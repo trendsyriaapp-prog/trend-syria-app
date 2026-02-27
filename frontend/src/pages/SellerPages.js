@@ -159,13 +159,13 @@ const SellerDocumentsPage = () => {
           <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-6 border border-white/5">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">اسم المتجر</label>
+                <label className="block text-sm font-medium mb-2">اسم النشاط التجاري</label>
                 <input
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="اسم متجرك أو نشاطك التجاري"
+                  placeholder="اسم نشاطك التجاري"
                   required
                   data-testid="business-name-input"
                 />
