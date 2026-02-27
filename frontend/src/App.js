@@ -49,6 +49,7 @@ function App() {
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:userId" element={<MessagesPage />} />
                 <Route path="/following" element={<FollowingPage />} />
+                <Route path="/favorites" element={<FavoritesPage />} />
                 
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />
