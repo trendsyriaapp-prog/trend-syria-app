@@ -31,7 +31,7 @@ const Watermark = () => (
                 letterSpacing: '0.5px'
               }}
             >
-              تريند سوريا
+              تريند سورية
             </span>
           ))}
         </div>
@@ -40,7 +40,7 @@ const Watermark = () => (
     
     {/* شعار واضح في الزاوية */}
     <div className="absolute bottom-1 right-1 bg-[#FF6B00] text-white text-[6px] font-bold px-1 py-0.5 rounded">
-      تريند سوريا
+      تريند سورية
     </div>
   </div>
 );

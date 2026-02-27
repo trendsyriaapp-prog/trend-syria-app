@@ -32,7 +32,7 @@ const Header = () => {
             <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
               <span className="text-white font-bold text-lg">ت</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">تريند سوريا</span>
+            <span className="text-xl font-bold text-gray-900 hidden sm:block">تريند سورية</span>
           </Link>
 
           {/* Search Bar - Desktop */}
