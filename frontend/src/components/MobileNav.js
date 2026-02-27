@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Bookmark } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -14,7 +14,7 @@ const MobileNav = () => {
     { path: '/', icon: Home, label: 'الرئيسية' },
     { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
     { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
-    { path: '/favorites', icon: Bookmark, label: 'المفضلة' },
+    { path: '/favorites', icon: Heart, label: 'المفضلة', isHeart: true },
     { path: user ? '/orders' : '/login', icon: User, label: user ? 'حسابي' : 'دخول' },
   ];
 
@@ -26,19 +26,23 @@ const MobileNav = () => {
             key={item.path}
             to={item.path}
             className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] transition-colors ${
-              isActive(item.path) ? 'text-[#FF6B00]' : 'text-gray-500 hover:text-gray-700'
+              isActive(item.path) ? 'text-[#FF6B00]' : item.isHeart ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'
             }`}
             data-testid={`nav-${item.label}`}
           >
             <div className="relative">
-              <item.icon size={22} />
+              {item.isHeart ? (
+                <Heart size={22} fill={isActive(item.path) ? '#FF6B00' : '#ef4444'} />
+              ) : (
+                <item.icon size={22} />
+              )}
               {item.badge > 0 && (
                 <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {item.badge}
                 </span>
               )}
             </div>
-            <span className="text-[10px]">{item.label}</span>
+            <span className={`text-[10px] ${item.isHeart && !isActive(item.path) ? 'text-red-500' : ''}`}>{item.label}</span>
           </Link>
         ))}
       </div>
