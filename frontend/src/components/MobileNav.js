@@ -19,21 +19,21 @@ const MobileNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg border-t border-white/10 z-50 safe-area-inset-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-inset-bottom shadow-lg">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] transition-colors ${
-              isActive(item.path) ? 'text-[#FF6B00]' : 'text-white/60 hover:text-white'
+              isActive(item.path) ? 'text-[#FF6B00]' : 'text-gray-500 hover:text-gray-700'
             }`}
             data-testid={`nav-${item.label}`}
           >
             <div className="relative">
               <item.icon size={22} />
               {item.badge > 0 && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF6B00] text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {item.badge}
                 </span>
               )}
