@@ -36,7 +36,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -44,38 +44,38 @@ const LoginPage = () => {
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-[#FF6B00] flex items-center justify-center mx-auto mb-4">
-            <span className="text-black font-bold text-2xl">ت</span>
+            <span className="text-white font-bold text-2xl">ت</span>
           </div>
-          <h1 className="text-2xl font-bold">تسجيل الدخول</h1>
-          <p className="text-white/50 mt-2">مرحباً بعودتك إلى تريند سوريا</p>
+          <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
+          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى تريند سوريا</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-6 border border-white/5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">رقم الهاتف</label>
               <div className="relative">
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                   placeholder="09xxxxxxxx"
                   required
                   data-testid="phone-input"
                 />
-                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">كلمة المرور</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">كلمة المرور</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pl-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                   placeholder="••••••••"
                   required
                   data-testid="password-input"
@@ -83,7 +83,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -94,26 +94,26 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#FF6B00] text-black font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+            className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
             data-testid="login-submit-btn"
           >
             {loading ? 'جاري الدخول...' : 'دخول'}
           </button>
 
-          <p className="text-center text-white/50 mt-4">
+          <p className="text-center text-gray-500 mt-4">
             ليس لديك حساب؟{' '}
-            <Link to="/register" className="text-[#FF6B00] hover:underline" data-testid="register-link">
+            <Link to="/register" className="text-[#FF6B00] hover:underline font-medium" data-testid="register-link">
               إنشاء حساب
             </Link>
           </p>
         </form>
 
         {/* Demo accounts */}
-        <div className="mt-6 p-4 bg-[#121212] rounded-xl border border-white/5">
-          <p className="text-sm text-white/50 mb-2">حسابات تجريبية:</p>
-          <div className="space-y-1 text-sm">
-            <p><span className="text-[#FF6B00]">مدير:</span> 0911111111 / admin123</p>
-            <p><span className="text-[#FF6B00]">بائع:</span> 0922222222 / seller123</p>
+        <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
+          <p className="text-sm text-gray-500 mb-2">حسابات تجريبية:</p>
+          <div className="space-y-1 text-sm text-gray-700">
+            <p><span className="text-[#FF6B00] font-medium">مدير:</span> 0911111111 / admin123</p>
+            <p><span className="text-[#FF6B00] font-medium">بائع:</span> 0922222222 / seller123</p>
           </div>
         </div>
       </motion.div>
@@ -176,7 +176,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-10">
+    <div className="min-h-screen flex items-center justify-center p-4 py-10 bg-gray-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -184,20 +184,20 @@ const RegisterPage = () => {
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-[#FF6B00] flex items-center justify-center mx-auto mb-4">
-            <span className="text-black font-bold text-2xl">ت</span>
+            <span className="text-white font-bold text-2xl">ت</span>
           </div>
-          <h1 className="text-2xl font-bold">إنشاء حساب جديد</h1>
-          <p className="text-white/50 mt-2">انضم إلى تريند سوريا اليوم</p>
+          <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
+          <p className="text-gray-500 mt-2">انضم إلى تريند سوريا اليوم</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-6 border border-white/5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           {/* Account Type */}
-          <div className="flex gap-2 p-1 bg-[#0A0A0A] rounded-full mb-6">
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-full mb-6">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, user_type: 'buyer' })}
               className={`flex-1 py-2 rounded-full transition-colors ${
-                formData.user_type === 'buyer' ? 'bg-[#FF6B00] text-black font-bold' : ''
+                formData.user_type === 'buyer' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
               data-testid="buyer-type-btn"
             >
@@ -207,7 +207,7 @@ const RegisterPage = () => {
               type="button"
               onClick={() => setFormData({ ...formData, user_type: 'seller' })}
               className={`flex-1 py-2 rounded-full transition-colors ${
-                formData.user_type === 'seller' ? 'bg-[#FF6B00] text-black font-bold' : ''
+                formData.user_type === 'seller' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
               data-testid="seller-type-btn"
             >
@@ -217,47 +217,47 @@ const RegisterPage = () => {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">الاسم الثلاثي *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الثلاثي *</label>
               <div className="relative">
                 <input
                   type="text"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                   placeholder="مثال: محمد أحمد علي"
                   required
                   data-testid="name-input"
                 />
-                <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+                <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
-              <p className="text-xs text-white/40 mt-1">أدخل اسمك الثلاثي كاملاً</p>
+              <p className="text-xs text-gray-400 mt-1">أدخل اسمك الثلاثي كاملاً</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">رقم الهاتف *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">رقم الهاتف *</label>
               <div className="relative">
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                   placeholder="09xxxxxxxx"
                   required
                   data-testid="phone-input"
                 />
-                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
-              <p className="text-xs text-white/40 mt-1">سيُستخدم لتسجيل الدخول</p>
+              <p className="text-xs text-gray-400 mt-1">سيُستخدم لتسجيل الدخول</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">كلمة المرور *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">كلمة المرور *</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pl-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -266,7 +266,7 @@ const RegisterPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -274,11 +274,11 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">المدينة</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
               <select
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 required
                 data-testid="city-select"
               >
@@ -290,7 +290,7 @@ const RegisterPage = () => {
           </div>
 
           {formData.user_type === 'seller' && (
-            <p className="text-sm text-white/50 mt-4 p-3 bg-[#FF6B00]/10 rounded-lg">
+            <p className="text-sm text-gray-600 mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
               ملاحظة: ستحتاج لرفع شهادة بائع (سجل تجاري) بعد التسجيل للموافقة على حسابك
             </p>
           )}
@@ -298,15 +298,15 @@ const RegisterPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#FF6B00] text-black font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+            className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
             data-testid="register-submit-btn"
           >
             {loading ? 'جاري التسجيل...' : 'إنشاء الحساب'}
           </button>
 
-          <p className="text-center text-white/50 mt-4">
+          <p className="text-center text-gray-500 mt-4">
             لديك حساب بالفعل؟{' '}
-            <Link to="/login" className="text-[#FF6B00] hover:underline">
+            <Link to="/login" className="text-[#FF6B00] hover:underline font-medium">
               تسجيل الدخول
             </Link>
           </p>
