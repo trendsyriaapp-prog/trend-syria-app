@@ -107,7 +107,7 @@ const HomePage = () => {
       <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">الأصناف</h2>
+            <h2 className="text-base font-bold text-gray-900">الأصناف</h2>
             <Link to="/categories" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-categories">
               عرض الكل
               <ChevronLeft size={16} />
@@ -144,7 +144,7 @@ const HomePage = () => {
       <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">المنتجات الرائجة</h2>
+            <h2 className="text-base font-bold text-gray-900">المنتجات الرائجة</h2>
             <Link to="/products" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-products">
               عرض الكل
               <ChevronLeft size={16} />
