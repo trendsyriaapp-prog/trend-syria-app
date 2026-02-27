@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
-  UtensilsCrossed, Heart, Car, ChevronLeft
+  UtensilsCrossed, Heart, SprayCan, ChevronLeft
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
