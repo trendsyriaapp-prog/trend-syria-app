@@ -631,6 +631,23 @@ const SellerDashboardPage = () => {
                 </select>
               </div>
 
+              {/* المدينة */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
+                <select
+                  value={newProduct.city}
+                  onChange={(e) => setNewProduct({ ...newProduct, city: e.target.value })}
+                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  required
+                  data-testid="product-city-select"
+                >
+                  <option value="">اختر المدينة</option>
+                  {SYRIAN_CITIES.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* أبعاد المنتج */}
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">أبعاد المنتج (بالسنتيمتر) - اختياري</label>
