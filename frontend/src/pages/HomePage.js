@@ -81,10 +81,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-8 border-y border-gray-100">
+      {/* Features - Smaller */}
+      <section className="py-4 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-2">
             {[
               { icon: Truck, text: 'توصيل مجاني', desc: 'لجميع المحافظات' },
               { icon: Shield, text: 'ضمان الجودة', desc: 'منتجات أصلية' },
@@ -96,14 +96,14 @@ const HomePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"
               >
-                <div className="p-3 bg-[#FF6B00]/10 rounded-full">
-                  <feature.icon size={24} className="text-[#FF6B00]" />
+                <div className="p-1.5 bg-[#FF6B00]/10 rounded-full">
+                  <feature.icon size={14} className="text-[#FF6B00]" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-gray-900">{feature.text}</p>
-                  <p className="text-xs text-gray-500">{feature.desc}</p>
+                  <p className="font-bold text-[10px] text-gray-900">{feature.text}</p>
+                  <p className="text-[8px] text-gray-500 hidden sm:block">{feature.desc}</p>
                 </div>
               </motion.div>
             ))}
