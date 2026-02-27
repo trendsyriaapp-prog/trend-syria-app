@@ -463,7 +463,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "city": order.city,
         "phone": order.phone,
         "payment_method": order.payment_method,
-        "shamcash_phone": order.shamcash_phone,
+        "payment_phone": order.payment_phone,
         "status": "pending_payment",
         "delivery_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
