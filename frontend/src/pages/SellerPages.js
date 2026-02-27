@@ -558,26 +558,26 @@ const SellerDashboardPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[#121212] rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-xl font-bold mb-4">إضافة منتج جديد</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-900">إضافة منتج جديد</h2>
             <form onSubmit={handleAddProduct} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">اسم المنتج</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">اسم المنتج</label>
                 <input
                   type="text"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                   required
                   data-testid="product-name-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الوصف</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">الوصف</label>
                 <textarea
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                   rows={3}
                   required
                   data-testid="product-desc-input"
@@ -586,23 +586,23 @@ const SellerDashboardPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">السعر (ل.س)</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">السعر (ل.س)</label>
                   <input
                     type="number"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none"
+                    className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                     required
                     data-testid="product-price-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">الكمية</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">الكمية</label>
                   <input
                     type="number"
                     value={newProduct.stock}
                     onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none"
+                    className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                     required
                     data-testid="product-stock-input"
                   />
@@ -610,11 +610,11 @@ const SellerDashboardPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الصنف</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">الصنف</label>
                 <select
                   value={newProduct.category}
                   onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white focus:border-[#FF6B00] focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                   data-testid="product-category-select"
                 >
                   {CATEGORIES.map(cat => (
