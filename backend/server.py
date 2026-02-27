@@ -55,6 +55,9 @@ class ProductCreate(BaseModel):
     category: str
     stock: int
     images: List[str]  # Base64 encoded images
+    length_cm: Optional[float] = None  # الطول بالسنتيمتر
+    width_cm: Optional[float] = None   # العرض بالسنتيمتر
+    height_cm: Optional[float] = None  # الارتفاع بالسنتيمتر
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -63,6 +66,9 @@ class ProductUpdate(BaseModel):
     category: Optional[str] = None
     stock: Optional[int] = None
     images: Optional[List[str]] = None
+    length_cm: Optional[float] = None
+    width_cm: Optional[float] = None
+    height_cm: Optional[float] = None
 
 class CartItem(BaseModel):
     product_id: str
