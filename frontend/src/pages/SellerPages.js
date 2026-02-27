@@ -350,7 +350,10 @@ const SellerDashboardPage = () => {
       await axios.post(`${API}/products`, {
         ...newProduct,
         price: parseFloat(newProduct.price),
-        stock: parseInt(newProduct.stock)
+        stock: parseInt(newProduct.stock),
+        length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
+        width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
+        height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null
       });
 
       toast({
