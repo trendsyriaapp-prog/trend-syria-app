@@ -13,7 +13,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Sparkles, Dumbbell, 
-  BookOpen, Gamepad2, UtensilsCrossed, Heart, Car
+  BookOpen, Gamepad2, UtensilsCrossed, Heart, SprayCan
 };
 
 const HomePage = () => {
