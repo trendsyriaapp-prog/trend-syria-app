@@ -443,72 +443,72 @@ const ProductDetailPage = () => {
 
             {/* Quantity */}
             {product.stock > 0 && (
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-gray-600">الكمية:</span>
-                <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-sm text-gray-600">الكمية:</span>
+                <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
                     data-testid="decrease-qty"
                   >
-                    <Minus size={18} />
+                    <Minus size={14} />
                   </button>
-                  <span className="w-12 text-center font-bold" data-testid="quantity">{quantity}</span>
+                  <span className="w-8 text-center font-bold text-sm" data-testid="quantity">{quantity}</span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                    className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
                     data-testid="increase-qty"
                   >
-                    <Plus size={18} />
+                    <Plus size={14} />
                   </button>
                 </div>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 mb-8">
+            <div className="flex gap-2 mb-4">
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0 || addingToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#FF6B00] text-white font-bold py-4 rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 bg-[#FF6B00] text-white font-bold py-2.5 rounded-full text-sm hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 data-testid="add-to-cart-btn"
               >
                 {addingToCart ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
                 ) : (
                   <>
-                    <ShoppingCart size={20} />
+                    <ShoppingCart size={16} />
                     أضف للسلة
                   </>
                 )}
               </button>
               <button
                 onClick={handleContactSeller}
-                className="p-4 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+                className="p-2.5 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
                 data-testid="contact-seller-btn"
               >
-                <MessageCircle size={20} className="text-gray-700" />
+                <MessageCircle size={16} className="text-gray-700" />
               </button>
             </div>
 
             {/* Features */}
-            <div className="space-y-3 border-t border-gray-200 pt-6">
-              <div className="flex items-center gap-3 text-gray-600">
-                <Truck size={20} className="text-[#FF6B00]" />
+            <div className="space-y-1 border-t border-gray-200 pt-3">
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <Truck size={14} className="text-[#FF6B00]" />
                 <span>توصيل مجاني لجميع المحافظات</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-600">
-                <Shield size={20} className="text-[#FF6B00]" />
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <Shield size={14} className="text-[#FF6B00]" />
                 <span>ضمان استرجاع خلال 14 يوم</span>
               </div>
             </div>
 
             {/* Seller */}
-            <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
-              <p className="text-sm text-gray-500">البائع</p>
-              <p className="font-bold text-gray-900">{product.seller_name}</p>
+            <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-500">البائع</p>
+              <p className="font-bold text-sm text-gray-900">{product.seller_name}</p>
               {product.city && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs text-gray-600">
                   <span className="inline-flex items-center gap-1">
                     📍 {product.city}
                   </span>
