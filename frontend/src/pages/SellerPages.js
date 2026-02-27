@@ -29,6 +29,12 @@ const CATEGORIES = [
   { id: 'cars', name: 'سيارات' },
 ];
 
+const SYRIAN_CITIES = [
+  'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',
+  'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء',
+  'القنيطرة', 'إدلب', 'ريف دمشق'
+];
+
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
   const navigate = useNavigate();
