@@ -321,7 +321,7 @@ async def get_featured_products():
     return products
 
 @api_router.get("/products/{product_id}")
-async def get_product(product_id: str):
+async def get_product(product_id: str, authorization: Optional[str] = Header(None)):
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -329,6 +329,24 @@ async def get_product(product_id: str):
     # Get reviews
     reviews = await db.reviews.find({"product_id": product_id}, {"_id": 0}).to_list(50)
     product["reviews"] = reviews
+    
+    # التحقق من نوع المستخدم
+    is_admin = False
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            token = authorization.replace("Bearer ", "")
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user = await db.users.find_one({"id": payload.get("user_id")})
+            if user and user.get("user_type") == "admin":
+                is_admin = True
+        except:
+            pass
+    
+    # إخفاء معلومات البائع من العملاء (فقط المدير يراها)
+    if not is_admin:
+        product.pop("seller_name", None)
+        product.pop("seller_phone", None)
+        product.pop("seller_id", None)
     
     return product
 
