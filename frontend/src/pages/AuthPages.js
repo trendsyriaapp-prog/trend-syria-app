@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Phone, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 
@@ -12,7 +12,7 @@ const LoginPage = () => {
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ phone: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -21,13 +21,13 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      await login(formData.phone, formData.password);
       toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
       navigate('/');
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "بيانات الدخول غير صحيحة",
+        description: error.response?.data?.detail || "رقم الهاتف أو كلمة المرور غير صحيحة",
         variant: "destructive"
       });
     } finally {
@@ -53,16 +53,19 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-6 border border-white/5">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">البريد الإلكتروني</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                placeholder="example@email.com"
-                required
-                data-testid="email-input"
-              />
+              <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  placeholder="09xxxxxxxx"
+                  required
+                  data-testid="phone-input"
+                />
+                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+              </div>
             </div>
 
             <div>
@@ -109,8 +112,8 @@ const LoginPage = () => {
         <div className="mt-6 p-4 bg-[#121212] rounded-xl border border-white/5">
           <p className="text-sm text-white/50 mb-2">حسابات تجريبية:</p>
           <div className="space-y-1 text-sm">
-            <p><span className="text-[#FF6B00]">مدير:</span> admin@trendsy.sy / admin123</p>
-            <p><span className="text-[#FF6B00]">بائع:</span> seller@trendsy.sy / seller123</p>
+            <p><span className="text-[#FF6B00]">مدير:</span> 0911111111 / admin123</p>
+            <p><span className="text-[#FF6B00]">بائع:</span> 0922222222 / seller123</p>
           </div>
         </div>
       </motion.div>
@@ -127,10 +130,9 @@ const RegisterPage = () => {
   const defaultType = searchParams.get('type') || 'buyer';
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
+    full_name: '',
     phone: '',
+    password: '',
     city: 'دمشق',
     user_type: defaultType
   });
@@ -139,6 +141,18 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // التحقق من الاسم الثلاثي
+    const nameParts = formData.full_name.trim().split(' ').filter(p => p.length > 0);
+    if (nameParts.length < 3) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال الاسم الثلاثي كاملاً",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -203,33 +217,41 @@ const RegisterPage = () => {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">الاسم الكامل</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                placeholder="أدخل اسمك"
-                required
-                data-testid="name-input"
-              />
+              <label className="block text-sm font-medium mb-2">الاسم الثلاثي *</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  placeholder="مثال: محمد أحمد علي"
+                  required
+                  data-testid="name-input"
+                />
+                <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+              </div>
+              <p className="text-xs text-white/40 mt-1">أدخل اسمك الثلاثي كاملاً</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">البريد الإلكتروني</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                placeholder="example@email.com"
-                required
-                data-testid="email-input"
-              />
+              <label className="block text-sm font-medium mb-2">رقم الهاتف *</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 pr-12 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  placeholder="09xxxxxxxx"
+                  required
+                  data-testid="phone-input"
+                />
+                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" />
+              </div>
+              <p className="text-xs text-white/40 mt-1">سيُستخدم لتسجيل الدخول</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">كلمة المرور</label>
+              <label className="block text-sm font-medium mb-2">كلمة المرور *</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -249,19 +271,6 @@ const RegisterPage = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                placeholder="09xxxxxxxx"
-                required
-                data-testid="phone-input"
-              />
             </div>
 
             <div>
