@@ -505,6 +505,13 @@ const ProductDetailPage = () => {
             <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
               <p className="text-sm text-gray-500">البائع</p>
               <p className="font-bold text-gray-900">{product.seller_name}</p>
+              {product.city && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="inline-flex items-center gap-1">
+                    📍 {product.city}
+                  </span>
+                </p>
+              )}
             </div>
           </motion.div>
         </div>
