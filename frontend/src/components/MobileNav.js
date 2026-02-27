@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Bookmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -14,7 +14,7 @@ const MobileNav = () => {
     { path: '/', icon: Home, label: 'الرئيسية' },
     { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
     { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
-    { path: '/following', icon: Heart, label: 'المتابعة' },
+    { path: '/favorites', icon: Bookmark, label: 'المفضلة' },
     { path: user ? '/orders' : '/login', icon: User, label: user ? 'حسابي' : 'دخول' },
   ];
 
