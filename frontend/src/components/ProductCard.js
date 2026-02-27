@@ -49,11 +49,11 @@ const ProductCard = ({ product }) => {
     >
       <Link 
         to={`/product/${product.id}`}
-        className="block bg-[#121212] border border-white/5 rounded-2xl overflow-hidden hover:border-[#FF6B00]/50 transition-colors group"
+        className="block bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#FF6B00] hover:shadow-lg transition-all group"
         data-testid={`product-card-${product.id}`}
       >
         {/* Image */}
-        <div className="aspect-square relative overflow-hidden bg-[#0A0A0A]">
+        <div className="aspect-square relative overflow-hidden bg-gray-50">
           <img
             src={product.images?.[0] || 'https://via.placeholder.com/400?text=No+Image'}
             alt={product.name}
@@ -61,12 +61,12 @@ const ProductCard = ({ product }) => {
             loading="lazy"
           />
           {product.stock <= 5 && product.stock > 0 && (
-            <span className="absolute top-2 right-2 bg-yellow-500/90 text-black text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
               كمية محدودة
             </span>
           )}
           {product.stock === 0 && (
-            <span className="absolute top-2 right-2 bg-red-500/90 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
               نفذت الكمية
             </span>
           )}
@@ -74,15 +74,15 @@ const ProductCard = ({ product }) => {
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-bold text-sm line-clamp-2 mb-2 group-hover:text-[#FF6B00] transition-colors">
+          <h3 className="font-bold text-sm line-clamp-2 mb-2 text-gray-900 group-hover:text-[#FF6B00] transition-colors">
             {product.name}
           </h3>
           
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
             <Star size={14} className="fill-[#FF6B00] text-[#FF6B00]" />
-            <span className="text-sm text-white/70">{product.rating || 0}</span>
-            <span className="text-xs text-white/40">({product.reviews_count || 0})</span>
+            <span className="text-sm text-gray-600">{product.rating || 0}</span>
+            <span className="text-xs text-gray-400">({product.reviews_count || 0})</span>
           </div>
 
           {/* Price & Add to Cart */}
@@ -91,7 +91,7 @@ const ProductCard = ({ product }) => {
             <button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
-              className="p-2 bg-[#FF6B00] text-black rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-[#FF6B00] text-white rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               data-testid={`add-to-cart-${product.id}`}
             >
               <ShoppingCart size={18} />
