@@ -343,10 +343,10 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
             logging.error(f"Token decode error: {e}")
     
     # إخفاء معلومات البائع من العملاء (فقط المدير يراها)
+    # نبقي seller_id للرابط إلى صفحة المتجر
     if not is_admin:
         product.pop("seller_name", None)
         product.pop("seller_phone", None)
-        product.pop("seller_id", None)
         product.pop("city", None)
     
     return product
