@@ -66,17 +66,9 @@ const HomePage = () => {
             <h1 className="text-3xl md:text-5xl font-bold mb-2 text-gray-900">
               تريند <span className="text-[#FF6B00]">سورية</span>
             </h1>
-            <p className="text-gray-600 text-base md:text-lg mb-4 max-w-2xl mx-auto">
+            <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
               منصة التسوق الأولى في سورية - توصيل مجاني لجميع المحافظات
             </p>
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 bg-[#FF6B00] text-white font-bold px-6 py-3 rounded-full hover:bg-[#E65000] transition-colors shadow-lg text-sm"
-              data-testid="shop-now-btn"
-            >
-              تسوق الآن
-              <ArrowLeft size={18} />
-            </Link>
           </motion.div>
         </div>
       </section>
