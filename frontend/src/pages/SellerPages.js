@@ -365,7 +365,10 @@ const SellerDashboardPage = () => {
         price: '',
         category: 'electronics',
         stock: '',
-        images: []
+        images: [],
+        length_cm: '',
+        width_cm: '',
+        height_cm: ''
       });
       fetchData();
     } catch (error) {
