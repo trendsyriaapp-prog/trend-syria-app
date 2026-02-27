@@ -744,8 +744,8 @@ async def seed_demo_data():
     admin_id = str(uuid.uuid4())
     await db.users.insert_one({
         "id": admin_id,
-        "name": "مدير النظام",
-        "email": "admin@trendsy.sy",
+        "name": "أحمد محمد علي",
+        "full_name": "أحمد محمد علي",
         "password": hash_password("admin123"),
         "phone": "0911111111",
         "city": "دمشق",
@@ -759,8 +759,8 @@ async def seed_demo_data():
     seller_id = str(uuid.uuid4())
     await db.users.insert_one({
         "id": seller_id,
-        "name": "متجر الأناقة",
-        "email": "seller@trendsy.sy",
+        "name": "خالد سعيد حسن",
+        "full_name": "خالد سعيد حسن",
         "password": hash_password("seller123"),
         "phone": "0922222222",
         "city": "حلب",
