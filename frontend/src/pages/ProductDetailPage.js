@@ -521,16 +521,27 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Seller */}
+            {/* Seller/Store Info */}
             <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-500">البائع</p>
-              <p className="font-bold text-sm text-gray-900">{product.seller_name}</p>
+              <p className="text-xs text-gray-500">المتجر</p>
+              <p className="font-bold text-sm text-gray-900">{product.business_name || product.seller_name}</p>
               {product.city && (
                 <p className="text-xs text-gray-600">
                   <span className="inline-flex items-center gap-1">
                     📍 {product.city}
                   </span>
                 </p>
+              )}
+              
+              {/* معلومات البائع للمدير فقط */}
+              {user?.user_type === 'admin' && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-xs text-red-500 font-bold">معلومات للمدير فقط:</p>
+                  <p className="text-xs text-gray-600">اسم البائع: {product.seller_name}</p>
+                  {product.seller_phone && (
+                    <p className="text-xs text-gray-600">رقم الهاتف: {product.seller_phone}</p>
+                  )}
+                </div>
               )}
             </div>
           </motion.div>
