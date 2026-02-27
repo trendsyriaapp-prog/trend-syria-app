@@ -513,7 +513,7 @@ const ProductDetailPage = () => {
             <div className="space-y-1 border-t border-gray-200 pt-3">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Truck size={14} className="text-[#FF6B00]" />
-                <span>توصيل مجاني لجميع المحافظات</span>
+                <span>توصيل مجاني داخل المحافظات</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Shield size={14} className="text-[#FF6B00]" />
