@@ -310,14 +310,14 @@ async def get_products(
         query.setdefault("price", {})["$lte"] = max_price
     
     skip = (page - 1) * limit
-    products = await db.products.find(query, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0}).skip(skip).limit(limit).to_list(limit)
+    products = await db.products.find(query, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).skip(skip).limit(limit).to_list(limit)
     total = await db.products.count_documents(query)
     
     return {"products": products, "total": total, "page": page, "pages": (total + limit - 1) // limit}
 
 @api_router.get("/products/featured")
 async def get_featured_products():
-    products = await db.products.find({"is_active": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0}).sort("sales_count", -1).limit(8).to_list(8)
+    products = await db.products.find({"is_active": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).sort("sales_count", -1).limit(8).to_list(8)
     return products
 
 @api_router.get("/products/{product_id}")
