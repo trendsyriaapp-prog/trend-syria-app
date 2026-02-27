@@ -407,24 +407,24 @@ const ProductDetailPage = () => {
 
             {/* Product Dimensions */}
             {(product.length_cm || product.width_cm || product.height_cm) && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-900 mb-3">أبعاد المنتج</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="font-bold text-gray-900 text-sm mb-2">أبعاد المنتج</h4>
+                <div className="flex gap-4 text-center text-sm">
                   {product.length_cm && (
                     <div>
-                      <p className="text-sm text-gray-500">الطول</p>
+                      <p className="text-xs text-gray-500">الطول</p>
                       <p className="font-bold text-gray-900">{product.length_cm} سم</p>
                     </div>
                   )}
                   {product.width_cm && (
                     <div>
-                      <p className="text-sm text-gray-500">العرض</p>
+                      <p className="text-xs text-gray-500">العرض</p>
                       <p className="font-bold text-gray-900">{product.width_cm} سم</p>
                     </div>
                   )}
                   {product.height_cm && (
                     <div>
-                      <p className="text-sm text-gray-500">الارتفاع</p>
+                      <p className="text-xs text-gray-500">الارتفاع</p>
                       <p className="font-bold text-gray-900">{product.height_cm} سم</p>
                     </div>
                   )}
