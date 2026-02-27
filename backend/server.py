@@ -166,17 +166,18 @@ async def register(user: UserRegister):
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    user = await db.users.find_one({"phone": credentials.phone}, {"_id": 0})
     if not user or user["password"] != hash_password(credentials.password):
-        raise HTTPException(status_code=401, detail="بيانات الدخول غير صحيحة")
+        raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     
     token = create_token(user["id"], user["user_type"])
     return {
         "token": token,
         "user": {
             "id": user["id"],
-            "name": user["name"],
-            "email": user["email"],
+            "name": user.get("full_name", user.get("name", "")),
+            "full_name": user.get("full_name", user.get("name", "")),
+            "phone": user["phone"],
             "user_type": user["user_type"],
             "is_approved": user.get("is_approved", False)
         }
@@ -186,8 +187,8 @@ async def login(credentials: UserLogin):
 async def get_me(user: dict = Depends(get_current_user)):
     return {
         "id": user["id"],
-        "name": user["name"],
-        "email": user["email"],
+        "name": user.get("full_name", user.get("name", "")),
+        "full_name": user.get("full_name", user.get("name", "")),
         "phone": user.get("phone", ""),
         "city": user.get("city", ""),
         "user_type": user["user_type"],
