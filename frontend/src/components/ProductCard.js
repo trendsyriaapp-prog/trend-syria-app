@@ -9,30 +9,38 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-// مكون العلامة المائية
+// مكون العلامة المائية المتكررة
 const Watermark = () => (
-  <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-    {/* علامة مائية في الوسط */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      <span 
-        className="text-black/10 text-xl font-bold rotate-[-25deg] whitespace-nowrap"
-      >
-        تريند سوريا
-      </span>
-    </div>
-    
-    {/* علامات مائية متكررة */}
-    <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-8 rotate-[-25deg] scale-150">
-      {[...Array(6)].map((_, i) => (
-        <span key={i} className="text-black/5 text-sm font-bold whitespace-nowrap">
-          تريند سوريا
-        </span>
+  <div 
+    className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10"
+    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+  >
+    {/* شبكة من العلامات المائية */}
+    <div 
+      className="absolute inset-0 flex flex-col items-center justify-center"
+      style={{ transform: 'rotate(-30deg) scale(1.5)' }}
+    >
+      {[...Array(5)].map((_, rowIndex) => (
+        <div key={rowIndex} className="flex gap-6 my-3">
+          {[...Array(3)].map((_, colIndex) => (
+            <span 
+              key={colIndex}
+              className="text-gray-500/30 text-base font-bold whitespace-nowrap"
+              style={{ 
+                textShadow: '0 0 1px rgba(0,0,0,0.1)',
+                letterSpacing: '1px'
+              }}
+            >
+              تريند سوريا
+            </span>
+          ))}
+        </div>
       ))}
     </div>
     
-    {/* شعار في الزاوية */}
-    <div className="absolute bottom-2 right-2 bg-[#FF6B00] text-white text-[9px] font-bold px-2 py-1 rounded shadow-sm">
-      تريند سوريا
+    {/* شعار واضح في الزاوية */}
+    <div className="absolute bottom-1 right-1 bg-[#FF6B00] text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-md">
+      تريند سوريا ®
     </div>
   </div>
 );
@@ -70,6 +78,12 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  // منع النقر بالزر الأيمن وسحب الصورة
+  const preventImageActions = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -88,19 +102,24 @@ const ProductCard = ({ product }) => {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
             draggable="false"
-            onContextMenu={(e) => e.preventDefault()}
+            onContextMenu={preventImageActions}
+            onDragStart={preventImageActions}
+            style={{ pointerEvents: 'none' }}
           />
+          
+          {/* طبقة شفافة لمنع التفاعل المباشر مع الصورة */}
+          <div className="absolute inset-0 bg-transparent" onContextMenu={preventImageActions}></div>
           
           {/* العلامة المائية */}
           <Watermark />
 
           {product.stock <= 5 && product.stock > 0 && (
-            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20">
               كمية محدودة
             </span>
           )}
           {product.stock === 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20">
               نفذت الكمية
             </span>
           )}
