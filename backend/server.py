@@ -33,15 +33,14 @@ security = HTTPBearer(auto_error=False)
 # ============== Models ==============
 
 class UserRegister(BaseModel):
-    name: str
-    email: str
+    full_name: str  # الاسم الثلاثي
+    phone: str  # رقم الهاتف - سيستخدم لتسجيل الدخول
     password: str
-    phone: str
     city: str
     user_type: str = "buyer"  # buyer or seller
 
 class UserLogin(BaseModel):
-    email: str
+    phone: str  # تسجيل الدخول برقم الهاتف
     password: str
 
 class SellerDocuments(BaseModel):
