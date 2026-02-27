@@ -1,53 +1,64 @@
-import { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import { Toaster } from "./components/ui/toaster";
+import Header from "./components/Header";
+import MobileNav from "./components/MobileNav";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+// Pages
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CategoriesPage from "./pages/CategoriesPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrdersPage from "./pages/OrdersPage";
+import MessagesPage from "./pages/MessagesPage";
+import { LoginPage, RegisterPage } from "./pages/AuthPages";
+import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
+import AdminDashboardPage from "./pages/AdminPage";
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthProvider>
+      <CartProvider>
+        <BrowserRouter>
+          <div className="App min-h-screen bg-[#050505]">
+            <Header />
+            <main className="pb-16 md:pb-0">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/product/:id" element={<ProductDetailPage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
+                
+                {/* Auth Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                
+                {/* Buyer Routes */}
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages/:userId" element={<MessagesPage />} />
+                
+                {/* Seller Routes */}
+                <Route path="/seller/documents" element={<SellerDocumentsPage />} />
+                <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminDashboardPage />} />
+              </Routes>
+            </main>
+            <MobileNav />
+            <Toaster />
+          </div>
+        </BrowserRouter>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
