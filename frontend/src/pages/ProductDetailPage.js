@@ -519,8 +519,11 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Reviews Section */}
-        <section className="mt-12">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">التقييمات ({product.reviews?.length || 0})</h2>
+        <section className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <MessageCircle size={20} className="text-[#FF6B00]" />
+            <h2 className="text-lg font-bold text-gray-900">تعليقات وصور العملاء ({product.reviews?.length || 0})</h2>
+          </div>
           
           {/* Review Form - Only show if user can review */}
           {canReview && (
@@ -528,28 +531,29 @@ const ProductDetailPage = () => {
           )}
           
           {user && !canReview && product.reviews?.some(r => r.user_id === user.id) && (
-            <p className="text-gray-500 mb-4 bg-green-50 p-3 rounded-lg border border-green-200">
+            <p className="text-gray-500 mb-3 bg-green-50 p-2 rounded-lg border border-green-200 text-sm">
               ✅ لقد قمت بتقييم هذا المنتج مسبقاً
             </p>
           )}
 
           {user && !canReview && !product.reviews?.some(r => r.user_id === user.id) && (
-            <p className="text-gray-500 mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p className="text-gray-500 mb-3 bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-sm">
               ⚠️ يجب شراء المنتج أولاً لتتمكن من تقييمه
             </p>
           )}
 
           {/* Reviews List */}
           {product.reviews?.length > 0 ? (
-            <div className="space-y-4 mt-6">
+            <div className="space-y-3 mt-4">
               {product.reviews.map((review) => (
                 <ReviewCard key={review.id} review={review} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-              <Star size={40} className="text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-500">لا توجد تقييمات بعد</p>
+            <div className="text-center py-6 bg-white rounded-xl border border-gray-200">
+              <Star size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">لا توجد تعليقات أو صور بعد</p>
+              <p className="text-gray-400 text-xs">كن أول من يشارك تجربته!</p>
             </div>
           )}
         </section>
