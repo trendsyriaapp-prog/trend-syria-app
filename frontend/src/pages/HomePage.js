@@ -54,25 +54,24 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
+    <div className="min-h-screen pb-20 md:pb-0 bg-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FF6B00]/10 to-transparent pointer-events-none" />
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/10 to-white">
         <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">
               تريند <span className="text-[#FF6B00]">سوريا</span>
             </h1>
-            <p className="text-white/70 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
               منصة التسوق الأولى في سوريا - توصيل مجاني لجميع المحافظات
             </p>
             <Link
               to="/products"
-              className="inline-flex items-center gap-2 bg-[#FF6B00] text-black font-bold px-8 py-4 rounded-full hover:bg-[#E65000] transition-colors shadow-[0_0_30px_rgba(255,107,0,0.3)]"
+              className="inline-flex items-center gap-2 bg-[#FF6B00] text-white font-bold px-8 py-4 rounded-full hover:bg-[#E65000] transition-colors shadow-lg"
               data-testid="shop-now-btn"
             >
               تسوق الآن
@@ -83,7 +82,7 @@ const HomePage = () => {
       </section>
 
       {/* Features */}
-      <section className="py-8 border-y border-white/5">
+      <section className="py-8 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -97,14 +96,14 @@ const HomePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-3 p-4 bg-[#121212] rounded-xl border border-white/5"
+                className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100"
               >
                 <div className="p-3 bg-[#FF6B00]/10 rounded-full">
                   <feature.icon size={24} className="text-[#FF6B00]" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm">{feature.text}</p>
-                  <p className="text-xs text-white/50">{feature.desc}</p>
+                  <p className="font-bold text-sm text-gray-900">{feature.text}</p>
+                  <p className="text-xs text-gray-500">{feature.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -112,17 +111,17 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-12">
+      {/* Categories - Smaller Size */}
+      <section className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">الأصناف</h2>
-            <Link to="/categories" className="text-[#FF6B00] flex items-center gap-1 hover:underline" data-testid="view-all-categories">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">الأصناف</h2>
+            <Link to="/categories" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-categories">
               عرض الكل
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
@@ -134,13 +133,13 @@ const HomePage = () => {
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="flex flex-col items-center gap-3 min-w-[100px]"
+                    className="flex flex-col items-center gap-2 min-w-[70px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-20 h-20 rounded-full bg-[#1E1E1E] flex items-center justify-center border border-white/5 hover:bg-[#FF6B00] hover:text-black transition-all group">
-                      <IconComponent size={32} className="group-hover:scale-110 transition-transform" />
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all group">
+                      <IconComponent size={20} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-sm font-medium">{cat.name}</span>
+                    <span className="text-xs font-medium text-gray-700">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
@@ -150,20 +149,20 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-12">
+      <section className="py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">المنتجات الرائجة</h2>
-            <Link to="/products" className="text-[#FF6B00] flex items-center gap-1 hover:underline" data-testid="view-all-products">
+            <h2 className="text-xl font-bold text-gray-900">المنتجات الرائجة</h2>
+            <Link to="/products" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-products">
               عرض الكل
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </Link>
           </div>
           
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-[#121212] rounded-2xl aspect-square animate-pulse" />
+                <div key={i} className="bg-gray-100 rounded-2xl aspect-square animate-pulse" />
               ))}
             </div>
           ) : (
@@ -184,19 +183,19 @@ const HomePage = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-12">
+      <section className="py-8">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-[#FF6B00]/20 to-[#121212] border border-[#FF6B00]/20 p-8 md:p-12">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-[#FF6B00] to-[#E65000] p-8 md:p-12">
             <div className="relative z-10 max-w-lg">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
                 هل أنت بائع؟
               </h3>
-              <p className="text-white/70 mb-6">
+              <p className="text-white/90 mb-6">
                 انضم إلى تريند سوريا وابدأ ببيع منتجاتك لآلاف العملاء في جميع أنحاء سوريا
               </p>
               <Link
                 to="/register?type=seller"
-                className="inline-flex items-center gap-2 bg-[#FF6B00] text-black font-bold px-6 py-3 rounded-full hover:bg-[#E65000] transition-colors"
+                className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors"
                 data-testid="become-seller-btn"
               >
                 سجل كبائع
