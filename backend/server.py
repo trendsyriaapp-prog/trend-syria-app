@@ -73,8 +73,8 @@ class OrderCreate(BaseModel):
     address: str
     city: str
     phone: str
-    payment_method: str = "shamcash"
-    shamcash_phone: Optional[str] = None
+    payment_method: str = "shamcash"  # shamcash, syriatel_cash, mtn_cash
+    payment_phone: Optional[str] = None
 
 class ReviewCreate(BaseModel):
     product_id: str
