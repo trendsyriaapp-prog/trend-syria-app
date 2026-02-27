@@ -187,7 +187,7 @@ const RegisterPage = () => {
             <span className="text-white font-bold text-2xl">ت</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
-          <p className="text-gray-500 mt-2">انضم إلى تريند سوريا اليوم</p>
+          <p className="text-gray-500 mt-2">انضم إلى تريند سوريا الآن</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
