@@ -267,18 +267,71 @@ const SellerDashboardPage = () => {
     }
   };
 
-  const handleImageUpload = (e) => {
+  // إضافة علامة مائية على الصورة
+  const addWatermark = (imageDataUrl) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // رسم الصورة الأصلية
+        ctx.drawImage(img, 0, 0);
+        
+        // إعداد العلامة المائية
+        const text = 'تريند سورية';
+        const fontSize = Math.max(canvas.width * 0.08, 24);
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // رسم خلفية شبه شفافة للنص
+        const textWidth = ctx.measureText(text).width;
+        const padding = 20;
+        const bgX = canvas.width / 2 - textWidth / 2 - padding;
+        const bgY = canvas.height / 2 - fontSize / 2 - padding / 2;
+        const bgWidth = textWidth + padding * 2;
+        const bgHeight = fontSize + padding;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+        
+        // رسم النص
+        ctx.fillStyle = 'rgba(255, 107, 0, 0.9)';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        
+        // إضافة حدود للنص
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+        
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.src = imageDataUrl;
+    });
+  };
+
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
+    setUploadingImage(true);
+    
+    for (const file of files) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
+        // إضافة العلامة المائية
+        const watermarkedImage = await addWatermark(reader.result);
         setNewProduct(prev => ({
           ...prev,
-          images: [...prev.images, reader.result]
+          images: [...prev.images, watermarkedImage]
         }));
       };
       reader.readAsDataURL(file);
-    });
+    }
+    
+    setUploadingImage(false);
   };
 
   const handleAddProduct = async (e) => {
