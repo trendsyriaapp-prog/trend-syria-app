@@ -9,6 +9,34 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
+// مكون العلامة المائية
+const Watermark = () => (
+  <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+    {/* علامة مائية في الوسط */}
+    <div className="absolute inset-0 flex items-center justify-center">
+      <span 
+        className="text-black/10 text-xl font-bold rotate-[-25deg] whitespace-nowrap"
+      >
+        تريند سوريا
+      </span>
+    </div>
+    
+    {/* علامات مائية متكررة */}
+    <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-8 rotate-[-25deg] scale-150">
+      {[...Array(6)].map((_, i) => (
+        <span key={i} className="text-black/5 text-sm font-bold whitespace-nowrap">
+          تريند سوريا
+        </span>
+      ))}
+    </div>
+    
+    {/* شعار في الزاوية */}
+    <div className="absolute bottom-2 right-2 bg-[#FF6B00] text-white text-[9px] font-bold px-2 py-1 rounded shadow-sm">
+      تريند سوريا
+    </div>
+  </div>
+);
+
 const ProductCard = ({ product }) => {
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -59,34 +87,20 @@ const ProductCard = ({ product }) => {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            draggable="false"
+            onContextMenu={(e) => e.preventDefault()}
           />
           
-          {/* Watermark - تريند سوريا */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span 
-                className="text-white/20 text-2xl md:text-3xl font-bold rotate-[-30deg] select-none"
-                style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}
-              >
-                تريند سوريا
-              </span>
-            </div>
-          </div>
-          
-          {/* Diagonal Watermark Pattern */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-2 right-2 bg-[#FF6B00]/80 text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
-              تريند سوريا
-            </div>
-          </div>
+          {/* العلامة المائية */}
+          <Watermark />
 
           {product.stock <= 5 && product.stock > 0 && (
-            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
               كمية محدودة
             </span>
           )}
           {product.stock === 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
               نفذت الكمية
             </span>
           )}
