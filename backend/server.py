@@ -335,7 +335,7 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
     if authorization:
         try:
             token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
             user = await db.users.find_one({"id": payload.get("user_id")})
             if user and user.get("user_type") == "admin":
                 is_admin = True
