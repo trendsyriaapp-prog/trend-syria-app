@@ -1,0 +1,112 @@
+{
+  "project_name": "Trend Syria",
+  "design_philosophy": {
+    "theme_name": "Damascus Night",
+    "core_concept": "A high-energy, dark-mode-first marketplace that captures the vibrancy of Syrian nightlife and modern commerce. The aesthetic is 'Cyber-Souq'—traditional warmth meeting digital precision.",
+    "emotional_tone": "Energetic, Trustworthy, Premium, Local",
+    "target_audience": "Modern Syrian youth and families looking for trends and deals.",
+    "mode": "dark",
+    "rtl_support": true
+  },
+  "typography": {
+    "font_family_primary": "Cairo",
+    "font_family_secondary": "Almarai",
+    "heading_style": "font-bold tracking-tight",
+    "body_style": "font-medium leading-relaxed",
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap",
+    "rules": "Use 'Cairo' for all Headings and UI elements. Use 'Almarai' for dense body text if needed. Text must be legible in RTL."
+  },
+  "colors": {
+    "palette": {
+      "primary": "#FF6B00",
+      "primary_foreground": "#000000",
+      "secondary": "#27272A",
+      "secondary_foreground": "#FFFFFF",
+      "background": "#050505",
+      "surface": "#121212",
+      "surface_highlight": "#1E1E1E",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A1A1AA",
+      "border": "#27272A",
+      "success": "#10B981",
+      "error": "#EF4444",
+      "warning": "#F59E0B"
+    },
+    "gradients": {
+      "hero_glow": "radial-gradient(circle at center, rgba(255, 107, 0, 0.15) 0%, rgba(0, 0, 0, 0) 70%)",
+      "card_hover": "linear-gradient(180deg, rgba(255, 107, 0, 0.05) 0%, rgba(0, 0, 0, 0) 100%)"
+    },
+    "usage": {
+      "buttons": "Solid Primary Orange (#FF6B00) with Black Text for High Contrast CTA.",
+      "backgrounds": "Deepest Black (#050505) for main page, slightly lighter (#121212) for cards.",
+      "text": "Pure White for Headings, Zinc-400 for subtitles. NEVER use pure grey on black."
+    }
+  },
+  "visual_enhancers": {
+    "radius": "rounded-xl",
+    "borders": "border border-white/10",
+    "shadows": "shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+    "glassmorphism": "backdrop-blur-xl bg-black/60 border-white/10",
+    "micro_interactions": "Scale 0.98 on click. Hover lifts y-1 with subtle orange glow."
+  },
+  "layout_grid": {
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "spacing_scale": {
+      "section_gap": "py-16",
+      "component_gap": "gap-6"
+    },
+    "bento_grid": "Use CSS Grid with distinct span classes for 'Featured' vs 'Regular' items to break monotony."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#FF6B00] text-black hover:bg-[#E65000] rounded-full font-bold shadow-[0_0_20px_rgba(255,107,0,0.3)] transition-all",
+      "secondary": "bg-transparent border border-white/20 text-white hover:bg-white/5 hover:border-white/40 rounded-full font-medium transition-all"
+    },
+    "cards": {
+      "product": "bg-[#121212] border border-white/5 rounded-2xl overflow-hidden hover:border-[#FF6B00]/50 transition-colors group relative",
+      "category": "aspect-square rounded-full bg-[#1E1E1E] flex items-center justify-center border border-white/5 hover:bg-[#FF6B00] hover:text-black transition-all cursor-pointer"
+    },
+    "inputs": {
+      "default": "bg-[#0A0A0A] border-white/10 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00] rounded-lg h-12"
+    },
+    "navigation": {
+      "mobile_nav": "fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg border-t border-white/10 h-16 flex items-center justify-around z-50",
+      "header": "sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/5"
+    }
+  },
+  "image_urls": {
+    "hero_fashion": "https://images.unsplash.com/photo-1737275849605-1885c31428d8",
+    "electronics_hero": "https://images.unsplash.com/photo-1759588071814-59ec64e569ba",
+    "delivery_man": "https://images.pexels.com/photos/11010523/pexels-photo-11010523.jpeg",
+    "generic_product": "https://images.unsplash.com/photo-1759588071845-3864bd8cc9d3",
+    "cham_cash_placeholder": "https://ui-avatars.com/api/?name=Cham+Cash&background=FF6B00&color=000&size=128",
+    "syria_market": "https://images.unsplash.com/photo-1737275852849-24f47fcc15c9"
+  },
+  "motion": {
+    "page_transition": "initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}",
+    "card_hover": "whileHover={{ y: -5 }} transition={{ type: 'spring', stiffness: 300 }}",
+    "loader": "animate-spin rounded-full h-8 w-8 border-t-2 border-[#FF6B00] border-r-2 border-transparent"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure #FF6B00 text is only used on dark backgrounds where contrast > 4.5. Use White for body text.",
+    "focus_states": "All interactive elements must have a visible focus ring using the primary color.",
+    "rtl_check": "Ensure margins and paddings are logical (ms-*, me-*) or standard (pl-*, pr-*) are flipped in the layout direction."
+  },
+  "instructions_to_main_agent": [
+    "INSTALL: npm install framer-motion lucide-react clsx tailwind-merge",
+    "SETUP: Update tailwind.config.js with the custom colors defined above.",
+    "FONTS: Add the Google Fonts import to index.css immediately.",
+    "RTL: Add dir='rtl' to the html tag in index.html.",
+    "LAYOUT: Build a Mobile-First layout. The Desktop view should use a max-width container to prevent stretching.",
+    "PWA: Ensure touch targets are at least 44px.",
+    "MOCK DATA: Create a distinct list of Syrian cities (Damascus, Aleppo, Homs, Latakia) for address forms.",
+    "PAYMENT: Create a simulated 'Cham Cash' modal that asks for a phone number and OTP."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for main backgrounds, only for subtle glows.",
+    "Avoid 'Inter' font. Use 'Cairo'.",
+    "Spacing must be generous (p-6, p-8) even on mobile to feel premium.",
+    "Use Shadcn components but override the styles to match the 'Damascus Night' theme.",
+    "All prices should be formatted as 'SYP 25,000'."
+  ]
+}
