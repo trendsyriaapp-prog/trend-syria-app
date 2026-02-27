@@ -158,7 +158,7 @@ const ProductCard = ({ product }) => {
       transition={{ type: 'spring', stiffness: 300 }}
     >
       <Link 
-        to={`/product/${product.id}`}
+        to={`/products/${product.id}`}
         className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#FF6B00] hover:shadow-md transition-all group"
         data-testid={`product-card-${product.id}`}
       >
