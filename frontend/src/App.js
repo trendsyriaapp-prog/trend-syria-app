@@ -18,6 +18,8 @@ import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
 import AdminDashboardPage from "./pages/AdminPage";
+import StorePage from "./pages/StorePage";
+import FollowingPage from "./pages/FollowingPage";
 
 function App() {
   return (
@@ -33,6 +35,7 @@ function App() {
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/store/:sellerId" element={<StorePage />} />
                 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
@@ -44,6 +47,7 @@ function App() {
                 <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:userId" element={<MessagesPage />} />
+                <Route path="/following" element={<FollowingPage />} />
                 
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />
