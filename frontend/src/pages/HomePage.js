@@ -121,7 +121,7 @@ const HomePage = () => {
               <ChevronLeft size={16} />
             </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+          <div className="flex gap-1 overflow-x-auto hide-scrollbar pb-2">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
@@ -133,13 +133,13 @@ const HomePage = () => {
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="flex flex-col items-center gap-2 min-w-[70px]"
+                    className="flex flex-col items-center gap-1 min-w-[55px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all group">
-                      <IconComponent size={20} className="group-hover:scale-110 transition-transform" />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all group">
+                      <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-xs font-medium text-gray-700">{cat.name}</span>
+                    <span className="text-[10px] font-medium text-gray-700">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
