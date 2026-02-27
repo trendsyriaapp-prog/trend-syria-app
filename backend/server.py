@@ -347,6 +347,7 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
         product.pop("seller_name", None)
         product.pop("seller_phone", None)
         product.pop("seller_id", None)
+        product.pop("city", None)
     
     return product
 
