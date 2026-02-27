@@ -346,26 +346,27 @@ const ProductDetailPage = () => {
           <span className="text-gray-900">{product.name}</span>
         </nav>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="flex flex-col">
           {/* Images */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
           >
-            <div className="aspect-square rounded-2xl overflow-hidden bg-white border border-gray-200 mb-4">
+            <div className="aspect-video md:aspect-[16/9] max-h-[400px] rounded-2xl overflow-hidden bg-white border border-gray-200 mb-4">
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
             {product.images?.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar justify-center">
                 {product.images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                    className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
                       currentImage === i ? 'border-[#FF6B00]' : 'border-gray-200'
                     }`}
                   >
@@ -378,8 +379,9 @@ const ProductDetailPage = () => {
 
           {/* Info */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto w-full"
           >
             <h1 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900" data-testid="product-name">
               {product.name}
