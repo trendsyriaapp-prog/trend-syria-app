@@ -132,20 +132,20 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
 
 @api_router.post("/auth/register")
 async def register(user: UserRegister):
-    existing = await db.users.find_one({"email": user.email})
+    existing = await db.users.find_one({"phone": user.phone})
     if existing:
-        raise HTTPException(status_code=400, detail="البريد الإلكتروني مسجل مسبقاً")
+        raise HTTPException(status_code=400, detail="رقم الهاتف مسجل مسبقاً")
     
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
-        "name": user.name,
-        "email": user.email,
-        "password": hash_password(user.password),
+        "name": user.full_name,
+        "full_name": user.full_name,
         "phone": user.phone,
+        "password": hash_password(user.password),
         "city": user.city,
         "user_type": user.user_type,
-        "is_verified": user.user_type == "buyer",  # Buyers auto-verified, sellers need approval
+        "is_verified": user.user_type == "buyer",
         "is_approved": user.user_type == "buyer",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -156,8 +156,9 @@ async def register(user: UserRegister):
         "token": token,
         "user": {
             "id": user_id,
-            "name": user.name,
-            "email": user.email,
+            "name": user.full_name,
+            "full_name": user.full_name,
+            "phone": user.phone,
             "user_type": user.user_type,
             "is_approved": user_doc["is_approved"]
         }
