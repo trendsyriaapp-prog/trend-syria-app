@@ -198,37 +198,55 @@ const ReviewForm = ({ productId, onSuccess }) => {
 
 // مكون عرض التقييم
 const ReviewCard = ({ review }) => {
+  const [showFullImage, setShowFullImage] = useState(null);
+  
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-200">
+    <div className="bg-white rounded-lg p-3 border border-gray-200">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
-            <span className="text-white font-bold text-sm">{review.user_name?.[0]}</span>
+          <div className="w-7 h-7 rounded-full bg-[#FF6B00] flex items-center justify-center">
+            <span className="text-white font-bold text-xs">{review.user_name?.[0]}</span>
           </div>
-          <span className="font-bold text-gray-900">{review.user_name}</span>
+          <span className="font-bold text-sm text-gray-900">{review.user_name}</span>
         </div>
-        <StarRating rating={review.rating} readonly size={16} />
+        <StarRating rating={review.rating} readonly size={12} />
       </div>
       
-      <p className="text-gray-700 mb-3">{review.comment}</p>
+      <p className="text-sm text-gray-700 mb-2">{review.comment}</p>
       
       {/* Review Images */}
       {review.images && review.images.length > 0 && (
         <div className="flex gap-2 flex-wrap mb-2">
           {review.images.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt="صورة التقييم"
-              className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-            />
+            <div key={i} className="relative">
+              <img
+                src={img}
+                alt="صورة من العميل"
+                className="w-16 h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setShowFullImage(img)}
+              />
+            </div>
           ))}
         </div>
       )}
       
-      <p className="text-xs text-gray-400">
+      <p className="text-[10px] text-gray-400">
         {new Date(review.created_at).toLocaleDateString('ar-SY')}
       </p>
+
+      {/* Full Image Modal */}
+      {showFullImage && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowFullImage(null)}
+        >
+          <img
+            src={showFullImage}
+            alt="صورة مكبرة"
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+      )}
     </div>
   );
 };
