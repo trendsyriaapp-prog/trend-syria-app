@@ -112,7 +112,7 @@ const HomePage = () => {
       </section>
 
       {/* Categories - Smaller Size */}
-      <section className="py-8">
+      <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">الأصناف</h2>
@@ -149,7 +149,7 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-8">
+      <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">المنتجات الرائجة</h2>
