@@ -160,13 +160,13 @@ const HomePage = () => {
           </div>
           
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-2xl aspect-square animate-pulse" />
+            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-xl aspect-square animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
               {products.map((product, i) => (
                 <motion.div
                   key={product.id}
