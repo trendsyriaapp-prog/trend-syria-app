@@ -64,10 +64,10 @@ const HomePage = () => {
             className="text-center"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">
-              تريند <span className="text-[#FF6B00]">سوريا</span>
+              تريند <span className="text-[#FF6B00]">سورية</span>
             </h1>
             <p className="text-gray-600 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-              منصة التسوق الأولى في سوريا - توصيل مجاني لجميع المحافظات
+              منصة التسوق الأولى في سورية - توصيل مجاني لجميع المحافظات
             </p>
             <Link
               to="/products"
