@@ -623,8 +623,48 @@ const SellerDashboardPage = () => {
                 </select>
               </div>
 
+              {/* أبعاد المنتج */}
               <div>
-                <label className="block text-sm font-medium mb-2">الصور</label>
+                <label className="block text-sm font-medium mb-2">أبعاد المنتج (بالسنتيمتر) - اختياري</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1">الطول</label>
+                    <input
+                      type="number"
+                      value={newProduct.length_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
+                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="سم"
+                      data-testid="product-length-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1">العرض</label>
+                    <input
+                      type="number"
+                      value={newProduct.width_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
+                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="سم"
+                      data-testid="product-width-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/50 mb-1">الارتفاع</label>
+                    <input
+                      type="number"
+                      value={newProduct.height_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
+                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="سم"
+                      data-testid="product-height-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الصور (سيتم إضافة علامة مائية تلقائياً)</label>
                 <div className="flex gap-2 flex-wrap mb-2">
                   {newProduct.images.map((img, i) => (
                     <div key={i} className="relative w-20 h-20">
@@ -645,8 +685,13 @@ const SellerDashboardPage = () => {
                     type="button"
                     onClick={() => document.getElementById('product-images').click()}
                     className="w-20 h-20 border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center hover:border-[#FF6B00]/50"
+                    disabled={uploadingImage}
                   >
-                    <Plus size={24} className="text-white/40" />
+                    {uploadingImage ? (
+                      <Loader2 size={24} className="text-white/40 animate-spin" />
+                    ) : (
+                      <Plus size={24} className="text-white/40" />
+                    )}
                   </button>
                 </div>
                 <input
