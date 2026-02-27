@@ -625,37 +625,37 @@ const SellerDashboardPage = () => {
 
               {/* أبعاد المنتج */}
               <div>
-                <label className="block text-sm font-medium mb-2">أبعاد المنتج (بالسنتيمتر) - اختياري</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">أبعاد المنتج (بالسنتيمتر) - اختياري</label>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-white/50 mb-1">الطول</label>
+                    <label className="block text-xs text-gray-500 mb-1">الطول</label>
                     <input
                       type="number"
                       value={newProduct.length_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
                       placeholder="سم"
                       data-testid="product-length-input"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/50 mb-1">العرض</label>
+                    <label className="block text-xs text-gray-500 mb-1">العرض</label>
                     <input
                       type="number"
                       value={newProduct.width_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
                       placeholder="سم"
                       data-testid="product-width-input"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/50 mb-1">الارتفاع</label>
+                    <label className="block text-xs text-gray-500 mb-1">الارتفاع</label>
                     <input
                       type="number"
                       value={newProduct.height_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-2 px-3 text-white text-sm focus:border-[#FF6B00] focus:outline-none"
+                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
                       placeholder="سم"
                       data-testid="product-height-input"
                     />
