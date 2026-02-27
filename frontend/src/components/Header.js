@@ -30,7 +30,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <span className="text-white font-bold text-lg">ت</span>
+              <Home size={20} className="text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 hidden sm:block">تريند سورية</span>
           </Link>
