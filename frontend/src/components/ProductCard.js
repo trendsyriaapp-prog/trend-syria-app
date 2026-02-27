@@ -20,15 +20,15 @@ const Watermark = () => (
       className="absolute inset-0 flex flex-col items-center justify-center"
       style={{ transform: 'rotate(-30deg) scale(1.5)' }}
     >
-      {[...Array(5)].map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-6 my-3">
-          {[...Array(3)].map((_, colIndex) => (
+      {[...Array(4)].map((_, rowIndex) => (
+        <div key={rowIndex} className="flex gap-4 my-2">
+          {[...Array(2)].map((_, colIndex) => (
             <span 
               key={colIndex}
-              className="text-gray-500/30 text-base font-bold whitespace-nowrap"
+              className="text-gray-500/25 text-xs font-bold whitespace-nowrap"
               style={{ 
                 textShadow: '0 0 1px rgba(0,0,0,0.1)',
-                letterSpacing: '1px'
+                letterSpacing: '0.5px'
               }}
             >
               تريند سوريا
@@ -39,8 +39,8 @@ const Watermark = () => (
     </div>
     
     {/* شعار واضح في الزاوية */}
-    <div className="absolute bottom-1 right-1 bg-[#FF6B00] text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-md">
-      تريند سوريا ®
+    <div className="absolute bottom-1 right-1 bg-[#FF6B00] text-white text-[6px] font-bold px-1 py-0.5 rounded">
+      تريند سوريا
     </div>
   </div>
 );
@@ -86,15 +86,15 @@ const ProductCard = ({ product }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
       <Link 
         to={`/product/${product.id}`}
-        className="block bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#FF6B00] hover:shadow-lg transition-all group"
+        className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#FF6B00] hover:shadow-md transition-all group"
         data-testid={`product-card-${product.id}`}
       >
-        {/* Image with Watermark */}
+        {/* Image with Watermark - Smaller */}
         <div className="aspect-square relative overflow-hidden bg-gray-50">
           <img
             src={product.images?.[0] || 'https://via.placeholder.com/400?text=No+Image'}
@@ -114,40 +114,40 @@ const ProductCard = ({ product }) => {
           <Watermark />
 
           {product.stock <= 5 && product.stock > 0 && (
-            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20">
-              كمية محدودة
+            <span className="absolute top-1 left-1 bg-yellow-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">
+              محدود
             </span>
           )}
           {product.stock === 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20">
-              نفذت الكمية
+            <span className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">
+              نفذ
             </span>
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="font-bold text-sm line-clamp-2 mb-2 text-gray-900 group-hover:text-[#FF6B00] transition-colors">
+        {/* Content - Smaller */}
+        <div className="p-2">
+          <h3 className="font-bold text-xs line-clamp-2 mb-1 text-gray-900 group-hover:text-[#FF6B00] transition-colors leading-tight">
             {product.name}
           </h3>
           
-          {/* Rating */}
-          <div className="flex items-center gap-1 mb-2">
-            <Star size={14} className="fill-[#FF6B00] text-[#FF6B00]" />
-            <span className="text-sm text-gray-600">{product.rating || 0}</span>
-            <span className="text-xs text-gray-400">({product.reviews_count || 0})</span>
+          {/* Rating - Smaller */}
+          <div className="flex items-center gap-0.5 mb-1">
+            <Star size={10} className="fill-[#FF6B00] text-[#FF6B00]" />
+            <span className="text-[10px] text-gray-600">{product.rating || 0}</span>
+            <span className="text-[8px] text-gray-400">({product.reviews_count || 0})</span>
           </div>
 
-          {/* Price & Add to Cart */}
+          {/* Price & Add to Cart - Smaller */}
           <div className="flex items-center justify-between">
-            <span className="text-[#FF6B00] font-bold">{formatPrice(product.price)}</span>
+            <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(product.price)}</span>
             <button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
-              className="p-2 bg-[#FF6B00] text-white rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 bg-[#FF6B00] text-white rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               data-testid={`add-to-cart-${product.id}`}
             >
-              <ShoppingCart size={18} />
+              <ShoppingCart size={12} />
             </button>
           </div>
         </div>
