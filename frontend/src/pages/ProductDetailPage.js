@@ -499,7 +499,7 @@ const ProductDetailPage = () => {
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Shield size={14} className="text-[#FF6B00]" />
-                <span>ضمان استرجاع خلال ساعة</span>
+                <span>ضمان الاسترجاع خلال ساعة</span>
               </div>
             </div>
 
