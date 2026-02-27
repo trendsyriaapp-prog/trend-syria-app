@@ -78,8 +78,9 @@ class OrderCreate(BaseModel):
 
 class ReviewCreate(BaseModel):
     product_id: str
-    rating: int
+    rating: int  # 1-5 نجوم
     comment: str
+    images: Optional[List[str]] = []  # صور المنتج بعد الاستلام
 
 class MessageCreate(BaseModel):
     receiver_id: str
