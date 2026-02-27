@@ -50,9 +50,73 @@ const Watermark = () => (
 );
 
 const ProductCard = ({ product }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && token) {
+      checkFavorite();
+    }
+  }, [user, token, product.id]);
+
+  const checkFavorite = async () => {
+    try {
+      const res = await axios.get(`${API}/favorites/check/${product.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsFavorite(res.data.is_favorite);
+    } catch (error) {
+      // Ignore error
+    }
+  };
+
+  const handleToggleFavorite = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "يجب تسجيل الدخول",
+        description: "سجل دخولك لإضافة المنتجات للمفضلة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFavoriteLoading(true);
+    try {
+      if (isFavorite) {
+        await axios.delete(`${API}/favorites/${product.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(false);
+        toast({
+          title: "تمت الإزالة",
+          description: "تمت إزالة المنتج من المفضلة"
+        });
+      } else {
+        await axios.post(`${API}/favorites/${product.id}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(true);
+        toast({
+          title: "تمت الإضافة",
+          description: "تمت إضافة المنتج للمفضلة"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
