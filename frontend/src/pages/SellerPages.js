@@ -238,9 +238,13 @@ const SellerDashboardPage = () => {
     price: '',
     category: 'electronics',
     stock: '',
-    images: []
+    images: [],
+    length_cm: '',
+    width_cm: '',
+    height_cm: ''
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
