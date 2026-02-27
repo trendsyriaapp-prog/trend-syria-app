@@ -480,6 +480,64 @@ async def get_following_stores(user: dict = Depends(get_current_user)):
     
     return stores
 
+# ============== Favorites/Wishlist ==============
+
+@api_router.post("/favorites/{product_id}")
+async def add_to_favorites(product_id: str, user: dict = Depends(get_current_user)):
+    """إضافة منتج للمفضلة"""
+    # التحقق من وجود المنتج
+    product = await db.products.find_one({"id": product_id, "is_active": True})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    # التحقق من عدم الإضافة مسبقاً
+    existing = await db.favorites.find_one({"user_id": user["id"], "product_id": product_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="المنتج موجود في المفضلة بالفعل")
+    
+    # إضافة للمفضلة
+    favorite_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "product_id": product_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.favorites.insert_one(favorite_doc)
+    
+    return {"message": "تمت الإضافة للمفضلة"}
+
+@api_router.delete("/favorites/{product_id}")
+async def remove_from_favorites(product_id: str, user: dict = Depends(get_current_user)):
+    """إزالة منتج من المفضلة"""
+    result = await db.favorites.delete_one({"user_id": user["id"], "product_id": product_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=400, detail="المنتج غير موجود في المفضلة")
+    
+    return {"message": "تمت الإزالة من المفضلة"}
+
+@api_router.get("/favorites")
+async def get_favorites(user: dict = Depends(get_current_user)):
+    """الحصول على قائمة المفضلة"""
+    favorites = await db.favorites.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+    
+    products = []
+    for fav in favorites:
+        product = await db.products.find_one(
+            {"id": fav["product_id"], "is_active": True}, 
+            {"_id": 0, "seller_name": 0, "seller_phone": 0, "city": 0}
+        )
+        if product:
+            product["added_at"] = fav.get("created_at")
+            products.append(product)
+    
+    return products
+
+@api_router.get("/favorites/check/{product_id}")
+async def check_favorite(product_id: str, user: dict = Depends(get_current_user)):
+    """التحقق إذا كان المنتج في المفضلة"""
+    favorite = await db.favorites.find_one({"user_id": user["id"], "product_id": product_id})
+    return {"is_favorite": favorite is not None}
+
 # ============== Cart ==============
 
 @api_router.get("/cart")
