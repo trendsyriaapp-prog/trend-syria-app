@@ -580,6 +580,7 @@ async def create_review(review: ReviewCreate, user: dict = Depends(get_current_u
         "product_id": review.product_id,
         "rating": review.rating,
         "comment": review.comment,
+        "images": review.images or [],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.reviews.insert_one(review_doc)
