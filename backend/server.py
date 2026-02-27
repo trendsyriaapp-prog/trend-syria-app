@@ -26,7 +26,7 @@ db = client[os.environ['DB_NAME']]
 JWT_SECRET = os.environ.get('JWT_SECRET', 'trend-syria-secret-key-2024')
 ALGORITHM = "HS256"
 
-app = FastAPI(title="تريند سوريا API")
+app = FastAPI(title="تريند سورية API")
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer(auto_error=False)
 
@@ -855,7 +855,7 @@ async def seed_demo_data():
 
 @api_router.get("/")
 async def root():
-    return {"message": "مرحباً بك في تريند سوريا API"}
+    return {"message": "مرحباً بك في تريند سورية API"}
 
 # Include router
 app.include_router(api_router)
