@@ -524,7 +524,13 @@ const ProductDetailPage = () => {
             {/* Seller/Store Info */}
             <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
               <p className="text-xs text-gray-500">المتجر</p>
-              <p className="font-bold text-sm text-gray-900">{product.business_name || 'متجر'}</p>
+              <Link 
+                to={`/store/${product.seller_id || ''}`}
+                className="font-bold text-sm text-[#FF6B00] hover:underline flex items-center gap-1"
+              >
+                <Store size={14} />
+                {product.business_name || 'متجر'}
+              </Link>
               
               {/* معلومات البائع والموقع للمدير فقط */}
               {user?.user_type === 'admin' && (
