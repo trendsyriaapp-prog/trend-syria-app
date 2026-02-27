@@ -257,11 +257,17 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
     if not user.get("is_approved"):
         raise HTTPException(status_code=403, detail="حسابك غير مفعل بعد")
     
+    # الحصول على اسم النشاط التجاري من وثائق البائع
+    seller_docs = await db.seller_documents.find_one({"seller_id": user["id"]})
+    business_name = seller_docs.get("business_name", user["name"]) if seller_docs else user["name"]
+    
     product_id = str(uuid.uuid4())
     product_doc = {
         "id": product_id,
         "seller_id": user["id"],
         "seller_name": user["name"],
+        "seller_phone": user.get("phone", ""),
+        "business_name": business_name,
         "name": product.name,
         "description": product.description,
         "price": product.price,
