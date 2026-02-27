@@ -556,7 +556,7 @@ const SellerDashboardPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#121212] rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
             <h2 className="text-xl font-bold mb-4 text-gray-900">إضافة منتج جديد</h2>
             <form onSubmit={handleAddProduct} className="space-y-4">
