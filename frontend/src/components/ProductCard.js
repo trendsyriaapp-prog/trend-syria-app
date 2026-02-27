@@ -181,6 +181,20 @@ const ProductCard = ({ product }) => {
           {/* العلامة المائية */}
           <Watermark />
 
+          {/* زر المفضلة */}
+          <button
+            onClick={handleToggleFavorite}
+            disabled={favoriteLoading}
+            className={`absolute top-1 right-1 p-1.5 rounded-full z-20 transition-colors ${
+              isFavorite 
+                ? 'bg-red-500 text-white' 
+                : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-500'
+            }`}
+            data-testid={`favorite-${product.id}`}
+          >
+            <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
+
           {product.stock <= 5 && product.stock > 0 && (
             <span className="absolute top-1 left-1 bg-yellow-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full z-20">
               محدود
