@@ -321,7 +321,7 @@ async def get_featured_products():
     return products
 
 @api_router.get("/products/{product_id}")
-async def get_product(product_id: str, authorization: Optional[str] = Header(None)):
+async def get_product(product_id: str, authorization: Optional[str] = Header(default=None)):
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -332,15 +332,15 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(Non
     
     # التحقق من نوع المستخدم
     is_admin = False
-    if authorization and authorization.startswith("Bearer "):
+    if authorization:
         try:
-            token = authorization.replace("Bearer ", "")
+            token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user = await db.users.find_one({"id": payload.get("user_id")})
             if user and user.get("user_type") == "admin":
                 is_admin = True
-        except:
-            pass
+        except Exception as e:
+            logging.error(f"Token decode error: {e}")
     
     # إخفاء معلومات البائع من العملاء (فقط المدير يراها)
     if not is_admin:
