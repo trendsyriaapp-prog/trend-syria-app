@@ -708,14 +708,14 @@ const SellerDashboardPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddProduct(false)}
-                  className="flex-1 py-3 border border-white/10 rounded-full hover:bg-white/5 transition-colors"
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-[#FF6B00] text-black font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                   data-testid="save-product-btn"
                 >
                   {saving ? (
