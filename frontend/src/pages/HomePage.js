@@ -67,7 +67,7 @@ const HomePage = () => {
               تريند <span className="text-[#FF6B00]">سورية</span>
             </h1>
             <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-              منصة التسوق الأولى في سورية - توصيل مجاني لجميع المحافظات
+              منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
         </div>
@@ -78,7 +78,7 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-4 gap-2">
             {[
-              { icon: Truck, text: 'توصيل مجاني', desc: 'لجميع المحافظات' },
+              { icon: Truck, text: 'توصيل مجاني', desc: 'داخل المحافظات' },
               { icon: Shield, text: 'ضمان الجودة', desc: 'منتجات أصلية' },
               { icon: CreditCard, text: 'شام كاش', desc: 'دفع آمن' },
               { icon: Heart, text: 'دعم 24/7', desc: 'خدمة العملاء' },
