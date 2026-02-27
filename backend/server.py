@@ -232,7 +232,6 @@ CATEGORIES = [
     {"id": "toys", "name": "ألعاب", "icon": "Gamepad2"},
     {"id": "food", "name": "طعام", "icon": "UtensilsCrossed"},
     {"id": "health", "name": "صحة", "icon": "Heart"},
-    {"id": "cars", "name": "سيارات", "icon": "Car"},
 ]
 
 @api_router.get("/categories")
