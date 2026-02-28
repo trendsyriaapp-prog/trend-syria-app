@@ -676,6 +676,94 @@ const ProductDetailPage = () => {
           </button>
         </div>
       </div>
+
+      {/* معرض الصور بملء الشاشة - مثل Trendyol */}
+      {showFullGallery && product?.images && (
+        <div className="fixed inset-0 bg-black z-[200]">
+          {/* Header */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent">
+            <button
+              onClick={() => setShowFullGallery(false)}
+              className="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center text-white"
+            >
+              <X size={24} />
+            </button>
+            <span className="text-white text-sm font-bold">
+              {galleryIndex + 1} / {product.images.length}
+            </span>
+            <div className="w-10" />
+          </div>
+
+          {/* الصورة */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            onTouchStart={(e) => {
+              setGalleryTouchEnd(null);
+              setGalleryTouchStart(e.targetTouches[0].clientX);
+            }}
+            onTouchMove={(e) => {
+              setGalleryTouchEnd(e.targetTouches[0].clientX);
+            }}
+            onTouchEnd={() => {
+              if (!galleryTouchStart || !galleryTouchEnd) return;
+              const distance = galleryTouchStart - galleryTouchEnd;
+              const isLeftSwipe = distance > 50;
+              const isRightSwipe = distance < -50;
+              
+              if (isLeftSwipe && product.images.length > 1) {
+                setGalleryIndex(prev => prev === product.images.length - 1 ? 0 : prev + 1);
+              }
+              if (isRightSwipe && product.images.length > 1) {
+                setGalleryIndex(prev => prev === 0 ? product.images.length - 1 : prev - 1);
+              }
+            }}
+          >
+            <img
+              src={product.images[galleryIndex]}
+              alt={product.name}
+              className="max-w-full max-h-full object-contain"
+              onContextMenu={(e) => e.preventDefault()}
+              draggable="false"
+            />
+          </div>
+
+          {/* نقاط التنقل */}
+          {product.images.length > 1 && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+              <div className="flex items-center gap-2">
+                {product.images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setGalleryIndex(i)}
+                    className={`rounded-full transition-all ${
+                      galleryIndex === i 
+                        ? 'bg-white w-3 h-3' 
+                        : 'bg-white/50 w-2 h-2'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* الصور المصغرة */}
+          <div className="absolute bottom-20 left-0 right-0 px-4">
+            <div className="flex justify-center gap-2 overflow-x-auto">
+              {product.images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setGalleryIndex(i)}
+                  className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                    galleryIndex === i ? 'border-white' : 'border-transparent opacity-60'
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
