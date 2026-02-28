@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Check, X, 
-  Eye, Clock, UserPlus, Trash2, ShieldCheck, AlertTriangle
+  Eye, Clock, UserPlus, Trash2, ShieldCheck, AlertTriangle, Bell, Send
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -24,15 +24,22 @@ const AdminDashboardPage = () => {
   const [pendingSellers, setPendingSellers] = useState([]);
   const [pendingProducts, setPendingProducts] = useState([]);
   const [subAdmins, setSubAdmins] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [showAddSubAdmin, setShowAddSubAdmin] = useState(false);
+  const [showAddNotification, setShowAddNotification] = useState(false);
   const [newSubAdmin, setNewSubAdmin] = useState({
     full_name: '',
     phone: '',
     password: '',
     city: ''
+  });
+  const [newNotification, setNewNotification] = useState({
+    title: '',
+    message: '',
+    target: 'all'
   });
 
   useEffect(() => {
