@@ -353,7 +353,7 @@ const ProductDetailPage = () => {
   if (!product) return null;
 
   return (
-    <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
+    <div className="min-h-screen pb-32 md:pb-10 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-4">
 
         <div className="flex flex-col">
@@ -399,21 +399,34 @@ const ProductDetailPage = () => {
                 </div>
               </div>
             </div>
-            {product.images?.length > 1 && (
-              <div className="flex gap-1 overflow-x-auto hide-scrollbar justify-center">
-                {product.images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentImage(i)}
-                    className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                      currentImage === i ? 'border-[#FF6B00]' : 'border-gray-200'
-                    }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            
+            {/* معرض الصور المصغرة + زر الفيديو */}
+            <div className="flex gap-1 overflow-x-auto hide-scrollbar justify-center items-center">
+              {product.images?.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentImage(i)}
+                  className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                    currentImage === i ? 'border-[#FF6B00]' : 'border-gray-200'
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+              
+              {/* زر الفيديو إذا كان موجوداً */}
+              {product.video_url && (
+                <a
+                  href={product.video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-14 h-14 rounded-lg flex-shrink-0 border-2 border-[#FF6B00] bg-[#FF6B00]/10 flex items-center justify-center"
+                  data-testid="video-btn"
+                >
+                  <Play size={20} className="text-[#FF6B00]" fill="#FF6B00" />
+                </a>
+              )}
+            </div>
           </motion.div>
 
           {/* Info */}
