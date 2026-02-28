@@ -507,18 +507,6 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Features */}
-            <div className="space-y-1 border-t border-gray-200 pt-3">
-              <div className="flex items-center gap-2 text-xs text-gray-600">
-                <Truck size={14} className="text-[#FF6B00]" />
-                <span>توصيل مجاني داخل المحافظات</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-600">
-                <Shield size={14} className="text-[#FF6B00]" />
-                <span>ضمان الاسترجاع خلال ساعة</span>
-              </div>
-            </div>
-
             {/* Seller/Store Info */}
             <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
               <p className="text-xs text-gray-500">المتجر</p>
