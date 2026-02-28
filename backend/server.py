@@ -295,10 +295,13 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "reviews_count": 0,
         "sales_count": 0,
         "is_active": True,
+        "is_approved": False,  # المنتج يحتاج موافقة
+        "approval_status": "pending",  # pending, approved, rejected
+        "rejection_reason": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.products.insert_one(product_doc)
-    return {"id": product_id, "message": "تم إضافة المنتج بنجاح"}
+    return {"id": product_id, "message": "تم إضافة المنتج بنجاح، في انتظار موافقة الإدارة"}
 
 @api_router.get("/products")
 async def get_products(
@@ -309,7 +312,8 @@ async def get_products(
     page: int = 1,
     limit: int = 20
 ):
-    query = {"is_active": True}
+    # فقط المنتجات المعتمدة تظهر للعملاء
+    query = {"is_active": True, "is_approved": True}
     if category:
         query["category"] = category
     if search:
@@ -330,7 +334,8 @@ async def get_products(
 
 @api_router.get("/products/featured")
 async def get_featured_products():
-    products = await db.products.find({"is_active": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).sort("sales_count", -1).limit(8).to_list(8)
+    # فقط المنتجات المعتمدة
+    products = await db.products.find({"is_active": True, "is_approved": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).sort("sales_count", -1).limit(8).to_list(8)
     return products
 
 @api_router.get("/products/{product_id}")
