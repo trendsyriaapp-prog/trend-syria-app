@@ -462,16 +462,16 @@ const ProductDetailPage = () => {
               
               {/* نقاط التنقل بين الصور - داخل الصورة */}
               {product.images?.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
-                  <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-full">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
+                  <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded-full">
                     {product.images.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentImage(i)}
                         className={`rounded-full transition-all ${
                           currentImage === i 
-                            ? 'bg-white w-1.5 h-1.5' 
-                            : 'bg-white/60 hover:bg-white/80 w-1 h-1'
+                            ? 'bg-white w-[5px] h-[5px]' 
+                            : 'bg-white/60 hover:bg-white/80 w-[4px] h-[4px]'
                         }`}
                         data-testid={`dot-${i}`}
                       />
@@ -483,7 +483,7 @@ const ProductDetailPage = () => {
             
             {/* زر الفيديو إذا كان موجوداً */}
             {product.video_url && (
-              <div className="flex justify-center mb-1">
+              <div className="flex justify-center">
                 <a
                   href={product.video_url}
                   target="_blank"
@@ -498,7 +498,7 @@ const ProductDetailPage = () => {
             )}
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100">
+            <div className="flex items-center justify-center gap-3 py-1 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100 mt-1">
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
@@ -519,7 +519,7 @@ const ProductDetailPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto w-full mt-1"
+            className="max-w-2xl mx-auto w-full"
           >
             <h1 className="text-sm md:text-base font-bold mb-1 text-gray-900" data-testid="product-name">
               {product.name}
