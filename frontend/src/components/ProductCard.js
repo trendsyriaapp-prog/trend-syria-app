@@ -159,7 +159,7 @@ const ProductCard = ({ product }) => {
     >
       <Link 
         to={`/products/${product.id}`}
-        className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-[#FF6B00] hover:shadow-md transition-all group"
+        className="block bg-white rounded-xl overflow-hidden hover:shadow-md transition-all group"
         data-testid={`product-card-${product.id}`}
       >
         {/* Image with Watermark - Smaller */}
