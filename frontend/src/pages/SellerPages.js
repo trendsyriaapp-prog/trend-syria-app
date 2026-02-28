@@ -290,35 +290,26 @@ const SellerDashboardPage = () => {
         // رسم الصورة الأصلية
         ctx.drawImage(img, 0, 0);
         
-        // إعداد العلامة المائية
+        // إعداد العلامة المائية الصغيرة في الزاوية فقط
         const text = 'تريند سورية';
-        const fontSize = Math.max(canvas.width * 0.06, 20);
+        const fontSize = Math.max(canvas.width * 0.04, 14);
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         
         // العلامة المائية في الزاوية السفلية اليمنى
         const textWidth = ctx.measureText(text).width;
-        const padding = 10;
-        const x = canvas.width - textWidth - padding - 15;
-        const y = canvas.height - padding - 15;
+        const padding = 6;
+        const x = canvas.width - textWidth - padding - 10;
+        const y = canvas.height - padding - 10;
         
         // رسم خلفية شبه شفافة للنص
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(x - padding, y - fontSize - padding/2, textWidth + padding * 2, fontSize + padding);
         
         // رسم النص
-        ctx.fillStyle = '#FF6B00';
+        ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
         ctx.fillText(text, x, y);
-        
-        // إضافة علامة مائية شفافة كبيرة في المنتصف
-        ctx.globalAlpha = 0.15;
-        ctx.font = `bold ${Math.max(canvas.width * 0.15, 40)}px Arial, sans-serif`;
-        ctx.fillStyle = '#FF6B00';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-        ctx.globalAlpha = 1;
         
         resolve(canvas.toDataURL('image/jpeg', 0.9));
       };
