@@ -389,15 +389,6 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
-              {/* زر المشاركة */}
-              <button
-                onClick={handleShare}
-                className="absolute top-3 left-3 z-10 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors"
-                data-testid="share-btn"
-              >
-                <Share2 size={18} className="text-gray-700" />
-              </button>
-              
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
