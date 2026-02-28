@@ -220,17 +220,9 @@ const ProductCard = ({ product }) => {
             <span className="text-[8px] text-gray-400">({product.reviews_count || 0})</span>
           </div>
 
-          {/* Price & Add to Cart - Smaller */}
+          {/* Price - Smaller */}
           <div className="flex items-center justify-between">
             <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(product.price)}</span>
-            <button
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-              className="p-1.5 bg-[#FF6B00] text-white rounded-full hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              data-testid={`add-to-cart-${product.id}`}
-            >
-              <ShoppingCart size={12} />
-            </button>
           </div>
         </div>
       </Link>
