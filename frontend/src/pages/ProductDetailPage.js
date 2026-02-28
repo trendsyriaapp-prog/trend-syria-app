@@ -484,7 +484,7 @@ const ProductDetailPage = () => {
             </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-2 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2 px-4">
+            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-1 px-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
@@ -505,27 +505,27 @@ const ProductDetailPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto w-full px-4"
+            className="max-w-2xl mx-auto w-full px-4 mt-1"
           >
-            <h1 className="text-sm md:text-base font-bold mb-1 text-gray-900" data-testid="product-name">
+            <h1 className="text-sm md:text-base font-bold mb-0.5 text-gray-900" data-testid="product-name">
               {product.name}
             </h1>
 
             {/* Rating */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-0.5">
               <StarRating rating={Math.round(product.rating || 0)} readonly size={12} />
               <span className="text-[10px] text-gray-600">({product.reviews_count || 0} تقييم)</span>
             </div>
 
             {/* Description */}
-            <p className="text-xs text-gray-600 mb-2 leading-relaxed">
+            <p className="text-xs text-gray-600 mb-1.5 leading-snug">
               {product.description}
             </p>
 
             {/* Product Dimensions */}
             {(product.length_cm || product.width_cm || product.height_cm) && (
-              <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                <h4 className="font-bold text-gray-900 text-[10px] mb-1">أبعاد المنتج</h4>
+              <div className="mb-1.5 p-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="font-bold text-gray-900 text-[10px] mb-0.5">أبعاد المنتج</h4>
                 <div className="flex gap-3 text-center text-[10px]">
                   {product.length_cm && (
                     <div>
@@ -550,7 +550,7 @@ const ProductDetailPage = () => {
             )}
 
             {/* Stock */}
-            <div className="mb-2">
+            <div className="mb-1.5">
               {product.stock > 0 ? (
                 <span className="text-green-600 font-medium text-xs">متوفر ({product.stock} قطعة)</span>
               ) : (
