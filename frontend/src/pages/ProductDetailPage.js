@@ -413,7 +413,7 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen pb-32 md:pb-10 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto">
 
         <div className="flex flex-col">
           {/* Images */}
