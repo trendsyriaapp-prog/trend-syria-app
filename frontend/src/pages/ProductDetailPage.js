@@ -352,6 +352,31 @@ const ProductDetailPage = () => {
 
   if (!product) return null;
 
+  // دالة المشاركة
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const shareText = `${product.name} - ${formatPrice(product.price)} | تريند سورية`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "تم النسخ",
+        description: "تم نسخ رابط المنتج"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen pb-32 md:pb-10 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -364,6 +389,15 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
+              {/* زر المشاركة */}
+              <button
+                onClick={handleShare}
+                className="absolute top-3 left-3 z-10 w-9 h-9 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors"
+                data-testid="share-btn"
+              >
+                <Share2 size={18} className="text-gray-700" />
+              </button>
+              
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
