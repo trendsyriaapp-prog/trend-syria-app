@@ -250,8 +250,18 @@ const SellerDashboardPage = () => {
     length_cm: '',
     width_cm: '',
     height_cm: '',
-    weight_kg: ''
+    weight_kg: '',
+    size_type: 'none',
+    available_sizes: []
   });
+
+  // المقاسات المتاحة لكل نوع
+  const SIZE_OPTIONS = {
+    clothes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+    shoes: ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    pants: ['28', '30', '32', '34', '36', '38', '40', '42'],
+    kids: ['2-3', '4-5', '6-7', '8-9', '10-11', '12-13', '14-15']
+  };
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
