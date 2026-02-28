@@ -62,6 +62,8 @@ class ProductCreate(BaseModel):
     width_cm: Optional[float] = None   # العرض بالسنتيمتر
     height_cm: Optional[float] = None  # الارتفاع بالسنتيمتر
     weight_kg: Optional[float] = None  # الوزن بالكيلوغرام
+    size_type: Optional[str] = None  # نوع المقاس: clothes, shoes, pants, none
+    available_sizes: Optional[List[str]] = None  # المقاسات المتوفرة
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -77,10 +79,13 @@ class ProductUpdate(BaseModel):
     width_cm: Optional[float] = None
     height_cm: Optional[float] = None
     weight_kg: Optional[float] = None
+    size_type: Optional[str] = None
+    available_sizes: Optional[List[str]] = None
 
 class CartItem(BaseModel):
     product_id: str
     quantity: int
+    selected_size: Optional[str] = None  # المقاس المختار
 
 class OrderCreate(BaseModel):
     items: List[CartItem]
