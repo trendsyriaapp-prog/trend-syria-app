@@ -406,7 +406,9 @@ const SellerDashboardPage = () => {
         length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
         width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
         height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
-        weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null
+        weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null,
+        size_type: newProduct.size_type !== 'none' ? newProduct.size_type : null,
+        available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null
       });
 
       toast({
@@ -427,7 +429,9 @@ const SellerDashboardPage = () => {
         length_cm: '',
         width_cm: '',
         height_cm: '',
-        weight_kg: ''
+        weight_kg: '',
+        size_type: 'none',
+        available_sizes: []
       });
       fetchData();
     } catch (error) {
