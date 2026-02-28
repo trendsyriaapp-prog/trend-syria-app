@@ -102,12 +102,29 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 py-2">
         {/* الصف الأول: الشعار + البحث + الأيقونات */}
         <div className="flex items-center gap-3">
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
-            <div className="w-9 h-9 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <Home size={18} className="text-white" />
-            </div>
-          </Link>
+          {/* Share/Notifications - على اليسار */}
+          {isProductPage ? (
+            <button 
+              onClick={handleShare}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
+              data-testid="share-icon"
+            >
+              <Share2 size={22} />
+            </button>
+          ) : (
+            <button 
+              onClick={() => user ? setShowNotifications(!showNotifications) : navigate('/login')}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
+              data-testid="notifications-icon"
+            >
+              <Bell size={22} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Search Bar - مدمج في الشريط */}
           <form onSubmit={handleSearch} className="flex-1">
