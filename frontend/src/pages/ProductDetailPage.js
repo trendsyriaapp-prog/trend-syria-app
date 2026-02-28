@@ -364,6 +364,18 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
+              {/* عبارات التوصيل والضمان - داخل الصورة من الأعلى */}
+              <div className="absolute top-2 left-2 right-2 z-10 flex justify-between">
+                <div className="flex items-center gap-1 bg-white/90 px-2 py-1 rounded-full shadow-sm">
+                  <Truck size={10} className="text-[#FF6B00]" />
+                  <span className="text-[9px] text-gray-700">توصيل مجاني</span>
+                </div>
+                <div className="flex items-center gap-1 bg-white/90 px-2 py-1 rounded-full shadow-sm">
+                  <Shield size={10} className="text-[#FF6B00]" />
+                  <span className="text-[9px] text-gray-700">ضمان الاسترجاع</span>
+                </div>
+              </div>
+              
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
