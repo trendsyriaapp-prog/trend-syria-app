@@ -71,7 +71,7 @@ const Header = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث عن منتجات..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 data-testid="search-input"
               />
               <button 
