@@ -262,6 +262,9 @@ const SettingsPage = () => {
                             {address.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">افتراضي</span>}
                           </div>
                           <p className="text-[10px] text-gray-600">{address.city} - {address.area}</p>
+                          <p className="text-[10px] text-gray-500">
+                            شارع {address.street_number} - بناء {address.building_number} - منزل {address.apartment_number}
+                          </p>
                           <p className="text-[10px] text-gray-500">{address.phone}</p>
                         </div>
                       </div>
