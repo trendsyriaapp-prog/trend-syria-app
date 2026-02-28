@@ -147,34 +147,18 @@ const Header = () => {
             </div>
           </form>
 
+          {/* Home Button - على اليمين */}
+          <Link to="/" className="flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <Home size={18} className="text-white" />
+            </div>
+          </Link>
+
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Notifications Bell أو Share Icon حسب الصفحة */}
-            {isProductPage ? (
-              <button 
-                onClick={handleShare}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-                data-testid="share-icon"
-              >
-                <Share2 size={22} />
-              </button>
-            ) : (
-              <>
-                <button 
-                  onClick={() => user ? setShowNotifications(!showNotifications) : navigate('/login')}
-                  className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-                  data-testid="notifications-icon"
-                >
-                  <Bell size={22} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notifications Modal */}
-                <AnimatePresence>
+            {/* Notifications Modal */}
+            {!isProductPage && (
+              <AnimatePresence>
                   {showNotifications && (
                     <>
                       <motion.div 
