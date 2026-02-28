@@ -53,7 +53,8 @@ const AdminDashboardPage = () => {
       const requests = [
         axios.get(`${API}/admin/stats`),
         axios.get(`${API}/admin/sellers/pending`),
-        axios.get(`${API}/admin/products/pending`)
+        axios.get(`${API}/admin/products/pending`),
+        axios.get(`${API}/admin/notifications`)
       ];
       
       // فقط المدير الرئيسي يمكنه رؤية المدراء التنفيذيين
@@ -65,9 +66,10 @@ const AdminDashboardPage = () => {
       setStats(responses[0].data);
       setPendingSellers(responses[1].data);
       setPendingProducts(responses[2].data);
+      setNotifications(responses[3].data);
       
-      if (user?.user_type === 'admin' && responses[3]) {
-        setSubAdmins(responses[3].data);
+      if (user?.user_type === 'admin' && responses[4]) {
+        setSubAdmins(responses[4].data);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
