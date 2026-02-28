@@ -151,6 +151,30 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/admin/notifications`, newNotification);
+      toast({ title: "تم الإرسال", description: "تم إرسال الإشعار بنجاح" });
+      setShowAddNotification(false);
+      setNewNotification({ title: '', message: '', target: 'all' });
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل إرسال الإشعار", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    if (!window.confirm('هل تريد حذف هذا الإشعار؟')) return;
+    try {
+      await axios.delete(`${API}/admin/notifications/${notificationId}`);
+      toast({ title: "تم الحذف", description: "تم حذف الإشعار" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حذف الإشعار", variant: "destructive" });
+    }
+  };
+
   if (!user || (user.user_type !== 'admin' && user.user_type !== 'sub_admin')) {
     navigate('/');
     return null;
