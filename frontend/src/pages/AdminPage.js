@@ -497,6 +497,123 @@ const AdminDashboardPage = () => {
             </div>
           </section>
         )}
+
+        {/* Notifications */}
+        {activeTab === 'notifications' && (
+          <section>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-bold text-gray-900">إدارة الإشعارات</h2>
+              <button
+                onClick={() => setShowAddNotification(true)}
+                className="flex items-center gap-1 bg-[#FF6B00] text-white px-3 py-1.5 rounded-full text-sm font-bold"
+              >
+                <Bell size={14} />
+                إشعار جديد
+              </button>
+            </div>
+
+            {showAddNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl p-4 border border-gray-200 mb-4"
+              >
+                <h3 className="font-bold text-gray-900 mb-3">إرسال إشعار جديد</h3>
+                <form onSubmit={handleSendNotification} className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="عنوان الإشعار"
+                    value={newNotification.title}
+                    onChange={(e) => setNewNotification({...newNotification, title: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                  <textarea
+                    placeholder="نص الإشعار (العرض أو المعلومات)"
+                    value={newNotification.message}
+                    onChange={(e) => setNewNotification({...newNotification, message: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                    rows={3}
+                    required
+                  />
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">إرسال إلى</label>
+                    <select
+                      value={newNotification.target}
+                      onChange={(e) => setNewNotification({...newNotification, target: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white"
+                    >
+                      <option value="all">الجميع</option>
+                      <option value="buyers">المشترين فقط</option>
+                      <option value="sellers">البائعين فقط</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                    >
+                      <Send size={14} />
+                      إرسال
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddNotification(false)}
+                      className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-sm"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {notifications.length === 0 ? (
+              <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+                <Bell size={48} className="text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">لا توجد إشعارات مرسلة</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {notifications.map((notification) => (
+                  <div key={notification.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-gray-900">{notification.title}</h3>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                            notification.target === 'all' ? 'bg-blue-100 text-blue-600' :
+                            notification.target === 'buyers' ? 'bg-green-100 text-green-600' :
+                            'bg-purple-100 text-purple-600'
+                          }`}>
+                            {notification.target === 'all' ? 'الجميع' : 
+                             notification.target === 'buyers' ? 'المشترين' : 'البائعين'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                        <p className="text-[10px] text-gray-400">
+                          {new Date(notification.created_at).toLocaleDateString('ar-SY', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteNotification(notification.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );
