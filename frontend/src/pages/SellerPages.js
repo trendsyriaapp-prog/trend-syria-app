@@ -732,6 +732,20 @@ const SellerDashboardPage = () => {
                 />
               </div>
 
+              {/* رابط فيديو المنتج */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">رابط فيديو المنتج (اختياري)</label>
+                <input
+                  type="url"
+                  value={newProduct.video_url}
+                  onChange={(e) => setNewProduct({ ...newProduct, video_url: e.target.value })}
+                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  placeholder="رابط يوتيوب أو أي رابط فيديو"
+                  data-testid="product-video-input"
+                />
+                <p className="text-xs text-gray-500 mt-1">أضف رابط فيديو لعرض المنتج بشكل أفضل</p>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
