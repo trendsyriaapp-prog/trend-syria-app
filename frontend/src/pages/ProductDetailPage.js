@@ -423,10 +423,11 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div 
-              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border-b border-gray-200 mb-2 relative"
+              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border-b border-gray-200 mb-2 relative cursor-pointer"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
+              onClick={() => { setGalleryIndex(currentImage); setShowFullGallery(true); }}
             >
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
@@ -436,34 +437,6 @@ const ProductDetailPage = () => {
                 draggable="false"
               />
               
-              {/* العلامة المائية - شبكة خفيفة */}
-              <div 
-                className="absolute inset-0 pointer-events-none overflow-hidden"
-                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-              >
-                <div 
-                  className="absolute inset-0 flex flex-col items-center justify-center"
-                  style={{ transform: 'rotate(-30deg) scale(1.5)' }}
-                >
-                  {[...Array(6)].map((_, rowIndex) => (
-                    <div key={rowIndex} className="flex gap-8 my-4">
-                      {[...Array(3)].map((_, colIndex) => (
-                        <span 
-                          key={colIndex}
-                          className="text-gray-500/20 text-sm font-bold whitespace-nowrap"
-                          style={{ 
-                            textShadow: '0 0 1px rgba(0,0,0,0.1)',
-                            letterSpacing: '0.5px'
-                          }}
-                        >
-                          تريند سورية
-                        </span>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
               {/* نقاط التنقل بين الصور - داخل الصورة */}
               {product.images?.length > 1 && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
@@ -471,7 +444,7 @@ const ProductDetailPage = () => {
                     {product.images.map((_, i) => (
                       <button
                         key={i}
-                        onClick={() => setCurrentImage(i)}
+                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
                         className={`rounded-full transition-all ${
                           currentImage === i 
                             ? 'bg-white w-[7px] h-[7px]' 
