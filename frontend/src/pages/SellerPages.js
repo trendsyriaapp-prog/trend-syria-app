@@ -276,47 +276,7 @@ const SellerDashboardPage = () => {
     }
   };
 
-  // إضافة علامة مائية على الصورة
-  const addWatermark = (imageDataUrl) => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // رسم الصورة الأصلية
-        ctx.drawImage(img, 0, 0);
-        
-        // إعداد العلامة المائية الصغيرة في الزاوية فقط
-        const text = 'تريند سورية';
-        const fontSize = Math.max(canvas.width * 0.04, 14);
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-        
-        // العلامة المائية في الزاوية السفلية اليمنى
-        const textWidth = ctx.measureText(text).width;
-        const padding = 6;
-        const x = canvas.width - textWidth - padding - 10;
-        const y = canvas.height - padding - 10;
-        
-        // رسم خلفية شبه شفافة للنص
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(x - padding, y - fontSize - padding/2, textWidth + padding * 2, fontSize + padding);
-        
-        // رسم النص
-        ctx.fillStyle = '#FFFFFF';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(text, x, y);
-        
-        resolve(canvas.toDataURL('image/jpeg', 0.9));
-      };
-      img.src = imageDataUrl;
-    });
-  };
-
+  // رفع الصور بدون علامة مائية
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -331,11 +291,10 @@ const SellerDashboardPage = () => {
           reader.readAsDataURL(file);
         });
         
-        // إضافة العلامة المائية
-        const watermarkedImage = await addWatermark(imageDataUrl);
+        // إضافة الصورة مباشرة بدون علامة مائية
         setNewProduct(prev => ({
           ...prev,
-          images: [...prev.images, watermarkedImage]
+          images: [...prev.images, imageDataUrl]
         }));
       }
     } catch (error) {
