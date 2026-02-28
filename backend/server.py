@@ -1096,6 +1096,182 @@ async def reject_product(product_id: str, approval: ProductApproval, user: dict 
 
 # ============== Seed Demo Data ==============
 
+# ============== User Addresses ==============
+
+@api_router.get("/user/addresses")
+async def get_user_addresses(user: dict = Depends(get_current_user)):
+    addresses = await db.addresses.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("is_default", -1).to_list(20)
+    return addresses
+
+@api_router.post("/user/addresses")
+async def create_address(address: AddressCreate, user: dict = Depends(get_current_user)):
+    address_id = str(uuid.uuid4())
+    
+    # If this is set as default, unset other defaults
+    if address.is_default:
+        await db.addresses.update_many(
+            {"user_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    # If this is the first address, make it default
+    existing_count = await db.addresses.count_documents({"user_id": user["id"]})
+    is_default = address.is_default or existing_count == 0
+    
+    address_doc = {
+        "id": address_id,
+        "user_id": user["id"],
+        "title": address.title,
+        "city": address.city,
+        "area": address.area,
+        "street": address.street,
+        "building": address.building,
+        "floor": address.floor,
+        "details": address.details,
+        "phone": address.phone,
+        "is_default": is_default,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.addresses.insert_one(address_doc)
+    return {"id": address_id, "message": "تم إضافة العنوان بنجاح"}
+
+@api_router.put("/user/addresses/{address_id}")
+async def update_address(address_id: str, address: AddressCreate, user: dict = Depends(get_current_user)):
+    existing = await db.addresses.find_one({"id": address_id, "user_id": user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="العنوان غير موجود")
+    
+    if address.is_default:
+        await db.addresses.update_many(
+            {"user_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    await db.addresses.update_one(
+        {"id": address_id},
+        {"$set": {
+            "title": address.title,
+            "city": address.city,
+            "area": address.area,
+            "street": address.street,
+            "building": address.building,
+            "floor": address.floor,
+            "details": address.details,
+            "phone": address.phone,
+            "is_default": address.is_default
+        }}
+    )
+    return {"message": "تم تحديث العنوان"}
+
+@api_router.delete("/user/addresses/{address_id}")
+async def delete_address(address_id: str, user: dict = Depends(get_current_user)):
+    result = await db.addresses.delete_one({"id": address_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="العنوان غير موجود")
+    return {"message": "تم حذف العنوان"}
+
+@api_router.post("/user/addresses/{address_id}/default")
+async def set_default_address(address_id: str, user: dict = Depends(get_current_user)):
+    existing = await db.addresses.find_one({"id": address_id, "user_id": user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="العنوان غير موجود")
+    
+    await db.addresses.update_many(
+        {"user_id": user["id"]},
+        {"$set": {"is_default": False}}
+    )
+    await db.addresses.update_one(
+        {"id": address_id},
+        {"$set": {"is_default": True}}
+    )
+    return {"message": "تم تعيين العنوان الافتراضي"}
+
+# ============== User Payment Methods ==============
+
+@api_router.get("/user/payment-methods")
+async def get_payment_methods(user: dict = Depends(get_current_user)):
+    methods = await db.payment_methods.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("is_default", -1).to_list(20)
+    return methods
+
+@api_router.post("/user/payment-methods")
+async def create_payment_method(payment: PaymentMethodCreate, user: dict = Depends(get_current_user)):
+    payment_id = str(uuid.uuid4())
+    
+    if payment.is_default:
+        await db.payment_methods.update_many(
+            {"user_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    existing_count = await db.payment_methods.count_documents({"user_id": user["id"]})
+    is_default = payment.is_default or existing_count == 0
+    
+    payment_doc = {
+        "id": payment_id,
+        "user_id": user["id"],
+        "type": payment.type,
+        "phone": payment.phone,
+        "holder_name": payment.holder_name,
+        "is_default": is_default,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.payment_methods.insert_one(payment_doc)
+    return {"id": payment_id, "message": "تم إضافة طريقة الدفع بنجاح"}
+
+@api_router.put("/user/payment-methods/{payment_id}")
+async def update_payment_method(payment_id: str, payment: PaymentMethodCreate, user: dict = Depends(get_current_user)):
+    existing = await db.payment_methods.find_one({"id": payment_id, "user_id": user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
+    
+    if payment.is_default:
+        await db.payment_methods.update_many(
+            {"user_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    await db.payment_methods.update_one(
+        {"id": payment_id},
+        {"$set": {
+            "type": payment.type,
+            "phone": payment.phone,
+            "holder_name": payment.holder_name,
+            "is_default": payment.is_default
+        }}
+    )
+    return {"message": "تم تحديث طريقة الدفع"}
+
+@api_router.delete("/user/payment-methods/{payment_id}")
+async def delete_payment_method(payment_id: str, user: dict = Depends(get_current_user)):
+    result = await db.payment_methods.delete_one({"id": payment_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
+    return {"message": "تم حذف طريقة الدفع"}
+
+@api_router.post("/user/payment-methods/{payment_id}/default")
+async def set_default_payment(payment_id: str, user: dict = Depends(get_current_user)):
+    existing = await db.payment_methods.find_one({"id": payment_id, "user_id": user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="طريقة الدفع غير موجودة")
+    
+    await db.payment_methods.update_many(
+        {"user_id": user["id"]},
+        {"$set": {"is_default": False}}
+    )
+    await db.payment_methods.update_one(
+        {"id": payment_id},
+        {"$set": {"is_default": True}}
+    )
+    return {"message": "تم تعيين طريقة الدفع الافتراضية"}
+
+# ============== Demo Data ==============
+
 @api_router.post("/seed")
 async def seed_demo_data():
     # Check if already seeded
