@@ -112,6 +112,23 @@ class ProductApproval(BaseModel):
     approved: bool
     rejection_reason: Optional[str] = None
 
+class AddressCreate(BaseModel):
+    title: str
+    city: str
+    area: str
+    street: Optional[str] = None
+    building: Optional[str] = None
+    floor: Optional[str] = None
+    details: Optional[str] = None
+    phone: str
+    is_default: bool = False
+
+class PaymentMethodCreate(BaseModel):
+    type: str
+    phone: str
+    holder_name: str
+    is_default: bool = False
+
 # ============== Helper Functions ==============
 
 def hash_password(password: str) -> str:
