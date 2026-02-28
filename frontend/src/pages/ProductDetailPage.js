@@ -484,19 +484,26 @@ const ProductDetailPage = () => {
             </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-3 px-4">
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Truck size={10} className="text-white" />
+            <div className="flex items-center justify-center gap-2 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-3 px-2 flex-wrap">
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Truck size={8} className="text-white" />
                 </div>
-                <span className="text-[10px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
+                <span className="text-[9px] text-gray-700 font-medium">توصيل مجاني</span>
               </div>
-              <div className="w-px h-4 bg-gray-300"></div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Shield size={10} className="text-white" />
+              <div className="w-px h-3 bg-gray-300"></div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield size={8} className="text-white" />
                 </div>
-                <span className="text-[10px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
+                <span className="text-[9px] text-gray-700 font-medium">ضمان استرداد</span>
+              </div>
+              <div className="w-px h-3 bg-gray-300"></div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Clock size={8} className="text-white" />
+                </div>
+                <span className="text-[9px] text-gray-700 font-medium">الشحن خلال 1-3 أيام</span>
               </div>
             </div>
           </motion.div>
