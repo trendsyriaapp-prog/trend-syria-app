@@ -484,19 +484,19 @@ const ProductDetailPage = () => {
             </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2 px-4">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-center gap-3 py-2 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2 px-4">
+              <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
                 </div>
-                <span className="text-[8px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
+                <span className="text-[10px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
               </div>
-              <div className="w-px h-3 bg-gray-300"></div>
-              <div className="flex items-center gap-1">
+              <div className="w-px h-4 bg-gray-300"></div>
+              <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
                   <Shield size={10} className="text-white" />
                 </div>
-                <span className="text-[8px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
+                <span className="text-[10px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
               </div>
             </div>
           </motion.div>
