@@ -418,11 +418,16 @@ const ProductDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-3"
           >
-            <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
+            <div 
+              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain select-none"
                 onContextMenu={(e) => e.preventDefault()}
                 draggable="false"
               />
