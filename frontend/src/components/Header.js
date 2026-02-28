@@ -226,7 +226,6 @@ const Header = () => {
                     </>
                   )}
                 </AnimatePresence>
-              </>
             )}
 
             {/* User Name only (menu moved to bottom nav) */}
