@@ -134,7 +134,7 @@ const Header = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث عن منتجات..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 data-testid="search-input"
               />
               <button 
@@ -142,7 +142,7 @@ const Header = () => {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B00] transition-colors"
                 data-testid="search-btn"
               >
-                <Search size={18} />
+                <Search size={20} />
               </button>
             </div>
           </form>
