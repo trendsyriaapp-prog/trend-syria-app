@@ -21,6 +21,7 @@ import AdminDashboardPage from "./pages/AdminPage";
 import StorePage from "./pages/StorePage";
 import FollowingPage from "./pages/FollowingPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
