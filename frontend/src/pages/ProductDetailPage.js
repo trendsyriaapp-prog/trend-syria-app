@@ -264,6 +264,36 @@ const ProductDetailPage = () => {
   const [currentImage, setCurrentImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [canReview, setCanReview] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // الحد الأدنى للسحب للتنقل بين الصور
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && product?.images?.length > 1) {
+      // سحب لليسار = الصورة التالية
+      setCurrentImage(prev => prev === product.images.length - 1 ? 0 : prev + 1);
+    }
+    if (isRightSwipe && product?.images?.length > 1) {
+      // سحب لليمين = الصورة السابقة
+      setCurrentImage(prev => prev === 0 ? product.images.length - 1 : prev - 1);
+    }
+  };
 
   useEffect(() => {
     fetchProduct();
