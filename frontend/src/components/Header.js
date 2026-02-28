@@ -141,7 +141,7 @@ const Header = () => {
                 <Share2 size={22} />
               </button>
             ) : (
-              <div className="relative">
+              <>
                 <button 
                   onClick={() => user ? setShowNotifications(!showNotifications) : navigate('/login')}
                   className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
@@ -155,19 +155,23 @@ const Header = () => {
                   )}
                 </button>
 
-                {/* Notifications Dropdown */}
+                {/* Notifications Modal */}
                 <AnimatePresence>
                   {showNotifications && (
                     <>
-                      <div 
-                        className="fixed inset-0 z-40" 
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/20 z-[100]" 
                         onClick={() => setShowNotifications(false)}
                       />
                       <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-14 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[101] overflow-hidden"
+                      >
                         style={{ maxHeight: '400px' }}
                       >
                         <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
