@@ -102,6 +102,16 @@ class ShamCashPayment(BaseModel):
     phone: str
     otp: str
 
+class SubAdminCreate(BaseModel):
+    full_name: str
+    phone: str
+    password: str
+    city: str
+
+class ProductApproval(BaseModel):
+    approved: bool
+    rejection_reason: Optional[str] = None
+
 # ============== Helper Functions ==============
 
 def hash_password(password: str) -> str:
