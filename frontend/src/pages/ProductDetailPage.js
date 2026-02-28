@@ -354,15 +354,7 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <a href="/" className="hover:text-gray-900">الرئيسية</a>
-          <ChevronLeft size={16} />
-          <a href="/products" className="hover:text-gray-900">المنتجات</a>
-          <ChevronLeft size={16} />
-          <span className="text-gray-900">{product.name}</span>
-        </nav>
+      <div className="max-w-7xl mx-auto px-4 py-4">
 
         <div className="flex flex-col">
           {/* Images */}
