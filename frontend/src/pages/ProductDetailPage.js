@@ -270,6 +270,7 @@ const ProductDetailPage = () => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryTouchStart, setGalleryTouchStart] = useState(null);
   const [galleryTouchEnd, setGalleryTouchEnd] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
 
   // الحد الأدنى للسحب للتنقل بين الصور
   const minSwipeDistance = 50;
