@@ -397,11 +397,6 @@ const ProductDetailPage = () => {
                     </div>
                   ))}
                 </div>
-                
-                {/* شعار واضح في الزاوية */}
-                <div className="absolute bottom-2 right-2 bg-[#FF6B00] text-white text-xs font-bold px-2 py-1 rounded">
-                  تريند سورية
-                </div>
               </div>
             </div>
             {product.images?.length > 1 && (
