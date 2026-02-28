@@ -521,41 +521,41 @@ const ProductDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-2xl mx-auto w-full mt-2"
           >
-            <h1 className="text-base md:text-lg font-bold mb-1 text-gray-900" data-testid="product-name">
+            <h1 className="text-sm md:text-base font-bold mb-1 text-gray-900" data-testid="product-name">
               {product.name}
             </h1>
 
             {/* Rating */}
-            <div className="flex items-center gap-2 mb-2">
-              <StarRating rating={Math.round(product.rating || 0)} readonly size={14} />
-              <span className="text-xs text-gray-600">({product.reviews_count || 0} تقييم)</span>
+            <div className="flex items-center gap-2 mb-1">
+              <StarRating rating={Math.round(product.rating || 0)} readonly size={12} />
+              <span className="text-[10px] text-gray-600">({product.reviews_count || 0} تقييم)</span>
             </div>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+            <p className="text-xs text-gray-600 mb-2 leading-relaxed">
               {product.description}
             </p>
 
             {/* Product Dimensions */}
             {(product.length_cm || product.width_cm || product.height_cm) && (
               <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                <h4 className="font-bold text-gray-900 text-xs mb-1">أبعاد المنتج</h4>
-                <div className="flex gap-3 text-center text-xs">
+                <h4 className="font-bold text-gray-900 text-[10px] mb-1">أبعاد المنتج</h4>
+                <div className="flex gap-3 text-center text-[10px]">
                   {product.length_cm && (
                     <div>
-                      <p className="text-[10px] text-gray-500">الطول</p>
+                      <p className="text-[9px] text-gray-500">الطول</p>
                       <p className="font-bold text-gray-900">{product.length_cm} سم</p>
                     </div>
                   )}
                   {product.width_cm && (
                     <div>
-                      <p className="text-[10px] text-gray-500">العرض</p>
+                      <p className="text-[9px] text-gray-500">العرض</p>
                       <p className="font-bold text-gray-900">{product.width_cm} سم</p>
                     </div>
                   )}
                   {product.height_cm && (
                     <div>
-                      <p className="text-[10px] text-gray-500">الارتفاع</p>
+                      <p className="text-[9px] text-gray-500">الارتفاع</p>
                       <p className="font-bold text-gray-900">{product.height_cm} سم</p>
                     </div>
                   )}
@@ -566,7 +566,7 @@ const ProductDetailPage = () => {
             {/* Stock */}
             <div className="mb-2">
               {product.stock > 0 ? (
-                <span className="text-green-600 font-medium text-sm">متوفر ({product.stock} قطعة)</span>
+                <span className="text-green-600 font-medium text-xs">متوفر ({product.stock} قطعة)</span>
               ) : (
                 <span className="text-red-500 font-medium text-sm">غير متوفر</span>
               )}
