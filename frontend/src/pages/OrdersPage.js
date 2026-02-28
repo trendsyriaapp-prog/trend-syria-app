@@ -228,7 +228,14 @@ const OrdersPage = () => {
                               />
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-gray-900">{item.product_name}</p>
-                                <p className="text-xs text-gray-500">{item.quantity}x {formatPrice(item.price)}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs text-gray-500">{item.quantity}x {formatPrice(item.price)}</p>
+                                  {item.selected_size && (
+                                    <span className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
+                                      المقاس: {item.selected_size}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <p className="font-bold text-sm text-[#FF6B00]">{formatPrice(item.item_total)}</p>
                             </div>
