@@ -750,11 +750,14 @@ const ProductDetailPage = () => {
                     {product.size_type === 'shoes' && ' (أحذية)'}
                     {product.size_type === 'pants' && ' (بناطيل)'}
                   </h4>
-                  {selectedSize && (
-                    <span className="text-[10px] text-[#FF6B00] font-bold">
-                      المقاس: {selectedSize}
-                    </span>
-                  )}
+                  <button
+                    onClick={() => setShowSizeGuide(true)}
+                    className="flex items-center gap-1 text-[10px] text-[#FF6B00] font-bold hover:underline"
+                    data-testid="size-guide-btn"
+                  >
+                    <Ruler size={12} />
+                    دليل المقاسات
+                  </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {product.available_sizes.map((size) => (
@@ -772,9 +775,13 @@ const ProductDetailPage = () => {
                     </button>
                   ))}
                 </div>
-                {!selectedSize && (
-                  <p className="text-[10px] text-red-500 mt-1">* يرجى اختيار المقاس</p>
-                )}
+                <div className="flex items-center justify-between mt-1.5">
+                  {!selectedSize ? (
+                    <p className="text-[10px] text-red-500">* يرجى اختيار المقاس</p>
+                  ) : (
+                    <p className="text-[10px] text-green-600 font-bold">✓ المقاس المختار: {selectedSize}</p>
+                  )}
+                </div>
               </div>
             )}
 
