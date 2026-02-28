@@ -573,6 +573,65 @@ const ProductDetailPage = () => {
           )}
         </section>
       </div>
+      
+      {/* الشريط السفلي الثابت - السعر والأزرار */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
+        <div className="flex items-center gap-2 p-3">
+          {/* السعر والكمية */}
+          <div className="flex-1">
+            <p className="text-lg font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">الكمية:</span>
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full"
+                data-testid="decrease-qty"
+              >
+                <Minus size={12} />
+              </button>
+              <span className="w-6 text-center text-sm font-bold">{quantity}</span>
+              <button
+                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full"
+                data-testid="increase-qty"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+          </div>
+          
+          {/* زر إضافة للسلة */}
+          <button
+            onClick={handleAddToCart}
+            disabled={product.stock === 0 || addingToCart}
+            className="flex items-center justify-center gap-1 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-4 py-2 rounded-full text-sm hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
+            data-testid="add-to-cart-btn"
+          >
+            {addingToCart ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <>
+                <ShoppingCart size={16} />
+                <span>السلة</span>
+              </>
+            )}
+          </button>
+          
+          {/* زر الطلب المباشر */}
+          <button
+            onClick={() => {
+              handleAddToCart();
+              setTimeout(() => navigate('/checkout'), 500);
+            }}
+            disabled={product.stock === 0 || addingToCart}
+            className="flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+            data-testid="buy-now-btn"
+          >
+            <Zap size={16} />
+            <span>اشتري الآن</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
