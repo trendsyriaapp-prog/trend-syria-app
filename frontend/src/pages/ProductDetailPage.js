@@ -559,7 +559,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Seller/Store Info */}
-            <div className="mt-2 p-2 bg-white rounded-lg border border-gray-200">
+            <div className="mt-1.5 p-1.5 bg-white rounded-lg border border-gray-200">
               <p className="text-[10px] text-gray-500">المتجر</p>
               <Link 
                 to={`/store/${product.seller_id || ''}`}
@@ -571,8 +571,8 @@ const ProductDetailPage = () => {
               
               {/* معلومات البائع والموقع للمدير فقط */}
               {user?.user_type === 'admin' && (
-                <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-[10px] text-red-500 font-bold mb-1">معلومات للمدير فقط:</p>
+                <div className="mt-1.5 pt-1.5 border-t border-gray-200">
+                  <p className="text-[10px] text-red-500 font-bold mb-0.5">معلومات للمدير فقط:</p>
                   <p className="text-[10px] text-gray-600">اسم البائع: {product.seller_name}</p>
                   {product.seller_phone && (
                     <p className="text-[10px] text-gray-600">رقم الهاتف: {product.seller_phone}</p>
@@ -587,8 +587,8 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Reviews Section */}
-        <section className="mt-6">
-          <div className="flex items-center gap-2 mb-3">
+        <section className="mt-4 px-4">
+          <div className="flex items-center gap-2 mb-2">
             <MessageCircle size={16} className="text-[#FF6B00]" />
             <h2 className="text-sm font-bold text-gray-900">تعليقات وصور العملاء ({product.reviews?.length || 0})</h2>
           </div>
