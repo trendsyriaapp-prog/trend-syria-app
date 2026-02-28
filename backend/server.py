@@ -1486,7 +1486,7 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
 @api_router.get("/admin/notifications")
 async def get_admin_notifications(user: dict = Depends(get_current_user)):
     """Get all notifications (Admin only)"""
-    if user.get("role") not in ["admin", "sub_admin"]:
+    if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
     notifications = await db.notifications.find(
@@ -1499,7 +1499,7 @@ async def get_admin_notifications(user: dict = Depends(get_current_user)):
 @api_router.delete("/admin/notifications/{notification_id}")
 async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)):
     """Delete notification (Admin only)"""
-    if user.get("role") not in ["admin", "sub_admin"]:
+    if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
     result = await db.notifications.delete_one({"id": notification_id})
