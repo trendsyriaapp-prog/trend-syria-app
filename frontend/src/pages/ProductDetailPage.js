@@ -519,9 +519,9 @@ const ProductDetailPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto w-full"
+            className="max-w-2xl mx-auto w-full mt-2"
           >
-            <h1 className="text-lg md:text-xl font-bold mb-1 text-gray-900" data-testid="product-name">
+            <h1 className="text-base md:text-lg font-bold mb-1 text-gray-900" data-testid="product-name">
               {product.name}
             </h1>
 
