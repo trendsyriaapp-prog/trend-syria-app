@@ -263,7 +263,7 @@ const SellerDashboardPage = () => {
   const fetchData = async () => {
     try {
       const [productsRes, ordersRes] = await Promise.all([
-        axios.get(`${API}/seller/products`),
+        axios.get(`${API}/seller/my-products`),
         axios.get(`${API}/orders`)
       ]);
       setProducts(productsRes.data);
