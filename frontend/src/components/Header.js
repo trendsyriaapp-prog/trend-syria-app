@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store, Mail, Share2
+  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
