@@ -498,16 +498,38 @@ const SellerDashboardPage = () => {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {products.map((product) => (
-                <div key={product.id} className="bg-[#121212] rounded-xl border border-white/5 overflow-hidden">
+                <div key={product.id} className="bg-[#121212] rounded-xl border border-white/5 overflow-hidden relative">
+                  {/* حالة الموافقة */}
+                  {product.approval_status === 'pending' && (
+                    <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-black text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <Clock size={10} />
+                      بانتظار الموافقة
+                    </div>
+                  )}
+                  {product.approval_status === 'rejected' && (
+                    <div className="absolute top-2 right-2 z-10 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <X size={10} />
+                      مرفوض
+                    </div>
+                  )}
+                  {product.approval_status === 'approved' && (
+                    <div className="absolute top-2 right-2 z-10 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <Check size={10} />
+                      معتمد
+                    </div>
+                  )}
                   <img
                     src={product.images?.[0] || 'https://via.placeholder.com/200'}
                     alt={product.name}
-                    className="w-full aspect-square object-cover"
+                    className={`w-full aspect-square object-cover ${product.approval_status !== 'approved' ? 'opacity-60' : ''}`}
                   />
                   <div className="p-3">
                     <h3 className="font-bold text-sm truncate">{product.name}</h3>
                     <p className="text-[#FF6B00] font-bold text-sm">{formatPrice(product.price)}</p>
                     <p className="text-xs text-white/50">المخزون: {product.stock}</p>
+                    {product.rejection_reason && (
+                      <p className="text-xs text-red-400 mt-1">سبب الرفض: {product.rejection_reason}</p>
+                    )}
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
