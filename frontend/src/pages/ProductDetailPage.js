@@ -470,8 +470,8 @@ const ProductDetailPage = () => {
                         onClick={() => setCurrentImage(i)}
                         className={`rounded-full transition-all ${
                           currentImage === i 
-                            ? 'bg-white w-[5px] h-[5px]' 
-                            : 'bg-white/60 hover:bg-white/80 w-[4px] h-[4px]'
+                            ? 'bg-white w-[6px] h-[6px]' 
+                            : 'bg-white/60 hover:bg-white/80 w-[5px] h-[5px]'
                         }`}
                         data-testid={`dot-${i}`}
                       />
