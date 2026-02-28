@@ -107,9 +107,9 @@ const SettingsPage = () => {
   const handleEditAddress = (address) => {
     setEditingAddress(address);
     setNewAddress({
-      title: address.title, city: address.city, area: address.area || '', street: address.street || '',
-      building: address.building || '', floor: address.floor || '', details: address.details || '',
-      phone: address.phone || '', is_default: address.is_default
+      title: address.title, city: address.city, area: address.area || '', 
+      street_number: address.street_number || '', building_number: address.building_number || '', 
+      apartment_number: address.apartment_number || '', phone: address.phone || '', is_default: address.is_default
     });
     setShowAddAddress(true);
   };
