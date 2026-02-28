@@ -529,10 +529,10 @@ const ProductDetailPage = () => {
               {product.description}
             </p>
 
-            {/* Product Dimensions */}
-            {(product.length_cm || product.width_cm || product.height_cm) && (
+            {/* Product Dimensions & Weight */}
+            {(product.length_cm || product.width_cm || product.height_cm || product.weight_kg) && (
               <div className="mb-1.5 p-1.5 bg-gray-50 rounded-lg border border-gray-200">
-                <h4 className="font-bold text-gray-900 text-[10px] mb-0.5">أبعاد المنتج</h4>
+                <h4 className="font-bold text-gray-900 text-[10px] mb-0.5">مواصفات المنتج</h4>
                 <div className="flex gap-3 text-center text-[10px]">
                   {product.length_cm && (
                     <div>
@@ -550,6 +550,12 @@ const ProductDetailPage = () => {
                     <div>
                       <p className="text-[9px] text-gray-500">الارتفاع</p>
                       <p className="font-bold text-gray-900">{product.height_cm} سم</p>
+                    </div>
+                  )}
+                  {product.weight_kg && (
+                    <div>
+                      <p className="text-[9px] text-gray-500">الوزن</p>
+                      <p className="font-bold text-gray-900">{product.weight_kg} كغ</p>
                     </div>
                   )}
                 </div>
