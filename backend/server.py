@@ -55,7 +55,8 @@ class ProductCreate(BaseModel):
     category: str
     stock: int
     images: List[str]  # Base64 encoded images
-    video_url: Optional[str] = None  # رابط فيديو المنتج
+    video: Optional[str] = None  # فيديو المنتج Base64
+    video_url: Optional[str] = None  # رابط فيديو المنتج (قديم)
     city: str  # مدينة البائع
     length_cm: Optional[float] = None  # الطول بالسنتيمتر
     width_cm: Optional[float] = None   # العرض بالسنتيمتر
@@ -68,6 +69,7 @@ class ProductUpdate(BaseModel):
     category: Optional[str] = None
     stock: Optional[int] = None
     images: Optional[List[str]] = None
+    video: Optional[str] = None
     video_url: Optional[str] = None
     city: Optional[str] = None
     length_cm: Optional[float] = None
