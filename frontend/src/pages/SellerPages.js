@@ -249,7 +249,8 @@ const SellerDashboardPage = () => {
     city: '',
     length_cm: '',
     width_cm: '',
-    height_cm: ''
+    height_cm: '',
+    weight_kg: ''
   });
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
