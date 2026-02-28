@@ -130,6 +130,10 @@ const Header = () => {
                       <MessageCircle size={18} />
                       <span className="text-sm">الرسائل</span>
                     </Link>
+                    <Link to="/settings" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="settings-link">
+                      <Settings size={18} />
+                      <span className="text-sm">الإعدادات</span>
+                    </Link>
                     {user.user_type === 'seller' && (
                       <Link to="/seller/dashboard" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="seller-dashboard-link">
                         <Store size={18} />
