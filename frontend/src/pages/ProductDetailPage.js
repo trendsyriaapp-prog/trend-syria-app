@@ -462,16 +462,16 @@ const ProductDetailPage = () => {
               
               {/* نقاط التنقل بين الصور - داخل الصورة */}
               {product.images?.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
-                  <div className="flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
+                  <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-full">
                     {product.images.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentImage(i)}
-                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                        className={`rounded-full transition-all ${
                           currentImage === i 
-                            ? 'bg-white w-3 h-3' 
-                            : 'bg-white/60 hover:bg-white/80'
+                            ? 'bg-white w-1.5 h-1.5' 
+                            : 'bg-white/60 hover:bg-white/80 w-1 h-1'
                         }`}
                         data-testid={`dot-${i}`}
                       />
@@ -483,34 +483,34 @@ const ProductDetailPage = () => {
             
             {/* زر الفيديو إذا كان موجوداً */}
             {product.video_url && (
-              <div className="flex justify-center mb-2">
+              <div className="flex justify-center mb-1">
                 <a
                   href={product.video_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-[#FF6B00] text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-[#E65000] transition-colors"
+                  className="flex items-center gap-2 bg-[#FF6B00] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#E65000] transition-colors"
                   data-testid="video-btn"
                 >
-                  <Play size={18} fill="white" />
+                  <Play size={14} fill="white" />
                   شاهد الفيديو
                 </a>
               </div>
             )}
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-4 py-2 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100">
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Truck size={12} className="text-white" />
+            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Truck size={10} className="text-white" />
                 </div>
-                <span className="text-[9px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
+                <span className="text-[8px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
               </div>
-              <div className="w-px h-4 bg-gray-300"></div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Shield size={12} className="text-white" />
+              <div className="w-px h-3 bg-gray-300"></div>
+              <div className="flex items-center gap-1">
+                <div className="w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield size={10} className="text-white" />
                 </div>
-                <span className="text-[9px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
+                <span className="text-[8px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
               </div>
             </div>
           </motion.div>
@@ -519,7 +519,7 @@ const ProductDetailPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto w-full mt-2"
+            className="max-w-2xl mx-auto w-full mt-1"
           >
             <h1 className="text-sm md:text-base font-bold mb-1 text-gray-900" data-testid="product-name">
               {product.name}
