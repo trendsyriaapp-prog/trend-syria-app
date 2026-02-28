@@ -280,14 +280,32 @@ const CheckoutPage = () => {
                   className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
                   data-testid="new-address-area"
                 />
-                <input
-                  type="text"
-                  value={newAddress.street}
-                  onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                  placeholder="الشارع / البناء (اختياري)"
-                  className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
-                  data-testid="new-address-street"
-                />
+                <div className="grid grid-cols-3 gap-1.5">
+                  <input
+                    type="text"
+                    value={newAddress.street_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
+                    placeholder="رقم الشارع *"
+                    className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                    data-testid="new-address-street"
+                  />
+                  <input
+                    type="text"
+                    value={newAddress.building_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, building_number: e.target.value })}
+                    placeholder="رقم البناء *"
+                    className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                    data-testid="new-address-building"
+                  />
+                  <input
+                    type="text"
+                    value={newAddress.apartment_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, apartment_number: e.target.value })}
+                    placeholder="رقم المنزل *"
+                    className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                    data-testid="new-address-apartment"
+                  />
+                </div>
                 <input
                   type="tel"
                   value={newAddress.phone}
