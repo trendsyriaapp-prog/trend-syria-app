@@ -636,25 +636,42 @@ async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)):
     if product["stock"] < item.quantity:
         raise HTTPException(status_code=400, detail="الكمية غير متوفرة")
     
+    # التحقق من المقاس إذا كان المنتج يحتوي على مقاسات
+    if product.get("available_sizes") and len(product.get("available_sizes", [])) > 0:
+        if not item.selected_size:
+            raise HTTPException(status_code=400, detail="يرجى اختيار المقاس")
+        if item.selected_size not in product["available_sizes"]:
+            raise HTTPException(status_code=400, detail="المقاس غير متوفر")
+    
     cart = await db.carts.find_one({"user_id": user["id"]})
+    cart_item = {
+        "product_id": item.product_id, 
+        "quantity": item.quantity,
+        "selected_size": item.selected_size
+    }
+    
     if cart:
-        # Check if product already in cart
-        existing_item = next((i for i in cart["items"] if i["product_id"] == item.product_id), None)
+        # Check if product already in cart (with same size)
+        existing_item = next(
+            (i for i in cart["items"] 
+             if i["product_id"] == item.product_id and i.get("selected_size") == item.selected_size), 
+            None
+        )
         if existing_item:
             new_quantity = existing_item["quantity"] + item.quantity
             await db.carts.update_one(
-                {"user_id": user["id"], "items.product_id": item.product_id},
+                {"user_id": user["id"], "items.product_id": item.product_id, "items.selected_size": item.selected_size},
                 {"$set": {"items.$.quantity": new_quantity}}
             )
         else:
             await db.carts.update_one(
                 {"user_id": user["id"]},
-                {"$push": {"items": {"product_id": item.product_id, "quantity": item.quantity}}}
+                {"$push": {"items": cart_item}}
             )
     else:
         await db.carts.insert_one({
             "user_id": user["id"],
-            "items": [{"product_id": item.product_id, "quantity": item.quantity}]
+            "items": [cart_item]
         })
     
     return {"message": "تمت الإضافة إلى السلة"}
