@@ -77,7 +77,7 @@ const SettingsPage = () => {
       }
       setShowAddAddress(false);
       setEditingAddress(null);
-      setNewAddress({ title: '', city: 'دمشق', area: '', street: '', building: '', floor: '', details: '', phone: '', is_default: false });
+      setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل حفظ العنوان", variant: "destructive" });
