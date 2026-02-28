@@ -9,6 +9,10 @@ const MobileNav = () => {
   const { cartCount } = useCart();
 
   const isActive = (path) => location.pathname === path;
+  
+  // إخفاء الشريط في صفحة تفاصيل المنتج
+  const isProductPage = location.pathname.startsWith('/products/');
+  if (isProductPage) return null;
 
   const navItems = [
     { path: '/', icon: Home, label: 'الرئيسية' },
