@@ -245,6 +245,7 @@ const SellerDashboardPage = () => {
     category: 'electronics',
     stock: '',
     images: [],
+    video_url: '',
     city: '',
     length_cm: '',
     width_cm: '',
