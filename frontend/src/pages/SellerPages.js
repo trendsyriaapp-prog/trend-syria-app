@@ -384,7 +384,7 @@ const SellerDashboardPage = () => {
         ...newProduct,
         price: parseFloat(newProduct.price),
         stock: parseInt(newProduct.stock),
-        video_url: newProduct.video_url || null,
+        video: newProduct.video || null,
         length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
         width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
         height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null
@@ -403,7 +403,7 @@ const SellerDashboardPage = () => {
         category: 'electronics',
         stock: '',
         images: [],
-        video_url: '',
+        video: null,
         city: '',
         length_cm: '',
         width_cm: '',
