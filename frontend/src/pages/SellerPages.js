@@ -779,15 +779,48 @@ const SellerDashboardPage = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">رابط فيديو (اختياري)</label>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">إضافة فيديو (اختياري)</label>
+                {newProduct.video ? (
+                  <div className="relative bg-gray-100 rounded-lg p-2">
+                    <video 
+                      src={newProduct.video} 
+                      className="w-full h-24 object-cover rounded"
+                      controls
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({ ...newProduct, video: null })}
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('product-video').click()}
+                    disabled={uploadingVideo}
+                    className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-[10px] flex items-center justify-center gap-1 hover:border-[#FF6B00] hover:text-[#FF6B00]"
+                  >
+                    {uploadingVideo ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Upload size={12} />
+                        اختر فيديو من الجهاز
+                      </>
+                    )}
+                  </button>
+                )}
                 <input
-                  type="url"
-                  value={newProduct.video_url}
-                  onChange={(e) => setNewProduct({ ...newProduct, video_url: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="رابط يوتيوب"
+                  id="product-video"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
                   data-testid="product-video-input"
                 />
+                <p className="text-[8px] text-gray-400 mt-0.5">الحد الأقصى 50MB</p>
               </div>
 
               <div className="flex gap-2 pt-2">
