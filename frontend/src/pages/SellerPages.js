@@ -455,66 +455,66 @@ const SellerDashboardPage = () => {
   const paidOrders = orders.filter(o => o.status === 'paid').length;
 
   return (
-    <div className="min-h-screen pb-20 md:pb-10">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">لوحة تحكم البائع</h1>
+    <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-3 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-sm font-bold text-gray-900">لوحة تحكم البائع</h1>
           <button
             onClick={() => setShowAddProduct(true)}
-            className="flex items-center gap-2 bg-[#FF6B00] text-black font-bold px-4 py-2 rounded-full hover:bg-[#E65000] transition-colors"
+            className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
             data-testid="add-product-btn"
           >
-            <Plus size={18} />
+            <Plus size={14} />
             إضافة منتج
           </button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {[
-            { icon: Package, label: 'المنتجات', value: products.length, color: 'bg-blue-500/20 text-blue-500' },
-            { icon: ShoppingBag, label: 'الطلبات المدفوعة', value: paidOrders, color: 'bg-green-500/20 text-green-500' },
-            { icon: DollarSign, label: 'إجمالي المبيعات', value: formatPrice(totalSales), color: 'bg-[#FF6B00]/20 text-[#FF6B00]' },
-            { icon: Clock, label: 'طلبات معلقة', value: orders.filter(o => o.delivery_status === 'pending').length, color: 'bg-yellow-500/20 text-yellow-500' },
+            { icon: Package, label: 'المنتجات', value: products.length, color: 'bg-blue-100 text-blue-600' },
+            { icon: ShoppingBag, label: 'طلبات مدفوعة', value: paidOrders, color: 'bg-green-100 text-green-600' },
+            { icon: DollarSign, label: 'المبيعات', value: formatPrice(totalSales), color: 'bg-orange-100 text-orange-600' },
+            { icon: Clock, label: 'معلقة', value: orders.filter(o => o.delivery_status === 'pending').length, color: 'bg-yellow-100 text-yellow-600' },
           ].map((stat, i) => (
-            <div key={i} className="bg-[#121212] rounded-xl p-4 border border-white/5">
-              <div className={`w-10 h-10 rounded-full ${stat.color} flex items-center justify-center mb-2`}>
-                <stat.icon size={20} />
+            <div key={i} className="bg-white rounded-xl p-2 border border-gray-200">
+              <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
+                <stat.icon size={12} />
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-sm text-white/50">{stat.label}</p>
+              <p className="text-sm font-bold text-gray-900">{stat.value}</p>
+              <p className="text-[9px] text-gray-500">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Products */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4">منتجاتي</h2>
+        <section className="mb-4">
+          <h2 className="text-xs font-bold mb-2 text-gray-900">منتجاتي</h2>
           {products.length === 0 ? (
-            <div className="bg-[#121212] rounded-xl p-8 text-center border border-white/5">
-              <Package size={48} className="text-white/20 mx-auto mb-4" />
-              <p className="text-white/50">لم تضف أي منتجات بعد</p>
+            <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
+              <Package size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-xs">لم تضف أي منتجات بعد</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
               {products.map((product) => (
-                <div key={product.id} className="bg-[#121212] rounded-xl border border-white/5 overflow-hidden relative">
+                <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
                   {/* حالة الموافقة */}
                   {product.approval_status === 'pending' && (
-                    <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-black text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                      <Clock size={10} />
-                      بانتظار الموافقة
+                    <div className="absolute top-1 right-1 z-10 bg-yellow-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                      <Clock size={8} />
+                      معلق
                     </div>
                   )}
                   {product.approval_status === 'rejected' && (
-                    <div className="absolute top-2 right-2 z-10 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                      <X size={10} />
+                    <div className="absolute top-1 right-1 z-10 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                      <X size={8} />
                       مرفوض
                     </div>
                   )}
                   {product.approval_status === 'approved' && (
-                    <div className="absolute top-2 right-2 z-10 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                      <Check size={10} />
+                    <div className="absolute top-1 right-1 z-10 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                      <Check size={8} />
                       معتمد
                     </div>
                   )}
@@ -523,22 +523,21 @@ const SellerDashboardPage = () => {
                     alt={product.name}
                     className={`w-full aspect-square object-cover ${product.approval_status !== 'approved' ? 'opacity-60' : ''}`}
                   />
-                  <div className="p-3">
-                    <h3 className="font-bold text-sm truncate">{product.name}</h3>
-                    <p className="text-[#FF6B00] font-bold text-sm">{formatPrice(product.price)}</p>
-                    <p className="text-xs text-white/50">المخزون: {product.stock}</p>
+                  <div className="p-2">
+                    <h3 className="font-bold text-[10px] truncate text-gray-900">{product.name}</h3>
+                    <p className="text-[#FF6B00] font-bold text-[10px]">{formatPrice(product.price)}</p>
+                    <p className="text-[8px] text-gray-500">المخزون: {product.stock}</p>
                     {product.rejection_reason && (
-                      <p className="text-xs text-red-400 mt-1">سبب الرفض: {product.rejection_reason}</p>
+                      <p className="text-[8px] text-red-400 mt-0.5 truncate">سبب: {product.rejection_reason}</p>
                     )}
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="flex-1 p-1.5 text-red-500 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors"
-                        data-testid={`delete-product-${product.id}`}
-                      >
-                        <Trash2 size={16} className="mx-auto" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="w-full mt-1 p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center gap-0.5"
+                      data-testid={`delete-product-${product.id}`}
+                    >
+                      <Trash2 size={10} />
+                      حذف
+                    </button>
                   </div>
                 </div>
               ))}
@@ -548,26 +547,26 @@ const SellerDashboardPage = () => {
 
         {/* Recent Orders */}
         <section>
-          <h2 className="text-xl font-bold mb-4">الطلبات الأخيرة</h2>
+          <h2 className="text-xs font-bold mb-2 text-gray-900">الطلبات الأخيرة</h2>
           {orders.length === 0 ? (
-            <div className="bg-[#121212] rounded-xl p-8 text-center border border-white/5">
-              <ShoppingBag size={48} className="text-white/20 mx-auto mb-4" />
-              <p className="text-white/50">لا توجد طلبات</p>
+            <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
+              <ShoppingBag size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-xs">لا توجد طلبات</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {orders.slice(0, 10).map((order) => (
-                <div key={order.id} className="bg-[#121212] rounded-xl p-4 border border-white/5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold">#{order.id.slice(0, 8).toUpperCase()}</span>
-                    <span className="text-[#FF6B00] font-bold">{formatPrice(order.total)}</span>
+                <div key={order.id} className="bg-white rounded-lg p-2 border border-gray-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-[10px] text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</span>
+                    <span className="text-[#FF6B00] font-bold text-[10px]">{formatPrice(order.total)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white/50">{order.user_name} - {order.city}</span>
+                    <span className="text-[9px] text-gray-500">{order.user_name} - {order.city}</span>
                     <select
                       value={order.delivery_status}
                       onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                      className="bg-[#0A0A0A] border border-white/10 rounded-lg px-2 py-1 text-sm"
+                      className="bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-[9px] text-gray-900"
                       data-testid={`order-status-${order.id}`}
                     >
                       <option value="pending">في الانتظار</option>
