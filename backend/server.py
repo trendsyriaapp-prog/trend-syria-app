@@ -309,6 +309,7 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "category": product.category,
         "stock": product.stock,
         "images": product.images,
+        "video": product.video,
         "video_url": product.video_url,
         "city": product.city,
         "length_cm": product.length_cm,
