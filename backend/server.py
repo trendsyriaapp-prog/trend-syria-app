@@ -402,6 +402,19 @@ async def delete_product(product_id: str, user: dict = Depends(get_current_user)
 
 # ============== Store/Seller Page ==============
 
+@api_router.get("/seller/my-products")
+async def get_seller_products(user: dict = Depends(get_current_user)):
+    """منتجات البائع مع حالة الموافقة"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    products = await db.products.find(
+        {"seller_id": user["id"], "is_active": True},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return products
+
 @api_router.get("/stores/{seller_id}")
 async def get_store_page(seller_id: str, authorization: Optional[str] = Header(default=None)):
     """صفحة المتجر - تظهر اسم المتجر ومنتجاته"""
