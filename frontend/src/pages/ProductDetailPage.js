@@ -364,15 +364,19 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
-              {/* عبارات التوصيل والضمان - على اليسار */}
-              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 bg-[#FF6B00] px-2 py-1 rounded-md shadow-sm">
-                  <Truck size={11} className="text-white" />
-                  <span className="text-[9px] text-white font-medium">توصيل مجاني داخل المحافظات</span>
+              {/* عبارات التوصيل والضمان - على اليسار بتصميم جديد */}
+              <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                <div className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                  <div className="w-5 h-5 bg-[#FF6B00] rounded-full flex items-center justify-center">
+                    <Truck size={10} className="text-white" />
+                  </div>
+                  <span className="text-[10px] text-white">توصيل مجاني داخل المحافظات</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-green-600 px-2 py-1 rounded-md shadow-sm">
-                  <Shield size={11} className="text-white" />
-                  <span className="text-[9px] text-white font-medium">ضمان استرجاع الأموال خلال ساعة</span>
+                <div className="flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <Shield size={10} className="text-white" />
+                  </div>
+                  <span className="text-[10px] text-white">ضمان استرجاع الأموال خلال ساعة</span>
                 </div>
               </div>
               
