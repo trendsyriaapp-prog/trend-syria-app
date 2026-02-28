@@ -106,10 +106,12 @@ const CheckoutPage = () => {
       let addressData;
       if (useNewAddress) {
         await axios.post(`${API}/user/addresses`, newAddress);
-        addressData = { address: `${newAddress.area}${newAddress.street ? ' - ' + newAddress.street : ''}`, city: newAddress.city, phone: newAddress.phone };
+        const fullAddress = `${newAddress.area} - شارع ${newAddress.street_number} - بناء ${newAddress.building_number} - منزل ${newAddress.apartment_number}`;
+        addressData = { address: fullAddress, city: newAddress.city, phone: newAddress.phone };
       } else {
         const addr = savedAddresses.find(a => a.id === selectedAddressId);
-        addressData = { address: `${addr.area}${addr.street ? ' - ' + addr.street : ''}`, city: addr.city, phone: addr.phone };
+        const fullAddress = `${addr.area}${addr.street_number ? ' - شارع ' + addr.street_number : ''}${addr.building_number ? ' - بناء ' + addr.building_number : ''}${addr.apartment_number ? ' - منزل ' + addr.apartment_number : ''}`;
+        addressData = { address: fullAddress, city: addr.city, phone: addr.phone };
       }
 
       let paymentData;
