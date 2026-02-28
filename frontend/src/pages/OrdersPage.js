@@ -239,12 +239,16 @@ const OrdersPage = () => {
                       {/* Delivery Address */}
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <h4 className="font-bold text-gray-900 mb-2">عنوان التوصيل</h4>
-                        <div className="bg-white p-3 rounded-lg">
+                        <div className="bg-white p-3 rounded-lg space-y-2">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <User size={16} className="text-[#FF6B00]" />
+                            <span className="text-sm font-medium">{user?.name || 'غير محدد'}</span>
+                          </div>
                           <div className="flex items-start gap-2 text-gray-600">
                             <MapPin size={16} className="text-[#FF6B00] mt-0.5" />
                             <span className="text-sm">{order.city} - {order.address}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-600 mt-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Phone size={16} className="text-[#FF6B00]" />
                             <span className="text-sm">{order.phone}</span>
                           </div>
