@@ -170,9 +170,8 @@ const Header = () => {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-14 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[101] overflow-hidden"
-                      >
-                        style={{ maxHeight: '400px' }}
+                        className="fixed top-14 right-4 left-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-[101]"
+                        style={{ maxHeight: 'calc(100vh - 80px)' }}
                       >
                         <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                           <h3 className="font-bold text-sm text-gray-900">الإشعارات</h3>
@@ -185,7 +184,7 @@ const Header = () => {
                             </button>
                           )}
                         </div>
-                        <div className="overflow-y-auto" style={{ maxHeight: '320px' }}>
+                        <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 150px)' }}>
                           {notifications.length === 0 ? (
                             <div className="p-6 text-center">
                               <Bell size={32} className="text-gray-300 mx-auto mb-2" />
@@ -225,7 +224,7 @@ const Header = () => {
                     </>
                   )}
                 </AnimatePresence>
-              </div>
+              </>
             )}
 
             {/* User Name only (menu moved to bottom nav) */}
