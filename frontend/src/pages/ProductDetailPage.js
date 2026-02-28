@@ -364,6 +364,26 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
+              {/* أسهم التنقل بين الصور */}
+              {product.images?.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentImage(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors"
+                    data-testid="prev-image-btn"
+                  >
+                    <ChevronLeft size={20} className="text-gray-700" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentImage(prev => prev === product.images.length - 1 ? 0 : prev + 1)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-colors rotate-180"
+                    data-testid="next-image-btn"
+                  >
+                    <ChevronLeft size={20} className="text-gray-700" />
+                  </button>
+                </>
+              )}
+              
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
