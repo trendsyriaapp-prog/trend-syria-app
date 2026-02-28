@@ -80,7 +80,7 @@ const HomePage = () => {
             {[
               { icon: Truck, text: 'توصيل مجاني', desc: 'داخل المحافظات' },
               { icon: Shield, text: 'ضمان الجودة', desc: 'منتجات أصلية' },
-              { icon: CreditCard, text: 'شام كاش', desc: 'دفع آمن' },
+              { icon: CreditCard, text: 'دفع إلكتروني', desc: 'آمن وسريع' },
               { icon: Heart, text: 'دعم 24/7', desc: 'خدمة العملاء' },
             ].map((feature, i) => (
               <motion.div
