@@ -39,7 +39,7 @@ const SettingsPage = () => {
   const [editingPayment, setEditingPayment] = useState(null);
   
   const [newAddress, setNewAddress] = useState({
-    title: '', city: 'دمشق', area: '', street: '', building: '', floor: '', details: '', phone: '', is_default: false
+    title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false
   });
   
   const [newPayment, setNewPayment] = useState({
