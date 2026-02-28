@@ -582,6 +582,44 @@ const ProductDetailPage = () => {
               )}
             </div>
 
+            {/* Size Selection */}
+            {product.available_sizes && product.available_sizes.length > 0 && (
+              <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-1.5">
+                  <h4 className="font-bold text-gray-900 text-[11px]">
+                    اختر المقاس
+                    {product.size_type === 'clothes' && ' (ملابس)'}
+                    {product.size_type === 'shoes' && ' (أحذية)'}
+                    {product.size_type === 'pants' && ' (بناطيل)'}
+                  </h4>
+                  {selectedSize && (
+                    <span className="text-[10px] text-[#FF6B00] font-bold">
+                      المقاس: {selectedSize}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.available_sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`min-w-[36px] h-8 px-2 rounded-lg text-xs font-bold transition-all ${
+                        selectedSize === size
+                          ? 'bg-[#FF6B00] text-white border-2 border-[#FF6B00]'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:border-[#FF6B00]'
+                      }`}
+                      data-testid={`size-${size}`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                {!selectedSize && (
+                  <p className="text-[10px] text-red-500 mt-1">* يرجى اختيار المقاس</p>
+                )}
+              </div>
+            )}
+
             {/* Seller/Store Info */}
             <div className="mt-1.5 p-1.5 bg-white rounded-lg border border-gray-200">
               <p className="text-[10px] text-gray-500">المتجر</p>
