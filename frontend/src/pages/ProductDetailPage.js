@@ -436,6 +436,23 @@ const ProductDetailPage = () => {
                 </a>
               </div>
             )}
+            
+            {/* شريط المميزات */}
+            <div className="flex items-center justify-center gap-4 py-2 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <Truck size={12} className="text-white" />
+                </div>
+                <span className="text-[10px] text-gray-700 font-medium">توصيل مجاني</span>
+              </div>
+              <div className="w-px h-4 bg-gray-300"></div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 bg-[#FF6B00] rounded-full flex items-center justify-center">
+                  <Shield size={12} className="text-white" />
+                </div>
+                <span className="text-[10px] text-gray-700 font-medium">ضمان الاسترجاع</span>
+              </div>
+            </div>
           </motion.div>
 
           {/* Info */}
