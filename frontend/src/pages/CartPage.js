@@ -71,7 +71,7 @@ const CartPage = () => {
           <div className="md:col-span-2 space-y-2">
             {cart.items.map((item) => (
               <motion.div
-                key={item.product_id}
+                key={`${item.product_id}-${item.selected_size || 'no-size'}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-lg p-2 border border-gray-200"
@@ -95,6 +95,12 @@ const CartPage = () => {
                     <p className="text-[#FF6B00] font-bold text-xs mt-0.5">
                       {formatPrice(item.product?.price)}
                     </p>
+                    {/* عرض المقاس المختار */}
+                    {item.selected_size && (
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        المقاس: <span className="font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{item.selected_size}</span>
+                      </p>
+                    )}
                     
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1 bg-gray-100 rounded-full">
