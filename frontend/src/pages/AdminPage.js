@@ -226,6 +226,7 @@ const AdminDashboardPage = () => {
             { id: 'overview', label: 'نظرة عامة' },
             { id: 'pending-products', label: `منتجات معلقة (${pendingProducts.length})` },
             { id: 'pending-sellers', label: `بائعين معلقين (${pendingSellers.length})` },
+            { id: 'notifications', label: `الإشعارات (${notifications.length})` },
             ...(user.user_type === 'admin' ? [{ id: 'sub-admins', label: `المدراء التنفيذيين (${subAdmins.length})` }] : [])
           ].map((tab) => (
             <button
