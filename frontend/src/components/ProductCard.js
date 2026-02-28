@@ -223,6 +223,13 @@ const ProductCard = ({ product }) => {
           {/* Price - Smaller */}
           <div className="flex items-center justify-between">
             <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(product.price)}</span>
+            {/* Video icon if product has video */}
+            {product.video && (
+              <div className="flex items-center gap-0.5 text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                <Play size={10} className="fill-current" />
+                <span className="text-[8px]">فيديو</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
