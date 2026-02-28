@@ -1478,7 +1478,8 @@ async def create_notification(data: NotificationCreate, user: dict = Depends(get
     }
     
     await db.notifications.insert_one(notification)
-    del notification["_id"] if "_id" in notification else None
+    if "_id" in notification:
+        del notification["_id"]
     
     return {"message": "تم إرسال الإشعار بنجاح", "notification": notification}
 
