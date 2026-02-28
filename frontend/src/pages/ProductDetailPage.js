@@ -461,7 +461,7 @@ const ProductDetailPage = () => {
             {/* خط مستقيم أسفل الصورة مع أيقونة الفيديو */}
             <div className="h-[1px] bg-gray-200 relative">
               {(product.video || product.video_url) && (
-                <div className="absolute right-4 -top-3">
+                <div className="absolute right-2 -top-2.5">
                   <button
                     onClick={() => {
                       if (product.video) {
@@ -471,10 +471,10 @@ const ProductDetailPage = () => {
                         window.open(product.video_url, '_blank');
                       }
                     }}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-[10px] font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
+                    className="flex items-center gap-1 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-1 rounded-full text-[8px] font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow"
                     data-testid="video-btn"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                     مشاهدة فيديو
