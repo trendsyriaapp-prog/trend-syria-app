@@ -401,32 +401,44 @@ const ProductDetailPage = () => {
             </div>
             
             {/* معرض الصور المصغرة + زر الفيديو */}
-            <div className="flex gap-1 overflow-x-auto hide-scrollbar justify-center items-center">
-              {product.images?.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentImage(i)}
-                  className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                    currentImage === i ? 'border-[#FF6B00]' : 'border-gray-200'
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-              
-              {/* زر الفيديو إذا كان موجوداً */}
-              {product.video_url && (
-                <a
-                  href={product.video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-14 h-14 rounded-lg flex-shrink-0 border-2 border-[#FF6B00] bg-[#FF6B00]/10 flex items-center justify-center"
-                  data-testid="video-btn"
-                >
-                  <Play size={20} className="text-[#FF6B00]" fill="#FF6B00" />
-                </a>
-              )}
-            </div>
+            {(product.images?.length > 1 || product.video_url) && (
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar justify-center items-center py-2">
+                {product.images?.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImage(i)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                      currentImage === i ? 'border-[#FF6B00] ring-2 ring-[#FF6B00]/30 scale-105' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    data-testid={`image-thumb-${i}`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+                
+                {/* زر الفيديو إذا كان موجوداً */}
+                {product.video_url && (
+                  <a
+                    href={product.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-16 h-16 rounded-lg flex-shrink-0 border-2 border-[#FF6B00] bg-[#FF6B00]/10 flex items-center justify-center hover:bg-[#FF6B00]/20 transition-colors"
+                    data-testid="video-btn"
+                  >
+                    <Play size={24} className="text-[#FF6B00]" fill="#FF6B00" />
+                  </a>
+                )}
+              </div>
+            )}
+            
+            {/* عداد الصور */}
+            {product.images?.length > 1 && (
+              <div className="text-center">
+                <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {currentImage + 1} / {product.images.length}
+                </span>
+              </div>
+            )}
           </motion.div>
 
           {/* Info */}
