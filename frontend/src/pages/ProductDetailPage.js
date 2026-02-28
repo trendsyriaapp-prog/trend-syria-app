@@ -1000,6 +1000,13 @@ const ProductDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal 
+        isOpen={showSizeGuide} 
+        onClose={() => setShowSizeGuide(false)} 
+        sizeType={product?.size_type || 'clothes'} 
+      />
     </div>
   );
 };
