@@ -239,7 +239,8 @@ const CheckoutPage = () => {
                         <span className="font-bold text-[11px] text-gray-900">{addr.title}</span>
                         {addr.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1 py-0.5 rounded">افتراضي</span>}
                       </div>
-                      <p className="text-[10px] text-gray-500 truncate">{addr.city} - {addr.area} | {addr.phone}</p>
+                      <p className="text-[10px] text-gray-500 truncate">{addr.city} - {addr.area}</p>
+                      <p className="text-[10px] text-gray-400 truncate">شارع {addr.street_number} - بناء {addr.building_number} - منزل {addr.apartment_number}</p>
                     </div>
                   </button>
                 ))}
