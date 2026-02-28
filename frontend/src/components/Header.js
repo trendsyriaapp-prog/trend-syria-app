@@ -131,7 +131,7 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Messages Icon أو Share Icon حسب الصفحة */}
+            {/* Notifications Bell أو Share Icon حسب الصفحة */}
             {isProductPage ? (
               <button 
                 onClick={handleShare}
@@ -141,13 +141,87 @@ const Header = () => {
                 <Share2 size={22} />
               </button>
             ) : (
-              <Link 
-                to={user ? "/messages" : "/login"}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-                data-testid="messages-icon"
-              >
-                <Mail size={22} />
-              </Link>
+              <div className="relative">
+                <button 
+                  onClick={() => user ? setShowNotifications(!showNotifications) : navigate('/login')}
+                  className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
+                  data-testid="notifications-icon"
+                >
+                  <Bell size={22} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowNotifications(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+                        style={{ maxHeight: '400px' }}
+                      >
+                        <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                          <h3 className="font-bold text-sm text-gray-900">الإشعارات</h3>
+                          {unreadCount > 0 && (
+                            <button 
+                              onClick={markAllAsRead}
+                              className="text-[10px] text-[#FF6B00] font-bold hover:underline"
+                            >
+                              قراءة الكل
+                            </button>
+                          )}
+                        </div>
+                        <div className="overflow-y-auto" style={{ maxHeight: '320px' }}>
+                          {notifications.length === 0 ? (
+                            <div className="p-6 text-center">
+                              <Bell size={32} className="text-gray-300 mx-auto mb-2" />
+                              <p className="text-gray-500 text-xs">لا توجد إشعارات</p>
+                            </div>
+                          ) : (
+                            notifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                onClick={() => !notification.is_read && markAsRead(notification.id)}
+                                className={`p-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                  !notification.is_read ? 'bg-[#FF6B00]/5' : ''
+                                }`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                    !notification.is_read ? 'bg-[#FF6B00]' : 'bg-transparent'
+                                  }`} />
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-xs text-gray-900">{notification.title}</h4>
+                                    <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-2">{notification.message}</p>
+                                    <p className="text-[9px] text-gray-400 mt-1">
+                                      {new Date(notification.created_at).toLocaleDateString('ar-SY', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
 
             {/* User Name only (menu moved to bottom nav) */}
