@@ -371,10 +371,36 @@ const ProductDetailPage = () => {
                 onContextMenu={(e) => e.preventDefault()}
                 draggable="false"
               />
-              {/* العلامة المائية */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-black/40 px-4 py-2 rounded-lg">
-                  <span className="text-white/90 font-bold text-lg">تريند سورية</span>
+              {/* العلامة المائية - شبكة خفيفة */}
+              <div 
+                className="absolute inset-0 pointer-events-none overflow-hidden"
+                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+              >
+                <div 
+                  className="absolute inset-0 flex flex-col items-center justify-center"
+                  style={{ transform: 'rotate(-30deg) scale(1.5)' }}
+                >
+                  {[...Array(6)].map((_, rowIndex) => (
+                    <div key={rowIndex} className="flex gap-8 my-4">
+                      {[...Array(3)].map((_, colIndex) => (
+                        <span 
+                          key={colIndex}
+                          className="text-gray-500/20 text-sm font-bold whitespace-nowrap"
+                          style={{ 
+                            textShadow: '0 0 1px rgba(0,0,0,0.1)',
+                            letterSpacing: '0.5px'
+                          }}
+                        >
+                          تريند سورية
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* شعار واضح في الزاوية */}
+                <div className="absolute bottom-2 right-2 bg-[#FF6B00] text-white text-xs font-bold px-2 py-1 rounded">
+                  تريند سورية
                 </div>
               </div>
             </div>
