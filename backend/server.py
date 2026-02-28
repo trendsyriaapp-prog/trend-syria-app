@@ -1396,6 +1396,120 @@ async def seed_demo_data():
     
     return {"message": "تم إنشاء البيانات التجريبية بنجاح"}
 
+# ============== Notifications API ==============
+
+@api_router.get("/notifications")
+async def get_notifications(user: dict = Depends(get_current_user)):
+    """Get user notifications"""
+    notifications = await db.notifications.find(
+        {"$or": [
+            {"target": "all"},
+            {"target": user.get("user_type", "buyer") + "s"},
+            {"user_id": user["id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    # Get user's read notifications
+    user_reads = await db.notification_reads.find(
+        {"user_id": user["id"]},
+        {"_id": 0, "notification_id": 1}
+    ).to_list(100)
+    read_ids = {r["notification_id"] for r in user_reads}
+    
+    # Add is_read flag
+    for n in notifications:
+        n["is_read"] = n["id"] in read_ids
+    
+    return notifications
+
+@api_router.post("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+    """Mark a notification as read"""
+    await db.notification_reads.update_one(
+        {"user_id": user["id"], "notification_id": notification_id},
+        {"$set": {
+            "user_id": user["id"],
+            "notification_id": notification_id,
+            "read_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "تم تحديد الإشعار كمقروء"}
+
+@api_router.post("/notifications/read-all")
+async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
+    """Mark all notifications as read"""
+    notifications = await db.notifications.find(
+        {"$or": [
+            {"target": "all"},
+            {"target": user.get("user_type", "buyer") + "s"},
+            {"user_id": user["id"]}
+        ]},
+        {"_id": 0, "id": 1}
+    ).to_list(100)
+    
+    for n in notifications:
+        await db.notification_reads.update_one(
+            {"user_id": user["id"], "notification_id": n["id"]},
+            {"$set": {
+                "user_id": user["id"],
+                "notification_id": n["id"],
+                "read_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+    
+    return {"message": "تم تحديد جميع الإشعارات كمقروءة"}
+
+@api_router.post("/admin/notifications")
+async def create_notification(data: NotificationCreate, user: dict = Depends(get_current_user)):
+    """Create notification (Admin only)"""
+    if user.get("role") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    notification = {
+        "id": str(uuid.uuid4()),
+        "title": data.title,
+        "message": data.message,
+        "target": data.target,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.notifications.insert_one(notification)
+    del notification["_id"] if "_id" in notification else None
+    
+    return {"message": "تم إرسال الإشعار بنجاح", "notification": notification}
+
+@api_router.get("/admin/notifications")
+async def get_admin_notifications(user: dict = Depends(get_current_user)):
+    """Get all notifications (Admin only)"""
+    if user.get("role") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    notifications = await db.notifications.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(100).to_list(100)
+    
+    return notifications
+
+@api_router.delete("/admin/notifications/{notification_id}")
+async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)):
+    """Delete notification (Admin only)"""
+    if user.get("role") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    result = await db.notifications.delete_one({"id": notification_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الإشعار غير موجود")
+    
+    # Also delete read records
+    await db.notification_reads.delete_many({"notification_id": notification_id})
+    
+    return {"message": "تم حذف الإشعار"}
+
 @api_router.get("/")
 async def root():
     return {"message": "مرحباً بك في تريند سورية API"}
