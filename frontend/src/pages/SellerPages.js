@@ -343,6 +343,30 @@ const SellerDashboardPage = () => {
     setUploadingImage(false);
   };
 
+  const handleVideoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) { // 50MB max
+        toast({
+          title: "خطأ",
+          description: "حجم الفيديو كبير جداً (الحد الأقصى 50MB)",
+          variant: "destructive"
+        });
+        return;
+      }
+      setUploadingVideo(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct(prev => ({
+          ...prev,
+          video: reader.result
+        }));
+        setUploadingVideo(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (newProduct.images.length === 0) {
