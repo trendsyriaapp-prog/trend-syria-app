@@ -419,7 +419,7 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div 
-              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative"
+              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border-b border-gray-200 mb-2 relative"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
