@@ -927,22 +927,142 @@ async def reject_seller(seller_id: str, user: dict = Depends(get_current_user)):
 
 @api_router.get("/admin/stats")
 async def get_admin_stats(user: dict = Depends(get_current_user)):
-    if user["user_type"] != "admin":
+    if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     total_users = await db.users.count_documents({})
     total_sellers = await db.users.count_documents({"user_type": "seller"})
-    total_products = await db.products.count_documents({"is_active": True})
+    total_products = await db.products.count_documents({"is_active": True, "is_approved": True})
     total_orders = await db.orders.count_documents({})
     pending_sellers = await db.seller_documents.count_documents({"status": "pending"})
+    pending_products = await db.products.count_documents({"approval_status": "pending"})
+    total_sub_admins = await db.users.count_documents({"user_type": "sub_admin"})
     
     return {
         "total_users": total_users,
         "total_sellers": total_sellers,
         "total_products": total_products,
         "total_orders": total_orders,
-        "pending_sellers": pending_sellers
+        "pending_sellers": pending_sellers,
+        "pending_products": pending_products,
+        "total_sub_admins": total_sub_admins
     }
+
+# ============== Sub-Admin Management ==============
+
+@api_router.post("/admin/sub-admins")
+async def create_sub_admin(sub_admin: SubAdminCreate, user: dict = Depends(get_current_user)):
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    existing = await db.users.find_one({"phone": sub_admin.phone})
+    if existing:
+        raise HTTPException(status_code=400, detail="رقم الهاتف مسجل مسبقاً")
+    
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "name": sub_admin.full_name,
+        "full_name": sub_admin.full_name,
+        "phone": sub_admin.phone,
+        "password": hash_password(sub_admin.password),
+        "city": sub_admin.city,
+        "user_type": "sub_admin",
+        "is_verified": True,
+        "is_approved": True,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    
+    return {"id": user_id, "message": "تم إضافة المدير التنفيذي بنجاح"}
+
+@api_router.get("/admin/sub-admins")
+async def get_sub_admins(user: dict = Depends(get_current_user)):
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    sub_admins = await db.users.find(
+        {"user_type": "sub_admin"},
+        {"_id": 0, "password": 0}
+    ).to_list(100)
+    return sub_admins
+
+@api_router.delete("/admin/sub-admins/{sub_admin_id}")
+async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    result = await db.users.delete_one({"id": sub_admin_id, "user_type": "sub_admin"})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="المدير التنفيذي غير موجود")
+    
+    return {"message": "تم حذف المدير التنفيذي"}
+
+# ============== Product Approval ==============
+
+@api_router.get("/admin/products/pending")
+async def get_pending_products(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    products = await db.products.find(
+        {"approval_status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # إضافة معلومات البائع
+    for product in products:
+        seller = await db.users.find_one({"id": product["seller_id"]}, {"_id": 0, "password": 0})
+        if seller:
+            product["seller"] = seller
+    
+    return products
+
+@api_router.post("/admin/products/{product_id}/approve")
+async def approve_product(product_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.products.update_one(
+        {"id": product_id},
+        {
+            "$set": {
+                "is_approved": True,
+                "approval_status": "approved",
+                "approved_by": user["id"],
+                "approved_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    return {"message": "تم الموافقة على المنتج"}
+
+@api_router.post("/admin/products/{product_id}/reject")
+async def reject_product(product_id: str, approval: ProductApproval, user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.products.update_one(
+        {"id": product_id},
+        {
+            "$set": {
+                "is_approved": False,
+                "approval_status": "rejected",
+                "rejection_reason": approval.rejection_reason,
+                "rejected_by": user["id"],
+                "rejected_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    return {"message": "تم رفض المنتج"}
 
 # ============== Seed Demo Data ==============
 
