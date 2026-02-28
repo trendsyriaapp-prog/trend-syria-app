@@ -568,31 +568,31 @@ const ProductDetailPage = () => {
               {product.stock > 0 ? (
                 <span className="text-green-600 font-medium text-xs">متوفر ({product.stock} قطعة)</span>
               ) : (
-                <span className="text-red-500 font-medium text-sm">غير متوفر</span>
+                <span className="text-red-500 font-medium text-xs">غير متوفر</span>
               )}
             </div>
 
             {/* Seller/Store Info */}
-            <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-500">المتجر</p>
+            <div className="mt-2 p-2 bg-white rounded-lg border border-gray-200">
+              <p className="text-[10px] text-gray-500">المتجر</p>
               <Link 
                 to={`/store/${product.seller_id || ''}`}
-                className="font-bold text-sm text-[#FF6B00] hover:underline flex items-center gap-1"
+                className="font-bold text-xs text-[#FF6B00] hover:underline flex items-center gap-1"
               >
-                <Store size={14} />
+                <Store size={12} />
                 {product.business_name || 'متجر'}
               </Link>
               
               {/* معلومات البائع والموقع للمدير فقط */}
               {user?.user_type === 'admin' && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-xs text-red-500 font-bold mb-1">معلومات للمدير فقط:</p>
-                  <p className="text-xs text-gray-600">اسم البائع: {product.seller_name}</p>
+                  <p className="text-[10px] text-red-500 font-bold mb-1">معلومات للمدير فقط:</p>
+                  <p className="text-[10px] text-gray-600">اسم البائع: {product.seller_name}</p>
                   {product.seller_phone && (
-                    <p className="text-xs text-gray-600">رقم الهاتف: {product.seller_phone}</p>
+                    <p className="text-[10px] text-gray-600">رقم الهاتف: {product.seller_phone}</p>
                   )}
                   {product.city && (
-                    <p className="text-xs text-gray-600">📍 الموقع: {product.city}</p>
+                    <p className="text-[10px] text-gray-600">📍 الموقع: {product.city}</p>
                   )}
                 </div>
               )}
@@ -601,10 +601,10 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Reviews Section */}
-        <section className="mt-8">
-          <div className="flex items-center gap-2 mb-4">
-            <MessageCircle size={20} className="text-[#FF6B00]" />
-            <h2 className="text-lg font-bold text-gray-900">تعليقات وصور العملاء ({product.reviews?.length || 0})</h2>
+        <section className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageCircle size={16} className="text-[#FF6B00]" />
+            <h2 className="text-sm font-bold text-gray-900">تعليقات وصور العملاء ({product.reviews?.length || 0})</h2>
           </div>
           
           {/* Review Form - Only show if user can review */}
@@ -613,7 +613,7 @@ const ProductDetailPage = () => {
           )}
           
           {user && !canReview && product.reviews?.some(r => r.user_id === user.id) && (
-            <p className="text-gray-500 mb-3 bg-green-50 p-2 rounded-lg border border-green-200 text-sm">
+            <p className="text-gray-500 mb-3 bg-green-50 p-2 rounded-lg border border-green-200 text-xs">
               ✅ لقد قمت بتقييم هذا المنتج مسبقاً
             </p>
           )}
