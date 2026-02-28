@@ -461,22 +461,23 @@ const ProductDetailPage = () => {
             {/* خط مستقيم أسفل الصورة مع أيقونة الفيديو */}
             <div className="h-[1px] bg-gray-200 relative">
               {(product.video || product.video_url) && (
-                <div className="absolute left-1/2 -translate-x-1/2 -top-3">
+                <div className="absolute right-4 -top-3">
                   <button
                     onClick={() => {
                       if (product.video) {
-                        // فتح الفيديو في نافذة منبثقة
                         const videoWindow = window.open('', '_blank');
                         videoWindow.document.write(`<video src="${product.video}" controls autoplay style="width:100%;height:100vh;background:#000;"></video>`);
                       } else if (product.video_url) {
                         window.open(product.video_url, '_blank');
                       }
                     }}
-                    className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold hover:bg-red-600 transition-colors shadow-md"
+                    className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-[10px] font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow-lg"
                     data-testid="video-btn"
                   >
-                    <Play size={12} fill="white" />
-                    فيديو
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    مشاهدة فيديو
                   </button>
                 </div>
               )}
