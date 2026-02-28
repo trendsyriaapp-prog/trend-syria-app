@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store, Mail
+  MessageCircle, Package, LogOut, Settings, Store, Mail, Share2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../hooks/use-toast';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,12 +15,39 @@ const Header = () => {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  
+  // التحقق إذا كنا في صفحة المنتج
+  const isProductPage = location.pathname.startsWith('/products/');
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
+    }
+  };
+
+  // دالة المشاركة
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'تريند سورية',
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled or error
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "تم النسخ",
+        description: "تم نسخ الرابط"
+      });
     }
   };
 
@@ -58,14 +86,24 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Messages Icon */}
-            <Link 
-              to={user ? "/messages" : "/login"}
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-              data-testid="messages-icon"
-            >
-              <Mail size={22} />
-            </Link>
+            {/* Messages Icon أو Share Icon حسب الصفحة */}
+            {isProductPage ? (
+              <button 
+                onClick={handleShare}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
+                data-testid="share-icon"
+              >
+                <Share2 size={22} />
+              </button>
+            ) : (
+              <Link 
+                to={user ? "/messages" : "/login"}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
+                data-testid="messages-icon"
+              >
+                <Mail size={22} />
+              </Link>
+            )}
 
             {/* User Menu */}
             {user ? (
