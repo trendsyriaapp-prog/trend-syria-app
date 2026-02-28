@@ -92,8 +92,8 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى اختيار طريقة الدفع", variant: "destructive" });
       return;
     }
-    if (useNewAddress && (!newAddress.area || !newAddress.phone)) {
-      toast({ title: "خطأ", description: "يرجى إكمال بيانات العنوان", variant: "destructive" });
+    if (useNewAddress && (!newAddress.area || !newAddress.phone || !newAddress.street_number || !newAddress.building_number || !newAddress.apartment_number)) {
+      toast({ title: "خطأ", description: "يرجى إكمال جميع بيانات العنوان", variant: "destructive" });
       return;
     }
     if (useNewPayment && (!newPayment.phone || !newPayment.holder_name)) {
