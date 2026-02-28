@@ -395,7 +395,8 @@ const SellerDashboardPage = () => {
         video: newProduct.video || null,
         length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
         width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
-        height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null
+        height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
+        weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null
       });
 
       toast({
@@ -415,7 +416,8 @@ const SellerDashboardPage = () => {
         city: '',
         length_cm: '',
         width_cm: '',
-        height_cm: ''
+        height_cm: '',
+        weight_kg: ''
       });
       fetchData();
     } catch (error) {
