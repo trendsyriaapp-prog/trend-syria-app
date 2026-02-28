@@ -41,7 +41,7 @@ const CheckoutPage = () => {
   const [useNewPayment, setUseNewPayment] = useState(false);
 
   const [newAddress, setNewAddress] = useState({
-    title: 'المنزل', city: 'دمشق', area: '', street: '', phone: '', is_default: false
+    title: 'المنزل', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false
   });
 
   const [newPayment, setNewPayment] = useState({
