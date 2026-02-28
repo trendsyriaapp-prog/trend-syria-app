@@ -61,6 +61,7 @@ const Header = () => {
       await axios.post(`${API}/notifications/read-all`);
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
+      setShowNotifications(false);
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
