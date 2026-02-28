@@ -292,30 +292,33 @@ const SellerDashboardPage = () => {
         
         // إعداد العلامة المائية
         const text = 'تريند سورية';
-        const fontSize = Math.max(canvas.width * 0.08, 24);
-        ctx.font = `bold ${fontSize}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        const fontSize = Math.max(canvas.width * 0.06, 20);
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        
+        // العلامة المائية في الزاوية السفلية اليمنى
+        const textWidth = ctx.measureText(text).width;
+        const padding = 10;
+        const x = canvas.width - textWidth - padding - 15;
+        const y = canvas.height - padding - 15;
         
         // رسم خلفية شبه شفافة للنص
-        const textWidth = ctx.measureText(text).width;
-        const padding = 20;
-        const bgX = canvas.width / 2 - textWidth / 2 - padding;
-        const bgY = canvas.height / 2 - fontSize / 2 - padding / 2;
-        const bgWidth = textWidth + padding * 2;
-        const bgHeight = fontSize + padding;
-        
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(x - padding, y - fontSize - padding/2, textWidth + padding * 2, fontSize + padding);
         
         // رسم النص
-        ctx.fillStyle = 'rgba(255, 107, 0, 0.9)';
-        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.fillStyle = '#FF6B00';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(text, x, y);
         
-        // إضافة حدود للنص
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.lineWidth = 2;
-        ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+        // إضافة علامة مائية شفافة كبيرة في المنتصف
+        ctx.globalAlpha = 0.15;
+        ctx.font = `bold ${Math.max(canvas.width * 0.15, 40)}px Arial, sans-serif`;
+        ctx.fillStyle = '#FF6B00';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.globalAlpha = 1;
         
         resolve(canvas.toDataURL('image/jpeg', 0.9));
       };
@@ -325,22 +328,35 @@ const SellerDashboardPage = () => {
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
     setUploadingImage(true);
     
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
+    try {
+      for (const file of files) {
+        const imageDataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+        
         // إضافة العلامة المائية
-        const watermarkedImage = await addWatermark(reader.result);
+        const watermarkedImage = await addWatermark(imageDataUrl);
         setNewProduct(prev => ({
           ...prev,
           images: [...prev.images, watermarkedImage]
         }));
-      };
-      reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في رفع الصورة",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
     }
-    
-    setUploadingImage(false);
   };
 
   const handleVideoUpload = (e) => {
