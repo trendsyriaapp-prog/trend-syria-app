@@ -31,9 +31,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId, quantity = 1, selectedSize = null) => {
     try {
-      await axios.post(`${API}/cart/add`, { product_id: productId, quantity });
+      await axios.post(`${API}/cart/add`, { 
+        product_id: productId, 
+        quantity,
+        selected_size: selectedSize 
+      });
       await fetchCart();
       return true;
     } catch (error) {
