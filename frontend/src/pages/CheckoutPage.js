@@ -124,7 +124,11 @@ const CheckoutPage = () => {
       }
 
       const res = await axios.post(`${API}/orders`, {
-        items: cart.items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+        items: cart.items.map(i => ({ 
+          product_id: i.product_id, 
+          quantity: i.quantity,
+          selected_size: i.selected_size 
+        })),
         ...addressData, ...paymentData
       });
 
