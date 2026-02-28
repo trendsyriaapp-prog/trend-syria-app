@@ -738,6 +738,20 @@ const SellerDashboardPage = () => {
                 </div>
               </div>
 
+              {/* الوزن */}
+              <div>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={newProduct.weight_kg}
+                  onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  placeholder="مثال: 1.5"
+                  data-testid="product-weight-input"
+                />
+              </div>
+
               <div>
                 <label className="block text-[10px] font-medium mb-1 text-gray-700">
                   صور المنتج ({newProduct.images.length}/5)
