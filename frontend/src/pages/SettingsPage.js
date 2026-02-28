@@ -207,7 +207,7 @@ const SettingsPage = () => {
             <div className="flex justify-between items-center mb-2">
               <h2 className="font-bold text-xs text-gray-900">عناوين التوصيل</h2>
               <button
-                onClick={() => { setShowAddAddress(true); setEditingAddress(null); setNewAddress({ title: '', city: 'دمشق', area: '', street: '', building: '', floor: '', details: '', phone: '', is_default: false }); }}
+                onClick={() => { setShowAddAddress(true); setEditingAddress(null); setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false }); }}
                 className="flex items-center gap-0.5 text-[#FF6B00] text-[10px] font-bold"
               >
                 <Plus size={14} />
@@ -223,12 +223,13 @@ const SettingsPage = () => {
                   <select value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs bg-white" required>
                     {SYRIAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                   </select>
-                  <input type="text" placeholder="المنطقة / الحي" value={newAddress.area} onChange={(e) => setNewAddress({...newAddress, area: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="الشارع" value={newAddress.street} onChange={(e) => setNewAddress({...newAddress, street: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" />
-                    <input type="text" placeholder="البناء" value={newAddress.building} onChange={(e) => setNewAddress({...newAddress, building: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" />
+                  <input type="text" placeholder="المنطقة / الحي *" value={newAddress.area} onChange={(e) => setNewAddress({...newAddress, area: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" placeholder="رقم الشارع *" value={newAddress.street_number} onChange={(e) => setNewAddress({...newAddress, street_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
+                    <input type="text" placeholder="رقم البناء *" value={newAddress.building_number} onChange={(e) => setNewAddress({...newAddress, building_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
+                    <input type="text" placeholder="رقم المنزل *" value={newAddress.apartment_number} onChange={(e) => setNewAddress({...newAddress, apartment_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
                   </div>
-                  <input type="tel" placeholder="رقم الهاتف" value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
+                  <input type="tel" placeholder="رقم الهاتف *" value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
                   <label className="flex items-center gap-1.5 text-[10px] text-gray-700">
                     <input type="checkbox" checked={newAddress.is_default} onChange={(e) => setNewAddress({...newAddress, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
                     عنوان افتراضي
