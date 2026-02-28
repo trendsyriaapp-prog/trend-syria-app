@@ -484,7 +484,7 @@ const ProductDetailPage = () => {
             </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2">
+            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2 px-4">
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
@@ -505,7 +505,7 @@ const ProductDetailPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto w-full"
+            className="max-w-2xl mx-auto w-full px-4"
           >
             <h1 className="text-sm md:text-base font-bold mb-1 text-gray-900" data-testid="product-name">
               {product.name}
