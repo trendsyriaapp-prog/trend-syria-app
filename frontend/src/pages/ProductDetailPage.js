@@ -371,12 +371,20 @@ const ProductDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-3"
           >
-            <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2">
+            <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
               <img
                 src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
                 alt={product.name}
                 className="w-full h-full object-contain"
+                onContextMenu={(e) => e.preventDefault()}
+                draggable="false"
               />
+              {/* العلامة المائية */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-black/40 px-4 py-2 rounded-lg">
+                  <span className="text-white/90 font-bold text-lg">تريند سورية</span>
+                </div>
+              </div>
             </div>
             {product.images?.length > 1 && (
               <div className="flex gap-1 overflow-x-auto hide-scrollbar justify-center">
