@@ -724,6 +724,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             "seller_id": product["seller_id"],
             "price": product["price"],
             "quantity": item["quantity"],
+            "selected_size": item.get("selected_size"),
             "item_total": item_total,
             "image": product["images"][0] if product["images"] else None
         })
