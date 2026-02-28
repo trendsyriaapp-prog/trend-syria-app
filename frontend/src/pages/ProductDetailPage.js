@@ -437,28 +437,6 @@ const ProductDetailPage = () => {
                 draggable="false"
               />
               
-              {/* أيقونة الفيديو داخل الصورة */}
-              {(product.video || product.video_url) && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (product.video) {
-                      const videoWindow = window.open('', '_blank');
-                      videoWindow.document.write(`<video src="${product.video}" controls autoplay style="width:100%;height:100vh;background:#000;"></video>`);
-                    } else if (product.video_url) {
-                      window.open(product.video_url, '_blank');
-                    }
-                  }}
-                  className="absolute bottom-12 right-2 flex items-center gap-1 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-1 rounded-full text-[8px] font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow z-20"
-                  data-testid="video-btn"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                  </svg>
-                  مشاهدة فيديو
-                </button>
-              )}
-              
               {/* نقاط التنقل بين الصور - داخل الصورة */}
               {product.images?.length > 1 && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
@@ -480,11 +458,33 @@ const ProductDetailPage = () => {
               )}
             </div>
             
-            {/* خط مستقيم أسفل الصورة */}
-            <div className="h-[1px] bg-gray-200"></div>
+            {/* خط مستقيم أسفل الصورة مع أيقونة الفيديو */}
+            <div className="h-[1px] bg-gray-200 relative">
+              {(product.video || product.video_url) && (
+                <div className="absolute right-2 -top-2.5 z-20">
+                  <button
+                    onClick={() => {
+                      if (product.video) {
+                        const videoWindow = window.open('', '_blank');
+                        videoWindow.document.write(`<video src="${product.video}" controls autoplay style="width:100%;height:100vh;background:#000;"></video>`);
+                      } else if (product.video_url) {
+                        window.open(product.video_url, '_blank');
+                      }
+                    }}
+                    className="flex items-center gap-1 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-1 rounded-full text-[8px] font-bold hover:from-red-600 hover:to-pink-600 transition-all shadow"
+                    data-testid="video-btn"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    مشاهدة فيديو
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-1 px-4">
+            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-3 px-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
