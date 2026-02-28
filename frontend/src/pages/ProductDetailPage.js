@@ -463,15 +463,15 @@ const ProductDetailPage = () => {
               {/* نقاط التنقل بين الصور - داخل الصورة */}
               {product.images?.length > 1 && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
-                  <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded-full">
+                  <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
                     {product.images.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentImage(i)}
                         className={`rounded-full transition-all ${
                           currentImage === i 
-                            ? 'bg-white w-[6px] h-[6px]' 
-                            : 'bg-white/60 hover:bg-white/80 w-[5px] h-[5px]'
+                            ? 'bg-white w-[7px] h-[7px]' 
+                            : 'bg-white/60 hover:bg-white/80 w-[6px] h-[6px]'
                         }`}
                         data-testid={`dot-${i}`}
                       />
