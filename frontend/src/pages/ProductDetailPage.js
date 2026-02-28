@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
-  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store
+  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
