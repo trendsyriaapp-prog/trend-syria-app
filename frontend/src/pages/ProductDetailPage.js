@@ -493,56 +493,6 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Quantity */}
-            {product.stock > 0 && (
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-sm text-gray-600">الكمية:</span>
-                <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
-                    data-testid="decrease-qty"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="w-8 text-center font-bold text-sm" data-testid="quantity">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
-                    data-testid="increase-qty"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={handleAddToCart}
-                disabled={product.stock === 0 || addingToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#FF6B00] text-white font-bold py-2.5 rounded-full text-sm hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                data-testid="add-to-cart-btn"
-              >
-                {addingToCart ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
-                ) : (
-                  <>
-                    <ShoppingCart size={16} />
-                    أضف للسلة
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleContactSeller}
-                className="p-2.5 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
-                data-testid="contact-seller-btn"
-              >
-                <MessageCircle size={16} className="text-gray-700" />
-              </button>
-            </div>
-
             {/* Features */}
             <div className="space-y-1 border-t border-gray-200 pt-3">
               <div className="flex items-center gap-2 text-xs text-gray-600">
