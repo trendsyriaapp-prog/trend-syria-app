@@ -368,11 +368,11 @@ const ProductDetailPage = () => {
               <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
                 <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded-md">
                   <Truck size={9} className="text-[#FF6B00]" />
-                  <span className="text-[8px] text-white">توصيل مجاني</span>
+                  <span className="text-[8px] text-white">توصيل مجاني داخل المحافظات</span>
                 </div>
                 <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded-md">
                   <Shield size={9} className="text-green-400" />
-                  <span className="text-[8px] text-white">ضمان الاسترجاع</span>
+                  <span className="text-[8px] text-white">ضمان استرجاع الأموال خلال ساعة</span>
                 </div>
               </div>
               
