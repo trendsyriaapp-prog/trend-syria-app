@@ -346,12 +346,22 @@ const ProductDetailPage = () => {
       return;
     }
 
+    // التحقق من اختيار المقاس إذا كان المنتج يحتوي على مقاسات
+    if (product.available_sizes && product.available_sizes.length > 0 && !selectedSize) {
+      toast({
+        title: "يرجى اختيار المقاس",
+        description: "اختر المقاس المناسب قبل الإضافة للسلة",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setAddingToCart(true);
     try {
-      await addToCart(product.id, quantity);
+      await addToCart(product.id, quantity, selectedSize);
       toast({
         title: "تمت الإضافة",
-        description: `تمت إضافة ${quantity} ${product.name} إلى السلة`
+        description: `تمت إضافة ${quantity} ${product.name}${selectedSize ? ` (${selectedSize})` : ''} إلى السلة`
       });
     } catch (error) {
       toast({
