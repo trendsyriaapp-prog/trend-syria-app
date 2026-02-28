@@ -116,10 +116,9 @@ class AddressCreate(BaseModel):
     title: str
     city: str
     area: str
-    street: Optional[str] = None
-    building: Optional[str] = None
-    floor: Optional[str] = None
-    details: Optional[str] = None
+    street_number: Optional[str] = None
+    building_number: Optional[str] = None
+    apartment_number: Optional[str] = None
     phone: str
     is_default: bool = False
 
@@ -128,6 +127,11 @@ class PaymentMethodCreate(BaseModel):
     phone: str
     holder_name: str
     is_default: bool = False
+
+class NotificationCreate(BaseModel):
+    title: str
+    message: str
+    target: str = "all"  # all, buyers, sellers
 
 # ============== Helper Functions ==============
 
