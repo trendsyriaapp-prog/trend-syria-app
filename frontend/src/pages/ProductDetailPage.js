@@ -251,6 +251,163 @@ const ReviewCard = ({ review }) => {
   );
 };
 
+// بيانات دليل المقاسات
+const SIZE_GUIDES = {
+  clothes: {
+    title: 'دليل مقاسات الملابس',
+    headers: ['المقاس', 'الصدر (سم)', 'الخصر (سم)', 'الطول (سم)'],
+    rows: [
+      ['S', '86-91', '71-76', '165-170'],
+      ['M', '91-96', '76-81', '170-175'],
+      ['L', '96-101', '81-86', '175-180'],
+      ['XL', '101-106', '86-91', '180-185'],
+      ['XXL', '106-111', '91-96', '185-190'],
+      ['3XL', '111-116', '96-101', '190-195'],
+    ]
+  },
+  shoes: {
+    title: 'دليل مقاسات الأحذية',
+    headers: ['المقاس EU', 'طول القدم (سم)', 'المقاس US'],
+    rows: [
+      ['36', '22.5', '4'],
+      ['37', '23', '5'],
+      ['38', '23.5', '6'],
+      ['39', '24', '7'],
+      ['40', '24.5', '7.5'],
+      ['41', '25', '8'],
+      ['42', '25.5', '9'],
+      ['43', '26.5', '10'],
+      ['44', '27', '11'],
+      ['45', '27.5', '12'],
+      ['46', '28', '13'],
+    ]
+  },
+  pants: {
+    title: 'دليل مقاسات البناطيل',
+    headers: ['المقاس', 'الخصر (سم)', 'الورك (سم)', 'طول الساق (سم)'],
+    rows: [
+      ['28', '71', '89', '76'],
+      ['30', '76', '94', '78'],
+      ['32', '81', '99', '80'],
+      ['34', '86', '104', '81'],
+      ['36', '91', '109', '82'],
+      ['38', '96', '114', '83'],
+      ['40', '101', '119', '84'],
+      ['42', '106', '124', '85'],
+    ]
+  }
+};
+
+// مكون دليل المقاسات
+const SizeGuideModal = ({ isOpen, onClose, sizeType }) => {
+  if (!isOpen) return null;
+  
+  const guide = SIZE_GUIDES[sizeType] || SIZE_GUIDES.clothes;
+  
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl max-w-md w-full max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gradient-to-r from-[#FF6B00] to-[#FF8533]">
+          <h3 className="font-bold text-white text-sm flex items-center gap-2">
+            <Ruler size={16} />
+            {guide.title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="p-3 overflow-y-auto max-h-[60vh]">
+          {/* Tips */}
+          <div className="bg-blue-50 rounded-lg p-2 mb-3 text-[11px] text-blue-700">
+            <p className="font-bold mb-1">💡 نصائح لاختيار المقاس:</p>
+            <ul className="space-y-0.5 list-disc mr-4">
+              <li>قس جسمك بشريط قياس مرن</li>
+              <li>إذا كنت بين مقاسين، اختر المقاس الأكبر</li>
+              <li>راجع تقييمات المشترين السابقين</li>
+            </ul>
+          </div>
+          
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="bg-gray-100">
+                  {guide.headers.map((header, i) => (
+                    <th key={i} className="py-2 px-2 text-right font-bold text-gray-700 border-b border-gray-200">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {guide.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    {row.map((cell, cellIndex) => (
+                      <td 
+                        key={cellIndex} 
+                        className={`py-2 px-2 border-b border-gray-100 ${cellIndex === 0 ? 'font-bold text-[#FF6B00]' : 'text-gray-600'}`}
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* How to measure */}
+          <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+            <p className="font-bold text-[11px] text-gray-700 mb-1">📏 طريقة القياس:</p>
+            {sizeType === 'clothes' && (
+              <ul className="text-[10px] text-gray-600 space-y-0.5">
+                <li><strong>الصدر:</strong> قس حول أعرض جزء من الصدر</li>
+                <li><strong>الخصر:</strong> قس حول أضيق جزء من الخصر</li>
+                <li><strong>الطول:</strong> قف مستقيماً وقس من الرأس للقدم</li>
+              </ul>
+            )}
+            {sizeType === 'shoes' && (
+              <ul className="text-[10px] text-gray-600 space-y-0.5">
+                <li><strong>طول القدم:</strong> قف على ورقة وارسم حول قدمك</li>
+                <li>قس من الكعب لأطول إصبع</li>
+                <li>قس كلا القدمين واختر الأكبر</li>
+              </ul>
+            )}
+            {sizeType === 'pants' && (
+              <ul className="text-[10px] text-gray-600 space-y-0.5">
+                <li><strong>الخصر:</strong> قس حول خط حزام البنطال</li>
+                <li><strong>الورك:</strong> قس حول أعرض جزء من الأرداف</li>
+                <li><strong>طول الساق:</strong> من الخصر للكاحل من الداخل</li>
+              </ul>
+            )}
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-3 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={onClose}
+            className="w-full bg-[#FF6B00] text-white font-bold py-2 rounded-full text-xs hover:bg-[#E65000] transition-colors"
+          >
+            فهمت، اختيار المقاس
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
