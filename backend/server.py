@@ -621,6 +621,7 @@ async def get_cart(user: dict = Depends(get_current_user)):
             items_with_details.append({
                 "product_id": item["product_id"],
                 "quantity": item["quantity"],
+                "selected_size": item.get("selected_size"),
                 "product": product,
                 "item_total": item_total
             })
