@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
