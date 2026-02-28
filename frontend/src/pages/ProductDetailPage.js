@@ -440,16 +440,9 @@ const ProductDetailPage = () => {
             </h1>
 
             {/* Rating */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-2">
               <StarRating rating={Math.round(product.rating || 0)} readonly size={14} />
               <span className="text-xs text-gray-600">({product.reviews_count || 0} تقييم)</span>
-            </div>
-
-            {/* Price */}
-            <div className="mb-2">
-              <span className="text-xl font-bold text-[#FF6B00]" data-testid="product-price">
-                {formatPrice(product.price)}
-              </span>
             </div>
 
             {/* Description */}
