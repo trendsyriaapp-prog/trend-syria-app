@@ -61,6 +61,7 @@ class ProductCreate(BaseModel):
     length_cm: Optional[float] = None  # الطول بالسنتيمتر
     width_cm: Optional[float] = None   # العرض بالسنتيمتر
     height_cm: Optional[float] = None  # الارتفاع بالسنتيمتر
+    weight_kg: Optional[float] = None  # الوزن بالكيلوغرام
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -75,6 +76,7 @@ class ProductUpdate(BaseModel):
     length_cm: Optional[float] = None
     width_cm: Optional[float] = None
     height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
 
 class CartItem(BaseModel):
     product_id: str
