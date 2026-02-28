@@ -71,10 +71,13 @@
 - GET /api/products
 - GET /api/products/{id}
 - POST /api/reviews
-- POST /api/cart/add
+- POST /api/cart/add (يدعم selected_size للمقاسات)
 - POST /api/orders
 - GET /api/orders
+- POST /api/admin/notifications (إرسال إشعارات)
+- GET /api/notifications (جلب الإشعارات)
 
 ## ملاحظات
 - طرق الدفع محاكاة (MOCKED) وليست متصلة بخدمات حقيقية
-- الصور في التقييمات تخزن كـ Base64
+- الصور والفيديوهات تخزن كـ Base64
+- المقاسات المدعومة: ملابس (S, M, L, XL, XXL, 3XL)، أحذية (36-46)، بناطيل (28-42)
