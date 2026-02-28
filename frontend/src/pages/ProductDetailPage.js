@@ -366,13 +366,11 @@ const ProductDetailPage = () => {
             <div className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
               {/* عبارات التوصيل والضمان - مربعات على زاوية اليمين */}
               <div className="absolute top-0 right-0 z-10 flex flex-col">
-                <div className="flex items-center gap-2 bg-green-500 px-3 py-2">
-                  <Truck size={14} className="text-white" />
-                  <span className="text-[10px] text-white font-bold">توصيل مجاني داخل المحافظات</span>
+                <div className="bg-green-500 px-2 py-1">
+                  <span className="text-[8px] text-white font-bold">توصيل مجاني داخل المحافظات</span>
                 </div>
-                <div className="flex items-center gap-2 bg-[#FF6B00] px-3 py-2">
-                  <Shield size={14} className="text-white" />
-                  <span className="text-[10px] text-white font-bold">ضمان استرجاع الأموال خلال ساعة</span>
+                <div className="bg-[#FF6B00] px-2 py-1">
+                  <span className="text-[8px] text-white font-bold">ضمان استرجاع الأموال خلال ساعة</span>
                 </div>
               </div>
               
