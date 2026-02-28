@@ -457,7 +457,7 @@ const CheckoutPage = () => {
         {/* Free delivery banner */}
         <div className="flex items-center justify-center gap-2 text-[10px] text-green-600 bg-green-50 rounded-lg py-2 mt-3">
           <Truck size={12} />
-          <span>توصيل مجاني لجميع أنحاء سوريا</span>
+          <span>توصيل مجاني داخل المحافظات</span>
         </div>
       </div>
     </div>
