@@ -55,27 +55,23 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-white">
-      {/* Hero Section */}
+      {/* Hero Section + Features - مدمجين */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/10 to-white">
-        <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center"
+            className="text-center mb-4"
           >
-            <h1 className="text-3xl md:text-5xl font-bold mb-2 text-gray-900">
+            <h1 className="text-2xl md:text-4xl font-bold mb-1 text-gray-900">
               تريند <span className="text-[#FF6B00]">سورية</span>
             </h1>
-            <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
               منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Features - Smaller */}
-      <section className="py-4 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4">
+          
+          {/* Features */}
           <div className="grid grid-cols-4 gap-2">
             {[
               { icon: Truck, text: 'توصيل مجاني', desc: 'داخل المحافظات' },
@@ -88,7 +84,7 @@ const HomePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"
+                className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-gray-100"
               >
                 <div className="p-1.5 bg-[#FF6B00]/10 rounded-full">
                   <feature.icon size={14} className="text-[#FF6B00]" />
