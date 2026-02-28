@@ -423,7 +423,7 @@ const ProductDetailPage = () => {
             className="mb-3"
           >
             <div 
-              className="aspect-square max-h-[500px] rounded-xl overflow-hidden bg-white border-b border-gray-200 mb-2 relative cursor-pointer"
+              className="aspect-square max-h-[500px] overflow-hidden bg-white relative cursor-pointer"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -458,24 +458,32 @@ const ProductDetailPage = () => {
               )}
             </div>
             
-            {/* زر الفيديو إذا كان موجوداً */}
-            {product.video_url && (
-              <div className="flex justify-center">
-                <a
-                  href={product.video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-[#FF6B00] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#E65000] transition-colors"
-                  data-testid="video-btn"
-                >
-                  <Play size={14} fill="white" />
-                  شاهد الفيديو
-                </a>
-              </div>
-            )}
+            {/* خط مستقيم أسفل الصورة مع أيقونة الفيديو */}
+            <div className="h-[1px] bg-gray-200 relative">
+              {(product.video || product.video_url) && (
+                <div className="absolute left-1/2 -translate-x-1/2 -top-3">
+                  <button
+                    onClick={() => {
+                      if (product.video) {
+                        // فتح الفيديو في نافذة منبثقة
+                        const videoWindow = window.open('', '_blank');
+                        videoWindow.document.write(`<video src="${product.video}" controls autoplay style="width:100%;height:100vh;background:#000;"></video>`);
+                      } else if (product.video_url) {
+                        window.open(product.video_url, '_blank');
+                      }
+                    }}
+                    className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold hover:bg-red-600 transition-colors shadow-md"
+                    data-testid="video-btn"
+                  >
+                    <Play size={12} fill="white" />
+                    فيديو
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-3 py-1 bg-gradient-to-r from-green-50 via-white to-orange-50 rounded-lg border border-gray-100 mt-1">
+            <div className="flex items-center justify-center gap-3 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-2">
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={10} className="text-white" />
