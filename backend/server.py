@@ -1465,7 +1465,7 @@ async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
 @api_router.post("/admin/notifications")
 async def create_notification(data: NotificationCreate, user: dict = Depends(get_current_user)):
     """Create notification (Admin only)"""
-    if user.get("role") not in ["admin", "sub_admin"]:
+    if user.get("user_type") not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
     notification = {
