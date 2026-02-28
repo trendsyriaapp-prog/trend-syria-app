@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Search, ShoppingCart, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store
+  Search, User, Menu, X, Home, Grid3X3, 
+  MessageCircle, Package, LogOut, Settings, Store, Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -25,25 +25,25 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        {/* الصف الأول: الشعار + البحث + الأيقونات */}
+        <div className="flex items-center gap-3">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <Home size={20} className="text-white" />
+          <Link to="/" className="flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <Home size={18} className="text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">تريند سورية</span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl">
-            <div className="relative w-full">
+          {/* Search Bar - مدمج في الشريط */}
+          <form onSubmit={handleSearch} className="flex-1">
+            <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ابحث عن منتجات..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-5 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 data-testid="search-input"
               />
               <button 
@@ -51,32 +51,27 @@ const Header = () => {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B00] transition-colors"
                 data-testid="search-btn"
               >
-                <Search size={20} />
+                <Search size={18} />
               </button>
             </div>
           </form>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
-            {/* Cart */}
+          <div className="flex items-center gap-2">
+            {/* Messages Icon */}
             <Link 
-              to="/cart" 
+              to={user ? "/messages" : "/login"}
               className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-              data-testid="cart-btn"
+              data-testid="messages-icon"
             >
-              <ShoppingCart size={24} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
+              <Mail size={22} />
             </Link>
 
             {/* User Menu */}
             {user ? (
               <div className="relative group">
                 <button 
-                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
                   data-testid="user-menu-btn"
                 >
                   <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
@@ -123,7 +118,7 @@ const Header = () => {
             ) : (
               <Link 
                 to="/login"
-                className="bg-[#FF6B00] text-white font-bold px-4 py-2 rounded-full hover:bg-[#E65000] transition-colors"
+                className="bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full hover:bg-[#E65000] transition-colors text-sm"
                 data-testid="login-btn"
               >
                 دخول
@@ -136,30 +131,10 @@ const Header = () => {
               className="p-2 md:hidden hover:bg-gray-100 rounded-full transition-colors text-gray-700"
               data-testid="mobile-menu-btn"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
-
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden mt-3">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث عن منتجات..."
-              className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-5 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-              data-testid="mobile-search-input"
-            />
-            <button 
-              type="submit"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B00] transition-colors"
-            >
-              <Search size={20} />
-            </button>
-          </div>
-        </form>
       </div>
 
       {/* Mobile Menu */}
