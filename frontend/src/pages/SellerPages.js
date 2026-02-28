@@ -584,156 +584,146 @@ const SellerDashboardPage = () => {
 
       {/* Add Product Modal */}
       {showAddProduct && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl p-4 w-full max-w-md max-h-[85vh] overflow-y-auto"
           >
-            <h2 className="text-xl font-bold mb-4 text-gray-900">إضافة منتج جديد</h2>
-            <form onSubmit={handleAddProduct} className="space-y-4">
+            <h2 className="text-sm font-bold mb-3 text-gray-900">إضافة منتج جديد</h2>
+            <form onSubmit={handleAddProduct} className="space-y-2">
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">اسم المنتج</label>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">اسم المنتج</label>
                 <input
                   type="text"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                   required
                   data-testid="product-name-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">الوصف</label>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">الوصف</label>
                 <textarea
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  rows={3}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  rows={2}
                   required
                   data-testid="product-desc-input"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">السعر (ل.س)</label>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">السعر (ل.س)</label>
                   <input
                     type="number"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                     required
                     data-testid="product-price-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">الكمية</label>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية</label>
                   <input
                     type="number"
                     value={newProduct.stock}
                     onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                     required
                     data-testid="product-stock-input"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">الصنف</label>
-                <select
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  data-testid="product-category-select"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* المدينة */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">المدينة</label>
-                <select
-                  value={newProduct.city}
-                  onChange={(e) => setNewProduct({ ...newProduct, city: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  required
-                  data-testid="product-city-select"
-                >
-                  <option value="">اختر المدينة</option>
-                  {SYRIAN_CITIES.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
+                  <select
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    data-testid="product-category-select"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">المدينة</label>
+                  <select
+                    value={newProduct.city}
+                    onChange={(e) => setNewProduct({ ...newProduct, city: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    required
+                    data-testid="product-city-select"
+                  >
+                    <option value="">اختر المدينة</option>
+                    {SYRIAN_CITIES.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* أبعاد المنتج */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">أبعاد المنتج (بالسنتيمتر) - اختياري</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">الطول</label>
-                    <input
-                      type="number"
-                      value={newProduct.length_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
-                      placeholder="سم"
-                      data-testid="product-length-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">العرض</label>
-                    <input
-                      type="number"
-                      value={newProduct.width_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
-                      placeholder="سم"
-                      data-testid="product-width-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">الارتفاع</label>
-                    <input
-                      type="number"
-                      value={newProduct.height_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                      className="w-full bg-white border border-gray-300 rounded-lg py-2 px-3 text-gray-900 text-sm focus:border-[#FF6B00] focus:outline-none"
-                      placeholder="سم"
-                      data-testid="product-height-input"
-                    />
-                  </div>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="number"
+                    value={newProduct.length_cm}
+                    onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="الطول"
+                    data-testid="product-length-input"
+                  />
+                  <input
+                    type="number"
+                    value={newProduct.width_cm}
+                    onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="العرض"
+                    data-testid="product-width-input"
+                  />
+                  <input
+                    type="number"
+                    value={newProduct.height_cm}
+                    onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="الارتفاع"
+                    data-testid="product-height-input"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  صور المنتج ({newProduct.images.length}/5 صور) - سيتم إضافة علامة مائية تلقائياً
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                  صور المنتج ({newProduct.images.length}/5)
                 </label>
-                <p className="text-xs text-gray-500 mb-2">أضف حتى 5 صور لمنتجك من زوايا مختلفة</p>
-                <div className="grid grid-cols-5 gap-2 mb-2">
+                <div className="grid grid-cols-5 gap-1.5 mb-1">
                   {newProduct.images.map((img, i) => (
                     <div key={i} className="relative aspect-square">
-                      <img src={img} alt="" className="w-full h-full object-cover rounded-lg border border-gray-300" />
+                      <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
                       <button
                         type="button"
                         onClick={() => setNewProduct({
                           ...newProduct,
                           images: newProduct.images.filter((_, idx) => idx !== i)
                         })}
-                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white"
                       >
-                        <X size={12} />
+                        <X size={10} />
                       </button>
                       {i === 0 && (
-                        <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[9px] text-center py-0.5 rounded-b-lg">
-                          الرئيسية
+                        <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[7px] text-center py-0.5 rounded-b">
+                          رئيسية
                         </span>
                       )}
                     </div>
@@ -742,16 +732,13 @@ const SellerDashboardPage = () => {
                     <button
                       type="button"
                       onClick={() => document.getElementById('product-images').click()}
-                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-[#FF6B00] hover:bg-[#FF6B00]/5 transition-colors"
+                      className="aspect-square border border-dashed border-gray-300 rounded flex flex-col items-center justify-center hover:border-[#FF6B00]"
                       disabled={uploadingImage}
                     >
                       {uploadingImage ? (
-                        <Loader2 size={20} className="text-gray-400 animate-spin" />
+                        <Loader2 size={14} className="text-gray-400 animate-spin" />
                       ) : (
-                        <>
-                          <Plus size={20} className="text-gray-400" />
-                          <span className="text-[10px] text-gray-400 mt-1">إضافة</span>
-                        </>
+                        <Plus size={14} className="text-gray-400" />
                       )}
                     </button>
                   )}
@@ -766,37 +753,35 @@ const SellerDashboardPage = () => {
                 />
               </div>
 
-              {/* رابط فيديو المنتج */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">رابط فيديو المنتج (اختياري)</label>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">رابط فيديو (اختياري)</label>
                 <input
                   type="url"
                   value={newProduct.video_url}
                   onChange={(e) => setNewProduct({ ...newProduct, video_url: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="رابط يوتيوب أو أي رابط فيديو"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  placeholder="رابط يوتيوب"
                   data-testid="product-video-input"
                 />
-                <p className="text-xs text-gray-500 mt-1">أضف رابط فيديو لعرض المنتج بشكل أفضل</p>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddProduct(false)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-colors"
+                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-full text-xs font-bold"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full text-xs disabled:opacity-50 flex items-center justify-center gap-1"
                   data-testid="save-product-btn"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="animate-spin" size={20} />
+                      <Loader2 className="animate-spin" size={12} />
                       جاري الحفظ...
                     </>
                   ) : (
