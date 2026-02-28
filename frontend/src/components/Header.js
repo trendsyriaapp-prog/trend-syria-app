@@ -105,58 +105,63 @@ const Header = () => {
               </Link>
             )}
 
-            {/* User Menu */}
+            {/* User Name & Settings Menu */}
             {user ? (
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  data-testid="user-menu-btn"
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{user.name[0]}</span>
-                  </div>
-                </button>
-                <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                  <div className="p-3 border-b border-gray-100">
-                    <p className="font-bold text-sm text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.phone}</p>
-                  </div>
-                  <div className="p-2">
-                    <Link to="/orders" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="my-orders-link">
-                      <Package size={18} />
-                      <span className="text-sm">طلباتي</span>
-                    </Link>
-                    <Link to="/messages" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="messages-link">
-                      <MessageCircle size={18} />
-                      <span className="text-sm">الرسائل</span>
-                    </Link>
-                    <Link to="/settings" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="settings-link">
-                      <Settings size={18} />
-                      <span className="text-sm">الإعدادات</span>
-                    </Link>
-                    {user.user_type === 'seller' && (
-                      <Link to="/seller/dashboard" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="seller-dashboard-link">
-                        <Store size={18} />
-                        <span className="text-sm">لوحة البائع</span>
+              <>
+                {/* اسم المستخدم */}
+                <span className="text-sm font-bold text-gray-900 hidden sm:block">{user.name}</span>
+                <span className="text-xs font-bold text-gray-900 sm:hidden">{user.name.split(' ')[0]}</span>
+                
+                {/* أيقونة الإعدادات مع القائمة */}
+                <div className="relative group">
+                  <button 
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    data-testid="settings-menu-btn"
+                  >
+                    <Settings size={22} className="text-gray-700" />
+                  </button>
+                  <div className="absolute left-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <p className="font-bold text-sm text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-500">{user.phone}</p>
+                    </div>
+                    <div className="p-2">
+                      <Link to="/orders" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="my-orders-link">
+                        <Package size={18} />
+                        <span className="text-sm">طلباتي</span>
                       </Link>
-                    )}
-                    {user.user_type === 'admin' && (
-                      <Link to="/admin" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="admin-link">
+                      <Link to="/messages" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="messages-link">
+                        <MessageCircle size={18} />
+                        <span className="text-sm">الرسائل</span>
+                      </Link>
+                      <Link to="/settings" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="settings-link">
                         <Settings size={18} />
-                        <span className="text-sm">لوحة التحكم</span>
+                        <span className="text-sm">الإعدادات</span>
                       </Link>
-                    )}
-                    <button 
-                      onClick={logout}
-                      className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-red-500"
-                      data-testid="logout-btn"
-                    >
-                      <LogOut size={18} />
-                      <span className="text-sm">تسجيل الخروج</span>
-                    </button>
+                      {user.user_type === 'seller' && (
+                        <Link to="/seller/dashboard" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="seller-dashboard-link">
+                          <Store size={18} />
+                          <span className="text-sm">لوحة البائع</span>
+                        </Link>
+                      )}
+                      {(user.user_type === 'admin' || user.user_type === 'sub_admin') && (
+                        <Link to="/admin" className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700" data-testid="admin-link">
+                          <Settings size={18} />
+                          <span className="text-sm">لوحة التحكم</span>
+                        </Link>
+                      )}
+                      <button 
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-red-500"
+                        data-testid="logout-btn"
+                      >
+                        <LogOut size={18} />
+                        <span className="text-sm">تسجيل الخروج</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             ) : (
               <Link 
                 to="/login"
