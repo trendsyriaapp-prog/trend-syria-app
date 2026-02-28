@@ -245,7 +245,7 @@ const SellerDashboardPage = () => {
     category: 'electronics',
     stock: '',
     images: [],
-    video_url: '',
+    video: null,
     city: '',
     length_cm: '',
     width_cm: '',
@@ -253,6 +253,7 @@ const SellerDashboardPage = () => {
   });
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
