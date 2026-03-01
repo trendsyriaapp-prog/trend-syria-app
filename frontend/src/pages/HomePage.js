@@ -58,28 +58,28 @@ const HomePage = () => {
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* Hero Section - Compact */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/8 via-[#FF6B00]/5 to-transparent">
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+        <div className="max-w-7xl mx-auto px-4 py-2 md:py-3">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-4"
+            className="text-center mb-2"
           >
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-2 text-gray-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold mb-1 text-gray-900 tracking-tight">
               تريند <span className="text-[#FF6B00] relative">
                 سورية
-                <svg className="absolute -bottom-1 left-0 right-0 w-full h-2" viewBox="0 0 100 10">
+                <svg className="absolute -bottom-0.5 left-0 right-0 w-full h-1.5" viewBox="0 0 100 10">
                   <path d="M0 8 Q50 0 100 8" stroke="#FF6B00" strokeWidth="3" fill="none" strokeLinecap="round"/>
                 </svg>
               </span>
             </h1>
-            <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto">
+            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto">
               منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
           
           {/* Features - Compact Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {[
               { icon: Truck, text: 'توصيل مجاني', color: 'bg-emerald-50 text-emerald-600' },
               { icon: Shield, text: 'ضمان الجودة', color: 'bg-blue-50 text-blue-600' },
