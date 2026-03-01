@@ -1126,7 +1126,6 @@ const SellerDashboardPage = () => {
                     استخدم خلفية بيضاء وإضاءة جيدة للحصول على أفضل النتائج
                   </p>
                 )}
-                </div>
                 <input
                   id="product-images"
                   type="file"
