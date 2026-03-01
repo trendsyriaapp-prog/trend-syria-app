@@ -653,7 +653,7 @@ const ProductDetailPage = () => {
             </div>
             
             {/* شريط المميزات */}
-            <div className="flex items-center justify-center gap-2 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-1 px-2 flex-wrap">
+            <div className="flex items-center justify-center gap-2 py-1.5 bg-gradient-to-r from-green-50 via-white to-orange-50 mt-4 px-2 flex-wrap">
               <div className="flex items-center gap-1">
                 <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={8} className="text-white" />
