@@ -115,16 +115,16 @@ const MessagesPage = () => {
   // Chat view
   if (userId) {
     return (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
-        <div className="bg-[#121212] border-b border-white/5 p-4 flex items-center gap-3">
-          <Link to="/messages" className="p-2 hover:bg-white/5 rounded-full">
-            <ArrowRight size={20} />
+        <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3 shadow-sm">
+          <Link to="/messages" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <ArrowRight size={20} className="text-gray-600" />
           </Link>
           <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
-            <span className="text-black font-bold">{otherUser?.name?.[0] || '?'}</span>
+            <span className="text-white font-bold">{otherUser?.name?.[0] || '?'}</span>
           </div>
-          <span className="font-bold">{otherUser?.name || 'محادثة'}</span>
+          <span className="font-bold text-gray-900">{otherUser?.name || 'محادثة'}</span>
         </div>
 
         {/* Messages */}
@@ -134,7 +134,7 @@ const MessagesPage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#FF6B00]" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center text-white/50 py-10">
+            <div className="text-center text-gray-400 py-10">
               <MessageCircle size={40} className="mx-auto mb-2 opacity-50" />
               <p>ابدأ محادثة جديدة</p>
             </div>
@@ -148,11 +148,11 @@ const MessagesPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${isMine ? 'justify-start' : 'justify-end'}`}
                 >
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                    isMine ? 'bg-[#FF6B00] text-black' : 'bg-[#1E1E1E]'
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${
+                    isMine ? 'bg-[#FF6B00] text-white' : 'bg-white text-gray-900 border border-gray-200'
                   }`}>
                     <p>{msg.content}</p>
-                    <p className={`text-[10px] mt-1 ${isMine ? 'text-black/50' : 'text-white/30'}`}>
+                    <p className={`text-[10px] mt-1 ${isMine ? 'text-white/70' : 'text-gray-400'}`}>
                       {new Date(msg.created_at).toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -164,20 +164,20 @@ const MessagesPage = () => {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="p-4 bg-[#121212] border-t border-white/5">
+        <form onSubmit={handleSend} className="p-4 bg-white border-t border-gray-200">
           <div className="flex gap-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-full py-3 px-5 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none"
+              className="flex-1 bg-gray-100 border border-gray-200 rounded-full py-3 px-5 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
               placeholder="اكتب رسالة..."
               data-testid="message-input"
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
-              className="p-3 bg-[#FF6B00] text-black rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+              className="p-3 bg-[#FF6B00] text-white rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors shadow-sm"
               data-testid="send-message-btn"
             >
               <Send size={20} />
