@@ -135,18 +135,15 @@ const HomePage = () => {
             </Link>
           </div>
           
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex gap-3 overflow-x-auto hide-scrollbar pb-2"
-          >
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
                 <motion.div
                   key={cat.id}
-                  variants={itemVariants}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -163,7 +160,7 @@ const HomePage = () => {
                 </motion.div>
               );
             })}
-          </motion.div>
+          </div>
         </div>
       </section>
 
