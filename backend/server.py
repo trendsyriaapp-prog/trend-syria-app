@@ -1065,6 +1065,57 @@ async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_u
     
     return {"message": "تم حذف المدير التنفيذي"}
 
+
+# ============== Admin - All Users ==============
+
+@api_router.get("/admin/users")
+async def get_all_users(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    users = await db.users.find(
+        {"user_type": "buyer"},
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).to_list(500)
+    return users
+
+@api_router.get("/admin/sellers")
+async def get_all_sellers(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    sellers = await db.users.find(
+        {"user_type": "seller"},
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # إضافة معلومات الوثائق لكل بائع
+    for seller in sellers:
+        doc = await db.seller_documents.find_one({"seller_id": seller["id"]}, {"_id": 0})
+        seller["documents"] = doc
+    
+    return sellers
+
+@api_router.get("/admin/orders")
+async def get_all_orders(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return orders
+
+@api_router.get("/admin/products/all")
+async def get_all_products_admin(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    products = await db.products.find(
+        {"approval_status": "approved"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    return products
+
+
 # ============== Product Approval ==============
 
 @api_router.get("/admin/products/pending")
