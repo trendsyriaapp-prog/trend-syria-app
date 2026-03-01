@@ -269,12 +269,12 @@ const AdminDashboardPage = () => {
         ) : (
           <>
             {/* الصفحة الرئيسية - نظرة عامة */}
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-base font-bold text-gray-900">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl font-bold text-gray-900">
                 {user.user_type === 'admin' ? 'لوحة تحكم المدير' : 'لوحة تحكم المدير التنفيذي'}
               </h1>
               {user.user_type === 'sub_admin' && (
-                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
+                <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">مدير تنفيذي</span>
               )}
             </div>
 
