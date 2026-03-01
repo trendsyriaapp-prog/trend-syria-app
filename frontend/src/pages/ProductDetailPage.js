@@ -603,19 +603,6 @@ const ProductDetailPage = () => {
     }
   };
 
-  const handleContactSeller = () => {
-    if (!user) {
-      toast({
-        title: "يجب تسجيل الدخول",
-        description: "سجل دخولك للتواصل مع البائع",
-        variant: "destructive"
-      });
-      navigate('/login');
-      return;
-    }
-    navigate(`/messages/${product.seller_id}?product=${product.id}`);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
