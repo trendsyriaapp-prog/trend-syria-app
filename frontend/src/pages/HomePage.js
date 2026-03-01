@@ -65,15 +65,15 @@ const HomePage = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-2"
           >
-            <h1 className="text-2xl md:text-3xl font-extrabold mb-1 text-gray-900 tracking-tight">
-              تريند <span className="text-[#FF6B00] relative">
+            <h1 className="text-2xl md:text-3xl font-extrabold mb-3 text-gray-900 tracking-tight">
+              تريند <span className="text-[#FF6B00] relative inline-block">
                 سورية
-                <svg className="absolute -bottom-0.5 left-0 right-0 w-full h-1.5" viewBox="0 0 100 10">
-                  <path d="M0 8 Q50 0 100 8" stroke="#FF6B00" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                <svg className="absolute -bottom-1 left-0 right-0 w-full h-1" viewBox="0 0 100 8">
+                  <path d="M0 6 Q50 0 100 6" stroke="#FF6B00" strokeWidth="2" fill="none" strokeLinecap="round"/>
                 </svg>
               </span>
             </h1>
-            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto">
+            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto mt-1">
               منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
