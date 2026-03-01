@@ -283,6 +283,7 @@ const AdminDashboardPage = () => {
                         <th className="py-2 px-2 text-right font-bold text-gray-700">الاسم</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">الهاتف</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">المدينة</th>
+                        <th className="py-2 px-2 text-right font-bold text-gray-700">العنوان الكامل</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">تاريخ التسجيل</th>
                       </tr>
                     </thead>
@@ -292,6 +293,19 @@ const AdminDashboardPage = () => {
                           <td className="py-2 px-2 font-medium text-gray-900">{u.full_name || u.name}</td>
                           <td className="py-2 px-2 text-gray-600">{u.phone}</td>
                           <td className="py-2 px-2 text-gray-600">{u.city}</td>
+                          <td className="py-2 px-2 text-gray-600 text-[10px]">
+                            {u.addresses && u.addresses.length > 0 ? (
+                              <div>
+                                <p>{u.addresses[0].street}</p>
+                                {u.addresses[0].street_number && <span>شارع {u.addresses[0].street_number}</span>}
+                                {u.addresses[0].building_number && <span> - بناء {u.addresses[0].building_number}</span>}
+                                {u.addresses[0].house_number && <span> - منزل {u.addresses[0].house_number}</span>}
+                                <p className="text-gray-400">{u.addresses[0].city} - {u.addresses[0].country}</p>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">لا يوجد عنوان</span>
+                            )}
+                          </td>
                           <td className="py-2 px-2 text-gray-400 text-[10px]">
                             {u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SY') : '-'}
                           </td>
@@ -324,6 +338,7 @@ const AdminDashboardPage = () => {
                         <th className="py-2 px-2 text-right font-bold text-gray-700">المتجر</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">الهاتف</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">المدينة</th>
+                        <th className="py-2 px-2 text-right font-bold text-gray-700">العنوان الكامل</th>
                         <th className="py-2 px-2 text-right font-bold text-gray-700">الحالة</th>
                       </tr>
                     </thead>
@@ -334,6 +349,19 @@ const AdminDashboardPage = () => {
                           <td className="py-2 px-2 text-gray-600">{s.documents?.business_name || '-'}</td>
                           <td className="py-2 px-2 text-gray-600">{s.phone}</td>
                           <td className="py-2 px-2 text-gray-600">{s.city}</td>
+                          <td className="py-2 px-2 text-gray-600 text-[10px]">
+                            {s.addresses && s.addresses.length > 0 ? (
+                              <div>
+                                <p>{s.addresses[0].street}</p>
+                                {s.addresses[0].street_number && <span>شارع {s.addresses[0].street_number}</span>}
+                                {s.addresses[0].building_number && <span> - بناء {s.addresses[0].building_number}</span>}
+                                {s.addresses[0].house_number && <span> - منزل {s.addresses[0].house_number}</span>}
+                                <p className="text-gray-400">{s.addresses[0].city} - {s.addresses[0].country}</p>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">لا يوجد عنوان</span>
+                            )}
+                          </td>
                           <td className="py-2 px-2">
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               s.documents?.status === 'approved' 
