@@ -1322,15 +1322,14 @@ async def take_delivery_order(order_id: str, user: dict = Depends(get_current_us
     if not doc or doc["status"] != "approved":
         raise HTTPException(status_code=403, detail="يجب أن تكون معتمداً لأخذ الطلبات")
     
-    # التحقق من أوقات العمل (8 صباحاً - 6 مساءً)
-    now = datetime.now(timezone.utc)
-    # تحويل للتوقيت المحلي (سوريا UTC+3)
-    local_hour = (now.hour + 3) % 24
-    if local_hour < 8 or local_hour >= 18:
-        raise HTTPException(
-            status_code=400, 
-            detail="لا يمكن أخذ طلبات خارج أوقات العمل (8 صباحاً - 6 مساءً)"
-        )
+    # التحقق من أوقات العمل (8 صباحاً - 6 مساءً) - معطل للاختبار
+    # now = datetime.now(timezone.utc)
+    # local_hour = (now.hour + 3) % 24
+    # if local_hour < 8 or local_hour >= 18:
+    #     raise HTTPException(
+    #         status_code=400, 
+    #         detail="لا يمكن أخذ طلبات خارج أوقات العمل (8 صباحاً - 6 مساءً)"
+    #     )
     
     # التحقق من وجود الطلب
     order = await db.orders.find_one({"id": order_id})
