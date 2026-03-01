@@ -743,7 +743,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     for item in cart["items"]:
         product = await db.products.find_one({"id": item["product_id"]})
         if not product:
-            raise HTTPException(status_code=400, detail=f"منتج غير موجود")
+            raise HTTPException(status_code=400, detail="منتج غير موجود")
         if product["stock"] < item["quantity"]:
             raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
         
