@@ -12,11 +12,56 @@
 
 body {
     font-family: 'Cairo', 'Almarai', sans-serif;
-    background-color: #FFFFFF;
+    background-color: #FAFAFA;
     color: #1A1A1A;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     direction: rtl;
+}
+
+/* Premium Card Styles */
+.product-card {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F8F8F8 100%);
+    border: 1px solid #E5E5E5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+    border-color: #FF6B00;
+    box-shadow: 0 8px 25px -5px rgba(255, 107, 0, 0.15), 
+                0 4px 10px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+}
+
+/* Category Hover Effect */
+.category-item {
+    transition: all 0.3s ease;
+}
+
+.category-item:hover {
+    transform: scale(1.05);
+}
+
+/* Badge Styles */
+.badge-new {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.badge-sale {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+}
+
+.badge-limited {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+/* Price Tag Style */
+.price-tag {
+    background: linear-gradient(135deg, #FF6B00 0%, #E65000 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
 }
 
 /* Custom scrollbar */
@@ -102,15 +147,54 @@ body {
 
 /* Glass effect - Light mode */
 .glass {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* Orange glow */
 .orange-glow {
     box-shadow: 0 0 30px rgba(255, 107, 0, 0.2);
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Smooth image zoom */
+.img-zoom {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.img-zoom:hover {
+    transform: scale(1.08);
+}
+
+/* Section Title Style */
+.section-title {
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    right: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, #FF6B00, transparent);
+    border-radius: 2px;
 }
 
 /* Hide scrollbar for horizontal scroll */
