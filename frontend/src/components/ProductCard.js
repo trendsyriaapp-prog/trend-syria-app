@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, Heart, Play, Flame, Sparkles } from 'lucide-react';
+import { Star, Heart, Play, Flame, Sparkles, ShoppingCart } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -14,10 +15,12 @@ const formatPrice = (price) => {
 
 const ProductCard = ({ product, variant = 'default' }) => {
   const { user, token } = useAuth();
+  const { addToCart } = useCart();
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     if (user && token) {
