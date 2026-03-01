@@ -30,6 +30,10 @@ const AdminDashboardPage = () => {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [showAddSubAdmin, setShowAddSubAdmin] = useState(false);
   const [showAddNotification, setShowAddNotification] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allSellers, setAllSellers] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [newSubAdmin, setNewSubAdmin] = useState({
     full_name: '',
     phone: '',
@@ -54,7 +58,11 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/stats`),
         axios.get(`${API}/admin/sellers/pending`),
         axios.get(`${API}/admin/products/pending`),
-        axios.get(`${API}/admin/notifications`)
+        axios.get(`${API}/admin/notifications`),
+        axios.get(`${API}/admin/users`),
+        axios.get(`${API}/admin/sellers`),
+        axios.get(`${API}/admin/orders`),
+        axios.get(`${API}/admin/products/all`)
       ];
       
       // فقط المدير الرئيسي يمكنه رؤية المدراء التنفيذيين
@@ -67,9 +75,13 @@ const AdminDashboardPage = () => {
       setPendingSellers(responses[1].data);
       setPendingProducts(responses[2].data);
       setNotifications(responses[3].data);
+      setAllUsers(responses[4].data);
+      setAllSellers(responses[5].data);
+      setAllOrders(responses[6].data);
+      setAllProducts(responses[7].data);
       
-      if (user?.user_type === 'admin' && responses[4]) {
-        setSubAdmins(responses[4].data);
+      if (user?.user_type === 'admin' && responses[8]) {
+        setSubAdmins(responses[8].data);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
