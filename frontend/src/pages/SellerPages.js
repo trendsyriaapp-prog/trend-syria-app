@@ -1210,6 +1210,9 @@ const SellerDashboardPage = () => {
           </motion.div>
         </div>
       )}
+      
+      {/* Photo Guide Modal */}
+      <PhotoGuideModal isOpen={showPhotoGuide} onClose={() => setShowPhotoGuide(false)} />
     </div>
   );
 };
