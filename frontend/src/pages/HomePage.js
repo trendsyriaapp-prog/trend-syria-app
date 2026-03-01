@@ -79,12 +79,7 @@ const HomePage = () => {
           </motion.div>
           
           {/* Features - Compact Cards */}
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"
-          >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
             {[
               { icon: Truck, text: 'توصيل مجاني', color: 'bg-emerald-50 text-emerald-600' },
               { icon: Shield, text: 'ضمان الجودة', color: 'bg-blue-50 text-blue-600' },
@@ -93,7 +88,9 @@ const HomePage = () => {
             ].map((feature, i) => (
               <motion.div
                 key={i}
-                variants={itemVariants}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
                 whileHover={{ scale: 1.02, y: -2 }}
                 className="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-default"
               >
@@ -103,7 +100,7 @@ const HomePage = () => {
                 <span className="font-semibold text-xs text-gray-700">{feature.text}</span>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
