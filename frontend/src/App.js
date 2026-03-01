@@ -17,6 +17,7 @@ import OrdersPage from "./pages/OrdersPage";
 import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
+import { DeliveryDocuments, DeliveryDashboard } from "./pages/DeliveryPages";
 import AdminDashboardPage from "./pages/AdminPage";
 import StorePage from "./pages/StorePage";
 import FollowingPage from "./pages/FollowingPage";
@@ -56,6 +57,10 @@ function App() {
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />
                 <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+                
+                {/* Delivery Routes */}
+                <Route path="/delivery/documents" element={<DeliveryDocuments />} />
+                <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboardPage />} />
