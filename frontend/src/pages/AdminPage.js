@@ -288,28 +288,30 @@ const AdminDashboardPage = () => {
             {/* Overview Stats */}
             <div className="bg-white rounded-lg p-3 border border-gray-200">
               <h2 className="font-bold text-sm mb-3 text-gray-900">ملخص النظام</h2>
-              <div className="grid md:grid-cols-2 gap-2">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي المستخدمين</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_users || 0}</p>
-                  <p className="text-[10px] text-gray-500">منهم {stats?.total_sellers || 0} بائع</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="p-2 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors" onClick={() => setActiveTab('users')}>
+                  <h3 className="text-[10px] text-blue-600 mb-0.5">المستخدمين</h3>
+                  <p className="text-lg font-bold text-blue-700">{stats?.total_users || 0}</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">المنتجات المعتمدة</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_products || 0}</p>
+                <div className="p-2 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => setActiveTab('sellers')}>
+                  <h3 className="text-[10px] text-purple-600 mb-0.5">البائعين</h3>
+                  <p className="text-lg font-bold text-purple-700">{stats?.total_sellers || 0}</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي الطلبات</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_orders || 0}</p>
+                <div className="p-2 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors" onClick={() => setActiveTab('products')}>
+                  <h3 className="text-[10px] text-green-600 mb-0.5">المنتجات</h3>
+                  <p className="text-lg font-bold text-green-700">{stats?.total_products || 0}</p>
                 </div>
-                <div className="p-2 bg-yellow-50 rounded-lg">
-                  <h3 className="text-[10px] text-yellow-600 mb-0.5">في انتظار الموافقة</h3>
-                  <p className="text-lg font-bold text-yellow-600">
-                    {(stats?.pending_sellers || 0) + (stats?.pending_products || 0)}
-                  </p>
-                  <p className="text-[10px] text-yellow-600">
-                    {stats?.pending_sellers || 0} بائع + {stats?.pending_products || 0} منتج
-                  </p>
+                <div className="p-2 bg-orange-50 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors" onClick={() => setActiveTab('orders')}>
+                  <h3 className="text-[10px] text-orange-600 mb-0.5">الطلبات</h3>
+                  <p className="text-lg font-bold text-orange-700">{stats?.total_orders || 0}</p>
+                </div>
+                <div className="p-2 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors" onClick={() => setActiveTab('pending-sellers')}>
+                  <h3 className="text-[10px] text-yellow-600 mb-0.5">بائعين معلقين</h3>
+                  <p className="text-lg font-bold text-yellow-700">{stats?.pending_sellers || 0}</p>
+                </div>
+                <div className="p-2 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors" onClick={() => setActiveTab('pending-products')}>
+                  <h3 className="text-[10px] text-red-600 mb-0.5">منتجات معلقة</h3>
+                  <p className="text-lg font-bold text-red-700">{stats?.pending_products || 0}</p>
                 </div>
               </div>
             </div>
