@@ -306,25 +306,25 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => setActiveTab('notifications')}
-                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-3"
+                className="bg-white rounded-xl p-3 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-2.5"
               >
-                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                  <Bell size={20} className="text-[#FF6B00]" />
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                  <Bell size={16} className="text-[#FF6B00]" />
                 </div>
-                <span className="text-sm font-bold text-gray-700">الإشعارات ({notifications.length})</span>
+                <span className="text-xs font-bold text-gray-700">الإشعارات ({notifications.length})</span>
               </button>
               {user.user_type === 'admin' && (
                 <button
                   onClick={() => setActiveTab('sub-admins')}
-                  className="bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-3"
+                  className="bg-white rounded-xl p-3 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-2.5"
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ShieldCheck size={20} className="text-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <ShieldCheck size={16} className="text-blue-600" />
                   </div>
-                  <span className="text-sm font-bold text-gray-700">المدراء ({subAdmins.length})</span>
+                  <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
                 </button>
               )}
             </div>
