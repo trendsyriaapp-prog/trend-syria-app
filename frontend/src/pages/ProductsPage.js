@@ -154,21 +154,28 @@ const ProductsPage = () => {
           {/* Products Grid */}
           <main className="flex-1">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="bg-[#121212] rounded-2xl aspect-square animate-pulse" />
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                    <div className="aspect-[4/5] shimmer" />
+                    <div className="p-3 space-y-2">
+                      <div className="h-4 shimmer rounded w-full" />
+                      <div className="h-3 shimmer rounded w-2/3" />
+                      <div className="h-5 shimmer rounded w-1/2" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-white/50 text-lg mb-4">لا توجد منتجات</p>
-                <Link to="/products" className="text-[#FF6B00] hover:underline">
+              <div className="text-center py-16 bg-white rounded-xl">
+                <p className="text-gray-500 text-lg mb-4">لا توجد منتجات</p>
+                <Link to="/products" className="text-[#FF6B00] hover:underline font-medium">
                   عرض جميع المنتجات
                 </Link>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {products.map((product, i) => (
                     <motion.div
                       key={product.id}
@@ -183,7 +190,7 @@ const ProductsPage = () => {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 mt-8">
+                  <div className="flex justify-center gap-2 mt-6">
                     {[...Array(totalPages)].map((_, i) => (
                       <button
                         key={i}
@@ -192,8 +199,8 @@ const ProductsPage = () => {
                           params.set('page', String(i + 1));
                           setSearchParams(params);
                         }}
-                        className={`w-10 h-10 rounded-full transition-colors ${
-                          page === i + 1 ? 'bg-[#FF6B00] text-black' : 'bg-[#121212] hover:bg-white/10'
+                        className={`w-10 h-10 rounded-full transition-colors font-bold ${
+                          page === i + 1 ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#FF6B00]'
                         }`}
                         data-testid={`page-${i + 1}`}
                       >
