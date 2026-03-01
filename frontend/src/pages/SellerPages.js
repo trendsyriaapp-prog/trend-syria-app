@@ -586,11 +586,10 @@ const SellerDashboardPage = () => {
           }
         }
         
-        // إضافة الشعار الصغير
-        const imageWithLogo = await addLogo(result.dataUrl);
+        // إضافة الصورة بدون علامة مائية
         setNewProduct(prev => ({
           ...prev,
-          images: [...prev.images, imageWithLogo]
+          images: [...prev.images, result.dataUrl]
         }));
       }
     } catch (error) {
