@@ -272,25 +272,37 @@ const ProductCard = ({ product, variant = 'default' }) => {
             </span>
           </div>
 
-          {/* Price */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[#FF6B00] font-extrabold text-base">
+          {/* Price and Cart Button */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col flex-1">
+              <span className="text-[#FF6B00] font-extrabold text-sm">
                 {formatPrice(product.price)}
               </span>
               {product.original_price && product.original_price > product.price && (
-                <span className="text-gray-400 text-xs line-through">
+                <span className="text-gray-400 text-[10px] line-through">
                   {formatPrice(product.original_price)}
                 </span>
               )}
             </div>
             
-            {/* Discount Badge */}
-            {product.original_price && product.original_price > product.price && (
-              <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-lg">
-                -{Math.round((1 - product.price / product.original_price) * 100)}%
-              </span>
-            )}
+            {/* Cart Button */}
+            <motion.button
+              onClick={handleAddToCart}
+              disabled={addingToCart || product.stock === 0}
+              whileTap={{ scale: 0.9 }}
+              className={`p-2 rounded-full transition-all ${
+                product.stock === 0 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#FF6B00] text-white hover:bg-[#E65000] shadow-md hover:shadow-lg'
+              }`}
+              data-testid={`add-to-cart-${product.id}`}
+            >
+              {addingToCart ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ShoppingCart size={16} />
+              )}
+            </motion.button>
           </div>
         </div>
 
