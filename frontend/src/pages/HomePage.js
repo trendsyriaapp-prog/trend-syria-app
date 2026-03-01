@@ -119,7 +119,7 @@ const HomePage = () => {
             </Link>
           </div>
           
-          <div className="flex justify-center gap-1 md:gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
@@ -130,16 +130,17 @@ const HomePage = () => {
                   transition={{ delay: i * 0.03 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="flex-shrink-0"
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="category-item flex flex-col items-center gap-1 w-[58px] md:w-[65px]"
+                    className="category-item flex flex-col items-center gap-1 w-[56px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
                       <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-[9px] md:text-[10px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
+                    <span className="text-[9px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
