@@ -889,6 +889,74 @@ async def get_reviews(product_id: str):
     reviews = await db.reviews.find({"product_id": product_id}, {"_id": 0}).to_list(100)
     return reviews
 
+# ============== Product Q&A (Public) ==============
+
+@api_router.post("/products/{product_id}/questions")
+async def ask_product_question(product_id: str, question: ProductQuestion, user: dict = Depends(get_current_user)):
+    """Ask a public question about a product - visible to everyone"""
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    question_doc = {
+        "id": str(uuid.uuid4()),
+        "product_id": product_id,
+        "user_id": user["id"],
+        "user_name": user["name"],
+        "question": question.question,
+        "answer": None,
+        "answered_by": None,
+        "answered_by_name": None,
+        "answered_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.product_questions.insert_one(question_doc)
+    return {"id": question_doc["id"], "message": "تم إرسال السؤال"}
+
+@api_router.get("/products/{product_id}/questions")
+async def get_product_questions(product_id: str):
+    """Get all public questions and answers for a product - visible to everyone"""
+    questions = await db.product_questions.find(
+        {"product_id": product_id}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return questions
+
+@api_router.post("/products/{product_id}/questions/{question_id}/answer")
+async def answer_product_question(
+    product_id: str, 
+    question_id: str, 
+    answer: ProductAnswer, 
+    user: dict = Depends(get_current_user)
+):
+    """Seller or Admin answers a product question"""
+    # Check if product exists and user is the seller or admin
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    is_seller = product.get("seller_id") == user["id"]
+    is_admin = user["user_type"] in ["admin", "sub_admin"]
+    
+    if not is_seller and not is_admin:
+        raise HTTPException(status_code=403, detail="فقط البائع أو المدير يمكنه الرد")
+    
+    # Update the question with the answer
+    result = await db.product_questions.update_one(
+        {"id": question_id, "product_id": product_id},
+        {"$set": {
+            "answer": answer.answer,
+            "answered_by": user["id"],
+            "answered_by_name": user["name"],
+            "answered_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="السؤال غير موجود")
+    
+    return {"message": "تم إضافة الرد"}
+
 # ============== Messages/Chat ==============
 
 @api_router.post("/messages")
