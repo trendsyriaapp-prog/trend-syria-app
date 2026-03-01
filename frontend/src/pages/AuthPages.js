@@ -21,15 +21,16 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const userData = await login(formData.phone, formData.password);
+      const response = await login(formData.phone, formData.password);
       toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
       
       // توجيه حسب نوع المستخدم
-      if (userData.user_type === 'admin' || userData.user_type === 'sub_admin') {
+      const userType = response.user?.user_type;
+      if (userType === 'admin' || userType === 'sub_admin') {
         navigate('/admin');
-      } else if (userData.user_type === 'seller') {
+      } else if (userType === 'seller') {
         navigate('/seller/dashboard');
-      } else if (userData.user_type === 'delivery') {
+      } else if (userType === 'delivery') {
         navigate('/delivery/dashboard');
       } else {
         navigate('/');
