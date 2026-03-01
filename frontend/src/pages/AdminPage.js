@@ -321,8 +321,10 @@ const AdminDashboardPage = () => {
                   onClick={() => setActiveTab('sub-admins')}
                   className="bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-3"
                 >
-                  <ShieldCheck size={16} className="text-blue-600" />
-                  <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <ShieldCheck size={20} className="text-blue-600" />
+                  </div>
+                  <span className="text-sm font-bold text-gray-700">المدراء ({subAdmins.length})</span>
                 </button>
               )}
             </div>
