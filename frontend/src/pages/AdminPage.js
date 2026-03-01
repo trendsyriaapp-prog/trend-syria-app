@@ -34,6 +34,8 @@ const AdminDashboardPage = () => {
   const [allSellers, setAllSellers] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [pendingDelivery, setPendingDelivery] = useState([]);
+  const [allDelivery, setAllDelivery] = useState([]);
   const [newSubAdmin, setNewSubAdmin] = useState({
     full_name: '',
     phone: '',
@@ -62,7 +64,9 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/users`),
         axios.get(`${API}/admin/sellers`),
         axios.get(`${API}/admin/orders`),
-        axios.get(`${API}/admin/products/all`)
+        axios.get(`${API}/admin/products/all`),
+        axios.get(`${API}/admin/delivery/pending`),
+        axios.get(`${API}/admin/delivery/all`)
       ];
       
       // فقط المدير الرئيسي يمكنه رؤية المدراء التنفيذيين
@@ -79,9 +83,11 @@ const AdminDashboardPage = () => {
       setAllSellers(responses[5].data);
       setAllOrders(responses[6].data);
       setAllProducts(responses[7].data);
+      setPendingDelivery(responses[8].data);
+      setAllDelivery(responses[9].data);
       
-      if (user?.user_type === 'admin' && responses[8]) {
-        setSubAdmins(responses[8].data);
+      if (user?.user_type === 'admin' && responses[10]) {
+        setSubAdmins(responses[10].data);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
