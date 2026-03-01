@@ -234,8 +234,21 @@ async def login(credentials: UserLogin):
     if not user:
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     
-    # Check password with bcrypt
-    if not bcrypt.checkpw(credentials.password.encode(), user["password"].encode()):
+    # Check password - support both bcrypt and hashlib
+    stored_password = user["password"]
+    password_valid = False
+    
+    if stored_password.startswith("$2"):
+        # Bcrypt hash
+        try:
+            password_valid = bcrypt.checkpw(credentials.password.encode(), stored_password.encode())
+        except:
+            password_valid = False
+    else:
+        # Old hashlib hash
+        password_valid = stored_password == hash_password(credentials.password)
+    
+    if not password_valid:
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     
     token = create_token(user["id"], user["user_type"])
