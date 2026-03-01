@@ -1002,21 +1002,25 @@ async def get_admin_stats(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    total_users = await db.users.count_documents({})
+    total_users = await db.users.count_documents({"user_type": "buyer"})
     total_sellers = await db.users.count_documents({"user_type": "seller"})
-    total_products = await db.products.count_documents({"is_active": True, "is_approved": True})
+    total_delivery = await db.users.count_documents({"user_type": "delivery"})
+    total_products = await db.products.count_documents({"approval_status": "approved"})
     total_orders = await db.orders.count_documents({})
     pending_sellers = await db.seller_documents.count_documents({"status": "pending"})
     pending_products = await db.products.count_documents({"approval_status": "pending"})
+    pending_delivery = await db.delivery_documents.count_documents({"status": "pending"})
     total_sub_admins = await db.users.count_documents({"user_type": "sub_admin"})
     
     return {
         "total_users": total_users,
         "total_sellers": total_sellers,
+        "total_delivery": total_delivery,
         "total_products": total_products,
         "total_orders": total_orders,
         "pending_sellers": pending_sellers,
         "pending_products": pending_products,
+        "pending_delivery": pending_delivery,
         "total_sub_admins": total_sub_admins
     }
 
