@@ -552,45 +552,6 @@ const SellerDashboardPage = () => {
   };
 
   // إضافة شعار صغير في زاوية الصورة
-  const addLogo = (imageDataUrl) => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // رسم الصورة الأصلية
-        ctx.drawImage(img, 0, 0);
-        
-        // إعداد الشعار الصغير
-        const text = 'تريند سورية';
-        const fontSize = Math.max(canvas.width * 0.035, 12);
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-        
-        const textWidth = ctx.measureText(text).width;
-        const padding = 4;
-        const x = canvas.width - textWidth - padding - 8;
-        const y = canvas.height - padding - 8;
-        
-        // خلفية شفافة للشعار
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(x - padding, y - fontSize, textWidth + padding * 2, fontSize + padding);
-        
-        // رسم النص
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(text, x, y);
-        
-        resolve(canvas.toDataURL('image/jpeg', 0.92));
-      };
-      img.src = imageDataUrl;
-    });
-  };
-
   // رفع الصور مع فحص وتحسين
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
