@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Check, X, 
-  Eye, Clock, UserPlus, Trash2, ShieldCheck, AlertTriangle, Bell, Send
+  Eye, Clock, UserPlus, Trash2, ShieldCheck, AlertTriangle, Bell, Send, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
