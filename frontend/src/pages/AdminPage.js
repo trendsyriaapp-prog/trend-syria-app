@@ -279,7 +279,7 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
               {[
                 { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'users' },
                 { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'sellers' },
@@ -293,14 +293,14 @@ const AdminDashboardPage = () => {
                 <div 
                   key={i} 
                   onClick={() => setActiveTab(stat.tab)}
-                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm cursor-pointer hover:shadow-lg hover:border-[#FF6B00] transition-all active:scale-95"
+                  className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm cursor-pointer hover:shadow-lg hover:border-[#FF6B00] transition-all active:scale-95"
                   data-testid={`stat-${stat.label}`}
                 >
-                  <div className={`w-10 h-10 rounded-full ${stat.color} flex items-center justify-center mb-2`}>
-                    <stat.icon size={20} />
+                  <div className={`w-8 h-8 rounded-full ${stat.color} flex items-center justify-center mb-1.5`}>
+                    <stat.icon size={16} />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+                  <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
