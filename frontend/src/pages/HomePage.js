@@ -119,7 +119,7 @@ const HomePage = () => {
             </Link>
           </div>
           
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+          <div className="flex justify-center gap-1 md:gap-2 flex-wrap">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
@@ -127,19 +127,19 @@ const HomePage = () => {
                   key={cat.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.03 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="category-item flex flex-col items-center gap-1.5 min-w-[60px]"
+                    className="category-item flex flex-col items-center gap-1 w-[58px] md:w-[65px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
-                      <IconComponent size={20} className="group-hover:scale-110 transition-transform" />
+                    <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
+                      <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
+                    <span className="text-[9px] md:text-[10px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
