@@ -141,9 +141,6 @@ const ProductCard = ({ product }) => {
           
           {/* طبقة شفافة لمنع التفاعل المباشر مع الصورة */}
           <div className="absolute inset-0 bg-transparent" onContextMenu={preventImageActions}></div>
-          
-          {/* العلامة المائية */}
-          <Watermark />
 
           {/* زر المفضلة */}
           <button
