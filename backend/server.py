@@ -37,12 +37,18 @@ class UserRegister(BaseModel):
     phone: str  # رقم الهاتف - سيستخدم لتسجيل الدخول
     password: str
     city: str
-    user_type: str = "buyer"  # buyer or seller
+    user_type: str = "buyer"  # buyer, seller, or delivery
 
 class UserLogin(BaseModel):
     phone: str  # تسجيل الدخول برقم الهاتف
     password: str
 
+class DeliveryDocuments(BaseModel):
+    national_id: str  # رقم الهوية الوطنية
+    personal_photo: str  # صورة شخصية Base64
+    id_photo: str  # صورة الهوية كاملة Base64
+    motorcycle_license: str  # شهادة/رخصة الدراجة Base64
+    
 class SellerDocuments(BaseModel):
     seller_id: str
     business_name: str
