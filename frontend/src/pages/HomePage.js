@@ -100,16 +100,16 @@ const HomePage = () => {
       </section>
 
       {/* Categories - Smaller Size */}
-      <section className="py-2">
+      <section className="py-1">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1">
             <h2 className="text-base font-bold text-gray-900">الأصناف</h2>
             <Link to="/categories" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-categories">
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
           </div>
-          <div className="flex gap-1 overflow-x-auto hide-scrollbar pb-2">
+          <div className="flex gap-1 overflow-x-auto hide-scrollbar pb-1">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
@@ -137,9 +137,9 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-2">
+      <section className="py-1">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-base font-bold text-gray-900">المنتجات الرائجة</h2>
             <Link to="/products" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-products">
               عرض الكل
