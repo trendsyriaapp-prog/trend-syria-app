@@ -527,6 +527,8 @@ const SellerDashboardPage = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [showPhotoGuide, setShowPhotoGuide] = useState(false);
+  const [imageWarnings, setImageWarnings] = useState([]);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
