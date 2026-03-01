@@ -13,42 +13,6 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-// مكون العلامة المائية المتكررة
-const Watermark = () => (
-  <div 
-    className="absolute inset-0 pointer-events-none select-none overflow-hidden z-10"
-    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-  >
-    {/* شبكة من العلامات المائية */}
-    <div 
-      className="absolute inset-0 flex flex-col items-center justify-center"
-      style={{ transform: 'rotate(-30deg) scale(1.5)' }}
-    >
-      {[...Array(4)].map((_, rowIndex) => (
-        <div key={rowIndex} className="flex gap-4 my-2">
-          {[...Array(2)].map((_, colIndex) => (
-            <span 
-              key={colIndex}
-              className="text-gray-500/25 text-xs font-bold whitespace-nowrap"
-              style={{ 
-                textShadow: '0 0 1px rgba(0,0,0,0.1)',
-                letterSpacing: '0.5px'
-              }}
-            >
-              تريند سورية
-            </span>
-          ))}
-        </div>
-      ))}
-    </div>
-    
-    {/* شعار واضح في الزاوية */}
-    <div className="absolute bottom-1 right-1 bg-[#FF6B00] text-white text-[6px] font-bold px-1 py-0.5 rounded">
-      تريند سورية
-    </div>
-  </div>
-);
-
 const ProductCard = ({ product }) => {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
