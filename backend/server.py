@@ -242,7 +242,7 @@ async def login(credentials: UserLogin):
         # Bcrypt hash
         try:
             password_valid = bcrypt.checkpw(credentials.password.encode(), stored_password.encode())
-        except:
+        except (ValueError, TypeError):
             password_valid = False
     else:
         # Old hashlib hash
