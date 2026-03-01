@@ -723,39 +723,6 @@ const AdminDashboardPage = () => {
           </section>
         )}
 
-        {/* Overview */}
-        {activeTab === 'overview' && (
-          <section>
-            <div className="bg-white rounded-lg p-3 border border-gray-200">
-              <h2 className="font-bold text-sm mb-3 text-gray-900">ملخص النظام</h2>
-              <div className="grid md:grid-cols-2 gap-2">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي المستخدمين</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_users || 0}</p>
-                  <p className="text-[10px] text-gray-500">منهم {stats?.total_sellers || 0} بائع</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">المنتجات المعتمدة</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_products || 0}</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي الطلبات</h3>
-                  <p className="text-lg font-bold text-gray-900">{stats?.total_orders || 0}</p>
-                </div>
-                <div className="p-2 bg-yellow-50 rounded-lg">
-                  <h3 className="text-[10px] text-yellow-600 mb-0.5">في انتظار الموافقة</h3>
-                  <p className="text-lg font-bold text-yellow-600">
-                    {(stats?.pending_sellers || 0) + (stats?.pending_products || 0)}
-                  </p>
-                  <p className="text-[10px] text-yellow-600">
-                    {stats?.pending_sellers || 0} بائع + {stats?.pending_products || 0} منتج
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Notifications */}
         {activeTab === 'notifications' && (
           <section>
