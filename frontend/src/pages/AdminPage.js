@@ -141,6 +141,27 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleApproveDelivery = async (driverId) => {
+    try {
+      await axios.post(`${API}/admin/delivery/${driverId}/approve`);
+      toast({ title: "تم التفعيل", description: "تم تفعيل حساب موظف التوصيل بنجاح" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تفعيل موظف التوصيل", variant: "destructive" });
+    }
+  };
+
+  const handleRejectDelivery = async (driverId) => {
+    if (!window.confirm('هل تريد رفض موظف التوصيل هذا؟')) return;
+    try {
+      await axios.post(`${API}/admin/delivery/${driverId}/reject`);
+      toast({ title: "تم الرفض", description: "تم رفض طلب موظف التوصيل" });
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل رفض موظف التوصيل", variant: "destructive" });
+    }
+  };
+
   const handleAddSubAdmin = async (e) => {
     e.preventDefault();
     try {
