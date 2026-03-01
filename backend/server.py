@@ -509,7 +509,7 @@ async def get_store_page(seller_id: str, authorization: Optional[str] = Header(d
             user_id = payload.get("user_id")
             follow = await db.follows.find_one({"user_id": user_id, "seller_id": seller_id})
             is_following = follow is not None
-        except:
+        except jwt.PyJWTError:
             pass
     
     return {
