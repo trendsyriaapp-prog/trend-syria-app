@@ -190,18 +190,18 @@ const AdminDashboardPage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-gray-900">
+      <div className="max-w-5xl mx-auto px-3 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-base font-bold text-gray-900">
             {user.user_type === 'admin' ? 'لوحة تحكم المدير' : 'لوحة تحكم المدير التنفيذي'}
           </h1>
           {user.user_type === 'sub_admin' && (
-            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">مدير تنفيذي</span>
+            <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
           {[
             { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600' },
             { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600' },
@@ -210,18 +210,18 @@ const AdminDashboardPage = () => {
             { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600' },
             { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600' },
           ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
-              <div className={`w-8 h-8 rounded-full ${stat.color} flex items-center justify-center mb-2`}>
-                <stat.icon size={16} />
+            <div key={i} className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm">
+              <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
+                <stat.icon size={12} />
               </div>
-              <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-[10px] text-gray-500">{stat.label}</p>
+              <p className="text-base font-bold text-gray-900">{stat.value}</p>
+              <p className="text-[9px] text-gray-500">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar">
+        <div className="flex gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
           {[
             { id: 'overview', label: 'نظرة عامة' },
             { id: 'pending-products', label: `منتجات معلقة (${pendingProducts.length})` },
@@ -232,7 +232,7 @@ const AdminDashboardPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors text-sm ${
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors text-xs ${
                 activeTab === tab.id 
                   ? 'bg-[#FF6B00] text-white font-bold' 
                   : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
