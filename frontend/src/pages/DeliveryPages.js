@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/ui/use-toast';
+import { useToast } from '../hooks/use-toast';
 import { 
   Truck, Package, MapPin, Phone, User, Clock, 
   CheckCircle, Upload, Camera, CreditCard, AlertTriangle,
