@@ -336,11 +336,12 @@ const DeliveryDashboard = () => {
     return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
   };
 
-  // التحقق من أوقات العمل
+  // التحقق من أوقات العمل - معطل للاختبار
   const isWorkingHours = () => {
-    const now = new Date();
-    const hour = now.getHours();
-    return hour >= 8 && hour < 18;
+    return true; // تم تعطيل التحقق من أوقات العمل للاختبار
+    // const now = new Date();
+    // const hour = now.getHours();
+    // return hour >= 8 && hour < 18;
   };
 
   if (loading) {
