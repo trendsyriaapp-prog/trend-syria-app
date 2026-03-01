@@ -203,67 +203,118 @@ const AdminDashboardPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-5xl mx-auto px-3 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-base font-bold text-gray-900">
-            {user.user_type === 'admin' ? 'لوحة تحكم المدير' : 'لوحة تحكم المدير التنفيذي'}
-          </h1>
-          {user.user_type === 'sub_admin' && (
-            <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-          {[
-            { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'users' },
-            { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'sellers' },
-            { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'products' },
-            { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'orders' },
-            { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600', tab: 'pending-sellers' },
-            { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600', tab: 'pending-products' },
-          ].map((stat, i) => (
-            <div 
-              key={i} 
-              onClick={() => setActiveTab(stat.tab)}
-              className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-[#FF6B00] transition-all active:scale-95"
-              data-testid={`stat-${stat.label}`}
-            >
-              <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
-                <stat.icon size={12} />
-              </div>
-              <p className="text-base font-bold text-gray-900">{stat.value}</p>
-              <p className="text-[9px] text-gray-500">{stat.label}</p>
+        
+        {/* إذا كان في صفحة فرعية، أظهر زر الرجوع والمحتوى فقط */}
+        {activeTab !== 'overview' ? (
+          <>
+            {/* Header with Back Button */}
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className="w-8 h-8 bg-white rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                data-testid="back-btn"
+              >
+                <ChevronRight size={18} className="text-gray-600" />
+              </button>
+              <h1 className="text-base font-bold text-gray-900">
+                {activeTab === 'users' && 'جميع المستخدمين'}
+                {activeTab === 'sellers' && 'جميع البائعين'}
+                {activeTab === 'products' && 'جميع المنتجات'}
+                {activeTab === 'orders' && 'جميع الطلبات'}
+                {activeTab === 'pending-products' && 'المنتجات المعلقة'}
+                {activeTab === 'pending-sellers' && 'البائعين المعلقين'}
+                {activeTab === 'notifications' && 'الإشعارات'}
+                {activeTab === 'sub-admins' && 'المدراء التنفيذيين'}
+              </h1>
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <>
+            {/* الصفحة الرئيسية - نظرة عامة */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-base font-bold text-gray-900">
+                {user.user_type === 'admin' ? 'لوحة تحكم المدير' : 'لوحة تحكم المدير التنفيذي'}
+              </h1>
+              {user.user_type === 'sub_admin' && (
+                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
+              )}
+            </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
-          {[
-            { id: 'overview', label: 'نظرة عامة' },
-            { id: 'users', label: `المستخدمين (${allUsers.length})` },
-            { id: 'sellers', label: `البائعين (${allSellers.length})` },
-            { id: 'products', label: `المنتجات (${allProducts.length})` },
-            { id: 'orders', label: `الطلبات (${allOrders.length})` },
-            { id: 'pending-products', label: `منتجات معلقة (${pendingProducts.length})` },
-            { id: 'pending-sellers', label: `بائعين معلقين (${pendingSellers.length})` },
-            { id: 'notifications', label: `الإشعارات (${notifications.length})` },
-            ...(user.user_type === 'admin' ? [{ id: 'sub-admins', label: `المدراء (${subAdmins.length})` }] : [])
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors text-xs ${
-                activeTab === tab.id 
-                  ? 'bg-[#FF6B00] text-white font-bold' 
-                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
-              data-testid={`tab-${tab.id}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+            {/* Stats */}
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+              {[
+                { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'users' },
+                { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'sellers' },
+                { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'products' },
+                { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'orders' },
+                { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600', tab: 'pending-sellers' },
+                { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600', tab: 'pending-products' },
+              ].map((stat, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setActiveTab(stat.tab)}
+                  className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-[#FF6B00] transition-all active:scale-95"
+                  data-testid={`stat-${stat.label}`}
+                >
+                  <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
+                    <stat.icon size={12} />
+                  </div>
+                  <p className="text-base font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-[9px] text-gray-500">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className="bg-white rounded-lg p-3 border border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-2"
+              >
+                <Bell size={16} className="text-[#FF6B00]" />
+                <span className="text-xs font-bold text-gray-700">الإشعارات ({notifications.length})</span>
+              </button>
+              {user.user_type === 'admin' && (
+                <button
+                  onClick={() => setActiveTab('sub-admins')}
+                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-2"
+                >
+                  <ShieldCheck size={16} className="text-blue-600" />
+                  <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
+                </button>
+              )}
+            </div>
+
+            {/* Overview Stats */}
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
+              <h2 className="font-bold text-sm mb-3 text-gray-900">ملخص النظام</h2>
+              <div className="grid md:grid-cols-2 gap-2">
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي المستخدمين</h3>
+                  <p className="text-lg font-bold text-gray-900">{stats?.total_users || 0}</p>
+                  <p className="text-[10px] text-gray-500">منهم {stats?.total_sellers || 0} بائع</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <h3 className="text-[10px] text-gray-500 mb-0.5">المنتجات المعتمدة</h3>
+                  <p className="text-lg font-bold text-gray-900">{stats?.total_products || 0}</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <h3 className="text-[10px] text-gray-500 mb-0.5">إجمالي الطلبات</h3>
+                  <p className="text-lg font-bold text-gray-900">{stats?.total_orders || 0}</p>
+                </div>
+                <div className="p-2 bg-yellow-50 rounded-lg">
+                  <h3 className="text-[10px] text-yellow-600 mb-0.5">في انتظار الموافقة</h3>
+                  <p className="text-lg font-bold text-yellow-600">
+                    {(stats?.pending_sellers || 0) + (stats?.pending_products || 0)}
+                  </p>
+                  <p className="text-[10px] text-yellow-600">
+                    {stats?.pending_sellers || 0} بائع + {stats?.pending_products || 0} منتج
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Users Section */}
         {activeTab === 'users' && (
