@@ -249,14 +249,16 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mb-4">
               {[
                 { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'users' },
                 { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'sellers' },
+                { icon: Truck, label: 'موظفي التوصيل', value: stats?.total_delivery || 0, color: 'bg-cyan-100 text-cyan-600', tab: 'delivery' },
                 { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'products' },
                 { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'orders' },
                 { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600', tab: 'pending-sellers' },
                 { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600', tab: 'pending-products' },
+                { icon: Truck, label: 'توصيل معلقين', value: stats?.pending_delivery || 0, color: 'bg-pink-100 text-pink-600', tab: 'pending-delivery' },
               ].map((stat, i) => (
                 <div 
                   key={i} 
