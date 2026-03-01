@@ -73,21 +73,21 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 md:pb-10">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl font-bold text-gray-900">
               {search ? `نتائج البحث: "${search}"` : category ? getCategoryName(category) : 'جميع المنتجات'}
             </h1>
-            <p className="text-white/50 text-sm mt-1">
+            <p className="text-gray-500 text-sm">
               {products.length} منتج
             </p>
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden flex items-center gap-2 px-4 py-2 bg-[#121212] border border-white/10 rounded-full"
+            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-gray-700 shadow-sm"
             data-testid="filter-toggle"
           >
             <Filter size={18} />
@@ -97,9 +97,9 @@ const ProductsPage = () => {
 
         {/* Active Filters */}
         {(category || search) && (
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             {category && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/20 text-[#FF6B00] rounded-full text-sm">
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
                 {getCategoryName(category)}
                 <button onClick={() => setCategory('')} data-testid="clear-category">
                   <X size={14} />
@@ -107,7 +107,7 @@ const ProductsPage = () => {
               </span>
             )}
             {search && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/20 text-[#FF6B00] rounded-full text-sm">
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
                 البحث: {search}
                 <button onClick={clearFilters} data-testid="clear-search">
                   <X size={14} />
@@ -117,22 +117,22 @@ const ProductsPage = () => {
           </div>
         )}
 
-        <div className="flex gap-6">
+        <div className="flex gap-4">
           {/* Sidebar Filters - Desktop */}
-          <aside className={`${showFilters ? 'fixed inset-0 z-50 bg-black/90 p-4' : 'hidden'} md:block md:relative md:bg-transparent md:p-0 md:w-64 flex-shrink-0`}>
-            <div className="bg-[#121212] rounded-2xl p-4 border border-white/5">
-              <div className="flex items-center justify-between mb-4 md:hidden">
-                <h3 className="font-bold">تصفية</h3>
-                <button onClick={() => setShowFilters(false)}>
+          <aside className={`${showFilters ? 'fixed inset-0 z-50 bg-black/50 p-4' : 'hidden'} md:block md:relative md:bg-transparent md:p-0 md:w-56 flex-shrink-0`}>
+            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-3 md:hidden">
+                <h3 className="font-bold text-gray-900">تصفية</h3>
+                <button onClick={() => setShowFilters(false)} className="text-gray-500">
                   <X size={24} />
                 </button>
               </div>
               
-              <h3 className="font-bold mb-3">الأصناف</h3>
-              <div className="space-y-2">
+              <h3 className="font-bold mb-2 text-gray-800 text-sm">الأصناف</h3>
+              <div className="space-y-1">
                 <button
                   onClick={() => { setCategory(''); setShowFilters(false); }}
-                  className={`w-full text-right p-2 rounded-lg transition-colors ${!category ? 'bg-[#FF6B00] text-black' : 'hover:bg-white/5'}`}
+                  className={`w-full text-right p-2 rounded-lg transition-colors text-sm ${!category ? 'bg-[#FF6B00] text-white font-bold' : 'hover:bg-gray-100 text-gray-700'}`}
                   data-testid="cat-all"
                 >
                   الكل
@@ -141,7 +141,7 @@ const ProductsPage = () => {
                   <button
                     key={cat.id}
                     onClick={() => { setCategory(cat.id); setShowFilters(false); }}
-                    className={`w-full text-right p-2 rounded-lg transition-colors ${category === cat.id ? 'bg-[#FF6B00] text-black' : 'hover:bg-white/5'}`}
+                    className={`w-full text-right p-2 rounded-lg transition-colors text-sm ${category === cat.id ? 'bg-[#FF6B00] text-white font-bold' : 'hover:bg-gray-100 text-gray-700'}`}
                     data-testid={`cat-filter-${cat.id}`}
                   >
                     {cat.name}
