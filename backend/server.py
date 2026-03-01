@@ -148,6 +148,12 @@ class NotificationCreate(BaseModel):
     message: str
     target: str = "all"  # all, buyers, sellers
 
+class ProductQuestion(BaseModel):
+    question: str
+
+class ProductAnswer(BaseModel):
+    answer: str
+
 # ============== Helper Functions ==============
 
 def hash_password(password: str) -> str:
