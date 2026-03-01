@@ -190,9 +190,9 @@ const MessagesPage = () => {
 
   // Conversations list
   return (
-    <div className="min-h-screen pb-20 md:pb-10">
+    <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">الرسائل</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900">الرسائل</h1>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -200,9 +200,9 @@ const MessagesPage = () => {
           </div>
         ) : conversations.length === 0 ? (
           <div className="text-center py-20">
-            <MessageCircle size={64} className="text-white/20 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">لا توجد رسائل</h2>
-            <p className="text-white/50">ابدأ محادثة مع بائع من صفحة المنتج</p>
+            <MessageCircle size={64} className="text-gray-300 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2 text-gray-900">لا توجد رسائل</h2>
+            <p className="text-gray-500">ابدأ محادثة مع بائع من صفحة المنتج</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -210,27 +210,27 @@ const MessagesPage = () => {
               <Link
                 key={conv.user.id}
                 to={`/messages/${conv.user.id}`}
-                className="flex items-center gap-3 p-4 bg-[#121212] rounded-xl border border-white/5 hover:border-[#FF6B00]/30 transition-colors"
+                className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-[#FF6B00]/30 hover:shadow-md transition-all"
                 data-testid={`conv-${conv.user.id}`}
               >
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full bg-[#FF6B00] flex items-center justify-center">
-                    <span className="text-black font-bold">{conv.user.name[0]}</span>
+                    <span className="text-white font-bold">{conv.user.name[0]}</span>
                   </div>
                   {conv.unread_count > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-black text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                       {conv.unread_count}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold">{conv.user.name}</span>
-                    <span className="text-xs text-white/30">
+                    <span className="font-bold text-gray-900">{conv.user.name}</span>
+                    <span className="text-xs text-gray-400">
                       {new Date(conv.last_message.created_at).toLocaleDateString('ar-SY')}
                     </span>
                   </div>
-                  <p className="text-sm text-white/50 truncate">
+                  <p className="text-sm text-gray-500 truncate">
                     {conv.last_message.is_mine && 'أنت: '}
                     {conv.last_message.content}
                   </p>
