@@ -467,7 +467,7 @@ async def delete_product(product_id: str, user: dict = Depends(get_current_user)
 # ============== Store/Seller Page ==============
 
 @api_router.get("/seller/my-products")
-async def get_seller_products(user: dict = Depends(get_current_user)):
+async def get_seller_my_products(user: dict = Depends(get_current_user)):
     """منتجات البائع مع حالة الموافقة"""
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
