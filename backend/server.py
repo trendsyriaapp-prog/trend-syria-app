@@ -230,7 +230,11 @@ async def register(user: UserRegister):
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
     user = await db.users.find_one({"phone": credentials.phone}, {"_id": 0})
-    if not user or user["password"] != hash_password(credentials.password):
+    if not user:
+        raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
+    
+    # Check password with bcrypt
+    if not bcrypt.checkpw(credentials.password.encode(), user["password"].encode()):
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     
     token = create_token(user["id"], user["user_type"])
