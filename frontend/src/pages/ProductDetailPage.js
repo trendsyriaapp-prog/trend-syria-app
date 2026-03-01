@@ -429,6 +429,13 @@ const ProductDetailPage = () => {
   const [galleryTouchEnd, setGalleryTouchEnd] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  
+  // Q&A states
+  const [questions, setQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [askingQuestion, setAskingQuestion] = useState(false);
+  const [answeringId, setAnsweringId] = useState(null);
+  const [newAnswer, setNewAnswer] = useState('');
 
   // الحد الأدنى للسحب للتنقل بين الصور
   const minSwipeDistance = 50;
