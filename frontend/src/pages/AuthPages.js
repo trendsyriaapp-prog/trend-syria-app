@@ -192,11 +192,11 @@ const RegisterPage = () => {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           {/* Account Type */}
-          <div className="flex gap-2 p-1 bg-gray-100 rounded-full mb-6">
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-full mb-6">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, user_type: 'buyer' })}
-              className={`flex-1 py-2 rounded-full transition-colors ${
+              className={`flex-1 py-2 rounded-full transition-colors text-sm ${
                 formData.user_type === 'buyer' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
               data-testid="buyer-type-btn"
@@ -206,12 +206,22 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, user_type: 'seller' })}
-              className={`flex-1 py-2 rounded-full transition-colors ${
+              className={`flex-1 py-2 rounded-full transition-colors text-sm ${
                 formData.user_type === 'seller' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
               data-testid="seller-type-btn"
             >
               بائع
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, user_type: 'delivery' })}
+              className={`flex-1 py-2 rounded-full transition-colors text-sm ${
+                formData.user_type === 'delivery' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
+              }`}
+              data-testid="delivery-type-btn"
+            >
+              موظف توصيل
             </button>
           </div>
 
