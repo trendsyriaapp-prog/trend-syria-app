@@ -5,7 +5,8 @@ import axios from 'axios';
 import { 
   Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
-  UtensilsCrossed, Heart, SprayCan, ChevronLeft
+  UtensilsCrossed, Heart, SprayCan, ChevronLeft, TrendingUp,
+  Package, Clock, Star
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
@@ -53,144 +54,205 @@ const HomePage = () => {
     seedData();
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="min-h-screen pb-20 md:pb-0 bg-white">
-      {/* Hero Section + Features - مدمجين */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/10 to-white">
-        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
+    <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
+      {/* Hero Section - Compact */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/8 via-[#FF6B00]/5 to-transparent">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-2"
+            transition={{ duration: 0.5 }}
+            className="text-center mb-4"
           >
-            <h1 className="text-2xl md:text-4xl font-bold mb-1 text-gray-900">
-              تريند <span className="text-[#FF6B00]">سورية</span>
+            <h1 className="text-3xl md:text-4xl font-extrabold mb-2 text-gray-900 tracking-tight">
+              تريند <span className="text-[#FF6B00] relative">
+                سورية
+                <svg className="absolute -bottom-1 left-0 right-0 w-full h-2" viewBox="0 0 100 10">
+                  <path d="M0 8 Q50 0 100 8" stroke="#FF6B00" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                </svg>
+              </span>
             </h1>
-            <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
+            <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto">
               منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
           
-          {/* Features */}
-          <div className="grid grid-cols-4 gap-2">
+          {/* Features - Compact Cards */}
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"
+          >
             {[
-              { icon: Truck, text: 'توصيل مجاني', desc: 'داخل المحافظات' },
-              { icon: Shield, text: 'ضمان الجودة', desc: 'منتجات أصلية' },
-              { icon: CreditCard, text: 'دفع إلكتروني', desc: 'آمن وسريع' },
-              { icon: Heart, text: 'دعم 24/7', desc: 'خدمة العملاء' },
+              { icon: Truck, text: 'توصيل مجاني', color: 'bg-emerald-50 text-emerald-600' },
+              { icon: Shield, text: 'ضمان الجودة', color: 'bg-blue-50 text-blue-600' },
+              { icon: CreditCard, text: 'دفع آمن', color: 'bg-purple-50 text-purple-600' },
+              { icon: Clock, text: 'دعم 24/7', color: 'bg-amber-50 text-amber-600' },
             ].map((feature, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-gray-100"
+                variants={itemVariants}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-default"
               >
-                <div className="p-1.5 bg-[#FF6B00]/10 rounded-full">
-                  <feature.icon size={14} className="text-[#FF6B00]" />
+                <div className={`p-2 rounded-lg ${feature.color}`}>
+                  <feature.icon size={16} />
                 </div>
-                <div>
-                  <p className="font-bold text-[10px] text-gray-900">{feature.text}</p>
-                  <p className="text-[8px] text-gray-500 hidden sm:block">{feature.desc}</p>
-                </div>
+                <span className="font-semibold text-xs text-gray-700">{feature.text}</span>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Categories - Smaller Size */}
-      <section className="py-1">
+      {/* Categories - Horizontal Scroll */}
+      <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-base font-bold text-gray-900">الأصناف</h2>
-            <Link to="/categories" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-categories">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-title text-lg font-bold text-gray-900">الأصناف</h2>
+            <Link 
+              to="/categories" 
+              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium" 
+              data-testid="view-all-categories"
+            >
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
           </div>
-          <div className="flex gap-1 overflow-x-auto hide-scrollbar pb-1">
+          
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex gap-3 overflow-x-auto hide-scrollbar pb-2"
+          >
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               return (
                 <motion.div
                   key={cat.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="flex flex-col items-center gap-1 min-w-[55px]"
+                    className="category-item flex flex-col items-center gap-2 min-w-[70px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all group">
-                      <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
+                    <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
+                      <IconComponent size={22} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-[10px] font-medium text-gray-700">{cat.name}</span>
+                    <span className="text-xs font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="py-1">
+      <section className="py-4">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-base font-bold text-gray-900">المنتجات الرائجة</h2>
-            <Link to="/products" className="text-[#FF6B00] flex items-center gap-1 hover:underline text-sm" data-testid="view-all-products">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg">
+                <TrendingUp size={18} className="text-[#FF6B00]" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">المنتجات الرائجة</h2>
+            </div>
+            <Link 
+              to="/products" 
+              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium" 
+              data-testid="view-all-products"
+            >
               عرض الكل
               <ChevronLeft size={16} />
             </Link>
           </div>
           
           {loading ? (
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-xl aspect-square animate-pulse" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                  <div className="aspect-[4/5] shimmer" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-4 shimmer rounded w-full" />
+                    <div className="h-3 shimmer rounded w-2/3" />
+                    <div className="h-5 shimmer rounded w-1/2" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4"
+            >
               {products.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
+                <motion.div key={product.id} variants={itemVariants}>
                   <ProductCard product={product} />
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-8">
+      {/* CTA Banner - Modern Style */}
+      <section className="py-6">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-[#FF6B00] to-[#E65000] p-8 md:p-12">
-            <div className="relative z-10 max-w-lg">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
-                هل أنت بائع؟
-              </h3>
-              <p className="text-white/90 mb-6">
-                انضم إلى تريند سورية وابدأ ببيع منتجاتك لآلاف العملاء في جميع أنحاء سورية
-              </p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-[#FF6B00] via-[#FF7B1C] to-[#FF8C00] p-6 md:p-10"
+          >
+            {/* Decorative Elements */}
+            <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-60 h-60 bg-black/5 rounded-full translate-x-1/3 translate-y-1/3" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-right">
+                <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 mb-3">
+                  <Package size={14} className="text-white" />
+                  <span className="text-white/90 text-xs font-medium">انضم لأكثر من 500 بائع</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-extrabold mb-2 text-white">
+                  هل أنت بائع؟
+                </h3>
+                <p className="text-white/85 text-sm md:text-base max-w-md">
+                  ابدأ ببيع منتجاتك لآلاف العملاء في جميع أنحاء سورية
+                </p>
+              </div>
               <Link
                 to="/register?type=seller"
-                className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-6 py-3 rounded-full hover:bg-gray-50 hover:shadow-lg transition-all group"
                 data-testid="become-seller-btn"
               >
-                سجل كبائع
-                <ArrowLeft size={18} />
+                سجل كبائع مجاناً
+                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
               </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
     </div>
