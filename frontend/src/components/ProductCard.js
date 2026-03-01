@@ -90,6 +90,54 @@ const ProductCard = ({ product, variant = 'default' }) => {
     return false;
   };
 
+  // إضافة للسلة
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "يجب تسجيل الدخول",
+        description: "سجل دخولك لإضافة المنتجات للسلة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // التحقق من المخزون
+    if (product.stock === 0) {
+      toast({
+        title: "نفذت الكمية",
+        description: "هذا المنتج غير متوفر حالياً",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // إذا كان المنتج يحتوي على مقاسات، توجيه للصفحة
+    if (product.available_sizes && product.available_sizes.length > 0) {
+      window.location.href = `/products/${product.id}`;
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      await addToCart(product.id);
+      toast({
+        title: "تمت الإضافة",
+        description: `تمت إضافة ${product.name} إلى السلة`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   // Check if product is new (created in last 7 days)
   const isNew = product.created_at && 
     (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
