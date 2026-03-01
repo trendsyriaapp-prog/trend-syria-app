@@ -923,6 +923,123 @@ const ProductDetailPage = () => {
             </div>
           )}
         </section>
+
+        {/* Q&A Section - Public Questions */}
+        <section className="mt-4 px-4 pb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageCircle size={16} className="text-green-600" />
+            <h2 className="text-sm font-bold text-gray-900">أسئلة وأجوبة ({questions.length})</h2>
+          </div>
+
+          {/* Ask Question Form */}
+          <form onSubmit={handleAskQuestion} className="mb-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+                placeholder={user ? "اطرح سؤالك عن المنتج..." : "سجل دخولك لطرح سؤال"}
+                className="flex-1 bg-white border border-gray-300 rounded-full py-2 px-4 text-sm placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                disabled={!user}
+                data-testid="question-input"
+              />
+              <button
+                type="submit"
+                disabled={!newQuestion.trim() || askingQuestion || !user}
+                className="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-600 disabled:opacity-50 transition-colors"
+                data-testid="ask-question-btn"
+              >
+                {askingQuestion ? '...' : 'إرسال'}
+              </button>
+            </div>
+          </form>
+
+          {/* Questions List */}
+          {questions.length > 0 ? (
+            <div className="space-y-3">
+              {questions.map((q) => (
+                <div key={q.id} className="bg-white rounded-xl border border-gray-200 p-3" data-testid={`question-${q.id}`}>
+                  {/* Question */}
+                  <div className="flex items-start gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 font-bold text-xs">{q.user_name?.[0] || '؟'}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-xs text-gray-900">{q.user_name}</span>
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(q.created_at).toLocaleDateString('ar-SY')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700">{q.question}</p>
+                    </div>
+                  </div>
+
+                  {/* Answer */}
+                  {q.answer ? (
+                    <div className="mt-3 mr-9 bg-green-50 rounded-lg p-2 border border-green-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Store size={12} className="text-green-600" />
+                        <span className="font-bold text-xs text-green-700">{q.answered_by_name || 'البائع'}</span>
+                        <span className="text-[10px] text-gray-400">
+                          {q.answered_at && new Date(q.answered_at).toLocaleDateString('ar-SY')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-800">{q.answer}</p>
+                    </div>
+                  ) : (
+                    /* Show answer form for seller/admin */
+                    (user?.id === product.seller_id || user?.user_type === 'admin' || user?.user_type === 'sub_admin') && (
+                      answeringId === q.id ? (
+                        <div className="mt-3 mr-9 flex gap-2">
+                          <input
+                            type="text"
+                            value={newAnswer}
+                            onChange={(e) => setNewAnswer(e.target.value)}
+                            placeholder="اكتب ردك..."
+                            className="flex-1 bg-white border border-gray-300 rounded-full py-1.5 px-3 text-sm focus:border-green-500 focus:outline-none"
+                            data-testid={`answer-input-${q.id}`}
+                          />
+                          <button
+                            onClick={() => handleAnswerQuestion(q.id)}
+                            className="px-3 py-1.5 bg-green-500 text-white rounded-full text-xs font-bold hover:bg-green-600"
+                          >
+                            رد
+                          </button>
+                          <button
+                            onClick={() => { setAnsweringId(null); setNewAnswer(''); }}
+                            className="px-3 py-1.5 bg-gray-200 text-gray-600 rounded-full text-xs font-bold hover:bg-gray-300"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setAnsweringId(q.id)}
+                          className="mt-2 mr-9 text-xs text-green-600 font-bold hover:underline"
+                          data-testid={`reply-btn-${q.id}`}
+                        >
+                          + إضافة رد
+                        </button>
+                      )
+                    )
+                  )}
+
+                  {/* Show "waiting for answer" if no answer and user is not seller */}
+                  {!q.answer && user?.id !== product.seller_id && user?.user_type !== 'admin' && user?.user_type !== 'sub_admin' && (
+                    <p className="mt-2 mr-9 text-xs text-gray-400 italic">في انتظار رد البائع...</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 bg-white rounded-xl border border-gray-200">
+              <MessageCircle size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">لا توجد أسئلة بعد</p>
+              <p className="text-gray-400 text-xs">كن أول من يسأل عن هذا المنتج!</p>
+            </div>
+          )}
+        </section>
       </div>
       
       {/* الشريط السفلي الثابت - السعر والأزرار */}
