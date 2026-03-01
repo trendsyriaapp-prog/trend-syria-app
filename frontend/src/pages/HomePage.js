@@ -149,14 +149,14 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-4">
+      <section className="py-2">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg">
-                <TrendingUp size={18} className="text-[#FF6B00]" />
+              <div className="p-1 bg-[#FF6B00]/10 rounded-lg">
+                <TrendingUp size={16} className="text-[#FF6B00]" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">المنتجات الرائجة</h2>
+              <h2 className="text-base font-bold text-gray-900">المنتجات الرائجة</h2>
             </div>
             <Link 
               to="/products" 
