@@ -658,21 +658,21 @@ const ProductDetailPage = () => {
                 <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Truck size={8} className="text-white" />
                 </div>
-                <span className="text-[9px] text-gray-700 font-medium">توصيل مجاني</span>
+                <span className="text-[9px] text-gray-700 font-medium">توصيل مجاني داخل المحافظات</span>
               </div>
               <div className="w-px h-3 bg-gray-300"></div>
               <div className="flex items-center gap-1">
                 <div className="w-4 h-4 bg-[#FF6B00] rounded-full flex items-center justify-center flex-shrink-0">
                   <Shield size={8} className="text-white" />
                 </div>
-                <span className="text-[9px] text-gray-700 font-medium">ضمان استرداد</span>
+                <span className="text-[9px] text-gray-700 font-medium">ضمان استرداد الأموال خلال ساعة</span>
               </div>
               <div className="w-px h-3 bg-gray-300"></div>
               <div className="flex items-center gap-1">
                 <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Clock size={8} className="text-white" />
                 </div>
-                <span className="text-[9px] text-gray-700 font-medium">الشحن خلال 1-3 أيام</span>
+                <span className="text-[9px] text-gray-700 font-medium">تسليم خلال 1-3 أيام</span>
               </div>
             </div>
           </motion.div>
