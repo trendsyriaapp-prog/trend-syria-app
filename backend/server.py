@@ -189,7 +189,7 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[ALGORITHM])
         user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         return user
-    except:
+    except jwt.PyJWTError:
         return None
 
 # ============== Auth Routes ==============
