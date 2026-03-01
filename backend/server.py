@@ -1122,6 +1122,226 @@ async def get_all_products_admin(user: dict = Depends(get_current_user)):
     return products
 
 
+
+# ============== Delivery Driver System ==============
+
+@api_router.post("/delivery/documents")
+async def submit_delivery_documents(docs: DeliveryDocuments, user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من عدم وجود وثائق سابقة
+    existing = await db.delivery_documents.find_one({"driver_id": user["id"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="تم إرسال الوثائق مسبقاً")
+    
+    doc_id = str(uuid.uuid4())
+    doc_data = {
+        "id": doc_id,
+        "driver_id": user["id"],
+        "driver_name": user["full_name"] or user.get("name"),
+        "driver_phone": user["phone"],
+        "driver_city": user["city"],
+        "national_id": docs.national_id,
+        "personal_photo": docs.personal_photo,
+        "id_photo": docs.id_photo,
+        "motorcycle_license": docs.motorcycle_license,
+        "status": "pending",  # pending, approved, rejected
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.delivery_documents.insert_one(doc_data)
+    return {"message": "تم إرسال الوثائق بنجاح، في انتظار موافقة الإدارة"}
+
+@api_router.get("/delivery/documents/status")
+async def get_delivery_doc_status(user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    doc = await db.delivery_documents.find_one({"driver_id": user["id"]}, {"_id": 0})
+    if not doc:
+        return {"status": "not_submitted"}
+    return {"status": doc["status"], "documents": doc}
+
+@api_router.get("/delivery/available-orders")
+async def get_available_orders_for_delivery(user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من اعتماد موظف التوصيل
+    doc = await db.delivery_documents.find_one({"driver_id": user["id"]})
+    if not doc or doc["status"] != "approved":
+        raise HTTPException(status_code=403, detail="يجب أن تكون معتمداً لمشاهدة الطلبات")
+    
+    # جلب الطلبات المدفوعة التي لم يتم تعيين موظف توصيل لها
+    orders = await db.orders.find(
+        {"status": "paid", "delivery_driver_id": {"$exists": False}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # إضافة عناوين البائع والمشتري لكل طلب
+    for order in orders:
+        # عنوان المشتري (موجود في الطلب)
+        order["buyer_address"] = {
+            "name": order.get("user_name"),
+            "phone": order.get("phone"),
+            "city": order.get("city"),
+            "address": order.get("address")
+        }
+        
+        # جلب عناوين البائعين من المنتجات
+        seller_addresses = []
+        for item in order.get("items", []):
+            seller = await db.users.find_one({"id": item.get("seller_id")}, {"_id": 0, "password": 0})
+            if seller:
+                seller_doc = await db.seller_documents.find_one({"seller_id": seller["id"]}, {"_id": 0})
+                seller_addresses.append({
+                    "name": seller.get("full_name") or seller.get("name"),
+                    "phone": seller.get("phone"),
+                    "city": seller.get("city"),
+                    "business_name": seller_doc.get("business_name") if seller_doc else None
+                })
+        order["seller_addresses"] = seller_addresses
+    
+    return orders
+
+@api_router.post("/delivery/take-order/{order_id}")
+async def take_delivery_order(order_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من اعتماد موظف التوصيل
+    doc = await db.delivery_documents.find_one({"driver_id": user["id"]})
+    if not doc or doc["status"] != "approved":
+        raise HTTPException(status_code=403, detail="يجب أن تكون معتمداً لأخذ الطلبات")
+    
+    # التحقق من أوقات العمل (8 صباحاً - 6 مساءً)
+    now = datetime.now(timezone.utc)
+    # تحويل للتوقيت المحلي (سوريا UTC+3)
+    local_hour = (now.hour + 3) % 24
+    if local_hour < 8 or local_hour >= 18:
+        raise HTTPException(
+            status_code=400, 
+            detail="لا يمكن أخذ طلبات خارج أوقات العمل (8 صباحاً - 6 مساءً)"
+        )
+    
+    # التحقق من وجود الطلب
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("delivery_driver_id"):
+        raise HTTPException(status_code=400, detail="تم تعيين موظف توصيل آخر لهذا الطلب")
+    
+    if order.get("status") != "paid":
+        raise HTTPException(status_code=400, detail="الطلب غير مدفوع")
+    
+    # تعيين موظف التوصيل للطلب
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "delivery_driver_id": user["id"],
+            "delivery_driver_name": user.get("full_name") or user.get("name"),
+            "delivery_driver_phone": user["phone"],
+            "delivery_status": "picked_up",
+            "delivery_assigned_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "تم تعيينك لتوصيل هذا الطلب بنجاح"}
+
+@api_router.get("/delivery/my-orders")
+async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    orders = await db.orders.find(
+        {"delivery_driver_id": user["id"]},
+        {"_id": 0}
+    ).sort("delivery_assigned_at", -1).to_list(100)
+    
+    return orders
+
+@api_router.post("/delivery/complete-order/{order_id}")
+async def complete_delivery_order(order_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id, "delivery_driver_id": user["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس معيناً لك")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "delivery_status": "delivered",
+            "delivered_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "تم تسليم الطلب بنجاح"}
+
+# ============== Admin - Delivery Drivers ==============
+
+@api_router.get("/admin/delivery/pending")
+async def get_pending_delivery_drivers(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    docs = await db.delivery_documents.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return docs
+
+@api_router.get("/admin/delivery/all")
+async def get_all_delivery_drivers(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    drivers = await db.users.find(
+        {"user_type": "delivery"},
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # إضافة معلومات الوثائق لكل سائق
+    for driver in drivers:
+        doc = await db.delivery_documents.find_one({"driver_id": driver["id"]}, {"_id": 0})
+        driver["documents"] = doc
+    
+    return drivers
+
+@api_router.post("/admin/delivery/{driver_id}/approve")
+async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.delivery_documents.update_one(
+        {"driver_id": driver_id},
+        {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
+    
+    return {"message": "تم اعتماد موظف التوصيل"}
+
+@api_router.post("/admin/delivery/{driver_id}/reject")
+async def reject_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.delivery_documents.update_one(
+        {"driver_id": driver_id},
+        {"$set": {"status": "rejected", "rejected_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
+    
+    return {"message": "تم رفض موظف التوصيل"}
+
+
 # ============== Product Approval ==============
 
 @api_router.get("/admin/products/pending")
