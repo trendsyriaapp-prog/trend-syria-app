@@ -591,23 +591,42 @@ const SellerDashboardPage = () => {
     });
   };
 
-  // رفع الصور مع شعار صغير
+  // رفع الصور مع فحص وتحسين
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
     
     setUploadingImage(true);
+    setImageWarnings([]);
     
     try {
       for (const file of files) {
-        const imageDataUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
+        // فحص وتحسين الصورة
+        const result = await validateAndEnhanceImage(file);
+        
+        // إذا كانت هناك مشاكل خطيرة
+        if (result.issues.length > 0) {
+          toast({
+            title: "⚠️ مشكلة في الصورة",
+            description: result.issues[0],
+            variant: "destructive"
+          });
+          continue;
+        }
+        
+        // عرض التحذيرات
+        if (result.warnings.length > 0) {
+          setImageWarnings(prev => [...prev, ...result.warnings]);
+          if (result.enhanced) {
+            toast({
+              title: "✨ تم تحسين الصورة",
+              description: "تم ضبط الإضاءة تلقائياً"
+            });
+          }
+        }
         
         // إضافة الشعار الصغير
-        const imageWithLogo = await addLogo(imageDataUrl);
+        const imageWithLogo = await addLogo(result.dataUrl);
         setNewProduct(prev => ({
           ...prev,
           images: [...prev.images, imageWithLogo]
