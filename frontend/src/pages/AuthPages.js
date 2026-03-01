@@ -21,9 +21,19 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(formData.phone, formData.password);
+      const userData = await login(formData.phone, formData.password);
       toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
-      navigate('/');
+      
+      // توجيه حسب نوع المستخدم
+      if (userData.user_type === 'admin' || userData.user_type === 'sub_admin') {
+        navigate('/admin');
+      } else if (userData.user_type === 'seller') {
+        navigate('/seller/dashboard');
+      } else if (userData.user_type === 'delivery') {
+        navigate('/delivery/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       toast({
         title: "خطأ",
