@@ -229,6 +229,8 @@ const AdminDashboardPage = () => {
                 {activeTab === 'orders' && 'جميع الطلبات'}
                 {activeTab === 'pending-products' && 'المنتجات المعلقة'}
                 {activeTab === 'pending-sellers' && 'البائعين المعلقين'}
+                {activeTab === 'pending-delivery' && 'موظفي التوصيل المعلقين'}
+                {activeTab === 'delivery' && 'موظفي التوصيل'}
                 {activeTab === 'notifications' && 'الإشعارات'}
                 {activeTab === 'sub-admins' && 'المدراء التنفيذيين'}
               </h1>
