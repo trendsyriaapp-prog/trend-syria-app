@@ -107,9 +107,18 @@ const MessagesPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/login');
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
   }
 
   // Chat view
