@@ -500,6 +500,70 @@ const ProductDetailPage = () => {
     }
   };
 
+  const fetchQuestions = async () => {
+    try {
+      const res = await axios.get(`${API}/products/${id}/questions`);
+      setQuestions(res.data);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
+
+  const handleAskQuestion = async (e) => {
+    e.preventDefault();
+    if (!newQuestion.trim() || askingQuestion) return;
+    
+    if (!user) {
+      toast({
+        title: "يجب تسجيل الدخول",
+        description: "سجل دخولك لطرح سؤال",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+
+    setAskingQuestion(true);
+    try {
+      await axios.post(`${API}/products/${id}/questions`, { question: newQuestion });
+      toast({ title: "تم إرسال السؤال", description: "سيرد البائع قريباً" });
+      setNewQuestion('');
+      fetchQuestions();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل إرسال السؤال",
+        variant: "destructive"
+      });
+    } finally {
+      setAskingQuestion(false);
+    }
+  };
+
+  const handleAnswerQuestion = async (questionId) => {
+    if (!newAnswer.trim()) return;
+    
+    try {
+      await axios.post(`${API}/products/${id}/questions/${questionId}/answer`, { answer: newAnswer });
+      toast({ title: "تم إضافة الرد" });
+      setNewAnswer('');
+      setAnsweringId(null);
+      fetchQuestions();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل إضافة الرد",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchQuestions();
+    }
+  }, [id]);
+
   const handleAddToCart = async () => {
     if (!user) {
       toast({
