@@ -133,13 +133,13 @@ const HomePage = () => {
                 >
                   <Link
                     to={`/products?category=${cat.id}`}
-                    className="category-item flex flex-col items-center gap-2 min-w-[70px]"
+                    className="category-item flex flex-col items-center gap-1.5 min-w-[60px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
-                      <IconComponent size={22} className="group-hover:scale-110 transition-transform" />
+                    <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
+                      <IconComponent size={20} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-xs font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
+                    <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
                   </Link>
                 </motion.div>
               );
