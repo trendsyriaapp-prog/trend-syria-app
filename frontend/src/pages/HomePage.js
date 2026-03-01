@@ -105,10 +105,10 @@ const HomePage = () => {
       </section>
 
       {/* Categories - Horizontal Scroll */}
-      <section className="py-4">
+      <section className="py-2">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="section-title text-lg font-bold text-gray-900">الأصناف</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="section-title text-base font-bold text-gray-900">الأصناف</h2>
             <Link 
               to="/categories" 
               className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium" 
