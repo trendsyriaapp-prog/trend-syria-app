@@ -1199,6 +1199,18 @@ async def get_all_products_admin(user: dict = Depends(get_current_user)):
     ).sort("created_at", -1).to_list(500)
     return products
 
+@api_router.delete("/admin/products/clear-all")
+async def delete_all_products(user: dict = Depends(get_current_user)):
+    """Delete all products - Admin only"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    result = await db.products.delete_many({})
+    await db.cart_items.delete_many({})
+    await db.reviews.delete_many({})
+    await db.product_questions.delete_many({})
+    
+    return {"message": f"تم حذف {result.deleted_count} منتج"}
 
 
 # ============== Delivery Driver System ==============
