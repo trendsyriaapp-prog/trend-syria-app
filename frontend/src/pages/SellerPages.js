@@ -1050,20 +1050,46 @@ const SellerDashboardPage = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">
-                  صور المنتج ({newProduct.images.length}/5)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-medium text-gray-700">
+                    صور المنتج ({newProduct.images.length}/5)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoGuide(true)}
+                    className="text-[10px] text-[#FF6B00] font-bold flex items-center gap-1 hover:underline"
+                  >
+                    <Camera size={12} />
+                    دليل التصوير
+                  </button>
+                </div>
+                
+                {/* تحذيرات الصور */}
+                {imageWarnings.length > 0 && (
+                  <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    {imageWarnings.map((warning, i) => (
+                      <p key={i} className="text-[10px] text-yellow-700 flex items-center gap-1">
+                        <AlertTriangle size={10} />
+                        {warning}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-5 gap-1.5 mb-1">
                   {newProduct.images.map((img, i) => (
-                    <div key={i} className="relative aspect-square">
+                    <div key={i} className="relative aspect-square group">
                       <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
                       <button
                         type="button"
-                        onClick={() => setNewProduct({
-                          ...newProduct,
-                          images: newProduct.images.filter((_, idx) => idx !== i)
-                        })}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white"
+                        onClick={() => {
+                          setNewProduct({
+                            ...newProduct,
+                            images: newProduct.images.filter((_, idx) => idx !== i)
+                          });
+                          setImageWarnings([]);
+                        }}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X size={10} />
                       </button>
@@ -1078,16 +1104,28 @@ const SellerDashboardPage = () => {
                     <button
                       type="button"
                       onClick={() => document.getElementById('product-images').click()}
-                      className="aspect-square border border-dashed border-gray-300 rounded flex flex-col items-center justify-center hover:border-[#FF6B00]"
+                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-[#FF6B00] hover:bg-orange-50 transition-colors"
                       disabled={uploadingImage}
                     >
                       {uploadingImage ? (
-                        <Loader2 size={14} className="text-gray-400 animate-spin" />
+                        <Loader2 size={14} className="text-[#FF6B00] animate-spin" />
                       ) : (
-                        <Plus size={14} className="text-gray-400" />
+                        <>
+                          <Plus size={14} className="text-gray-400" />
+                          <span className="text-[8px] text-gray-400 mt-0.5">إضافة</span>
+                        </>
                       )}
                     </button>
                   )}
+                </div>
+                
+                {/* نصيحة سريعة */}
+                {newProduct.images.length === 0 && (
+                  <p className="text-[9px] text-gray-400 flex items-center gap-1">
+                    <Info size={10} />
+                    استخدم خلفية بيضاء وإضاءة جيدة للحصول على أفضل النتائج
+                  </p>
+                )}
                 </div>
                 <input
                   id="product-images"
