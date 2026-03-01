@@ -384,9 +384,16 @@ const DeliveryDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => navigate('/')}
+            className="w-8 h-8 bg-white rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+            data-testid="back-btn"
+          >
+            <ChevronRight size={18} className="text-gray-600" />
+          </button>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-gray-900">مرحباً، {user?.full_name || user?.name}</h1>
             <p className="text-xs text-gray-500">موظف توصيل</p>
           </div>
