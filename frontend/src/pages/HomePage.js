@@ -209,7 +209,7 @@ const HomePage = () => {
                   <ProductCard product={product} />
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           )}
         </div>
       </section>
