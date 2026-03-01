@@ -57,11 +57,11 @@ const HomePage = () => {
     <div className="min-h-screen pb-20 md:pb-0 bg-white">
       {/* Hero Section + Features - مدمجين */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/10 to-white">
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-4"
+            className="text-center mb-2"
           >
             <h1 className="text-2xl md:text-4xl font-bold mb-1 text-gray-900">
               تريند <span className="text-[#FF6B00]">سورية</span>
