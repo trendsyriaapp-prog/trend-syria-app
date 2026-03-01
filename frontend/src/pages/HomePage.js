@@ -54,19 +54,6 @@ const HomePage = () => {
     seedData();
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* Hero Section - Compact */}
