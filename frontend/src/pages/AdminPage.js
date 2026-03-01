@@ -306,18 +306,20 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setActiveTab('notifications')}
-                className="bg-white rounded-lg p-3 border border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-2"
+                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-3"
               >
-                <Bell size={16} className="text-[#FF6B00]" />
-                <span className="text-xs font-bold text-gray-700">الإشعارات ({notifications.length})</span>
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                  <Bell size={20} className="text-[#FF6B00]" />
+                </div>
+                <span className="text-sm font-bold text-gray-700">الإشعارات ({notifications.length})</span>
               </button>
               {user.user_type === 'admin' && (
                 <button
                   onClick={() => setActiveTab('sub-admins')}
-                  className="bg-white rounded-lg p-3 border border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-2"
+                  className="bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-3"
                 >
                   <ShieldCheck size={16} className="text-blue-600" />
                   <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
