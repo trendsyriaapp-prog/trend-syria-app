@@ -215,10 +215,10 @@ const AdminDashboardPage = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
           {[
-            { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'overview' },
-            { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'overview' },
-            { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'overview' },
-            { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'overview' },
+            { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'users' },
+            { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'sellers' },
+            { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'products' },
+            { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'orders' },
             { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600', tab: 'pending-sellers' },
             { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600', tab: 'pending-products' },
           ].map((stat, i) => (
@@ -241,10 +241,14 @@ const AdminDashboardPage = () => {
         <div className="flex gap-1.5 mb-4 overflow-x-auto hide-scrollbar">
           {[
             { id: 'overview', label: 'نظرة عامة' },
+            { id: 'users', label: `المستخدمين (${allUsers.length})` },
+            { id: 'sellers', label: `البائعين (${allSellers.length})` },
+            { id: 'products', label: `المنتجات (${allProducts.length})` },
+            { id: 'orders', label: `الطلبات (${allOrders.length})` },
             { id: 'pending-products', label: `منتجات معلقة (${pendingProducts.length})` },
             { id: 'pending-sellers', label: `بائعين معلقين (${pendingSellers.length})` },
             { id: 'notifications', label: `الإشعارات (${notifications.length})` },
-            ...(user.user_type === 'admin' ? [{ id: 'sub-admins', label: `المدراء التنفيذيين (${subAdmins.length})` }] : [])
+            ...(user.user_type === 'admin' ? [{ id: 'sub-admins', label: `المدراء (${subAdmins.length})` }] : [])
           ].map((tab) => (
             <button
               key={tab.id}
