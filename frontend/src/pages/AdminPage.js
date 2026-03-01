@@ -203,14 +203,19 @@ const AdminDashboardPage = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
           {[
-            { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600' },
-            { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600' },
-            { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600' },
-            { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600' },
-            { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600' },
-            { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600' },
+            { icon: Users, label: 'المستخدمين', value: stats?.total_users || 0, color: 'bg-blue-100 text-blue-600', tab: 'overview' },
+            { icon: Users, label: 'البائعين', value: stats?.total_sellers || 0, color: 'bg-purple-100 text-purple-600', tab: 'overview' },
+            { icon: Package, label: 'المنتجات', value: stats?.total_products || 0, color: 'bg-green-100 text-green-600', tab: 'overview' },
+            { icon: ShoppingBag, label: 'الطلبات', value: stats?.total_orders || 0, color: 'bg-orange-100 text-orange-600', tab: 'overview' },
+            { icon: Clock, label: 'بائعين معلقين', value: stats?.pending_sellers || 0, color: 'bg-yellow-100 text-yellow-600', tab: 'pending-sellers' },
+            { icon: AlertTriangle, label: 'منتجات معلقة', value: stats?.pending_products || 0, color: 'bg-red-100 text-red-600', tab: 'pending-products' },
           ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm">
+            <div 
+              key={i} 
+              onClick={() => setActiveTab(stat.tab)}
+              className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-[#FF6B00] transition-all active:scale-95"
+              data-testid={`stat-${stat.label}`}
+            >
               <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
                 <stat.icon size={12} />
               </div>
