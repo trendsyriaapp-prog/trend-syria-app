@@ -796,6 +796,16 @@ const ProductDetailPage = () => {
                 {product.business_name || 'متجر'}
               </Link>
               
+              {/* زر التواصل مع البائع */}
+              <button
+                onClick={handleContactSeller}
+                className="mt-2 w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors"
+                data-testid="contact-seller-btn"
+              >
+                <MessageCircle size={14} />
+                تواصل مع البائع
+              </button>
+              
               {/* معلومات البائع والموقع للمدير فقط */}
               {user?.user_type === 'admin' && (
                 <div className="mt-1.5 pt-1.5 border-t border-gray-200">
