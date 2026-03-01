@@ -107,12 +107,7 @@ const MessagesPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
-
+  // Don't redirect immediately, wait for auth to load
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
