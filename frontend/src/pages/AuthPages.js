@@ -161,6 +161,8 @@ const RegisterPage = () => {
       
       if (formData.user_type === 'seller') {
         navigate('/seller/documents');
+      } else if (formData.user_type === 'delivery') {
+        navigate('/delivery/documents');
       } else {
         navigate('/');
       }
