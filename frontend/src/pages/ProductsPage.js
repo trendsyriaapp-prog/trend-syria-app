@@ -385,7 +385,7 @@ const ProductsPage = () => {
                   data-testid="sort-btn"
                 >
                   <ArrowUpDown size={14} />
-                  {sortOptions.find(s => s.value === sort)?.label || 'ترتيب'}
+                  فلتر
                   <ChevronDown size={14} />
                 </button>
                 {showSort && (
