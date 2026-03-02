@@ -31,6 +31,7 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <div className="App min-h-screen bg-[#050505]">
+            <FreeShippingBanner />
             <Header />
             <main className="pb-16 md:pb-0">
               <Routes>
