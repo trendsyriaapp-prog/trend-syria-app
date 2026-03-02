@@ -426,12 +426,86 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
     
     # إخفاء معلومات البائع من العملاء (فقط المدير يراها)
     # نبقي seller_id للرابط إلى صفحة المتجر
+    # نبقي city لحساب تكلفة الشحن
     if not is_admin:
         product.pop("seller_name", None)
         product.pop("seller_phone", None)
-        product.pop("city", None)
+        # نبقي city للمنتج لحساب تكلفة الشحن
     
     return product
+
+# تكلفة الشحن بين المحافظات (بالليرة السورية)
+SHIPPING_COSTS = {
+    "same_city": 0,  # نفس المحافظة - مجاني
+    "nearby": 15000,  # محافظات قريبة
+    "far": 25000,  # محافظات بعيدة
+}
+
+# المحافظات القريبة من بعضها
+NEARBY_CITIES = {
+    "دمشق": ["ريف دمشق", "درعا", "السويداء", "القنيطرة"],
+    "ريف دمشق": ["دمشق", "درعا", "السويداء", "القنيطرة"],
+    "حلب": ["إدلب", "الرقة", "الحسكة"],
+    "حمص": ["حماة", "طرطوس"],
+    "حماة": ["حمص", "إدلب", "طرطوس"],
+    "اللاذقية": ["طرطوس", "إدلب"],
+    "طرطوس": ["اللاذقية", "حمص", "حماة"],
+    "درعا": ["دمشق", "ريف دمشق", "السويداء"],
+    "السويداء": ["دمشق", "ريف دمشق", "درعا"],
+    "إدلب": ["حلب", "حماة", "اللاذقية"],
+    "الرقة": ["حلب", "دير الزور", "الحسكة"],
+    "دير الزور": ["الرقة", "الحسكة"],
+    "الحسكة": ["الرقة", "دير الزور", "حلب"],
+    "القنيطرة": ["دمشق", "ريف دمشق", "درعا"],
+}
+
+@api_router.get("/shipping/calculate")
+async def calculate_shipping(product_id: str, customer_city: str):
+    """حساب تكلفة الشحن بناءً على موقع المنتج وموقع العميل"""
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    seller_city = product.get("city", "")
+    
+    # نفس المحافظة - مجاني
+    if seller_city == customer_city:
+        return {
+            "shipping_cost": 0,
+            "shipping_type": "free",
+            "message": "توصيل مجاني - نفس المحافظة",
+            "seller_city": seller_city,
+            "customer_city": customer_city
+        }
+    
+    # محافظات قريبة
+    nearby = NEARBY_CITIES.get(seller_city, [])
+    if customer_city in nearby:
+        return {
+            "shipping_cost": SHIPPING_COSTS["nearby"],
+            "shipping_type": "nearby",
+            "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
+            "seller_city": seller_city,
+            "customer_city": customer_city
+        }
+    
+    # محافظات بعيدة
+    return {
+        "shipping_cost": SHIPPING_COSTS["far"],
+        "shipping_type": "far",
+        "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
+        "seller_city": seller_city,
+        "customer_city": customer_city
+    }
+
+@api_router.get("/shipping/cities")
+async def get_cities():
+    """قائمة المحافظات السورية"""
+    return [
+        "دمشق", "ريف دمشق", "حلب", "حمص", "حماة", 
+        "اللاذقية", "طرطوس", "درعا", "السويداء", 
+        "إدلب", "الرقة", "دير الزور", "الحسكة", "القنيطرة"
+    ]
 
 @api_router.get("/products/{product_id}/similar")
 async def get_similar_products(product_id: str, limit: int = 6):
