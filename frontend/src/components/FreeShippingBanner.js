@@ -214,7 +214,9 @@ const FreeShippingBanner = () => {
   };
 
   // لا تظهر شيء في حالات معينة
-  if (!user || !shouldShowOnCurrentPage || dismissed) return null;
+  // لا تظهر للمدير أو البائع أو عامل التوصيل
+  const isCustomer = user?.user_type === 'buyer' || user?.user_type === 'customer';
+  if (!user || !isCustomer || !shouldShowOnCurrentPage || dismissed) return null;
 
   // إذا كان شريط النجاح يجب أن يظهر
   if (showSuccessBanner) {
