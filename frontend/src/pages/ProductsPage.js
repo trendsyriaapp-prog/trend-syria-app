@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -11,18 +11,34 @@ const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Price filter states
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
   const page = parseInt(searchParams.get('page') || '1');
+  const priceMin = searchParams.get('price_min') || '';
+  const priceMax = searchParams.get('price_max') || '';
+  const cityFilter = searchParams.get('city') || '';
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [category, search, page]);
+    fetchCities();
+  }, [category, search, page, priceMin, priceMax, cityFilter]);
+
+  useEffect(() => {
+    setMinPrice(priceMin);
+    setMaxPrice(priceMax);
+    setSelectedCity(cityFilter);
+  }, [priceMin, priceMax, cityFilter]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -30,6 +46,9 @@ const ProductsPage = () => {
       const params = new URLSearchParams();
       if (category) params.append('category', category);
       if (search) params.append('search', search);
+      if (priceMin) params.append('price_min', priceMin);
+      if (priceMax) params.append('price_max', priceMax);
+      if (cityFilter) params.append('city', cityFilter);
       params.append('page', page);
       params.append('limit', 20);
 
@@ -52,6 +71,15 @@ const ProductsPage = () => {
     }
   };
 
+  const fetchCities = async () => {
+    try {
+      const res = await axios.get(`${API}/shipping/cities`);
+      setCities(res.data);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+
   const setCategory = (cat) => {
     const params = new URLSearchParams(searchParams);
     if (cat) {
@@ -63,13 +91,68 @@ const ProductsPage = () => {
     setSearchParams(params);
   };
 
+  const applyPriceFilter = () => {
+    const params = new URLSearchParams(searchParams);
+    if (minPrice) {
+      params.set('price_min', minPrice);
+    } else {
+      params.delete('price_min');
+    }
+    if (maxPrice) {
+      params.set('price_max', maxPrice);
+    } else {
+      params.delete('price_max');
+    }
+    params.set('page', '1');
+    setSearchParams(params);
+    setShowFilters(false);
+  };
+
+  const applyCityFilter = (city) => {
+    const params = new URLSearchParams(searchParams);
+    if (city) {
+      params.set('city', city);
+    } else {
+      params.delete('city');
+    }
+    params.set('page', '1');
+    setSearchParams(params);
+    setSelectedCity(city);
+    setShowFilters(false);
+  };
+
   const clearFilters = () => {
     setSearchParams({});
+    setMinPrice('');
+    setMaxPrice('');
+    setSelectedCity('');
+  };
+
+  const clearPriceFilter = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('price_min');
+    params.delete('price_max');
+    params.set('page', '1');
+    setSearchParams(params);
+    setMinPrice('');
+    setMaxPrice('');
+  };
+
+  const clearCityFilter = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('city');
+    params.set('page', '1');
+    setSearchParams(params);
+    setSelectedCity('');
   };
 
   const getCategoryName = (id) => {
     const cat = categories.find(c => c.id === id);
     return cat?.name || id;
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
   };
 
   return (
