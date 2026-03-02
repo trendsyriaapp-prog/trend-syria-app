@@ -1,0 +1,143 @@
+# /app/backend/models/schemas.py
+# نماذج البيانات (Pydantic Models)
+
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+# ============== User Models ==============
+
+class UserRegister(BaseModel):
+    full_name: str
+    phone: str
+    password: str
+    city: str
+    user_type: str = "buyer"
+
+class UserLogin(BaseModel):
+    phone: str
+    password: str
+
+class DeliveryDocuments(BaseModel):
+    national_id: str
+    personal_photo: str
+    id_photo: str
+    motorcycle_license: str
+    
+class SellerDocuments(BaseModel):
+    seller_id: str
+    business_name: str
+    business_license: str
+
+# ============== Product Models ==============
+
+class ProductCreate(BaseModel):
+    name: str
+    description: str
+    price: float
+    category: str
+    stock: int
+    images: List[str]
+    video: Optional[str] = None
+    video_url: Optional[str] = None
+    city: str
+    length_cm: Optional[float] = None
+    width_cm: Optional[float] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    size_type: Optional[str] = None
+    available_sizes: Optional[List[str]] = None
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    category: Optional[str] = None
+    stock: Optional[int] = None
+    images: Optional[List[str]] = None
+    video: Optional[str] = None
+    video_url: Optional[str] = None
+    city: Optional[str] = None
+    length_cm: Optional[float] = None
+    width_cm: Optional[float] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    size_type: Optional[str] = None
+    available_sizes: Optional[List[str]] = None
+
+class ProductApproval(BaseModel):
+    approved: bool
+    rejection_reason: Optional[str] = None
+
+class ProductQuestion(BaseModel):
+    question: str
+
+class ProductAnswer(BaseModel):
+    answer: str
+
+# ============== Cart & Order Models ==============
+
+class CartItem(BaseModel):
+    product_id: str
+    quantity: int
+    selected_size: Optional[str] = None
+
+class OrderCreate(BaseModel):
+    items: List[CartItem]
+    address: str
+    city: str
+    phone: str
+    payment_method: str = "shamcash"
+    payment_phone: Optional[str] = None
+
+# ============== Review Models ==============
+
+class ReviewCreate(BaseModel):
+    product_id: str
+    rating: int
+    comment: str
+    images: Optional[List[str]] = []
+
+# ============== Message Models ==============
+
+class MessageCreate(BaseModel):
+    receiver_id: str
+    content: str
+    product_id: Optional[str] = None
+
+# ============== Payment Models ==============
+
+class ShamCashPayment(BaseModel):
+    order_id: str
+    phone: str
+    otp: str
+
+# ============== Admin Models ==============
+
+class SubAdminCreate(BaseModel):
+    full_name: str
+    phone: str
+    password: str
+    city: str
+
+class NotificationCreate(BaseModel):
+    title: str
+    message: str
+    target: str = "all"
+
+# ============== Address & Payment Method Models ==============
+
+class AddressCreate(BaseModel):
+    title: str
+    city: str
+    area: str
+    street_number: Optional[str] = None
+    building_number: Optional[str] = None
+    apartment_number: Optional[str] = None
+    phone: str
+    is_default: bool = False
+
+class PaymentMethodCreate(BaseModel):
+    type: str
+    phone: str
+    holder_name: str
+    is_default: bool = False
