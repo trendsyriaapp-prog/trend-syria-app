@@ -277,6 +277,7 @@ const AdminDashboardPage = () => {
                 {activeTab === 'delivery' && 'موظفي التوصيل'}
                 {activeTab === 'notifications' && 'الإشعارات'}
                 {activeTab === 'sub-admins' && 'المدراء التنفيذيين'}
+                {activeTab === 'commissions' && 'العمولات'}
               </h1>
             </div>
           </>
