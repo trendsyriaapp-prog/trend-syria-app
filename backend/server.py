@@ -2454,6 +2454,18 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def init_commission_rates():
+    """تهيئة نسب العمولات الافتراضية في قاعدة البيانات"""
+    existing = await db.commission_rates.find_one({"id": "main"})
+    if not existing:
+        await db.commission_rates.insert_one({
+            "id": "main",
+            "categories": DEFAULT_CATEGORY_COMMISSIONS,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        logger.info("تم تهيئة نسب العمولات الافتراضية")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
