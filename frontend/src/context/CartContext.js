@@ -11,22 +11,22 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
 
+  // Fetch cart when user/token changes
   useEffect(() => {
     if (user && token) {
-      fetchCart();
+      loadCart();
     } else {
       setCart({ items: [], total: 0 });
     }
   }, [user, token]);
 
-  const fetchCart = async () => {
-    if (!token) return;
+  const loadCart = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCart(res.data);
+      const res = await axios.get(`${API}/cart`);
+      if (res.data) {
+        setCart(res.data);
+      }
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -41,57 +41,47 @@ export const CartProvider = ({ children }) => {
         product_id: productId, 
         quantity,
         selected_size: selectedSize 
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-      await fetchCart();
+      // Reload cart after adding
+      const res = await axios.get(`${API}/cart`);
+      if (res.data) setCart(res.data);
       return true;
     } catch (error) {
+      console.error('Error adding to cart:', error);
       throw error;
     }
   };
 
   const updateQuantity = async (productId, quantity) => {
     if (!token) return;
+    
     if (quantity < 1) {
       await removeFromCart(productId);
       return;
     }
+    
     try {
-      const res = await axios.put(`${API}/cart/update`, { product_id: productId, quantity }, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put(`${API}/cart/update`, { 
+        product_id: productId, 
+        quantity 
       });
-      // تحديث السلة محلياً فوراً
-      setCart(prevCart => ({
-        ...prevCart,
-        items: prevCart.items.map(item => 
-          item.product_id === productId ? { ...item, quantity } : item
-        )
-      }));
-      // ثم جلب البيانات الكاملة من السيرفر
-      await fetchCart();
+      // Reload cart after update
+      const res = await axios.get(`${API}/cart`);
+      if (res.data) setCart(res.data);
     } catch (error) {
       console.error('Error updating cart:', error);
-      await fetchCart(); // إعادة جلب البيانات في حالة الخطأ
     }
   };
 
   const removeFromCart = async (productId) => {
     if (!token) return;
     try {
-      await axios.delete(`${API}/cart/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // حذف المنتج محلياً فوراً
-      setCart(prevCart => ({
-        ...prevCart,
-        items: prevCart.items.filter(item => item.product_id !== productId)
-      }));
-      // ثم جلب البيانات الكاملة من السيرفر
-      await fetchCart();
+      await axios.delete(`${API}/cart/${productId}`);
+      // Reload cart after remove
+      const res = await axios.get(`${API}/cart`);
+      if (res.data) setCart(res.data);
     } catch (error) {
       console.error('Error removing from cart:', error);
-      await fetchCart(); // إعادة جلب البيانات في حالة الخطأ
     }
   };
 
@@ -99,7 +89,9 @@ export const CartProvider = ({ children }) => {
     setCart({ items: [], total: 0 });
   };
 
-  const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const fetchCart = loadCart;
+
+  const cartCount = cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
 
   return (
     <CartContext.Provider value={{ 
