@@ -20,9 +20,12 @@ export const CartProvider = ({ children }) => {
   }, [user, token]);
 
   const fetchCart = async () => {
+    if (!token) return;
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/cart`);
+      const res = await axios.get(`${API}/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCart(res.data);
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -32,11 +35,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (productId, quantity = 1, selectedSize = null) => {
+    if (!token) return false;
     try {
       await axios.post(`${API}/cart/add`, { 
         product_id: productId, 
         quantity,
         selected_size: selectedSize 
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       await fetchCart();
       return true;
@@ -46,8 +52,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (productId, quantity) => {
+    if (!token) return;
     try {
-      await axios.put(`${API}/cart/update`, { product_id: productId, quantity });
+      await axios.put(`${API}/cart/update`, { product_id: productId, quantity }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchCart();
     } catch (error) {
       console.error('Error updating cart:', error);
@@ -55,8 +64,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (productId) => {
+    if (!token) return;
     try {
-      await axios.delete(`${API}/cart/${productId}`);
+      await axios.delete(`${API}/cart/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchCart();
     } catch (error) {
       console.error('Error removing from cart:', error);
