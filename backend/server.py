@@ -1437,6 +1437,100 @@ async def get_admin_stats(user: dict = Depends(get_current_user)):
         "total_sub_admins": total_sub_admins
     }
 
+# ============== نظام العمولات - Admin ==============
+
+@api_router.get("/admin/commissions")
+async def get_commissions_report(user: dict = Depends(get_current_user)):
+    """تقرير العمولات الكامل للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # جلب جميع الطلبات المكتملة
+    orders = await db.orders.find(
+        {"status": {"$in": ["paid", "completed", "delivered"]}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    total_sales = 0
+    total_commission = 0
+    commission_by_category = {}
+    commission_by_seller = {}
+    
+    for order in orders:
+        total_sales += order.get("total", 0)
+        total_commission += order.get("total_commission", 0)
+        
+        for item in order.get("items", []):
+            category = item.get("category", "غير محدد")
+            seller_id = item.get("seller_id", "غير معروف")
+            commission = item.get("commission_amount", 0)
+            
+            # تجميع حسب الفئة
+            if category not in commission_by_category:
+                commission_by_category[category] = {"sales": 0, "commission": 0, "orders_count": 0}
+            commission_by_category[category]["sales"] += item.get("item_total", 0)
+            commission_by_category[category]["commission"] += commission
+            commission_by_category[category]["orders_count"] += 1
+            
+            # تجميع حسب البائع
+            if seller_id not in commission_by_seller:
+                commission_by_seller[seller_id] = {"sales": 0, "commission": 0, "seller_amount": 0}
+            commission_by_seller[seller_id]["sales"] += item.get("item_total", 0)
+            commission_by_seller[seller_id]["commission"] += commission
+            commission_by_seller[seller_id]["seller_amount"] += item.get("seller_amount", 0)
+    
+    # إضافة أسماء البائعين
+    sellers_report = []
+    for seller_id, data in commission_by_seller.items():
+        seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "name": 1, "phone": 1})
+        sellers_report.append({
+            "seller_id": seller_id,
+            "seller_name": seller.get("name", "غير معروف") if seller else "غير معروف",
+            "seller_phone": seller.get("phone", "") if seller else "",
+            **data
+        })
+    
+    # ترتيب حسب العمولة
+    sellers_report.sort(key=lambda x: x["commission"], reverse=True)
+    
+    return {
+        "summary": {
+            "total_sales": total_sales,
+            "total_commission": total_commission,
+            "total_seller_amount": total_sales - total_commission,
+            "orders_count": len(orders)
+        },
+        "by_category": commission_by_category,
+        "by_seller": sellers_report[:20]  # أعلى 20 بائع
+    }
+
+@api_router.get("/admin/commissions/rates")
+async def get_commission_rates(user: dict = Depends(get_current_user)):
+    """عرض نسب العمولة لجميع الفئات"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    rates = []
+    for category, rate in CATEGORY_COMMISSIONS.items():
+        if category != "default":
+            rates.append({
+                "category": category,
+                "rate": rate,
+                "percentage": f"{rate * 100:.0f}%"
+            })
+    
+    rates.sort(key=lambda x: x["rate"], reverse=True)
+    return {
+        "rates": rates,
+        "default_rate": CATEGORY_COMMISSIONS["default"],
+        "default_percentage": f"{CATEGORY_COMMISSIONS['default'] * 100:.0f}%"
+    }
+
+@api_router.get("/commission/calculate")
+async def calculate_product_commission(price: float, category: str):
+    """حساب العمولة لمنتج (للبائعين والعملاء)"""
+    return calculate_commission(price, category)
+
 # ============== Sub-Admin Management ==============
 
 @api_router.post("/admin/sub-admins")
