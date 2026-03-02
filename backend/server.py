@@ -1063,7 +1063,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         
         # حساب العمولة لهذا المنتج
         category = product.get("category", "default")
-        commission_info = calculate_commission(item_total, category)
+        commission_info = await calculate_commission(item_total, category)
         item_commission = commission_info["commission_amount"]
         seller_amount = commission_info["seller_amount"]
         
