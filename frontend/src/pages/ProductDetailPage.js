@@ -899,31 +899,43 @@ const ProductDetailPage = () => {
 
               {shippingInfo && (
                 <div className={`p-2 rounded-lg ${
-                  shippingInfo.shipping_type === 'free' 
+                  shippingInfo.shipping_type === 'free' || shippingInfo.shipping_type === 'free_threshold'
                     ? 'bg-green-50 border border-green-200' 
                     : 'bg-orange-50 border border-orange-200'
                 }`}>
-                  {shippingInfo.shipping_type === 'free' ? (
+                  {(shippingInfo.shipping_type === 'free' || shippingInfo.shipping_type === 'free_threshold') ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                         <Check size={12} className="text-white" />
                       </div>
                       <div>
                         <p className="text-green-700 font-bold text-xs">توصيل مجاني! 🎉</p>
-                        <p className="text-green-600 text-[10px]">المنتج من نفس محافظتك ({shippingInfo.seller_city})</p>
+                        <p className="text-green-600 text-[10px]">
+                          {shippingInfo.shipping_type === 'free' 
+                            ? `المنتج من نفس محافظتك (${shippingInfo.seller_city})`
+                            : `طلبك تجاوز 150,000 ل.س`
+                          }
+                        </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-orange-700 font-bold text-xs">
-                          تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
-                        </p>
-                        <p className="text-orange-600 text-[10px]">
-                          من {shippingInfo.seller_city} إلى {shippingInfo.customer_city}
-                        </p>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-700 font-bold text-xs">
+                            تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
+                          </p>
+                          <p className="text-orange-600 text-[10px]">
+                            من {shippingInfo.seller_city} إلى {shippingInfo.customer_city}
+                          </p>
+                        </div>
+                        <Truck size={20} className="text-orange-500" />
                       </div>
-                      <Truck size={20} className="text-orange-500" />
+                      {shippingInfo.remaining_for_free > 0 && (
+                        <p className="text-[10px] text-blue-600 mt-1 bg-blue-50 p-1 rounded">
+                          💡 أضف {formatPrice(shippingInfo.remaining_for_free)} للحصول على توصيل مجاني!
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
