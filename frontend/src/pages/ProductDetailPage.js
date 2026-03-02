@@ -470,6 +470,7 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     fetchProduct();
+    fetchSimilarProducts();
   }, [id]);
 
   const fetchProduct = async () => {
