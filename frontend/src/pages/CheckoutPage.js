@@ -194,8 +194,23 @@ const CheckoutPage = () => {
     }
   };
 
-  if (!user) { navigate('/login'); return null; }
-  if (cart.items.length === 0 && !orderId) { navigate('/cart'); return null; }
+  // Handle redirects in useEffect to avoid render warnings
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (cart.items.length === 0 && !orderId && !orderComplete) {
+      navigate('/cart');
+    }
+  }, [user, cart.items.length, orderId, orderComplete, navigate]);
+
+  // Show loading while checking auth/cart
+  if (!user || (cart.items.length === 0 && !orderId && !orderComplete)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-[#FF6B00]" size={32} />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
