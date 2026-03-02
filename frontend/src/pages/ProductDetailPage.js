@@ -1222,7 +1222,7 @@ const ProductDetailPage = () => {
       )}
       
       {/* الشريط السفلي الثابت - السعر والأزرار */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
         <div className="flex items-center gap-2 p-3">
           {/* السعر والكمية */}
           <div className="flex-1">
