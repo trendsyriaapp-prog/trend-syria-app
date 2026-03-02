@@ -436,6 +436,9 @@ const ProductDetailPage = () => {
   const [askingQuestion, setAskingQuestion] = useState(false);
   const [answeringId, setAnsweringId] = useState(null);
   const [newAnswer, setNewAnswer] = useState('');
+  
+  // Similar products state
+  const [similarProducts, setSimilarProducts] = useState([]);
 
   // الحد الأدنى للسحب للتنقل بين الصور
   const minSwipeDistance = 50;
