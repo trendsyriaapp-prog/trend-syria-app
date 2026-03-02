@@ -6,8 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
 const STORAGE_KEY = 'freeShippingShownForSeller';
-const SESSION_INIT_KEY = 'freeShippingInitialized';
-const LAST_TOTAL_KEY = 'freeShippingLastTotal';
+const ITEM_COUNT_KEY = 'freeShippingItemCount';
 
 // الصفحات المسموحة
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
@@ -54,9 +53,14 @@ const FreeShippingBanner = () => {
   const [isExiting, setIsExiting] = useState(false);
   
   const timerRef = useRef(null);
-  const hasInitializedRef = useRef(false);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
+
+  // حساب عدد المنتجات الفعلي (مجموع الكميات)
+  const getItemCount = useCallback(() => {
+    if (!cart.items || cart.items.length === 0) return 0;
+    return cart.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  }, [cart.items]);
 
   // الحصول على معرف البائع
   const getSellerId = useCallback(() => {
@@ -113,6 +117,7 @@ const FreeShippingBanner = () => {
 
   const analysis = analyzeCart();
   const currentSellerId = getSellerId();
+  const currentItemCount = getItemCount();
 
   // التحقق من localStorage
   const hasShownForSeller = (sellerId) => {
@@ -124,69 +129,47 @@ const FreeShippingBanner = () => {
     if (sellerId) localStorage.setItem(STORAGE_KEY, sellerId);
   };
 
-  // الحصول على آخر مجموع محفوظ
-  const getLastTotal = () => {
-    const saved = sessionStorage.getItem(LAST_TOTAL_KEY);
-    return saved ? parseFloat(saved) : null;
+  // الحصول على آخر عدد منتجات محفوظ
+  const getStoredItemCount = () => {
+    const saved = sessionStorage.getItem(ITEM_COUNT_KEY);
+    return saved ? parseInt(saved, 10) : -1; // -1 يعني لم يتم التهيئة
   };
 
-  // حفظ المجموع الحالي
-  const saveLastTotal = (total) => {
-    sessionStorage.setItem(LAST_TOTAL_KEY, total.toString());
-  };
-
-  // التحقق من التهيئة
-  const isSessionInitialized = () => {
-    return sessionStorage.getItem(SESSION_INIT_KEY) === 'true';
-  };
-
-  // تعليم الجلسة كمهيأة
-  const markSessionInitialized = () => {
-    sessionStorage.setItem(SESSION_INIT_KEY, 'true');
+  // حفظ عدد المنتجات
+  const saveItemCount = (count) => {
+    sessionStorage.setItem(ITEM_COUNT_KEY, count.toString());
   };
 
   // منطق إظهار الشريط الأخضر
   useEffect(() => {
+    const storedCount = getStoredItemCount();
     const currentTotal = cart.total || 0;
     
-    // إذا لم يتم التهيئة بعد في هذا المكون
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      
-      // إذا كانت الجلسة جديدة تماماً
-      if (!isSessionInitialized()) {
-        markSessionInitialized();
-        saveLastTotal(currentTotal);
-        // سجل البائع كـ "تم العرض له" إذا كان مؤهل
-        if (analysis.isSuccess && currentSellerId) {
-          markShownForSeller(currentSellerId);
-        }
-        return;
+    // التهيئة الأولى - فقط احفظ العدد ولا تفعل شيء
+    if (storedCount === -1) {
+      saveItemCount(currentItemCount);
+      // سجل البائع كـ "معروض" إذا كان مؤهل
+      if (analysis.isSuccess && currentSellerId) {
+        markShownForSeller(currentSellerId);
       }
-    }
-
-    // الحصول على آخر مجموع محفوظ
-    const lastTotal = getLastTotal();
-    
-    // إذا لم يكن هناك مجموع محفوظ، احفظ الحالي فقط
-    if (lastTotal === null) {
-      saveLastTotal(currentTotal);
       return;
     }
 
-    const wasBelow = lastTotal < FREE_SHIPPING_THRESHOLD;
-    const isNowAbove = currentTotal >= FREE_SHIPPING_THRESHOLD;
-    const isSingleSeller = currentSellerId !== null;
-    const notShownYet = !hasShownForSeller(currentSellerId);
-    const totalIncreased = currentTotal > lastTotal;
-
-    // إظهار الشريط فقط إذا:
-    // 1. كان أقل من الحد
-    // 2. أصبح فوق الحد
+    // الشرط الأساسي: عدد المنتجات يجب أن يزيد (تمت إضافة منتج فعلياً)
+    const itemsAdded = currentItemCount > storedCount;
+    
+    // شروط إظهار الشريط الأخضر:
+    // 1. تمت إضافة منتج (العدد زاد)
+    // 2. المجموع >= الحد
     // 3. بائع واحد
-    // 4. لم يُعرض من قبل
-    // 5. المجموع زاد (تمت إضافة منتج)
-    if (wasBelow && isNowAbove && isSingleSeller && notShownYet && totalIncreased) {
+    // 4. لم يُعرض من قبل لهذا البائع
+    const shouldShowSuccess = 
+      itemsAdded && 
+      currentTotal >= FREE_SHIPPING_THRESHOLD && 
+      currentSellerId !== null && 
+      !hasShownForSeller(currentSellerId);
+
+    if (shouldShowSuccess) {
       setShowSuccessBanner(true);
       markShownForSeller(currentSellerId);
       
@@ -199,20 +182,19 @@ const FreeShippingBanner = () => {
       }, 3000);
     }
 
-    // حفظ المجموع الحالي
-    saveLastTotal(currentTotal);
+    // حفظ العدد الحالي
+    saveItemCount(currentItemCount);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [cart.total, currentSellerId, analysis.isSuccess]);
+  }, [currentItemCount, cart.total, currentSellerId, analysis.isSuccess]);
 
   // مسح عند إفراغ السلة
   useEffect(() => {
     if (!cart.items || cart.items.length === 0) {
       localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(LAST_TOTAL_KEY);
-      sessionStorage.removeItem(SESSION_INIT_KEY);
+      sessionStorage.removeItem(ITEM_COUNT_KEY);
     }
   }, [cart.items]);
 
