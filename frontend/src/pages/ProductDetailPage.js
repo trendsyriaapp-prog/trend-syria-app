@@ -817,6 +817,11 @@ const ProductDetailPage = () => {
             <h1 className="text-sm md:text-base font-bold mb-0.5 text-gray-900" data-testid="product-name">
               {product.name}
             </h1>
+            
+            {/* Store City */}
+            {product.city && (
+              <p className="text-[11px] text-gray-500 mb-1">{product.city}</p>
+            )}
 
             {/* Rating */}
             <div className="flex items-center gap-2 mb-0.5">
