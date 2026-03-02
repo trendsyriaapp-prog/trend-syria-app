@@ -96,8 +96,8 @@ const Header = () => {
 
           {/* Home Button - على اليمين */}
           <Link to="/" className="flex-shrink-0">
-            <div className="w-9 h-9 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <Home size={18} className="text-white" />
+            <div className="w-7 h-7 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <Home size={14} className="text-white" />
             </div>
           </Link>
 
