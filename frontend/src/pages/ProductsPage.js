@@ -244,7 +244,7 @@ const ProductsPage = () => {
             data-testid="filter-toggle"
           >
             <Filter size={18} />
-            <span>تصفية</span>
+            <span>فلتر</span>
           </button>
         </div>
 
@@ -292,7 +292,7 @@ const ProductsPage = () => {
           <aside className={`${showFilters ? 'fixed inset-0 z-50 bg-black/50 p-4' : 'hidden'} md:block md:relative md:bg-transparent md:p-0 md:w-56 flex-shrink-0`}>
             <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-3 md:hidden">
-                <h3 className="font-bold text-gray-900">تصفية</h3>
+                <h3 className="font-bold text-gray-900">فلتر</h3>
                 <button onClick={() => setShowFilters(false)} className="text-gray-500">
                   <X size={24} />
                 </button>
@@ -378,33 +378,6 @@ const ProductsPage = () => {
             {/* Sort Options */}
             <div className="flex justify-between items-center mb-4">
               <p className="text-sm text-gray-500">{products.length} منتج</p>
-              <div className="relative">
-                <button
-                  onClick={() => setShowSort(!showSort)}
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-[#FF6B00] transition-colors"
-                  data-testid="sort-btn"
-                >
-                  <ArrowUpDown size={14} />
-                  فلتر
-                  <ChevronDown size={14} />
-                </button>
-                {showSort && (
-                  <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
-                    {sortOptions.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => setSort(option.value)}
-                        className={`w-full text-right px-3 py-2 text-sm hover:bg-gray-50 ${
-                          sort === option.value ? 'text-[#FF6B00] font-bold' : 'text-gray-700'
-                        }`}
-                        data-testid={`sort-${option.value}`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
 
             {loading && products.length === 0 ? (
