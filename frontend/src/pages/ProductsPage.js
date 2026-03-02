@@ -375,10 +375,6 @@ const ProductsPage = () => {
 
           {/* Products Grid */}
           <main className="flex-1">
-            {/* Sort Options */}
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-500">{products.length} منتج</p>
-            </div>
 
             {loading && products.length === 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
