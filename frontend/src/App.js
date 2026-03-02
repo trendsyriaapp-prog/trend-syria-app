@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
+import FreeShippingBanner from "./components/FreeShippingBanner";
 
 // Pages
 import HomePage from "./pages/HomePage";
