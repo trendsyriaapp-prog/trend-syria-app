@@ -53,13 +53,26 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = async (productId, quantity) => {
     if (!token) return;
+    if (quantity < 1) {
+      await removeFromCart(productId);
+      return;
+    }
     try {
-      await axios.put(`${API}/cart/update`, { product_id: productId, quantity }, {
+      const res = await axios.put(`${API}/cart/update`, { product_id: productId, quantity }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // تحديث السلة محلياً فوراً
+      setCart(prevCart => ({
+        ...prevCart,
+        items: prevCart.items.map(item => 
+          item.product_id === productId ? { ...item, quantity } : item
+        )
+      }));
+      // ثم جلب البيانات الكاملة من السيرفر
       await fetchCart();
     } catch (error) {
       console.error('Error updating cart:', error);
+      await fetchCart(); // إعادة جلب البيانات في حالة الخطأ
     }
   };
 
@@ -69,9 +82,16 @@ export const CartProvider = ({ children }) => {
       await axios.delete(`${API}/cart/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // حذف المنتج محلياً فوراً
+      setCart(prevCart => ({
+        ...prevCart,
+        items: prevCart.items.filter(item => item.product_id !== productId)
+      }));
+      // ثم جلب البيانات الكاملة من السيرفر
       await fetchCart();
     } catch (error) {
       console.error('Error removing from cart:', error);
+      await fetchCart(); // إعادة جلب البيانات في حالة الخطأ
     }
   };
 
