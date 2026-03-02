@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
 const STORAGE_KEY = 'freeShippingShownForSeller';
-const ACTIVATION_DELAY = 3000; // 3 ثواني انتظار بعد تحميل الصفحة
+const SESSION_INIT_KEY = 'freeShippingInitialized';
+const LAST_TOTAL_KEY = 'freeShippingLastTotal';
 
 // الصفحات المسموحة
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
@@ -51,11 +52,9 @@ const FreeShippingBanner = () => {
   const [dismissed, setDismissed] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [isActive, setIsActive] = useState(false); // لن يعمل المنطق حتى يصبح true
   
   const timerRef = useRef(null);
-  const activationTimerRef = useRef(null);
-  const previousTotalRef = useRef(null); // null يعني لم يتم التهيئة بعد
+  const hasInitializedRef = useRef(false);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
@@ -115,19 +114,6 @@ const FreeShippingBanner = () => {
   const analysis = analyzeCart();
   const currentSellerId = getSellerId();
 
-  // تفعيل المنطق بعد فترة انتظار
-  useEffect(() => {
-    activationTimerRef.current = setTimeout(() => {
-      setIsActive(true);
-      // حفظ القيمة الحالية كقيمة أساسية
-      previousTotalRef.current = cart.total || 0;
-    }, ACTIVATION_DELAY);
-
-    return () => {
-      if (activationTimerRef.current) clearTimeout(activationTimerRef.current);
-    };
-  }, []); // يعمل مرة واحدة عند التحميل
-
   // التحقق من localStorage
   const hasShownForSeller = (sellerId) => {
     if (!sellerId) return false;
@@ -138,26 +124,69 @@ const FreeShippingBanner = () => {
     if (sellerId) localStorage.setItem(STORAGE_KEY, sellerId);
   };
 
-  // منطق إظهار الشريط الأخضر - يعمل فقط إذا كان isActive = true
+  // الحصول على آخر مجموع محفوظ
+  const getLastTotal = () => {
+    const saved = sessionStorage.getItem(LAST_TOTAL_KEY);
+    return saved ? parseFloat(saved) : null;
+  };
+
+  // حفظ المجموع الحالي
+  const saveLastTotal = (total) => {
+    sessionStorage.setItem(LAST_TOTAL_KEY, total.toString());
+  };
+
+  // التحقق من التهيئة
+  const isSessionInitialized = () => {
+    return sessionStorage.getItem(SESSION_INIT_KEY) === 'true';
+  };
+
+  // تعليم الجلسة كمهيأة
+  const markSessionInitialized = () => {
+    sessionStorage.setItem(SESSION_INIT_KEY, 'true');
+  };
+
+  // منطق إظهار الشريط الأخضر
   useEffect(() => {
-    // لا تفعل شيء إذا لم يتم تفعيل المنطق بعد
-    if (!isActive) return;
-    
     const currentTotal = cart.total || 0;
     
-    // إذا لم يتم التهيئة، احفظ القيمة فقط
-    if (previousTotalRef.current === null) {
-      previousTotalRef.current = currentTotal;
+    // إذا لم يتم التهيئة بعد في هذا المكون
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      
+      // إذا كانت الجلسة جديدة تماماً
+      if (!isSessionInitialized()) {
+        markSessionInitialized();
+        saveLastTotal(currentTotal);
+        // سجل البائع كـ "تم العرض له" إذا كان مؤهل
+        if (analysis.isSuccess && currentSellerId) {
+          markShownForSeller(currentSellerId);
+        }
+        return;
+      }
+    }
+
+    // الحصول على آخر مجموع محفوظ
+    const lastTotal = getLastTotal();
+    
+    // إذا لم يكن هناك مجموع محفوظ، احفظ الحالي فقط
+    if (lastTotal === null) {
+      saveLastTotal(currentTotal);
       return;
     }
 
-    const wasBelow = previousTotalRef.current < FREE_SHIPPING_THRESHOLD;
+    const wasBelow = lastTotal < FREE_SHIPPING_THRESHOLD;
     const isNowAbove = currentTotal >= FREE_SHIPPING_THRESHOLD;
     const isSingleSeller = currentSellerId !== null;
     const notShownYet = !hasShownForSeller(currentSellerId);
+    const totalIncreased = currentTotal > lastTotal;
 
-    // إظهار الشريط الأخضر فقط عند تجاوز الحد
-    if (wasBelow && isNowAbove && isSingleSeller && notShownYet) {
+    // إظهار الشريط فقط إذا:
+    // 1. كان أقل من الحد
+    // 2. أصبح فوق الحد
+    // 3. بائع واحد
+    // 4. لم يُعرض من قبل
+    // 5. المجموع زاد (تمت إضافة منتج)
+    if (wasBelow && isNowAbove && isSingleSeller && notShownYet && totalIncreased) {
       setShowSuccessBanner(true);
       markShownForSeller(currentSellerId);
       
@@ -170,19 +199,20 @@ const FreeShippingBanner = () => {
       }, 3000);
     }
 
-    // تحديث القيمة السابقة
-    previousTotalRef.current = currentTotal;
+    // حفظ المجموع الحالي
+    saveLastTotal(currentTotal);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [cart.total, currentSellerId, isActive]);
+  }, [cart.total, currentSellerId, analysis.isSuccess]);
 
   // مسح عند إفراغ السلة
   useEffect(() => {
     if (!cart.items || cart.items.length === 0) {
       localStorage.removeItem(STORAGE_KEY);
-      previousTotalRef.current = 0;
+      sessionStorage.removeItem(LAST_TOTAL_KEY);
+      sessionStorage.removeItem(SESSION_INIT_KEY);
     }
   }, [cart.items]);
 
