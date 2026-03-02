@@ -249,16 +249,8 @@ const ProductsPage = () => {
         </div>
 
         {/* Active Filters */}
-        {(category || search || priceMin || priceMax || cityFilter) && (
+        {(search || priceMin || priceMax || cityFilter) && (
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            {category && (
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
-                {getCategoryName(category)}
-                <button onClick={() => setCategory('')} data-testid="clear-category">
-                  <X size={14} />
-                </button>
-              </span>
-            )}
             {search && (
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
                 البحث: {search}
