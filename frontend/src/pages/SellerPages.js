@@ -202,23 +202,28 @@ const validateAndEnhanceImage = (file) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Resize if too large
+        // Resize to optimal size (max 1200px for better performance)
         let newWidth = img.width;
         let newHeight = img.height;
-        const maxSize = 1500;
+        const maxSize = 1200;
         
         if (newWidth > maxSize || newHeight > maxSize) {
           if (newWidth > newHeight) {
-            newHeight = (newHeight / newWidth) * maxSize;
+            newHeight = Math.round((newHeight / newWidth) * maxSize);
             newWidth = maxSize;
           } else {
-            newWidth = (newWidth / newHeight) * maxSize;
+            newWidth = Math.round((newWidth / newHeight) * maxSize);
             newHeight = maxSize;
           }
+          warnings.push(`تم تصغير الصورة إلى ${newWidth}×${newHeight}`);
         }
         
         canvas.width = newWidth;
         canvas.height = newHeight;
+        
+        // High quality drawing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         
         // Draw and enhance
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
@@ -255,12 +260,30 @@ const validateAndEnhanceImage = (file) => {
           warnings.push('تم تحسين إضاءة الصورة تلقائياً');
         }
         
-        const enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        // Try WebP first (30% smaller), fallback to JPEG
+        let enhancedDataUrl;
+        const webpDataUrl = canvas.toDataURL('image/webp', 0.85);
+        if (webpDataUrl.startsWith('data:image/webp')) {
+          enhancedDataUrl = webpDataUrl;
+          
+          // Calculate size savings
+          const originalSize = file.size;
+          const compressedSize = Math.round(webpDataUrl.length * 0.75); // Approximate
+          const savings = Math.round((1 - compressedSize / originalSize) * 100);
+          if (savings > 10) {
+            warnings.push(`تم ضغط الصورة بنسبة ${savings}%`);
+          }
+        } else {
+          // Fallback to JPEG
+          enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        }
         
         resolve({
           dataUrl: enhancedDataUrl,
-          width: img.width,
-          height: img.height,
+          width: newWidth,
+          height: newHeight,
+          originalWidth: img.width,
+          originalHeight: img.height,
           issues,
           warnings,
           enhanced: avgBrightness < 120
