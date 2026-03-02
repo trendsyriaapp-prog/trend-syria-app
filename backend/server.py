@@ -444,6 +444,9 @@ SHIPPING_COSTS = {
     "far": 25000,  # محافظات بعيدة
 }
 
+# الحد الأدنى للطلب للتوصيل المجاني
+FREE_SHIPPING_THRESHOLD = 150000  # 150,000 ل.س
+
 # المحافظات القريبة من بعضها
 NEARBY_CITIES = {
     "دمشق": ["ريف دمشق", "درعا", "السويداء", "القنيطرة"],
@@ -463,42 +466,75 @@ NEARBY_CITIES = {
 }
 
 @api_router.get("/shipping/calculate")
-async def calculate_shipping(product_id: str, customer_city: str):
-    """حساب تكلفة الشحن بناءً على موقع المنتج وموقع العميل"""
+async def calculate_shipping(product_id: str, customer_city: str, order_total: float = 0):
+    """حساب تكلفة الشحن بناءً على موقع المنتج وموقع العميل ومبلغ الطلب"""
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
     
     seller_city = product.get("city", "")
     
-    # نفس المحافظة - مجاني
+    # نفس المحافظة - مجاني دائماً
     if seller_city == customer_city:
         return {
             "shipping_cost": 0,
             "shipping_type": "free",
             "message": "توصيل مجاني - نفس المحافظة",
             "seller_city": seller_city,
-            "customer_city": customer_city
+            "customer_city": customer_city,
+            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+            "qualifies_for_free": True
+        }
+    
+    # التحقق من الحد الأدنى للتوصيل المجاني
+    if order_total >= FREE_SHIPPING_THRESHOLD:
+        return {
+            "shipping_cost": 0,
+            "shipping_type": "free_threshold",
+            "message": f"توصيل مجاني - طلبك تجاوز {FREE_SHIPPING_THRESHOLD:,} ل.س",
+            "seller_city": seller_city,
+            "customer_city": customer_city,
+            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+            "qualifies_for_free": True
         }
     
     # محافظات قريبة
     nearby = NEARBY_CITIES.get(seller_city, [])
     if customer_city in nearby:
+        remaining = FREE_SHIPPING_THRESHOLD - order_total
         return {
             "shipping_cost": SHIPPING_COSTS["nearby"],
             "shipping_type": "nearby",
             "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
             "seller_city": seller_city,
-            "customer_city": customer_city
+            "customer_city": customer_city,
+            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+            "remaining_for_free": remaining,
+            "qualifies_for_free": False
         }
     
     # محافظات بعيدة
+    remaining = FREE_SHIPPING_THRESHOLD - order_total
     return {
         "shipping_cost": SHIPPING_COSTS["far"],
         "shipping_type": "far",
         "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
         "seller_city": seller_city,
-        "customer_city": customer_city
+        "customer_city": customer_city,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "remaining_for_free": remaining,
+        "qualifies_for_free": False
+    }
+
+@api_router.get("/shipping/info")
+async def get_shipping_info():
+    """معلومات الشحن والحد الأدنى للتوصيل المجاني"""
+    return {
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "same_city_cost": SHIPPING_COSTS["same_city"],
+        "nearby_cost": SHIPPING_COSTS["nearby"],
+        "far_cost": SHIPPING_COSTS["far"],
+        "message": f"توصيل مجاني للطلبات فوق {FREE_SHIPPING_THRESHOLD:,} ل.س"
     }
 
 @api_router.get("/shipping/cities")
