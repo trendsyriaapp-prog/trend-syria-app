@@ -871,6 +871,66 @@ const ProductDetailPage = () => {
               )}
             </div>
 
+            {/* Shipping Cost Calculator */}
+            <div className="mb-2 p-2 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-100">
+              <div className="flex items-center gap-2 mb-2">
+                <Truck size={16} className="text-blue-600" />
+                <h4 className="font-bold text-gray-900 text-[11px]">تكلفة الشحن</h4>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-2">
+                <select
+                  value={customerCity}
+                  onChange={(e) => setCustomerCity(e.target.value)}
+                  className="flex-1 text-xs p-2 border border-gray-200 rounded-lg focus:border-[#FF6B00] focus:outline-none"
+                  data-testid="shipping-city-select"
+                >
+                  <option value="">اختر محافظتك</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              {shippingInfo && (
+                <div className={`p-2 rounded-lg ${
+                  shippingInfo.shipping_type === 'free' 
+                    ? 'bg-green-50 border border-green-200' 
+                    : 'bg-orange-50 border border-orange-200'
+                }`}>
+                  {shippingInfo.shipping_type === 'free' ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <Check size={12} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-green-700 font-bold text-xs">توصيل مجاني! 🎉</p>
+                        <p className="text-green-600 text-[10px]">المنتج من نفس محافظتك ({shippingInfo.seller_city})</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-orange-700 font-bold text-xs">
+                          تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
+                        </p>
+                        <p className="text-orange-600 text-[10px]">
+                          من {shippingInfo.seller_city} إلى {shippingInfo.customer_city}
+                        </p>
+                      </div>
+                      <Truck size={20} className="text-orange-500" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!customerCity && (
+                <p className="text-[10px] text-gray-500 mt-1">
+                  اختر محافظتك لمعرفة تكلفة الشحن
+                </p>
+              )}
+            </div>
+
             {/* Size Selection */}
             {product.available_sizes && product.available_sizes.length > 0 && (
               <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
