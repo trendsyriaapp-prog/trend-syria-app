@@ -52,8 +52,9 @@ const FreeShippingBanner = () => {
     }
 
     if (isSingleSeller && cartTotal >= FREE_SHIPPING_THRESHOLD) {
+      // لا نظهر شريط النجاح - فقط نخفيه
       return {
-        show: true,
+        show: false, // لا يظهر الشريط الأخضر
         type: 'success',
         icon: PartyPopper,
         message: 'مبروك! التوصيل مجاني داخل المحافظة',
