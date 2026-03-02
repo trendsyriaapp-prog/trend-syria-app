@@ -476,7 +476,41 @@ const ProductDetailPage = () => {
   useEffect(() => {
     fetchProduct();
     fetchSimilarProducts();
+    fetchCities();
   }, [id]);
+
+  useEffect(() => {
+    // Get user's city from localStorage or user profile
+    if (user?.city) {
+      setCustomerCity(user.city);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Calculate shipping when product and customer city are available
+    if (product && customerCity) {
+      calculateShipping();
+    }
+  }, [product, customerCity]);
+
+  const fetchCities = async () => {
+    try {
+      const res = await axios.get(`${API}/shipping/cities`);
+      setCities(res.data);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+
+  const calculateShipping = async () => {
+    if (!product?.id || !customerCity) return;
+    try {
+      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}`);
+      setShippingInfo(res.data);
+    } catch (error) {
+      console.error('Error calculating shipping:', error);
+    }
+  };
 
   const fetchProduct = async () => {
     try {
