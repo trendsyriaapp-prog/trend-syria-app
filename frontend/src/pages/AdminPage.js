@@ -876,6 +876,112 @@ const AdminDashboardPage = () => {
           </section>
         )}
 
+        {/* Commissions Section */}
+        {activeTab === 'commissions' && (
+          <section>
+            <h2 className="font-bold text-sm text-gray-900 mb-3">تقرير العمولات</h2>
+            
+            {/* ملخص العمولات */}
+            {commissionsReport && (
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-white rounded-xl p-3 border border-gray-200">
+                  <p className="text-[10px] text-gray-500">إجمالي المبيعات</p>
+                  <p className="text-lg font-bold text-gray-900">{formatPrice(commissionsReport.summary.total_sales)}</p>
+                </div>
+                <div className="bg-white rounded-xl p-3 border border-gray-200">
+                  <p className="text-[10px] text-gray-500">إجمالي العمولات</p>
+                  <p className="text-lg font-bold text-green-600">{formatPrice(commissionsReport.summary.total_commission)}</p>
+                </div>
+                <div className="bg-white rounded-xl p-3 border border-gray-200">
+                  <p className="text-[10px] text-gray-500">حصة البائعين</p>
+                  <p className="text-lg font-bold text-blue-600">{formatPrice(commissionsReport.summary.total_seller_amount)}</p>
+                </div>
+                <div className="bg-white rounded-xl p-3 border border-gray-200">
+                  <p className="text-[10px] text-gray-500">عدد الطلبات</p>
+                  <p className="text-lg font-bold text-gray-900">{commissionsReport.summary.orders_count}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* نسب العمولات حسب الفئة */}
+            {commissionRates && (
+              <div className="bg-white rounded-xl p-3 border border-gray-200 mb-4">
+                <h3 className="font-bold text-xs text-gray-900 mb-2 flex items-center gap-1">
+                  <Percent size={14} className="text-[#FF6B00]" />
+                  نسب العمولات حسب الفئة
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {commissionRates.rates.map((rate) => (
+                    <div key={rate.category} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-700">{rate.category}</span>
+                      <span className="text-xs font-bold text-[#FF6B00]">{rate.percentage}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
+                  <span className="text-xs text-gray-500">النسبة الافتراضية</span>
+                  <span className="text-xs font-bold text-gray-700">{commissionRates.default_percentage}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* العمولات حسب الفئة */}
+            {commissionsReport?.by_category && Object.keys(commissionsReport.by_category).length > 0 && (
+              <div className="bg-white rounded-xl p-3 border border-gray-200 mb-4">
+                <h3 className="font-bold text-xs text-gray-900 mb-2">العمولات حسب الفئة</h3>
+                <div className="space-y-2">
+                  {Object.entries(commissionsReport.by_category).map(([category, data]) => (
+                    <div key={category} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">{category}</p>
+                        <p className="text-[10px] text-gray-500">{data.orders_count} طلب</p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-green-600">{formatPrice(data.commission)}</p>
+                        <p className="text-[10px] text-gray-500">من {formatPrice(data.sales)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* أعلى البائعين */}
+            {commissionsReport?.by_seller && commissionsReport.by_seller.length > 0 && (
+              <div className="bg-white rounded-xl p-3 border border-gray-200">
+                <h3 className="font-bold text-xs text-gray-900 mb-2">أعلى البائعين (حسب العمولة)</h3>
+                <div className="space-y-2">
+                  {commissionsReport.by_seller.slice(0, 10).map((seller, index) => (
+                    <div key={seller.seller_id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[#FF6B00] text-white text-[10px] flex items-center justify-center font-bold">
+                          {index + 1}
+                        </span>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">{seller.seller_name}</p>
+                          <p className="text-[10px] text-gray-500">{seller.seller_phone}</p>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-green-600">{formatPrice(seller.commission)}</p>
+                        <p className="text-[10px] text-gray-500">مبيعات: {formatPrice(seller.sales)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {!commissionsReport && (
+              <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
+                <DollarSign size={36} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">لا توجد بيانات عمولات بعد</p>
+                <p className="text-gray-400 text-xs mt-1">ستظهر العمولات بعد إتمام أول عملية بيع</p>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Notifications */}
         {activeTab === 'notifications' && (
           <section>
