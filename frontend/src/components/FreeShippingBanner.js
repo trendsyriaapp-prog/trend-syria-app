@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
 const STORAGE_KEY = 'freeShippingShownForSeller';
+const ACTIVATION_DELAY = 3000; // 3 ثواني انتظار بعد تحميل الصفحة
 
 // الصفحات المسموحة
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
@@ -50,11 +51,11 @@ const FreeShippingBanner = () => {
   const [dismissed, setDismissed] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [isActive, setIsActive] = useState(false); // لن يعمل المنطق حتى يصبح true
   
   const timerRef = useRef(null);
-  const isFirstRender = useRef(true);
-  const previousTotalRef = useRef(0);
-  const previousSellerRef = useRef(null);
+  const activationTimerRef = useRef(null);
+  const previousTotalRef = useRef(null); // null يعني لم يتم التهيئة بعد
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
@@ -114,6 +115,19 @@ const FreeShippingBanner = () => {
   const analysis = analyzeCart();
   const currentSellerId = getSellerId();
 
+  // تفعيل المنطق بعد فترة انتظار
+  useEffect(() => {
+    activationTimerRef.current = setTimeout(() => {
+      setIsActive(true);
+      // حفظ القيمة الحالية كقيمة أساسية
+      previousTotalRef.current = cart.total || 0;
+    }, ACTIVATION_DELAY);
+
+    return () => {
+      if (activationTimerRef.current) clearTimeout(activationTimerRef.current);
+    };
+  }, []); // يعمل مرة واحدة عند التحميل
+
   // التحقق من localStorage
   const hasShownForSeller = (sellerId) => {
     if (!sellerId) return false;
@@ -124,34 +138,25 @@ const FreeShippingBanner = () => {
     if (sellerId) localStorage.setItem(STORAGE_KEY, sellerId);
   };
 
-  // منطق إظهار الشريط الأخضر
+  // منطق إظهار الشريط الأخضر - يعمل فقط إذا كان isActive = true
   useEffect(() => {
+    // لا تفعل شيء إذا لم يتم تفعيل المنطق بعد
+    if (!isActive) return;
+    
     const currentTotal = cart.total || 0;
     
-    // التحميل الأولي - فقط احفظ القيم
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    // إذا لم يتم التهيئة، احفظ القيمة فقط
+    if (previousTotalRef.current === null) {
       previousTotalRef.current = currentTotal;
-      previousSellerRef.current = currentSellerId;
       return;
     }
 
-    // الشروط:
-    // 1. المجموع السابق أقل من الحد
-    // 2. المجموع الحالي يساوي أو أكبر من الحد
-    // 3. البائع واحد
-    // 4. لم يُعرض الشريط لهذا البائع من قبل
     const wasBelow = previousTotalRef.current < FREE_SHIPPING_THRESHOLD;
     const isNowAbove = currentTotal >= FREE_SHIPPING_THRESHOLD;
     const isSingleSeller = currentSellerId !== null;
     const notShownYet = !hasShownForSeller(currentSellerId);
-    
-    // إذا تغير البائع، امسح السجل
-    if (currentSellerId && currentSellerId !== previousSellerRef.current) {
-      localStorage.removeItem(STORAGE_KEY);
-    }
 
-    // إظهار الشريط الأخضر
+    // إظهار الشريط الأخضر فقط عند تجاوز الحد
     if (wasBelow && isNowAbove && isSingleSeller && notShownYet) {
       setShowSuccessBanner(true);
       markShownForSeller(currentSellerId);
@@ -165,22 +170,19 @@ const FreeShippingBanner = () => {
       }, 3000);
     }
 
-    // تحديث القيم السابقة
+    // تحديث القيمة السابقة
     previousTotalRef.current = currentTotal;
-    previousSellerRef.current = currentSellerId;
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [cart.total, currentSellerId]);
+  }, [cart.total, currentSellerId, isActive]);
 
   // مسح عند إفراغ السلة
   useEffect(() => {
     if (!cart.items || cart.items.length === 0) {
       localStorage.removeItem(STORAGE_KEY);
       previousTotalRef.current = 0;
-      previousSellerRef.current = null;
-      isFirstRender.current = true;
     }
   }, [cart.items]);
 
