@@ -493,7 +493,7 @@ async def calculate_shipping(product_id: str, customer_city: str, order_total: f
         return {
             "shipping_cost": SHIPPING_COSTS["nearby"],
             "shipping_type": "same_city_below_threshold",
-            "message": f"نفس المحافظة - أضف المزيد للتوصيل المجاني",
+            "message": "نفس المحافظة - أضف المزيد للتوصيل المجاني",
             "seller_city": seller_city,
             "customer_city": customer_city,
             "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
