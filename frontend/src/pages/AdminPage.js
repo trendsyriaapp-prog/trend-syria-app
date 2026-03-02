@@ -231,6 +231,61 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // === دوال تعديل العمولات ===
+  const handleStartEditRates = () => {
+    const ratesObj = {};
+    commissionRates.rates.forEach(r => {
+      ratesObj[r.category] = r.rate;
+    });
+    ratesObj['default'] = commissionRates.default_rate;
+    setEditedRates(ratesObj);
+    setEditingRates(true);
+  };
+
+  const handleSaveRates = async () => {
+    try {
+      await axios.put(`${API}/admin/commissions/rates`, editedRates);
+      toast({ title: "تم", description: "تم تحديث نسب العمولات بنجاح" });
+      setEditingRates(false);
+      // إعادة جلب البيانات
+      const res = await axios.get(`${API}/admin/commissions/rates`);
+      setCommissionRates(res.data);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تحديث نسب العمولات", variant: "destructive" });
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.name || !newCategory.rate) return;
+    
+    try {
+      const rate = parseFloat(newCategory.rate) / 100;
+      await axios.post(`${API}/admin/commissions/rates/category?category=${encodeURIComponent(newCategory.name)}&rate=${rate}`);
+      toast({ title: "تم", description: `تم إضافة فئة ${newCategory.name}` });
+      setNewCategory({ name: '', rate: '' });
+      // إعادة جلب البيانات
+      const res = await axios.get(`${API}/admin/commissions/rates`);
+      setCommissionRates(res.data);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل إضافة الفئة", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteCategory = async (category) => {
+    if (!window.confirm(`هل أنت متأكد من حذف فئة "${category}"؟`)) return;
+    
+    try {
+      await axios.delete(`${API}/admin/commissions/rates/category/${encodeURIComponent(category)}`);
+      toast({ title: "تم", description: `تم حذف فئة ${category}` });
+      // إعادة جلب البيانات
+      const res = await axios.get(`${API}/admin/commissions/rates`);
+      setCommissionRates(res.data);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حذف الفئة", variant: "destructive" });
+    }
+  };
+
   useEffect(() => {
     if (user && user.user_type !== 'admin' && user.user_type !== 'sub_admin') {
       navigate('/');
