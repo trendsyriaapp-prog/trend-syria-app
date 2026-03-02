@@ -28,6 +28,36 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'trend-syria-secret-key-2024')
 ALGORITHM = "HS256"
 
 app = FastAPI(title="تريند سورية API")
+
+# ============== Notification Helper ==============
+async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None):
+    """إنشاء إشعار لمستخدم معين"""
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "title": title,
+        "message": message,
+        "type": notification_type,
+        "order_id": order_id,
+        "target": "user",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    return notification
+
+async def create_notification_for_role(role: str, title: str, message: str, notification_type: str = "order", order_id: str = None):
+    """إنشاء إشعار لدور معين (sellers, buyers, delivery)"""
+    notification = {
+        "id": str(uuid.uuid4()),
+        "title": title,
+        "message": message,
+        "type": notification_type,
+        "order_id": order_id,
+        "target": role,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    return notification
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer(auto_error=False)
 
@@ -1117,6 +1147,17 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
     
+    # إرسال إشعار للبائعين
+    seller_ids = set(item["seller_id"] for item in items_details)
+    for seller_id in seller_ids:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="🛒 طلب جديد!",
+            message=f"لديك طلب جديد بقيمة {total:,.0f} ل.س",
+            notification_type="new_order",
+            order_id=order_id
+        )
+    
     return {"order_id": order_id, "total": total, "commission": total_commission, "message": "تم إنشاء الطلب"}
 
 @api_router.get("/orders")
@@ -1145,14 +1186,52 @@ async def get_order(order_id: str, user: dict = Depends(get_current_user)):
 
 @api_router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status: str = Query(...), user: dict = Depends(get_current_user)):
-    if user["user_type"] not in ["seller", "admin"]:
+    if user["user_type"] not in ["seller", "admin", "delivery"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    old_status = order.get("delivery_status", "pending")
     
     await db.orders.update_one(
         {"id": order_id},
-        {"$set": {"delivery_status": status}}
+        {"$set": {"delivery_status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    return {"message": "تم تحديث حالة الطلب"}
+    
+    # إرسال إشعارات حسب الحالة الجديدة
+    customer_id = order["user_id"]
+    status_messages = {
+        "confirmed": ("✅ تم تأكيد طلبك", "طلبك قيد التجهيز الآن"),
+        "processing": ("📦 جاري تجهيز طلبك", "البائع يجهز طلبك للشحن"),
+        "shipped": ("🚚 تم شحن طلبك", "طلبك في الطريق إليك"),
+        "out_for_delivery": ("🏃 طلبك في الطريق!", "موظف التوصيل في طريقه إليك"),
+        "delivered": ("🎉 تم التسليم!", "تم تسليم طلبك بنجاح. شكراً لك!"),
+        "cancelled": ("❌ تم إلغاء الطلب", "تم إلغاء طلبك")
+    }
+    
+    if status in status_messages:
+        title, message = status_messages[status]
+        await create_notification_for_user(
+            user_id=customer_id,
+            title=title,
+            message=message,
+            notification_type="order_status",
+            order_id=order_id
+        )
+    
+    # إشعار موظف التوصيل عند جاهزية الطلب للشحن
+    if status == "shipped":
+        await create_notification_for_role(
+            role="delivery",
+            title="📦 طلب جاهز للتوصيل",
+            message=f"طلب جديد جاهز للتوصيل إلى {order.get('city', '')}",
+            notification_type="delivery_ready",
+            order_id=order_id
+        )
+    
+    return {"message": "تم تحديث حالة الطلب", "old_status": old_status, "new_status": status}
 
 # ============== ShamCash Payment ==============
 
