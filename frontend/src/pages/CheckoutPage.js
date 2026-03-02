@@ -536,7 +536,7 @@ const CheckoutPage = () => {
                 {submitting ? (
                   <><Loader2 className="animate-spin" size={14} /> جاري إنشاء الطلب...</>
                 ) : (
-                  <><Truck size={14} /> تأكيد الطلب • {formatPrice(cart.total)}</>
+                  <><Truck size={14} /> تأكيد الطلب • {formatPrice(cart.total + (shippingInfo?.shipping_cost || 0))}</>
                 )}
               </button>
             )}
