@@ -439,6 +439,11 @@ const ProductDetailPage = () => {
   
   // Similar products state
   const [similarProducts, setSimilarProducts] = useState([]);
+  
+  // Shipping state
+  const [shippingInfo, setShippingInfo] = useState(null);
+  const [customerCity, setCustomerCity] = useState('');
+  const [cities, setCities] = useState([]);
 
   // الحد الأدنى للسحب للتنقل بين الصور
   const minSwipeDistance = 50;
