@@ -474,38 +474,26 @@ async def calculate_shipping(product_id: str, customer_city: str, order_total: f
     
     seller_city = product.get("city", "")
     
-    # نفس المحافظة - مجاني دائماً
+    # نفس المحافظة + نفس المتجر + تجاوز الحد الأدنى = مجاني
+    if seller_city == customer_city and order_total >= FREE_SHIPPING_THRESHOLD:
+        return {
+            "shipping_cost": 0,
+            "shipping_type": "free_same_city",
+            "message": f"توصيل مجاني - نفس المحافظة وتجاوزت {FREE_SHIPPING_THRESHOLD:,} ل.س",
+            "seller_city": seller_city,
+            "customer_city": customer_city,
+            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+            "qualifies_for_free": True
+        }
+    
+    # نفس المحافظة لكن لم يتجاوز الحد الأدنى
     if seller_city == customer_city:
-        return {
-            "shipping_cost": 0,
-            "shipping_type": "free",
-            "message": "توصيل مجاني - نفس المحافظة",
-            "seller_city": seller_city,
-            "customer_city": customer_city,
-            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
-            "qualifies_for_free": True
-        }
-    
-    # التحقق من الحد الأدنى للتوصيل المجاني
-    if order_total >= FREE_SHIPPING_THRESHOLD:
-        return {
-            "shipping_cost": 0,
-            "shipping_type": "free_threshold",
-            "message": f"توصيل مجاني - طلبك تجاوز {FREE_SHIPPING_THRESHOLD:,} ل.س",
-            "seller_city": seller_city,
-            "customer_city": customer_city,
-            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
-            "qualifies_for_free": True
-        }
-    
-    # محافظات قريبة
-    nearby = NEARBY_CITIES.get(seller_city, [])
-    if customer_city in nearby:
         remaining = FREE_SHIPPING_THRESHOLD - order_total
+        # محافظات قريبة لنفس المحافظة
         return {
             "shipping_cost": SHIPPING_COSTS["nearby"],
-            "shipping_type": "nearby",
-            "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
+            "shipping_type": "same_city_below_threshold",
+            "message": f"نفس المحافظة - أضف المزيد للتوصيل المجاني",
             "seller_city": seller_city,
             "customer_city": customer_city,
             "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
@@ -513,8 +501,21 @@ async def calculate_shipping(product_id: str, customer_city: str, order_total: f
             "qualifies_for_free": False
         }
     
+    # محافظات مختلفة - لا يوجد توصيل مجاني
+    nearby = NEARBY_CITIES.get(seller_city, [])
+    if customer_city in nearby:
+        return {
+            "shipping_cost": SHIPPING_COSTS["nearby"],
+            "shipping_type": "nearby",
+            "message": f"تكلفة الشحن من {seller_city} إلى {customer_city}",
+            "seller_city": seller_city,
+            "customer_city": customer_city,
+            "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+            "qualifies_for_free": False,
+            "no_free_option": True
+        }
+    
     # محافظات بعيدة
-    remaining = FREE_SHIPPING_THRESHOLD - order_total
     return {
         "shipping_cost": SHIPPING_COSTS["far"],
         "shipping_type": "far",
@@ -522,8 +523,8 @@ async def calculate_shipping(product_id: str, customer_city: str, order_total: f
         "seller_city": seller_city,
         "customer_city": customer_city,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
-        "remaining_for_free": remaining,
-        "qualifies_for_free": False
+        "qualifies_for_free": False,
+        "no_free_option": True
     }
 
 @api_router.get("/shipping/info")
