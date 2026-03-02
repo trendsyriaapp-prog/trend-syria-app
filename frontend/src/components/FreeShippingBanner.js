@@ -109,7 +109,7 @@ const FreeShippingBanner = () => {
   const Icon = analysis.icon;
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-50 ${bgColors[analysis.type]} text-white shadow-lg`}>
+    <div className={`sticky top-0 z-50 ${bgColors[analysis.type]} text-white shadow-lg`}>
       <div className="max-w-4xl mx-auto px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
