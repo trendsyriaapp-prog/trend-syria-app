@@ -433,6 +433,41 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
     
     return product
 
+@api_router.get("/products/{product_id}/similar")
+async def get_similar_products(product_id: str, limit: int = 6):
+    """الحصول على منتجات مشابهة من نفس الفئة"""
+    # الحصول على المنتج الأصلي
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        return []
+    
+    # البحث عن منتجات من نفس الفئة (باستثناء المنتج الحالي)
+    similar = await db.products.find(
+        {
+            "category": product.get("category"),
+            "id": {"$ne": product_id},
+            "is_active": True,
+            "is_approved": True
+        },
+        {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}
+    ).limit(limit).to_list(limit)
+    
+    # إذا لم يكن هناك منتجات كافية من نفس الفئة، أضف منتجات عشوائية
+    if len(similar) < limit:
+        remaining = limit - len(similar)
+        existing_ids = [product_id] + [p["id"] for p in similar]
+        more_products = await db.products.find(
+            {
+                "id": {"$nin": existing_ids},
+                "is_active": True,
+                "is_approved": True
+            },
+            {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}
+        ).limit(remaining).to_list(remaining)
+        similar.extend(more_products)
+    
+    return similar
+
 @api_router.get("/seller/products")
 async def get_seller_products(user: dict = Depends(get_current_user)):
     if user["user_type"] != "seller":
