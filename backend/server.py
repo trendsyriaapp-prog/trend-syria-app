@@ -1039,9 +1039,11 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="السلة فارغة")
     
-    # Calculate total and validate stock
+    # Calculate total, commission and validate stock
     items_details = []
     total = 0
+    total_commission = 0
+    
     for item in cart["items"]:
         product = await db.products.find_one({"id": item["product_id"]})
         if not product:
@@ -1050,6 +1052,13 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
         
         item_total = product["price"] * item["quantity"]
+        
+        # حساب العمولة لهذا المنتج
+        category = product.get("category", "default")
+        commission_info = calculate_commission(item_total, category)
+        item_commission = commission_info["commission_amount"]
+        seller_amount = commission_info["seller_amount"]
+        
         items_details.append({
             "product_id": item["product_id"],
             "product_name": product["name"],
@@ -1058,9 +1067,17 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             "quantity": item["quantity"],
             "selected_size": item.get("selected_size"),
             "item_total": item_total,
+            "category": category,
+            "commission_rate": commission_info["commission_rate"],
+            "commission_amount": item_commission,
+            "seller_amount": seller_amount,
             "image": product["images"][0] if product["images"] else None
         })
         total += item_total
+        total_commission += item_commission
+    
+    # المبلغ الصافي للبائعين
+    total_seller_amount = total - total_commission
     
     order_id = str(uuid.uuid4())
     order_doc = {
@@ -1069,6 +1086,8 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "user_name": user["name"],
         "items": items_details,
         "total": total,
+        "total_commission": total_commission,
+        "total_seller_amount": total_seller_amount,
         "address": order.address,
         "city": order.city,
         "phone": order.phone,
@@ -1090,7 +1109,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
     
-    return {"order_id": order_id, "total": total, "message": "تم إنشاء الطلب"}
+    return {"order_id": order_id, "total": total, "commission": total_commission, "message": "تم إنشاء الطلب"}
 
 @api_router.get("/orders")
 async def get_orders(user: dict = Depends(get_current_user)):
