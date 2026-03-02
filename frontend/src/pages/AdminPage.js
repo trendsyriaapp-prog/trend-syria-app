@@ -91,6 +91,18 @@ const AdminDashboardPage = () => {
       if (user?.user_type === 'admin' && responses[10]) {
         setSubAdmins(responses[10].data);
       }
+      
+      // جلب بيانات العمولات
+      try {
+        const [commissionsRes, ratesRes] = await Promise.all([
+          axios.get(`${API}/admin/commissions`),
+          axios.get(`${API}/admin/commissions/rates`)
+        ]);
+        setCommissionsReport(commissionsRes.data);
+        setCommissionRates(ratesRes.data);
+      } catch (err) {
+        console.log('Commission data not available yet');
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
