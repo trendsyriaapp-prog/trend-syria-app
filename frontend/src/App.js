@@ -24,6 +24,7 @@ import StorePage from "./pages/StorePage";
 import FollowingPage from "./pages/FollowingPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import SettingsPage from "./pages/SettingsPage";
+import WalletPage from "./pages/WalletPage";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />
                 <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+                <Route path="/wallet" element={<WalletPage />} />
                 
                 {/* Delivery Routes */}
                 <Route path="/delivery/documents" element={<DeliveryDocuments />} />

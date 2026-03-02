@@ -141,3 +141,16 @@ class PaymentMethodCreate(BaseModel):
     phone: str
     holder_name: str
     is_default: bool = False
+
+# ============== Wallet & Withdrawal Models ==============
+
+class WithdrawalRequest(BaseModel):
+    amount: int
+    shamcash_phone: str
+
+class DeliveryFeesUpdate(BaseModel):
+    same_city: int = 3000
+    nearby: int = 5000
+    medium: int = 8000
+    far: int = 12000
+

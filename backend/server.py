@@ -32,6 +32,9 @@ from routes.notifications import router as notifications_router
 from routes.user import router as user_router
 from routes.admin import router as admin_router
 from routes.delivery import router as delivery_router
+from routes.wallet import router as wallet_router
+from routes.payment import router as payment_router
+from routes.settings import router as settings_router
 
 # Create FastAPI app
 app = FastAPI(title="تريند سورية API", description="API لمتجر تريند سورية الإلكتروني")
@@ -54,6 +57,9 @@ api_router.include_router(notifications_router)
 api_router.include_router(user_router)
 api_router.include_router(admin_router)
 api_router.include_router(delivery_router)
+api_router.include_router(wallet_router)
+api_router.include_router(payment_router)
+api_router.include_router(settings_router)
 
 # ============== Categories ==============
 

@@ -23,6 +23,8 @@ import DeliveryTab from '../components/admin/DeliveryTab';
 import SubAdminsTab from '../components/admin/SubAdminsTab';
 import NotificationsTab from '../components/admin/NotificationsTab';
 import CommissionsTab from '../components/admin/CommissionsTab';
+import WithdrawalsTab from '../components/admin/WithdrawalsTab';
+import SettingsTab from '../components/admin/SettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -262,7 +264,9 @@ const AdminDashboardPage = () => {
     'delivery': 'موظفي التوصيل',
     'notifications': 'الإشعارات',
     'sub-admins': 'المدراء التنفيذيين',
-    'commissions': 'العمولات'
+    'commissions': 'العمولات',
+    'withdrawals': 'طلبات السحب',
+    'settings': 'إعدادات المنصة'
   };
 
   return (
@@ -338,6 +342,12 @@ const AdminDashboardPage = () => {
                 onDelete={handleDeleteNotification} 
               />
             )}
+            {activeTab === 'withdrawals' && (
+              <WithdrawalsTab />
+            )}
+            {activeTab === 'settings' && user.user_type === 'admin' && (
+              <SettingsTab user={user} />
+            )}
           </>
         ) : (
           <>
@@ -390,6 +400,15 @@ const AdminDashboardPage = () => {
                 <span className="text-xs font-bold text-gray-700">العمولات</span>
               </button>
               <button
+                onClick={() => setActiveTab('withdrawals')}
+                className="bg-white rounded-xl p-3 border border-gray-200 hover:border-yellow-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+              >
+                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <DollarSign size={16} className="text-yellow-600" />
+                </div>
+                <span className="text-xs font-bold text-gray-700">طلبات السحب</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('notifications')}
                 className="bg-white rounded-xl p-3 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-2.5"
               >
@@ -399,15 +418,26 @@ const AdminDashboardPage = () => {
                 <span className="text-xs font-bold text-gray-700">الإشعارات ({notifications.length})</span>
               </button>
               {user.user_type === 'admin' && (
-                <button
-                  onClick={() => setActiveTab('sub-admins')}
-                  className="bg-white rounded-xl p-3 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-2.5"
-                >
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ShieldCheck size={16} className="text-blue-600" />
-                  </div>
-                  <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveTab('sub-admins')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <ShieldCheck size={16} className="text-blue-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">المدراء ({subAdmins.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all flex items-center gap-2.5 col-span-2"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <Package size={16} className="text-purple-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">إعدادات المنصة</span>
+                  </button>
+                </>
               )}
             </div>
           </>
