@@ -513,6 +513,15 @@ const ProductDetailPage = () => {
     }
   };
 
+  const fetchSimilarProducts = async () => {
+    try {
+      const res = await axios.get(`${API}/products/${id}/similar`);
+      setSimilarProducts(res.data);
+    } catch (error) {
+      console.error('Error fetching similar products:', error);
+    }
+  };
+
   const handleAskQuestion = async (e) => {
     e.preventDefault();
     if (!newQuestion.trim() || askingQuestion) return;
