@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Truck, X, AlertCircle, MapPin, PartyPopper } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Truck, X, AlertCircle, PartyPopper } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,12 +13,14 @@ const FreeShippingBanner = () => {
   const { cart } = useCart();
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [hideSuccess, setHideSuccess] = useState(false);
+  const prevSellerCountRef = useRef(1);
+  const timerRef = useRef(null);
 
   // تحليل السلة
   const analyzeCart = () => {
     if (!cart.items || cart.items.length === 0) {
-      return { show: false };
+      return { show: false, sellerCount: 0 };
     }
 
     // جمع معرفات البائعين
@@ -43,7 +45,8 @@ const FreeShippingBanner = () => {
         icon: AlertCircle,
         message: 'الشحن المجاني متاح فقط عند الشراء من متجر واحد',
         progress: 0,
-        showProgress: false
+        showProgress: false,
+        sellerCount
       };
     }
 
@@ -55,7 +58,8 @@ const FreeShippingBanner = () => {
         message: 'مبروك! التوصيل مجاني داخل المحافظة',
         progress: 100,
         showProgress: false,
-        celebrate: true
+        isSuccess: true,
+        sellerCount
       };
     }
 
@@ -66,37 +70,68 @@ const FreeShippingBanner = () => {
         icon: Truck,
         message: `أضف ${formatPrice(remaining)} ل.س من نفس المتجر للتوصيل المجاني`,
         progress: progress,
-        showProgress: true
+        showProgress: true,
+        sellerCount
       };
     }
 
-    return { show: false };
+    return { show: false, sellerCount: 0 };
   };
 
   const analysis = analyzeCart();
 
-  // إظهار احتفال عند الوصول للحد الأدنى
+  // إدارة إخفاء الشريط الأخضر (النجاح) بعد 4 ثواني
   useEffect(() => {
-    if (analysis.celebrate && !showCelebration) {
-      setShowCelebration(true);
-      // إخفاء بعد 5 ثواني
-      const timer = setTimeout(() => {
-        setDismissed(true);
-      }, 5000);
-      return () => clearTimeout(timer);
+    // إذا كان الشحن مجاني - ابدأ عداد الإخفاء
+    if (analysis.isSuccess && !hideSuccess) {
+      timerRef.current = setTimeout(() => {
+        setHideSuccess(true);
+      }, 4000);
     }
-  }, [analysis.celebrate, showCelebration]);
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [analysis.isSuccess, hideSuccess]);
 
-  // إعادة إظهار الشريط عند تغيير السلة
+  // إذا تغير عدد البائعين (أضاف من متجر آخر) - أظهر الشريط مجدداً
   useEffect(() => {
-    if (!analysis.celebrate) {
+    const currentSellerCount = analysis.sellerCount || 0;
+    
+    // إذا أصبح هناك أكثر من متجر - أظهر التحذير
+    if (currentSellerCount > 1 && prevSellerCountRef.current === 1) {
+      setHideSuccess(false);
       setDismissed(false);
-      setShowCelebration(false);
     }
-  }, [cart.total, cart.items?.length]);
+    
+    // إذا عاد لمتجر واحد ولم يعد مؤهل للمجاني - أعد الإظهار
+    if (currentSellerCount === 1 && !analysis.isSuccess) {
+      setHideSuccess(false);
+    }
+    
+    prevSellerCountRef.current = currentSellerCount;
+  }, [analysis.sellerCount, analysis.isSuccess]);
 
-  // لا تظهر إذا لم يسجل دخول أو السلة فارغة أو تم الإغلاق
+  // إعادة تعيين عند تغيير حالة السلة جذرياً
+  useEffect(() => {
+    if (!analysis.isSuccess) {
+      setHideSuccess(false);
+    }
+  }, [cart.total, analysis.isSuccess]);
+
+  // لا تظهر إذا:
+  // - لم يسجل دخول
+  // - السلة فارغة أو لا يوجد ما يُعرض
+  // - تم الإغلاق يدوياً
+  // - الشحن مجاني وتم إخفاؤه تلقائياً (إلا إذا أضاف من متجر آخر)
   if (!user || !analysis.show || dismissed) {
+    return null;
+  }
+  
+  // إخفاء الشريط الأخضر بعد الوقت المحدد
+  if (analysis.isSuccess && hideSuccess) {
     return null;
   }
 
@@ -109,7 +144,7 @@ const FreeShippingBanner = () => {
   const Icon = analysis.icon;
 
   return (
-    <div className={`sticky top-0 z-50 ${bgColors[analysis.type]} text-white shadow-lg`}>
+    <div className={`sticky top-0 z-50 ${bgColors[analysis.type]} text-white shadow-lg transition-all duration-300`}>
       <div className="max-w-4xl mx-auto px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
