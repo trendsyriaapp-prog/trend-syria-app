@@ -1,105 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Truck, X, AlertCircle, PartyPopper, Sparkles } from 'lucide-react';
+import { Truck, X, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
-const STORAGE_KEY = 'freeShippingShownFor';
 
 // الصفحات التي يظهر فيها الشريط (صفحات التسوق فقط)
-const ALLOWED_PATHS = [
-  '/',           // الرئيسية
-  '/products',   // المنتجات
-  '/cart',       // السلة
-  '/checkout',   // الدفع
-];
+const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
 
-// التحقق مما إذا كان المسار مسموح
 const isAllowedPath = (pathname) => {
-  // الصفحة الرئيسية
   if (pathname === '/') return true;
-  
-  // صفحات التسوق الأساسية
   if (ALLOWED_PATHS.includes(pathname)) return true;
-  
-  // صفحة تفاصيل المنتج (مسار ديناميكي)
   if (pathname.startsWith('/products/')) return true;
-  
   return false;
 };
-
-// أنماط الرسوم المتحركة
-const animationStyles = `
-  @keyframes slideDown {
-    from {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slideUp {
-    from {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-  }
-  
-  @keyframes celebratePulse {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.02);
-    }
-  }
-  
-  @keyframes sparkle {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1) rotate(0deg);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.2) rotate(180deg);
-    }
-  }
-  
-  @keyframes progressFill {
-    from {
-      width: 0%;
-    }
-  }
-  
-  .banner-enter {
-    animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-  
-  .banner-exit {
-    animation: slideUp 0.3s ease-in forwards;
-  }
-  
-  .banner-celebrate {
-    animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-               celebratePulse 0.6s ease-in-out 0.5s 2;
-  }
-  
-  .sparkle-icon {
-    animation: sparkle 1s ease-in-out infinite;
-  }
-  
-  .progress-animated {
-    animation: progressFill 0.8s ease-out forwards;
-  }
-`;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price);
@@ -110,49 +25,14 @@ const FreeShippingBanner = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [dismissed, setDismissed] = useState(false);
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const [isEntering, setIsEntering] = useState(false);
-  const timerRef = useRef(null);
-  
-  // تتبع عدد العناصر السابق لاكتشاف الإضافة الفعلية
-  const prevCartCountRef = useRef(0);
-  const prevCartTotalRef = useRef(0);
-  const hasInitializedRef = useRef(false);
 
   // التحقق من المسار الحالي
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
-  // الحصول على معرف البائع الحالي
-  const getCurrentSellerId = () => {
-    if (!cart.items || cart.items.length === 0) return null;
-    const sellerIds = new Set();
-    cart.items.forEach(item => {
-      if (item.product?.seller_id) {
-        sellerIds.add(item.product.seller_id);
-      }
-    });
-    return sellerIds.size === 1 ? Array.from(sellerIds)[0] : null;
-  };
-
-  // التحقق مما إذا كان الشريط قد ظهر لهذا البائع
-  const hasShownForSeller = (sellerId) => {
-    if (!sellerId) return false;
-    const shown = localStorage.getItem(STORAGE_KEY);
-    return shown === sellerId;
-  };
-
-  // تسجيل أن الشريط ظهر لهذا البائع
-  const markShownForSeller = (sellerId) => {
-    if (sellerId) {
-      localStorage.setItem(STORAGE_KEY, sellerId);
-    }
-  };
-
   // تحليل السلة
   const analyzeCart = () => {
     if (!cart.items || cart.items.length === 0) {
-      return { show: false, sellerCount: 0, sellerId: null };
+      return { show: false };
     }
 
     const sellerIds = new Set();
@@ -164,11 +44,11 @@ const FreeShippingBanner = () => {
 
     const isSingleSeller = sellerIds.size === 1;
     const sellerCount = sellerIds.size;
-    const sellerId = isSingleSeller ? Array.from(sellerIds)[0] : null;
     const cartTotal = cart.total || 0;
     const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
     const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
 
+    // تحذير: أكثر من متجر
     if (sellerCount > 1) {
       return {
         show: true,
@@ -176,214 +56,79 @@ const FreeShippingBanner = () => {
         icon: AlertCircle,
         message: 'الشحن المجاني متاح فقط عند الشراء من متجر واحد',
         progress: 0,
-        showProgress: false,
-        sellerCount,
-        sellerId: null,
-        isSuccess: false
+        showProgress: false
       };
     }
 
+    // مؤهل للشحن المجاني - لا تظهر شيء
     if (isSingleSeller && cartTotal >= FREE_SHIPPING_THRESHOLD) {
-      return {
-        show: false,
-        type: 'success',
-        icon: PartyPopper,
-        message: 'مبروك! التوصيل مجاني داخل المحافظة',
-        progress: 100,
-        showProgress: false,
-        isSuccess: true,
-        sellerCount,
-        sellerId
-      };
+      return { show: false };
     }
 
+    // شريط التقدم - كم متبقي
     if (isSingleSeller && remaining > 0) {
       return {
         show: true,
         type: 'info',
         icon: Truck,
-        message: `أضف ${formatPrice(remaining)} ل.س من نفس المتجر للتوصيل المجاني`,
+        message: `أضف ${formatPrice(remaining)} ل.س للتوصيل المجاني`,
         progress: progress,
-        showProgress: true,
-        sellerCount,
-        sellerId,
-        isSuccess: false
+        showProgress: true
       };
     }
 
-    return { show: false, sellerCount: 0, sellerId: null, isSuccess: false };
+    return { show: false };
   };
 
   const analysis = analyzeCart();
 
-  // إدارة ظهور شريط النجاح
+  // إعادة تعيين الإغلاق عند تغيير السلة
   useEffect(() => {
-    const currentSellerId = analysis.sellerId;
-    const currentTotal = cart.total || 0;
-    const currentCount = cart.items?.length || 0;
-    const alreadyShown = hasShownForSeller(currentSellerId);
-    
-    // التحميل الأولي - فقط احفظ القيم ولا تفعل شيء
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      prevCartCountRef.current = currentCount;
-      prevCartTotalRef.current = currentTotal;
-      
-      // إذا كانت السلة مؤهلة بالفعل، سجل ذلك
-      if (analysis.isSuccess && currentSellerId) {
-        markShownForSeller(currentSellerId);
-      }
-      return;
-    }
-    
-    // اكتشاف إذا تمت إضافة منتج (زيادة في العدد أو المجموع)
-    const itemAdded = currentCount > prevCartCountRef.current || 
-                      currentTotal > prevCartTotalRef.current;
-    
-    // شرط إظهار الشريط: تمت إضافة منتج + أصبح مؤهل للمجاني + لم يُعرض سابقاً
-    const justQualified = analysis.isSuccess && itemAdded && !alreadyShown;
-    
-    if (justQualified) {
-      // أظهر الشريط مع رسوم متحركة
-      setIsEntering(true);
-      setShowSuccessBanner(true);
-      markShownForSeller(currentSellerId);
-      
-      // أخفه بعد 3 ثوان
-      timerRef.current = setTimeout(() => {
-        setIsExiting(true);
-        setTimeout(() => {
-          setShowSuccessBanner(false);
-          setIsExiting(false);
-          setIsEntering(false);
-        }, 300);
-      }, 3000);
-    }
-    
-    // إذا تغير البائع - أعد تعيين الحالة
-    if (currentSellerId && !analysis.isSuccess) {
-      setDismissed(false);
-      if (itemAdded) {
-        setIsEntering(true);
-        setTimeout(() => setIsEntering(false), 400);
-      }
-    }
-    
-    // حفظ القيم الحالية
-    prevCartCountRef.current = currentCount;
-    prevCartTotalRef.current = currentTotal;
-    
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, [cart.total, cart.items?.length, analysis.isSuccess, analysis.sellerId]);
+    setDismissed(false);
+  }, [cart.items?.length]);
 
-  // مسح التخزين عند إفراغ السلة
-  useEffect(() => {
-    if (!cart.items || cart.items.length === 0) {
-      localStorage.removeItem(STORAGE_KEY);
-      prevCartCountRef.current = 0;
-      prevCartTotalRef.current = 0;
-      hasInitializedRef.current = false;
-    }
-  }, [cart.items]);
-
-  // إغلاق الشريط مع رسوم متحركة
-  const handleDismiss = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setDismissed(true);
-      setIsExiting(false);
-    }, 300);
-  };
-
-  // لا تظهر إذا لم يسجل دخول أو تم الإغلاق أو الصفحة غير مسموحة
-  if (!user || dismissed || !shouldShowOnCurrentPage) {
-    return null;
-  }
-  
-  // تحديد ما يجب عرضه
-  let displayType = analysis.type;
-  let displayMessage = analysis.message;
-  let displayIcon = analysis.icon;
-  let displayProgress = analysis.progress;
-  let displayShowProgress = analysis.showProgress;
-  let isCelebrating = false;
-  
-  // إذا كان شريط النجاح يجب أن يظهر
-  if (showSuccessBanner && analysis.isSuccess) {
-    displayType = 'success';
-    displayMessage = 'مبروك! التوصيل مجاني داخل المحافظة';
-    displayIcon = PartyPopper;
-    displayShowProgress = false;
-    isCelebrating = true;
-  } else if (!analysis.show) {
-    // لا يوجد ما يُعرض
+  // لا تظهر إذا لم يسجل دخول أو تم الإغلاق أو الصفحة غير مسموحة أو لا يوجد ما يُعرض
+  if (!user || dismissed || !shouldShowOnCurrentPage || !analysis.show) {
     return null;
   }
 
   const bgColors = {
     info: 'bg-gradient-to-r from-[#FF6B00] to-[#FF8533]',
-    warning: 'bg-gradient-to-r from-amber-500 to-amber-400',
-    success: 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500'
+    warning: 'bg-gradient-to-r from-amber-500 to-amber-400'
   };
 
-  // تحديد فئة الرسوم المتحركة
-  const getAnimationClass = () => {
-    if (isExiting) return 'banner-exit';
-    if (isCelebrating) return 'banner-celebrate';
-    if (isEntering) return 'banner-enter';
-    return 'banner-enter';
-  };
-
-  const Icon = displayIcon;
+  const Icon = analysis.icon;
 
   return (
-    <>
-      {/* إضافة أنماط CSS للرسوم المتحركة */}
-      <style>{animationStyles}</style>
-      
-      <div className={`sticky top-0 z-50 ${bgColors[displayType]} text-white shadow-lg ${getAnimationClass()}`}>
-        <div className="max-w-4xl mx-auto px-3 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {/* أيقونة مع تأثير للنجاح */}
-              {isCelebrating ? (
-                <div className="flex items-center gap-1">
-                  <Sparkles size={16} className="sparkle-icon text-yellow-200" />
-                  <Icon size={20} className="flex-shrink-0" />
-                  <Sparkles size={16} className="sparkle-icon text-yellow-200" />
-                </div>
-              ) : (
-                <Icon size={18} className="flex-shrink-0" />
-              )}
-              <span className={`text-xs font-medium truncate ${isCelebrating ? 'text-sm font-bold' : ''}`}>
-                {displayMessage}
-              </span>
-            </div>
-            <button 
-              onClick={handleDismiss}
-              className="p-1 hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-110 flex-shrink-0"
-              aria-label="إغلاق"
-            >
-              <X size={14} />
-            </button>
+    <div className={`sticky top-0 z-50 ${bgColors[analysis.type]} text-white shadow-lg`}>
+      <div className="max-w-4xl mx-auto px-2 sm:px-3 py-1.5 sm:py-2">
+        <div className="flex items-center justify-between gap-1 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+            <Icon size={14} className="flex-shrink-0 sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[10px] sm:text-xs font-medium truncate">
+              {analysis.message}
+            </span>
           </div>
-          
-          {/* شريط التقدم مع رسوم متحركة */}
-          {displayShowProgress && (
-            <div className="mt-2 h-1.5 bg-white/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-white rounded-full progress-animated shadow-sm"
-                style={{ width: `${displayProgress}%` }}
-              />
-            </div>
-          )}
+          <button 
+            onClick={() => setDismissed(true)}
+            className="p-0.5 sm:p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+            aria-label="إغلاق"
+          >
+            <X size={12} className="sm:w-[14px] sm:h-[14px]" />
+          </button>
         </div>
+        
+        {/* شريط التقدم */}
+        {analysis.showProgress && (
+          <div className="mt-1 sm:mt-1.5 h-1 bg-white/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-500"
+              style={{ width: `${analysis.progress}%` }}
+            />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
