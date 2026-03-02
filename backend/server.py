@@ -1518,8 +1518,11 @@ async def get_commission_rates(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    # جلب النسب من قاعدة البيانات
+    db_rates = await get_commission_rates_from_db()
+    
     rates = []
-    for category, rate in CATEGORY_COMMISSIONS.items():
+    for category, rate in db_rates.items():
         if category != "default":
             rates.append({
                 "category": category,
@@ -1530,9 +1533,92 @@ async def get_commission_rates(user: dict = Depends(get_current_user)):
     rates.sort(key=lambda x: x["rate"], reverse=True)
     return {
         "rates": rates,
-        "default_rate": CATEGORY_COMMISSIONS["default"],
-        "default_percentage": f"{CATEGORY_COMMISSIONS['default'] * 100:.0f}%"
+        "default_rate": db_rates.get("default", 0.15),
+        "default_percentage": f"{db_rates.get('default', 0.15) * 100:.0f}%"
     }
+
+@api_router.put("/admin/commissions/rates")
+async def update_commission_rates(rates: dict, user: dict = Depends(get_current_user)):
+    """تحديث نسب العمولة (للمدير فقط)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة النسب
+    for category, rate in rates.items():
+        if not isinstance(rate, (int, float)) or rate < 0 or rate > 1:
+            raise HTTPException(status_code=400, detail=f"نسبة غير صحيحة للفئة {category}")
+    
+    # تحديث أو إنشاء السجل
+    await db.commission_rates.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "categories": rates,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث نسب العمولات بنجاح", "rates": rates}
+
+@api_router.post("/admin/commissions/rates/category")
+async def add_commission_category(category: str, rate: float, user: dict = Depends(get_current_user)):
+    """إضافة فئة جديدة مع نسبة العمولة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if rate < 0 or rate > 1:
+        raise HTTPException(status_code=400, detail="النسبة يجب أن تكون بين 0 و 1")
+    
+    # جلب النسب الحالية
+    current_rates = await get_commission_rates_from_db()
+    current_rates[category] = rate
+    
+    # تحديث
+    await db.commission_rates.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "categories": current_rates,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": f"تم إضافة فئة {category} بنسبة {rate * 100:.0f}%"}
+
+@api_router.delete("/admin/commissions/rates/category/{category}")
+async def delete_commission_category(category: str, user: dict = Depends(get_current_user)):
+    """حذف فئة من نسب العمولات"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if category == "default":
+        raise HTTPException(status_code=400, detail="لا يمكن حذف الفئة الافتراضية")
+    
+    # جلب النسب الحالية
+    current_rates = await get_commission_rates_from_db()
+    if category in current_rates:
+        del current_rates[category]
+    
+    # تحديث
+    await db.commission_rates.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "categories": current_rates,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": f"تم حذف فئة {category}"}
 
 @api_router.get("/commission/calculate")
 async def calculate_product_commission(price: float, category: str):
