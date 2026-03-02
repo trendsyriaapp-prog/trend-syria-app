@@ -1,10 +1,82 @@
 import { useState, useEffect, useRef } from 'react';
-import { Truck, X, AlertCircle, PartyPopper } from 'lucide-react';
+import { Truck, X, AlertCircle, PartyPopper, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
 const STORAGE_KEY = 'freeShippingShownFor';
+
+// أنماط الرسوم المتحركة
+const animationStyles = `
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes celebratePulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+  }
+  
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.2) rotate(180deg);
+    }
+  }
+  
+  @keyframes progressFill {
+    from {
+      width: 0%;
+    }
+  }
+  
+  .banner-enter {
+    animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  
+  .banner-exit {
+    animation: slideUp 0.3s ease-in forwards;
+  }
+  
+  .banner-celebrate {
+    animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               celebratePulse 0.6s ease-in-out 0.5s 2;
+  }
+  
+  .sparkle-icon {
+    animation: sparkle 1s ease-in-out infinite;
+  }
+  
+  .progress-animated {
+    animation: progressFill 0.8s ease-out forwards;
+  }
+`;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price);
@@ -15,6 +87,8 @@ const FreeShippingBanner = () => {
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
   const timerRef = useRef(null);
   const lastCartStateRef = useRef({ isSuccess: false, sellerId: null });
 
@@ -122,19 +196,27 @@ const FreeShippingBanner = () => {
     const notShownBefore = !hasShownForSeller(currentSellerId);
     
     if (justQualified && notShownBefore) {
-      // أظهر الشريط
+      // أظهر الشريط مع رسوم متحركة
+      setIsEntering(true);
       setShowSuccessBanner(true);
       markShownForSeller(currentSellerId);
       
-      // أخفه بعد 2 ثانية
+      // أخفه بعد 3 ثوان مع رسوم متحركة للخروج
       timerRef.current = setTimeout(() => {
-        setShowSuccessBanner(false);
-      }, 2000);
+        setIsExiting(true);
+        setTimeout(() => {
+          setShowSuccessBanner(false);
+          setIsExiting(false);
+          setIsEntering(false);
+        }, 300); // انتظر انتهاء رسوم الخروج
+      }, 3000);
     }
     
     // إذا تغير البائع وليس مؤهل للمجاني - أعد تعيين الحالة
     if (differentSeller && !analysis.isSuccess) {
       setDismissed(false);
+      setIsEntering(true);
+      setTimeout(() => setIsEntering(false), 400);
     }
     
     // حفظ الحالة الحالية
@@ -158,6 +240,15 @@ const FreeShippingBanner = () => {
     }
   }, [cart.items]);
 
+  // إغلاق الشريط مع رسوم متحركة
+  const handleDismiss = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setDismissed(true);
+      setIsExiting(false);
+    }, 300);
+  };
+
   // لا تظهر إذا لم يسجل دخول أو تم الإغلاق
   if (!user || dismissed) {
     return null;
@@ -169,6 +260,7 @@ const FreeShippingBanner = () => {
   let displayIcon = analysis.icon;
   let displayProgress = analysis.progress;
   let displayShowProgress = analysis.showProgress;
+  let isCelebrating = false;
   
   // إذا كان شريط النجاح يجب أن يظهر
   if (showSuccessBanner && analysis.isSuccess) {
@@ -176,6 +268,7 @@ const FreeShippingBanner = () => {
     displayMessage = 'مبروك! التوصيل مجاني داخل المحافظة';
     displayIcon = PartyPopper;
     displayShowProgress = false;
+    isCelebrating = true;
   } else if (!analysis.show) {
     // لا يوجد ما يُعرض
     return null;
@@ -184,39 +277,63 @@ const FreeShippingBanner = () => {
   const bgColors = {
     info: 'bg-gradient-to-r from-[#FF6B00] to-[#FF8533]',
     warning: 'bg-gradient-to-r from-amber-500 to-amber-400',
-    success: 'bg-gradient-to-r from-green-500 to-green-400'
+    success: 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500'
+  };
+
+  // تحديد فئة الرسوم المتحركة
+  const getAnimationClass = () => {
+    if (isExiting) return 'banner-exit';
+    if (isCelebrating) return 'banner-celebrate';
+    if (isEntering) return 'banner-enter';
+    return 'banner-enter';
   };
 
   const Icon = displayIcon;
 
   return (
-    <div className={`sticky top-0 z-50 ${bgColors[displayType]} text-white shadow-lg transition-all duration-300`}>
-      <div className="max-w-4xl mx-auto px-3 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Icon size={18} className="flex-shrink-0" />
-            <span className="text-xs font-medium truncate">{displayMessage}</span>
+    <>
+      {/* إضافة أنماط CSS للرسوم المتحركة */}
+      <style>{animationStyles}</style>
+      
+      <div className={`sticky top-0 z-50 ${bgColors[displayType]} text-white shadow-lg ${getAnimationClass()}`}>
+        <div className="max-w-4xl mx-auto px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {/* أيقونة مع تأثير للنجاح */}
+              {isCelebrating ? (
+                <div className="flex items-center gap-1">
+                  <Sparkles size={16} className="sparkle-icon text-yellow-200" />
+                  <Icon size={20} className="flex-shrink-0" />
+                  <Sparkles size={16} className="sparkle-icon text-yellow-200" />
+                </div>
+              ) : (
+                <Icon size={18} className="flex-shrink-0" />
+              )}
+              <span className={`text-xs font-medium truncate ${isCelebrating ? 'text-sm font-bold' : ''}`}>
+                {displayMessage}
+              </span>
+            </div>
+            <button 
+              onClick={handleDismiss}
+              className="p-1 hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-110 flex-shrink-0"
+              aria-label="إغلاق"
+            >
+              <X size={14} />
+            </button>
           </div>
-          <button 
-            onClick={() => setDismissed(true)}
-            className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
-            aria-label="إغلاق"
-          >
-            <X size={14} />
-          </button>
+          
+          {/* شريط التقدم مع رسوم متحركة */}
+          {displayShowProgress && (
+            <div className="mt-2 h-1.5 bg-white/30 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-white rounded-full progress-animated shadow-sm"
+                style={{ width: `${displayProgress}%` }}
+              />
+            </div>
+          )}
         </div>
-        
-        {/* شريط التقدم */}
-        {displayShowProgress && (
-          <div className="mt-1.5 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-white rounded-full transition-all duration-500"
-              style={{ width: `${displayProgress}%` }}
-            />
-          </div>
-        )}
       </div>
-    </div>
+    </>
   );
 };
 
