@@ -179,7 +179,7 @@ const ProductsPage = () => {
         </div>
 
         {/* Active Filters */}
-        {(category || search) && (
+        {(category || search || priceMin || priceMax || cityFilter) && (
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {category && (
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
@@ -193,6 +193,23 @@ const ProductsPage = () => {
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B00]/10 text-[#FF6B00] rounded-full text-sm font-medium">
                 البحث: {search}
                 <button onClick={clearFilters} data-testid="clear-search">
+                  <X size={14} />
+                </button>
+              </span>
+            )}
+            {(priceMin || priceMax) && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                السعر: {priceMin ? formatPrice(priceMin) : '0'} - {priceMax ? formatPrice(priceMax) : '∞'}
+                <button onClick={clearPriceFilter} data-testid="clear-price">
+                  <X size={14} />
+                </button>
+              </span>
+            )}
+            {cityFilter && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                <MapPin size={14} />
+                {cityFilter}
+                <button onClick={clearCityFilter} data-testid="clear-city">
                   <X size={14} />
                 </button>
               </span>
