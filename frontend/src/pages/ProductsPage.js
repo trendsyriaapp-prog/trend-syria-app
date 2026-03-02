@@ -229,7 +229,7 @@ const ProductsPage = () => {
               </div>
               
               <h3 className="font-bold mb-2 text-gray-800 text-sm">الأصناف</h3>
-              <div className="space-y-1">
+              <div className="space-y-1 mb-4">
                 <button
                   onClick={() => { setCategory(''); setShowFilters(false); }}
                   className={`w-full text-right p-2 rounded-lg transition-colors text-sm ${!category ? 'bg-[#FF6B00] text-white font-bold' : 'hover:bg-gray-100 text-gray-700'}`}
@@ -247,6 +247,58 @@ const ProductsPage = () => {
                     {cat.name}
                   </button>
                 ))}
+              </div>
+
+              {/* Price Filter */}
+              <div className="border-t border-gray-100 pt-4 mb-4">
+                <h3 className="font-bold mb-2 text-gray-800 text-sm flex items-center gap-2">
+                  <DollarSign size={14} />
+                  السعر (ل.س)
+                </h3>
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    placeholder="الحد الأدنى"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:border-[#FF6B00] focus:outline-none"
+                    data-testid="min-price-input"
+                  />
+                  <input
+                    type="number"
+                    placeholder="الحد الأقصى"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:border-[#FF6B00] focus:outline-none"
+                    data-testid="max-price-input"
+                  />
+                  <button
+                    onClick={applyPriceFilter}
+                    className="w-full p-2 bg-[#FF6B00] text-white rounded-lg text-sm font-bold hover:bg-[#E65000] transition-colors"
+                    data-testid="apply-price-filter"
+                  >
+                    تطبيق
+                  </button>
+                </div>
+              </div>
+
+              {/* City Filter */}
+              <div className="border-t border-gray-100 pt-4">
+                <h3 className="font-bold mb-2 text-gray-800 text-sm flex items-center gap-2">
+                  <MapPin size={14} />
+                  المحافظة
+                </h3>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => applyCityFilter(e.target.value)}
+                  className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:border-[#FF6B00] focus:outline-none"
+                  data-testid="city-filter-select"
+                >
+                  <option value="">جميع المحافظات</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </aside>
