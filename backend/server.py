@@ -447,6 +447,41 @@ SHIPPING_COSTS = {
 # الحد الأدنى للطلب للتوصيل المجاني
 FREE_SHIPPING_THRESHOLD = 150000  # 150,000 ل.س
 
+# ============== نظام العمولات (مطابق لـ Trendyol) ==============
+# نسبة العمولة على كل عملية بيع حسب فئة المنتج
+CATEGORY_COMMISSIONS = {
+    "إلكترونيات": 0.18,      # 18%
+    "أزياء": 0.17,           # 17%
+    "أحذية": 0.21,           # 21%
+    "تجميل": 0.18,           # 18%
+    "مجوهرات": 0.16,         # 16%
+    "إكسسوارات": 0.16,       # 16%
+    "المنزل": 0.20,          # 20%
+    "رياضة": 0.16,           # 16%
+    "أطفال": 0.15,           # 15%
+    "كتب": 0.12,             # 12%
+    "ألعاب": 0.14,           # 14%
+    # الفئة الافتراضية لأي فئة غير مدرجة
+    "default": 0.15,         # 15%
+}
+
+def get_commission_rate(category: str) -> float:
+    """الحصول على نسبة العمولة حسب فئة المنتج"""
+    return CATEGORY_COMMISSIONS.get(category, CATEGORY_COMMISSIONS["default"])
+
+def calculate_commission(price: float, category: str) -> dict:
+    """حساب العمولة على منتج"""
+    rate = get_commission_rate(category)
+    commission = price * rate
+    seller_amount = price - commission
+    return {
+        "price": price,
+        "commission_rate": rate,
+        "commission_percentage": f"{rate * 100:.0f}%",
+        "commission_amount": commission,
+        "seller_amount": seller_amount
+    }
+
 # المحافظات القريبة من بعضها
 NEARBY_CITIES = {
     "دمشق": ["ريف دمشق", "درعا", "السويداء", "القنيطرة"],
