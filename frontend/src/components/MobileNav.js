@@ -65,7 +65,7 @@ const MobileNav = () => {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] ${item.isHeart && !isActive(item.path) ? 'text-red-500' : ''}`}>{item.label}</span>
+              <span className={`text-[10px] ${item.isHeart && !isActive(item.path) ? 'text-red-500' : ''} ${item.isHome ? 'font-bold text-black' : ''}`}>{item.label}</span>
             </Link>
           ))}
         </div>
