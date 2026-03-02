@@ -1537,7 +1537,7 @@ async def get_commission_rates(user: dict = Depends(get_current_user)):
 @api_router.get("/commission/calculate")
 async def calculate_product_commission(price: float, category: str):
     """حساب العمولة لمنتج (للبائعين والعملاء)"""
-    return calculate_commission(price, category)
+    return await calculate_commission(price, category)
 
 # ============== Sub-Admin Management ==============
 
