@@ -38,6 +38,9 @@ const AdminDashboardPage = () => {
   const [allDelivery, setAllDelivery] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
+  const [editingRates, setEditingRates] = useState(false);
+  const [editedRates, setEditedRates] = useState({});
+  const [newCategory, setNewCategory] = useState({ name: '', rate: '' });
   const [newSubAdmin, setNewSubAdmin] = useState({
     full_name: '',
     phone: '',
