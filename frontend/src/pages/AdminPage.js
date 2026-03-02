@@ -323,6 +323,15 @@ const AdminDashboardPage = () => {
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-2.5">
               <button
+                onClick={() => setActiveTab('commissions')}
+                className="bg-white rounded-xl p-3 border border-gray-200 hover:border-green-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+              >
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <DollarSign size={16} className="text-green-600" />
+                </div>
+                <span className="text-xs font-bold text-gray-700">العمولات</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('notifications')}
                 className="bg-white rounded-xl p-3 border border-gray-200 hover:border-[#FF6B00] hover:shadow-lg transition-all flex items-center gap-2.5"
               >
