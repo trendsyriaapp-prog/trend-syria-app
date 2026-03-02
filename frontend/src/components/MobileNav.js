@@ -32,7 +32,7 @@ const MobileNav = () => {
   };
 
   const navItems = [
-    { path: '/', icon: Home, label: 'تريند سورية', isHome: true },
+    { path: '/', icon: Home, label: 'الرئيسية' },
     { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
     { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
     { path: '/favorites', icon: Heart, label: 'المفضلة', isHeart: true },
