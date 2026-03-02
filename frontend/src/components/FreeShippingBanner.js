@@ -80,13 +80,13 @@ const FreeShippingBanner = () => {
 
   const analysis = analyzeCart();
 
-  // إدارة إخفاء الشريط الأخضر (النجاح) بعد 4 ثواني
+  // إدارة إخفاء الشريط الأخضر (النجاح) بعد 2 ثانية
   useEffect(() => {
     // إذا كان الشحن مجاني - ابدأ عداد الإخفاء
     if (analysis.isSuccess && !hideSuccess) {
       timerRef.current = setTimeout(() => {
         setHideSuccess(true);
-      }, 4000);
+      }, 2000);
     }
     
     return () => {
