@@ -544,9 +544,9 @@ const CheckoutPage = () => {
         </div>
 
         {/* Free delivery banner */}
-        <div className="flex items-center justify-center gap-2 text-[10px] text-green-600 bg-green-50 rounded-lg py-2 mt-3">
+        <div className="flex items-center justify-center gap-2 text-[10px] text-gray-600 bg-gray-100 rounded-lg py-2 mt-3">
           <Truck size={12} />
-          <span>توصيل مجاني داخل المحافظات</span>
+          <span>توصيل مجاني عند الشراء من متجر واحد بنفس المحافظة (أكثر من 150,000 ل.س)</span>
         </div>
       </div>
     </div>
