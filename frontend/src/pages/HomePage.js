@@ -58,14 +58,14 @@ const HomePage = () => {
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* Hero Section - Compact */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/8 via-[#FF6B00]/5 to-transparent">
-        <div className="max-w-7xl mx-auto px-4 py-1 md:py-2">
+        <div className="max-w-7xl mx-auto px-4 py-2 md:py-3">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-1"
+            className="text-center mb-2"
           >
-            <h1 className="text-2xl md:text-3xl font-extrabold mb-2 text-gray-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold mb-3 text-gray-900 tracking-tight">
               تريند <span className="text-[#FF6B00] relative inline-block">
                 سورية
                 <svg className="absolute -bottom-1 left-0 right-0 w-full h-1" viewBox="0 0 100 8">
@@ -73,7 +73,7 @@ const HomePage = () => {
                 </svg>
               </span>
             </h1>
-            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto">
+            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto mt-1">
               منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
             </p>
           </motion.div>
