@@ -461,13 +461,44 @@ const CheckoutPage = () => {
                 <span>المجموع ({cart.items.length} منتج)</span>
                 <span className="font-bold text-gray-900">{formatPrice(cart.total)}</span>
               </div>
+              
+              {/* تكلفة الشحن */}
               <div className="flex justify-between text-gray-600 mb-1">
                 <span>التوصيل</span>
-                <span className="font-bold text-green-600">مجاني</span>
+                {shippingLoading ? (
+                  <span className="text-gray-400">جاري الحساب...</span>
+                ) : shippingInfo?.qualifies_for_free ? (
+                  <span className="font-bold text-green-600">مجاني</span>
+                ) : shippingInfo?.shipping_cost > 0 ? (
+                  <span className="font-bold text-gray-900">{formatPrice(shippingInfo.shipping_cost)}</span>
+                ) : (
+                  <span className="text-gray-400">اختر العنوان</span>
+                )}
               </div>
+              
+              {/* رسالة الشحن */}
+              {shippingInfo && !shippingInfo.qualifies_for_free && (
+                <div className="text-[10px] py-1 mb-1">
+                  {shippingInfo.remaining_for_free ? (
+                    <p className="text-amber-600 bg-amber-50 rounded px-2 py-1">
+                      أضف {formatPrice(shippingInfo.remaining_for_free)} للتوصيل المجاني
+                    </p>
+                  ) : shippingInfo.no_free_option ? (
+                    <p className="text-gray-500">
+                      {shippingInfo.seller_count > 1 
+                        ? "الشحن المجاني متاح فقط عند الشراء من متجر واحد"
+                        : `الشحن من ${shippingInfo.seller_city} إلى ${shippingInfo.customer_city}`
+                      }
+                    </p>
+                  ) : null}
+                </div>
+              )}
+              
               <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200 text-xs">
                 <span>الإجمالي</span>
-                <span className="text-[#FF6B00]">{formatPrice(cart.total)}</span>
+                <span className="text-[#FF6B00]">
+                  {formatPrice(cart.total + (shippingInfo?.shipping_cost || 0))}
+                </span>
               </div>
             </div>
 
