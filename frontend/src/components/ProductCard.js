@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
+import LazyImage from './LazyImage';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -160,17 +161,13 @@ const ProductCard = ({ product, variant = 'default' }) => {
       >
         {/* Image Section */}
         <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-b from-gray-100 to-gray-50">
-          <motion.img
+          <LazyImage
             src={product.images?.[0] || 'https://via.placeholder.com/400?text=No+Image'}
             alt={product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            draggable="false"
+            className="w-full h-full"
+            aspectRatio="4/5"
             onContextMenu={preventImageActions}
             onDragStart={preventImageActions}
-            style={{ pointerEvents: 'none' }}
-            animate={{ scale: isHovered ? 1.08 : 1 }}
-            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
           />
           
           {/* Gradient Overlay on Hover */}

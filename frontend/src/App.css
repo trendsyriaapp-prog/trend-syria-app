@@ -2,3 +2,47 @@
   min-height: 100vh;
   background-color: #FFFFFF;
 }
+
+/* Shimmer Effect for Lazy Loading */
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Smooth Image Loading */
+.image-loading {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+/* Performance Optimizations */
+.product-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-effect {
+    animation: none;
+  }
+  
+  .product-card {
+    transition: none;
+  }
+}
+

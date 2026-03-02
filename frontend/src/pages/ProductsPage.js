@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown, MapPin, DollarSign } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -13,8 +13,13 @@ const ProductsPage = () => {
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const observerRef = useRef(null);
+  const loadMoreRef = useRef(null);
   
   // Price filter states
   const [minPrice, setMinPrice] = useState('');
@@ -23,25 +28,27 @@ const ProductsPage = () => {
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
-  const page = parseInt(searchParams.get('page') || '1');
   const priceMin = searchParams.get('price_min') || '';
   const priceMax = searchParams.get('price_max') || '';
   const cityFilter = searchParams.get('city') || '';
+  const sort = searchParams.get('sort') || 'newest';
 
+  // Reset when filters change
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    fetchCities();
-  }, [category, search, page, priceMin, priceMax, cityFilter]);
-
-  useEffect(() => {
-    setMinPrice(priceMin);
-    setMaxPrice(priceMax);
-    setSelectedCity(cityFilter);
-  }, [priceMin, priceMax, cityFilter]);
-
-  const fetchProducts = async () => {
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
     setLoading(true);
+  }, [category, search, priceMin, priceMax, cityFilter, sort]);
+
+  // Fetch products
+  const fetchProducts = useCallback(async (pageNum, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const params = new URLSearchParams();
       if (category) params.append('category', category);
@@ -49,18 +56,71 @@ const ProductsPage = () => {
       if (priceMin) params.append('price_min', priceMin);
       if (priceMax) params.append('price_max', priceMax);
       if (cityFilter) params.append('city', cityFilter);
-      params.append('page', page);
-      params.append('limit', 20);
+      if (sort) params.append('sort', sort);
+      params.append('page', pageNum);
+      params.append('limit', 12);
 
       const res = await axios.get(`${API}/products?${params}`);
-      setProducts(res.data.products);
-      setTotalPages(res.data.pages);
+      const newProducts = res.data.products;
+      
+      if (append) {
+        setProducts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const uniqueNew = newProducts.filter(p => !existingIds.has(p.id));
+          return [...prev, ...uniqueNew];
+        });
+      } else {
+        setProducts(newProducts);
+      }
+      
+      setHasMore(res.data.has_more);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setHasMore(false);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [category, search, priceMin, priceMax, cityFilter, sort]);
+
+  // Initial load and filter changes
+  useEffect(() => {
+    if (loading && page === 1) {
+      fetchProducts(1, false);
+    }
+  }, [loading, page, fetchProducts]);
+
+  // Load more pages
+  useEffect(() => {
+    if (page > 1 && !loading) {
+      fetchProducts(page, true);
+    }
+  }, [page]);
+
+  // Intersection Observer
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { rootMargin: '200px', threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => observerRef.current?.disconnect();
+  }, [hasMore, loading, loadingMore]);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchCities();
+  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -87,8 +147,14 @@ const ProductsPage = () => {
     } else {
       params.delete('category');
     }
-    params.set('page', '1');
     setSearchParams(params);
+  };
+
+  const setSort = (sortValue) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', sortValue);
+    setSearchParams(params);
+    setShowSort(false);
   };
 
   const applyPriceFilter = () => {
@@ -103,7 +169,6 @@ const ProductsPage = () => {
     } else {
       params.delete('price_max');
     }
-    params.set('page', '1');
     setSearchParams(params);
     setShowFilters(false);
   };
@@ -115,11 +180,16 @@ const ProductsPage = () => {
     } else {
       params.delete('city');
     }
-    params.set('page', '1');
     setSearchParams(params);
     setSelectedCity(city);
-    setShowFilters(false);
   };
+
+  const sortOptions = [
+    { value: 'newest', label: 'الأحدث' },
+    { value: 'popular', label: 'الأكثر مبيعاً' },
+    { value: 'price_low', label: 'السعر: من الأقل' },
+    { value: 'price_high', label: 'السعر: من الأعلى' }
+  ];
 
   const clearFilters = () => {
     setSearchParams({});
@@ -305,15 +375,47 @@ const ProductsPage = () => {
 
           {/* Products Grid */}
           <main className="flex-1">
-            {loading ? (
+            {/* Sort Options */}
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-500">{products.length} منتج</p>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSort(!showSort)}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-[#FF6B00] transition-colors"
+                  data-testid="sort-btn"
+                >
+                  <ArrowUpDown size={14} />
+                  {sortOptions.find(s => s.value === sort)?.label || 'ترتيب'}
+                  <ChevronDown size={14} />
+                </button>
+                {showSort && (
+                  <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
+                    {sortOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSort(option.value)}
+                        className={`w-full text-right px-3 py-2 text-sm hover:bg-gray-50 ${
+                          sort === option.value ? 'text-[#FF6B00] font-bold' : 'text-gray-700'
+                        }`}
+                        data-testid={`sort-${option.value}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {loading && products.length === 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[...Array(12)].map((_, i) => (
                   <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                    <div className="aspect-[4/5] shimmer" />
+                    <div className="aspect-[4/5] shimmer-effect bg-gray-100" />
                     <div className="p-3 space-y-2">
-                      <div className="h-4 shimmer rounded w-full" />
-                      <div className="h-3 shimmer rounded w-2/3" />
-                      <div className="h-5 shimmer rounded w-1/2" />
+                      <div className="h-4 shimmer-effect bg-gray-100 rounded w-full" />
+                      <div className="h-3 shimmer-effect bg-gray-100 rounded w-2/3" />
+                      <div className="h-5 shimmer-effect bg-gray-100 rounded w-1/2" />
                     </div>
                   </div>
                 ))}
@@ -328,44 +430,51 @@ const ProductsPage = () => {
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {products.map((product, i) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
+                  {products.map((product, index) => (
+                    <div
+                      key={`${product.id}-${index}`}
+                      className="product-card"
+                      style={{ 
+                        animationDelay: `${(index % 12) * 50}ms`,
+                        animation: index < 12 ? 'fadeInUp 0.4s ease-out forwards' : 'none'
+                      }}
                     >
                       <ProductCard product={product} />
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 mt-6">
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          const params = new URLSearchParams(searchParams);
-                          params.set('page', String(i + 1));
-                          setSearchParams(params);
-                        }}
-                        className={`w-10 h-10 rounded-full transition-colors font-bold ${
-                          page === i + 1 ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#FF6B00]'
-                        }`}
-                        data-testid={`page-${i + 1}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Infinite Scroll Trigger */}
+                <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+                  {loadingMore && (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader2 className="w-5 h-5 animate-spin text-[#FF6B00]" />
+                      <span className="text-sm">جاري تحميل المزيد...</span>
+                    </div>
+                  )}
+                  {!hasMore && products.length > 12 && (
+                    <p className="text-gray-400 text-sm">تم عرض جميع المنتجات</p>
+                  )}
+                </div>
               </>
             )}
           </main>
         </div>
       </div>
+      
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };

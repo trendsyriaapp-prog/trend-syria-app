@@ -74,8 +74,9 @@ async def get_products(
     price_min: Optional[float] = None,
     price_max: Optional[float] = None,
     city: Optional[str] = None,
+    sort: Optional[str] = None,  # newest, price_low, price_high, popular
     page: int = 1,
-    limit: int = 20
+    limit: int = Query(default=12, le=50)  # Max 50 per page
 ):
     query = {"is_active": True, "is_approved": True}
     if category:
@@ -92,15 +93,64 @@ async def get_products(
     if city:
         query["city"] = city
     
+    # Sorting
+    sort_options = {
+        "newest": [("created_at", -1)],
+        "price_low": [("price", 1)],
+        "price_high": [("price", -1)],
+        "popular": [("sales_count", -1), ("rating", -1)]
+    }
+    sort_query = sort_options.get(sort, [("created_at", -1)])
+    
+    # Projection - only essential fields for listing
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},  # Only first image
+        "rating": 1,
+        "reviews_count": 1,
+        "stock": 1,
+        "created_at": 1,
+        "category": 1,
+        "city": 1,
+        "available_sizes": 1,
+        "video": 1
+    }
+    
     skip = (page - 1) * limit
-    products = await db.products.find(query, {"_id": 0, "seller_name": 0, "seller_phone": 0}).skip(skip).limit(limit).to_list(limit)
+    products = await db.products.find(query, projection).sort(sort_query).skip(skip).limit(limit).to_list(limit)
     total = await db.products.count_documents(query)
     
-    return {"products": products, "total": total, "page": page, "pages": (total + limit - 1) // limit}
+    return {
+        "products": products, 
+        "total": total, 
+        "page": page, 
+        "pages": (total + limit - 1) // limit,
+        "has_more": page * limit < total
+    }
 
 @router.get("/featured")
-async def get_featured_products():
-    products = await db.products.find({"is_active": True, "is_approved": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0}).sort("sales_count", -1).limit(8).to_list(8)
+async def get_featured_products(limit: int = Query(default=8, le=20)):
+    # Projection for lightweight response
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},
+        "rating": 1,
+        "reviews_count": 1,
+        "stock": 1,
+        "created_at": 1,
+        "available_sizes": 1,
+        "video": 1
+    }
+    products = await db.products.find(
+        {"is_active": True, "is_approved": True}, 
+        projection
+    ).sort("sales_count", -1).limit(limit).to_list(limit)
     return products
 
 @router.get("/{product_id}")
