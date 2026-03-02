@@ -876,19 +876,6 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Store Location */}
-            {product.city && (
-              <div className="mb-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100">
-                <div className="w-8 h-8 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
-                  <Store size={16} className="text-[#FF6B00]" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-500">موقع المتجر</p>
-                  <p className="text-xs font-bold text-gray-800">{product.city}</p>
-                </div>
-              </div>
-            )}
-
             {/* Shipping Cost Calculator */}
             <div className="mb-2 p-2 bg-gradient-to-r from-blue-50 to-white rounded-lg border border-blue-100">
               <div className="flex items-center gap-2 mb-2">
