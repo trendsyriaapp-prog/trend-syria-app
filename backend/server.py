@@ -371,8 +371,9 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
 async def get_products(
     category: Optional[str] = None,
     search: Optional[str] = None,
-    min_price: Optional[float] = None,
-    max_price: Optional[float] = None,
+    price_min: Optional[float] = None,
+    price_max: Optional[float] = None,
+    city: Optional[str] = None,
     page: int = 1,
     limit: int = 20
 ):
@@ -385,13 +386,15 @@ async def get_products(
             {"name": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
-    if min_price is not None:
-        query["price"] = {"$gte": min_price}
-    if max_price is not None:
-        query.setdefault("price", {})["$lte"] = max_price
+    if price_min is not None:
+        query["price"] = {"$gte": price_min}
+    if price_max is not None:
+        query.setdefault("price", {})["$lte"] = price_max
+    if city:
+        query["city"] = city
     
     skip = (page - 1) * limit
-    products = await db.products.find(query, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).skip(skip).limit(limit).to_list(limit)
+    products = await db.products.find(query, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0}).skip(skip).limit(limit).to_list(limit)
     total = await db.products.count_documents(query)
     
     return {"products": products, "total": total, "page": page, "pages": (total + limit - 1) // limit}
@@ -399,7 +402,7 @@ async def get_products(
 @api_router.get("/products/featured")
 async def get_featured_products():
     # فقط المنتجات المعتمدة
-    products = await db.products.find({"is_active": True, "is_approved": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0, "city": 0}).sort("sales_count", -1).limit(8).to_list(8)
+    products = await db.products.find({"is_active": True, "is_approved": True}, {"_id": 0, "seller_name": 0, "seller_phone": 0, "seller_id": 0}).sort("sales_count", -1).limit(8).to_list(8)
     return products
 
 @api_router.get("/products/{product_id}")
