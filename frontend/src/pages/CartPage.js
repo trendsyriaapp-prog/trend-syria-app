@@ -171,9 +171,28 @@ const CartPage = () => {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>التوصيل</span>
-                  <span className="text-green-500 font-bold">مجاني</span>
+                  <span className="text-gray-400">يُحسب عند الدفع</span>
                 </div>
               </div>
+              
+              {/* معلومات الشحن المجاني */}
+              {analysis.isSingleSeller && analysis.remainingForFree > 0 && (
+                <div className="bg-amber-50 rounded-lg p-2 mb-2 text-[10px] text-amber-700">
+                  <div className="flex items-start gap-1">
+                    <Truck size={12} className="flex-shrink-0 mt-0.5" />
+                    <span>أضف {formatPrice(analysis.remainingForFree)} للتوصيل المجاني (نفس المحافظة)</span>
+                  </div>
+                </div>
+              )}
+              
+              {!analysis.isSingleSeller && analysis.sellerCount > 1 && (
+                <div className="bg-gray-100 rounded-lg p-2 mb-2 text-[10px] text-gray-600">
+                  <div className="flex items-start gap-1">
+                    <Info size={12} className="flex-shrink-0 mt-0.5" />
+                    <span>الشحن المجاني متاح فقط عند الشراء من متجر واحد</span>
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-between font-bold text-sm pt-2 border-t border-gray-100">
                 <span className="text-gray-900">الإجمالي</span>
