@@ -931,7 +931,7 @@ const ProductDetailPage = () => {
 
               {!customerCity && (
                 <p className="text-[10px] text-gray-500 mt-1">
-                  اختر محافظتك لمعرفة تكلفة الشحن
+                  اختر محافظتك لمعرفة تكلفة الشحن - <span className="text-green-600 font-medium">توصيل مجاني داخل المحافظات</span>
                 </p>
               )}
             </div>
