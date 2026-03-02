@@ -67,6 +67,20 @@ async def get_admin_stats(user: dict = Depends(get_current_user)):
         "total_sub_admins": total_sub_admins
     }
 
+# ============== Users Management ==============
+
+@router.get("/users")
+async def get_all_users(user: dict = Depends(get_current_user)):
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    users = await db.users.find(
+        {"user_type": "buyer"},
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).to_list(200)
+    
+    return users
+
 # ============== Sellers Management ==============
 
 @router.get("/sellers/pending")

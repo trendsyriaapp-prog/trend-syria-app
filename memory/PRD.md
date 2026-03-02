@@ -68,13 +68,15 @@
 
 ### 10. إعادة هيكلة الكود (مارس 2026)
 - ✅ تقسيم server.py من ~2500 سطر إلى 12 ملف route منفصل
+- ✅ تقسيم AdminPage.js من ~1264 سطر إلى 11 مكون منفصل
 - ✅ هيكل modular قابل للتوسع
 - ✅ فصل Models, Database, Routes
 
 ---
 
-## البنية الحالية للـ Backend
+## البنية الحالية
 
+### Backend
 ```
 /app/backend/
 ├── server.py           # الملف الرئيسي (274 سطر)
@@ -97,6 +99,25 @@
     └── delivery.py     # التوصيل
 ```
 
+### Frontend - Admin Components
+```
+/app/frontend/src/
+├── pages/
+│   └── AdminPage.js        # الملف الرئيسي (420 سطر)
+└── components/admin/
+    ├── UsersTab.js         # جدول المستخدمين
+    ├── SellersTab.js       # جدول البائعين
+    ├── ProductsTab.js      # شبكة المنتجات
+    ├── OrdersTab.js        # قائمة الطلبات
+    ├── PendingProductsTab.js # المنتجات المعلقة
+    ├── PendingSellersTab.js  # البائعين المعلقين
+    ├── DeliveryTab.js      # موظفي التوصيل
+    ├── SubAdminsTab.js     # المدراء التنفيذيين
+    ├── NotificationsTab.js # إدارة الإشعارات
+    ├── CommissionsTab.js   # تقارير العمولات
+    └── OverviewTab.js      # الإحصائيات
+```
+
 ---
 
 ## المهام القادمة (Backlog)
@@ -113,10 +134,7 @@
    - إشعارات فورية بدلاً من polling
 
 ### P2 - أولوية متوسطة
-4. **تقسيم Frontend AdminPage.js**
-   - استخراج ProductsTab, SellersTab, OrdersTab, DeliveryTab
-
-5. **تحسين الأداء**
+4. **تحسين الأداء**
    - Lazy loading للصور
    - Pagination للمنتجات
 
