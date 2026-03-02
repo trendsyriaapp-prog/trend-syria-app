@@ -448,8 +448,8 @@ SHIPPING_COSTS = {
 FREE_SHIPPING_THRESHOLD = 150000  # 150,000 ل.س
 
 # ============== نظام العمولات (مطابق لـ Trendyol) ==============
-# نسبة العمولة على كل عملية بيع حسب فئة المنتج
-CATEGORY_COMMISSIONS = {
+# النسب الافتراضية - سيتم تحميلها من قاعدة البيانات
+DEFAULT_CATEGORY_COMMISSIONS = {
     "إلكترونيات": 0.18,      # 18%
     "أزياء": 0.17,           # 17%
     "ملابس": 0.17,           # 17% (نفس أزياء)
@@ -462,17 +462,24 @@ CATEGORY_COMMISSIONS = {
     "أطفال": 0.15,           # 15%
     "كتب": 0.12,             # 12%
     "ألعاب": 0.14,           # 14%
-    # الفئة الافتراضية لأي فئة غير مدرجة
     "default": 0.15,         # 15%
 }
 
-def get_commission_rate(category: str) -> float:
-    """الحصول على نسبة العمولة حسب فئة المنتج"""
-    return CATEGORY_COMMISSIONS.get(category, CATEGORY_COMMISSIONS["default"])
+async def get_commission_rates_from_db():
+    """جلب نسب العمولات من قاعدة البيانات"""
+    rates = await db.commission_rates.find_one({"id": "main"}, {"_id": 0})
+    if rates and rates.get("categories"):
+        return rates["categories"]
+    return DEFAULT_CATEGORY_COMMISSIONS
 
-def calculate_commission(price: float, category: str) -> dict:
+async def get_commission_rate(category: str) -> float:
+    """الحصول على نسبة العمولة حسب فئة المنتج"""
+    rates = await get_commission_rates_from_db()
+    return rates.get(category, rates.get("default", 0.15))
+
+async def calculate_commission(price: float, category: str) -> dict:
     """حساب العمولة على منتج"""
-    rate = get_commission_rate(category)
+    rate = await get_commission_rate(category)
     commission = price * rate
     seller_amount = price - commission
     return {
