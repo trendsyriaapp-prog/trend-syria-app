@@ -13,9 +13,10 @@ const FreeShippingBanner = () => {
   const { cart } = useCart();
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
-  const [hideSuccess, setHideSuccess] = useState(false);
+  const [hideSuccess, setHideSuccess] = useState(true); // يبدأ مخفي للشريط الأخضر
   const prevSellerCountRef = useRef(1);
   const timerRef = useRef(null);
+  const hasShownSuccessRef = useRef(false);
 
   // تحليل السلة
   const analyzeCart = () => {
@@ -80,12 +81,14 @@ const FreeShippingBanner = () => {
 
   const analysis = analyzeCart();
 
-  // إدارة إخفاء الشريط الأخضر (النجاح) بعد 2 ثانية
+  // إدارة إخفاء الشريط الأخضر (النجاح) - يظهر فقط عند الانتقال للمجاني
   useEffect(() => {
-    // إذا كان الشحن مجاني - ابدأ عداد الإخفاء
-    if (analysis.isSuccess && !hideSuccess) {
+    // إذا كان الشحن مجاني ولم يُعرض من قبل في هذه الجلسة
+    if (analysis.isSuccess && !hasShownSuccessRef.current) {
+      hasShownSuccessRef.current = true;
+      setHideSuccess(false); // أظهر الشريط
       timerRef.current = setTimeout(() => {
-        setHideSuccess(true);
+        setHideSuccess(true); // أخفه بعد 2 ثانية
       }, 2000);
     }
     
@@ -94,7 +97,7 @@ const FreeShippingBanner = () => {
         clearTimeout(timerRef.current);
       }
     };
-  }, [analysis.isSuccess, hideSuccess]);
+  }, [analysis.isSuccess]);
 
   // إذا تغير عدد البائعين (أضاف من متجر آخر) - أظهر الشريط مجدداً
   useEffect(() => {
@@ -104,11 +107,13 @@ const FreeShippingBanner = () => {
     if (currentSellerCount > 1 && prevSellerCountRef.current === 1) {
       setHideSuccess(false);
       setDismissed(false);
+      hasShownSuccessRef.current = false;
     }
     
     // إذا عاد لمتجر واحد ولم يعد مؤهل للمجاني - أعد الإظهار
     if (currentSellerCount === 1 && !analysis.isSuccess) {
       setHideSuccess(false);
+      hasShownSuccessRef.current = false;
     }
     
     prevSellerCountRef.current = currentSellerCount;
