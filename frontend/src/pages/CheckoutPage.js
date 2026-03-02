@@ -51,10 +51,43 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState(null);
   const [otp, setOtp] = useState('');
   const [orderComplete, setOrderComplete] = useState(false);
+  
+  // حالة الشحن
+  const [shippingInfo, setShippingInfo] = useState(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   useEffect(() => {
     if (user) fetchSavedData();
   }, [user]);
+
+  // حساب الشحن عند تغيير العنوان
+  useEffect(() => {
+    const calculateShipping = async () => {
+      let selectedCity = null;
+      
+      if (useNewAddress) {
+        selectedCity = newAddress.city;
+      } else if (selectedAddressId) {
+        const addr = savedAddresses.find(a => a.id === selectedAddressId);
+        selectedCity = addr?.city;
+      }
+      
+      if (selectedCity && cart.items.length > 0) {
+        setShippingLoading(true);
+        try {
+          const res = await axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(selectedCity)}`);
+          setShippingInfo(res.data);
+        } catch (error) {
+          console.error('Error calculating shipping:', error);
+          setShippingInfo(null);
+        } finally {
+          setShippingLoading(false);
+        }
+      }
+    };
+    
+    calculateShipping();
+  }, [selectedAddressId, useNewAddress, newAddress.city, savedAddresses, cart.items]);
 
   const fetchSavedData = async () => {
     try {
