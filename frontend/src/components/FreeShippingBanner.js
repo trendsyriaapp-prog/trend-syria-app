@@ -1,10 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Truck, X, AlertCircle, PartyPopper, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
 const FREE_SHIPPING_THRESHOLD = 150000;
 const STORAGE_KEY = 'freeShippingShownFor';
+
+// الصفحات التي يظهر فيها الشريط (صفحات التسوق فقط)
+const ALLOWED_PATHS = [
+  '/',           // الرئيسية
+  '/products',   // المنتجات
+  '/cart',       // السلة
+  '/checkout',   // الدفع
+];
+
+// التحقق مما إذا كان المسار مسموح
+const isAllowedPath = (pathname) => {
+  // الصفحة الرئيسية
+  if (pathname === '/') return true;
+  
+  // صفحات التسوق الأساسية
+  if (ALLOWED_PATHS.includes(pathname)) return true;
+  
+  // صفحة تفاصيل المنتج (مسار ديناميكي)
+  if (pathname.startsWith('/products/')) return true;
+  
+  return false;
+};
 
 // أنماط الرسوم المتحركة
 const animationStyles = `
@@ -85,12 +108,16 @@ const formatPrice = (price) => {
 const FreeShippingBanner = () => {
   const { cart } = useCart();
   const { user } = useAuth();
+  const location = useLocation();
   const [dismissed, setDismissed] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const timerRef = useRef(null);
   const lastCartStateRef = useRef({ isSuccess: false, sellerId: null });
+
+  // التحقق من المسار الحالي
+  const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
   // الحصول على معرف البائع الحالي
   const getCurrentSellerId = () => {
@@ -249,8 +276,8 @@ const FreeShippingBanner = () => {
     }, 300);
   };
 
-  // لا تظهر إذا لم يسجل دخول أو تم الإغلاق
-  if (!user || dismissed) {
+  // لا تظهر إذا لم يسجل دخول أو تم الإغلاق أو الصفحة غير مسموحة
+  if (!user || dismissed || !shouldShowOnCurrentPage) {
     return null;
   }
   
