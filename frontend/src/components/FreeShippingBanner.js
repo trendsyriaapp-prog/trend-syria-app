@@ -114,7 +114,11 @@ const FreeShippingBanner = () => {
   const [isExiting, setIsExiting] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const timerRef = useRef(null);
-  const lastCartStateRef = useRef({ isSuccess: false, sellerId: null });
+  
+  // تتبع عدد العناصر السابق لاكتشاف الإضافة الفعلية
+  const prevCartCountRef = useRef(0);
+  const prevCartTotalRef = useRef(0);
+  const hasInitializedRef = useRef(false);
 
   // التحقق من المسار الحالي
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
@@ -214,56 +218,75 @@ const FreeShippingBanner = () => {
 
   // إدارة ظهور شريط النجاح
   useEffect(() => {
-    const prevState = lastCartStateRef.current;
     const currentSellerId = analysis.sellerId;
+    const currentTotal = cart.total || 0;
+    const currentCount = cart.items?.length || 0;
+    const alreadyShown = hasShownForSeller(currentSellerId);
     
-    // الشرط: أصبح مؤهل للمجاني الآن، ولم يكن مؤهل سابقاً، ولم يُعرض الشريط لهذا البائع
-    const justQualified = analysis.isSuccess && !prevState.isSuccess;
-    const differentSeller = currentSellerId && currentSellerId !== prevState.sellerId;
-    const notShownBefore = !hasShownForSeller(currentSellerId);
+    // التحميل الأولي - فقط احفظ القيم ولا تفعل شيء
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      prevCartCountRef.current = currentCount;
+      prevCartTotalRef.current = currentTotal;
+      
+      // إذا كانت السلة مؤهلة بالفعل، سجل ذلك
+      if (analysis.isSuccess && currentSellerId) {
+        markShownForSeller(currentSellerId);
+      }
+      return;
+    }
     
-    if (justQualified && notShownBefore) {
+    // اكتشاف إذا تمت إضافة منتج (زيادة في العدد أو المجموع)
+    const itemAdded = currentCount > prevCartCountRef.current || 
+                      currentTotal > prevCartTotalRef.current;
+    
+    // شرط إظهار الشريط: تمت إضافة منتج + أصبح مؤهل للمجاني + لم يُعرض سابقاً
+    const justQualified = analysis.isSuccess && itemAdded && !alreadyShown;
+    
+    if (justQualified) {
       // أظهر الشريط مع رسوم متحركة
       setIsEntering(true);
       setShowSuccessBanner(true);
       markShownForSeller(currentSellerId);
       
-      // أخفه بعد 3 ثوان مع رسوم متحركة للخروج
+      // أخفه بعد 3 ثوان
       timerRef.current = setTimeout(() => {
         setIsExiting(true);
         setTimeout(() => {
           setShowSuccessBanner(false);
           setIsExiting(false);
           setIsEntering(false);
-        }, 300); // انتظر انتهاء رسوم الخروج
+        }, 300);
       }, 3000);
     }
     
-    // إذا تغير البائع وليس مؤهل للمجاني - أعد تعيين الحالة
-    if (differentSeller && !analysis.isSuccess) {
+    // إذا تغير البائع - أعد تعيين الحالة
+    if (currentSellerId && !analysis.isSuccess) {
       setDismissed(false);
-      setIsEntering(true);
-      setTimeout(() => setIsEntering(false), 400);
+      if (itemAdded) {
+        setIsEntering(true);
+        setTimeout(() => setIsEntering(false), 400);
+      }
     }
     
-    // حفظ الحالة الحالية
-    lastCartStateRef.current = { 
-      isSuccess: analysis.isSuccess, 
-      sellerId: currentSellerId 
-    };
+    // حفظ القيم الحالية
+    prevCartCountRef.current = currentCount;
+    prevCartTotalRef.current = currentTotal;
     
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [analysis.isSuccess, analysis.sellerId]);
+  }, [cart.total, cart.items?.length, analysis.isSuccess, analysis.sellerId]);
 
   // مسح التخزين عند إفراغ السلة
   useEffect(() => {
     if (!cart.items || cart.items.length === 0) {
       localStorage.removeItem(STORAGE_KEY);
-      lastCartStateRef.current = { isSuccess: false, sellerId: null };
+      prevCartCountRef.current = 0;
+      prevCartTotalRef.current = 0;
+      hasInitializedRef.current = false;
     }
   }, [cart.items]);
 
