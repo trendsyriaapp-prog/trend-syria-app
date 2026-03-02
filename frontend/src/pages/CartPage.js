@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Truck, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
@@ -13,11 +13,33 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
+const FREE_SHIPPING_THRESHOLD = 150000;
+
 const CartPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cart, updateQuantity, removeFromCart, loading } = useCart();
   const { toast } = useToast();
+  
+  // تحليل السلة لمعرفة حالة الشحن
+  const cartAnalysis = () => {
+    if (!cart.items.length) return { sellerCount: 0, isSingleSeller: false };
+    
+    const sellerIds = new Set();
+    cart.items.forEach(item => {
+      if (item.product?.seller_id) {
+        sellerIds.add(item.product.seller_id);
+      }
+    });
+    
+    return {
+      sellerCount: sellerIds.size,
+      isSingleSeller: sellerIds.size === 1,
+      remainingForFree: Math.max(0, FREE_SHIPPING_THRESHOLD - cart.total)
+    };
+  };
+  
+  const analysis = cartAnalysis();
 
   if (!user) {
     return (
