@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -13,13 +14,14 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-const FREE_SHIPPING_THRESHOLD = 150000;
-
 const CartPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cart, updateQuantity, removeFromCart, loading } = useCart();
+  const { settings } = useSettings();
   const { toast } = useToast();
+  
+  const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
   // تحليل السلة لمعرفة حالة الشحن
   const cartAnalysis = () => {

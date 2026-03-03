@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -28,11 +29,12 @@ import WalletPage from "./pages/WalletPage";
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <BrowserRouter>
-          <div className="App min-h-screen bg-[#050505]">
-            <Header />
+    <SettingsProvider>
+      <AuthProvider>
+        <CartProvider>
+          <BrowserRouter>
+            <div className="App min-h-screen bg-[#050505]">
+              <Header />
             <FreeShippingBanner />
             <main className="pb-16 md:pb-0">
               <Routes>
@@ -76,6 +78,7 @@ function App() {
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>
+  </SettingsProvider>
   );
 }
 

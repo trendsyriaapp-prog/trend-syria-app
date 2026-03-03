@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Settings, Truck, Banknote, Package, Save } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -14,6 +15,7 @@ const formatPrice = (price) => {
 
 const SettingsTab = ({ user }) => {
   const { toast } = useToast();
+  const { refreshSettings } = useSettings();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,6 +104,8 @@ const SettingsTab = ({ user }) => {
       await axios.put(`${API}/api/settings/free-shipping`, null, {
         params: { threshold: freeShipping }
       });
+      // تحديث الإعدادات في كل التطبيق
+      await refreshSettings();
       toast({ title: "تم الحفظ", description: "تم تحديث حد الشحن المجاني" });
     } catch (error) {
       toast({

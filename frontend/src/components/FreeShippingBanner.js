@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Truck, X, AlertCircle, PartyPopper, Sparkles, ShoppingBag } from 'lucide-react';
+import { Truck, X, PartyPopper } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const FREE_SHIPPING_THRESHOLD = 150000;
 
 // الصفحات المسموحة
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
@@ -21,7 +20,10 @@ const formatPrice = (price) => new Intl.NumberFormat('ar-SY').format(price);
 const FreeShippingBanner = () => {
   const { cart } = useCart();
   const { user } = useAuth();
+  const { settings } = useSettings();
   const location = useLocation();
+  
+  const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
   const [dismissed, setDismissed] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
