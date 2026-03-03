@@ -11,22 +11,19 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
 
-  // Fetch cart when user/token changes
   useEffect(() => {
     if (user && token) {
-      loadCart();
+      fetchCart();
     } else {
       setCart({ items: [], total: 0 });
     }
   }, [user, token]);
 
-  const loadCart = async () => {
+  const fetchCart = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/cart`);
-      if (res.data) {
-        setCart(res.data);
-      }
+      setCart(res.data);
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -35,51 +32,32 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (productId, quantity = 1, selectedSize = null) => {
-    if (!token) return false;
     try {
       await axios.post(`${API}/cart/add`, { 
         product_id: productId, 
         quantity,
         selected_size: selectedSize 
       });
-      // Reload cart after adding
-      const res = await axios.get(`${API}/cart`);
-      if (res.data) setCart(res.data);
+      await fetchCart();
       return true;
     } catch (error) {
-      console.error('Error adding to cart:', error);
       throw error;
     }
   };
 
   const updateQuantity = async (productId, quantity) => {
-    if (!token) return;
-    
-    if (quantity < 1) {
-      await removeFromCart(productId);
-      return;
-    }
-    
     try {
-      await axios.put(`${API}/cart/update`, { 
-        product_id: productId, 
-        quantity 
-      });
-      // Reload cart after update
-      const res = await axios.get(`${API}/cart`);
-      if (res.data) setCart(res.data);
+      await axios.put(`${API}/cart/update`, { product_id: productId, quantity });
+      await fetchCart();
     } catch (error) {
       console.error('Error updating cart:', error);
     }
   };
 
   const removeFromCart = async (productId) => {
-    if (!token) return;
     try {
       await axios.delete(`${API}/cart/${productId}`);
-      // Reload cart after remove
-      const res = await axios.get(`${API}/cart`);
-      if (res.data) setCart(res.data);
+      await fetchCart();
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
@@ -89,9 +67,7 @@ export const CartProvider = ({ children }) => {
     setCart({ items: [], total: 0 });
   };
 
-  const fetchCart = loadCart;
-
-  const cartCount = cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+  const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ 
