@@ -890,37 +890,85 @@ const ProductDetailPage = () => {
               </div>
 
               {shippingInfo && (
-                <div 
+                <motion.div 
                   key={shippingInfo._timestamp || 0}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                   className={`p-2 rounded-lg ${
                   shippingInfo.shipping_type === 'free_same_city'
-                    ? 'bg-green-50 border border-green-200' 
-                    : 'bg-orange-50 border border-orange-200'
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' 
+                    : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'
                 }`}>
                   {shippingInfo.shipping_type === 'free_same_city' ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <Check size={12} className="text-white" />
-                      </div>
+                    <motion.div 
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
+                        className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg"
+                      >
+                        <Check size={14} className="text-white" />
+                      </motion.div>
                       <div>
                         <p className="text-green-700 font-bold text-xs">توصيل مجاني! 🎉</p>
                         <p className="text-green-600 text-[10px]">نفس المحافظة + تجاوزت 150,000 ل.س</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ) : shippingInfo.shipping_type === 'same_city_below_threshold' ? (
                     <div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-orange-700 font-bold text-xs">
                             تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
                           </p>
                           <p className="text-orange-600 text-[10px]">نفس المحافظة ({shippingInfo.seller_city})</p>
                         </div>
-                        <Truck size={20} className="text-orange-500" />
+                        <motion.div
+                          animate={{ x: [0, 5, 0] }}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                        >
+                          <Truck size={20} className="text-orange-500" />
+                        </motion.div>
                       </div>
-                      <p className="text-[10px] text-blue-600 mt-1 bg-blue-50 p-1 rounded">
-                        💡 أضف {formatPrice(shippingInfo.remaining_for_free)} للحصول على توصيل مجاني!
-                      </p>
+                      
+                      {/* شريط التقدم المتحرك */}
+                      <div className="mb-2">
+                        <div className="flex justify-between text-[9px] text-gray-500 mb-1">
+                          <span>0</span>
+                          <span className="text-green-600 font-bold">🎁 شحن مجاني</span>
+                          <span>150,000</span>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, ((shippingInfo.free_shipping_threshold - shippingInfo.remaining_for_free) / shippingInfo.free_shipping_threshold) * 100)}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="h-full bg-gradient-to-r from-orange-400 via-amber-400 to-green-500 rounded-full relative"
+                          >
+                            <motion.div
+                              animate={{ opacity: [0.5, 1, 0.5] }}
+                              transition={{ repeat: Infinity, duration: 1 }}
+                              className="absolute inset-0 bg-white/30 rounded-full"
+                            />
+                          </motion.div>
+                        </div>
+                      </div>
+                      
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-blue-50 border border-blue-200 p-1.5 rounded-lg"
+                      >
+                        <p className="text-[10px] text-blue-700 font-medium flex items-center gap-1">
+                          <span className="text-lg">💡</span>
+                          <span>أضف <span className="font-bold text-blue-800">{formatPrice(shippingInfo.remaining_for_free)}</span> فقط للتوصيل المجاني!</span>
+                        </p>
+                      </motion.div>
                     </div>
                   ) : (
                     <div>
@@ -940,7 +988,7 @@ const ProductDetailPage = () => {
                       </p>
                     </div>
                   )}
-                </div>
+                </motion.div>
               )}
 
               {!customerCity && (
