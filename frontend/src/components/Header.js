@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2
+  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -24,6 +24,9 @@ const Header = () => {
   
   // التحقق إذا كنا في صفحة المنتج
   const isProductPage = location.pathname.startsWith('/products/');
+  
+  // التحقق إذا كنا في الصفحة الرئيسية
+  const isHomePage = location.pathname === '/';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -60,18 +63,31 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 py-2">
         {/* الصف الأول: الشعار + البحث + الأيقونات */}
         <div className="flex items-center gap-3">
-          {/* Share/Notifications - على اليسار */}
-          {isProductPage ? (
-            <button 
-              onClick={handleShare}
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
-              data-testid="share-icon"
-            >
-              <Share2 size={22} />
-            </button>
-          ) : (
-            <NotificationsDropdown />
-          )}
+          {/* Share/Notifications + سهم الرجوع - على اليسار */}
+          <div className="flex items-center gap-1">
+            {isProductPage ? (
+              <button 
+                onClick={handleShare}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
+                data-testid="share-icon"
+              >
+                <Share2 size={22} />
+              </button>
+            ) : (
+              <NotificationsDropdown />
+            )}
+            
+            {/* سهم الرجوع - لا يظهر في الصفحة الرئيسية */}
+            {!isHomePage && (
+              <button 
+                onClick={() => navigate(-1)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
+                data-testid="back-btn"
+              >
+                <ArrowRight size={22} />
+              </button>
+            )}
+          </div>
 
           {/* Search Bar - مدمج في الشريط */}
           <form onSubmit={handleSearch} className="flex-1">

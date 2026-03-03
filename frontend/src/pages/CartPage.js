@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Truck, Info } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
@@ -87,15 +87,15 @@ const CartPage = () => {
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-3 py-4">
         {/* Header مع سهم الرجوع */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-base font-bold text-gray-900">سلة التسوق ({cart.items.length})</h1>
           <button
             onClick={() => navigate(-1)}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             data-testid="cart-back-btn"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowRight size={20} className="text-gray-700" />
           </button>
-          <h1 className="text-base font-bold text-gray-900">سلة التسوق ({cart.items.length})</h1>
         </div>
 
         <div className="grid md:grid-cols-3 gap-3">
