@@ -121,31 +121,30 @@ const FreeShippingBanner = () => {
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ y: -100, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
+          exit={{ y: -50, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
+          className="sticky top-[52px] z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md"
         >
-          <div className="max-w-4xl mx-auto px-3 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1">
+          <div className="max-w-4xl mx-auto px-2 py-1">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 flex-1">
                 <motion.div
-                  animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+                  animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5, repeat: 2 }}
                 >
-                  <PartyPopper size={18} />
+                  <PartyPopper size={12} />
                 </motion.div>
-                <Sparkles size={14} className="text-yellow-200" />
-                <span className="text-xs sm:text-sm font-bold">
-                  🎉 مبروك! التوصيل مجاني داخل المحافظة
+                <span className="text-[9px] font-bold">
+                  🎉 مبروك! التوصيل مجاني
                 </span>
               </div>
               <button 
                 onClick={handleDismiss} 
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
               >
-                <X size={14} />
+                <X size={10} />
               </button>
             </div>
           </div>
@@ -159,24 +158,24 @@ const FreeShippingBanner = () => {
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ y: -100, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          className="z-40 bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-lg"
+          exit={{ y: -50, opacity: 0 }}
+          className="sticky top-[52px] z-40 bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-md"
         >
-          <div className="max-w-4xl mx-auto px-3 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1">
-                <AlertCircle size={16} />
-                <span className="text-xs font-medium">
-                  الشحن المجاني متاح فقط عند الشراء من متجر واحد
+          <div className="max-w-4xl mx-auto px-2 py-1">
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1.5 flex-1">
+                <AlertCircle size={12} />
+                <span className="text-[9px] font-medium">
+                  الشحن المجاني متاح فقط من متجر واحد
                 </span>
               </div>
               <button 
                 onClick={handleDismiss} 
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
               >
-                <X size={14} />
+                <X size={10} />
               </button>
             </div>
           </div>
@@ -189,64 +188,42 @@ const FreeShippingBanner = () => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: -100, opacity: 0 }}
+        initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -100, opacity: 0 }}
-        className="z-40 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-lg"
+        exit={{ y: -50, opacity: 0 }}
+        className="sticky top-[52px] z-40 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-md"
       >
-        <div className="max-w-4xl mx-auto px-3 py-2">
-          {/* الصف الأول: الرسالة والإغلاق */}
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <div className="flex items-center gap-2 flex-1">
+        <div className="max-w-4xl mx-auto px-2 py-1">
+          {/* صف واحد مضغوط */}
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 flex-1">
               <motion.div
-                animate={{ x: [0, 5, 0] }}
+                animate={{ x: [0, 3, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
               >
-                <Truck size={16} />
+                <Truck size={12} />
               </motion.div>
-              <div className="flex items-center gap-1">
-                <ShoppingBag size={12} />
-                <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">
-                  {formatPrice(analysis.total)} ل.س
-                </span>
-              </div>
-              <span className="text-xs font-medium">
-                أضف <span className="font-bold">{formatPrice(analysis.remaining)}</span> ل.س للتوصيل المجاني!
+              <span className="text-[9px] font-medium">
+                أضف <span className="font-bold">{formatPrice(analysis.remaining)}</span> ل.س للتوصيل المجاني
               </span>
             </div>
-            <button 
-              onClick={handleDismiss} 
-              className="p-1 hover:bg-white/20 rounded-full transition-colors"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          
-          {/* شريط التقدم */}
-          <div className="relative">
-            <div className="flex justify-between text-[8px] mb-0.5 opacity-80">
-              <span>0</span>
-              <span className="flex items-center gap-0.5">
-                <span>🎁</span>
-                <span>شحن مجاني</span>
-              </span>
-              <span>{formatPrice(FREE_SHIPPING_THRESHOLD)}</span>
-            </div>
-            <div className="h-2 bg-white/30 rounded-full overflow-hidden">
+            
+            {/* شريط التقدم المصغر */}
+            <div className="w-16 h-1.5 bg-white/30 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${analysis.progress}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-white via-yellow-200 to-green-300 rounded-full relative"
-              >
-                {/* تأثير اللمعان */}
-                <motion.div
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                />
-              </motion.div>
+                transition={{ duration: 0.8 }}
+                className="h-full bg-white rounded-full"
+              />
             </div>
+            
+            <button 
+              onClick={handleDismiss} 
+              className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <X size={10} />
+            </button>
           </div>
         </div>
       </motion.div>
