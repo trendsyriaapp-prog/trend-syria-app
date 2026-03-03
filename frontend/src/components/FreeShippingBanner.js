@@ -124,6 +124,7 @@ const FreeShippingBanner = () => {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
+          transition={{ duration: 0.3 }}
           className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
         >
           <div className="max-w-4xl mx-auto px-3 py-2">
