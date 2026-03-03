@@ -86,7 +86,17 @@ const CartPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-3 py-4">
-        <h1 className="text-base font-bold mb-3 text-gray-900">سلة التسوق ({cart.items.length})</h1>
+        {/* Header مع سهم الرجوع */}
+        <div className="flex items-center gap-3 mb-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            data-testid="cart-back-btn"
+          >
+            <ArrowLeft size={20} className="text-gray-700" />
+          </button>
+          <h1 className="text-base font-bold text-gray-900">سلة التسوق ({cart.items.length})</h1>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-3">
           {/* Cart Items */}

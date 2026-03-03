@@ -145,13 +145,32 @@ const FreeShippingBanner = () => {
     const storedCount = getStoredItemCount();
     const currentTotal = cart.total || 0;
     
-    // التهيئة الأولى - فقط احفظ العدد ولا تفعل شيء
+    console.log('FreeShippingBanner Debug:', {
+      storedCount,
+      currentItemCount,
+      currentTotal,
+      currentSellerId,
+      isSuccess: analysis.isSuccess,
+      hasShown: hasShownForSeller(currentSellerId)
+    });
+    
+    // التهيئة الأولى مع منتجات - أظهر الشريط إذا كان مؤهل
     if (storedCount === -1) {
-      saveItemCount(currentItemCount);
-      // سجل البائع كـ "معروض" إذا كان مؤهل
-      if (analysis.isSuccess && currentSellerId) {
+      // إذا كان هناك منتجات ومؤهل للشحن المجاني، أظهر الشريط
+      if (currentItemCount > 0 && currentTotal >= FREE_SHIPPING_THRESHOLD && currentSellerId && !hasShownForSeller(currentSellerId)) {
+        console.log('FreeShippingBanner: Showing success banner on first load');
+        setShowSuccessBanner(true);
         markShownForSeller(currentSellerId);
+        
+        timerRef.current = setTimeout(() => {
+          setIsExiting(true);
+          setTimeout(() => {
+            setShowSuccessBanner(false);
+            setIsExiting(false);
+          }, 300);
+        }, 3000);
       }
+      saveItemCount(currentItemCount);
       return;
     }
 
@@ -168,6 +187,8 @@ const FreeShippingBanner = () => {
       currentTotal >= FREE_SHIPPING_THRESHOLD && 
       currentSellerId !== null && 
       !hasShownForSeller(currentSellerId);
+
+    console.log('FreeShippingBanner shouldShowSuccess:', shouldShowSuccess, { itemsAdded });
 
     if (shouldShowSuccess) {
       setShowSuccessBanner(true);
