@@ -28,7 +28,6 @@ const FreeShippingBanner = () => {
   const [celebrationShown, setCelebrationShown] = useState(false);
   
   const prevTotalRef = useRef(0);
-  const prevSellerCountRef = useRef(1);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
@@ -37,34 +36,24 @@ const FreeShippingBanner = () => {
     if (!cart.items || cart.items.length === 0) {
       return { 
         hasItems: false, 
-        isSingleSeller: false, 
         total: 0, 
         remaining: FREE_SHIPPING_THRESHOLD,
         progress: 0,
-        qualifiesForFree: false,
-        sellerCount: 0
+        qualifiesForFree: false
       };
     }
 
-    const sellerIds = new Set();
-    cart.items.forEach(item => {
-      if (item.product?.seller_id) sellerIds.add(item.product.seller_id);
-    });
-
-    const isSingleSeller = sellerIds.size === 1;
     const cartTotal = cart.total || 0;
     const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
     const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
-    const qualifiesForFree = isSingleSeller && cartTotal >= FREE_SHIPPING_THRESHOLD;
+    const qualifiesForFree = cartTotal >= FREE_SHIPPING_THRESHOLD;
 
     return {
       hasItems: true,
-      isSingleSeller,
       total: cartTotal,
       remaining,
       progress,
-      qualifiesForFree,
-      sellerCount: sellerIds.size
+      qualifiesForFree
     };
   }, [cart.items, cart.total]);
 
@@ -86,16 +75,6 @@ const FreeShippingBanner = () => {
     
     prevTotalRef.current = currentTotal;
   }, [cart.total, analysis.qualifiesForFree, celebrationShown, dismissed]);
-
-  // إعادة إظهار الشريط عند إضافة منتج من بائع مختلف
-  useEffect(() => {
-    // إذا زاد عدد البائعين (أضاف منتج من بائع مختلف)
-    if (analysis.sellerCount > prevSellerCountRef.current) {
-      setDismissed(false);
-      setShowBanner(true);
-    }
-    prevSellerCountRef.current = analysis.sellerCount;
-  }, [analysis.sellerCount]);
 
   // إعادة تعيين عند إفراغ السلة
   useEffect(() => {
@@ -150,37 +129,6 @@ const FreeShippingBanner = () => {
                 </motion.div>
                 <span className="text-[9px] font-bold">
                   🎉 مبروك! التوصيل مجاني
-                </span>
-              </div>
-              <button 
-                onClick={handleDismiss} 
-                className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={10} />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  // تحذير لأكثر من بائع
-  if (analysis.sellerCount > 1) {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          className="sticky top-[52px] z-40 bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-md"
-        >
-          <div className="max-w-4xl mx-auto px-2 py-1">
-            <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-1.5 flex-1">
-                <AlertCircle size={12} />
-                <span className="text-[9px] font-medium">
-                  الشحن المجاني متاح فقط من متجر واحد
                 </span>
               </div>
               <button 
