@@ -23,7 +23,7 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/cart`);
-      setCart(res.data);
+      setCart({...res.data});
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -48,7 +48,9 @@ export const CartProvider = ({ children }) => {
   const updateQuantity = async (productId, quantity) => {
     try {
       await axios.put(`${API}/cart/update`, { product_id: productId, quantity });
-      await fetchCart();
+      // جلب السلة مباشرة وتحديث الـ state
+      const res = await axios.get(`${API}/cart`);
+      setCart({...res.data});
     } catch (error) {
       console.error('Error updating cart:', error);
     }
@@ -57,7 +59,9 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
       await axios.delete(`${API}/cart/${productId}`);
-      await fetchCart();
+      // جلب السلة مباشرة وتحديث الـ state
+      const res = await axios.get(`${API}/cart`);
+      setCart({...res.data});
     } catch (error) {
       console.error('Error removing from cart:', error);
     }

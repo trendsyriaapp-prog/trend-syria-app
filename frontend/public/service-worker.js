@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trend-syria-v1';
+const CACHE_NAME = 'trend-syria-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -25,6 +25,12 @@ self.addEventListener('install', (event) => {
 
 // Fetch event
 self.addEventListener('fetch', (event) => {
+  // تجاهل API requests - لا نخزنها
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
