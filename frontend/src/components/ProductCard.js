@@ -124,10 +124,7 @@ const ProductCard = ({ product, variant = 'default' }) => {
     setAddingToCart(true);
     try {
       await addToCart(product.id);
-      toast({
-        title: "تمت الإضافة",
-        description: `تمت إضافة ${product.name} إلى السلة`
-      });
+      // لا نُظهر إشعار - شريط الشحن العائم سيُظهر التقدم
     } catch (error) {
       toast({
         title: "خطأ",
