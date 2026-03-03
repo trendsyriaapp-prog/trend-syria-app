@@ -412,7 +412,7 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const { toast } = useToast();
 
   const [product, setProduct] = useState(null);
@@ -488,10 +488,11 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     // Calculate shipping when product and customer city are available
+    // Also recalculate when cart total changes (for free shipping threshold)
     if (product && customerCity) {
       calculateShipping();
     }
-  }, [product, customerCity]);
+  }, [product, customerCity, cart.total]);
 
   const fetchCities = async () => {
     try {
