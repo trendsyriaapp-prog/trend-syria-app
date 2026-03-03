@@ -488,11 +488,11 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     // Calculate shipping when product and customer city are available
-    // Also recalculate when cart total changes (for free shipping threshold)
+    // Also recalculate when quantity changes
     if (product && customerCity) {
       calculateShipping();
     }
-  }, [product, customerCity, cart.total]);
+  }, [product, customerCity, quantity]);
 
   const fetchCities = async () => {
     try {
@@ -506,8 +506,12 @@ const ProductDetailPage = () => {
   const calculateShipping = async () => {
     if (!product?.id || !customerCity) return;
     try {
-      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}`);
-      setShippingInfo(res.data);
+      // إرسال سعر المنتج الحالي * الكمية المختارة
+      // هذا يُظهر للمستخدم تكلفة الشحن إذا اشترى هذا المنتج فقط
+      const productTotal = product.price * quantity;
+      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}&order_total=${productTotal}`);
+      // إنشاء object جديد لإجبار React على re-render
+      setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
       console.error('Error calculating shipping:', error);
     }
@@ -641,10 +645,17 @@ const ProductDetailPage = () => {
     setAddingToCart(true);
     try {
       await addToCart(product.id, quantity, selectedSize);
-      toast({
-        title: "تمت الإضافة",
-        description: `تمت إضافة ${quantity} ${product.name}${selectedSize ? ` (${selectedSize})` : ''} إلى السلة`
-      });
+      // تحديث حساب الشحن بعد إضافة المنتج
+      if (customerCity) {
+        // حساب الإجمالي الجديد مباشرة (السلة الحالية + المنتج الجديد)
+        const newTotal = (cart?.total || 0) + (product.price * quantity);
+        try {
+          const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}&order_total=${newTotal}`);
+          setShippingInfo({ ...res.data, _timestamp: Date.now() });
+        } catch (err) {
+          console.error('Error updating shipping:', err);
+        }
+      }
     } catch (error) {
       toast({
         title: "خطأ",
@@ -879,7 +890,9 @@ const ProductDetailPage = () => {
               </div>
 
               {shippingInfo && (
-                <div className={`p-2 rounded-lg ${
+                <div 
+                  key={shippingInfo._timestamp || 0}
+                  className={`p-2 rounded-lg ${
                   shippingInfo.shipping_type === 'free_same_city'
                     ? 'bg-green-50 border border-green-200' 
                     : 'bg-orange-50 border border-orange-200'
