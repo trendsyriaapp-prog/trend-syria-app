@@ -172,12 +172,7 @@ const SettingsPage = () => {
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-xl mx-auto px-3 py-3">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full">
-            <ChevronLeft size={20} className="text-gray-700" />
-          </button>
-          <h1 className="text-sm font-bold text-gray-900">إعدادات الحساب</h1>
-        </div>
+        <h1 className="text-sm font-bold text-gray-900 mb-3">إعدادات الحساب</h1>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-3">

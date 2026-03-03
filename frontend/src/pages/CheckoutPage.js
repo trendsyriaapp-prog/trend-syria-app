@@ -253,12 +253,7 @@ const CheckoutPage = () => {
     <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
       <div className="max-w-lg mx-auto px-3 py-3">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full">
-            <ChevronLeft size={20} className="text-gray-700" />
-          </button>
-          <h1 className="text-sm font-bold text-gray-900">إتمام الطلب</h1>
-        </div>
+        <h1 className="text-sm font-bold text-gray-900 mb-3">إتمام الطلب</h1>
 
         {/* Single Card Container */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

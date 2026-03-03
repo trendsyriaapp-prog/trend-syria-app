@@ -693,26 +693,6 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen pb-32 md:pb-10 bg-gray-50">
-      {/* زر الرجوع */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            data-testid="back-btn"
-          >
-            <ChevronLeft size={24} className="text-gray-700 rotate-180" />
-          </button>
-          <span className="font-bold text-gray-800 truncate flex-1">{product?.name || 'تفاصيل المنتج'}</span>
-          <button
-            onClick={handleShare}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            data-testid="share-btn"
-          >
-            <Share2 size={20} className="text-gray-600" />
-          </button>
-        </div>
-      </div>
       
       <div className="max-w-7xl mx-auto">
 

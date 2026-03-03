@@ -127,15 +127,7 @@ const WalletPage = () => {
       <div className="max-w-lg mx-auto px-4 py-6">
         
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-white rounded-full border border-gray-200 flex items-center justify-center"
-          >
-            <ChevronRight size={20} className="text-gray-600" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-900">المحفظة</h1>
-        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-6">المحفظة</h1>
         
         {/* Balance Card */}
         <motion.div
