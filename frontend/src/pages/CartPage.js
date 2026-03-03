@@ -172,7 +172,11 @@ const CartPage = () => {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>التوصيل</span>
-                  <span className="text-gray-400">يُحسب عند الدفع</span>
+                  {analysis.isSingleSeller && cart.total >= FREE_SHIPPING_THRESHOLD ? (
+                    <span className="text-green-600 font-bold">مجاني ✓</span>
+                  ) : (
+                    <span className="text-gray-400">يُحسب عند الدفع</span>
+                  )}
                 </div>
               </div>
               
