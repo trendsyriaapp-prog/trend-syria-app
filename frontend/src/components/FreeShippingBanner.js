@@ -125,7 +125,7 @@ const FreeShippingBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="sticky top-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
+          className="z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
         >
           <div className="max-w-4xl mx-auto px-3 py-2">
             <div className="flex items-center justify-between gap-2">
@@ -162,7 +162,7 @@ const FreeShippingBanner = () => {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
-          className="sticky top-0 z-50 bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-lg"
+          className="z-40 bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-lg"
         >
           <div className="max-w-4xl mx-auto px-3 py-2">
             <div className="flex items-center justify-between gap-2">
@@ -192,7 +192,7 @@ const FreeShippingBanner = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -100, opacity: 0 }}
-        className="sticky top-0 z-50 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-lg"
+        className="z-40 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-lg"
       >
         <div className="max-w-4xl mx-auto px-3 py-2">
           {/* الصف الأول: الرسالة والإغلاق */}
