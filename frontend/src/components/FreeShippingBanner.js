@@ -28,6 +28,7 @@ const FreeShippingBanner = () => {
   const [celebrationShown, setCelebrationShown] = useState(false);
   
   const prevTotalRef = useRef(0);
+  const prevSellerCountRef = useRef(1);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
@@ -40,7 +41,8 @@ const FreeShippingBanner = () => {
         total: 0, 
         remaining: FREE_SHIPPING_THRESHOLD,
         progress: 0,
-        qualifiesForFree: false
+        qualifiesForFree: false,
+        sellerCount: 0
       };
     }
 
@@ -84,6 +86,16 @@ const FreeShippingBanner = () => {
     
     prevTotalRef.current = currentTotal;
   }, [cart.total, analysis.qualifiesForFree, celebrationShown, dismissed]);
+
+  // إعادة إظهار الشريط عند إضافة منتج من بائع مختلف
+  useEffect(() => {
+    // إذا زاد عدد البائعين (أضاف منتج من بائع مختلف)
+    if (analysis.sellerCount > prevSellerCountRef.current) {
+      setDismissed(false);
+      setShowBanner(true);
+    }
+    prevSellerCountRef.current = analysis.sellerCount;
+  }, [analysis.sellerCount]);
 
   // إعادة تعيين عند إفراغ السلة
   useEffect(() => {
