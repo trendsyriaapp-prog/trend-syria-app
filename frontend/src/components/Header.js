@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight
+  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
+  Clock, Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -16,6 +17,8 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
@@ -28,11 +31,59 @@ const Header = () => {
   // التحقق إذا كنا في الصفحة الرئيسية
   const isHomePage = location.pathname === '/';
 
+  // جلب سجل البحث
+  useEffect(() => {
+    if (user) {
+      fetchSearchHistory();
+    }
+  }, [user]);
+
+  const fetchSearchHistory = async () => {
+    try {
+      const res = await axios.get(`${API}/products/search-history`);
+      setSearchHistory(res.data.searches || []);
+    } catch (error) {
+      console.error('Error fetching search history:', error);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
+      setShowHistory(false);
+      // تحديث السجل بعد البحث
+      setTimeout(() => fetchSearchHistory(), 500);
+    }
+  };
+
+  const handleHistoryClick = (query) => {
+    navigate(`/products?search=${encodeURIComponent(query)}`);
+    setSearchQuery('');
+    setShowHistory(false);
+  };
+
+  const handleDeleteHistory = async (searchId, e) => {
+    e.stopPropagation();
+    try {
+      await axios.delete(`${API}/products/search-history/${searchId}`);
+      setSearchHistory(prev => prev.filter(s => s.id !== searchId));
+    } catch (error) {
+      console.error('Error deleting search:', error);
+    }
+  };
+
+  const handleClearAllHistory = async () => {
+    try {
+      await axios.delete(`${API}/products/search-history`);
+      setSearchHistory([]);
+      toast({
+        title: "تم المسح",
+        description: "تم مسح سجل البحث"
+      });
+    } catch (error) {
+      console.error('Error clearing history:', error);
     }
   };
 
@@ -90,12 +141,14 @@ const Header = () => {
           </div>
 
           {/* Search Bar - مدمج في الشريط */}
-          <form onSubmit={handleSearch} className="flex-1">
+          <form onSubmit={handleSearch} className="flex-1 relative">
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => user && searchHistory.length > 0 && setShowHistory(true)}
+                onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                 placeholder="ابحث عن منتجات..."
                 className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 data-testid="search-input"
@@ -108,6 +161,51 @@ const Header = () => {
                 <Search size={20} />
               </button>
             </div>
+
+            {/* قائمة سجل البحث */}
+            <AnimatePresence>
+              {showHistory && searchHistory.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
+                >
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+                    <span className="text-xs font-bold text-gray-600 flex items-center gap-1">
+                      <Clock size={12} />
+                      عمليات البحث السابقة
+                    </span>
+                    <button
+                      onClick={handleClearAllHistory}
+                      className="text-[10px] text-red-500 hover:text-red-600"
+                    >
+                      مسح الكل
+                    </button>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {searchHistory.slice(0, 10).map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleHistoryClick(item.query)}
+                        className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Search size={14} className="text-gray-400" />
+                          <span className="text-sm text-gray-700">{item.query}</span>
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteHistory(item.id, e)}
+                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded transition-opacity"
+                        >
+                          <X size={14} className="text-red-400" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </form>
 
           {/* Home Button - على اليمين */}

@@ -1,7 +1,7 @@
 # /app/backend/routes/products.py
 # مسارات المنتجات
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Header
+from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
@@ -72,15 +72,37 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
 
 @router.get("")
 async def get_products(
+    request: Request,
     category: Optional[str] = None,
     search: Optional[str] = None,
     price_min: Optional[float] = None,
     price_max: Optional[float] = None,
     city: Optional[str] = None,
-    sort: Optional[str] = None,  # newest, price_low, price_high, popular
+    sort: Optional[str] = None,
     page: int = 1,
-    limit: int = Query(default=12, le=50)  # Max 50 per page
+    limit: int = Query(default=12, le=50)
 ):
+    # تسجيل البحث
+    if search and search.strip():
+        try:
+            user_id = None
+            auth_header = request.headers.get("authorization", "")
+            if auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+                payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+                user_id = payload.get("user_id")
+            
+            if user_id:
+                await db.search_logs.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "query": search.strip(),
+                    "user_id": user_id,
+                    "category": category,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+        except Exception:
+            pass  # لا نوقف البحث إذا فشل التسجيل
+    
     query = {"is_active": True, "is_approved": True}
     if category:
         query["category"] = category
@@ -155,6 +177,32 @@ async def get_featured_products(limit: int = Query(default=8, le=20)):
         projection
     ).sort("sales_count", -1).limit(limit).to_list(limit)
     return products
+
+# ============== سجل البحث ==============
+
+@router.get("/search-history")
+async def get_search_history(user: dict = Depends(get_current_user)):
+    """جلب سجل البحث للمستخدم"""
+    searches = await db.search_logs.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(20).to_list(20)
+    
+    return {"searches": searches}
+
+@router.delete("/search-history/{search_id}")
+async def delete_search_history_item(search_id: str, user: dict = Depends(get_current_user)):
+    """حذف عنصر من سجل البحث"""
+    result = await db.search_logs.delete_one({"id": search_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="لم يتم العثور على العنصر")
+    return {"message": "تم الحذف"}
+
+@router.delete("/search-history")
+async def clear_search_history(user: dict = Depends(get_current_user)):
+    """مسح كل سجل البحث"""
+    await db.search_logs.delete_many({"user_id": user["id"]})
+    return {"message": "تم مسح سجل البحث"}
 
 @router.get("/{product_id}")
 async def get_product(product_id: str, authorization: Optional[str] = Header(default=None)):
