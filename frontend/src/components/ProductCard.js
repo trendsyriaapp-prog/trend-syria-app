@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, Heart, Play, Flame, Sparkles, ShoppingCart } from 'lucide-react';
+import { Star, Heart, Play, Flame, Sparkles, ShoppingCart, Truck } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
+import { useSettings } from '../context/SettingsContext';
 import LazyImage from './LazyImage';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -18,10 +19,15 @@ const ProductCard = ({ product, variant = 'default' }) => {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { settings } = useSettings();
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+
+  // حد الشحن المجاني
+  const freeShippingThreshold = settings?.free_shipping_threshold || 150000;
+  const hasFreeShipping = product.price >= freeShippingThreshold;
 
   useEffect(() => {
     if (user && token) {
@@ -275,6 +281,12 @@ const ProductCard = ({ product, variant = 'default' }) => {
               {product.original_price && product.original_price > product.price && (
                 <span className="text-gray-400 text-[10px] line-through">
                   {formatPrice(product.original_price)}
+                </span>
+              )}
+              {hasFreeShipping && (
+                <span className="text-green-600 text-[10px] font-bold flex items-center gap-0.5 mt-0.5">
+                  <Truck size={10} />
+                  شحن مجاني
                 </span>
               )}
             </div>
