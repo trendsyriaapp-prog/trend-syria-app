@@ -898,7 +898,7 @@ const ProductDetailPage = () => {
                     </p>
                   )}
                   <p className="text-[10px] text-green-600 mt-1">
-                    🎁 شحن مجاني للطلبات من متجر واحد بنفس المحافظة أكثر من {formatPrice(shippingInfo?.free_shipping_threshold || 150000)}
+                    🎁 شحن مجاني للطلبات من متجر واحد داخل المحافظة أكثر من {formatPrice(shippingInfo?.free_shipping_threshold || 150000)}
                   </p>
                 </div>
               )}
@@ -1009,7 +1009,7 @@ const ProductDetailPage = () => {
                       <div className="mt-2 pt-2 border-t border-amber-200">
                         <p className="text-[10px] text-gray-600 flex items-center gap-1">
                           <span className="text-green-500">🎁</span>
-                          <span>الشحن مجاني عند الشراء من متجر واحد بنفس المحافظة أكثر من <span className="font-bold text-green-600">{formatPrice(shippingInfo.free_shipping_threshold)}</span></span>
+                          <span>الشحن مجاني عند الشراء من متجر واحد داخل المحافظة أكثر من <span className="font-bold text-green-600">{formatPrice(shippingInfo.free_shipping_threshold)}</span></span>
                         </p>
                       </div>
                     </div>
