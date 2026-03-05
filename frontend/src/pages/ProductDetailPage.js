@@ -442,8 +442,8 @@ const ProductDetailPage = () => {
   
   // Shipping state
   const [shippingInfo, setShippingInfo] = useState(null);
-  const [customerCity, setCustomerCity] = useState('');
-  const [cities, setCities] = useState([]);
+  const [customerAddress, setCustomerAddress] = useState(null);
+  const [loadingAddress, setLoadingAddress] = useState(true);
 
   // الحد الأدنى للسحب للتنقل بين الصور
   const minSwipeDistance = 50;
@@ -476,41 +476,43 @@ const ProductDetailPage = () => {
   useEffect(() => {
     fetchProduct();
     fetchSimilarProducts();
-    fetchCities();
   }, [id]);
 
   useEffect(() => {
-    // Get user's city from localStorage or user profile
-    if (user?.city) {
-      setCustomerCity(user.city);
+    // Fetch user's saved address
+    if (user) {
+      fetchUserAddress();
+    } else {
+      setLoadingAddress(false);
     }
   }, [user]);
 
   useEffect(() => {
-    // Calculate shipping when product and customer city are available
-    // Also recalculate when quantity changes
-    if (product && customerCity) {
+    // Calculate shipping when product and customer address are available
+    if (product && customerAddress?.city) {
       calculateShipping();
     }
-  }, [product, customerCity, quantity]);
+  }, [product, customerAddress, quantity]);
 
-  const fetchCities = async () => {
+  const fetchUserAddress = async () => {
     try {
-      const res = await axios.get(`${API}/shipping/cities`);
-      setCities(res.data);
+      const res = await axios.get(`${API}/user/addresses`);
+      // Get the default address or the first one
+      const addresses = res.data;
+      const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+      setCustomerAddress(defaultAddr || null);
     } catch (error) {
-      console.error('Error fetching cities:', error);
+      console.error('Error fetching address:', error);
+    } finally {
+      setLoadingAddress(false);
     }
   };
 
   const calculateShipping = async () => {
-    if (!product?.id || !customerCity) return;
+    if (!product?.id || !customerAddress?.city) return;
     try {
-      // إرسال سعر المنتج الحالي * الكمية المختارة
-      // هذا يُظهر للمستخدم تكلفة الشحن إذا اشترى هذا المنتج فقط
       const productTotal = product.price * quantity;
-      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}&order_total=${productTotal}`);
-      // إنشاء object جديد لإجبار React على re-render
+      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${productTotal}`);
       setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -875,58 +877,72 @@ const ProductDetailPage = () => {
                 <h4 className="font-bold text-gray-900 text-[11px]">تكلفة الشحن</h4>
               </div>
               
-              <div className="flex items-center gap-2 mb-2">
-                <select
-                  value={customerCity}
-                  onChange={(e) => setCustomerCity(e.target.value)}
-                  className="flex-1 text-xs p-2 border border-gray-200 rounded-lg focus:border-[#FF6B00] focus:outline-none"
-                  data-testid="shipping-city-select"
-                >
-                  <option value="">اختر محافظتك</option>
-                  {cities.map((city) => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
-
-              {shippingInfo && (
+              {/* Loading Address */}
+              {loadingAddress && (
+                <div className="flex items-center gap-2 text-gray-500 text-xs py-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>جاري تحميل عنوانك...</span>
+                </div>
+              )}
+              
+              {/* No User or No Address */}
+              {!loadingAddress && (!user || !customerAddress) && (
+                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                  {!user ? (
+                    <p className="text-[10px] text-gray-600">
+                      <Link to="/login" className="text-[#FF6B00] font-bold hover:underline">سجل دخولك</Link> لمعرفة تكلفة الشحن
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-gray-600">
+                      <Link to="/settings" className="text-[#FF6B00] font-bold hover:underline">أضف عنوانك</Link> لمعرفة تكلفة الشحن
+                    </p>
+                  )}
+                  <p className="text-[10px] text-green-600 mt-1">
+                    🎁 شحن مجاني للطلبات من متجر واحد بنفس المحافظة أكثر من {formatPrice(shippingInfo?.free_shipping_threshold || 150000)}
+                  </p>
+                </div>
+              )}
+              
+              {/* Has Address - Show Shipping Info */}
+              {!loadingAddress && customerAddress && shippingInfo && (
                 <motion.div 
                   key={shippingInfo._timestamp || 0}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`p-2 rounded-lg ${
-                  shippingInfo.shipping_type === 'free_same_city'
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' 
-                    : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'
-                }`}>
+                >
+                  {/* Same City - Free or Progress */}
                   {shippingInfo.shipping_type === 'free_same_city' ? (
-                    <motion.div 
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      className="flex items-center gap-2"
-                    >
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
                       <motion.div 
-                        initial={{ scale: 0 }}
+                        initial={{ scale: 0.9 }}
                         animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
-                        className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg"
+                        className="flex items-center gap-2"
                       >
-                        <Check size={14} className="text-white" />
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
+                          className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg"
+                        >
+                          <Check size={14} className="text-white" />
+                        </motion.div>
+                        <div>
+                          <p className="text-green-700 font-bold text-xs">توصيل مجاني! 🎉</p>
+                          <p className="text-green-600 text-[10px]">عنوانك: {customerAddress.city} • المتجر: {shippingInfo.seller_city}</p>
+                        </div>
                       </motion.div>
-                      <div>
-                        <p className="text-green-700 font-bold text-xs">توصيل مجاني! 🎉</p>
-                        <p className="text-green-600 text-[10px]">نفس المحافظة + تجاوزت 150,000 ل.س</p>
-                      </div>
-                    </motion.div>
+                    </div>
                   ) : shippingInfo.shipping_type === 'same_city_below_threshold' ? (
-                    <div>
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200">
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-orange-700 font-bold text-xs">
                             تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
                           </p>
-                          <p className="text-orange-600 text-[10px]">نفس المحافظة ({shippingInfo.seller_city})</p>
+                          <p className="text-orange-600 text-[10px]">
+                            عنوانك: {customerAddress.city} • نفس محافظة المتجر ✓
+                          </p>
                         </div>
                         <motion.div
                           animate={{ x: [0, 5, 0] }}
@@ -941,7 +957,7 @@ const ProductDetailPage = () => {
                         <div className="flex justify-between text-[9px] text-gray-500 mb-1">
                           <span>0</span>
                           <span className="text-green-600 font-bold">🎁 شحن مجاني</span>
-                          <span>150,000</span>
+                          <span>{formatPrice(shippingInfo.free_shipping_threshold)}</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                           <motion.div
@@ -971,30 +987,34 @@ const ProductDetailPage = () => {
                       </motion.div>
                     </div>
                   ) : (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-700 font-bold text-xs">
+                    /* Different City - Show Alert */
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+                      <div className="flex items-start gap-2">
+                        <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Truck size={16} className="text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-amber-800 font-bold text-xs mb-1">
+                            المتجر من محافظة أخرى
+                          </p>
+                          <p className="text-amber-700 text-[10px] mb-1">
+                            عنوانك: <span className="font-bold">{customerAddress.city}</span> • المتجر: <span className="font-bold">{shippingInfo.seller_city}</span>
+                          </p>
+                          <p className="text-amber-700 text-xs font-bold">
                             تكلفة الشحن: {formatPrice(shippingInfo.shipping_cost)}
                           </p>
-                          <p className="text-orange-600 text-[10px]">
-                            من {shippingInfo.seller_city} إلى {shippingInfo.customer_city}
-                          </p>
                         </div>
-                        <Truck size={20} className="text-orange-500" />
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-1">
-                        ⚠️ التوصيل المجاني متاح فقط داخل نفس المحافظة
-                      </p>
+                      
+                      <div className="mt-2 pt-2 border-t border-amber-200">
+                        <p className="text-[10px] text-gray-600 flex items-center gap-1">
+                          <span className="text-green-500">🎁</span>
+                          <span>الشحن مجاني عند الشراء من متجر واحد بنفس المحافظة أكثر من <span className="font-bold text-green-600">{formatPrice(shippingInfo.free_shipping_threshold)}</span></span>
+                        </p>
+                      </div>
                     </div>
                   )}
                 </motion.div>
-              )}
-
-              {!customerCity && (
-                <p className="text-[10px] text-gray-500 mt-1">
-                  اختر محافظتك لمعرفة تكلفة الشحن - <span className="text-green-600 font-medium">توصيل مجاني للطلبات فوق 150,000 ل.س</span>
-                </p>
               )}
             </div>
 
