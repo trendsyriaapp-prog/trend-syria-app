@@ -8,6 +8,7 @@ import uuid
 
 from core.database import db, get_current_user, create_notification_for_user, create_notification_for_role
 from models.schemas import OrderCreate, CartItem, ShamCashPayment
+from routes.loyalty import add_loyalty_points
 
 router = APIRouter(tags=["Orders"])
 
@@ -239,7 +240,19 @@ async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends
             {"id": payment.order_id},
             {"$set": {"status": "paid", "payment_verified_at": datetime.now(timezone.utc).isoformat()}}
         )
-        return {"success": True, "message": "تم الدفع بنجاح"}
+        
+        # إضافة نقاط الولاء للعميل
+        points_earned = await add_loyalty_points(
+            user_id=order["user_id"],
+            order_total=order["total"],
+            order_id=payment.order_id
+        )
+        
+        return {
+            "success": True, 
+            "message": "تم الدفع بنجاح",
+            "loyalty_points_earned": points_earned
+        }
     else:
         raise HTTPException(status_code=400, detail="رمز التحقق غير صحيح")
 

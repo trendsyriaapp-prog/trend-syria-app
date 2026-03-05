@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
-  ChevronLeft, User, Phone, Building, Home
+  ChevronLeft, User, Phone, Building, Home, Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import LoyaltyCard from '../components/LoyaltyCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -28,7 +29,7 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('addresses');
+  const [activeTab, setActiveTab] = useState('loyalty');
   const [addresses, setAddresses] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -175,26 +176,42 @@ const SettingsPage = () => {
         <h1 className="text-sm font-bold text-gray-900 mb-3">إعدادات الحساب</h1>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-1 mb-3 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('loyalty')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'loyalty' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            <Award size={12} />
+            نقاط الولاء
+          </button>
           <button
             onClick={() => setActiveTab('addresses')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-xs transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
               activeTab === 'addresses' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
             }`}
           >
-            <MapPin size={14} />
+            <MapPin size={12} />
             العناوين
           </button>
           <button
             onClick={() => setActiveTab('payments')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-bold text-xs transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
               activeTab === 'payments' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
             }`}
           >
-            <CreditCard size={14} />
+            <CreditCard size={12} />
             طرق الدفع
           </button>
         </div>
+
+        {/* Loyalty Tab */}
+        {activeTab === 'loyalty' && (
+          <section data-testid="loyalty-tab">
+            <LoyaltyCard />
+          </section>
+        )}
 
         {/* Addresses Tab */}
         {activeTab === 'addresses' && (
