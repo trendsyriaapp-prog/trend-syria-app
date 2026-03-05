@@ -45,16 +45,6 @@ class AdResponse(BaseModel):
     clicks: int
     created_at: datetime
 
-# دالة مساعدة للحصول على قاعدة البيانات
-async def get_database():
-    from ..database import get_database as get_db
-    return await get_db()
-
-# دالة مساعدة للحصول على المستخدم الحالي
-async def get_current_user():
-    from ..auth import get_current_user as get_user
-    return await get_user()
-
 # حساب تكلفة الإعلان
 def calculate_ad_cost(ad_type: str, duration: str, prices: dict) -> float:
     key = f"{ad_type}_{duration}"
@@ -62,7 +52,7 @@ def calculate_ad_cost(ad_type: str, duration: str, prices: dict) -> float:
 
 # الحصول على أسعار الإعلانات
 @router.get("/prices")
-async def get_ad_prices(db = Depends(get_database)):
+async def get_ad_prices():
     """الحصول على أسعار الإعلانات"""
     settings = await db.settings.find_one({"type": "ad_settings"})
     if settings and "prices" in settings:
@@ -73,7 +63,6 @@ async def get_ad_prices(db = Depends(get_database)):
 @router.post("/create")
 async def create_ad(
     data: CreateAdRequest,
-    db = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """إنشاء إعلان جديد للمنتج"""
@@ -168,7 +157,6 @@ async def create_ad(
 # الحصول على إعلانات البائع
 @router.get("/my-ads")
 async def get_my_ads(
-    db = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """الحصول على إعلانات البائع"""
@@ -209,8 +197,7 @@ async def get_my_ads(
 # الحصول على المنتجات المميزة (للعرض في الصفحة الرئيسية)
 @router.get("/featured-products")
 async def get_featured_products(
-    limit: int = 10,
-    db = Depends(get_database)
+    limit: int = 10
 ):
     """الحصول على المنتجات المميزة النشطة"""
     
@@ -262,8 +249,7 @@ async def get_featured_products(
 # الحصول على البانرات النشطة
 @router.get("/banners")
 async def get_active_banners(
-    limit: int = 5,
-    db = Depends(get_database)
+    limit: int = 5
 ):
     """الحصول على البانرات الإعلانية النشطة"""
     
@@ -308,8 +294,7 @@ async def get_active_banners(
 # تسجيل نقرة على الإعلان
 @router.post("/click/{ad_id}")
 async def record_ad_click(
-    ad_id: str,
-    db = Depends(get_database)
+    ad_id: str
 ):
     """تسجيل نقرة على الإعلان"""
     
@@ -326,7 +311,6 @@ async def record_ad_click(
 @router.get("/admin/all")
 async def get_all_ads_admin(
     status: Optional[str] = None,
-    db = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """الحصول على جميع الإعلانات (للمدير)"""
@@ -338,7 +322,7 @@ async def get_all_ads_admin(
     if status:
         query["status"] = status
     
-    ads = await db.ads.find(query).sort("created_at", -1).to_list(length=500)
+    ads = await db.ads.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=500)
     
     # تحديث الإعلانات المنتهية
     now = datetime.utcnow()
@@ -356,7 +340,6 @@ async def get_all_ads_admin(
 @router.put("/admin/prices")
 async def update_ad_prices(
     prices: dict,
-    db = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """تحديث أسعار الإعلانات (للمدير)"""
@@ -375,7 +358,6 @@ async def update_ad_prices(
 # إحصائيات الإعلانات (للمدير)
 @router.get("/admin/stats")
 async def get_ads_stats(
-    db = Depends(get_database),
     current_user: dict = Depends(get_current_user)
 ):
     """إحصائيات الإعلانات (للمدير)"""

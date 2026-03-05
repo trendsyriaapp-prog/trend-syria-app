@@ -5,10 +5,12 @@ import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Edit, Trash2, Loader2,
-  AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle
+  AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle,
+  Megaphone, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import SellerAdsTab from '../components/seller/SellerAdsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -552,12 +554,24 @@ const SellerDashboardPage = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [imageWarnings, setImageWarnings] = useState([]);
+  const [activeTab, setActiveTab] = useState('products'); // products, ads
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
       fetchData();
+      fetchWallet();
     }
   }, [user]);
+
+  const fetchWallet = async () => {
+    try {
+      const res = await axios.get(`${API}/wallet/balance`);
+      setWalletBalance(res.data.balance || 0);
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -774,16 +788,54 @@ const SellerDashboardPage = () => {
       <div className="max-w-4xl mx-auto px-3 py-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-sm font-bold text-gray-900">لوحة تحكم البائع</h1>
+          {activeTab === 'products' && (
+            <button
+              onClick={() => setShowAddProduct(true)}
+              className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
+              data-testid="add-product-btn"
+            >
+              <Plus size={14} />
+              إضافة منتج
+            </button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-4 bg-white rounded-xl p-1 border border-gray-200">
           <button
-            onClick={() => setShowAddProduct(true)}
-            className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
-            data-testid="add-product-btn"
+            onClick={() => setActiveTab('products')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'products' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            data-testid="tab-products"
           >
-            <Plus size={14} />
-            إضافة منتج
+            <Package size={14} />
+            منتجاتي
+          </button>
+          <button
+            onClick={() => setActiveTab('ads')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'ads' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            data-testid="tab-ads"
+          >
+            <Megaphone size={14} />
+            الإعلانات
           </button>
         </div>
 
+        {/* Ads Tab */}
+        {activeTab === 'ads' && (
+          <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
+        )}
+
+        {/* Products Tab */}
+        {activeTab === 'products' && (
+          <>
         {/* Stats */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[
@@ -895,6 +947,8 @@ const SellerDashboardPage = () => {
             </div>
           )}
         </section>
+          </>
+        )}
       </div>
 
       {/* Add Product Modal */}

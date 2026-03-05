@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
-  ChevronRight, Truck, DollarSign, ShieldCheck
+  ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -25,6 +25,7 @@ import NotificationsTab from '../components/admin/NotificationsTab';
 import CommissionsTab from '../components/admin/CommissionsTab';
 import WithdrawalsTab from '../components/admin/WithdrawalsTab';
 import SettingsTab from '../components/admin/SettingsTab';
+import AdsTab from '../components/admin/AdsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -266,7 +267,8 @@ const AdminDashboardPage = () => {
     'sub-admins': 'المدراء التنفيذيين',
     'commissions': 'العمولات',
     'withdrawals': 'طلبات السحب',
-    'settings': 'إعدادات المنصة'
+    'settings': 'إعدادات المنصة',
+    'ads': 'إدارة الإعلانات'
   };
 
   return (
@@ -347,6 +349,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'settings' && user.user_type === 'admin' && (
               <SettingsTab user={user} />
+            )}
+            {activeTab === 'ads' && user.user_type === 'admin' && (
+              <AdsTab user={user} />
             )}
           </>
         ) : (
@@ -430,12 +435,22 @@ const AdminDashboardPage = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab('settings')}
-                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all flex items-center gap-2.5 col-span-2"
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all flex items-center gap-2.5"
                   >
                     <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
                       <Package size={16} className="text-purple-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">إعدادات المنصة</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('ads')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="ads-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                      <Megaphone size={16} className="text-orange-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">إدارة الإعلانات</span>
                   </button>
                 </>
               )}

@@ -9,6 +9,7 @@ import {
   Package, Clock, Star
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import FeaturedProducts from '../components/FeaturedProducts';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -148,6 +149,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Products - Sponsored */}
+      <FeaturedProducts />
 
       {/* Featured Products */}
       <section className="py-2">
