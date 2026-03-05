@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
-  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check
+  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -412,7 +412,7 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart, cart } = useCart();
+  const { addToCart, cart, cartCount } = useCart();
   const { toast } = useToast();
 
   const [product, setProduct] = useState(null);
@@ -1286,6 +1286,20 @@ const ProductDetailPage = () => {
       {/* الشريط السفلي الثابت - السعر والأزرار */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
         <div className="flex items-center gap-2 p-3">
+          {/* أيقونة السلة للانتقال المباشر */}
+          <button
+            onClick={() => navigate('/cart')}
+            className="relative w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            data-testid="go-to-cart-btn"
+          >
+            <ShoppingBag size={20} className="text-gray-600" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
+          </button>
+
           {/* السعر والكمية */}
           <div className="flex-1">
             <p className="text-lg font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
