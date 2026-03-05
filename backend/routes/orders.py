@@ -338,12 +338,15 @@ async def get_order_tracking(order_id: str, user: dict = Depends(get_current_use
     if order.get("delivery_driver_id") and (is_customer or is_seller or is_admin):
         driver = await db.users.find_one({"id": order["delivery_driver_id"]}, {"_id": 0, "password": 0})
         if driver:
-            tracking_info["delivery_driver"] = {
+            driver_info = {
                 "id": driver["id"],
                 "name": driver.get("full_name", driver.get("name", "")),
-                "phone": driver.get("phone", ""),
                 "photo": driver.get("photo", "")
             }
+            # رقم الهاتف يظهر فقط للبائع والأدمن، ليس للعميل
+            if is_seller or is_admin:
+                driver_info["phone"] = driver.get("phone", "")
+            tracking_info["delivery_driver"] = driver_info
     
     # معلومات البائع (لموظف التوصيل)
     if is_delivery:

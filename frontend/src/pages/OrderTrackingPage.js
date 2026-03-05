@@ -231,25 +231,11 @@ const OrderTrackingPage = () => {
                 )}
               </div>
               
-              {/* معلومات الموظف */}
+              {/* معلومات الموظف - الاسم فقط للعميل */}
               <div className="flex-1">
                 <p className="font-bold text-gray-900">{tracking.delivery_driver.name}</p>
-                <a 
-                  href={`tel:${tracking.delivery_driver.phone}`}
-                  className="flex items-center gap-1 text-[#FF6B00] text-sm mt-1"
-                >
-                  <Phone size={14} />
-                  {tracking.delivery_driver.phone}
-                </a>
+                <p className="text-sm text-gray-500 mt-1">موظف التوصيل المسؤول عن طلبك</p>
               </div>
-              
-              {/* زر الاتصال */}
-              <a
-                href={`tel:${tracking.delivery_driver.phone}`}
-                className="w-12 h-12 bg-[#FF6B00] text-white rounded-full flex items-center justify-center"
-              >
-                <Phone size={20} />
-              </a>
             </div>
           </motion.div>
         )}
