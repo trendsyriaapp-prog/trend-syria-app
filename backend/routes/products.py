@@ -33,6 +33,9 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
     seller_docs = await db.seller_documents.find_one({"seller_id": user["id"]})
     business_name = seller_docs.get("business_name", user["name"]) if seller_docs else user["name"]
     
+    # أخذ المدينة من بيانات البائع إذا لم تُحدد
+    seller_city = product.city if product.city else user.get("city", "دمشق")
+    
     product_id = str(uuid.uuid4())
     product_doc = {
         "id": product_id,
@@ -48,7 +51,7 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "images": product.images,
         "video": product.video,
         "video_url": product.video_url,
-        "city": product.city,
+        "city": seller_city,
         "length_cm": product.length_cm,
         "width_cm": product.width_cm,
         "height_cm": product.height_cm,

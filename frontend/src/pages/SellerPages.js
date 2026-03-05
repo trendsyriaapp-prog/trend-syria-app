@@ -536,7 +536,6 @@ const SellerDashboardPage = () => {
     stock: '',
     images: [],
     video: null,
-    city: '',
     length_cm: '',
     width_cm: '',
     height_cm: '',
@@ -723,7 +722,6 @@ const SellerDashboardPage = () => {
         stock: '',
         images: [],
         video: null,
-        city: '',
         length_cm: '',
         width_cm: '',
         height_cm: '',
@@ -1117,21 +1115,6 @@ const SellerDashboardPage = () => {
                   >
                     {CATEGORIES.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">المدينة</label>
-                  <select
-                    value={newProduct.city}
-                    onChange={(e) => setNewProduct({ ...newProduct, city: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    required
-                    data-testid="product-city-select"
-                  >
-                    <option value="">اختر المدينة</option>
-                    {SYRIAN_CITIES.map(city => (
-                      <option key={city} value={city}>{city}</option>
                     ))}
                   </select>
                 </div>
