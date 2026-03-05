@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
+import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -22,6 +23,19 @@ const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const { restoreScrollPosition } = useScroll();
+
+  // استعادة موقع التمرير عند العودة للصفحة بعد تحميل البيانات
+  useEffect(() => {
+    if (!loading) {
+      // تأخير لضمان تحميل المحتوى بالكامل
+      const timer = setTimeout(() => {
+        restoreScrollPosition(location.pathname);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, location.pathname, restoreScrollPosition]);
 
   useEffect(() => {
     fetchData();

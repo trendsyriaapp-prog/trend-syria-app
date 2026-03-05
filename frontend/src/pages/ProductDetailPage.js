@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
+import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -411,9 +412,18 @@ const SizeGuideModal = ({ isOpen, onClose, sizeType }) => {
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { addToCart, cart, cartCount } = useCart();
   const { toast } = useToast();
+  const { saveScrollPosition } = useScroll();
+
+  // حفظ موقع التمرير في الصفحة السابقة قبل الدخول لهذه الصفحة
+  useEffect(() => {
+    // عند الدخول لصفحة المنتج، سيتم حفظ موقع الصفحة السابقة تلقائياً من HomePage
+    // عند مغادرة هذه الصفحة، نبدأ من الأعلى
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);

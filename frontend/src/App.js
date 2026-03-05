@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { ScrollProvider } from "./context/ScrollContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -33,6 +34,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
+            <ScrollProvider>
             <div className="App min-h-screen bg-[#050505]">
               <Header />
             <FreeShippingBanner />
@@ -75,6 +77,7 @@ function App() {
             <MobileNav />
             <Toaster />
           </div>
+          </ScrollProvider>
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>

@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const { restoreScrollPosition } = useScroll();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
@@ -25,6 +28,16 @@ const ProductsPage = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+
+  // استعادة موقع التمرير بعد تحميل البيانات
+  useEffect(() => {
+    if (!loading && products.length > 0) {
+      const timer = setTimeout(() => {
+        restoreScrollPosition(location.pathname + location.search);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, products.length]);
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
