@@ -402,3 +402,111 @@ async def get_ads_stats(
         "total_views": total_views,
         "total_clicks": total_clicks
     }
+
+
+
+# === تقارير أداء الإعلانات للبائع ===
+
+@router.get("/my-analytics")
+async def get_seller_ad_analytics(
+    current_user: dict = Depends(get_current_user)
+):
+    """تقارير أداء إعلانات البائع"""
+    
+    if current_user.get("user_type") != "seller":
+        raise HTTPException(status_code=403, detail="فقط البائعين")
+    
+    seller_id = current_user.get("id")
+    
+    # جلب جميع إعلانات البائع
+    ads = await db.ads.find(
+        {"seller_id": seller_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(length=100)
+    
+    # إحصائيات عامة
+    total_ads = len(ads)
+    active_ads = len([a for a in ads if a.get("status") == "active"])
+    total_spent = sum(a.get("cost", 0) for a in ads)
+    total_views = sum(a.get("views", 0) for a in ads)
+    total_clicks = sum(a.get("clicks", 0) for a in ads)
+    
+    # معدل التحويل (CTR)
+    ctr = (total_clicks / total_views * 100) if total_views > 0 else 0
+    
+    # أداء حسب نوع الإعلان
+    performance_by_type = {}
+    for ad in ads:
+        ad_type = ad.get("ad_type", "unknown")
+        if ad_type not in performance_by_type:
+            performance_by_type[ad_type] = {
+                "count": 0,
+                "views": 0,
+                "clicks": 0,
+                "spent": 0
+            }
+        performance_by_type[ad_type]["count"] += 1
+        performance_by_type[ad_type]["views"] += ad.get("views", 0)
+        performance_by_type[ad_type]["clicks"] += ad.get("clicks", 0)
+        performance_by_type[ad_type]["spent"] += ad.get("cost", 0)
+    
+    # تحويل لقائمة للرسم البياني
+    type_labels = {
+        "featured_product": "منتج مميز",
+        "banner": "بانر",
+        "search_top": "أول البحث"
+    }
+    
+    type_chart_data = []
+    for ad_type, data in performance_by_type.items():
+        type_ctr = (data["clicks"] / data["views"] * 100) if data["views"] > 0 else 0
+        type_chart_data.append({
+            "name": type_labels.get(ad_type, ad_type),
+            "type": ad_type,
+            "views": data["views"],
+            "clicks": data["clicks"],
+            "spent": data["spent"],
+            "ctr": round(type_ctr, 2),
+            "count": data["count"]
+        })
+    
+    # أداء آخر 7 إعلانات (للرسم البياني)
+    recent_ads_data = []
+    for ad in ads[:7]:
+        ad_ctr = (ad.get("clicks", 0) / ad.get("views", 1) * 100) if ad.get("views", 0) > 0 else 0
+        recent_ads_data.append({
+            "name": ad.get("product_name", "")[:15] + "...",
+            "views": ad.get("views", 0),
+            "clicks": ad.get("clicks", 0),
+            "ctr": round(ad_ctr, 2),
+            "cost": ad.get("cost", 0),
+            "status": ad.get("status", "unknown")
+        })
+    
+    # أفضل منتج إعلاني
+    best_ad = None
+    if ads:
+        sorted_by_clicks = sorted(ads, key=lambda x: x.get("clicks", 0), reverse=True)
+        if sorted_by_clicks and sorted_by_clicks[0].get("clicks", 0) > 0:
+            best = sorted_by_clicks[0]
+            best_ad = {
+                "product_name": best.get("product_name"),
+                "product_image": best.get("product_image"),
+                "views": best.get("views", 0),
+                "clicks": best.get("clicks", 0),
+                "ctr": round((best.get("clicks", 0) / best.get("views", 1) * 100), 2) if best.get("views", 0) > 0 else 0
+            }
+    
+    return {
+        "summary": {
+            "total_ads": total_ads,
+            "active_ads": active_ads,
+            "total_spent": total_spent,
+            "total_views": total_views,
+            "total_clicks": total_clicks,
+            "ctr": round(ctr, 2)
+        },
+        "type_chart_data": type_chart_data,
+        "recent_ads_data": recent_ads_data,
+        "best_ad": best_ad
+    }

@@ -6,11 +6,12 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Edit, Trash2, Loader2,
   AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle,
-  Megaphone, Wallet
+  Megaphone, Wallet, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import SellerAdsTab from '../components/seller/SellerAdsTab';
+import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -554,7 +555,7 @@ const SellerDashboardPage = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [imageWarnings, setImageWarnings] = useState([]);
-  const [activeTab, setActiveTab] = useState('products'); // products, ads
+  const [activeTab, setActiveTab] = useState('products'); // products, ads, analytics
   const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
@@ -826,11 +827,28 @@ const SellerDashboardPage = () => {
             <Megaphone size={14} />
             الإعلانات
           </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'analytics' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            data-testid="tab-analytics"
+          >
+            <TrendingUp size={14} />
+            التقارير
+          </button>
         </div>
 
         {/* Ads Tab */}
         {activeTab === 'ads' && (
           <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <SellerAdAnalytics />
         )}
 
         {/* Products Tab */}
