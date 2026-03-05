@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -27,7 +27,40 @@ const CartPage = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   
+  // Shipping state
+  const [shippingInfo, setShippingInfo] = useState(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [customerAddress, setCustomerAddress] = useState(null);
+  
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
+  
+  // Fetch customer address and calculate shipping
+  useEffect(() => {
+    if (user && cart.items.length > 0) {
+      fetchAddressAndShipping();
+    }
+  }, [user, cart.total, cart.items.length]);
+  
+  const fetchAddressAndShipping = async () => {
+    try {
+      // Get customer address
+      const addressRes = await axios.get(`${API}/user/addresses`);
+      const addresses = addressRes.data;
+      const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+      setCustomerAddress(defaultAddr || null);
+      
+      if (defaultAddr?.city) {
+        // Calculate shipping based on address
+        setShippingLoading(true);
+        const shippingRes = await axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`);
+        setShippingInfo(shippingRes.data);
+      }
+    } catch (error) {
+      console.error('Error fetching shipping:', error);
+    } finally {
+      setShippingLoading(false);
+    }
+  };
   
   // تحليل السلة لمعرفة حالة الشحن
   const cartAnalysis = () => {
@@ -43,11 +76,15 @@ const CartPage = () => {
     return {
       sellerCount: sellerIds.size,
       isSingleSeller: sellerIds.size === 1,
-      remainingForFree: Math.max(0, FREE_SHIPPING_THRESHOLD - cart.total)
+      remainingForFree: shippingInfo?.remaining_for_free || Math.max(0, FREE_SHIPPING_THRESHOLD - cart.total)
     };
   };
   
   const analysis = cartAnalysis();
+  
+  // Check if shipping is free
+  const isFreeShipping = shippingInfo?.qualifies_for_free === true;
+  const shippingCost = shippingInfo?.shipping_cost || 0;
   
   // Apply coupon
   const handleApplyCoupon = async () => {
@@ -86,8 +123,8 @@ const CartPage = () => {
     setCouponCode('');
   };
   
-  // Final total
-  const finalTotal = cart.total - discountAmount;
+  // Final total (with shipping)
+  const finalTotal = cart.total - discountAmount + (isFreeShipping ? 0 : shippingCost);
 
   if (!user) {
     return (
@@ -230,15 +267,35 @@ const CartPage = () => {
                   </div>
                 )}
                 
+                {/* Shipping */}
                 <div className="flex justify-between text-gray-600">
                   <span>التوصيل</span>
-                  {finalTotal >= FREE_SHIPPING_THRESHOLD ? (
+                  {shippingLoading ? (
+                    <Loader2 size={12} className="animate-spin text-gray-400" />
+                  ) : isFreeShipping ? (
                     <span className="text-green-600 font-bold">مجاني ✓</span>
+                  ) : shippingInfo ? (
+                    <span className="text-gray-900 font-bold">{formatPrice(shippingCost)}</span>
                   ) : (
                     <span className="text-gray-400">يُحسب عند الدفع</span>
                   )}
                 </div>
               </div>
+              
+              {/* Shipping Warning for different city */}
+              {shippingInfo && shippingInfo.no_free_option && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle size={12} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] text-amber-700 font-bold">المتجر من محافظة أخرى</p>
+                      <p className="text-[10px] text-amber-600">
+                        عنوانك: {customerAddress?.city} • المتجر: {shippingInfo.seller_city}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Coupon Input */}
               <div className="mb-3">
@@ -281,12 +338,22 @@ const CartPage = () => {
                 )}
               </div>
               
-              {/* معلومات الشحن المجاني */}
-              {analysis.remainingForFree > 0 && !appliedCoupon && (
-                <div className="bg-amber-50 rounded-lg p-2 mb-2 text-[10px] text-amber-700">
+              {/* معلومات الشحن المجاني - فقط للمحافظة نفسها */}
+              {shippingInfo && !shippingInfo.no_free_option && analysis.remainingForFree > 0 && !isFreeShipping && (
+                <div className="bg-blue-50 rounded-lg p-2 mb-2 text-[10px] text-blue-700">
                   <div className="flex items-start gap-1">
                     <Truck size={12} className="flex-shrink-0 mt-0.5" />
-                    <span>أضف {formatPrice(analysis.remainingForFree)} للتوصيل المجاني</span>
+                    <span>أضف {formatPrice(analysis.remainingForFree)} للتوصيل المجاني (نفس المحافظة)</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* رسالة الشحن المجاني للمحافظات المختلفة */}
+              {shippingInfo && shippingInfo.no_free_option && (
+                <div className="bg-gray-50 rounded-lg p-2 mb-2 text-[10px] text-gray-600">
+                  <div className="flex items-start gap-1">
+                    <Info size={12} className="flex-shrink-0 mt-0.5" />
+                    <span>الشحن المجاني متاح للطلبات من متجر واحد بنفس المحافظة أكثر من {formatPrice(FREE_SHIPPING_THRESHOLD)}</span>
                   </div>
                 </div>
               )}
