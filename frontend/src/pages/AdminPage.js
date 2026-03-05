@@ -26,6 +26,7 @@ import CommissionsTab from '../components/admin/CommissionsTab';
 import WithdrawalsTab from '../components/admin/WithdrawalsTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import AdsTab from '../components/admin/AdsTab';
+import LowStockTab from '../components/admin/LowStockTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -268,7 +269,8 @@ const AdminDashboardPage = () => {
     'commissions': 'العمولات',
     'withdrawals': 'طلبات السحب',
     'settings': 'إعدادات المنصة',
-    'ads': 'إدارة الإعلانات'
+    'ads': 'إدارة الإعلانات',
+    'low-stock': 'تقرير المخزون المنخفض'
   };
 
   return (
@@ -352,6 +354,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'ads' && user.user_type === 'admin' && (
               <AdsTab user={user} />
+            )}
+            {activeTab === 'low-stock' && (
+              <LowStockTab />
             )}
           </>
         ) : (
@@ -451,6 +456,16 @@ const AdminDashboardPage = () => {
                       <Megaphone size={16} className="text-orange-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">إدارة الإعلانات</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('low-stock')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-yellow-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="low-stock-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <AlertTriangle size={16} className="text-yellow-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">المخزون المنخفض</span>
                   </button>
                 </>
               )}

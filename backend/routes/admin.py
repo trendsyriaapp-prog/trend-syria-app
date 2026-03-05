@@ -534,3 +534,39 @@ async def delete_notification(notification_id: str, user: dict = Depends(get_cur
     await db.notification_reads.delete_many({"notification_id": notification_id})
     
     return {"message": "تم حذف الإشعار"}
+
+
+# ============== Low Stock Report ==============
+
+@router.get("/products/low-stock")
+async def get_low_stock_products(user: dict = Depends(get_current_user)):
+    """جلب المنتجات ذات المخزون المنخفض"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # Get threshold from settings
+    settings = await db.platform_settings.find_one({"id": "main"})
+    threshold = settings.get("low_stock_threshold", 5) if settings else 5
+    
+    # Find products with low stock
+    products = await db.products.find(
+        {
+            "stock": {"$lte": threshold},
+            "is_active": True
+        },
+        {"_id": 0}
+    ).sort("stock", 1).to_list(100)
+    
+    # Enrich with seller info
+    for product in products:
+        seller = await db.users.find_one(
+            {"id": product.get("seller_id")},
+            {"_id": 0, "full_name": 1, "phone": 1}
+        )
+        product["seller_info"] = seller or {}
+    
+    return {
+        "threshold": threshold,
+        "count": len(products),
+        "products": products
+    }
