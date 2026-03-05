@@ -129,7 +129,7 @@ const FeaturedProducts = () => {
               className="flex-shrink-0"
             >
               <Link
-                to={`/product/${item.product.id}`}
+                to={`/products/${item.product.id}`}
                 onClick={() => handleClick(item.ad_id)}
                 className="block w-36 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-yellow-200 relative"
                 data-testid={`featured-product-${item.product.id}`}

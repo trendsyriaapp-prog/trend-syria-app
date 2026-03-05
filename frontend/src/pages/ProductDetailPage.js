@@ -1285,74 +1285,76 @@ const ProductDetailPage = () => {
       
       {/* الشريط السفلي الثابت - السعر والأزرار */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
-        <div className="flex items-center gap-2 p-3">
+        <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-2 p-3">
           {/* أيقونة السلة للانتقال المباشر */}
           <button
             onClick={() => navigate('/cart')}
-            className="relative w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            className="relative w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
             data-testid="go-to-cart-btn"
           >
-            <ShoppingBag size={20} className="text-gray-600" />
+            <ShoppingBag size={18} className="text-gray-600" />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6B00] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
           </button>
 
           {/* السعر والكمية */}
-          <div className="flex-1">
-            <p className="text-lg font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
+          <div className="flex-1 flex items-center justify-center gap-3 min-w-0">
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">الكمية:</span>
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full"
-                data-testid="decrease-qty"
-              >
-                <Minus size={12} />
-              </button>
-              <span className="w-6 text-center text-sm font-bold">{quantity}</span>
               <button
                 onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full"
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"
                 data-testid="increase-qty"
               >
                 <Plus size={12} />
               </button>
+              <span className="w-6 text-center text-sm font-bold">{quantity}</span>
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"
+                data-testid="decrease-qty"
+              >
+                <Minus size={12} />
+              </button>
             </div>
+            <p className="text-sm sm:text-base font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
           </div>
-          
-          {/* زر إضافة للسلة */}
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0 || addingToCart}
-            className="flex items-center justify-center gap-1 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-4 py-2 rounded-full text-sm hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
-            data-testid="add-to-cart-btn"
-          >
-            {addingToCart ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <>
-                <ShoppingCart size={16} />
-                <span>السلة</span>
-              </>
-            )}
-          </button>
-          
-          {/* زر الطلب المباشر */}
-          <button
-            onClick={() => {
-              handleAddToCart();
-              setTimeout(() => navigate('/checkout'), 500);
-            }}
-            disabled={product.stock === 0 || addingToCart}
-            className="flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-[#E65000] disabled:opacity-50 transition-colors"
-            data-testid="buy-now-btn"
-          >
-            <Zap size={16} />
-            <span>اشتري الآن</span>
-          </button>
+
+          {/* أزرار الشراء */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* زر إضافة للسلة */}
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock === 0 || addingToCart}
+              className="flex items-center justify-center gap-1 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-3 py-1.5 rounded-full text-xs hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
+              data-testid="add-to-cart-btn"
+            >
+              {addingToCart ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <>
+                  <ShoppingCart size={14} />
+                  <span className="hidden sm:inline">السلة</span>
+                </>
+              )}
+            </button>
+            
+            {/* زر الطلب المباشر */}
+            <button
+              onClick={() => {
+                handleAddToCart();
+                setTimeout(() => navigate('/checkout'), 500);
+              }}
+              disabled={product.stock === 0 || addingToCart}
+              className="flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+              data-testid="buy-now-btn"
+            >
+              <Zap size={14} />
+              <span>اشتري</span>
+            </button>
+          </div>
         </div>
       </div>
 

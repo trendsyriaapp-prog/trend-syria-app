@@ -159,7 +159,7 @@ const LowStockTab = () => {
                     </td>
                     <td className="p-3 text-center">
                       <button
-                        onClick={() => navigate(`/product/${product.id}`)}
+                        onClick={() => navigate(`/products/${product.id}`)}
                         className="inline-flex items-center gap-1 px-3 py-1 bg-[#FF6B00] text-white rounded-lg text-xs font-medium hover:bg-[#E65000]"
                         data-testid={`view-product-${product.id}`}
                       >
