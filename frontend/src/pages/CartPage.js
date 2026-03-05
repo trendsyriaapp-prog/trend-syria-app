@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -20,6 +20,12 @@ const CartPage = () => {
   const { cart, updateQuantity, removeFromCart, loading } = useCart();
   const { settings } = useSettings();
   const { toast } = useToast();
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
   
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
@@ -42,6 +48,46 @@ const CartPage = () => {
   };
   
   const analysis = cartAnalysis();
+  
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setCouponLoading(true);
+    try {
+      const productIds = cart.items.map(item => item.product_id);
+      const res = await axios.post(`${API}/discounts/apply-coupon`, {
+        code: couponCode,
+        cart_total: cart.total,
+        product_ids: productIds
+      });
+      
+      setAppliedCoupon(res.data.discount);
+      setDiscountAmount(res.data.discount_amount);
+      toast({
+        title: "تم تطبيق الخصم",
+        description: res.data.message
+      });
+    } catch (error) {
+      toast({
+        title: "كود غير صالح",
+        description: error.response?.data?.detail || "تعذر تطبيق الكود",
+        variant: "destructive"
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+  
+  // Remove coupon
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponCode('');
+  };
+  
+  // Final total
+  const finalTotal = cart.total - discountAmount;
 
   if (!user) {
     return (
@@ -172,9 +218,21 @@ const CartPage = () => {
                   <span>المجموع الفرعي</span>
                   <span className="text-gray-900">{formatPrice(cart.total)}</span>
                 </div>
+                
+                {/* Applied Coupon */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      <Tag size={10} />
+                      خصم ({appliedCoupon.name})
+                    </span>
+                    <span className="font-bold">- {formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-gray-600">
                   <span>التوصيل</span>
-                  {cart.total >= FREE_SHIPPING_THRESHOLD ? (
+                  {finalTotal >= FREE_SHIPPING_THRESHOLD ? (
                     <span className="text-green-600 font-bold">مجاني ✓</span>
                   ) : (
                     <span className="text-gray-400">يُحسب عند الدفع</span>
@@ -182,8 +240,49 @@ const CartPage = () => {
                 </div>
               </div>
               
+              {/* Coupon Input */}
+              <div className="mb-3">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={14} className="text-green-600" />
+                      <span className="text-xs font-bold text-green-700">{appliedCoupon.code}</span>
+                    </div>
+                    <button
+                      onClick={removeCoupon}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="كود الخصم"
+                      className="flex-1 p-2 border border-gray-300 rounded-lg text-xs focus:border-[#FF6B00] focus:outline-none text-left font-mono"
+                      data-testid="coupon-input"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                      data-testid="apply-coupon-btn"
+                    >
+                      {couponLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        'تطبيق'
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
               {/* معلومات الشحن المجاني */}
-              {analysis.remainingForFree > 0 && (
+              {analysis.remainingForFree > 0 && !appliedCoupon && (
                 <div className="bg-amber-50 rounded-lg p-2 mb-2 text-[10px] text-amber-700">
                   <div className="flex items-start gap-1">
                     <Truck size={12} className="flex-shrink-0 mt-0.5" />
@@ -194,11 +293,12 @@ const CartPage = () => {
               
               <div className="flex justify-between font-bold text-sm pt-2 border-t border-gray-100">
                 <span className="text-gray-900">الإجمالي</span>
-                <span className="text-[#FF6B00]">{formatPrice(cart.total)}</span>
+                <span className="text-[#FF6B00]">{formatPrice(finalTotal)}</span>
               </div>
 
               <Link
                 to="/checkout"
+                state={{ coupon: appliedCoupon, discountAmount }}
                 className="w-full flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full mt-3 hover:bg-[#E65000] transition-colors text-sm"
                 data-testid="checkout-btn"
               >

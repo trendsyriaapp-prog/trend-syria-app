@@ -6,12 +6,13 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Edit, Trash2, Loader2,
   AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle,
-  Megaphone, Wallet, TrendingUp
+  Megaphone, Wallet, TrendingUp, Gift
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import SellerAdsTab from '../components/seller/SellerAdsTab';
 import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
+import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -555,7 +556,7 @@ const SellerDashboardPage = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [imageWarnings, setImageWarnings] = useState([]);
-  const [activeTab, setActiveTab] = useState('products'); // products, ads, analytics
+  const [activeTab, setActiveTab] = useState('products'); // products, ads, analytics, discounts
   const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
@@ -802,41 +803,53 @@ const SellerDashboardPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4 bg-white rounded-xl p-1 border border-gray-200">
+        <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 border border-gray-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab('products')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
               activeTab === 'products' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
             data-testid="tab-products"
           >
-            <Package size={14} />
+            <Package size={12} />
             منتجاتي
           </button>
           <button
             onClick={() => setActiveTab('ads')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
               activeTab === 'ads' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
             data-testid="tab-ads"
           >
-            <Megaphone size={14} />
+            <Megaphone size={12} />
             الإعلانات
           </button>
           <button
+            onClick={() => setActiveTab('discounts')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
+              activeTab === 'discounts' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            data-testid="tab-discounts"
+          >
+            <Gift size={12} />
+            الخصومات
+          </button>
+          <button
             onClick={() => setActiveTab('analytics')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
               activeTab === 'analytics' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
             data-testid="tab-analytics"
           >
-            <TrendingUp size={14} />
+            <TrendingUp size={12} />
             التقارير
           </button>
         </div>
@@ -844,6 +857,11 @@ const SellerDashboardPage = () => {
         {/* Ads Tab */}
         {activeTab === 'ads' && (
           <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
+        )}
+
+        {/* Discounts Tab */}
+        {activeTab === 'discounts' && (
+          <SellerDiscountsTab products={products} />
         )}
 
         {/* Analytics Tab */}
