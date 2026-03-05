@@ -7,7 +7,7 @@ import { useToast } from '../hooks/use-toast';
 import { 
   Truck, Package, MapPin, Phone, User, Clock, 
   CheckCircle, Upload, Camera, CreditCard, AlertTriangle,
-  ChevronRight, Navigation
+  ChevronRight, Navigation, Wallet, DollarSign
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -265,10 +265,21 @@ const DeliveryDashboard = () => {
   const [myOrders, setMyOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('available');
   const [docStatus, setDocStatus] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     checkStatusAndFetch();
+    fetchWallet();
   }, []);
+
+  const fetchWallet = async () => {
+    try {
+      const res = await axios.get(`${API}/wallet/balance`);
+      setWalletBalance(res.data.balance || 0);
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+    }
+  };
 
   const checkStatusAndFetch = async () => {
     try {
@@ -406,6 +417,36 @@ const DeliveryDashboard = () => {
         <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-center gap-2">
           <Clock size={16} className="text-blue-600" />
           <span className="text-xs text-blue-700">أوقات العمل: 8 صباحاً - 6 مساءً</span>
+        </div>
+
+        {/* Wallet Quick Access Card */}
+        <div 
+          onClick={() => navigate('/wallet')}
+          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
+          data-testid="wallet-quick-access"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <Wallet size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
+                <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/wallet');
+              }}
+              className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
+              data-testid="withdraw-quick-btn"
+            >
+              <DollarSign size={14} />
+              طلب سحب
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

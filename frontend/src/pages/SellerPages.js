@@ -920,6 +920,36 @@ const SellerDashboardPage = () => {
         {/* Products Tab */}
         {activeTab === 'products' && (
           <>
+        {/* Wallet Quick Access Card */}
+        <div 
+          onClick={() => navigate('/wallet')}
+          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
+          data-testid="wallet-quick-access"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <Wallet size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
+                <p className="text-white font-bold text-lg">{formatPrice(walletBalance)}</p>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/wallet');
+              }}
+              className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
+              data-testid="withdraw-quick-btn"
+            >
+              <DollarSign size={14} />
+              طلب سحب
+            </button>
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           {[
