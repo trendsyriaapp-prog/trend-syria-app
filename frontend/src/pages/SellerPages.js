@@ -812,6 +812,37 @@ const SellerDashboardPage = () => {
     }
   };
 
+  // دالة جديدة لإجراءات البائع على الطلبات
+  const handleSellerAction = async (orderId, action) => {
+    try {
+      const endpoints = {
+        'confirm': `/orders/${orderId}/seller/confirm`,
+        'preparing': `/orders/${orderId}/seller/preparing`,
+        'shipped': `/orders/${orderId}/seller/shipped`
+      };
+      
+      await axios.post(`${API}${endpoints[action]}`);
+      
+      const messages = {
+        'confirm': 'تم تأكيد الطلب',
+        'preparing': 'تم بدء التحضير',
+        'shipped': 'تم شحن الطلب'
+      };
+      
+      toast({
+        title: "تم بنجاح",
+        description: messages[action]
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في تنفيذ الإجراء",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!user || user.user_type !== 'seller') {
     navigate('/');
     return null;
@@ -1052,28 +1083,73 @@ const SellerDashboardPage = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {orders.slice(0, 10).map((order) => (
-                <div key={order.id} className="bg-white rounded-lg p-2 border border-gray-200">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-[10px] text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</span>
-                    <span className="text-[#FF6B00] font-bold text-[10px]">{formatPrice(order.total)}</span>
+              {orders.slice(0, 10).map((order) => {
+                const canConfirm = order.status === 'paid' && order.delivery_status === 'pending';
+                const canPrepare = order.delivery_status === 'confirmed';
+                const canShip = order.delivery_status === 'preparing';
+                
+                return (
+                  <div key={order.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-[11px] text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</span>
+                      <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(order.total)}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] text-gray-500">{order.user_name} - {order.city}</span>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full ${
+                        order.delivery_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                        order.delivery_status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                        order.delivery_status === 'preparing' ? 'bg-purple-100 text-purple-700' :
+                        order.delivery_status === 'shipped' ? 'bg-indigo-100 text-indigo-700' :
+                        order.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {order.delivery_status === 'pending' ? 'في الانتظار' :
+                         order.delivery_status === 'confirmed' ? 'تم التأكيد' :
+                         order.delivery_status === 'preparing' ? 'جاري التحضير' :
+                         order.delivery_status === 'shipped' ? 'تم الشحن' :
+                         order.delivery_status === 'picked_up' ? 'استلم الموظف' :
+                         order.delivery_status === 'on_the_way' ? 'في الطريق' :
+                         order.delivery_status === 'delivered' ? 'تم التسليم' : order.delivery_status}
+                      </span>
+                    </div>
+                    
+                    {/* أزرار التحكم */}
+                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                      {canConfirm && (
+                        <button
+                          onClick={() => handleSellerAction(order.id, 'confirm')}
+                          className="flex-1 text-[10px] bg-blue-500 text-white py-1.5 rounded-lg font-medium hover:bg-blue-600"
+                          data-testid={`confirm-order-${order.id}`}
+                        >
+                          تأكيد الطلب
+                        </button>
+                      )}
+                      {canPrepare && (
+                        <button
+                          onClick={() => handleSellerAction(order.id, 'preparing')}
+                          className="flex-1 text-[10px] bg-purple-500 text-white py-1.5 rounded-lg font-medium hover:bg-purple-600"
+                          data-testid={`prepare-order-${order.id}`}
+                        >
+                          بدء التحضير
+                        </button>
+                      )}
+                      {canShip && (
+                        <button
+                          onClick={() => handleSellerAction(order.id, 'shipped')}
+                          className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600"
+                          data-testid={`ship-order-${order.id}`}
+                        >
+                          تم الشحن
+                        </button>
+                      )}
+                      {!canConfirm && !canPrepare && !canShip && order.delivery_status !== 'delivered' && (
+                        <span className="text-[9px] text-gray-400 italic">بانتظار {order.status === 'pending_payment' ? 'الدفع' : 'الخطوة التالية'}</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] text-gray-500">{order.user_name} - {order.city}</span>
-                    <select
-                      value={order.delivery_status}
-                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                      className="bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-[9px] text-gray-900"
-                      data-testid={`order-status-${order.id}`}
-                    >
-                      <option value="pending">في الانتظار</option>
-                      <option value="processing">قيد التجهيز</option>
-                      <option value="shipped">تم الشحن</option>
-                      <option value="delivered">تم التوصيل</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

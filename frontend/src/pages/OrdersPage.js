@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -194,15 +194,25 @@ const OrdersPage = () => {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                      className="w-full flex items-center justify-center gap-2 mt-3 pt-3 border-t border-gray-100 text-gray-600 hover:text-[#FF6B00] transition-colors"
-                      data-testid={`view-order-${order.id}`}
-                    >
-                      <Eye size={16} />
-                      <span className="text-sm">تتبع الشحنة</span>
-                      <ChevronLeft size={16} className={`transition-transform ${selectedOrder?.id === order.id ? 'rotate-90' : ''}`} />
-                    </button>
+                    {/* Buttons */}
+                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <button
+                        onClick={() => navigate(`/orders/${order.id}/tracking`)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#FF6B00] text-white rounded-xl text-sm font-medium hover:bg-[#E65000] transition-colors"
+                        data-testid={`track-order-${order.id}`}
+                      >
+                        <Truck size={16} />
+                        <span>تتبع الطلب</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                        className="flex items-center justify-center gap-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200 transition-colors"
+                        data-testid={`view-order-${order.id}`}
+                      >
+                        <Eye size={16} />
+                        <ChevronLeft size={14} className={`transition-transform ${selectedOrder?.id === order.id ? 'rotate-90' : ''}`} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Order Details & Tracking */}

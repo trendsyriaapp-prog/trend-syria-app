@@ -1,0 +1,468 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import axios from 'axios';
+import { 
+  Package, Clock, Truck, Check, MapPin, Phone, User, 
+  MessageSquare, ChevronRight, ArrowRight, Camera, 
+  Store, Navigation, CheckCircle2, Circle, Loader2
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/use-toast';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
+
+const formatDate = (date) => {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('ar-SY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+// خريطة الحالات
+const statusSteps = [
+  { key: 'pending_payment', label: 'في انتظار الدفع', icon: Clock, color: 'yellow' },
+  { key: 'paid', label: 'تم الدفع', icon: Check, color: 'green' },
+  { key: 'confirmed', label: 'تم التأكيد', icon: CheckCircle2, color: 'blue' },
+  { key: 'preparing', label: 'جاري التحضير', icon: Package, color: 'blue' },
+  { key: 'shipped', label: 'تم الشحن', icon: Truck, color: 'purple' },
+  { key: 'picked_up', label: 'استلم الموظف', icon: User, color: 'orange' },
+  { key: 'on_the_way', label: 'في الطريق', icon: Navigation, color: 'orange' },
+  { key: 'delivered', label: 'تم التسليم', icon: CheckCircle2, color: 'green' },
+];
+
+const OrderTrackingPage = () => {
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [order, setOrder] = useState(null);
+  const [tracking, setTracking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [deliveryNote, setDeliveryNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+
+  useEffect(() => {
+    if (orderId) {
+      fetchOrderTracking();
+    }
+  }, [orderId]);
+
+  const fetchOrderTracking = async () => {
+    try {
+      const [orderRes, trackingRes] = await Promise.all([
+        axios.get(`${API}/orders/${orderId}`),
+        axios.get(`${API}/orders/${orderId}/tracking`)
+      ]);
+      setOrder(orderRes.data);
+      setTracking(trackingRes.data);
+      setDeliveryNote(trackingRes.data.delivery_note || '');
+    } catch (error) {
+      console.error('Error fetching tracking:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل معلومات التتبع",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    setSavingNote(true);
+    try {
+      await axios.put(`${API}/orders/${orderId}/delivery-note`, {
+        delivery_note: deliveryNote
+      });
+      toast({
+        title: "تم الحفظ",
+        description: "تم حفظ ملاحظتك لموظف التوصيل"
+      });
+      setShowNoteInput(false);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في حفظ الملاحظة",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const getCurrentStepIndex = () => {
+    const status = tracking?.delivery_status || order?.delivery_status || 'pending_payment';
+    // معالجة الحالات القديمة
+    if (status === 'pending') return 0;
+    if (status === 'out_for_delivery') return 6; // on_the_way
+    
+    const index = statusSteps.findIndex(s => s.key === status);
+    return index >= 0 ? index : 0;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF6B00]" />
+      </div>
+    );
+  }
+
+  if (!order || !tracking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">الطلب غير موجود</p>
+      </div>
+    );
+  }
+
+  const currentStep = getCurrentStepIndex();
+  const isDelivered = tracking.delivery_status === 'delivered';
+  const canAddNote = !isDelivered && user?.id === order.user_id;
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <ArrowRight size={20} />
+          </button>
+          <div>
+            <h1 className="font-bold text-gray-900">تتبع الطلب</h1>
+            <p className="text-xs text-gray-500">#{orderId.slice(0, 8)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* Order Status Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-4 shadow-sm"
+        >
+          <h2 className="font-bold text-gray-900 mb-4">حالة الطلب</h2>
+          
+          {/* Timeline */}
+          <div className="relative">
+            {statusSteps.map((step, index) => {
+              const isCompleted = index <= currentStep;
+              const isCurrent = index === currentStep;
+              const StepIcon = step.icon;
+              const historyItem = tracking.tracking_history?.find(h => h.status === step.key);
+              
+              return (
+                <div key={step.key} className="flex gap-4 relative pb-6 last:pb-0">
+                  {/* Line */}
+                  {index < statusSteps.length - 1 && (
+                    <div className={`absolute right-4 top-10 w-0.5 h-full -translate-x-1/2 ${
+                      index < currentStep ? 'bg-[#FF6B00]' : 'bg-gray-200'
+                    }`} />
+                  )}
+                  
+                  {/* Icon */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
+                    isCompleted
+                      ? 'bg-[#FF6B00] text-white'
+                      : 'bg-gray-200 text-gray-400'
+                  } ${isCurrent ? 'ring-4 ring-[#FF6B00]/20' : ''}`}>
+                    <StepIcon size={16} />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium ${isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {step.label}
+                    </p>
+                    {historyItem && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        <span>{formatDate(historyItem.timestamp)}</span>
+                        {historyItem.actor && (
+                          <span className="mr-2">• {historyItem.actor}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Delivery Driver Info - للعميل */}
+        {tracking.delivery_driver && user?.id === order.user_id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
+            <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Truck size={18} className="text-[#FF6B00]" />
+              موظف التوصيل
+            </h2>
+            
+            <div className="flex items-center gap-4">
+              {/* صورة الموظف */}
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {tracking.delivery_driver.photo ? (
+                  <img 
+                    src={tracking.delivery_driver.photo} 
+                    alt={tracking.delivery_driver.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User size={24} className="text-gray-400" />
+                )}
+              </div>
+              
+              {/* معلومات الموظف */}
+              <div className="flex-1">
+                <p className="font-bold text-gray-900">{tracking.delivery_driver.name}</p>
+                <a 
+                  href={`tel:${tracking.delivery_driver.phone}`}
+                  className="flex items-center gap-1 text-[#FF6B00] text-sm mt-1"
+                >
+                  <Phone size={14} />
+                  {tracking.delivery_driver.phone}
+                </a>
+              </div>
+              
+              {/* زر الاتصال */}
+              <a
+                href={`tel:${tracking.delivery_driver.phone}`}
+                className="w-12 h-12 bg-[#FF6B00] text-white rounded-full flex items-center justify-center"
+              >
+                <Phone size={20} />
+              </a>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Customer Note Section */}
+        {canAddNote && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                <MessageSquare size={18} className="text-[#FF6B00]" />
+                ملاحظة لموظف التوصيل
+              </h2>
+              {!showNoteInput && deliveryNote && (
+                <button
+                  onClick={() => setShowNoteInput(true)}
+                  className="text-sm text-[#FF6B00]"
+                >
+                  تعديل
+                </button>
+              )}
+            </div>
+            
+            {showNoteInput || !deliveryNote ? (
+              <div className="space-y-3">
+                <textarea
+                  value={deliveryNote}
+                  onChange={(e) => setDeliveryNote(e.target.value)}
+                  placeholder="أضف ملاحظة لموظف التوصيل (مثال: اتصل قبل الوصول، الطابق الثالث...)"
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none h-24 focus:border-[#FF6B00] focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveNote}
+                    disabled={savingNote}
+                    className="flex-1 bg-[#FF6B00] text-white py-2 rounded-xl text-sm font-medium disabled:opacity-50"
+                  >
+                    {savingNote ? 'جاري الحفظ...' : 'حفظ الملاحظة'}
+                  </button>
+                  {deliveryNote && (
+                    <button
+                      onClick={() => setShowNoteInput(false)}
+                      className="px-4 py-2 bg-gray-100 rounded-xl text-sm"
+                    >
+                      إلغاء
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <p className="text-gray-700 text-sm">{deliveryNote}</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Order Details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl p-4 shadow-sm"
+        >
+          <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Package size={18} className="text-[#FF6B00]" />
+            تفاصيل الطلب
+          </h2>
+          
+          {/* Products */}
+          <div className="space-y-3 mb-4">
+            {order.items?.map((item, index) => (
+              <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
+                <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                  {item.image ? (
+                    <img src={item.image} alt={item.product_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <Package size={20} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">{item.product_name}</p>
+                  <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
+                  {item.selected_size && (
+                    <p className="text-xs text-gray-500">المقاس: {item.selected_size}</p>
+                  )}
+                </div>
+                <p className="font-bold text-[#FF6B00] text-sm">{formatPrice(item.item_total)}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Delivery Address */}
+          <div className="border-t pt-4">
+            <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+              <MapPin size={16} className="text-gray-400" />
+              عنوان التوصيل
+            </h3>
+            <p className="text-sm text-gray-600">{order.address}</p>
+            <p className="text-sm text-gray-500">{order.city}</p>
+            <a 
+              href={`tel:${order.phone}`}
+              className="flex items-center gap-1 text-[#FF6B00] text-sm mt-2"
+            >
+              <Phone size={14} />
+              {order.phone}
+            </a>
+          </div>
+          
+          {/* Total */}
+          <div className="border-t pt-4 mt-4 flex justify-between items-center">
+            <span className="font-medium text-gray-700">الإجمالي</span>
+            <span className="text-lg font-bold text-[#FF6B00]">{formatPrice(order.total)}</span>
+          </div>
+        </motion.div>
+
+        {/* Seller Info - لموظف التوصيل */}
+        {tracking.sellers && user?.user_type === 'delivery' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
+            <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Store size={18} className="text-[#FF6B00]" />
+              معلومات البائع
+            </h2>
+            
+            {tracking.sellers.map((seller, index) => (
+              <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl mb-2 last:mb-0">
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">{seller.store_name || seller.name}</p>
+                  <p className="text-sm text-gray-500">{seller.store_address}</p>
+                  <a 
+                    href={`tel:${seller.phone}`}
+                    className="flex items-center gap-1 text-[#FF6B00] text-sm mt-1"
+                  >
+                    <Phone size={14} />
+                    {seller.phone}
+                  </a>
+                </div>
+                <a
+                  href={`tel:${seller.phone}`}
+                  className="w-10 h-10 bg-[#FF6B00] text-white rounded-full flex items-center justify-center"
+                >
+                  <Phone size={18} />
+                </a>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Customer Info - لموظف التوصيل */}
+        {tracking.customer && user?.user_type === 'delivery' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-2xl p-4 shadow-sm"
+          >
+            <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <User size={18} className="text-[#FF6B00]" />
+              معلومات العميل
+            </h2>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <User size={18} className="text-gray-400" />
+                <span className="text-gray-900">{tracking.customer.name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone size={18} className="text-gray-400" />
+                <a href={`tel:${tracking.customer.phone}`} className="text-[#FF6B00]">
+                  {tracking.customer.phone}
+                </a>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin size={18} className="text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-gray-900">{tracking.customer.address}</p>
+                  <p className="text-gray-500 text-sm">{tracking.customer.city}</p>
+                </div>
+              </div>
+              
+              {/* ملاحظة العميل */}
+              {tracking.customer.delivery_note && (
+                <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+                  <p className="text-xs text-yellow-700 font-medium mb-1">ملاحظة من العميل:</p>
+                  <p className="text-gray-800 text-sm">{tracking.customer.delivery_note}</p>
+                </div>
+              )}
+            </div>
+            
+            {/* زر الاتصال */}
+            <a
+              href={`tel:${tracking.customer.phone}`}
+              className="w-full mt-4 bg-[#FF6B00] text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+            >
+              <Phone size={18} />
+              اتصال بالعميل
+            </a>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default OrderTrackingPage;

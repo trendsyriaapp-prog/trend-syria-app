@@ -311,10 +311,27 @@ const DeliveryDashboard = () => {
 
   const handleTakeOrder = async (orderId) => {
     try {
-      await axios.post(`${API}/delivery/take-order/${orderId}`);
+      await axios.post(`${API}/orders/${orderId}/delivery/pickup`);
       toast({
         title: "تم بنجاح",
-        description: "تم تعيينك لتوصيل هذا الطلب"
+        description: "تم استلام الطلب من البائع"
+      });
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleOnTheWay = async (orderId) => {
+    try {
+      await axios.post(`${API}/orders/${orderId}/delivery/on-the-way`);
+      toast({
+        title: "تم التحديث",
+        description: "تم إعلام العميل أنك في الطريق"
       });
       fetchOrders();
     } catch (error) {
@@ -328,12 +345,13 @@ const DeliveryDashboard = () => {
 
   const handleCompleteOrder = async (orderId) => {
     try {
-      await axios.post(`${API}/delivery/complete-order/${orderId}`);
+      await axios.post(`${API}/orders/${orderId}/delivery/delivered`);
       toast({
         title: "تم بنجاح",
-        description: "تم تسليم الطلب بنجاح"
+        description: "تم تسليم الطلب وإضافة أجرتك للمحفظة"
       });
       fetchOrders();
+      fetchWallet();
     } catch (error) {
       toast({
         title: "خطأ",
@@ -562,45 +580,102 @@ const DeliveryDashboard = () => {
                 <p className="text-gray-500">لم تأخذ أي طلبات بعد</p>
               </div>
             ) : (
-              myOrders.map((order) => (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl border border-gray-200 p-3"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      order.delivery_status === 'delivered' 
-                        ? 'bg-green-100 text-green-600' 
-                        : 'bg-yellow-100 text-yellow-600'
-                    }`}>
-                      {order.delivery_status === 'delivered' ? 'تم التسليم' : 'قيد التوصيل'}
-                    </span>
-                  </div>
+              myOrders.map((order) => {
+                const canStartDelivery = order.delivery_status === 'picked_up';
+                const canComplete = order.delivery_status === 'on_the_way';
+                const isDelivered = order.delivery_status === 'delivered';
+                
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                  >
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          order.delivery_status === 'delivered' ? 'bg-green-100 text-green-600' :
+                          order.delivery_status === 'on_the_way' ? 'bg-orange-100 text-orange-600' :
+                          order.delivery_status === 'picked_up' ? 'bg-blue-100 text-blue-600' :
+                          'bg-yellow-100 text-yellow-600'
+                        }`}>
+                          {order.delivery_status === 'delivered' ? 'تم التسليم' :
+                           order.delivery_status === 'on_the_way' ? 'في الطريق' :
+                           order.delivery_status === 'picked_up' ? 'تم الاستلام' : 'قيد التوصيل'}
+                        </span>
+                      </div>
 
-                  <p className="text-xs text-gray-600 mb-1">
-                    <MapPin size={12} className="inline ml-1" />
-                    {order.address}, {order.city}
-                  </p>
-                  <p className="text-xs text-gray-600 mb-2">
-                    <Phone size={12} className="inline ml-1" />
-                    {order.phone}
-                  </p>
-                  <p className="font-bold text-[#FF6B00] text-sm mb-3">{formatPrice(order.total)}</p>
+                      {/* معلومات العميل */}
+                      <div className="bg-gray-50 rounded-lg p-2 mb-3">
+                        <p className="text-xs font-bold text-gray-700 mb-1">معلومات العميل:</p>
+                        <p className="text-xs text-gray-600">
+                          <User size={12} className="inline ml-1" />
+                          {order.user_name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          <MapPin size={12} className="inline ml-1" />
+                          {order.address}, {order.city}
+                        </p>
+                        <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1">
+                          <Phone size={12} />
+                          {order.phone}
+                        </a>
+                        
+                        {/* ملاحظة العميل */}
+                        {order.delivery_note && (
+                          <div className="mt-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <p className="text-[10px] font-bold text-yellow-700">ملاحظة من العميل:</p>
+                            <p className="text-xs text-gray-700">{order.delivery_note}</p>
+                          </div>
+                        )}
+                      </div>
 
-                  {order.delivery_status !== 'delivered' && (
-                    <button
-                      onClick={() => handleCompleteOrder(order.id)}
-                      className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm"
-                    >
-                      <CheckCircle size={14} className="inline ml-1" />
-                      تأكيد التسليم
-                    </button>
-                  )}
-                </motion.div>
-              ))
+                      <p className="font-bold text-[#FF6B00] text-sm mb-3">{formatPrice(order.total)}</p>
+
+                      {/* أزرار الإجراءات */}
+                      <div className="space-y-2">
+                        {canStartDelivery && (
+                          <button
+                            onClick={() => handleOnTheWay(order.id)}
+                            className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                          >
+                            <Navigation size={14} />
+                            في الطريق للعميل
+                          </button>
+                        )}
+                        {canComplete && (
+                          <button
+                            onClick={() => handleCompleteOrder(order.id)}
+                            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                          >
+                            <CheckCircle size={14} />
+                            تأكيد التسليم
+                          </button>
+                        )}
+                        {!isDelivered && (
+                          <a
+                            href={`tel:${order.phone}`}
+                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                          >
+                            <Phone size={14} />
+                            اتصال بالعميل
+                          </a>
+                        )}
+                        {/* رابط للتتبع */}
+                        <button
+                          onClick={() => navigate(`/orders/${order.id}/tracking`)}
+                          className="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded-lg text-sm flex items-center justify-center gap-2"
+                        >
+                          تفاصيل الطلب
+                          <ChevronRight size={14} className="rotate-180" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         )}

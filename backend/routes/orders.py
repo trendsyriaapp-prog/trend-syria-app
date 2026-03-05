@@ -2,6 +2,7 @@
 # مسارات الطلبات والدفع
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
@@ -11,6 +12,32 @@ from models.schemas import OrderCreate, CartItem, ShamCashPayment
 from routes.loyalty import add_loyalty_points
 
 router = APIRouter(tags=["Orders"])
+
+# ============== Order Tracking Status Flow ==============
+# 1. pending_payment   - في انتظار الدفع (العميل)
+# 2. paid              - تم الدفع (النظام تلقائي)
+# 3. confirmed         - تم تأكيد الطلب (البائع)
+# 4. preparing         - جاري التحضير (البائع)
+# 5. shipped           - تم الشحن (البائع)
+# 6. picked_up         - استلم موظف التوصيل (موظف التوصيل)
+# 7. on_the_way        - في الطريق للعميل (موظف التوصيل)
+# 8. delivered         - تم التسليم (موظف التوصيل)
+
+ORDER_TRACKING_STEPS = [
+    {"key": "pending_payment", "label": "في انتظار الدفع", "actor": "customer"},
+    {"key": "paid", "label": "تم الدفع", "actor": "system"},
+    {"key": "confirmed", "label": "تم تأكيد الطلب", "actor": "seller"},
+    {"key": "preparing", "label": "جاري التحضير", "actor": "seller"},
+    {"key": "shipped", "label": "تم الشحن", "actor": "seller"},
+    {"key": "picked_up", "label": "استلم موظف التوصيل", "actor": "delivery"},
+    {"key": "on_the_way", "label": "في الطريق للعميل", "actor": "delivery"},
+    {"key": "delivered", "label": "تم التسليم", "actor": "delivery"},
+]
+
+# ============== Pydantic Models ==============
+
+class CustomerNoteUpdate(BaseModel):
+    delivery_note: str
 
 # ============== Commission Helpers ==============
 
@@ -277,3 +304,440 @@ async def verify_shamcash_payment(payment: ShamCashPayment, user: dict = Depends
 async def calculate_product_commission(price: float, category: str):
     result = await calculate_commission(price, category)
     return result
+
+# ============== Order Tracking System ==============
+
+@router.get("/orders/{order_id}/tracking")
+async def get_order_tracking(order_id: str, user: dict = Depends(get_current_user)):
+    """الحصول على معلومات تتبع الطلب الكاملة"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من الصلاحيات
+    is_customer = order["user_id"] == user["id"]
+    is_seller = user["user_type"] == "seller" and any(item["seller_id"] == user["id"] for item in order.get("items", []))
+    is_delivery = user["user_type"] == "delivery" and order.get("delivery_driver_id") == user["id"]
+    is_admin = user["user_type"] in ["admin", "sub_admin"]
+    
+    if not any([is_customer, is_seller, is_delivery, is_admin]):
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # بناء معلومات التتبع
+    tracking_info = {
+        "order_id": order_id,
+        "status": order.get("status", "pending_payment"),
+        "delivery_status": order.get("delivery_status", "pending"),
+        "tracking_history": order.get("tracking_history", []),
+        "delivery_note": order.get("delivery_note", ""),
+        "created_at": order.get("created_at"),
+        "steps": ORDER_TRACKING_STEPS
+    }
+    
+    # معلومات موظف التوصيل (للعميل والبائع)
+    if order.get("delivery_driver_id") and (is_customer or is_seller or is_admin):
+        driver = await db.users.find_one({"id": order["delivery_driver_id"]}, {"_id": 0, "password": 0})
+        if driver:
+            tracking_info["delivery_driver"] = {
+                "id": driver["id"],
+                "name": driver.get("full_name", driver.get("name", "")),
+                "phone": driver.get("phone", ""),
+                "photo": driver.get("photo", "")
+            }
+    
+    # معلومات البائع (لموظف التوصيل)
+    if is_delivery:
+        seller_ids = set(item["seller_id"] for item in order.get("items", []))
+        sellers_info = []
+        for seller_id in seller_ids:
+            seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
+            if seller:
+                store = await db.stores.find_one({"seller_id": seller_id}, {"_id": 0})
+                sellers_info.append({
+                    "id": seller["id"],
+                    "name": seller.get("full_name", seller.get("name", "")),
+                    "phone": seller.get("phone", ""),
+                    "store_name": store.get("name", "") if store else "",
+                    "store_address": store.get("address", "") if store else ""
+                })
+        tracking_info["sellers"] = sellers_info
+        
+        # معلومات العميل (لموظف التوصيل)
+        tracking_info["customer"] = {
+            "name": order.get("user_name", ""),
+            "phone": order.get("phone", ""),
+            "address": order.get("address", ""),
+            "city": order.get("city", ""),
+            "delivery_note": order.get("delivery_note", "")
+        }
+    
+    return tracking_info
+
+@router.put("/orders/{order_id}/delivery-note")
+async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: dict = Depends(get_current_user)):
+    """إضافة/تعديل ملاحظة العميل لموظف التوصيل"""
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order["user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="يمكن للعميل فقط إضافة ملاحظة")
+    
+    # لا يمكن تعديل الملاحظة بعد التسليم
+    if order.get("delivery_status") == "delivered":
+        raise HTTPException(status_code=400, detail="لا يمكن تعديل الملاحظة بعد التسليم")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "delivery_note": note.delivery_note,
+            "delivery_note_updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # إشعار موظف التوصيل إذا كان الطلب معين له
+    if order.get("delivery_driver_id"):
+        await create_notification_for_user(
+            user_id=order["delivery_driver_id"],
+            title="ملاحظة جديدة من العميل",
+            message=f"أضاف العميل ملاحظة: {note.delivery_note[:50]}...",
+            notification_type="delivery_note",
+            order_id=order_id
+        )
+    
+    return {"message": "تم حفظ الملاحظة"}
+
+# ============== Seller Order Management ==============
+
+@router.post("/orders/{order_id}/seller/confirm")
+async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_user)):
+    """البائع يؤكد استلام الطلب"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التأكد أن البائع صاحب المنتج
+    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+        raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
+    
+    if order.get("status") != "paid":
+        raise HTTPException(status_code=400, detail="الطلب لم يتم دفعه بعد")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": "confirmed",
+                "confirmed_at": datetime.now(timezone.utc).isoformat(),
+                "confirmed_by": user["id"]
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "confirmed",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "seller"
+                }
+            }
+        }
+    )
+    
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="تم تأكيد طلبك!",
+        message="البائع بدأ بتجهيز طلبك",
+        notification_type="order_status",
+        order_id=order_id
+    )
+    
+    return {"message": "تم تأكيد الطلب"}
+
+@router.post("/orders/{order_id}/seller/preparing")
+async def seller_preparing_order(order_id: str, user: dict = Depends(get_current_user)):
+    """البائع يبدأ تحضير الطلب"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+        raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": "preparing",
+                "preparing_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "preparing",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "seller"
+                }
+            }
+        }
+    )
+    
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="جاري تحضير طلبك",
+        message="البائع يقوم بتجهيز طلبك الآن",
+        notification_type="order_status",
+        order_id=order_id
+    )
+    
+    return {"message": "تم تحديث حالة الطلب"}
+
+@router.post("/orders/{order_id}/seller/shipped")
+async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """البائع يشحن الطلب"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+        raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
+    
+    update_data = {
+        "delivery_status": "shipped",
+        "shipped_at": datetime.now(timezone.utc).isoformat()
+    }
+    if tracking_number:
+        update_data["tracking_number"] = tracking_number
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": update_data,
+            "$push": {
+                "tracking_history": {
+                    "status": "shipped",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "seller",
+                    "tracking_number": tracking_number
+                }
+            }
+        }
+    )
+    
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="تم شحن طلبك!",
+        message="طلبك جاهز وبانتظار موظف التوصيل",
+        notification_type="order_status",
+        order_id=order_id
+    )
+    
+    # إشعار موظفي التوصيل
+    await create_notification_for_role(
+        role="delivery",
+        title="طلب جاهز للتوصيل",
+        message=f"طلب جديد جاهز للتوصيل إلى {order.get('city', '')}",
+        notification_type="delivery_ready",
+        order_id=order_id
+    )
+    
+    return {"message": "تم شحن الطلب"}
+
+# ============== Delivery Driver Order Management ==============
+
+@router.post("/orders/{order_id}/delivery/pickup")
+async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)):
+    """موظف التوصيل يستلم الطلب من البائع"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من اعتماد الحساب
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0}
+    )
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("delivery_status") not in ["shipped"]:
+        raise HTTPException(status_code=400, detail="الطلب غير جاهز للاستلام")
+    
+    if order.get("delivery_driver_id") and order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=400, detail="هذا الطلب مسند لموظف آخر")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_driver_id": user["id"],
+                "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_phone": user.get("phone", ""),
+                "delivery_driver_photo": user.get("photo", ""),
+                "delivery_status": "picked_up",
+                "picked_up_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "picked_up",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "actor_phone": user.get("phone", "")
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="تم استلام طلبك!",
+        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} استلم طلبك",
+        notification_type="delivery",
+        order_id=order_id
+    )
+    
+    # إشعار البائع
+    seller_ids = set(item["seller_id"] for item in order.get("items", []))
+    for seller_id in seller_ids:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="تم استلام الطلب من المتجر",
+            message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} استلم الطلب",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    return {"message": "تم استلام الطلب"}
+
+@router.post("/orders/{order_id}/delivery/on-the-way")
+async def delivery_on_the_way(order_id: str, user: dict = Depends(get_current_user)):
+    """موظف التوصيل في الطريق للعميل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="هذا الطلب ليس مسنداً إليك")
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": "on_the_way",
+                "on_the_way_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "on_the_way",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery"
+                }
+            }
+        }
+    )
+    
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="طلبك في الطريق!",
+        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} في طريقه إليك الآن",
+        notification_type="delivery",
+        order_id=order_id
+    )
+    
+    return {"message": "تم تحديث الحالة"}
+
+@router.post("/orders/{order_id}/delivery/delivered")
+async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """موظف التوصيل يؤكد التسليم"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="هذا الطلب ليس مسنداً إليك")
+    
+    update_data = {
+        "delivery_status": "delivered",
+        "status": "completed",
+        "delivered_at": datetime.now(timezone.utc).isoformat()
+    }
+    if delivery_photo:
+        update_data["delivery_proof_photo"] = delivery_photo
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": update_data,
+            "$push": {
+                "tracking_history": {
+                    "status": "delivered",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "proof_photo": delivery_photo
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="تم التسليم!",
+        message="تم تسليم طلبك بنجاح. شكراً لتسوقك معنا!",
+        notification_type="delivery",
+        order_id=order_id
+    )
+    
+    # إشعار البائع
+    seller_ids = set(item["seller_id"] for item in order.get("items", []))
+    for seller_id in seller_ids:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="تم تسليم الطلب",
+            message="تم تسليم طلبك للعميل بنجاح",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    # إضافة أجرة التوصيل لمحفظة موظف التوصيل
+    delivery_fee = order.get("delivery_fee", 5000)
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {
+            "$inc": {"balance": delivery_fee, "total_earned": delivery_fee},
+            "$push": {
+                "transactions": {
+                    "id": str(uuid.uuid4()),
+                    "type": "delivery_earning",
+                    "amount": delivery_fee,
+                    "order_id": order_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "description": f"أجرة توصيل طلب #{order_id[:8]}"
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تأكيد التسليم", "delivery_fee": delivery_fee}

@@ -17,6 +17,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrdersPage from "./pages/OrdersPage";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
 import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/orders/:orderId/tracking" element={<OrderTrackingPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:userId" element={<MessagesPage />} />
                 <Route path="/following" element={<FollowingPage />} />
