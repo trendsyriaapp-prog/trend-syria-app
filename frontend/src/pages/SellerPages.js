@@ -1002,7 +1002,7 @@ const SellerDashboardPage = () => {
                   {product.approval_status === 'approved' && (
                     <div className="absolute top-1 right-1 z-10 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
                       <Check size={8} />
-                      معتمد
+                      تم النشر
                     </div>
                   )}
                   <img
@@ -1504,7 +1504,7 @@ const SellerDashboardPage = () => {
                           product.approval_status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
                           'bg-red-100 text-red-600'
                         }`}>
-                          {product.approval_status === 'approved' ? 'معتمد' :
+                          {product.approval_status === 'approved' ? 'تم النشر' :
                            product.approval_status === 'pending' ? 'معلق' : 'مرفوض'}
                         </span>
                       </div>
