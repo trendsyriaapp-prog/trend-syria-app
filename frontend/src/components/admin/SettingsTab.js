@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Truck, Banknote, Package, Save } from 'lucide-react';
+import { Settings, Truck, Banknote, Package, Save, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -32,6 +32,7 @@ const SettingsTab = ({ user }) => {
     delivery: 25000
   });
   const [freeShipping, setFreeShipping] = useState(150000);
+  const [lowStockThreshold, setLowStockThreshold] = useState(5);
   
   useEffect(() => {
     fetchSettings();
@@ -53,6 +54,9 @@ const SettingsTab = ({ user }) => {
       }
       if (res.data.free_shipping_threshold) {
         setFreeShipping(res.data.free_shipping_threshold);
+      }
+      if (res.data.low_stock_threshold) {
+        setLowStockThreshold(res.data.low_stock_threshold);
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -107,6 +111,24 @@ const SettingsTab = ({ user }) => {
       // تحديث الإعدادات في كل التطبيق
       await refreshSettings();
       toast({ title: "تم الحفظ", description: "تم تحديث حد الشحن المجاني" });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل الحفظ",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveLowStockThreshold = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/low-stock-threshold`, null, {
+        params: { threshold: lowStockThreshold }
+      });
+      toast({ title: "تم الحفظ", description: "تم تحديث حد تنبيه المخزون المنخفض" });
     } catch (error) {
       toast({
         title: "خطأ",
@@ -252,6 +274,39 @@ const SettingsTab = ({ user }) => {
             onClick={saveFreeShipping}
             disabled={saving}
             className="w-full bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Save size={16} />
+            حفظ
+          </button>
+        </div>
+      </div>
+
+      {/* Low Stock Threshold */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+          <AlertTriangle size={18} className="text-yellow-500" />
+          <h3 className="font-bold text-gray-900">حد تنبيه المخزون المنخفض</h3>
+        </div>
+        <div className="p-4">
+          <p className="text-xs text-gray-500 mb-3">
+            سيتم إرسال تنبيه للبائع عند وصول مخزون أي منتج إلى هذا الحد أو أقل
+          </p>
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="number"
+              value={lowStockThreshold}
+              onChange={(e) => setLowStockThreshold(parseInt(e.target.value) || 1)}
+              className="flex-1 p-2 border border-gray-300 rounded-lg text-left"
+              min="1"
+              data-testid="low-stock-threshold-input"
+            />
+            <span className="text-sm text-gray-400">قطعة</span>
+          </div>
+          <button
+            onClick={saveLowStockThreshold}
+            disabled={saving}
+            className="w-full bg-yellow-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            data-testid="save-low-stock-btn"
           >
             <Save size={16} />
             حفظ

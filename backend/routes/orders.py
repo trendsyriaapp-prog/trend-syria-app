@@ -120,8 +120,9 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # Clear cart
     await db.carts.delete_one({"user_id": user["id"]})
     
-    # Update product stock and check for low stock
-    LOW_STOCK_THRESHOLD = 5  # الحد الأدنى للمخزون
+    # Get low stock threshold from settings
+    settings = await db.platform_settings.find_one({"id": "main"})
+    LOW_STOCK_THRESHOLD = settings.get("low_stock_threshold", 5) if settings else 5
     
     for item in cart["items"]:
         await db.products.update_one(

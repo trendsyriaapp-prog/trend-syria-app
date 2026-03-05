@@ -44,6 +44,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
                 "far": 12000
             },
             "free_shipping_threshold": 150000,
+            "low_stock_threshold": 5,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(settings)
@@ -164,3 +165,38 @@ async def update_free_shipping_threshold(
         "message": "تم تحديث حد الشحن المجاني",
         "free_shipping_threshold": threshold
     }
+
+@router.put("/low-stock-threshold")
+async def update_low_stock_threshold(
+    threshold: int,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث حد تنبيه المخزون المنخفض"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if threshold < 1:
+        raise HTTPException(status_code=400, detail="الحد الأدنى يجب أن يكون 1 على الأقل")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "low_stock_threshold": threshold,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث حد تنبيه المخزون المنخفض",
+        "low_stock_threshold": threshold
+    }
+
+@router.get("/low-stock-threshold")
+async def get_low_stock_threshold():
+    """جلب حد تنبيه المخزون المنخفض"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    return {"low_stock_threshold": settings.get("low_stock_threshold", 5) if settings else 5}
