@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   MapPin, CreditCard, Check, Loader2, Plus, 
-  ShoppingBag, Truck, X, ChevronLeft
+  ShoppingBag, Truck, X, ChevronLeft, Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -557,6 +557,12 @@ const CheckoutPage = () => {
         <div className="flex items-center justify-center gap-2 text-[10px] text-gray-600 bg-gray-100 rounded-lg py-2 mt-3">
           <Truck size={12} />
           <span>توصيل مجاني عند الشراء من متجر واحد بنفس المحافظة (أكثر من 150,000 ل.س)</span>
+        </div>
+        
+        {/* Refund policy notice */}
+        <div className="flex items-center justify-center gap-2 text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-lg py-2 mt-2">
+          <Clock size={12} />
+          <span>يمكنك إلغاء الطلب واسترداد أموالك خلال ساعة من بعد الدفع</span>
         </div>
       </div>
     </div>
