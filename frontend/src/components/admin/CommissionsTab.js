@@ -18,6 +18,8 @@ const CommissionsTab = ({
   const [editingRates, setEditingRates] = useState(false);
   const [editedRates, setEditedRates] = useState({});
   const [newCategory, setNewCategory] = useState({ name: '', rate: '' });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [tempRate, setTempRate] = useState('');
 
   const handleStartEditRates = () => {
     if (commissionRates) {
@@ -30,6 +32,52 @@ const CommissionsTab = ({
       setEditedRates(rates);
       setEditingRates(true);
     }
+  };
+
+  // تعديل مباشر لنسبة معينة
+  const handleDirectEdit = (category, currentRate) => {
+    if (user.user_type !== 'admin') return;
+    setEditingCategory(category);
+    const rate = parseFloat(currentRate.replace('%', ''));
+    setTempRate(rate.toString());
+  };
+
+  const handleSaveDirectEdit = async () => {
+    if (!editingCategory || !tempRate) return;
+    
+    try {
+      // تحضير البيانات
+      const rates = {};
+      if (commissionRates) {
+        commissionRates.rates.forEach(r => {
+          const numericRate = parseFloat(r.percentage.replace('%', '')) / 100;
+          rates[r.category] = numericRate;
+        });
+        rates['default'] = parseFloat(commissionRates.default_percentage.replace('%', '')) / 100;
+      }
+      
+      // تحديث النسبة المعدلة
+      rates[editingCategory] = parseFloat(tempRate) / 100;
+      
+      await onSaveRates(rates);
+      setEditingCategory(null);
+      setTempRate('');
+      toast({
+        title: "تم الحفظ",
+        description: `تم تحديث نسبة ${editingCategory} إلى ${tempRate}%`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل حفظ النسبة",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCancelDirectEdit = () => {
+    setEditingCategory(null);
+    setTempRate('');
   };
 
   const handleAddCategory = (e) => {
@@ -113,16 +161,97 @@ const CommissionsTab = ({
             <>
               <div className="grid grid-cols-2 gap-2">
                 {commissionRates.rates.map((rate) => (
-                  <div key={rate.category} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                  <div 
+                    key={rate.category} 
+                    className={`flex justify-between items-center p-2 rounded-lg transition-all ${
+                      editingCategory === rate.category 
+                        ? 'bg-orange-50 border border-orange-300' 
+                        : 'bg-gray-50 hover:bg-orange-50 cursor-pointer'
+                    }`}
+                    onClick={() => !editingCategory && handleDirectEdit(rate.category, rate.percentage)}
+                  >
                     <span className="text-xs text-gray-700">{rate.category}</span>
-                    <span className="text-xs font-bold text-[#FF6B00]">{rate.percentage}</span>
+                    {editingCategory === rate.category ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={tempRate}
+                          onChange={(e) => setTempRate(e.target.value)}
+                          className="w-14 text-xs p-1 border border-orange-300 rounded text-center font-bold"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span className="text-[10px] text-gray-500">%</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSaveDirectEdit(); }}
+                          className="p-1 bg-green-500 text-white rounded text-[10px]"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleCancelDirectEdit(); }}
+                          className="p-1 bg-gray-400 text-white rounded text-[10px]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-[#FF6B00] flex items-center gap-1">
+                        {rate.percentage}
+                        {user.user_type === 'admin' && <Edit2 size={10} className="text-gray-400" />}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
+              <div 
+                className={`mt-2 pt-2 border-t border-gray-200 flex justify-between items-center p-2 rounded-lg transition-all ${
+                  editingCategory === 'default' 
+                    ? 'bg-orange-50 border border-orange-300' 
+                    : 'hover:bg-orange-50 cursor-pointer'
+                }`}
+                onClick={() => !editingCategory && handleDirectEdit('default', commissionRates.default_percentage)}
+              >
                 <span className="text-xs text-gray-500">النسبة الافتراضية</span>
-                <span className="text-xs font-bold text-gray-700">{commissionRates.default_percentage}</span>
+                {editingCategory === 'default' ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={tempRate}
+                      onChange={(e) => setTempRate(e.target.value)}
+                      className="w-14 text-xs p-1 border border-orange-300 rounded text-center font-bold"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="text-[10px] text-gray-500">%</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSaveDirectEdit(); }}
+                      className="p-1 bg-green-500 text-white rounded text-[10px]"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCancelDirectEdit(); }}
+                      className="p-1 bg-gray-400 text-white rounded text-[10px]"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-gray-700 flex items-center gap-1">
+                    {commissionRates.default_percentage}
+                    {user.user_type === 'admin' && <Edit2 size={10} className="text-gray-400" />}
+                  </span>
+                )}
               </div>
+              
+              {user.user_type === 'admin' && (
+                <p className="text-[9px] text-gray-400 mt-2 text-center">انقر على أي نسبة لتعديلها مباشرة</p>
+              )}
             </>
           ) : (
             <>
