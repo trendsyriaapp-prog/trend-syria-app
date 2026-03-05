@@ -5,7 +5,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Star, ChevronLeft, Sparkles } from 'lucide-react';
+import { Star, ChevronLeft, Sparkles, ShoppingCart, Truck, Loader2 } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
+import { useToast } from '../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +19,12 @@ const formatPrice = (price) => {
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState({});
+  const { addToCart } = useCart();
+  const { settings } = useSettings();
+  const { toast } = useToast();
+
+  const freeShippingThreshold = settings?.free_shipping_threshold || 150000;
   
   useEffect(() => {
     fetchFeaturedProducts();
@@ -37,6 +46,28 @@ const FeaturedProducts = () => {
       await axios.post(`${API}/api/ads/click/${adId}`);
     } catch (error) {
       // Silent fail
+    }
+  };
+
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setAddingToCart(prev => ({ ...prev, [product.id]: true }));
+    try {
+      await addToCart(product, 1);
+      toast({
+        title: "تمت الإضافة",
+        description: `تم إضافة ${product.name} للسلة`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل إضافة المنتج للسلة",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingToCart(prev => ({ ...prev, [product.id]: false }));
     }
   };
   
@@ -124,12 +155,31 @@ const FeaturedProducts = () => {
                   <h3 className="text-[11px] font-medium text-gray-900 truncate mb-1">
                     {item.product.name}
                   </h3>
-                  <p className="text-[#FF6B00] font-bold text-xs">
-                    {formatPrice(item.product.price)}
-                  </p>
-                  {item.product.city && (
-                    <p className="text-[9px] text-gray-400 mt-0.5">{item.product.city}</p>
-                  )}
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex flex-col">
+                      <p className="text-[#FF6B00] font-bold text-xs">
+                        {formatPrice(item.product.price)}
+                      </p>
+                      {item.product.price >= freeShippingThreshold && (
+                        <span className="text-green-600 text-[9px] font-bold flex items-center gap-0.5">
+                          <Truck size={9} />
+                          شحن مجاني
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => handleAddToCart(e, item.product)}
+                      disabled={addingToCart[item.product.id]}
+                      className="w-7 h-7 bg-[#FF6B00] text-white rounded-full flex items-center justify-center hover:bg-[#E65000] transition-colors disabled:opacity-50 flex-shrink-0"
+                      data-testid={`add-to-cart-${item.product.id}`}
+                    >
+                      {addingToCart[item.product.id] ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <ShoppingCart size={14} />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </Link>
             </motion.div>
