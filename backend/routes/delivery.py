@@ -54,6 +54,12 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)):
     
     return orders
 
+# Alias for frontend compatibility
+@router.get("/available-orders")
+async def get_available_orders_alias(user: dict = Depends(get_current_user)):
+    """الطلبات المتاحة للتوصيل - Alias"""
+    return await get_all_available_orders(user)
+
 @router.get("/my-orders")
 async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
     """الطلبات التي استلمها موظف التوصيل"""
