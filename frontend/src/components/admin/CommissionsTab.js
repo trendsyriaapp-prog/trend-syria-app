@@ -68,8 +68,6 @@ const CommissionsTab = ({
 
   return (
     <section>
-      <h2 className="font-bold text-sm text-gray-900 mb-3">تقرير العمولات</h2>
-      
       {/* ملخص العمولات */}
       {commissionsReport && (
         <div className="grid grid-cols-2 gap-2 mb-4">

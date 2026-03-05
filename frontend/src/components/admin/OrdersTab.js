@@ -8,7 +8,6 @@ const formatPrice = (price) => {
 const OrdersTab = ({ allOrders }) => {
   return (
     <section>
-      <h2 className="font-bold text-sm text-gray-900 mb-3">جميع الطلبات ({allOrders.length})</h2>
       {allOrders.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
           <ShoppingBag size={36} className="text-gray-300 mx-auto mb-3" />
