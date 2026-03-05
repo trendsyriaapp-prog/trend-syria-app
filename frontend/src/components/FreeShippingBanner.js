@@ -17,6 +17,9 @@ const isAllowedPath = (pathname) => {
 
 const formatPrice = (price) => new Intl.NumberFormat('ar-SY').format(price);
 
+// مفتاح localStorage لتتبع حالة الشحن المجاني
+const FREE_SHIPPING_SHOWN_KEY = 'free_shipping_shown_at';
+
 const FreeShippingBanner = () => {
   const { cart } = useCart();
   const { user } = useAuth();
@@ -27,8 +30,9 @@ const FreeShippingBanner = () => {
   
   const [dismissed, setDismissed] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
-  const [celebrationShown, setCelebrationShown] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   
+  const prevQualifiedRef = useRef(false);
   const prevTotalRef = useRef(0);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
@@ -57,51 +61,104 @@ const FreeShippingBanner = () => {
       progress,
       qualifiesForFree
     };
-  }, [cart.items, cart.total]);
+  }, [cart.items, cart.total, FREE_SHIPPING_THRESHOLD]);
 
   const analysis = analyzeCart();
 
-  // إظهار الشريط عند وجود منتجات في السلة
+  // التحقق إذا كان الشحن المجاني قد ظهر بالفعل في هذه الجلسة
+  const hasShownFreeShipping = () => {
+    const shownAt = localStorage.getItem(FREE_SHIPPING_SHOWN_KEY);
+    if (!shownAt) return false;
+    
+    // تحقق إذا كان المبلغ المحفوظ هو نفس المبلغ الحالي أو أكثر
+    const savedTotal = parseFloat(shownAt);
+    return cart.total <= savedTotal;
+  };
+
+  // حفظ أن الشحن المجاني قد ظهر
+  const markFreeShippingShown = () => {
+    localStorage.setItem(FREE_SHIPPING_SHOWN_KEY, cart.total.toString());
+  };
+
+  // مسح العلامة عند النزول تحت الحد
+  const clearFreeShippingShown = () => {
+    localStorage.removeItem(FREE_SHIPPING_SHOWN_KEY);
+  };
+
+  // إظهار شريط التقدم عند وجود منتجات ولم يصل للشحن المجاني
   useEffect(() => {
     const currentTotal = cart.total || 0;
     
-    // إظهار الشريط إذا كانت السلة غير فارغة
-    if (currentTotal > 0 && !dismissed) {
-      setShowBanner(true);
+    // إذا السلة فارغة، أخفِ الشريط
+    if (currentTotal === 0) {
+      setShowBanner(false);
+      setShowCelebration(false);
+      setDismissed(false);
+      clearFreeShippingShown();
+      prevQualifiedRef.current = false;
+      prevTotalRef.current = 0;
+      return;
+    }
+
+    // إذا وصل للشحن المجاني
+    if (analysis.qualifiesForFree) {
+      // تحقق إذا كان هذا وصول جديد (لم يكن مؤهلاً من قبل أو زاد المبلغ)
+      const isNewQualification = !prevQualifiedRef.current || currentTotal > prevTotalRef.current;
+      const alreadyShown = hasShownFreeShipping();
       
-      // إذا وصل للشحن المجاني ولم يُحتفل من قبل
-      if (analysis.qualifiesForFree && !celebrationShown) {
-        setCelebrationShown(true);
+      if (isNewQualification && !alreadyShown && !dismissed) {
+        // أظهر رسالة الاحتفال
+        setShowCelebration(true);
+        setShowBanner(true);
+        markFreeShippingShown();
+        
+        // أخفِ بعد 4 ثواني
+        setTimeout(() => {
+          setShowCelebration(false);
+          setShowBanner(false);
+        }, 4000);
+      } else {
+        // لا تظهر الشريط (سبق وظهر)
+        setShowBanner(false);
+        setShowCelebration(false);
       }
+      
+      prevQualifiedRef.current = true;
+    } else {
+      // لم يصل للشحن المجاني بعد
+      // إذا نزل تحت الحد، امسح العلامة
+      if (prevQualifiedRef.current) {
+        clearFreeShippingShown();
+      }
+      
+      // أظهر شريط التقدم
+      if (!dismissed) {
+        setShowBanner(true);
+      }
+      setShowCelebration(false);
+      prevQualifiedRef.current = false;
     }
     
     prevTotalRef.current = currentTotal;
-  }, [cart.total, analysis.qualifiesForFree, celebrationShown, dismissed]);
+  }, [cart.total, analysis.qualifiesForFree, dismissed]);
 
   // إعادة تعيين عند إفراغ السلة
   useEffect(() => {
     if (!cart.items || cart.items.length === 0) {
       setShowBanner(false);
       setDismissed(false);
-      setCelebrationShown(false);
+      setShowCelebration(false);
+      clearFreeShippingShown();
+      prevQualifiedRef.current = false;
       prevTotalRef.current = 0;
     }
   }, [cart.items]);
-
-  // إخفاء تلقائي عند اكتمال الشحن المجاني (بعد 5 ثواني)
-  useEffect(() => {
-    if (analysis.qualifiesForFree && showBanner) {
-      const timer = setTimeout(() => {
-        setShowBanner(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [analysis.qualifiesForFree, showBanner]);
 
   // الإغلاق
   const handleDismiss = () => {
     setDismissed(true);
     setShowBanner(false);
+    setShowCelebration(false);
   };
 
   // شروط عدم الإظهار
@@ -109,8 +166,8 @@ const FreeShippingBanner = () => {
   if (!user || !isCustomer || !shouldShowOnCurrentPage) return null;
   if (dismissed || !showBanner || !analysis.hasItems) return null;
 
-  // شريط النجاح (الشحن المجاني)
-  if (analysis.qualifiesForFree) {
+  // شريط النجاح (الشحن المجاني) - يظهر فقط لحظة الوصول
+  if (showCelebration && analysis.qualifiesForFree) {
     return (
       <AnimatePresence>
         <motion.div
@@ -146,7 +203,12 @@ const FreeShippingBanner = () => {
     );
   }
 
-  // شريط التقدم العادي
+  // لا تظهر شريط التقدم إذا وصل للشحن المجاني
+  if (analysis.qualifiesForFree) {
+    return null;
+  }
+
+  // شريط التقدم العادي (لم يصل للشحن المجاني بعد)
   return (
     <AnimatePresence>
       <motion.div
