@@ -13,6 +13,7 @@ import { useToast } from '../hooks/use-toast';
 import SellerAdsTab from '../components/seller/SellerAdsTab';
 import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
 import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
+import ImageBackgroundSelector from '../components/seller/ImageBackgroundSelector';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -562,6 +563,8 @@ const SellerDashboardPage = () => {
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+  const [showImageProcessor, setShowImageProcessor] = useState(false);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
@@ -594,7 +597,6 @@ const SellerDashboardPage = () => {
     }
   };
 
-  // إضافة شعار صغير في زاوية الصورة
   // رفع الصور مع فحص وتحسين
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -618,22 +620,14 @@ const SellerDashboardPage = () => {
           continue;
         }
         
+        // فتح نافذة معالجة الصورة
+        setPendingImage(result.dataUrl);
+        setShowImageProcessor(true);
+        
         // عرض التحذيرات
         if (result.warnings.length > 0) {
           setImageWarnings(prev => [...prev, ...result.warnings]);
-          if (result.enhanced) {
-            toast({
-              title: "✨ تم تحسين الصورة",
-              description: "تم ضبط الإضاءة تلقائياً"
-            });
-          }
         }
-        
-        // إضافة الصورة بدون علامة مائية
-        setNewProduct(prev => ({
-          ...prev,
-          images: [...prev.images, result.dataUrl]
-        }));
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -645,6 +639,24 @@ const SellerDashboardPage = () => {
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  const handleProcessedImage = (processedImageUrl) => {
+    setNewProduct(prev => ({
+      ...prev,
+      images: [...prev.images, processedImageUrl]
+    }));
+    setShowImageProcessor(false);
+    setPendingImage(null);
+    toast({
+      title: "✅ تم إضافة الصورة",
+      description: "تمت إضافة الصورة بنجاح"
+    });
+  };
+
+  const handleCancelImageProcess = () => {
+    setShowImageProcessor(false);
+    setPendingImage(null);
   };
 
   const handleVideoUpload = (e) => {
@@ -1416,6 +1428,14 @@ const SellerDashboardPage = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Image Background Processor Modal */}
+      <ImageBackgroundSelector
+        imageDataUrl={pendingImage}
+        onProcessed={handleProcessedImage}
+        onCancel={handleCancelImageProcess}
+        isOpen={showImageProcessor}
+      />
     </div>
   );
 };
