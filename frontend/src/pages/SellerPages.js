@@ -558,6 +558,10 @@ const SellerDashboardPage = () => {
   const [imageWarnings, setImageWarnings] = useState([]);
   const [activeTab, setActiveTab] = useState('products'); // products, ads, analytics, discounts
   const [walletBalance, setWalletBalance] = useState(0);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [editStock, setEditStock] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
@@ -743,6 +747,40 @@ const SellerDashboardPage = () => {
         description: "فشل حذف المنتج",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setEditPrice(product.price.toString());
+    setEditStock(product.stock.toString());
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProduct) return;
+    
+    setSavingEdit(true);
+    try {
+      await axios.put(`${API}/products/${editingProduct.id}`, {
+        price: parseFloat(editPrice),
+        stock: parseInt(editStock)
+      });
+      
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث المنتج بنجاح"
+      });
+      
+      setEditingProduct(null);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل تحديث المنتج",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -933,14 +971,24 @@ const SellerDashboardPage = () => {
                     {product.rejection_reason && (
                       <p className="text-[8px] text-red-400 mt-0.5 truncate">سبب: {product.rejection_reason}</p>
                     )}
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="w-full mt-1 p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center gap-0.5"
-                      data-testid={`delete-product-${product.id}`}
-                    >
-                      <Trash2 size={10} />
-                      حذف
-                    </button>
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="flex-1 p-1 text-blue-600 bg-blue-50 rounded text-[9px] flex items-center justify-center gap-0.5"
+                        data-testid={`edit-product-${product.id}`}
+                      >
+                        <Edit size={10} />
+                        تعديل
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="flex-1 p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center gap-0.5"
+                        data-testid={`delete-product-${product.id}`}
+                      >
+                        <Trash2 size={10} />
+                        حذف
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1285,6 +1333,89 @@ const SellerDashboardPage = () => {
       
       {/* Photo Guide Modal */}
       <PhotoGuideModal isOpen={showPhotoGuide} onClose={() => setShowPhotoGuide(false)} />
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl p-4 w-full max-w-sm"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-900">تعديل المنتج</h2>
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Product Preview */}
+            <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-lg">
+              <img
+                src={editingProduct.images?.[0] || 'https://via.placeholder.com/60'}
+                alt={editingProduct.name}
+                className="w-12 h-12 object-cover rounded"
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-xs text-gray-900 truncate">{editingProduct.name}</h3>
+                <p className="text-[10px] text-gray-500">{editingProduct.category}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">السعر (ل.س)</label>
+                <input
+                  type="number"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  data-testid="edit-price-input"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية المتاحة</label>
+                <input
+                  type="number"
+                  value={editStock}
+                  onChange={(e) => setEditStock(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  data-testid="edit-stock-input"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-full text-xs font-bold"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="flex-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full text-xs disabled:opacity-50 flex items-center justify-center gap-1"
+                data-testid="save-edit-btn"
+              >
+                {savingEdit ? (
+                  <>
+                    <Loader2 className="animate-spin" size={12} />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  'حفظ التغييرات'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
