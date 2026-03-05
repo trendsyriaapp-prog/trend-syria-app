@@ -65,7 +65,7 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
 
 # ============== Notification Helpers ==============
 
-async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None):
+async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None, product_id: str = None):
     notification = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -73,6 +73,7 @@ async def create_notification_for_user(user_id: str, title: str, message: str, n
         "message": message,
         "type": notification_type,
         "order_id": order_id,
+        "product_id": product_id,
         "target": "user",
         "created_at": datetime.now(timezone.utc).isoformat()
     }

@@ -120,12 +120,26 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # Clear cart
     await db.carts.delete_one({"user_id": user["id"]})
     
-    # Update product stock
+    # Update product stock and check for low stock
+    LOW_STOCK_THRESHOLD = 5  # الحد الأدنى للمخزون
+    
     for item in cart["items"]:
         await db.products.update_one(
             {"id": item["product_id"]},
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
+        
+        # Check if stock is low after this order
+        updated_product = await db.products.find_one({"id": item["product_id"]})
+        if updated_product and updated_product.get("stock", 0) <= LOW_STOCK_THRESHOLD:
+            # Send low stock alert to seller
+            await create_notification_for_user(
+                user_id=updated_product["seller_id"],
+                title="⚠️ تنبيه: مخزون منخفض!",
+                message=f"المنتج '{updated_product['name']}' وصل إلى {updated_product['stock']} قطع فقط. قم بتحديث المخزون.",
+                notification_type="low_stock",
+                product_id=item["product_id"]
+            )
     
     # Send notifications to sellers
     seller_ids = set(item["seller_id"] for item in items_details)
