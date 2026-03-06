@@ -97,6 +97,21 @@
 ### 8. إعادة هيكلة الكود (مارس 2026)
 - ✅ تقسيم server.py من ~2500 سطر إلى 15 ملف route منفصل
 - ✅ تقسيم AdminPage.js من ~1264 سطر إلى 13 مكون منفصل
+- ✅ **تقسيم SellerPages.js** من 1708 سطر إلى 567 سطر (تخفيض 67%)
+  - SellerStatsCard.js - بطاقات الإحصائيات
+  - SellerProductsGrid.js - شبكة المنتجات مع أزرار التعديل/الحذف
+  - SellerOrdersSection.js - قسم الطلبات مع أزرار الإجراءات
+  - AddProductModal.js - نموذج إضافة منتج
+  - EditProductModal.js - نموذج تعديل منتج
+  - StatDetailsModal.js - نافذة تفاصيل الإحصائيات
+  - PhotoGuideModal.js - دليل تصوير المنتجات
+- ✅ **تقسيم DeliveryPages.js** من 773 سطر إلى 501 سطر (تخفيض 35%)
+  - DeliveryHeader.js - الهيدر مع بطاقات المحفظة والتقييم
+  - AvailableOrdersList.js - قائمة الطلبات المتاحة
+  - MyOrdersList.js - قائمة طلباتي
+- ✅ **ملفات مشتركة:**
+  - /utils/imageHelpers.js - دوال معالجة الصور
+  - /utils/constants.js - الثوابت (الفئات، المدن، حالات الطلبات)
 - ✅ هيكل modular قابل للتوسع
 
 ### 9. نظام الدفع والمحافظ (جديد - مارس 2026)
