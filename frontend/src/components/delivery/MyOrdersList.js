@@ -70,9 +70,9 @@ const MyOrdersList = ({
                   <MapPin size={12} className="inline ml-1" />
                   {order.address}, {order.city}
                 </p>
-                <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1">
+                <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1 font-bold">
                   <Phone size={12} />
-                  {order.phone}
+                  اتصال: {order.phone}
                 </a>
                 
                 {/* ملاحظة العميل */}
@@ -83,6 +83,21 @@ const MyOrdersList = ({
                   </div>
                 )}
               </div>
+
+              {/* معلومات البائع */}
+              {order.seller_phone && (
+                <div className="bg-blue-50 rounded-lg p-2 mb-3">
+                  <p className="text-xs font-bold text-blue-700 mb-1">معلومات البائع:</p>
+                  <p className="text-xs text-gray-600">
+                    <User size={12} className="inline ml-1" />
+                    {order.seller_name || 'البائع'}
+                  </p>
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1 font-bold">
+                    <Phone size={12} />
+                    اتصال: {order.seller_phone}
+                  </a>
+                </div>
+              )}
 
               <p className="font-bold text-[#FF6B00] text-sm mb-3">{formatPrice(order.total)}</p>
 
@@ -107,13 +122,24 @@ const MyOrdersList = ({
                   </button>
                 )}
                 {!isDelivered && (
-                  <a
-                    href={`tel:${order.phone}`}
-                    className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
-                  >
-                    <Phone size={14} />
-                    اتصال بالعميل
-                  </a>
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`tel:${order.phone}`}
+                      className="bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                    >
+                      <Phone size={14} />
+                      العميل
+                    </a>
+                    {order.seller_phone && (
+                      <a
+                        href={`tel:${order.seller_phone}`}
+                        className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      >
+                        <Phone size={14} />
+                        البائع
+                      </a>
+                    )}
+                  </div>
                 )}
                 {/* رابط للتتبع */}
                 <button

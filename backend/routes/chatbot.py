@@ -305,3 +305,46 @@ async def update_support_request(request_id: str, status: str, user: dict = Depe
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
     return {"message": "تم تحديث الحالة"}
+
+
+class AdminReply(BaseModel):
+    ticket_id: str
+    user_id: str
+    message: str
+
+@router.post("/admin/reply")
+async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_user)):
+    """إرسال رد من المدير للعميل كإشعار"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إرسال إشعار للعميل
+    await create_notification_for_user(
+        user_id=data.user_id,
+        title="رد من فريق الدعم 💬",
+        message=data.message,
+        notification_type="support_reply"
+    )
+    
+    # تحديث التذكرة مع الرد
+    await db.support_requests.update_one(
+        {"id": data.ticket_id},
+        {
+            "$push": {
+                "admin_replies": {
+                    "message": data.message,
+                    "admin_id": user["id"],
+                    "admin_name": user.get("full_name") or user.get("name"),
+                    "created_at": now
+                }
+            },
+            "$set": {
+                "last_reply_at": now,
+                "status": "assigned"  # تحديث الحالة تلقائياً
+            }
+        }
+    )
+    
+    return {"message": "تم إرسال الرد للعميل بنجاح"}

@@ -1,4 +1,4 @@
-import { ShoppingBag, Printer, Clock } from 'lucide-react';
+import { ShoppingBag, Printer, Clock, Phone, Truck } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import { DELIVERY_STATUS_COLORS, ORDER_STATUSES } from '../../utils/constants';
 
@@ -26,6 +26,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
         const canConfirm = order.status === 'paid' && order.delivery_status === 'pending';
         const canPrepare = order.delivery_status === 'confirmed';
         const canShip = order.delivery_status === 'preparing';
+        const hasDeliveryDriver = order.delivery_driver_id && order.delivery_driver_name;
         
         return (
           <div key={order.id} className="bg-white rounded-lg p-3 border border-gray-200">
@@ -39,6 +40,29 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                 {getStatusLabel(order.delivery_status)}
               </span>
             </div>
+            
+            {/* معلومات موظف التوصيل */}
+            {hasDeliveryDriver && (
+              <div className="bg-emerald-50 rounded-lg p-2 mb-2 border border-emerald-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Truck size={14} className="text-emerald-600" />
+                    <span className="text-[10px] text-emerald-700 font-bold">
+                      {order.delivery_driver_name}
+                    </span>
+                  </div>
+                  {order.delivery_driver_phone && (
+                    <a
+                      href={`tel:${order.delivery_driver_phone}`}
+                      className="flex items-center gap-1 bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"
+                    >
+                      <Phone size={10} />
+                      اتصال
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* أزرار التحكم */}
             <div className="flex gap-2 pt-2 border-t border-gray-100">

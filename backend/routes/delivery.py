@@ -71,6 +71,17 @@ async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
+    # إضافة معلومات البائع لكل طلب
+    for order in orders:
+        if order.get("seller_id"):
+            seller = await db.users.find_one(
+                {"id": order["seller_id"]},
+                {"_id": 0, "phone": 1, "name": 1, "full_name": 1, "store_name": 1}
+            )
+            if seller:
+                order["seller_phone"] = seller.get("phone")
+                order["seller_name"] = seller.get("store_name") or seller.get("full_name") or seller.get("name")
+    
     return orders
 
 @router.post("/orders/{order_id}/accept")

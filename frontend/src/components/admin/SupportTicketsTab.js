@@ -283,7 +283,8 @@ const TicketRow = ({ ticket, isSelected, onClick }) => {
 };
 
 const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
-  const [adminNote, setAdminNote] = useState('');
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sending, setSending] = useState(false);
 
   const statusColors = {
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -295,6 +296,25 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
     pending: 'قيد الانتظار',
     assigned: 'قيد المعالجة',
     resolved: 'تم الحل'
+  };
+
+  const sendReply = async () => {
+    if (!replyMessage.trim() || sending) return;
+    
+    setSending(true);
+    try {
+      await axios.post(`${API}/api/chatbot/admin/reply`, {
+        ticket_id: ticket.id,
+        user_id: ticket.user_id,
+        message: replyMessage
+      });
+      setReplyMessage('');
+      alert('تم إرسال الرد للعميل بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ في إرسال الرد');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -363,6 +383,29 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
       {/* Actions */}
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="space-y-3">
+          {/* Reply to Customer */}
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <p className="text-xs text-gray-500 mb-2">إرسال رد للعميل (كإشعار):</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                placeholder="اكتب ردك هنا..."
+                className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+                disabled={sending}
+              />
+              <button
+                onClick={sendReply}
+                disabled={!replyMessage.trim() || sending}
+                className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg text-sm font-bold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                إرسال
+              </button>
+            </div>
+          </div>
+
           {/* Status Actions */}
           <div className="flex gap-2">
             {ticket.status === 'pending' && (
