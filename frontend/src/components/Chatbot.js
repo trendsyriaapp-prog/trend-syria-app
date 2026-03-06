@@ -210,26 +210,6 @@ const Chatbot = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Button */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 left-4 z-50 w-14 h-14 bg-gradient-to-br from-[#FF6B00] to-orange-600 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-shadow"
-            data-testid="chatbot-toggle"
-          >
-            <MessageCircle size={28} className="text-white" />
-            {/* Notification Badge */}
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">؟</span>
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
