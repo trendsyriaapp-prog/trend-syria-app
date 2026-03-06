@@ -28,6 +28,7 @@ import FollowingPage from "./pages/FollowingPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
+import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
 
 function App() {
   return (
@@ -74,6 +75,11 @@ function App() {
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboardPage />} />
+                
+                {/* Legal Pages */}
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                <Route path="/returns" element={<ReturnPolicyPage />} />
               </Routes>
             </main>
             <MobileNav />

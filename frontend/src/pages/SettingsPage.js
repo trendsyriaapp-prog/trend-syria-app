@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
-  ChevronLeft, User, Phone, Building, Home, Award
+  ChevronLeft, User, Phone, Building, Home, Award,
+  Shield, FileText, RefreshCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -372,6 +373,49 @@ const SettingsPage = () => {
             )}
           </section>
         )}
+
+        {/* Legal Links Section */}
+        <section className="mt-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <h3 className="text-xs font-bold text-gray-700 p-3 border-b border-gray-100">القانونية والدعم</h3>
+          <div className="divide-y divide-gray-100">
+            <button
+              onClick={() => navigate('/privacy')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Shield size={14} className="text-[#FF6B00]" />
+                </div>
+                <span className="text-sm text-gray-900">سياسة الخصوصية</span>
+              </div>
+              <ChevronLeft size={16} className="text-gray-400" />
+            </button>
+            <button
+              onClick={() => navigate('/terms')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <FileText size={14} className="text-blue-600" />
+                </div>
+                <span className="text-sm text-gray-900">شروط الاستخدام</span>
+              </div>
+              <ChevronLeft size={16} className="text-gray-400" />
+            </button>
+            <button
+              onClick={() => navigate('/returns')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <RefreshCcw size={14} className="text-green-600" />
+                </div>
+                <span className="text-sm text-gray-900">سياسة الإرجاع والاستبدال</span>
+              </div>
+              <ChevronLeft size={16} className="text-gray-400" />
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

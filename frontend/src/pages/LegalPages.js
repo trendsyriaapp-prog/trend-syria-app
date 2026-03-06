@@ -1,0 +1,544 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  ArrowRight, Shield, FileText, RefreshCcw, 
+  ChevronDown, ChevronUp, Phone, Mail, MapPin,
+  Lock, Eye, Database, Users, Truck, CreditCard
+} from 'lucide-react';
+
+// ============== Privacy Policy Page ==============
+export const PrivacyPolicyPage = () => {
+  const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState({});
+
+  const toggleSection = (key) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const sections = [
+    {
+      key: 'collect',
+      icon: Database,
+      title: 'المعلومات التي نجمعها',
+      content: `نقوم بجمع المعلومات التالية:
+
+• **المعلومات الشخصية:** الاسم الكامل، رقم الهاتف، عنوان التوصيل، المدينة.
+• **معلومات الحساب:** كلمة المرور المشفرة، نوع الحساب (مشتري/بائع/توصيل).
+• **معلومات المعاملات:** سجل الطلبات، المدفوعات، المحفظة الإلكترونية.
+• **معلومات الجهاز:** نوع المتصفح، عنوان IP، معلومات الجهاز لتحسين الخدمة.
+• **وثائق البائعين وموظفي التوصيل:** صور الهوية، السجل التجاري (للتحقق فقط).`
+    },
+    {
+      key: 'use',
+      icon: Eye,
+      title: 'كيف نستخدم معلوماتك',
+      content: `نستخدم معلوماتك للأغراض التالية:
+
+• معالجة وتوصيل طلباتك.
+• التواصل معك بخصوص طلباتك وحسابك.
+• تحسين خدماتنا وتجربة المستخدم.
+• التحقق من هوية البائعين وموظفي التوصيل.
+• منع الاحتيال وضمان أمان المنصة.
+• إرسال إشعارات مهمة عن طلباتك.
+• الامتثال للمتطلبات القانونية.`
+    },
+    {
+      key: 'share',
+      icon: Users,
+      title: 'مشاركة المعلومات',
+      content: `نشارك معلوماتك في الحالات التالية فقط:
+
+• **مع البائعين:** اسمك وعنوان التوصيل لتجهيز طلبك.
+• **مع موظفي التوصيل:** اسمك وعنوانك ورقم هاتفك لتوصيل الطلب.
+• **مع مزودي خدمات الدفع:** لمعالجة المدفوعات بشكل آمن.
+• **للجهات القانونية:** عند الطلب بموجب القانون.
+
+**لا نبيع معلوماتك الشخصية لأي طرف ثالث.**`
+    },
+    {
+      key: 'protect',
+      icon: Lock,
+      title: 'حماية معلوماتك',
+      content: `نتخذ إجراءات أمنية صارمة لحماية بياناتك:
+
+• تشفير كلمات المرور باستخدام خوارزميات متقدمة.
+• اتصالات مشفرة (HTTPS) لجميع البيانات.
+• وصول محدود للموظفين المصرح لهم فقط.
+• مراجعات أمنية دورية.
+• نسخ احتياطية آمنة للبيانات.`
+    },
+    {
+      key: 'rights',
+      icon: Shield,
+      title: 'حقوقك',
+      content: `لديك الحقوق التالية:
+
+• **الوصول:** طلب نسخة من بياناتك الشخصية.
+• **التصحيح:** تعديل معلوماتك غير الدقيقة.
+• **الحذف:** طلب حذف حسابك وبياناتك.
+• **الاعتراض:** رفض استخدام بياناتك لأغراض تسويقية.
+
+للممارسة أي من هذه الحقوق، تواصل معنا عبر البريد الإلكتروني.`
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={20} />
+          </button>
+          <div className="flex items-center gap-2">
+            <Shield className="text-[#FF6B00]" size={20} />
+            <h1 className="font-bold text-gray-900">سياسة الخصوصية</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4">
+        {/* Intro */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white rounded-2xl p-4 mb-4"
+        >
+          <h2 className="font-bold text-lg mb-2">خصوصيتك تهمنا</h2>
+          <p className="text-sm opacity-90">
+            نلتزم بحماية خصوصيتك وبياناتك الشخصية. تشرح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.
+          </p>
+          <p className="text-xs mt-2 opacity-75">آخر تحديث: ديسمبر 2025</p>
+        </motion.div>
+
+        {/* Sections */}
+        <div className="space-y-3">
+          {sections.map((section, index) => (
+            <motion.div
+              key={section.key}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+            >
+              <button
+                onClick={() => toggleSection(section.key)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+                    <section.icon size={18} className="text-[#FF6B00]" />
+                  </div>
+                  <span className="font-bold text-gray-900">{section.title}</span>
+                </div>
+                {openSections[section.key] ? (
+                  <ChevronUp size={20} className="text-gray-400" />
+                ) : (
+                  <ChevronDown size={20} className="text-gray-400" />
+                )}
+              </button>
+              {openSections[section.key] && (
+                <div className="px-4 pb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {section.content}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Contact */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-xl border border-gray-200 p-4 mt-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3">تواصل معنا</h3>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p className="flex items-center gap-2">
+              <Mail size={16} className="text-[#FF6B00]" />
+              privacy@trendsyria.com
+            </p>
+            <p className="flex items-center gap-2">
+              <Phone size={16} className="text-[#FF6B00]" />
+              +963 XX XXX XXXX
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// ============== Terms of Service Page ==============
+export const TermsOfServicePage = () => {
+  const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState({});
+
+  const toggleSection = (key) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const sections = [
+    {
+      key: 'acceptance',
+      title: '1. قبول الشروط',
+      content: `باستخدامك لمنصة "تريند سورية"، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام المنصة.
+
+يجب أن يكون عمرك 18 عاماً أو أكثر لاستخدام هذه المنصة، أو أن تحصل على موافقة ولي أمرك.`
+    },
+    {
+      key: 'accounts',
+      title: '2. الحسابات والتسجيل',
+      content: `**للمشترين:**
+• يجب تقديم معلومات صحيحة ودقيقة عند التسجيل.
+• أنت مسؤول عن الحفاظ على سرية كلمة مرورك.
+• يجب إبلاغنا فوراً عن أي استخدام غير مصرح به لحسابك.
+
+**للبائعين:**
+• يجب تقديم وثائق رسمية صالحة (هوية، سجل تجاري).
+• يجب انتظار موافقة الإدارة قبل البدء بالبيع.
+• أنت مسؤول عن دقة معلومات منتجاتك.
+
+**لموظفي التوصيل:**
+• يجب تقديم وثائق رسمية صالحة.
+• يجب الالتزام بأوقات العمل المحددة.
+• أنت مسؤول عن سلامة الطلبات حتى التسليم.`
+    },
+    {
+      key: 'products',
+      title: '3. المنتجات والمحتوى',
+      content: `**المنتجات المسموحة:**
+• منتجات قانونية ومطابقة للمواصفات.
+• منتجات جديدة أو مستعملة بحالة جيدة مع الإفصاح.
+• منتجات لها مصدر معروف.
+
+**المنتجات الممنوعة:**
+• المنتجات المقلدة أو المزيفة.
+• المواد الخطرة أو غير القانونية.
+• المنتجات التي تنتهك حقوق الملكية الفكرية.
+• الأسلحة والمتفجرات.
+• المواد المخدرة.
+
+**نحتفظ بالحق في:**
+• رفض أو إزالة أي منتج دون إبداء الأسباب.
+• تعليق أو إنهاء حسابات البائعين المخالفين.`
+    },
+    {
+      key: 'orders',
+      title: '4. الطلبات والدفع',
+      content: `**إنشاء الطلبات:**
+• الأسعار المعروضة تشمل جميع الرسوم باستثناء التوصيل.
+• يعتبر الطلب ملزماً بعد تأكيد الدفع.
+• نحتفظ بالحق في إلغاء الطلبات المشبوهة.
+
+**الدفع:**
+• نقبل الدفع عبر شام كاش والدفع عند الاستلام.
+• يتم خصم عمولة المنصة من مبيعات البائع.
+• يتم تحويل أرباح البائعين للمحفظة الإلكترونية.
+
+**العمولات:**
+• تتراوح العمولات بين 12% - 21% حسب فئة المنتج.
+• يمكن للإدارة تعديل نسب العمولات بإشعار مسبق.`
+    },
+    {
+      key: 'delivery',
+      title: '5. التوصيل',
+      content: `**مسؤوليات المنصة:**
+• توفير موظفي توصيل معتمدين.
+• متابعة حالة الطلبات.
+• حل النزاعات بين الأطراف.
+
+**مسؤوليات موظف التوصيل:**
+• استلام الطلبات من البائعين في الوقت المحدد.
+• توصيل الطلبات بحالة سليمة.
+• الالتزام بأوقات العمل (8 صباحاً - 6 مساءً).
+
+**رسوم التوصيل:**
+• التوصيل داخل نفس المحافظة: حسب التعرفة المعتمدة.
+• التوصيل بين المحافظات: رسوم إضافية.
+• شحن مجاني: عند تجاوز الحد الأدنى للطلب في نفس المحافظة.`
+    },
+    {
+      key: 'liability',
+      title: '6. حدود المسؤولية',
+      content: `**المنصة غير مسؤولة عن:**
+• جودة المنتجات المباعة من قبل البائعين.
+• التأخير الناتج عن ظروف خارجة عن السيطرة.
+• الأضرار غير المباشرة أو التبعية.
+• المحتوى المنشور من قبل المستخدمين.
+
+**المنصة مسؤولة عن:**
+• توفير بيئة آمنة للتعاملات.
+• التحقق من هوية البائعين وموظفي التوصيل.
+• معالجة الشكاوى والنزاعات.`
+    },
+    {
+      key: 'termination',
+      title: '7. إنهاء الخدمة',
+      content: `يحق لنا تعليق أو إنهاء حسابك في الحالات التالية:
+
+• انتهاك شروط الاستخدام.
+• تقديم معلومات خاطئة أو مضللة.
+• السلوك الاحتيالي أو المسيء.
+• عدم النشاط لفترة طويلة.
+
+**عند الإنهاء:**
+• يجب تسوية جميع المعاملات المعلقة.
+• يحق لك سحب رصيد محفظتك.
+• قد نحتفظ ببعض البيانات للأغراض القانونية.`
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={20} />
+          </button>
+          <div className="flex items-center gap-2">
+            <FileText className="text-[#FF6B00]" size={20} />
+            <h1 className="font-bold text-gray-900">شروط الاستخدام</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4">
+        {/* Intro */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl p-4 mb-4"
+        >
+          <h2 className="font-bold text-lg mb-2">شروط وأحكام الاستخدام</h2>
+          <p className="text-sm opacity-90">
+            تحكم هذه الشروط استخدامك لمنصة "تريند سورية". يرجى قراءتها بعناية قبل استخدام المنصة.
+          </p>
+          <p className="text-xs mt-2 opacity-75">آخر تحديث: ديسمبر 2025</p>
+        </motion.div>
+
+        {/* Sections */}
+        <div className="space-y-3">
+          {sections.map((section, index) => (
+            <motion.div
+              key={section.key}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+            >
+              <button
+                onClick={() => toggleSection(section.key)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+              >
+                <span className="font-bold text-gray-900 text-right">{section.title}</span>
+                {openSections[section.key] ? (
+                  <ChevronUp size={20} className="text-gray-400" />
+                ) : (
+                  <ChevronDown size={20} className="text-gray-400" />
+                )}
+              </button>
+              {openSections[section.key] && (
+                <div className="px-4 pb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {section.content}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============== Return Policy Page ==============
+export const ReturnPolicyPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={20} />
+          </button>
+          <div className="flex items-center gap-2">
+            <RefreshCcw className="text-[#FF6B00]" size={20} />
+            <h1 className="font-bold text-gray-900">سياسة الإرجاع والاستبدال</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* Intro */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-green-600 to-green-500 text-white rounded-2xl p-4"
+        >
+          <h2 className="font-bold text-lg mb-2">ضمان رضاك</h2>
+          <p className="text-sm opacity-90">
+            نسعى لضمان رضاك التام عن مشترياتك. إذا لم تكن راضياً، يمكنك الإرجاع أو الاستبدال وفق الشروط التالية.
+          </p>
+        </motion.div>
+
+        {/* Return Period */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 font-bold">7</span>
+            </div>
+            مدة الإرجاع
+          </h3>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            يحق لك إرجاع أو استبدال المنتج خلال <strong>7 أيام</strong> من تاريخ الاستلام، بشرط أن يكون المنتج بحالته الأصلية ومع جميع الملحقات والتغليف.
+          </p>
+        </motion.div>
+
+        {/* Conditions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3">شروط الإرجاع</h3>
+          <div className="space-y-3">
+            {[
+              'المنتج غير مستخدم وبحالته الأصلية',
+              'جميع الملصقات والتغليف الأصلي موجودة',
+              'إرفاق فاتورة الشراء أو رقم الطلب',
+              'المنتج غير تالف بسبب سوء الاستخدام',
+              'المنتج ليس من المنتجات المستثناة'
+            ].map((condition, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-xs">✓</span>
+                </div>
+                {condition}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Excluded Products */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-red-50 border border-red-200 rounded-xl p-4"
+        >
+          <h3 className="font-bold text-red-800 mb-3">المنتجات المستثناة من الإرجاع</h3>
+          <div className="space-y-2">
+            {[
+              'الملابس الداخلية ومنتجات العناية الشخصية',
+              'المنتجات الغذائية والقابلة للتلف',
+              'المنتجات المصنوعة حسب الطلب',
+              'البرمجيات والمحتوى الرقمي',
+              'المنتجات المخفضة أو التصفيات (ما لم يكن بها عيب)'
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-red-700">
+                <span className="text-red-500">✕</span>
+                {item}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Process */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-4">خطوات الإرجاع</h3>
+          <div className="space-y-4">
+            {[
+              { step: 1, title: 'تقديم الطلب', desc: 'تواصل معنا عبر التطبيق أو البريد الإلكتروني مع ذكر رقم الطلب وسبب الإرجاع' },
+              { step: 2, title: 'مراجعة الطلب', desc: 'سنراجع طلبك ونرد عليك خلال 24-48 ساعة' },
+              { step: 3, title: 'استلام المنتج', desc: 'سيتم إرسال موظف التوصيل لاستلام المنتج من عنوانك' },
+              { step: 4, title: 'فحص المنتج', desc: 'سنفحص المنتج للتأكد من مطابقته لشروط الإرجاع' },
+              { step: 5, title: 'استرداد المبلغ', desc: 'سيتم إضافة المبلغ لمحفظتك خلال 3-5 أيام عمل' }
+            ].map((item) => (
+              <div key={item.step} className="flex gap-3">
+                <div className="w-8 h-8 bg-[#FF6B00] text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                  {item.step}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{item.title}</p>
+                  <p className="text-gray-600 text-xs">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Refund */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <CreditCard size={18} className="text-[#FF6B00]" />
+            استرداد المبلغ
+          </h3>
+          <div className="text-sm text-gray-700 space-y-2">
+            <p>• يتم استرداد المبلغ كاملاً إلى محفظتك في التطبيق.</p>
+            <p>• يمكنك استخدام الرصيد لشراء منتجات أخرى أو طلب سحبه.</p>
+            <p>• في حالة الاستبدال، يتم احتساب الفرق إن وجد.</p>
+            <p>• رسوم التوصيل غير قابلة للاسترداد إلا في حالة خطأ من البائع.</p>
+          </div>
+        </motion.div>
+
+        {/* Damaged Products */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-yellow-50 border border-yellow-200 rounded-xl p-4"
+        >
+          <h3 className="font-bold text-yellow-800 mb-3">المنتجات التالفة أو الخاطئة</h3>
+          <p className="text-sm text-yellow-700 leading-relaxed">
+            إذا استلمت منتجاً تالفاً أو مختلفاً عما طلبته، يرجى التواصل معنا خلال <strong>48 ساعة</strong> من الاستلام مع إرفاق صور للمنتج. سنقوم بترتيب الاستبدال أو الاسترداد على حسابنا.
+          </p>
+        </motion.div>
+
+        {/* Contact */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3">تواصل معنا</h3>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p className="flex items-center gap-2">
+              <Mail size={16} className="text-[#FF6B00]" />
+              returns@trendsyria.com
+            </p>
+            <p className="flex items-center gap-2">
+              <Phone size={16} className="text-[#FF6B00]" />
+              +963 XX XXX XXXX
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
