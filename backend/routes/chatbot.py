@@ -389,3 +389,100 @@ async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_us
     )
     
     return {"message": "تم إرسال الرد للعميل بنجاح"}
+
+
+# ============== نظام تقييم الدعم ==============
+
+class SupportRating(BaseModel):
+    ticket_id: str
+    rating: int  # 1-5
+    comment: Optional[str] = None
+
+@router.post("/rate-support")
+async def rate_support_experience(data: SupportRating, user: dict = Depends(get_current_user)):
+    """تقييم تجربة الدعم من قبل العميل"""
+    
+    if data.rating < 1 or data.rating > 5:
+        raise HTTPException(status_code=400, detail="التقييم يجب أن يكون بين 1 و 5")
+    
+    # التحقق من وجود التذكرة وأنها تخص هذا المستخدم
+    ticket = await db.support_requests.find_one({
+        "id": data.ticket_id,
+        "user_id": user["id"]
+    })
+    
+    if not ticket:
+        raise HTTPException(status_code=404, detail="التذكرة غير موجودة")
+    
+    if ticket.get("rating"):
+        raise HTTPException(status_code=400, detail="تم تقييم هذه التذكرة مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ التقييم في التذكرة
+    await db.support_requests.update_one(
+        {"id": data.ticket_id},
+        {
+            "$set": {
+                "rating": data.rating,
+                "rating_comment": data.comment,
+                "rated_at": now
+            }
+        }
+    )
+    
+    return {"message": "شكراً لتقييمك! نسعى دائماً لتحسين خدماتنا 🙏"}
+
+@router.get("/my-pending-rating")
+async def get_pending_rating(user: dict = Depends(get_current_user)):
+    """جلب تذاكر الدعم المحلولة التي لم يتم تقييمها بعد"""
+    
+    ticket = await db.support_requests.find_one(
+        {
+            "user_id": user["id"],
+            "status": "resolved",
+            "rating": {"$exists": False}
+        },
+        {"_id": 0}
+    )
+    
+    return {"ticket": ticket}
+
+@router.get("/admin/rating-stats")
+async def get_rating_stats(user: dict = Depends(get_current_user)):
+    """إحصائيات تقييمات الدعم للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # جلب جميع التذاكر المقيمة
+    rated_tickets = await db.support_requests.find(
+        {"rating": {"$exists": True}},
+        {"_id": 0, "rating": 1, "rating_comment": 1, "rated_at": 1, "user_name": 1}
+    ).sort("rated_at", -1).limit(50).to_list(50)
+    
+    if not rated_tickets:
+        return {
+            "average_rating": 0,
+            "total_ratings": 0,
+            "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            "recent_ratings": []
+        }
+    
+    # حساب المتوسط
+    ratings = [t["rating"] for t in rated_tickets]
+    average = sum(ratings) / len(ratings)
+    
+    # توزيع التقييمات
+    distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in ratings:
+        distribution[r] = distribution.get(r, 0) + 1
+    
+    # آخر التقييمات مع تعليقات
+    recent_with_comments = [t for t in rated_tickets if t.get("rating_comment")][:10]
+    
+    return {
+        "average_rating": round(average, 1),
+        "total_ratings": len(ratings),
+        "rating_distribution": distribution,
+        "recent_ratings": recent_with_comments
+    }

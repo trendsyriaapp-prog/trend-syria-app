@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Headphones, MessageCircle, Clock, CheckCircle, User,
   Phone, Calendar, Filter, Search, X, Send, AlertCircle,
-  Loader2, ChevronDown, ChevronUp
+  Loader2, ChevronDown, ChevronUp, Star, TrendingUp
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -32,9 +32,12 @@ const SupportTicketsTab = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
+  const [ratingStats, setRatingStats] = useState(null);
+  const [showRatings, setShowRatings] = useState(false);
 
   useEffect(() => {
     fetchTickets();
+    fetchRatingStats();
   }, []);
 
   const fetchTickets = async () => {
@@ -46,6 +49,15 @@ const SupportTicketsTab = () => {
       console.error('Error fetching tickets:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRatingStats = async () => {
+    try {
+      const res = await axios.get(`${API}/api/chatbot/admin/rating-stats`);
+      setRatingStats(res.data);
+    } catch (error) {
+      console.error('Error fetching rating stats:', error);
     }
   };
 
@@ -100,7 +112,7 @@ const SupportTicketsTab = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
           icon={AlertCircle}
           label="قيد الانتظار"
@@ -133,7 +145,42 @@ const SupportTicketsTab = () => {
           onClick={() => setFilter('all')}
           active={filter === 'all'}
         />
+        {/* Rating Stats Card */}
+        <button
+          onClick={() => setShowRatings(!showRatings)}
+          className={`bg-white rounded-xl border p-4 text-right transition-all ${
+            showRatings ? 'border-yellow-400 ring-2 ring-yellow-400/20' : 'border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="w-10 h-10 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center mb-2">
+            <Star size={20} className="fill-yellow-500" />
+          </div>
+          <p className="text-xs text-gray-500">متوسط التقييم</p>
+          <div className="flex items-center gap-1">
+            <p className="text-2xl font-bold text-gray-900">
+              {ratingStats?.average_rating || 0}
+            </p>
+            <span className="text-xs text-gray-400">/ 5</span>
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1">
+            ({ratingStats?.total_ratings || 0} تقييم)
+          </p>
+        </button>
       </div>
+
+      {/* Rating Stats Panel */}
+      <AnimatePresence>
+        {showRatings && ratingStats && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <RatingStatsPanel stats={ratingStats} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -448,6 +495,89 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
               {ticket.user_phone}
             </a>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// مكون إحصائيات التقييمات
+const RatingStatsPanel = ({ stats }) => {
+  const maxCount = Math.max(...Object.values(stats.rating_distribution || {}), 1);
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Star size={20} className="text-yellow-500 fill-yellow-500" />
+        <h3 className="font-bold text-gray-900">إحصائيات تقييمات العملاء</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Rating Distribution */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">توزيع التقييمات</h4>
+          <div className="space-y-2">
+            {[5, 4, 3, 2, 1].map((rating) => {
+              const count = stats.rating_distribution?.[rating] || 0;
+              const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+              
+              return (
+                <div key={rating} className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 w-12">
+                    <span className="text-sm font-medium">{rating}</span>
+                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                  </div>
+                  <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      className="h-full bg-yellow-400 rounded-full"
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 w-8">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Recent Comments */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">آخر التعليقات</h4>
+          {stats.recent_ratings?.length > 0 ? (
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {stats.recent_ratings.slice(0, 5).map((r, i) => (
+                <div key={i} className="bg-gray-50 rounded-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="text-xs text-gray-500">{r.user_name}</span>
+                    <div className="flex">
+                      {[...Array(r.rating)].map((_, j) => (
+                        <Star key={j} size={10} className="text-yellow-400 fill-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-700">{r.rating_comment}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-4">لا توجد تعليقات بعد</p>
+          )}
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={16} className="text-green-500" />
+          <span className="text-sm text-gray-600">
+            إجمالي التقييمات: <span className="font-bold">{stats.total_ratings}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-gray-600">المتوسط:</span>
+          <span className="font-bold text-yellow-600">{stats.average_rating}</span>
+          <Star size={14} className="text-yellow-400 fill-yellow-400" />
         </div>
       </div>
     </div>
