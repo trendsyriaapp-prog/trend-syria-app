@@ -1,10 +1,10 @@
 // /app/frontend/src/components/delivery/DriverPenaltyPoints.js
-// عرض نقاط السلوك للموظف
+// عرض نقاط السلوك والمكافآت للموظف
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Shield, AlertTriangle, Clock, TrendingDown } from 'lucide-react';
+import { Shield, AlertTriangle, Clock, TrendingDown, TrendingUp, Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -54,6 +54,11 @@ const DriverPenaltyPoints = () => {
   const { current_points, max_points, percentage, history } = data;
   const isLow = percentage <= 30;
   const isCritical = percentage <= 10;
+  const isFull = percentage >= 100;
+
+  // فصل السجلات إلى خصومات ومكافآت
+  const deductions = history?.filter(h => h.type !== 'bonus') || [];
+  const bonuses = history?.filter(h => h.type === 'bonus') || [];
 
   return (
     <motion.div
@@ -62,6 +67,7 @@ const DriverPenaltyPoints = () => {
       className={`rounded-xl p-4 border ${
         isCritical ? 'bg-red-50 border-red-200' : 
         isLow ? 'bg-yellow-50 border-yellow-200' : 
+        isFull ? 'bg-green-50 border-green-200' :
         'bg-white border-gray-200'
       }`}
     >
@@ -96,8 +102,17 @@ const DriverPenaltyPoints = () => {
         />
       </div>
 
-      {/* Warning */}
-      {isLow && (
+      {/* Status Message */}
+      {isFull && (
+        <div className="flex items-center gap-2 p-2 rounded-lg mt-2 bg-green-100">
+          <Gift size={14} className="text-green-600" />
+          <span className="text-xs font-medium text-green-700">
+            ممتاز! نقاطك في الحد الأقصى. استمر بالعمل الجيد!
+          </span>
+        </div>
+      )}
+
+      {isLow && !isFull && (
         <div className={`flex items-center gap-2 p-2 rounded-lg mt-2 ${
           isCritical ? 'bg-red-100' : 'bg-yellow-100'
         }`}>
@@ -111,21 +126,39 @@ const DriverPenaltyPoints = () => {
         </div>
       )}
 
+      {/* Bonus Tips */}
+      {!isFull && (
+        <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
+          <p className="text-xs text-blue-700 font-medium flex items-center gap-1">
+            <Gift size={12} />
+            اكسب نقاط: +5 عند تقييم 5⭐ | +10 كل 10 توصيلات
+          </p>
+        </div>
+      )}
+
       {/* History */}
       {history && history.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center gap-1 mb-2">
             <Clock size={12} className="text-gray-400" />
-            <span className="text-xs text-gray-500">آخر الخصومات</span>
+            <span className="text-xs text-gray-500">آخر السجلات</span>
           </div>
           <div className="space-y-1">
-            {history.slice(-3).reverse().map((item, i) => (
+            {history.slice(-4).reverse().map((item, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1">
-                  <TrendingDown size={10} className="text-red-500" />
-                  <span className="text-gray-600">{item.category}</span>
+                  {item.type === 'bonus' ? (
+                    <TrendingUp size={10} className="text-green-500" />
+                  ) : (
+                    <TrendingDown size={10} className="text-red-500" />
+                  )}
+                  <span className="text-gray-600 truncate max-w-[150px]">
+                    {item.type === 'bonus' ? item.reason : item.category}
+                  </span>
                 </div>
-                <span className="text-red-600 font-medium">-{item.points_deducted}</span>
+                <span className={`font-medium ${item.type === 'bonus' ? 'text-green-600' : 'text-red-600'}`}>
+                  {item.type === 'bonus' ? `+${item.points_added}` : `-${item.points_deducted}`}
+                </span>
               </div>
             ))}
           </div>

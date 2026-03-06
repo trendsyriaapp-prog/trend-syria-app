@@ -160,7 +160,40 @@ async def mark_order_delivered(order_id: str, user: dict = Depends(get_current_u
         order_id=order_id
     )
     
+    # التحقق من مكافأة كل 10 توصيلات
+    await check_delivery_milestone_bonus(user["id"])
+    
     return {"message": "تم تأكيد التسليم"}
+
+
+async def check_delivery_milestone_bonus(driver_id: str):
+    """التحقق من مكافأة كل 10 توصيلات"""
+    # عدد التوصيلات المكتملة
+    delivered_count = await db.orders.count_documents({
+        "delivery_driver_id": driver_id,
+        "delivery_status": "delivered"
+    })
+    
+    # جلب آخر milestone تم مكافأته
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "last_delivery_milestone": 1})
+    last_milestone = driver.get("last_delivery_milestone", 0) if driver else 0
+    
+    # التحقق من الوصول لـ milestone جديد (كل 10 توصيلات)
+    current_milestone = (delivered_count // 10) * 10
+    
+    if current_milestone > last_milestone and current_milestone > 0:
+        # إضافة مكافأة
+        await add_bonus_points(
+            driver_id=driver_id,
+            bonus_type="ten_deliveries",
+            reason=f"أكملت {current_milestone} توصيلة!"
+        )
+        
+        # تحديث آخر milestone
+        await db.users.update_one(
+            {"id": driver_id},
+            {"$set": {"last_delivery_milestone": current_milestone}}
+        )
 
 @router.get("/stats")
 async def get_delivery_stats(user: dict = Depends(get_current_user)):
@@ -625,6 +658,14 @@ async def rate_delivery_driver(order_id: str, rating_data: DriverRating, user: d
     # تحديث متوسط تقييم موظف التوصيل
     await update_driver_average_rating(driver_id)
     
+    # إضافة نقاط مكافأة عند تقييم 5 نجوم
+    if rating_data.rating == 5:
+        await add_bonus_points(
+            driver_id=driver_id,
+            bonus_type="five_star_rating",
+            reason="حصلت على تقييم 5 نجوم من عميل"
+        )
+    
     # إشعار موظف التوصيل
     await create_notification_for_user(
         user_id=driver_id,
@@ -742,8 +783,59 @@ PENALTY_POINTS = {
     "أخرى": 10            # خصم 10 نقاط
 }
 
+# نقاط المكافآت الإيجابية
+BONUS_POINTS = {
+    "five_star_rating": 5,      # +5 نقاط عند تقييم 5 نجوم
+    "ten_deliveries": 10,       # +10 نقاط عند كل 10 توصيلات
+    "challenge_complete": 15,   # +15 نقاط عند إتمام تحدي
+}
+
 # الحد الأقصى للنقاط
 MAX_PENALTY_POINTS = 100
+
+
+async def add_bonus_points(driver_id: str, bonus_type: str, reason: str):
+    """إضافة نقاط مكافأة للموظف"""
+    bonus = BONUS_POINTS.get(bonus_type, 5)
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب النقاط الحالية
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "penalty_points": 1})
+    current_points = driver.get("penalty_points", MAX_PENALTY_POINTS) if driver else MAX_PENALTY_POINTS
+    new_points = min(MAX_PENALTY_POINTS, current_points + bonus)
+    
+    # لا نضيف إذا وصلنا للحد الأقصى
+    if current_points >= MAX_PENALTY_POINTS:
+        return {"added": False, "reason": "النقاط في الحد الأقصى"}
+    
+    # تحديث النقاط
+    bonus_record = {
+        "date": now,
+        "type": "bonus",
+        "bonus_type": bonus_type,
+        "reason": reason,
+        "points_added": bonus,
+        "points_before": current_points,
+        "points_after": new_points
+    }
+    
+    await db.users.update_one(
+        {"id": driver_id},
+        {
+            "$set": {"penalty_points": new_points},
+            "$push": {"penalty_history": bonus_record}
+        }
+    )
+    
+    # إشعار الموظف
+    await create_notification_for_user(
+        user_id=driver_id,
+        title=f"🎉 +{bonus} نقاط مكافأة!",
+        message=f"{reason}. رصيدك الحالي: {new_points} نقطة",
+        notification_type="bonus_points"
+    )
+    
+    return {"added": True, "bonus": bonus, "new_points": new_points}
 
 @router.post("/report-driver")
 async def report_driver(data: DriverReport, user: dict = Depends(get_current_user)):
