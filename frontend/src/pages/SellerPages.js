@@ -4,327 +4,27 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
-  Package, DollarSign, ShoppingBag, Edit, Trash2, Loader2,
-  AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle,
-  Megaphone, Wallet, TrendingUp, Gift, Printer, BookOpen
+  Package, DollarSign, ShoppingBag, Loader2,
+  Megaphone, Wallet, TrendingUp, Gift, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import { formatPrice } from '../utils/imageHelpers';
+
+// Imported Components
 import SellerAdsTab from '../components/seller/SellerAdsTab';
 import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
 import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
 import ImageBackgroundSelector from '../components/seller/ImageBackgroundSelector';
 import OrderLabelPrint from '../components/seller/OrderLabelPrint';
+import AddProductModal from '../components/seller/AddProductModal';
+import EditProductModal from '../components/seller/EditProductModal';
+import SellerStatsCard from '../components/seller/SellerStatsCard';
+import SellerProductsGrid from '../components/seller/SellerProductsGrid';
+import SellerOrdersSection from '../components/seller/SellerOrdersSection';
+import StatDetailsModal from '../components/seller/StatDetailsModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-// ============== Photo Guide Modal ==============
-const PhotoGuideModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
-      >
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between rounded-t-2xl">
-          <div className="flex items-center gap-2">
-            <Camera className="text-[#FF6B00]" size={20} />
-            <h2 className="font-bold text-gray-900">دليل تصوير المنتجات</h2>
-          </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">
-            <X size={20} className="text-gray-500" />
-          </button>
-        </div>
-
-        <div className="p-4 space-y-4">
-          {/* Stats */}
-          <div className="bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold">+60%</p>
-            <p className="text-sm opacity-90">زيادة في المبيعات مع صور احترافية</p>
-          </div>
-
-          {/* Good Examples */}
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-            <h3 className="font-bold text-green-800 flex items-center gap-2 mb-3">
-              <CheckCircle size={16} />
-              صور صحيحة ✅
-            </h3>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-green-300 flex items-center justify-center mb-1">
-                  <div className="w-8 h-10 bg-gray-300 rounded"></div>
-                </div>
-                <p className="text-[9px] text-green-700">خلفية بيضاء</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-green-300 flex items-center justify-center mb-1">
-                  <div className="w-6 h-10 bg-blue-200 rounded relative">
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-pink-200 rounded-full"></div>
-                  </div>
-                </div>
-                <p className="text-[9px] text-green-700">على موديل</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-green-300 flex items-center justify-center mb-1">
-                  <div className="w-10 h-6 bg-gray-400 rounded-sm"></div>
-                </div>
-                <p className="text-[9px] text-green-700">تفاصيل قريبة</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-green-300 flex items-center justify-center mb-1">
-                  <Sun size={20} className="text-yellow-500" />
-                </div>
-                <p className="text-[9px] text-green-700">إضاءة جيدة</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bad Examples */}
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-            <h3 className="font-bold text-red-800 flex items-center gap-2 mb-3">
-              <AlertTriangle size={16} />
-              صور خاطئة ❌
-            </h3>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="text-center">
-                <div className="aspect-square bg-gradient-to-br from-blue-200 via-pink-200 to-yellow-200 rounded-lg border-2 border-red-300 flex items-center justify-center mb-1">
-                  <div className="w-6 h-8 bg-gray-400 rounded opacity-50"></div>
-                </div>
-                <p className="text-[9px] text-red-700">خلفية فوضوية</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-gray-700 rounded-lg border-2 border-red-300 flex items-center justify-center mb-1">
-                  <div className="w-6 h-8 bg-gray-600 rounded"></div>
-                </div>
-                <p className="text-[9px] text-red-700">إضاءة ضعيفة</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-red-300 flex items-center justify-center mb-1 blur-[2px]">
-                  <div className="w-6 h-8 bg-gray-400 rounded"></div>
-                </div>
-                <p className="text-[9px] text-red-700">صورة ضبابية</p>
-              </div>
-              <div className="text-center">
-                <div className="aspect-square bg-white rounded-lg border-2 border-red-300 flex items-center justify-center mb-1">
-                  <div className="w-3 h-4 bg-gray-400 rounded"></div>
-                </div>
-                <p className="text-[9px] text-red-700">المنتج بعيد</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Tips */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-            <h3 className="font-bold text-blue-800 mb-2">💡 نصائح سريعة</h3>
-            <ul className="space-y-1.5 text-sm text-blue-900">
-              <li className="flex items-start gap-2">
-                <Sun size={14} className="text-yellow-500 mt-0.5 flex-shrink-0" />
-                <span>صوّر بجانب النافذة للحصول على إضاءة طبيعية</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Image size={14} className="text-gray-500 mt-0.5 flex-shrink-0" />
-                <span>استخدم ورقة بيضاء أو قماش أبيض كخلفية</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Maximize size={14} className="text-green-500 mt-0.5 flex-shrink-0" />
-                <span>اجعل المنتج يشغل 80% من الصورة</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Camera size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                <span>ارفع 3-5 صور من زوايا مختلفة</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Requirements */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-            <h3 className="font-bold text-gray-800 mb-2">📏 متطلبات الصور</h3>
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-              <div className="flex items-center gap-1">
-                <Check size={12} className="text-green-500" />
-                <span>الحد الأدنى: 800×800 بكسل</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Check size={12} className="text-green-500" />
-                <span>الصيغ: JPG, PNG, WebP</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Check size={12} className="text-green-500" />
-                <span>الحجم الأقصى: 5 ميجابايت</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Check size={12} className="text-green-500" />
-                <span>النسبة: 1:1 (مربع) مفضلة</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <button
-            onClick={onClose}
-            className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-xl hover:bg-[#E65000] transition-colors"
-          >
-            فهمت، بدء رفع الصور 📸
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
-// ============== Image Validation Helper ==============
-const validateAndEnhanceImage = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = document.createElement('img');
-      img.onload = () => {
-        const issues = [];
-        const warnings = [];
-        
-        // Check dimensions
-        if (img.width < 800 || img.height < 800) {
-          issues.push(`الصورة صغيرة جداً (${img.width}×${img.height}). الحد الأدنى 800×800`);
-        } else if (img.width < 1000 || img.height < 1000) {
-          warnings.push(`جودة متوسطة (${img.width}×${img.height}). يُفضل 1200×1200 أو أكثر`);
-        }
-        
-        // Check file size
-        if (file.size > 5 * 1024 * 1024) {
-          issues.push('حجم الملف كبير جداً (الحد الأقصى 5MB)');
-        }
-        
-        // Check aspect ratio
-        const ratio = img.width / img.height;
-        if (ratio < 0.5 || ratio > 2) {
-          warnings.push('نسبة الأبعاد غير مثالية. يُفضل صورة مربعة (1:1)');
-        }
-        
-        // Create enhanced canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Resize to optimal size (max 1200px for better performance)
-        let newWidth = img.width;
-        let newHeight = img.height;
-        const maxSize = 1200;
-        
-        if (newWidth > maxSize || newHeight > maxSize) {
-          if (newWidth > newHeight) {
-            newHeight = Math.round((newHeight / newWidth) * maxSize);
-            newWidth = maxSize;
-          } else {
-            newWidth = Math.round((newWidth / newHeight) * maxSize);
-            newHeight = maxSize;
-          }
-          warnings.push(`تم تصغير الصورة إلى ${newWidth}×${newHeight}`);
-        }
-        
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-        
-        // High quality drawing
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        // Draw and enhance
-        ctx.drawImage(img, 0, 0, newWidth, newHeight);
-        
-        // Auto enhance: slight brightness and contrast boost
-        const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-        const data = imageData.data;
-        
-        // Calculate average brightness
-        let totalBrightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-        }
-        const avgBrightness = totalBrightness / (data.length / 4);
-        
-        // Only enhance if image is dark
-        if (avgBrightness < 120) {
-          const brightnessAdjust = 20;
-          const contrastFactor = 1.1;
-          
-          for (let i = 0; i < data.length; i += 4) {
-            // Brightness
-            data[i] = Math.min(255, data[i] + brightnessAdjust);
-            data[i + 1] = Math.min(255, data[i + 1] + brightnessAdjust);
-            data[i + 2] = Math.min(255, data[i + 2] + brightnessAdjust);
-            
-            // Contrast
-            data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrastFactor + 128));
-            data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrastFactor + 128));
-            data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrastFactor + 128));
-          }
-          
-          ctx.putImageData(imageData, 0, 0);
-          warnings.push('تم تحسين إضاءة الصورة تلقائياً');
-        }
-        
-        // Try WebP first (30% smaller), fallback to JPEG
-        let enhancedDataUrl;
-        const webpDataUrl = canvas.toDataURL('image/webp', 0.85);
-        if (webpDataUrl.startsWith('data:image/webp')) {
-          enhancedDataUrl = webpDataUrl;
-          
-          // Calculate size savings
-          const originalSize = file.size;
-          const compressedSize = Math.round(webpDataUrl.length * 0.75); // Approximate
-          const savings = Math.round((1 - compressedSize / originalSize) * 100);
-          if (savings > 10) {
-            warnings.push(`تم ضغط الصورة بنسبة ${savings}%`);
-          }
-        } else {
-          // Fallback to JPEG
-          enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
-        }
-        
-        resolve({
-          dataUrl: enhancedDataUrl,
-          width: newWidth,
-          height: newHeight,
-          originalWidth: img.width,
-          originalHeight: img.height,
-          issues,
-          warnings,
-          enhanced: avgBrightness < 120
-        });
-      };
-      img.onerror = () => reject(new Error('فشل تحميل الصورة'));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error('فشل قراءة الملف'));
-    reader.readAsDataURL(file);
-  });
-};
-
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
-};
-
-const CATEGORIES = [
-  { id: 'electronics', name: 'إلكترونيات' },
-  { id: 'fashion', name: 'أزياء' },
-  { id: 'home', name: 'المنزل' },
-  { id: 'beauty', name: 'تجميل' },
-  { id: 'sports', name: 'رياضة' },
-  { id: 'books', name: 'كتب' },
-  { id: 'toys', name: 'ألعاب' },
-  { id: 'food', name: 'طعام' },
-  { id: 'health', name: 'صحة' },
-  { id: 'cars', name: 'سيارات' },
-];
-
-const SYRIAN_CITIES = [
-  'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',
-  'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء',
-  'القنيطرة', 'إدلب', 'ريف دمشق'
-];
 
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
@@ -529,42 +229,13 @@ const SellerDashboardPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: 'electronics',
-    stock: '',
-    images: [],
-    video: null,
-    length_cm: '',
-    width_cm: '',
-    height_cm: '',
-    weight_kg: '',
-    size_type: 'none',
-    available_sizes: []
-  });
-
-  // المقاسات المتاحة لكل نوع
-  const SIZE_OPTIONS = {
-    clothes: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
-    shoes: ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    pants: ['28', '30', '32', '34', '36', '38', '40', '42'],
-    kids: ['2-3', '4-5', '6-7', '8-9', '10-11', '12-13', '14-15']
-  };
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [showPhotoGuide, setShowPhotoGuide] = useState(false);
-  const [imageWarnings, setImageWarnings] = useState([]);
-  const [activeTab, setActiveTab] = useState('products'); // products, ads, analytics, discounts
+  const [activeTab, setActiveTab] = useState('products');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
-  const [pendingImage, setPendingImage] = useState(null);
-  const [showImageProcessor, setShowImageProcessor] = useState(false);
   const [activeStatView, setActiveStatView] = useState(null);
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
 
@@ -599,139 +270,15 @@ const SellerDashboardPage = () => {
     }
   };
 
-  // رفع الصور مع فحص وتحسين
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    
-    setUploadingImage(true);
-    setImageWarnings([]);
-    
-    try {
-      for (const file of files) {
-        // فحص وتحسين الصورة
-        const result = await validateAndEnhanceImage(file);
-        
-        // إذا كانت هناك مشاكل خطيرة
-        if (result.issues.length > 0) {
-          toast({
-            title: "⚠️ مشكلة في الصورة",
-            description: result.issues[0],
-            variant: "destructive"
-          });
-          continue;
-        }
-        
-        // فتح نافذة معالجة الصورة
-        setPendingImage(result.dataUrl);
-        setShowImageProcessor(true);
-        
-        // عرض التحذيرات
-        if (result.warnings.length > 0) {
-          setImageWarnings(prev => [...prev, ...result.warnings]);
-        }
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ في رفع الصورة",
-        variant: "destructive"
-      });
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleProcessedImage = (processedImageUrl) => {
-    setNewProduct(prev => ({
-      ...prev,
-      images: [...prev.images, processedImageUrl]
-    }));
-    setShowImageProcessor(false);
-    setPendingImage(null);
-    toast({
-      title: "✅ تم إضافة الصورة",
-      description: "تمت إضافة الصورة بنجاح"
-    });
-  };
-
-  const handleCancelImageProcess = () => {
-    setShowImageProcessor(false);
-    setPendingImage(null);
-  };
-
-  const handleVideoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB max
-        toast({
-          title: "خطأ",
-          description: "حجم الفيديو كبير جداً (الحد الأقصى 50MB)",
-          variant: "destructive"
-        });
-        return;
-      }
-      setUploadingVideo(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewProduct(prev => ({
-          ...prev,
-          video: reader.result
-        }));
-        setUploadingVideo(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    if (newProduct.images.length === 0) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إضافة صورة واحدة على الأقل",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleAddProduct = async (productData) => {
     setSaving(true);
     try {
-      await axios.post(`${API}/products`, {
-        ...newProduct,
-        price: parseFloat(newProduct.price),
-        stock: parseInt(newProduct.stock),
-        video: newProduct.video || null,
-        length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
-        width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
-        height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
-        weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null,
-        size_type: newProduct.size_type !== 'none' ? newProduct.size_type : null,
-        available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null
-      });
-
+      await axios.post(`${API}/products`, productData);
       toast({
         title: "تم الإضافة",
         description: "تمت إضافة المنتج بنجاح"
       });
-
       setShowAddProduct(false);
-      setNewProduct({
-        name: '',
-        description: '',
-        price: '',
-        category: 'electronics',
-        stock: '',
-        images: [],
-        video: null,
-        length_cm: '',
-        width_cm: '',
-        height_cm: '',
-        weight_kg: '',
-        size_type: 'none',
-        available_sizes: []
-      });
       fetchData();
     } catch (error) {
       toast({
@@ -797,24 +344,6 @@ const SellerDashboardPage = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId, status) => {
-    try {
-      await axios.put(`${API}/orders/${orderId}/status?status=${status}`);
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث حالة الطلب"
-      });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل تحديث الحالة",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // دالة جديدة لإجراءات البائع على الطلبات
   const handleSellerAction = async (orderId, action) => {
     try {
       const endpoints = {
@@ -863,7 +392,6 @@ const SellerDashboardPage = () => {
     );
   }
 
-  // Calculate stats
   const totalSales = orders.reduce((sum, o) => sum + (o.status === 'paid' ? o.total : 0), 0);
   const paidOrders = orders.filter(o => o.status === 'paid').length;
 
@@ -886,802 +414,133 @@ const SellerDashboardPage = () => {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 border border-gray-200 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
-              activeTab === 'products' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            data-testid="tab-products"
-          >
-            <Package size={12} />
-            منتجاتي
-          </button>
-          <button
-            onClick={() => setActiveTab('ads')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
-              activeTab === 'ads' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            data-testid="tab-ads"
-          >
-            <Megaphone size={12} />
-            الإعلانات
-          </button>
-          <button
-            onClick={() => setActiveTab('discounts')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
-              activeTab === 'discounts' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            data-testid="tab-discounts"
-          >
-            <Gift size={12} />
-            الخصومات
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
-              activeTab === 'analytics' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            data-testid="tab-analytics"
-          >
-            <TrendingUp size={12} />
-            التقارير
-          </button>
+          {[
+            { id: 'products', icon: Package, label: 'منتجاتي' },
+            { id: 'ads', icon: Megaphone, label: 'الإعلانات' },
+            { id: 'discounts', icon: Gift, label: 'الخصومات' },
+            { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
+                activeTab === tab.id 
+                  ? 'bg-[#FF6B00] text-white' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              data-testid={`tab-${tab.id}`}
+            >
+              <tab.icon size={12} />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Ads Tab */}
+        {/* Tab Content */}
         {activeTab === 'ads' && (
           <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
         )}
 
-        {/* Discounts Tab */}
         {activeTab === 'discounts' && (
           <SellerDiscountsTab products={products} />
         )}
 
-        {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <SellerAdAnalytics />
         )}
 
-        {/* Products Tab */}
         {activeTab === 'products' && (
           <>
-        {/* Wallet Quick Access Card */}
-        <div 
-          onClick={() => navigate('/wallet')}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
-          data-testid="wallet-quick-access"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Wallet size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
-                <p className="text-white font-bold text-lg">{formatPrice(walletBalance)}</p>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/wallet');
-              }}
-              className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
-              data-testid="withdraw-quick-btn"
-            >
-              <DollarSign size={14} />
-              طلب سحب
-            </button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {[
-            { icon: Package, label: 'المنتجات', value: products.length, color: 'bg-blue-100 text-blue-600', action: 'products' },
-            { icon: ShoppingBag, label: 'طلبات مدفوعة', value: paidOrders, color: 'bg-green-100 text-green-600', action: 'paid_orders' },
-            { icon: DollarSign, label: 'المبيعات', value: formatPrice(totalSales), color: 'bg-orange-100 text-orange-600', action: 'sales' },
-            { icon: Clock, label: 'معلقة', value: orders.filter(o => o.delivery_status === 'pending').length, color: 'bg-yellow-100 text-yellow-600', action: 'pending_orders' },
-          ].map((stat, i) => (
+            {/* Wallet Quick Access Card */}
             <div 
-              key={i} 
-              onClick={() => setActiveStatView(stat.action)}
-              className="bg-white rounded-xl p-2 border border-gray-200 cursor-pointer hover:border-[#FF6B00] hover:shadow-md transition-all"
-              data-testid={`stat-${stat.action}`}
+              onClick={() => navigate('/wallet')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
+              data-testid="wallet-quick-access"
             >
-              <div className={`w-6 h-6 rounded-full ${stat.color} flex items-center justify-center mb-1`}>
-                <stat.icon size={12} />
-              </div>
-              <p className="text-sm font-bold text-gray-900">{stat.value}</p>
-              <p className="text-[9px] text-gray-500">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Products */}
-        <section className="mb-4">
-          <h2 className="text-xs font-bold mb-2 text-gray-900">منتجاتي</h2>
-          {products.length === 0 ? (
-            <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
-              <Package size={32} className="text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-500 text-xs">لم تضف أي منتجات بعد</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-              {products.map((product) => (
-                <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
-                  {/* حالة الموافقة */}
-                  {product.approval_status === 'pending' && (
-                    <div className="absolute top-1 right-1 z-10 bg-yellow-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
-                      <Clock size={8} />
-                      معلق
-                    </div>
-                  )}
-                  {product.approval_status === 'rejected' && (
-                    <div className="absolute top-1 right-1 z-10 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
-                      <X size={8} />
-                      مرفوض
-                    </div>
-                  )}
-                  {product.approval_status === 'approved' && (
-                    <div className="absolute top-1 right-1 z-10 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
-                      <Check size={8} />
-                      تم النشر
-                    </div>
-                  )}
-                  <img
-                    src={product.images?.[0] || 'https://via.placeholder.com/200'}
-                    alt={product.name}
-                    className={`w-full aspect-square object-cover ${product.approval_status !== 'approved' ? 'opacity-60' : ''}`}
-                  />
-                  <div className="p-2">
-                    <h3 className="font-bold text-[10px] truncate text-gray-900">{product.name}</h3>
-                    <p className="text-[#FF6B00] font-bold text-[10px]">{formatPrice(product.price)}</p>
-                    <p className="text-[8px] text-gray-500">المخزون: {product.stock}</p>
-                    {product.rejection_reason && (
-                      <p className="text-[8px] text-red-400 mt-0.5 truncate">سبب: {product.rejection_reason}</p>
-                    )}
-                    <div className="flex gap-1 mt-1">
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="flex-1 p-1 text-blue-600 bg-blue-50 rounded text-[9px] flex items-center justify-center gap-0.5"
-                        data-testid={`edit-product-${product.id}`}
-                      >
-                        <Edit size={10} />
-                        تعديل
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="flex-1 p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center gap-0.5"
-                        data-testid={`delete-product-${product.id}`}
-                      >
-                        <Trash2 size={10} />
-                        حذف
-                      </button>
-                    </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <Wallet size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
+                    <p className="text-white font-bold text-lg">{formatPrice(walletBalance)}</p>
                   </div>
                 </div>
-              ))}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/wallet');
+                  }}
+                  className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
+                  data-testid="withdraw-quick-btn"
+                >
+                  <DollarSign size={14} />
+                  طلب سحب
+                </button>
+              </div>
             </div>
-          )}
-        </section>
 
-        {/* Recent Orders */}
-        <section>
-          <h2 className="text-xs font-bold mb-2 text-gray-900">الطلبات الأخيرة</h2>
-          {orders.length === 0 ? (
-            <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
-              <ShoppingBag size={32} className="text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-500 text-xs">لا توجد طلبات</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {orders.slice(0, 10).map((order) => {
-                const canConfirm = order.status === 'paid' && order.delivery_status === 'pending';
-                const canPrepare = order.delivery_status === 'confirmed';
-                const canShip = order.delivery_status === 'preparing';
-                
-                return (
-                  <div key={order.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[11px] text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</span>
-                      <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(order.total)}</span>
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] text-gray-500">{order.user_name} - {order.city}</span>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full ${
-                        order.delivery_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        order.delivery_status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
-                        order.delivery_status === 'preparing' ? 'bg-purple-100 text-purple-700' :
-                        order.delivery_status === 'shipped' ? 'bg-indigo-100 text-indigo-700' :
-                        order.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {order.delivery_status === 'pending' ? 'في الانتظار' :
-                         order.delivery_status === 'confirmed' ? 'تم التأكيد' :
-                         order.delivery_status === 'preparing' ? 'جاري التحضير' :
-                         order.delivery_status === 'shipped' ? 'تم الشحن' :
-                         order.delivery_status === 'picked_up' ? 'استلم الموظف' :
-                         order.delivery_status === 'on_the_way' ? 'في الطريق' :
-                         order.delivery_status === 'delivered' ? 'تم التسليم' : order.delivery_status}
-                      </span>
-                    </div>
-                    
-                    {/* أزرار التحكم */}
-                    <div className="flex gap-2 pt-2 border-t border-gray-100">
-                      {/* زر طباعة الملصق */}
-                      <button
-                        onClick={() => setPrintLabelOrder(order)}
-                        className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200"
-                        title="طباعة ملصق الطلب"
-                      >
-                        <Printer size={14} className="text-gray-600" />
-                      </button>
-                      
-                      {canConfirm && (
-                        <button
-                          onClick={() => handleSellerAction(order.id, 'confirm')}
-                          className="flex-1 text-[10px] bg-blue-500 text-white py-1.5 rounded-lg font-medium hover:bg-blue-600"
-                          data-testid={`confirm-order-${order.id}`}
-                        >
-                          تأكيد الطلب
-                        </button>
-                      )}
-                      {canPrepare && (
-                        <button
-                          onClick={() => handleSellerAction(order.id, 'preparing')}
-                          className="flex-1 text-[10px] bg-purple-500 text-white py-1.5 rounded-lg font-medium hover:bg-purple-600"
-                          data-testid={`prepare-order-${order.id}`}
-                        >
-                          بدء التحضير
-                        </button>
-                      )}
-                      {canShip && (
-                        <button
-                          onClick={() => handleSellerAction(order.id, 'shipped')}
-                          className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600"
-                          data-testid={`ship-order-${order.id}`}
-                        >
-                          تم الشحن
-                        </button>
-                      )}
-                      {!canConfirm && !canPrepare && !canShip && order.delivery_status !== 'delivered' && (
-                        <span className="text-[9px] text-gray-400 italic">بانتظار {order.status === 'pending_payment' ? 'الدفع' : 'الخطوة التالية'}</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+            {/* Stats */}
+            <SellerStatsCard 
+              products={products} 
+              orders={orders} 
+              onStatClick={setActiveStatView} 
+            />
+
+            {/* Products */}
+            <section className="mb-4">
+              <h2 className="text-xs font-bold mb-2 text-gray-900">منتجاتي</h2>
+              <SellerProductsGrid 
+                products={products} 
+                onEdit={handleEditProduct} 
+                onDelete={handleDeleteProduct} 
+              />
+            </section>
+
+            {/* Recent Orders */}
+            <section>
+              <h2 className="text-xs font-bold mb-2 text-gray-900">الطلبات الأخيرة</h2>
+              <SellerOrdersSection 
+                orders={orders} 
+                onSellerAction={handleSellerAction} 
+                onPrintLabel={setPrintLabelOrder} 
+              />
+            </section>
           </>
         )}
       </div>
 
       {/* Add Product Modal */}
-      {showAddProduct && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-4 w-full max-w-md max-h-[85vh] overflow-y-auto"
-          >
-            <h2 className="text-sm font-bold mb-3 text-gray-900">إضافة منتج جديد</h2>
-            <form onSubmit={handleAddProduct} className="space-y-2">
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">اسم المنتج</label>
-                <input
-                  type="text"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  required
-                  data-testid="product-name-input"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الوصف</label>
-                <textarea
-                  value={newProduct.description}
-                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  rows={2}
-                  required
-                  data-testid="product-desc-input"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">السعر (ل.س)</label>
-                  <input
-                    type="number"
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    required
-                    data-testid="product-price-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية</label>
-                  <input
-                    type="number"
-                    value={newProduct.stock}
-                    onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    required
-                    data-testid="product-stock-input"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
-                  <select
-                    value={newProduct.category}
-                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    data-testid="product-category-select"
-                  >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* أبعاد المنتج */}
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="number"
-                    value={newProduct.length_cm}
-                    onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    placeholder="الطول"
-                    data-testid="product-length-input"
-                  />
-                  <input
-                    type="number"
-                    value={newProduct.width_cm}
-                    onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    placeholder="العرض"
-                    data-testid="product-width-input"
-                  />
-                  <input
-                    type="number"
-                    value={newProduct.height_cm}
-                    onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    placeholder="الارتفاع"
-                    data-testid="product-height-input"
-                  />
-                </div>
-              </div>
-
-              {/* الوزن */}
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={newProduct.weight_kg}
-                  onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="مثال: 1.5"
-                  data-testid="product-weight-input"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-medium text-gray-700">
-                    صور المنتج ({newProduct.images.length}/5)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowPhotoGuide(true)}
-                    className="text-[10px] text-[#FF6B00] font-bold flex items-center gap-1 hover:underline"
-                  >
-                    <Camera size={12} />
-                    دليل التصوير
-                  </button>
-                </div>
-                
-                {/* تحذيرات الصور */}
-                {imageWarnings.length > 0 && (
-                  <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    {imageWarnings.map((warning, i) => (
-                      <p key={i} className="text-[10px] text-yellow-700 flex items-center gap-1">
-                        <AlertTriangle size={10} />
-                        {warning}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-5 gap-1.5 mb-1">
-                  {newProduct.images.map((img, i) => (
-                    <div key={i} className="relative aspect-square group">
-                      <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNewProduct({
-                            ...newProduct,
-                            images: newProduct.images.filter((_, idx) => idx !== i)
-                          });
-                          setImageWarnings([]);
-                        }}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={10} />
-                      </button>
-                      {i === 0 && (
-                        <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[7px] text-center py-0.5 rounded-b">
-                          رئيسية
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  {newProduct.images.length < 5 && (
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('product-images').click()}
-                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-[#FF6B00] hover:bg-orange-50 transition-colors"
-                      disabled={uploadingImage}
-                    >
-                      {uploadingImage ? (
-                        <Loader2 size={14} className="text-[#FF6B00] animate-spin" />
-                      ) : (
-                        <>
-                          <Plus size={14} className="text-gray-400" />
-                          <span className="text-[8px] text-gray-400 mt-0.5">إضافة</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-                
-                {/* نصيحة سريعة */}
-                {newProduct.images.length === 0 && (
-                  <p className="text-[9px] text-gray-400 flex items-center gap-1">
-                    <Info size={10} />
-                    استخدم خلفية بيضاء وإضاءة جيدة للحصول على أفضل النتائج
-                  </p>
-                )}
-                <input
-                  id="product-images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">إضافة فيديو (اختياري)</label>
-                {newProduct.video ? (
-                  <div className="relative bg-gray-100 rounded-lg p-2">
-                    <video 
-                      src={newProduct.video} 
-                      className="w-full h-24 object-cover rounded"
-                      controls
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setNewProduct({ ...newProduct, video: null })}
-                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('product-video').click()}
-                    disabled={uploadingVideo}
-                    className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-[10px] flex items-center justify-center gap-1 hover:border-[#FF6B00] hover:text-[#FF6B00]"
-                  >
-                    {uploadingVideo ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Upload size={12} />
-                        اختر فيديو من الجهاز
-                      </>
-                    )}
-                  </button>
-                )}
-                <input
-                  id="product-video"
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className="hidden"
-                  data-testid="product-video-input"
-                />
-                <p className="text-[8px] text-gray-400 mt-0.5">الحد الأقصى 50MB</p>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddProduct(false)}
-                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-full text-xs font-bold"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full text-xs disabled:opacity-50 flex items-center justify-center gap-1"
-                  data-testid="save-product-btn"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="animate-spin" size={12} />
-                      جاري الحفظ...
-                    </>
-                  ) : (
-                    'حفظ المنتج'
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-      
-      {/* Photo Guide Modal */}
-      <PhotoGuideModal isOpen={showPhotoGuide} onClose={() => setShowPhotoGuide(false)} />
+      <AddProductModal
+        isOpen={showAddProduct}
+        onClose={() => setShowAddProduct(false)}
+        onSave={handleAddProduct}
+        saving={saving}
+        toast={toast}
+      />
 
       {/* Edit Product Modal */}
-      {editingProduct && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-4 w-full max-w-sm"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-gray-900">تعديل المنتج</h2>
-              <button
-                onClick={() => setEditingProduct(null)}
-                className="p-1 hover:bg-gray-100 rounded-full"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-
-            {/* Product Preview */}
-            <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-lg">
-              <img
-                src={editingProduct.images?.[0] || 'https://via.placeholder.com/60'}
-                alt={editingProduct.name}
-                className="w-12 h-12 object-cover rounded"
-              />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-xs text-gray-900 truncate">{editingProduct.name}</h3>
-                <p className="text-[10px] text-gray-500">{editingProduct.category}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">السعر (ل.س)</label>
-                <input
-                  type="number"
-                  value={editPrice}
-                  onChange={(e) => setEditPrice(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  data-testid="edit-price-input"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية المتاحة</label>
-                <input
-                  type="number"
-                  value={editStock}
-                  onChange={(e) => setEditStock(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  data-testid="edit-stock-input"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => setEditingProduct(null)}
-                className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-full text-xs font-bold"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                disabled={savingEdit}
-                className="flex-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full text-xs disabled:opacity-50 flex items-center justify-center gap-1"
-                data-testid="save-edit-btn"
-              >
-                {savingEdit ? (
-                  <>
-                    <Loader2 className="animate-spin" size={12} />
-                    جاري الحفظ...
-                  </>
-                ) : (
-                  'حفظ التغييرات'
-                )}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Image Background Processor Modal */}
-      <ImageBackgroundSelector
-        imageDataUrl={pendingImage}
-        onProcessed={handleProcessedImage}
-        onCancel={handleCancelImageProcess}
-        isOpen={showImageProcessor}
+      <EditProductModal
+        product={editingProduct}
+        editPrice={editPrice}
+        setEditPrice={setEditPrice}
+        editStock={editStock}
+        setEditStock={setEditStock}
+        onSave={handleSaveEdit}
+        onClose={() => setEditingProduct(null)}
+        saving={savingEdit}
       />
 
       {/* Stat Details Modal */}
-      {activeStatView && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden"
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-3 flex items-center justify-between">
-              <h2 className="font-bold text-sm text-gray-900">
-                {activeStatView === 'products' && 'منتجاتي'}
-                {activeStatView === 'paid_orders' && 'الطلبات المدفوعة'}
-                {activeStatView === 'sales' && 'تفاصيل المبيعات'}
-                {activeStatView === 'pending_orders' && 'الطلبات المعلقة'}
-              </h2>
-              <button
-                onClick={() => setActiveStatView(null)}
-                className="p-1 hover:bg-gray-100 rounded-full"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-3 overflow-y-auto max-h-[calc(80vh-60px)]">
-              {/* Products View */}
-              {activeStatView === 'products' && (
-                <div className="space-y-2">
-                  {products.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">لا توجد منتجات</p>
-                  ) : (
-                    products.map((product) => (
-                      <div key={product.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                        <img
-                          src={product.images?.[0] || 'https://via.placeholder.com/50'}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-xs text-gray-900 truncate">{product.name}</p>
-                          <p className="text-[10px] text-gray-500">المخزون: {product.stock} | السعر: {formatPrice(product.price)}</p>
-                        </div>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full ${
-                          product.approval_status === 'approved' ? 'bg-green-100 text-green-600' :
-                          product.approval_status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-red-100 text-red-600'
-                        }`}>
-                          {product.approval_status === 'approved' ? 'تم النشر' :
-                           product.approval_status === 'pending' ? 'معلق' : 'مرفوض'}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {/* Paid Orders View */}
-              {activeStatView === 'paid_orders' && (
-                <div className="space-y-2">
-                  {orders.filter(o => o.payment_status === 'paid').length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">لا توجد طلبات مدفوعة</p>
-                  ) : (
-                    orders.filter(o => o.payment_status === 'paid').map((order) => (
-                      <div key={order.id} className="p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold text-xs text-gray-900">طلب #{order.id?.slice(-6)}</span>
-                          <span className="bg-green-100 text-green-600 text-[9px] px-2 py-0.5 rounded-full">مدفوع</span>
-                        </div>
-                        <p className="text-[10px] text-gray-500">{order.items?.length || 0} منتج</p>
-                        <p className="text-xs font-bold text-[#FF6B00]">{formatPrice(order.total)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {/* Sales View */}
-              {activeStatView === 'sales' && (
-                <div className="space-y-3">
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-4 text-white text-center">
-                    <p className="text-sm opacity-90">إجمالي المبيعات</p>
-                    <p className="text-2xl font-bold">{formatPrice(totalSales)}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-green-50 rounded-lg p-3 text-center">
-                      <p className="text-lg font-bold text-green-600">{paidOrders}</p>
-                      <p className="text-[10px] text-green-700">طلبات مكتملة</p>
-                    </div>
-                    <div className="bg-blue-50 rounded-lg p-3 text-center">
-                      <p className="text-lg font-bold text-blue-600">{products.reduce((sum, p) => sum + (p.sales_count || 0), 0)}</p>
-                      <p className="text-[10px] text-blue-700">منتجات مباعة</p>
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-xs text-gray-700 mt-3">أكثر المنتجات مبيعاً</h3>
-                  {products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 5).map((product) => (
-                    <div key={product.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <img
-                        src={product.images?.[0] || 'https://via.placeholder.com/40'}
-                        alt={product.name}
-                        className="w-10 h-10 object-cover rounded"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-xs text-gray-900 truncate">{product.name}</p>
-                        <p className="text-[10px] text-gray-500">{formatPrice(product.price)}</p>
-                      </div>
-                      <span className="text-xs font-bold text-[#FF6B00]">{product.sales_count || 0} مبيعات</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Pending Orders View */}
-              {activeStatView === 'pending_orders' && (
-                <div className="space-y-2">
-                  {orders.filter(o => o.delivery_status === 'pending').length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">لا توجد طلبات معلقة</p>
-                  ) : (
-                    orders.filter(o => o.delivery_status === 'pending').map((order) => (
-                      <div key={order.id} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold text-xs text-gray-900">طلب #{order.id?.slice(-6)}</span>
-                          <span className="bg-yellow-100 text-yellow-700 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Clock size={10} />
-                            معلق
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-gray-600">{order.customer_name || 'عميل'}</p>
-                        <p className="text-[10px] text-gray-500">{order.items?.length || 0} منتج</p>
-                        <p className="text-xs font-bold text-[#FF6B00] mt-1">{formatPrice(order.total)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <StatDetailsModal
+        activeStatView={activeStatView}
+        onClose={() => setActiveStatView(null)}
+        products={products}
+        orders={orders}
+        totalSales={totalSales}
+        paidOrders={paidOrders}
+      />
 
       {/* Print Label Modal */}
       {printLabelOrder && (

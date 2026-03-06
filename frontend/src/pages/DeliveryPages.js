@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Package, MapPin, Phone, User, Clock, 
-  CheckCircle, Upload, Camera, CreditCard, AlertTriangle,
-  ChevronRight, Navigation, Wallet, DollarSign, Star
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
+import DeliveryHeader from '../components/delivery/DeliveryHeader';
+import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
+import MyOrdersList from '../components/delivery/MyOrdersList';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -119,6 +119,41 @@ const DeliveryDocuments = () => {
     );
   }
 
+  // Image upload field component
+  const ImageUploadField = ({ field, label, icon: Icon, value, onUpload }) => (
+    <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <label className="block text-sm font-bold text-gray-700 mb-2">
+        <Icon size={16} className="inline ml-1" />
+        {label}
+      </label>
+      <div className="relative">
+        {value ? (
+          <div className="relative">
+            <img src={value} alt={label} className="w-full h-40 object-cover rounded-lg" />
+            <button
+              type="button"
+              onClick={() => setDocs(prev => ({ ...prev, [field]: '' }))}
+              className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
+            <Upload size={24} className="text-gray-400 mb-2" />
+            <span className="text-sm text-gray-500">اضغط لرفع الصورة</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onUpload}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-lg mx-auto px-4 py-6">
@@ -142,73 +177,22 @@ const DeliveryDocuments = () => {
             />
           </div>
 
-          {/* صورة شخصية */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              <Camera size={16} className="inline ml-1" />
-              صورة شخصية حديثة
-            </label>
-            <div className="relative">
-              {docs.personal_photo ? (
-                <div className="relative">
-                  <img src={docs.personal_photo} alt="صورة شخصية" className="w-full h-40 object-cover rounded-lg" />
-                  <button
-                    type="button"
-                    onClick={() => setDocs(prev => ({ ...prev, personal_photo: '' }))}
-                    className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
-                  <Upload size={24} className="text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">اضغط لرفع الصورة</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload('personal_photo')}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-          </div>
+          <ImageUploadField
+            field="personal_photo"
+            label="صورة شخصية حديثة"
+            icon={Camera}
+            value={docs.personal_photo}
+            onUpload={handleImageUpload('personal_photo')}
+          />
 
-          {/* صورة الهوية */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              <CreditCard size={16} className="inline ml-1" />
-              صورة الهوية كاملة (الوجهين)
-            </label>
-            <div className="relative">
-              {docs.id_photo ? (
-                <div className="relative">
-                  <img src={docs.id_photo} alt="صورة الهوية" className="w-full h-40 object-cover rounded-lg" />
-                  <button
-                    type="button"
-                    onClick={() => setDocs(prev => ({ ...prev, id_photo: '' }))}
-                    className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
-                  <Upload size={24} className="text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">اضغط لرفع صورة الهوية</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload('id_photo')}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-          </div>
+          <ImageUploadField
+            field="id_photo"
+            label="صورة الهوية كاملة (الوجهين)"
+            icon={CreditCard}
+            value={docs.id_photo}
+            onUpload={handleImageUpload('id_photo')}
+          />
 
-          {/* رخصة الدراجة */}
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <label className="block text-sm font-bold text-gray-700 mb-2">
               <Truck size={16} className="inline ml-1" />
@@ -382,16 +366,9 @@ const DeliveryDashboard = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
-  };
-
   // التحقق من أوقات العمل - معطل للاختبار
   const isWorkingHours = () => {
     return true; // تم تعطيل التحقق من أوقات العمل للاختبار
-    // const now = new Date();
-    // const hour = now.getHours();
-    // return hour >= 8 && hour < 18;
   };
 
   if (loading) {
@@ -434,89 +411,12 @@ const DeliveryDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
-        {/* Header with Back Button */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => navigate('/')}
-            className="w-8 h-8 bg-white rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-            data-testid="back-btn"
-          >
-            <ChevronRight size={18} className="text-gray-600" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-bold text-gray-900">مرحباً، {user?.full_name || user?.name}</h1>
-            <p className="text-xs text-gray-500">موظف توصيل</p>
-          </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${isWorkingHours() ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-            {isWorkingHours() ? 'أوقات العمل' : 'خارج أوقات العمل'}
-          </div>
-        </div>
-
-        {/* أوقات العمل */}
-        <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-center gap-2">
-          <Clock size={16} className="text-blue-600" />
-          <span className="text-xs text-blue-700">أوقات العمل: 8 صباحاً - 6 مساءً</span>
-        </div>
-
-        {/* Wallet Quick Access Card */}
-        <div 
-          onClick={() => navigate('/wallet')}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
-          data-testid="wallet-quick-access"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Wallet size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
-                <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/wallet');
-              }}
-              className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
-              data-testid="withdraw-quick-btn"
-            >
-              <DollarSign size={14} />
-              طلب سحب
-            </button>
-          </div>
-        </div>
-
-        {/* Rating Card */}
-        <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Star size={20} className="text-white fill-white" />
-              </div>
-              <div>
-                <p className="text-white/80 text-[10px]">تقييمي</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        size={12}
-                        className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="text-left">
-              <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
-              <p className="text-white/80 text-[10px]">تقييم</p>
-            </div>
-          </div>
-        </div>
+        <DeliveryHeader 
+          user={user}
+          walletBalance={walletBalance}
+          myRatings={myRatings}
+          isWorkingHours={isWorkingHours()}
+        />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
@@ -544,191 +444,20 @@ const DeliveryDashboard = () => {
 
         {/* Available Orders */}
         {activeTab === 'available' && (
-          <div className="space-y-3">
-            {availableOrders.length === 0 ? (
-              <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-                <Package size={48} className="text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">لا توجد طلبات متاحة حالياً</p>
-              </div>
-            ) : (
-              availableOrders.map((order) => (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-                >
-                  <div className="p-3">
-                    {/* رقم الطلب والسعر */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
-                      <span className="font-bold text-[#FF6B00]">{formatPrice(order.total)}</span>
-                    </div>
-
-                    {/* من أين - البائع */}
-                    <div className="bg-green-50 rounded-lg p-2 mb-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <Navigation size={12} className="text-white" />
-                        </div>
-                        <span className="text-xs font-bold text-green-700">من (البائع)</span>
-                      </div>
-                      {order.seller_addresses?.map((seller, i) => (
-                        <div key={i} className="mr-8 text-xs text-gray-600">
-                          <p className="font-medium">{seller.business_name || seller.name}</p>
-                          <p>{seller.city}</p>
-                          <p className="flex items-center gap-1">
-                            <Phone size={10} /> {seller.phone}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* إلى أين - المشتري */}
-                    <div className="bg-blue-50 rounded-lg p-2 mb-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <MapPin size={12} className="text-white" />
-                        </div>
-                        <span className="text-xs font-bold text-blue-700">إلى (المشتري)</span>
-                      </div>
-                      <div className="mr-8 text-xs text-gray-600">
-                        <p className="font-medium">{order.buyer_address?.name}</p>
-                        <p>{order.buyer_address?.address}</p>
-                        <p>{order.buyer_address?.city}</p>
-                        <p className="flex items-center gap-1">
-                          <Phone size={10} /> {order.buyer_address?.phone}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* عدد المنتجات */}
-                    <p className="text-xs text-gray-500 mb-3">
-                      عدد المنتجات: {order.items?.length || 0}
-                    </p>
-
-                    {/* زر أخذ الطلب */}
-                    <button
-                      onClick={() => setShowPickupChecklist(order)}
-                      disabled={!isWorkingHours()}
-                      className="w-full bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isWorkingHours() ? 'أخذ الطلب' : 'خارج أوقات العمل'}
-                    </button>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </div>
+          <AvailableOrdersList
+            orders={availableOrders}
+            isWorkingHours={isWorkingHours}
+            onTakeOrder={(order) => setShowPickupChecklist(order)}
+          />
         )}
 
         {/* My Orders */}
         {activeTab === 'my' && (
-          <div className="space-y-3">
-            {myOrders.length === 0 ? (
-              <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-                <Truck size={48} className="text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">لم تأخذ أي طلبات بعد</p>
-              </div>
-            ) : (
-              myOrders.map((order) => {
-                const canStartDelivery = order.delivery_status === 'picked_up';
-                const canComplete = order.delivery_status === 'on_the_way';
-                const isDelivered = order.delivery_status === 'delivered';
-                
-                return (
-                  <motion.div
-                    key={order.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-                  >
-                    <div className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          order.delivery_status === 'delivered' ? 'bg-green-100 text-green-600' :
-                          order.delivery_status === 'on_the_way' ? 'bg-orange-100 text-orange-600' :
-                          order.delivery_status === 'picked_up' ? 'bg-blue-100 text-blue-600' :
-                          'bg-yellow-100 text-yellow-600'
-                        }`}>
-                          {order.delivery_status === 'delivered' ? 'تم التسليم' :
-                           order.delivery_status === 'on_the_way' ? 'في الطريق' :
-                           order.delivery_status === 'picked_up' ? 'تم الاستلام' : 'قيد التوصيل'}
-                        </span>
-                      </div>
-
-                      {/* معلومات العميل */}
-                      <div className="bg-gray-50 rounded-lg p-2 mb-3">
-                        <p className="text-xs font-bold text-gray-700 mb-1">معلومات العميل:</p>
-                        <p className="text-xs text-gray-600">
-                          <User size={12} className="inline ml-1" />
-                          {order.user_name}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          <MapPin size={12} className="inline ml-1" />
-                          {order.address}, {order.city}
-                        </p>
-                        <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1">
-                          <Phone size={12} />
-                          {order.phone}
-                        </a>
-                        
-                        {/* ملاحظة العميل */}
-                        {order.delivery_note && (
-                          <div className="mt-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <p className="text-[10px] font-bold text-yellow-700">ملاحظة من العميل:</p>
-                            <p className="text-xs text-gray-700">{order.delivery_note}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <p className="font-bold text-[#FF6B00] text-sm mb-3">{formatPrice(order.total)}</p>
-
-                      {/* أزرار الإجراءات */}
-                      <div className="space-y-2">
-                        {canStartDelivery && (
-                          <button
-                            onClick={() => handleOnTheWay(order.id)}
-                            className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
-                          >
-                            <Navigation size={14} />
-                            في الطريق للعميل
-                          </button>
-                        )}
-                        {canComplete && (
-                          <button
-                            onClick={() => setShowDeliveryChecklist(order)}
-                            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
-                          >
-                            <CheckCircle size={14} />
-                            تأكيد التسليم
-                          </button>
-                        )}
-                        {!isDelivered && (
-                          <a
-                            href={`tel:${order.phone}`}
-                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
-                          >
-                            <Phone size={14} />
-                            اتصال بالعميل
-                          </a>
-                        )}
-                        {/* رابط للتتبع */}
-                        <button
-                          onClick={() => navigate(`/orders/${order.id}/tracking`)}
-                          className="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded-lg text-sm flex items-center justify-center gap-2"
-                        >
-                          تفاصيل الطلب
-                          <ChevronRight size={14} className="rotate-180" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
+          <MyOrdersList
+            orders={myOrders}
+            onStartDelivery={handleOnTheWay}
+            onShowDeliveryChecklist={(order) => setShowDeliveryChecklist(order)}
+          />
         )}
       </div>
 
