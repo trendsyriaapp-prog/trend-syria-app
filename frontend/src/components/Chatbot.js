@@ -27,13 +27,31 @@ const Chatbot = () => {
   const [pendingRatingTicket, setPendingRatingTicket] = useState(null);
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
+  const userOpenedRef = useRef(false); // للتأكد من أن المستخدم فتح الشات بوت بنفسه
 
   // الاستماع لحدث فتح الدردشة من الأيقونة في شريط البحث
   useEffect(() => {
-    const handleOpenChatbot = () => setIsOpen(true);
+    const handleOpenChatbot = () => {
+      userOpenedRef.current = true;
+      setIsOpen(true);
+    };
     window.addEventListener('openChatbot', handleOpenChatbot);
     return () => window.removeEventListener('openChatbot', handleOpenChatbot);
   }, []);
+
+  // إغلاق الشات بوت إذا فُتح بدون تدخل المستخدم (عند تسجيل الدخول)
+  useEffect(() => {
+    if (isOpen && !userOpenedRef.current) {
+      setIsOpen(false);
+    }
+  }, [user]);
+
+  // إعادة تعيين الـ ref عند إغلاق الشات بوت
+  useEffect(() => {
+    if (!isOpen) {
+      userOpenedRef.current = false;
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && quickQuestions.length === 0) {
