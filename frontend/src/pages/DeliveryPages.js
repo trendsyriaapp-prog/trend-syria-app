@@ -11,6 +11,7 @@ import DeliveryHeader from '../components/delivery/DeliveryHeader';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
 import MyOrdersList from '../components/delivery/MyOrdersList';
 import MyBoxCard from '../components/delivery/MyBoxCard';
+import DriverPerformance from '../components/delivery/DriverPerformance';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -421,6 +422,11 @@ const DeliveryDashboard = () => {
           myRatings={myRatings}
           isWorkingHours={isWorkingHours()}
         />
+
+        {/* تقارير الأداء */}
+        <div className="mb-4">
+          <DriverPerformance />
+        </div>
 
         {/* بطاقة الصندوق */}
         <div className="mb-4">

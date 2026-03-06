@@ -182,6 +182,207 @@ async def get_delivery_stats(user: dict = Depends(get_current_user)):
         "earnings_per_delivery": 5000
     }
 
+@router.get("/performance")
+async def get_driver_performance(user: dict = Depends(get_current_user)):
+    """تقرير أداء موظف التوصيل الشامل مع بيانات الرسوم البيانية"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from datetime import timedelta
+    
+    # الأسماء العربية للأشهر
+    arabic_months = {
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل",
+        5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+        9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+    }
+    
+    # ======= إحصائيات عامة =======
+    total_delivered = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered"
+    })
+    
+    pending_delivery = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "out_for_delivery"
+    })
+    
+    total_earnings = total_delivered * 5000  # 5000 ل.س لكل طلب
+    
+    # ======= بيانات آخر 6 أشهر =======
+    monthly_data = []
+    now = datetime.now(timezone.utc)
+    
+    for i in range(5, -1, -1):
+        month_date = now - timedelta(days=i*30)
+        month_num = month_date.month
+        year = month_date.year
+        
+        # حساب بداية ونهاية الشهر
+        month_start = datetime(year, month_num, 1, tzinfo=timezone.utc)
+        if month_num == 12:
+            month_end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            month_end = datetime(year, month_num + 1, 1, tzinfo=timezone.utc)
+        
+        # عدد الطلبات المسلمة في هذا الشهر
+        month_orders = await db.orders.count_documents({
+            "delivery_driver_id": user["id"],
+            "delivery_status": "delivered",
+            "delivered_at": {
+                "$gte": month_start.isoformat(),
+                "$lt": month_end.isoformat()
+            }
+        })
+        
+        monthly_data.append({
+            "month": arabic_months[month_num],
+            "orders": month_orders,
+            "earnings": month_orders * 5000
+        })
+    
+    # ======= بيانات آخر 7 أيام =======
+    daily_data = []
+    arabic_days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
+    
+    for i in range(6, -1, -1):
+        day_date = now - timedelta(days=i)
+        day_start = datetime(day_date.year, day_date.month, day_date.day, tzinfo=timezone.utc)
+        day_end = day_start + timedelta(days=1)
+        
+        day_orders = await db.orders.count_documents({
+            "delivery_driver_id": user["id"],
+            "delivery_status": "delivered",
+            "delivered_at": {
+                "$gte": day_start.isoformat(),
+                "$lt": day_end.isoformat()
+            }
+        })
+        
+        daily_data.append({
+            "day": arabic_days[day_date.weekday()] if day_date.weekday() < 7 else day_date.strftime("%d/%m"),
+            "date": day_date.strftime("%d/%m"),
+            "orders": day_orders,
+            "earnings": day_orders * 5000
+        })
+    
+    # ======= التقييمات =======
+    ratings = await db.driver_ratings.find(
+        {"driver_id": user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    avg_rating = round(sum(r["rating"] for r in ratings) / len(ratings), 1) if ratings else 0
+    total_ratings = len(ratings)
+    
+    # توزيع التقييمات
+    rating_distribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    for r in ratings:
+        rating_distribution[r["rating"]] = rating_distribution.get(r["rating"], 0) + 1
+    
+    rating_chart_data = [
+        {"stars": "5 نجوم", "count": rating_distribution[5]},
+        {"stars": "4 نجوم", "count": rating_distribution[4]},
+        {"stars": "3 نجوم", "count": rating_distribution[3]},
+        {"stars": "2 نجوم", "count": rating_distribution[2]},
+        {"stars": "1 نجمة", "count": rating_distribution[1]},
+    ]
+    
+    # ======= معدل الأداء =======
+    # حساب الطلبات اليوم
+    today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    today_orders = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered",
+        "delivered_at": {"$gte": today_start.isoformat()}
+    })
+    
+    # حساب الطلبات هذا الأسبوع
+    week_start = today_start - timedelta(days=now.weekday())
+    week_orders = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered",
+        "delivered_at": {"$gte": week_start.isoformat()}
+    })
+    
+    # حساب الطلبات هذا الشهر
+    month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    month_orders = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered",
+        "delivered_at": {"$gte": month_start.isoformat()}
+    })
+    
+    # ======= مستوى الأداء =======
+    # بناءً على معدل الطلبات الشهرية
+    if month_orders >= 100:
+        performance_level = {"level": "ماسي", "color": "#7c3aed", "icon": "💎"}
+    elif month_orders >= 60:
+        performance_level = {"level": "ذهبي", "color": "#f59e0b", "icon": "🥇"}
+    elif month_orders >= 30:
+        performance_level = {"level": "فضي", "color": "#6b7280", "icon": "🥈"}
+    elif month_orders >= 10:
+        performance_level = {"level": "برونزي", "color": "#b45309", "icon": "🥉"}
+    else:
+        performance_level = {"level": "مبتدئ", "color": "#10b981", "icon": "🌱"}
+    
+    return {
+        "overview": {
+            "total_delivered": total_delivered,
+            "pending_delivery": pending_delivery,
+            "total_earnings": total_earnings,
+            "avg_rating": avg_rating,
+            "total_ratings": total_ratings
+        },
+        "period_stats": {
+            "today": {"orders": today_orders, "earnings": today_orders * 5000},
+            "week": {"orders": week_orders, "earnings": week_orders * 5000},
+            "month": {"orders": month_orders, "earnings": month_orders * 5000}
+        },
+        "charts": {
+            "monthly": monthly_data,
+            "daily": daily_data,
+            "ratings": rating_chart_data
+        },
+        "performance_level": performance_level,
+        "tips": get_performance_tips(avg_rating, month_orders)
+    }
+
+def get_performance_tips(avg_rating: float, month_orders: int) -> list:
+    """نصائح لتحسين الأداء"""
+    tips = []
+    
+    if avg_rating < 4:
+        tips.append({
+            "type": "rating",
+            "title": "تحسين التقييم",
+            "description": "حاول الابتسام والتعامل بلطف مع العملاء لتحسين تقييمك"
+        })
+    
+    if month_orders < 30:
+        tips.append({
+            "type": "orders",
+            "title": "زيادة الطلبات",
+            "description": "حاول العمل في أوقات الذروة (12-2 ظهراً و 6-9 مساءً) لزيادة طلباتك"
+        })
+    
+    if avg_rating >= 4.5 and month_orders >= 50:
+        tips.append({
+            "type": "excellent",
+            "title": "أداء ممتاز! 🌟",
+            "description": "استمر على هذا المستوى الرائع!"
+        })
+    
+    if not tips:
+        tips.append({
+            "type": "general",
+            "title": "نصيحة",
+            "description": "تأكد من التحقق من الطلب قبل التسليم لتجنب الأخطاء"
+        })
+    
+    return tips
+
 # ============== Driver Rating System ==============
 
 from pydantic import BaseModel
