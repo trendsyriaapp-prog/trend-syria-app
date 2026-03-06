@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import { useSettings } from '../context/SettingsContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -22,12 +23,14 @@ const WalletPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { settings } = useSettings();
   
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [minWithdrawal, setMinWithdrawal] = useState(50000);
   
   // Withdrawal form
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
@@ -38,8 +41,23 @@ const WalletPage = () => {
   useEffect(() => {
     if (user && (user.user_type === 'seller' || user.user_type === 'delivery')) {
       fetchWalletData();
+      fetchWithdrawalLimits();
     }
   }, [user]);
+  
+  const fetchWithdrawalLimits = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/wallet`);
+      if (user.user_type === 'seller') {
+        setMinWithdrawal(res.data.seller_min_withdrawal || 50000);
+      } else {
+        setMinWithdrawal(res.data.delivery_min_withdrawal || 25000);
+      }
+    } catch (error) {
+      // استخدام القيم الافتراضية
+      setMinWithdrawal(user.user_type === 'seller' ? 50000 : 25000);
+    }
+  };
   
   const fetchWalletData = async () => {
     try {
@@ -193,10 +211,10 @@ const WalletPage = () => {
                     placeholder="مثال: 50000"
                     className="w-full p-3 border border-gray-300 rounded-xl text-lg"
                     required
-                    min={user.user_type === 'seller' ? 50000 : 25000}
+                    min={minWithdrawal}
                   />
                   <p className="text-xs text-gray-400 mt-1">
-                    الحد الأدنى: {formatPrice(user.user_type === 'seller' ? 50000 : 25000)}
+                    الحد الأدنى: {formatPrice(minWithdrawal)}
                   </p>
                 </div>
                 

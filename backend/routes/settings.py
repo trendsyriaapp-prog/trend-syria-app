@@ -200,3 +200,19 @@ async def get_low_stock_threshold():
     """جلب حد تنبيه المخزون المنخفض"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     return {"low_stock_threshold": settings.get("low_stock_threshold", 5) if settings else 5}
+
+@router.get("/wallet")
+async def get_wallet_settings():
+    """جلب إعدادات المحفظة (للبائعين وموظفي التوصيل)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "seller_min_withdrawal": 50000,
+            "delivery_min_withdrawal": 25000
+        }
+    
+    return {
+        "seller_min_withdrawal": settings.get("min_seller_withdrawal", 50000),
+        "delivery_min_withdrawal": settings.get("min_delivery_withdrawal", 25000)
+    }
