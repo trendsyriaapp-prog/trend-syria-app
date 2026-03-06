@@ -5,10 +5,11 @@ import axios from 'axios';
 import { 
   Package, Clock, Truck, Check, MapPin, Phone, User, 
   MessageSquare, ChevronRight, ArrowRight, Camera, 
-  Store, Navigation, CheckCircle2, Circle, Loader2
+  Store, Navigation, CheckCircle2, Circle, Loader2, Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import RateDriverModal from '../components/delivery/RateDriverModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -51,12 +52,24 @@ const OrderTrackingPage = () => {
   const [deliveryNote, setDeliveryNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
 
   useEffect(() => {
     if (orderId) {
       fetchOrderTracking();
+      checkRating();
     }
   }, [orderId]);
+
+  const checkRating = async () => {
+    try {
+      const res = await axios.get(`${API}/delivery/check-rating/${orderId}`);
+      setHasRated(res.data.has_rated);
+    } catch (error) {
+      console.error('Error checking rating:', error);
+    }
+  };
 
   const fetchOrderTracking = async () => {
     try {
@@ -237,6 +250,24 @@ const OrderTrackingPage = () => {
                 <p className="text-sm text-gray-500 mt-1">موظف التوصيل المسؤول عن طلبك</p>
               </div>
             </div>
+
+            {/* زر التقييم - يظهر بعد التسليم */}
+            {isDelivered && !hasRated && (
+              <button
+                onClick={() => setShowRateModal(true)}
+                className="w-full mt-4 bg-yellow-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-yellow-600"
+              >
+                <Star size={18} />
+                قيّم موظف التوصيل
+              </button>
+            )}
+
+            {/* عرض التقييم إذا تم */}
+            {hasRated && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl text-center">
+                <p className="text-green-700 text-sm">✓ شكراً لتقييمك!</p>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -447,6 +478,17 @@ const OrderTrackingPage = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Rate Driver Modal */}
+      {showRateModal && (
+        <RateDriverModal
+          order={order}
+          onClose={() => setShowRateModal(false)}
+          onSuccess={() => {
+            setHasRated(true);
+          }}
+        />
+      )}
     </div>
   );
 };

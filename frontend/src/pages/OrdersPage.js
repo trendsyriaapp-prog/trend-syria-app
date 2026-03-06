@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import RateDriverModal from '../components/delivery/RateDriverModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -88,6 +89,8 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [rateOrder, setRateOrder] = useState(null);
+  const [ratedOrders, setRatedOrders] = useState({});
 
   useEffect(() => {
     if (user) {
@@ -99,6 +102,19 @@ const OrdersPage = () => {
     try {
       const res = await axios.get(`${API}/orders`);
       setOrders(res.data);
+      
+      // Check which orders have been rated
+      const delivered = res.data.filter(o => o.delivery_status === 'delivered');
+      for (const order of delivered) {
+        try {
+          const ratingRes = await axios.get(`${API}/delivery/check-rating/${order.id}`);
+          if (ratingRes.data.has_rated) {
+            setRatedOrders(prev => ({ ...prev, [order.id]: ratingRes.data.rating }));
+          }
+        } catch (e) {
+          console.error('Error checking rating:', e);
+        }
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -204,6 +220,27 @@ const OrdersPage = () => {
                         <Truck size={16} />
                         <span>تتبع الطلب</span>
                       </button>
+                      
+                      {/* زر التقييم - يظهر فقط للطلبات المكتملة */}
+                      {order.delivery_status === 'delivered' && !ratedOrders[order.id] && (
+                        <button
+                          onClick={() => setRateOrder(order)}
+                          className="flex items-center justify-center gap-1 px-4 py-2 bg-yellow-500 text-white rounded-xl text-sm font-medium hover:bg-yellow-600 transition-colors"
+                          data-testid={`rate-order-${order.id}`}
+                        >
+                          <Star size={16} />
+                          <span>قيّم</span>
+                        </button>
+                      )}
+                      
+                      {/* عرض التقييم إذا تم */}
+                      {ratedOrders[order.id] && (
+                        <div className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-xl text-sm">
+                          <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                          <span className="font-medium text-gray-700">{ratedOrders[order.id].rating}</span>
+                        </div>
+                      )}
+                      
                       <button
                         onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
                         className="flex items-center justify-center gap-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200 transition-colors"
@@ -279,6 +316,17 @@ const OrdersPage = () => {
           </div>
         )}
       </div>
+
+      {/* Rate Driver Modal */}
+      {rateOrder && (
+        <RateDriverModal
+          order={rateOrder}
+          onClose={() => setRateOrder(null)}
+          onSuccess={() => {
+            fetchOrders();
+          }}
+        />
+      )}
     </div>
   );
 };

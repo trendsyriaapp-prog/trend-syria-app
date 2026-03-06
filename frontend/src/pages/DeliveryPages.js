@@ -7,7 +7,7 @@ import { useToast } from '../hooks/use-toast';
 import { 
   Truck, Package, MapPin, Phone, User, Clock, 
   CheckCircle, Upload, Camera, CreditCard, AlertTriangle,
-  ChevronRight, Navigation, Wallet, DollarSign
+  ChevronRight, Navigation, Wallet, DollarSign, Star
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 
@@ -272,11 +272,24 @@ const DeliveryDashboard = () => {
   const [showPickupChecklist, setShowPickupChecklist] = useState(null);
   const [showDeliveryChecklist, setShowDeliveryChecklist] = useState(null);
   const [showReturnChecklist, setShowReturnChecklist] = useState(null);
+  
+  // Ratings
+  const [myRatings, setMyRatings] = useState({ ratings: [], average_rating: 0, total_ratings: 0 });
 
   useEffect(() => {
     checkStatusAndFetch();
     fetchWallet();
+    fetchMyRatings();
   }, []);
+
+  const fetchMyRatings = async () => {
+    try {
+      const res = await axios.get(`${API}/delivery/my-ratings`);
+      setMyRatings(res.data);
+    } catch (error) {
+      console.error('Error fetching ratings:', error);
+    }
+  };
 
   const fetchWallet = async () => {
     try {
@@ -472,6 +485,36 @@ const DeliveryDashboard = () => {
               <DollarSign size={14} />
               طلب سحب
             </button>
+          </div>
+        </div>
+
+        {/* Rating Card */}
+        <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <Star size={20} className="text-white fill-white" />
+              </div>
+              <div>
+                <p className="text-white/80 text-[10px]">تقييمي</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={12}
+                        className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="text-left">
+              <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
+              <p className="text-white/80 text-[10px]">تقييم</p>
+            </div>
           </div>
         </div>
 

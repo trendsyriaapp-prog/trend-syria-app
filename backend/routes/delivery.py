@@ -181,3 +181,154 @@ async def get_delivery_stats(user: dict = Depends(get_current_user)):
         "total_earnings": total_earnings,
         "earnings_per_delivery": 5000
     }
+
+# ============== Driver Rating System ==============
+
+from pydantic import BaseModel
+from typing import Optional
+
+class DriverRating(BaseModel):
+    rating: int  # 1-5 stars
+    comment: Optional[str] = None
+
+@router.post("/rate/{order_id}")
+async def rate_delivery_driver(order_id: str, rating_data: DriverRating, user: dict = Depends(get_current_user)):
+    """تقييم موظف التوصيل بعد استلام الطلب"""
+    
+    # التحقق من أن التقييم بين 1 و 5
+    if rating_data.rating < 1 or rating_data.rating > 5:
+        raise HTTPException(status_code=400, detail="التقييم يجب أن يكون بين 1 و 5")
+    
+    # جلب الطلب
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التأكد من أن المستخدم هو صاحب الطلب
+    if order.get("user_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="يمكنك تقييم طلباتك فقط")
+    
+    # التأكد من أن الطلب تم تسليمه
+    if order.get("delivery_status") != "delivered":
+        raise HTTPException(status_code=400, detail="يمكن التقييم بعد التسليم فقط")
+    
+    # التأكد من عدم وجود تقييم سابق
+    existing_rating = await db.driver_ratings.find_one({
+        "order_id": order_id,
+        "customer_id": user["id"]
+    })
+    if existing_rating:
+        raise HTTPException(status_code=400, detail="لقد قمت بتقييم هذا الطلب مسبقاً")
+    
+    # الحصول على معرف موظف التوصيل
+    driver_id = order.get("delivery_driver_id")
+    if not driver_id:
+        raise HTTPException(status_code=400, detail="لا يوجد موظف توصيل لهذا الطلب")
+    
+    # إنشاء التقييم
+    rating_doc = {
+        "id": str(uuid.uuid4()),
+        "order_id": order_id,
+        "driver_id": driver_id,
+        "customer_id": user["id"],
+        "customer_name": user.get("full_name", user.get("name", "")),
+        "rating": rating_data.rating,
+        "comment": rating_data.comment,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.driver_ratings.insert_one(rating_doc)
+    
+    # تحديث متوسط تقييم موظف التوصيل
+    await update_driver_average_rating(driver_id)
+    
+    # إشعار موظف التوصيل
+    await create_notification_for_user(
+        user_id=driver_id,
+        title="تقييم جديد!",
+        message=f"حصلت على تقييم {rating_data.rating} نجوم من عميل",
+        notification_type="rating",
+        order_id=order_id
+    )
+    
+    return {"message": "تم إرسال التقييم بنجاح", "rating": rating_data.rating}
+
+async def update_driver_average_rating(driver_id: str):
+    """تحديث متوسط تقييم موظف التوصيل"""
+    ratings = await db.driver_ratings.find({"driver_id": driver_id}).to_list(1000)
+    
+    if ratings:
+        total = sum(r["rating"] for r in ratings)
+        average = round(total / len(ratings), 1)
+        
+        await db.users.update_one(
+            {"id": driver_id},
+            {"$set": {
+                "average_rating": average,
+                "total_ratings": len(ratings)
+            }}
+        )
+        
+        return average
+    return 0
+
+@router.get("/ratings/{driver_id}")
+async def get_driver_ratings(driver_id: str, page: int = 1, limit: int = 10):
+    """جلب تقييمات موظف التوصيل"""
+    
+    skip = (page - 1) * limit
+    
+    ratings = await db.driver_ratings.find(
+        {"driver_id": driver_id},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.driver_ratings.count_documents({"driver_id": driver_id})
+    
+    # جلب معلومات موظف التوصيل
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "password": 0})
+    
+    return {
+        "ratings": ratings,
+        "total": total,
+        "average_rating": driver.get("average_rating", 0) if driver else 0,
+        "total_ratings": driver.get("total_ratings", 0) if driver else 0
+    }
+
+@router.get("/my-ratings")
+async def get_my_ratings(user: dict = Depends(get_current_user), page: int = 1, limit: int = 20):
+    """جلب تقييماتي كموظف توصيل"""
+    
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    skip = (page - 1) * limit
+    
+    ratings = await db.driver_ratings.find(
+        {"driver_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.driver_ratings.count_documents({"driver_id": user["id"]})
+    
+    return {
+        "ratings": ratings,
+        "total": total,
+        "average_rating": user.get("average_rating", 0),
+        "total_ratings": user.get("total_ratings", 0)
+    }
+
+@router.get("/check-rating/{order_id}")
+async def check_order_rating(order_id: str, user: dict = Depends(get_current_user)):
+    """التحقق مما إذا كان العميل قد قيّم الطلب"""
+    
+    existing_rating = await db.driver_ratings.find_one({
+        "order_id": order_id,
+        "customer_id": user["id"]
+    }, {"_id": 0})
+    
+    return {
+        "has_rated": existing_rating is not None,
+        "rating": existing_rating
+    }
+
