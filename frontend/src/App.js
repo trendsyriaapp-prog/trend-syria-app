@@ -33,6 +33,7 @@ import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages
 import PackagingGuidePage from "./pages/PackagingGuidePage";
 import JoinAsSellerPage from "./pages/JoinAsSellerPage";
 import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
+import FoodPage from "./pages/FoodPage";
 
 function App() {
   return (
@@ -89,6 +90,9 @@ function App() {
                 {/* Landing Pages */}
                 <Route path="/join/seller" element={<JoinAsSellerPage />} />
                 <Route path="/join/delivery" element={<JoinAsDeliveryPage />} />
+                
+                {/* Food Delivery Routes */}
+                <Route path="/food" element={<FoodPage />} />
               </Routes>
             </main>
             <MobileNav />

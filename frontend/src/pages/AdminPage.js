@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
-  ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone
+  ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
+  UtensilsCrossed
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -32,6 +33,7 @@ import ChallengesTab from '../components/admin/ChallengesTab';
 import DeliverySettingsTab from '../components/admin/DeliverySettingsTab';
 import SupportTicketsTab from '../components/admin/SupportTicketsTab';
 import DriverReportsTab from '../components/admin/DriverReportsTab';
+import FoodStoresTab from '../components/admin/FoodStoresTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -280,7 +282,8 @@ const AdminDashboardPage = () => {
     'challenges': 'التحديات والمكافآت',
     'delivery-settings': 'إعدادات التوصيل',
     'support-tickets': 'تذاكر الدعم الفني',
-    'driver-reports': 'البلاغات الأخلاقية'
+    'driver-reports': 'البلاغات الأخلاقية',
+    'food-stores': 'متاجر الطعام'
   };
 
   return (
@@ -382,6 +385,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'driver-reports' && (
               <DriverReportsTab />
+            )}
+            {activeTab === 'food-stores' && (
+              <FoodStoresTab />
             )}
           </>
         ) : (
@@ -546,6 +552,18 @@ const AdminDashboardPage = () => {
                       <AlertTriangle size={16} className="text-red-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">البلاغات الأخلاقية</span>
+                  </button>
+
+                  {/* متاجر الطعام */}
+                  <button
+                    onClick={() => setActiveTab('food-stores')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-green-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="food-stores-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <UtensilsCrossed size={16} className="text-green-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">متاجر الطعام</span>
                   </button>
                 </>
               )}

@@ -16,12 +16,30 @@ router = APIRouter(prefix="/products", tags=["Products"])
 # الفئات المتاحة
 CATEGORIES = [
     "إلكترونيات", "أزياء", "ملابس", "أحذية", "تجميل",
-    "مجوهرات", "إكسسوارات", "المنزل", "رياضة", "أطفال", "كتب", "ألعاب"
+    "مجوهرات", "إكسسوارات", "المنزل", "رياضة", "أطفال", "كتب", "ألعاب",
+    "مطاعم", "مواد غذائية", "خضروات وفواكه"
 ]
+
+# أنواع الفئات (عادية أو طعام)
+FOOD_CATEGORIES = ["مطاعم", "مواد غذائية", "خضروات وفواكه"]
 
 @router.get("/categories")
 async def get_categories():
-    return CATEGORIES
+    """إرجاع الأصناف مع الأيقونات والنوع"""
+    categories_with_icons = [
+        {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
+        {"id": "fashion", "name": "أزياء", "icon": "Sparkles", "type": "shopping"},
+        {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
+        {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
+        {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
+        {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
+        {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
+        {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+        {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
+        {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
+        {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
+    ]
+    return categories_with_icons
 
 @router.post("")
 async def create_product(product: ProductCreate, user: dict = Depends(get_current_user)):

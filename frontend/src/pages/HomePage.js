@@ -6,7 +6,7 @@ import {
   Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, Heart, SprayCan, ChevronLeft, TrendingUp,
-  Package, Clock, Star
+  Package, Clock, Star, ShoppingBasket, Apple
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -16,7 +16,8 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Sparkles, Dumbbell, 
-  BookOpen, Gamepad2, UtensilsCrossed, Heart, SprayCan
+  BookOpen, Gamepad2, UtensilsCrossed, Heart, SprayCan,
+  ShoppingBasket, Apple
 };
 
 const HomePage = () => {
@@ -137,6 +138,7 @@ const HomePage = () => {
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
             {categories.map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
+              const isFood = cat.type === 'food';
               return (
                 <motion.div
                   key={cat.id}
@@ -148,14 +150,18 @@ const HomePage = () => {
                   className="flex-shrink-0"
                 >
                   <Link
-                    to={`/products?category=${cat.id}`}
+                    to={isFood ? `/food?category=${cat.id}` : `/products?category=${cat.id}`}
                     className="category-item flex flex-col items-center gap-1 w-[56px]"
                     data-testid={`category-${cat.id}`}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border-2 border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white transition-all duration-300 group shadow-sm">
+                    <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center border-2 transition-all duration-300 group shadow-sm ${
+                      isFood 
+                        ? 'border-green-200 hover:border-green-500 hover:bg-green-500 hover:text-white text-green-600' 
+                        : 'border-gray-100 hover:border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white'
+                    }`}>
                       <IconComponent size={18} className="group-hover:scale-110 transition-transform" />
                     </div>
-                    <span className="text-[9px] font-medium text-gray-600 text-center leading-tight">{cat.name}</span>
+                    <span className={`text-[9px] font-medium text-center leading-tight ${isFood ? 'text-green-600' : 'text-gray-600'}`}>{cat.name}</span>
                   </Link>
                 </motion.div>
               );

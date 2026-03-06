@@ -32,11 +32,25 @@ DEFAULT_CATEGORY_COMMISSIONS = {
     "default": 0.15,
 }
 
+# عمولات متاجر الطعام
+DEFAULT_FOOD_COMMISSIONS = {
+    "restaurants": 0.20,  # مطاعم
+    "groceries": 0.20,    # مواد غذائية
+    "vegetables": 0.20,   # خضروات وفواكه
+    "default": 0.20,
+}
+
 async def get_commission_rates_from_db():
     rates = await db.commission_rates.find_one({"id": "main"}, {"_id": 0})
     if rates and rates.get("categories"):
         return rates["categories"]
     return DEFAULT_CATEGORY_COMMISSIONS
+
+async def get_food_commission_rates_from_db():
+    rates = await db.commission_rates.find_one({"id": "food"}, {"_id": 0})
+    if rates and rates.get("categories"):
+        return rates["categories"]
+    return DEFAULT_FOOD_COMMISSIONS
 
 # ============== Stats ==============
 
@@ -835,3 +849,148 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
         )
         
         return {"message": "تم فصل الموظف نهائياً"}
+
+
+
+# ============== إدارة متاجر الطعام ==============
+
+@router.get("/food/stats")
+async def get_food_admin_stats(user: dict = Depends(get_current_user)):
+    """إحصائيات متاجر الطعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    total_stores = await db.food_stores.count_documents({})
+    active_stores = await db.food_stores.count_documents({"is_active": True, "is_approved": True})
+    pending_stores = await db.food_stores.count_documents({"is_approved": False})
+    total_products = await db.food_products.count_documents({})
+    
+    # حسب النوع
+    restaurants_count = await db.food_stores.count_documents({"store_type": "restaurants"})
+    groceries_count = await db.food_stores.count_documents({"store_type": "groceries"})
+    vegetables_count = await db.food_stores.count_documents({"store_type": "vegetables"})
+    
+    return {
+        "total_stores": total_stores,
+        "active_stores": active_stores,
+        "pending_stores": pending_stores,
+        "total_products": total_products,
+        "by_type": {
+            "restaurants": restaurants_count,
+            "groceries": groceries_count,
+            "vegetables": vegetables_count
+        }
+    }
+
+@router.get("/food/stores")
+async def get_food_stores_admin(
+    status: str = None,
+    store_type: str = None,
+    user: dict = Depends(get_current_user)
+):
+    """جلب متاجر الطعام للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    query = {}
+    if status == "pending":
+        query["is_approved"] = False
+    elif status == "approved":
+        query["is_approved"] = True
+    if store_type:
+        query["store_type"] = store_type
+    
+    stores = await db.food_stores.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
+    return stores
+
+@router.post("/food/stores/{store_id}/approve")
+async def approve_food_store(store_id: str, user: dict = Depends(get_current_user)):
+    """الموافقة على متجر طعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    await db.food_stores.update_one(
+        {"id": store_id},
+        {"$set": {"is_approved": True, "approved_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # إشعار صاحب المتجر
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="✅ تمت الموافقة على متجرك",
+        message=f"تم قبول متجر {store['name']} وأصبح ظاهراً للعملاء",
+        notification_type="store_approved"
+    )
+    
+    return {"message": "تمت الموافقة على المتجر"}
+
+@router.post("/food/stores/{store_id}/reject")
+async def reject_food_store(
+    store_id: str, 
+    reason: str = "لم يستوفِ الشروط",
+    user: dict = Depends(get_current_user)
+):
+    """رفض متجر طعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    await db.food_stores.update_one(
+        {"id": store_id},
+        {"$set": {"is_approved": False, "rejection_reason": reason, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # إشعار صاحب المتجر
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="❌ تم رفض متجرك",
+        message=f"تم رفض متجر {store['name']}. السبب: {reason}",
+        notification_type="store_rejected"
+    )
+    
+    return {"message": "تم رفض المتجر"}
+
+@router.get("/food/commissions")
+async def get_food_commissions(user: dict = Depends(get_current_user)):
+    """جلب عمولات متاجر الطعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    rates = await get_food_commission_rates_from_db()
+    return {
+        "commissions": rates,
+        "types": {
+            "restaurants": "مطاعم",
+            "groceries": "مواد غذائية",
+            "vegetables": "خضروات وفواكه"
+        }
+    }
+
+@router.put("/food/commissions")
+async def update_food_commissions(
+    commissions: dict,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث عمولات متاجر الطعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    for key, value in commissions.items():
+        if not isinstance(value, (int, float)) or value < 0 or value > 1:
+            raise HTTPException(status_code=400, detail=f"قيمة العمولة غير صالحة: {key}")
+    
+    await db.commission_rates.update_one(
+        {"id": "food"},
+        {"$set": {"categories": commissions, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث العمولات بنجاح", "commissions": commissions}
