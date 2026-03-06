@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import uuid
 import re
 
-from core.database import db, get_current_user
+from core.database import db, get_current_user, create_notification_for_user
 
 router = APIRouter(prefix="/chatbot", tags=["Chatbot"])
 
@@ -244,6 +244,28 @@ async def get_chat_history(session_id: Optional[str] = None, user: dict = Depend
     
     return {"messages": messages}
 
+@router.get("/check-replies/{session_id}")
+async def check_new_replies(session_id: str, last_count: int = 0, user: dict = Depends(get_current_user)):
+    """التحقق من وجود ردود جديدة من الدعم"""
+    
+    # جلب جميع الرسائل في هذه الجلسة
+    messages = await db.chat_messages.find(
+        {"session_id": session_id, "user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    
+    current_count = len(messages)
+    has_new = current_count > last_count
+    
+    # جلب الرسائل الجديدة فقط
+    new_messages = messages[last_count:] if has_new else []
+    
+    return {
+        "has_new": has_new,
+        "new_messages": new_messages,
+        "total_count": current_count
+    }
+
 @router.get("/quick-questions")
 async def get_quick_questions():
     """جلب الأسئلة السريعة الشائعة"""
@@ -314,13 +336,32 @@ class AdminReply(BaseModel):
 
 @router.post("/admin/reply")
 async def send_admin_reply(data: AdminReply, user: dict = Depends(get_current_user)):
-    """إرسال رد من المدير للعميل كإشعار"""
+    """إرسال رد من المدير للعميل كإشعار ورسالة في الدردشة"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     now = datetime.now(timezone.utc).isoformat()
     
-    # إرسال إشعار للعميل
+    # جلب بيانات التذكرة للحصول على session_id
+    ticket = await db.support_requests.find_one({"id": data.ticket_id})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="التذكرة غير موجودة")
+    
+    session_id = ticket.get("session_id")
+    
+    # حفظ رد الدعم كرسالة في المحادثة حتى تظهر للمستخدم
+    if session_id:
+        await db.chat_messages.insert_one({
+            "session_id": session_id,
+            "user_id": data.user_id,
+            "sender": "support",  # نوع جديد للدعم الفني
+            "message": data.message,
+            "admin_id": user["id"],
+            "admin_name": user.get("full_name") or user.get("name"),
+            "created_at": now
+        })
+    
+    # إرسال إشعار للعميل أيضاً
     await create_notification_for_user(
         user_id=data.user_id,
         title="رد من فريق الدعم 💬",

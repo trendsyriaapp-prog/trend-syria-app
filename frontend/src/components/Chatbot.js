@@ -1,19 +1,19 @@
 // /app/frontend/src/components/Chatbot.js
 // Chatbot للدعم الفني - أيقونة عائمة + نافذة دردشة
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, X, Send, User, Bot, 
-  Headphones, ChevronDown, Loader2
+  Headphones, ChevronDown, Loader2, HeadphonesIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const Chatbot = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -21,7 +21,10 @@ const Chatbot = () => {
   const [sessionId, setSessionId] = useState(null);
   const [quickQuestions, setQuickQuestions] = useState([]);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const [hasSupportRequest, setHasSupportRequest] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const pollingRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && quickQuestions.length === 0) {
@@ -32,6 +35,38 @@ const Chatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Polling للتحقق من ردود الدعم الجديدة
+  useEffect(() => {
+    if (hasSupportRequest && sessionId && isOpen) {
+      // بدء Polling كل 5 ثواني
+      pollingRef.current = setInterval(checkForNewReplies, 5000);
+      return () => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+        }
+      };
+    }
+  }, [hasSupportRequest, sessionId, isOpen, messageCount]);
+
+  const checkForNewReplies = useCallback(async () => {
+    if (!sessionId || !token) return;
+    
+    try {
+      const res = await axios.get(
+        `${API}/api/chatbot/check-replies/${sessionId}?last_count=${messageCount}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (res.data.has_new && res.data.new_messages?.length > 0) {
+        // إضافة الرسائل الجديدة
+        setMessages(prev => [...prev, ...res.data.new_messages]);
+        setMessageCount(res.data.total_count);
+      }
+    } catch (error) {
+      console.error('Error checking for new replies:', error);
+    }
+  }, [sessionId, messageCount, token]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -59,9 +94,12 @@ const Chatbot = () => {
       const res = await axios.post(`${API}/api/chatbot/send`, {
         message: text,
         session_id: sessionId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       setSessionId(res.data.session_id);
+      setMessageCount(prev => prev + 2); // رسالة المستخدم + رد البوت
 
       const botMessage = {
         sender: 'bot',
@@ -91,6 +129,8 @@ const Chatbot = () => {
       const res = await axios.post(`${API}/api/chatbot/request-support`, {
         message: messages.length > 0 ? messages[messages.length - 1].message : 'طلب دعم',
         session_id: sessionId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       setMessages(prev => [...prev, {
@@ -98,6 +138,9 @@ const Chatbot = () => {
         message: res.data.message,
         created_at: new Date().toISOString()
       }]);
+      
+      setHasSupportRequest(true);
+      setMessageCount(prev => prev + 1);
     } catch (error) {
       console.error('Error requesting support:', error);
     }
@@ -260,6 +303,7 @@ const Chatbot = () => {
 const MessageBubble = ({ message, onQuickReply }) => {
   const isUser = message.sender === 'user';
   const isSystem = message.sender === 'system';
+  const isSupport = message.sender === 'support';
 
   return (
     <motion.div
@@ -268,10 +312,24 @@ const MessageBubble = ({ message, onQuickReply }) => {
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       <div className={`max-w-[85%] ${isUser ? 'order-1' : 'order-2'}`}>
+        {/* أيقونة البوت أو الدعم */}
         {!isUser && !isSystem && (
-          <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mb-1">
-            <Bot size={14} className="text-[#FF6B00]" />
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
+            isSupport ? 'bg-green-100' : 'bg-orange-100'
+          }`}>
+            {isSupport ? (
+              <HeadphonesIcon size={14} className="text-green-600" />
+            ) : (
+              <Bot size={14} className="text-[#FF6B00]" />
+            )}
           </div>
+        )}
+        
+        {/* عنوان الدعم الفني */}
+        {isSupport && (
+          <span className="text-xs text-green-600 font-medium mb-1 block">
+            الدعم الفني {message.admin_name ? `(${message.admin_name})` : ''}
+          </span>
         )}
         
         <div
@@ -280,7 +338,9 @@ const MessageBubble = ({ message, onQuickReply }) => {
               ? 'bg-[#FF6B00] text-white rounded-br-none'
               : isSystem
                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                : 'bg-white text-gray-800 shadow-sm rounded-bl-none'
+                : isSupport
+                  ? 'bg-green-100 text-green-800 border border-green-200 rounded-bl-none'
+                  : 'bg-white text-gray-800 shadow-sm rounded-bl-none'
           }`}
         >
           <p className="text-sm whitespace-pre-line">{message.message}</p>
