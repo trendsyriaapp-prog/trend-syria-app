@@ -506,11 +506,56 @@ export const ReturnPolicyPage = () => {
           </div>
         </motion.div>
 
-        {/* Manufacturing Defects */}
+        {/* Packaging Errors - Seller Responsibility */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
+          className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4"
+        >
+          <h3 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
+            <span className="text-xl">📦</span>
+            أخطاء التغليف - مسؤولية البائع
+          </h3>
+          <p className="text-sm text-orange-700 leading-relaxed mb-3">
+            إذا وصل المنتج تالفاً بسبب <strong>خطأ في التغليف من البائع</strong>، فإن تكلفة شحن الاستبدال أو الاسترجاع تكون <strong>على حساب البائع</strong> وليس العميل.
+          </p>
+          <div className="bg-white rounded-lg p-3 border border-orange-200">
+            <p className="text-xs font-bold text-orange-800 mb-2">أخطاء التغليف التي يتحمل البائع تكلفتها:</p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-orange-700">
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>تغليف ضعيف أو غير كافٍ</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>عدم استخدام فلين للمنتجات القابلة للكسر</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>صندوق أكبر/أصغر من المنتج</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>عدم وضع علامة "قابل للكسر"</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>إهمال حماية المنتج من الرطوبة</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-red-500">✕</span>
+                <span>تغليف ملابس بدون كيس بلاستيكي</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Manufacturing Defects */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
           className="bg-yellow-50 border border-yellow-200 rounded-xl p-4"
         >
           <h3 className="font-bold text-yellow-800 mb-3">العيوب المصنعية</h3>
@@ -523,7 +568,7 @@ export const ReturnPolicyPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
           className="bg-white rounded-xl border border-gray-200 p-4"
         >
           <h3 className="font-bold text-gray-900 mb-3">تواصل معنا</h3>

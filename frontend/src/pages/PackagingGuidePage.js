@@ -222,6 +222,26 @@ const PackagingGuidePage = () => {
           </div>
         </motion.div>
 
+        {/* Seller Responsibility Warning */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-orange-100 border-2 border-orange-400 rounded-xl p-4"
+        >
+          <h3 className="font-bold text-orange-800 mb-2 flex items-center gap-2">
+            <span className="text-xl">💰</span>
+            تنبيه مهم - المسؤولية المالية
+          </h3>
+          <p className="text-sm text-orange-800 leading-relaxed">
+            <strong>إذا وصل المنتج تالفاً بسبب خطأ في التغليف</strong> وطلب العميل استبدال أو استرجاع، 
+            ستكون <strong>تكلفة الشحن على حسابك</strong> (البائع) وليس العميل.
+          </p>
+          <p className="text-xs text-orange-700 mt-2">
+            راجع سياسة الإرجاع للمزيد من التفاصيل.
+          </p>
+        </motion.div>
+
         {/* Success Tips */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
