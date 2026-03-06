@@ -1,14 +1,18 @@
 // /app/frontend/src/components/admin/DeliverySettingsTab.js
-// تبويب إعدادات التوصيل (مستويات الأداء وساعات العمل)
+// تبويب إعدادات التوصيل (مستويات الأداء وساعات العمل وجوائز الصدارة)
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Award, Clock, Save, RefreshCw, CheckCircle, AlertCircle,
-  Star, Zap, Crown, Diamond
+  Star, Zap, Crown, Diamond, Trophy, Gift
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
 
 const DeliverySettingsTab = () => {
   const [loading, setLoading] = useState(true);
@@ -24,6 +28,11 @@ const DeliverySettingsTab = () => {
       start_hour: 8,
       end_hour: 18,
       is_enabled: true
+    },
+    leaderboard_rewards: {
+      first: 50000,
+      second: 30000,
+      third: 15000
     }
   });
 
@@ -34,7 +43,11 @@ const DeliverySettingsTab = () => {
   const fetchSettings = async () => {
     try {
       const res = await axios.get(`${API}/api/settings/delivery-settings`);
-      setSettings(res.data);
+      setSettings({
+        ...settings,
+        ...res.data,
+        leaderboard_rewards: res.data.leaderboard_rewards || settings.leaderboard_rewards
+      });
     } catch (error) {
       console.error('Error fetching settings:', error);
     } finally {
@@ -66,6 +79,18 @@ const DeliverySettingsTab = () => {
     }
   };
 
+  const handleSaveLeaderboardRewards = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/leaderboard-rewards`, settings.leaderboard_rewards);
+      alert('تم حفظ جوائز الصدارة بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -74,10 +99,106 @@ const DeliverySettingsTab = () => {
     );
   }
 
-  const { performance_levels, working_hours } = settings;
+  const { performance_levels, working_hours, leaderboard_rewards } = settings;
 
   return (
     <div className="space-y-6">
+      {/* Leaderboard Rewards Section */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Trophy size={24} />
+            <div>
+              <h2 className="font-bold text-lg">جوائز لوحة الصدارة</h2>
+              <p className="text-sm text-white/80">حدد الجوائز الشهرية للمراكز الثلاثة الأولى</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-3xl mb-2">
+                🥇
+              </div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الأول</label>
+              <input
+                type="number"
+                value={leaderboard_rewards?.first || 50000}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  leaderboard_rewards: {
+                    ...leaderboard_rewards,
+                    first: parseInt(e.target.value) || 0
+                  }
+                })}
+                className="w-full p-2 border rounded-lg text-center"
+                min={0}
+                step={5000}
+              />
+              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.first || 50000)}</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-3xl mb-2">
+                🥈
+              </div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الثاني</label>
+              <input
+                type="number"
+                value={leaderboard_rewards?.second || 30000}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  leaderboard_rewards: {
+                    ...leaderboard_rewards,
+                    second: parseInt(e.target.value) || 0
+                  }
+                })}
+                className="w-full p-2 border rounded-lg text-center"
+                min={0}
+                step={5000}
+              />
+              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.second || 30000)}</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl mb-2">
+                🥉
+              </div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الثالث</label>
+              <input
+                type="number"
+                value={leaderboard_rewards?.third || 15000}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  leaderboard_rewards: {
+                    ...leaderboard_rewards,
+                    third: parseInt(e.target.value) || 0
+                  }
+                })}
+                className="w-full p-2 border rounded-lg text-center"
+                min={0}
+                step={5000}
+              />
+              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.third || 15000)}</p>
+            </div>
+          </div>
+          
+          <div className="bg-amber-50 rounded-xl p-3 border border-amber-200 mb-4">
+            <p className="text-sm text-amber-700 text-center">
+              إجمالي الجوائز الشهرية: <strong>{formatPrice((leaderboard_rewards?.first || 50000) + (leaderboard_rewards?.second || 30000) + (leaderboard_rewards?.third || 15000))}</strong>
+            </p>
+          </div>
+
+          <button
+            onClick={handleSaveLeaderboardRewards}
+            disabled={saving}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ جوائز الصدارة
+          </button>
+        </div>
+      </div>
+
       {/* Performance Levels Section */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">

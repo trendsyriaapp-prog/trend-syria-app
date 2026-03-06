@@ -13,6 +13,7 @@ import MyOrdersList from '../components/delivery/MyOrdersList';
 import MyBoxCard from '../components/delivery/MyBoxCard';
 import DriverPerformance from '../components/delivery/DriverPerformance';
 import DriverChallenges from '../components/delivery/DriverChallenges';
+import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -452,6 +453,9 @@ const DeliveryDashboard = () => {
 
         {/* التحديات والمكافآت */}
         <DriverChallenges />
+
+        {/* لوحة الصدارة */}
+        <DriverLeaderboard />
 
         {/* تقارير الأداء */}
         <div className="mb-4">

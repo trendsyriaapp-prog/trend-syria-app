@@ -233,7 +233,7 @@ class DeliveryWorkingHours(BaseModel):
 
 @router.get("/delivery-settings")
 async def get_delivery_settings():
-    """جلب إعدادات التوصيل (مستويات الأداء وساعات العمل)"""
+    """جلب إعدادات التوصيل (مستويات الأداء وساعات العمل وجوائز الصدارة)"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
     
     default_levels = {
@@ -249,15 +249,23 @@ async def get_delivery_settings():
         "is_enabled": True
     }
     
+    default_rewards = {
+        "first": 50000,
+        "second": 30000,
+        "third": 15000
+    }
+    
     if not settings:
         return {
             "performance_levels": default_levels,
-            "working_hours": default_hours
+            "working_hours": default_hours,
+            "leaderboard_rewards": default_rewards
         }
     
     return {
         "performance_levels": settings.get("performance_levels", default_levels),
-        "working_hours": settings.get("working_hours", default_hours)
+        "working_hours": settings.get("working_hours", default_hours),
+        "leaderboard_rewards": settings.get("leaderboard_rewards", default_rewards)
     }
 
 @router.put("/performance-levels")
@@ -339,5 +347,51 @@ async def update_working_hours(
             "start_hour": hours.start_hour,
             "end_hour": hours.end_hour,
             "is_enabled": hours.is_enabled
+        }
+    }
+
+
+# ============== Leaderboard Rewards ==============
+
+class LeaderboardRewards(BaseModel):
+    first: float = 50000    # جائزة المركز الأول
+    second: float = 30000   # جائزة المركز الثاني
+    third: float = 15000    # جائزة المركز الثالث
+
+@router.put("/leaderboard-rewards")
+async def update_leaderboard_rewards(
+    rewards: LeaderboardRewards,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث جوائز لوحة الصدارة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    if rewards.first < 0 or rewards.second < 0 or rewards.third < 0:
+        raise HTTPException(status_code=400, detail="الجوائز يجب أن تكون قيم موجبة")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "leaderboard_rewards": {
+                    "first": rewards.first,
+                    "second": rewards.second,
+                    "third": rewards.third
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث جوائز الصدارة بنجاح",
+        "leaderboard_rewards": {
+            "first": rewards.first,
+            "second": rewards.second,
+            "third": rewards.third
         }
     }

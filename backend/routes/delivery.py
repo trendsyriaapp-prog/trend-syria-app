@@ -410,6 +410,150 @@ def get_performance_tips(avg_rating: float, month_orders: int) -> list:
     
     return tips
 
+# ============== Leaderboard ==============
+
+@router.get("/leaderboard")
+async def get_driver_leaderboard(user: dict = Depends(get_current_user)):
+    """لوحة صدارة السائقين - أفضل 10 سائقين هذا الشهر"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from datetime import timedelta
+    
+    now = datetime.now(timezone.utc)
+    month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    
+    # جلب إعدادات الجوائز من قاعدة البيانات
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    leaderboard_settings = settings.get("leaderboard_rewards", {}) if settings else {}
+    
+    # الجوائز الافتراضية
+    rewards = {
+        "first": leaderboard_settings.get("first", 50000),   # المركز الأول
+        "second": leaderboard_settings.get("second", 30000), # المركز الثاني
+        "third": leaderboard_settings.get("third", 15000)    # المركز الثالث
+    }
+    
+    # جلب جميع السائقين المعتمدين
+    approved_docs = await db.delivery_documents.find(
+        {"status": "approved"},
+        {"_id": 0, "driver_id": 1, "delivery_id": 1}
+    ).to_list(1000)
+    
+    # إزالة التكرارات
+    driver_ids = list(set(doc.get("driver_id") or doc.get("delivery_id") for doc in approved_docs))
+    
+    # حساب طلبات كل سائق هذا الشهر
+    leaderboard_data = []
+    
+    for driver_id in driver_ids:
+        # جلب معلومات السائق
+        driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "id": 1, "name": 1, "full_name": 1})
+        if not driver:
+            continue
+        
+        # عدد الطلبات المسلمة هذا الشهر
+        month_orders = await db.orders.count_documents({
+            "delivery_driver_id": driver_id,
+            "delivery_status": "delivered",
+            "delivered_at": {"$gte": month_start.isoformat()}
+        })
+        
+        # معدل التقييم
+        ratings = await db.driver_ratings.find(
+            {"driver_id": driver_id},
+            {"_id": 0, "rating": 1}
+        ).to_list(1000)
+        avg_rating = round(sum(r["rating"] for r in ratings) / len(ratings), 1) if ratings else 0
+        
+        leaderboard_data.append({
+            "driver_id": driver_id,
+            "name": driver.get("full_name") or driver.get("name"),
+            "orders_count": month_orders,
+            "avg_rating": avg_rating,
+            "earnings": month_orders * 5000
+        })
+    
+    # ترتيب حسب عدد الطلبات ثم التقييم
+    leaderboard_data.sort(key=lambda x: (-x["orders_count"], -x["avg_rating"]))
+    
+    # إضافة المراكز والجوائز
+    for i, driver in enumerate(leaderboard_data):
+        driver["rank"] = i + 1
+        if i == 0:
+            driver["reward"] = rewards["first"]
+            driver["badge"] = "🥇"
+            driver["badge_color"] = "#FFD700"
+        elif i == 1:
+            driver["reward"] = rewards["second"]
+            driver["badge"] = "🥈"
+            driver["badge_color"] = "#C0C0C0"
+        elif i == 2:
+            driver["reward"] = rewards["third"]
+            driver["badge"] = "🥉"
+            driver["badge_color"] = "#CD7F32"
+        else:
+            driver["reward"] = 0
+            driver["badge"] = None
+            driver["badge_color"] = None
+    
+    # أخذ أفضل 10 فقط
+    top_10 = leaderboard_data[:10]
+    
+    # إيجاد مركز السائق الحالي
+    my_rank = None
+    my_data = None
+    for driver in leaderboard_data:
+        if driver["driver_id"] == user["id"]:
+            my_rank = driver["rank"]
+            my_data = driver
+            break
+    
+    # إذا لم يكن في القائمة، أضفه بصفر طلبات
+    if my_data is None:
+        my_data = {
+            "driver_id": user["id"],
+            "name": user.get("full_name") or user.get("name"),
+            "orders_count": 0,
+            "avg_rating": 0,
+            "earnings": 0,
+            "rank": len(leaderboard_data) + 1,
+            "reward": 0,
+            "badge": None,
+            "badge_color": None
+        }
+        my_rank = my_data["rank"]
+    
+    # حساب الأيام المتبقية في الشهر
+    if now.month == 12:
+        next_month = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
+    else:
+        next_month = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
+    days_remaining = (next_month - now).days
+    
+    # الأسماء العربية للأشهر
+    arabic_months = {
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل",
+        5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+        9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+    }
+    
+    return {
+        "leaderboard": top_10,
+        "my_position": {
+            "rank": my_rank,
+            "data": my_data,
+            "is_in_top_10": my_rank <= 10 if my_rank else False
+        },
+        "rewards": rewards,
+        "month_info": {
+            "name": arabic_months[now.month],
+            "year": now.year,
+            "days_remaining": days_remaining
+        },
+        "total_participants": len(leaderboard_data)
+    }
+
 # ============== Driver Rating System ==============
 
 from pydantic import BaseModel
