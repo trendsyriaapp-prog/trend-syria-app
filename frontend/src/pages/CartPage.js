@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle, Store, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -31,6 +31,7 @@ const CartPage = () => {
   const [shippingInfo, setShippingInfo] = useState(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [customerAddress, setCustomerAddress] = useState(null);
+  const [sellerShippingDetails, setSellerShippingDetails] = useState([]);
   
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
@@ -54,6 +55,10 @@ const CartPage = () => {
         setShippingLoading(true);
         const shippingRes = await axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`);
         setShippingInfo(shippingRes.data);
+        
+        // Fetch detailed shipping per seller
+        const detailedRes = await axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(defaultAddr.city)}`);
+        setSellerShippingDetails(detailedRes.data.sellers || []);
       }
     } catch (error) {
       console.error('Error fetching shipping:', error);
@@ -174,75 +179,243 @@ const CartPage = () => {
         {/* Header */}
         <h1 className="text-base font-bold mb-3 text-gray-900">سلة التسوق ({cart.items.length})</h1>
 
+        {/* عنوان العميل الحالي */}
+        {customerAddress && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3 flex items-center gap-2">
+            <MapPin size={14} className="text-blue-600" />
+            <span className="text-xs text-blue-700">
+              عنوانك: <strong>{customerAddress.city}</strong>
+            </span>
+          </div>
+        )}
+
+        {/* شريط تنبيه للشحن - يظهر فقط إذا كان هناك منتجات من محافظات مختلفة */}
+        {sellerShippingDetails.length > 0 && sellerShippingDetails.some(s => !s.is_same_city) && (
+          <div className="bg-orange-100 border border-orange-300 rounded-lg p-2 mb-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={14} className="text-orange-600 flex-shrink-0" />
+              <p className="text-[10px] text-orange-700">
+                <strong>بعض المنتجات من محافظات أخرى</strong> - الشحن المجاني متاح فقط للمتاجر من نفس محافظتك
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* شريط التقدم للشحن المجاني - فقط للمتاجر من نفس المحافظة */}
+        {sellerShippingDetails.length > 0 && sellerShippingDetails.some(s => s.shipping_status === 'paid_can_be_free') && (
+          <div className="bg-gradient-to-l from-[#FF6B00] to-orange-400 rounded-lg p-2 mb-3">
+            {sellerShippingDetails.filter(s => s.shipping_status === 'paid_can_be_free').map((seller) => (
+              <div key={seller.seller_id} className="flex items-center gap-2 text-white">
+                <Truck size={14} />
+                <span className="text-xs">
+                  أضف <strong>{formatPrice(seller.remaining_for_free)}</strong> من "{seller.seller_name}" للشحن المجاني
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-3">
-          {/* Cart Items */}
-          <div className="md:col-span-2 space-y-2">
-            {cart.items.map((item) => (
-              <motion.div
-                key={`${item.product_id}-${item.selected_size || 'no-size'}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-lg p-2 border border-gray-200"
-                data-testid={`cart-item-${item.product_id}`}
-              >
-                <div className="flex gap-2">
-                  <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
-                    <img
-                      src={item.product?.images?.[0] || 'https://via.placeholder.com/100'}
-                      alt={item.product?.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link 
-                      to={`/products/${item.product_id}`}
-                      className="font-bold text-xs text-gray-900 hover:text-[#FF6B00] transition-colors line-clamp-2"
-                    >
-                      {item.product?.name}
-                    </Link>
-                    <p className="text-[#FF6B00] font-bold text-xs mt-0.5">
-                      {formatPrice(item.product?.price)}
-                    </p>
-                    {/* عرض المقاس المختار */}
-                    {item.selected_size && (
-                      <p className="text-[10px] text-gray-500 mt-0.5">
-                        المقاس: <span className="font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{item.selected_size}</span>
+          {/* Cart Items - مجمعة حسب البائع */}
+          <div className="md:col-span-2 space-y-3">
+            {sellerShippingDetails.length > 0 ? (
+              // عرض المنتجات مجمعة حسب البائع
+              sellerShippingDetails.map((seller) => (
+                <div key={seller.seller_id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  {/* رأس البائع */}
+                  <div className={`p-2 border-b ${
+                    seller.shipping_status === 'free' ? 'bg-green-50 border-green-200' :
+                    seller.shipping_status === 'paid_can_be_free' ? 'bg-amber-50 border-amber-200' :
+                    !seller.is_same_city ? 'bg-orange-50 border-orange-200' :
+                    'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Store size={14} className="text-gray-600" />
+                        <span className="font-bold text-xs text-gray-900">{seller.seller_name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          seller.is_same_city ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {seller.seller_city}
+                          {seller.is_same_city && ' ✓'}
+                        </span>
+                      </div>
+                      {/* حالة الشحن */}
+                      <div className="flex items-center gap-1">
+                        {seller.shipping_status === 'free' ? (
+                          <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Truck size={10} />
+                            شحن مجاني ✓
+                          </span>
+                        ) : seller.shipping_status === 'paid_can_be_free' ? (
+                          <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                            🚚 {formatPrice(seller.shipping_cost)}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
+                            🚚 {formatPrice(seller.shipping_cost)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* رسالة الشحن */}
+                    {seller.shipping_status === 'paid_can_be_free' && seller.remaining_for_free > 0 && (
+                      <p className="text-[10px] text-amber-700 mt-1 flex items-center gap-1">
+                        <Info size={10} />
+                        أضف {formatPrice(seller.remaining_for_free)} للشحن المجاني من هذا المتجر
                       </p>
                     )}
-                    
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="flex items-center gap-1 bg-gray-100 rounded-full">
-                        <button
-                          onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                          className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                          data-testid={`decrease-${item.product_id}`}
-                        >
-                          <Minus size={12} className="text-gray-600" />
-                        </button>
-                        <span className="w-5 text-center text-xs font-bold text-gray-900">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                          className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                          data-testid={`increase-${item.product_id}`}
-                        >
-                          <Plus size={12} className="text-gray-600" />
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => removeFromCart(item.product_id)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        data-testid={`remove-${item.product_id}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    {seller.shipping_status === 'paid_no_free_option' && !seller.is_same_city && (
+                      <p className="text-[10px] text-orange-600 mt-1">
+                        ⚠️ الشحن من {seller.seller_city} إلى {seller.customer_city} (لا يوجد شحن مجاني)
+                      </p>
+                    )}
                   </div>
-                  <div className="text-left text-[10px] text-gray-500 self-end">
-                    <span className="text-gray-900 font-bold text-xs">{formatPrice(item.item_total)}</span>
+                  
+                  {/* منتجات هذا البائع */}
+                  <div className="p-2 space-y-2">
+                    {seller.items.map((sellerItem) => {
+                      // العثور على العنصر الأصلي في السلة
+                      const cartItem = cart.items.find(ci => ci.product_id === sellerItem.product_id);
+                      if (!cartItem) return null;
+                      
+                      return (
+                        <div
+                          key={sellerItem.product_id}
+                          className="flex gap-2"
+                          data-testid={`cart-item-${sellerItem.product_id}`}
+                        >
+                          <Link to={`/products/${sellerItem.product_id}`} className="flex-shrink-0">
+                            <img
+                              src={sellerItem.image || 'https://via.placeholder.com/100'}
+                              alt={sellerItem.name}
+                              className="w-14 h-14 object-cover rounded-lg"
+                            />
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <Link 
+                              to={`/products/${sellerItem.product_id}`}
+                              className="font-bold text-[11px] text-gray-900 hover:text-[#FF6B00] transition-colors line-clamp-1"
+                            >
+                              {sellerItem.name}
+                            </Link>
+                            <p className="text-[#FF6B00] font-bold text-[11px]">
+                              {formatPrice(sellerItem.price)}
+                            </p>
+                            {cartItem.selected_size && (
+                              <p className="text-[9px] text-gray-500">
+                                المقاس: <span className="font-bold bg-gray-100 px-1 rounded">{cartItem.selected_size}</span>
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between mt-1">
+                              <div className="flex items-center gap-1 bg-gray-100 rounded-full">
+                                <button
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity - 1)}
+                                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                >
+                                  <Minus size={10} className="text-gray-600" />
+                                </button>
+                                <span className="w-4 text-center text-[10px] font-bold text-gray-900">{cartItem.quantity}</span>
+                                <button
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity + 1)}
+                                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                >
+                                  <Plus size={10} className="text-gray-600" />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => removeFromCart(sellerItem.product_id)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-left self-center">
+                            <span className="text-gray-900 font-bold text-[11px]">{formatPrice(sellerItem.total)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* مجموع هذا البائع */}
+                  <div className="p-2 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                    <span className="text-[10px] text-gray-500">مجموع المتجر</span>
+                    <span className="font-bold text-xs text-gray-900">{formatPrice(seller.subtotal)}</span>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              ))
+            ) : (
+              // العرض القديم إذا لم تتوفر بيانات البائعين
+              cart.items.map((item) => (
+                <motion.div
+                  key={`${item.product_id}-${item.selected_size || 'no-size'}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-lg p-2 border border-gray-200"
+                  data-testid={`cart-item-${item.product_id}`}
+                >
+                  <div className="flex gap-2">
+                    <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
+                      <img
+                        src={item.product?.images?.[0] || 'https://via.placeholder.com/100'}
+                        alt={item.product?.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link 
+                        to={`/products/${item.product_id}`}
+                        className="font-bold text-xs text-gray-900 hover:text-[#FF6B00] transition-colors line-clamp-2"
+                      >
+                        {item.product?.name}
+                      </Link>
+                      <p className="text-[#FF6B00] font-bold text-xs mt-0.5">
+                        {formatPrice(item.product?.price)}
+                      </p>
+                      {item.selected_size && (
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          المقاس: <span className="font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{item.selected_size}</span>
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-full">
+                          <button
+                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            data-testid={`decrease-${item.product_id}`}
+                          >
+                            <Minus size={12} className="text-gray-600" />
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold text-gray-900">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            data-testid={`increase-${item.product_id}`}
+                          >
+                            <Plus size={12} className="text-gray-600" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.product_id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                          data-testid={`remove-${item.product_id}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-left text-[10px] text-gray-500 self-end">
+                      <span className="text-gray-900 font-bold text-xs">{formatPrice(item.item_total)}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* Summary */}
@@ -267,33 +440,60 @@ const CartPage = () => {
                   </div>
                 )}
                 
-                {/* Shipping */}
-                <div className="flex justify-between text-gray-600">
-                  <span>التوصيل</span>
-                  {shippingLoading ? (
-                    <Loader2 size={12} className="animate-spin text-gray-400" />
-                  ) : isFreeShipping ? (
-                    <span className="text-green-600 font-bold">مجاني ✓</span>
-                  ) : shippingInfo ? (
-                    <span className="text-gray-900 font-bold">{formatPrice(shippingCost)}</span>
-                  ) : (
-                    <span className="text-gray-400">يُحسب عند الدفع</span>
-                  )}
-                </div>
-              </div>
-              
-              {/* Shipping Warning for different city */}
-              {shippingInfo && shippingInfo.no_free_option && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
-                  <div className="flex items-start gap-1.5">
-                    <AlertTriangle size={12} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] text-amber-700 font-bold">المتجر من محافظة أخرى</p>
-                      <p className="text-[10px] text-amber-600">
-                        عنوانك: {customerAddress?.city} • المتجر: {shippingInfo.seller_city}
-                      </p>
+                {/* تفاصيل الشحن لكل بائع */}
+                {sellerShippingDetails.length > 0 && (
+                  <div className="border-t border-gray-100 pt-2 mt-2">
+                    <p className="text-[10px] text-gray-500 mb-1.5 font-medium">تكلفة الشحن:</p>
+                    {sellerShippingDetails.map((seller) => (
+                      <div key={seller.seller_id} className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] text-gray-600 truncate max-w-[120px]">
+                          {seller.seller_name}
+                        </span>
+                        {seller.shipping_status === 'free' ? (
+                          <span className="text-[10px] font-bold text-green-600">مجاني ✓</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-gray-700">{formatPrice(seller.shipping_cost)}</span>
+                        )}
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center pt-1 border-t border-dashed border-gray-200">
+                      <span className="text-[10px] text-gray-600 font-medium">إجمالي الشحن</span>
+                      <span className="text-[10px] font-bold text-gray-900">
+                        {sellerShippingDetails.every(s => s.shipping_status === 'free') 
+                          ? 'مجاني ✓' 
+                          : formatPrice(sellerShippingDetails.reduce((sum, s) => sum + s.shipping_cost, 0))
+                        }
+                      </span>
                     </div>
                   </div>
+                )}
+                
+                {/* Shipping - عرض قديم إذا لم تتوفر التفاصيل */}
+                {sellerShippingDetails.length === 0 && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>التوصيل</span>
+                    {shippingLoading ? (
+                      <Loader2 size={12} className="animate-spin text-gray-400" />
+                    ) : isFreeShipping ? (
+                      <span className="text-green-600 font-bold">مجاني ✓</span>
+                    ) : shippingInfo ? (
+                      <span className="text-gray-900 font-bold">{formatPrice(shippingCost)}</span>
+                    ) : (
+                      <span className="text-gray-400">يُحسب عند الدفع</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* رسائل الشحن المفيدة */}
+              {sellerShippingDetails.some(s => s.shipping_status === 'paid_can_be_free') && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                  <p className="text-[10px] text-amber-700 font-bold mb-1">💡 وفّر على الشحن!</p>
+                  {sellerShippingDetails.filter(s => s.shipping_status === 'paid_can_be_free').map((seller) => (
+                    <p key={seller.seller_id} className="text-[10px] text-amber-600">
+                      أضف {formatPrice(seller.remaining_for_free)} من "{seller.seller_name}" للشحن المجاني
+                    </p>
+                  ))}
                 </div>
               )}
               
@@ -338,29 +538,25 @@ const CartPage = () => {
                 )}
               </div>
               
-              {/* معلومات الشحن المجاني - فقط للمحافظة نفسها */}
-              {shippingInfo && !shippingInfo.no_free_option && analysis.remainingForFree > 0 && !isFreeShipping && (
-                <div className="bg-blue-50 rounded-lg p-2 mb-2 text-[10px] text-blue-700">
-                  <div className="flex items-start gap-1">
-                    <Truck size={12} className="flex-shrink-0 mt-0.5" />
-                    <span>أضف {formatPrice(analysis.remainingForFree)} للتوصيل المجاني (نفس المحافظة)</span>
-                  </div>
+              {/* رسالة الشحن المجاني */}
+              <div className="bg-gray-50 rounded-lg p-2 mb-2 text-[10px] text-gray-600">
+                <div className="flex items-start gap-1">
+                  <Info size={12} className="flex-shrink-0 mt-0.5" />
+                  <span>شحن مجاني للطلبات فوق {formatPrice(FREE_SHIPPING_THRESHOLD)} من نفس المحافظة</span>
                 </div>
-              )}
-              
-              {/* رسالة الشحن المجاني للمحافظات المختلفة */}
-              {shippingInfo && shippingInfo.no_free_option && (
-                <div className="bg-gray-50 rounded-lg p-2 mb-2 text-[10px] text-gray-600">
-                  <div className="flex items-start gap-1">
-                    <Info size={12} className="flex-shrink-0 mt-0.5" />
-                    <span>الشحن المجاني متاح للطلبات من متجر واحد بنفس المحافظة أكثر من {formatPrice(FREE_SHIPPING_THRESHOLD)}</span>
-                  </div>
-                </div>
-              )}
+              </div>
               
               <div className="flex justify-between font-bold text-sm pt-2 border-t border-gray-100">
                 <span className="text-gray-900">الإجمالي</span>
-                <span className="text-[#FF6B00]">{formatPrice(finalTotal)}</span>
+                <span className="text-[#FF6B00]">
+                  {formatPrice(
+                    cart.total - discountAmount + 
+                    (sellerShippingDetails.length > 0 
+                      ? sellerShippingDetails.reduce((sum, s) => sum + s.shipping_cost, 0)
+                      : shippingCost
+                    )
+                  )}
+                </span>
               </div>
 
               <Link

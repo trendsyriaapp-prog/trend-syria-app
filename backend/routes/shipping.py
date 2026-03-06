@@ -216,3 +216,101 @@ async def get_cities():
         "اللاذقية", "طرطوس", "درعا", "السويداء", 
         "إدلب", "الرقة", "دير الزور", "الحسكة", "القنيطرة"
     ]
+
+@router.get("/cart/detailed")
+async def calculate_cart_shipping_detailed(customer_city: str, user: dict = Depends(get_current_user)):
+    """
+    حساب تفاصيل الشحن لكل بائع على حدة
+    يُظهر للعميل تكلفة الشحن لكل متجر بشكل منفصل
+    """
+    cart = await db.carts.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not cart or not cart.get("items"):
+        return {
+            "sellers": [],
+            "total_shipping": 0,
+            "message": "السلة فارغة"
+        }
+    
+    # تجميع المنتجات حسب البائع
+    sellers_data = {}
+    
+    for item in cart.get("items", []):
+        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        if product:
+            seller_id = product.get("seller_id", "unknown")
+            
+            if seller_id not in sellers_data:
+                # جلب معلومات البائع
+                seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
+                seller_city = product.get("city", "")
+                
+                sellers_data[seller_id] = {
+                    "seller_id": seller_id,
+                    "seller_name": seller.get("business_name") or seller.get("full_name") or "متجر",
+                    "seller_city": seller_city,
+                    "items": [],
+                    "subtotal": 0
+                }
+            
+            sellers_data[seller_id]["items"].append({
+                "product_id": product["id"],
+                "name": product["name"],
+                "price": product["price"],
+                "quantity": item["quantity"],
+                "total": product["price"] * item["quantity"],
+                "image": product.get("images", [""])[0] if product.get("images") else ""
+            })
+            sellers_data[seller_id]["subtotal"] += product["price"] * item["quantity"]
+    
+    # حساب الشحن لكل بائع
+    sellers_result = []
+    total_shipping = 0
+    
+    for seller_id, seller_data in sellers_data.items():
+        seller_city = seller_data["seller_city"]
+        subtotal = seller_data["subtotal"]
+        
+        shipping_info = {
+            "seller_id": seller_id,
+            "seller_name": seller_data["seller_name"],
+            "seller_city": seller_city,
+            "customer_city": customer_city,
+            "items": seller_data["items"],
+            "subtotal": subtotal,
+            "is_same_city": seller_city == customer_city
+        }
+        
+        # نفس المحافظة
+        if seller_city == customer_city:
+            if subtotal >= FREE_SHIPPING_THRESHOLD:
+                # شحن مجاني
+                shipping_info["shipping_cost"] = 0
+                shipping_info["shipping_status"] = "free"
+                shipping_info["message"] = "شحن مجاني ✓"
+            else:
+                # لم يصل للحد الأدنى
+                remaining = FREE_SHIPPING_THRESHOLD - subtotal
+                shipping_info["shipping_cost"] = SHIPPING_COSTS["nearby"]
+                shipping_info["shipping_status"] = "paid_can_be_free"
+                shipping_info["remaining_for_free"] = remaining
+                shipping_info["message"] = f"أضف {remaining:,.0f} ل.س للشحن المجاني"
+        else:
+            # محافظة مختلفة - لا يوجد شحن مجاني
+            nearby = NEARBY_CITIES.get(seller_city, [])
+            if customer_city in nearby:
+                shipping_info["shipping_cost"] = SHIPPING_COSTS["nearby"]
+            else:
+                shipping_info["shipping_cost"] = SHIPPING_COSTS["far"]
+            
+            shipping_info["shipping_status"] = "paid_no_free_option"
+            shipping_info["message"] = f"شحن من {seller_city}"
+        
+        total_shipping += shipping_info["shipping_cost"]
+        sellers_result.append(shipping_info)
+    
+    return {
+        "sellers": sellers_result,
+        "total_shipping": total_shipping,
+        "customer_city": customer_city,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD
+    }
