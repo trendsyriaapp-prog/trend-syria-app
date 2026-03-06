@@ -384,9 +384,25 @@ export const ReturnPolicyPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-green-600 to-green-500 text-white rounded-2xl p-4"
         >
-          <h2 className="font-bold text-lg mb-2">ضمان رضاك</h2>
+          <h2 className="font-bold text-lg mb-2">الإرجاع عند التسليم فقط</h2>
           <p className="text-sm opacity-90">
-            نسعى لضمان رضاك التام عن مشترياتك. إذا لم تكن راضياً، يمكنك الإرجاع أو الاستبدال وفق الشروط التالية.
+            يجب فحص المنتج أمام موظف التوصيل عند الاستلام. الإرجاع متاح فقط في لحظة التسليم.
+          </p>
+        </motion.div>
+
+        {/* Important Notice */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-red-50 border-2 border-red-300 rounded-xl p-4"
+        >
+          <h3 className="font-bold text-red-800 mb-2 flex items-center gap-2">
+            <span className="text-xl">⚠️</span>
+            تنبيه هام
+          </h3>
+          <p className="text-red-700 text-sm leading-relaxed font-medium">
+            بمجرد استلام المنتج والتوقيع على التسليم، <strong>لا يمكن إرجاع المنتج</strong>. يرجى فحص المنتج جيداً أمام موظف التوصيل قبل التوقيع.
           </p>
         </motion.div>
 
@@ -394,85 +410,38 @@ export const ReturnPolicyPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
-        >
-          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold">7</span>
-            </div>
-            مدة الإرجاع
-          </h3>
-          <p className="text-gray-700 text-sm leading-relaxed">
-            يحق لك إرجاع أو استبدال المنتج خلال <strong>7 أيام</strong> من تاريخ الاستلام، بشرط أن يكون المنتج بحالته الأصلية ومع جميع الملحقات والتغليف.
-          </p>
-        </motion.div>
-
-        {/* Conditions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-white rounded-xl border border-gray-200 p-4"
         >
-          <h3 className="font-bold text-gray-900 mb-3">شروط الإرجاع</h3>
-          <div className="space-y-3">
-            {[
-              'المنتج غير مستخدم وبحالته الأصلية',
-              'جميع الملصقات والتغليف الأصلي موجودة',
-              'إرفاق فاتورة الشراء أو رقم الطلب',
-              'المنتج غير تالف بسبب سوء الاستخدام',
-              'المنتج ليس من المنتجات المستثناة'
-            ].map((condition, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                {condition}
-              </div>
-            ))}
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+              <Truck size={16} className="text-[#FF6B00]" />
+            </div>
+            سياسة الإرجاع
+          </h3>
+          <div className="space-y-3 text-sm text-gray-700">
+            <p>• الإرجاع متاح <strong>فقط عند لحظة التسليم</strong> وأمام موظف التوصيل.</p>
+            <p>• يجب فحص المنتج والتأكد من سلامته قبل التوقيع على الاستلام.</p>
+            <p>• بعد التوقيع على الاستلام، يعتبر البيع نهائياً ولا يمكن الإرجاع.</p>
+            <p>• في حالة وجود عيب مصنعي، تواصل معنا خلال 24 ساعة مع صور توضيحية.</p>
           </div>
         </motion.div>
 
-        {/* Excluded Products */}
+        {/* How to Return */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-red-50 border border-red-200 rounded-xl p-4"
-        >
-          <h3 className="font-bold text-red-800 mb-3">المنتجات المستثناة من الإرجاع</h3>
-          <div className="space-y-2">
-            {[
-              'الملابس الداخلية ومنتجات العناية الشخصية',
-              'المنتجات الغذائية والقابلة للتلف',
-              'المنتجات المصنوعة حسب الطلب',
-              'البرمجيات والمحتوى الرقمي',
-              'المنتجات المخفضة أو التصفيات (ما لم يكن بها عيب)'
-            ].map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-red-700">
-                <span className="text-red-500">✕</span>
-                {item}
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Process */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
           className="bg-white rounded-xl border border-gray-200 p-4"
         >
-          <h3 className="font-bold text-gray-900 mb-4">خطوات الإرجاع</h3>
+          <h3 className="font-bold text-gray-900 mb-4">كيفية الإرجاع عند التسليم</h3>
           <div className="space-y-4">
             {[
-              { step: 1, title: 'تقديم الطلب', desc: 'تواصل معنا عبر التطبيق أو البريد الإلكتروني مع ذكر رقم الطلب وسبب الإرجاع' },
-              { step: 2, title: 'مراجعة الطلب', desc: 'سنراجع طلبك ونرد عليك خلال 24-48 ساعة' },
-              { step: 3, title: 'استلام المنتج', desc: 'سيتم إرسال موظف التوصيل لاستلام المنتج من عنوانك' },
-              { step: 4, title: 'فحص المنتج', desc: 'سنفحص المنتج للتأكد من مطابقته لشروط الإرجاع' },
-              { step: 5, title: 'استرداد المبلغ', desc: 'سيتم إضافة المبلغ لمحفظتك خلال 3-5 أيام عمل' }
+              { step: 1, title: 'فحص المنتج', desc: 'افحص المنتج جيداً أمام موظف التوصيل قبل التوقيع' },
+              { step: 2, title: 'التأكد من المواصفات', desc: 'تأكد أن المنتج مطابق لما طلبته (اللون، المقاس، الكمية)' },
+              { step: 3, title: 'إعلام الموظف', desc: 'إذا كان هناك مشكلة، أخبر موظف التوصيل فوراً قبل التوقيع' },
+              { step: 4, title: 'رفض الاستلام', desc: 'يحق لك رفض استلام المنتج إذا لم يكن مطابقاً' },
+              { step: 5, title: 'استرداد المبلغ', desc: 'سيتم إضافة المبلغ لمحفظتك خلال 24-48 ساعة' }
             ].map((item) => (
               <div key={item.step} className="flex gap-3">
                 <div className="w-8 h-8 bg-[#FF6B00] text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">
@@ -487,35 +456,66 @@ export const ReturnPolicyPage = () => {
           </div>
         </motion.div>
 
-        {/* Refund */}
+        {/* Conditions for Return */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl border border-gray-200 p-4"
+        >
+          <h3 className="font-bold text-gray-900 mb-3">حالات يمكن فيها الإرجاع</h3>
+          <div className="space-y-3">
+            {[
+              'المنتج تالف أو مكسور عند الاستلام',
+              'المنتج مختلف عن الصور أو الوصف',
+              'المقاس أو اللون خاطئ',
+              'نقص في الكمية المطلوبة',
+              'المنتج منتهي الصلاحية (للمنتجات الغذائية)'
+            ].map((condition, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-xs">✓</span>
+                </div>
+                {condition}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* No Return Cases */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-red-50 border border-red-200 rounded-xl p-4"
         >
-          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <CreditCard size={18} className="text-[#FF6B00]" />
-            استرداد المبلغ
-          </h3>
-          <div className="text-sm text-gray-700 space-y-2">
-            <p>• يتم استرداد المبلغ كاملاً إلى محفظتك في التطبيق.</p>
-            <p>• يمكنك استخدام الرصيد لشراء منتجات أخرى أو طلب سحبه.</p>
-            <p>• في حالة الاستبدال، يتم احتساب الفرق إن وجد.</p>
-            <p>• رسوم التوصيل غير قابلة للاسترداد إلا في حالة خطأ من البائع.</p>
+          <h3 className="font-bold text-red-800 mb-3">حالات لا يمكن فيها الإرجاع</h3>
+          <div className="space-y-2">
+            {[
+              'بعد التوقيع على استلام الطلب',
+              'تغيير رأي العميل بعد الاستلام',
+              'المنتجات المستخدمة أو المفتوحة',
+              'الملابس الداخلية ومنتجات العناية الشخصية',
+              'المنتجات المصنوعة حسب الطلب'
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-red-700">
+                <span className="text-red-500">✕</span>
+                {item}
+              </div>
+            ))}
           </div>
         </motion.div>
 
-        {/* Damaged Products */}
+        {/* Manufacturing Defects */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
           className="bg-yellow-50 border border-yellow-200 rounded-xl p-4"
         >
-          <h3 className="font-bold text-yellow-800 mb-3">المنتجات التالفة أو الخاطئة</h3>
+          <h3 className="font-bold text-yellow-800 mb-3">العيوب المصنعية</h3>
           <p className="text-sm text-yellow-700 leading-relaxed">
-            إذا استلمت منتجاً تالفاً أو مختلفاً عما طلبته، يرجى التواصل معنا خلال <strong>48 ساعة</strong> من الاستلام مع إرفاق صور للمنتج. سنقوم بترتيب الاستبدال أو الاسترداد على حسابنا.
+            إذا اكتشفت عيباً مصنعياً بعد الاستلام، تواصل معنا خلال <strong>24 ساعة</strong> مع إرفاق صور واضحة للعيب. سنقوم بمراجعة طلبك والرد عليك خلال 48 ساعة.
           </p>
         </motion.div>
 
