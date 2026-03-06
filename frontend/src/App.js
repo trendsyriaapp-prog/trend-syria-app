@@ -36,6 +36,9 @@ import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
 import FoodPage from "./pages/FoodPage";
 import JoinAsFoodSellerPage from "./pages/JoinAsFoodSellerPage";
 import FoodStoreDashboard from "./pages/FoodStoreDashboard";
+import FoodStorePage from "./pages/FoodStorePage";
+import FoodCartPage from "./pages/FoodCartPage";
+import FoodOrderTracking from "./pages/FoodOrderTracking";
 
 function App() {
   return (
@@ -97,6 +100,9 @@ function App() {
                 <Route path="/food" element={<FoodPage />} />
                 <Route path="/join/food-seller" element={<JoinAsFoodSellerPage />} />
                 <Route path="/food/dashboard" element={<FoodStoreDashboard />} />
+                <Route path="/food/store/:storeId" element={<FoodStorePage />} />
+                <Route path="/food/cart/:storeId" element={<FoodCartPage />} />
+                <Route path="/food/order/:orderId" element={<FoodOrderTracking />} />
               </Routes>
             </main>
             <MobileNav />

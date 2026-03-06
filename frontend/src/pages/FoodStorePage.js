@@ -1,0 +1,363 @@
+// /app/frontend/src/pages/FoodStorePage.js
+// صفحة تفاصيل متجر الطعام
+
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import { 
+  Store, Star, Clock, MapPin, Phone, Plus, Minus, ShoppingBag,
+  ArrowLeft, Heart, Share2, ChevronLeft
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/use-toast';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+const FoodStorePage = () => {
+  const { storeId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [store, setStore] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [cart, setCart] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    fetchStore();
+    loadCart();
+  }, [storeId]);
+
+  const fetchStore = async () => {
+    try {
+      const res = await axios.get(`${API}/food/stores/${storeId}`);
+      setStore(res.data);
+    } catch (error) {
+      toast({ title: "خطأ", description: "المتجر غير موجود", variant: "destructive" });
+      navigate('/food');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCart = () => {
+    const savedCart = localStorage.getItem(`food_cart_${storeId}`);
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+  };
+
+  const saveCart = (newCart) => {
+    localStorage.setItem(`food_cart_${storeId}`, JSON.stringify(newCart));
+    setCart(newCart);
+  };
+
+  const addToCart = (product, quantity = 1) => {
+    const existingIndex = cart.findIndex(item => item.product_id === product.id);
+    
+    if (existingIndex >= 0) {
+      const newCart = [...cart];
+      newCart[existingIndex].quantity += quantity;
+      saveCart(newCart);
+    } else {
+      const newItem = {
+        product_id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0] || null,
+        quantity: quantity
+      };
+      saveCart([...cart, newItem]);
+    }
+    
+    toast({ title: "تمت الإضافة", description: `${product.name} أُضيف للسلة` });
+  };
+
+  const getCartQuantity = (productId) => {
+    const item = cart.find(i => i.product_id === productId);
+    return item?.quantity || 0;
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Group products by category
+  const productsByCategory = store?.products?.reduce((acc, product) => {
+    const cat = product.category || 'عام';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(product);
+    return acc;
+  }, {}) || {};
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!store) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Header Image */}
+      <div className="relative h-48 bg-gradient-to-br from-green-500 to-green-600">
+        {store.cover_image && (
+          <img 
+            src={store.cover_image} 
+            alt={store.name} 
+            className="w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/30" />
+        
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/food')}
+          className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        
+        {/* Store Logo */}
+        <div className="absolute -bottom-12 right-4">
+          <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden">
+            {store.logo ? (
+              <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
+            ) : (
+              <Store size={40} className="text-green-500" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Store Info */}
+      <div className="px-4 pt-16 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">{store.name}</h1>
+        <p className="text-gray-500 text-sm">{store.category_name}</p>
+        
+        <div className="flex flex-wrap items-center gap-4 mt-3">
+          {store.rating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star size={16} className="text-yellow-500 fill-yellow-500" />
+              <span className="font-medium">{store.rating.toFixed(1)}</span>
+              <span className="text-gray-400 text-sm">({store.reviews_count})</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1 text-gray-600">
+            <Clock size={16} />
+            <span className="text-sm">{store.delivery_time} دقيقة</span>
+          </div>
+          <div className="flex items-center gap-1 text-gray-600">
+            <MapPin size={16} />
+            <span className="text-sm">{store.city}</span>
+          </div>
+        </div>
+
+        {store.minimum_order > 0 && (
+          <div className="mt-3 bg-yellow-50 text-yellow-700 text-sm px-3 py-2 rounded-lg inline-block">
+            الحد الأدنى للطلب: {store.minimum_order.toLocaleString()} ل.س
+          </div>
+        )}
+
+        {store.description && (
+          <p className="text-gray-600 text-sm mt-3">{store.description}</p>
+        )}
+      </div>
+
+      {/* Products */}
+      <div className="px-4">
+        {Object.keys(productsByCategory).length === 0 ? (
+          <div className="text-center py-12">
+            <ShoppingBag size={48} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-600">لا توجد منتجات متاحة حالياً</p>
+          </div>
+        ) : (
+          Object.entries(productsByCategory).map(([category, products]) => (
+            <div key={category} className="mb-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-3">{category}</h2>
+              <div className="space-y-3">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    cartQuantity={getCartQuantity(product.id)}
+                    onAdd={() => addToCart(product)}
+                    onView={() => setSelectedProduct(product)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Cart Button */}
+      {cartItemsCount > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+          <button
+            onClick={() => navigate(`/food/cart/${storeId}`)}
+            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-green-600"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingBag size={20} />
+              <span>عرض السلة ({cartItemsCount})</span>
+            </div>
+            <span>{cartTotal.toLocaleString()} ل.س</span>
+          </button>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <ProductModal
+            product={selectedProduct}
+            cartQuantity={getCartQuantity(selectedProduct.id)}
+            onAdd={(qty) => {
+              addToCart(selectedProduct, qty);
+              setSelectedProduct(null);
+            }}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
+  <motion.div
+    whileTap={{ scale: 0.98 }}
+    onClick={onView}
+    className="bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer hover:shadow-md transition-shadow"
+  >
+    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+      {product.images?.[0] ? (
+        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <ShoppingBag size={24} className="text-gray-400" />
+        </div>
+      )}
+    </div>
+    <div className="flex-1 min-w-0">
+      <h3 className="font-bold text-gray-900 truncate">{product.name}</h3>
+      {product.description && (
+        <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
+      )}
+      <div className="flex items-center justify-between mt-2">
+        <div>
+          <span className="font-bold text-green-600">{product.price.toLocaleString()} ل.س</span>
+          {product.original_price && (
+            <span className="text-sm text-gray-400 line-through mr-2">
+              {product.original_price.toLocaleString()}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            cartQuantity > 0 
+              ? 'bg-green-500 text-white' 
+              : 'bg-green-100 text-green-600'
+          }`}
+        >
+          {cartQuantity > 0 ? cartQuantity : <Plus size={18} />}
+        </button>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
+  const [quantity, setQuantity] = useState(1);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-lg rounded-t-2xl overflow-hidden max-h-[85vh] overflow-y-auto pb-16"
+      >
+        {/* Product Image */}
+        <div className="h-48 bg-gray-100">
+          {product.images?.[0] ? (
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ShoppingBag size={48} className="text-gray-400" />
+            </div>
+          )}
+        </div>
+
+        <div className="p-4">
+          <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
+          {product.description && (
+            <p className="text-gray-600 mt-2">{product.description}</p>
+          )}
+          
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-2xl font-bold text-green-600">{product.price.toLocaleString()} ل.س</span>
+            {product.original_price && (
+              <span className="text-lg text-gray-400 line-through">
+                {product.original_price.toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {product.preparation_time && (
+            <div className="flex items-center gap-2 mt-3 text-gray-600">
+              <Clock size={16} />
+              <span>وقت التحضير: {product.preparation_time} دقيقة</span>
+            </div>
+          )}
+
+          {/* Quantity Selector */}
+          <div className="flex items-center justify-center gap-6 mt-6">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200"
+            >
+              <Minus size={20} />
+            </button>
+            <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center hover:bg-green-200"
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={() => onAdd(quantity)}
+            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold mt-6 mb-20 flex items-center justify-center gap-2 hover:bg-green-600"
+          >
+            <Plus size={20} />
+            إضافة للسلة - {(product.price * quantity).toLocaleString()} ل.س
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default FoodStorePage;

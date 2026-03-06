@@ -14,9 +14,7 @@ router = APIRouter(prefix="/wallet", tags=["Wallet"])
 
 @router.get("/balance")
 async def get_wallet_balance(user: dict = Depends(get_current_user)):
-    """الحصول على رصيد المحفظة"""
-    if user["user_type"] not in ["seller", "delivery"]:
-        raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
+    """الحصول على رصيد المحفظة - متاح لجميع المستخدمين"""
     
     wallet = await db.wallets.find_one({"user_id": user["id"]}, {"_id": 0})
     
@@ -35,13 +33,14 @@ async def get_wallet_balance(user: dict = Depends(get_current_user)):
         await db.wallets.insert_one(wallet)
         wallet.pop("_id", None)
     
-    # Get pending withdrawal requests
-    pending_withdrawals = await db.withdrawal_requests.find({
-        "user_id": user["id"],
-        "status": "pending"
-    }, {"_id": 0}).to_list(10)
-    
-    pending_amount = sum(w.get("amount", 0) for w in pending_withdrawals)
+    # Get pending withdrawal requests (for sellers/delivery)
+    pending_amount = 0
+    if user["user_type"] in ["seller", "delivery"]:
+        pending_withdrawals = await db.withdrawal_requests.find({
+            "user_id": user["id"],
+            "status": "pending"
+        }, {"_id": 0}).to_list(10)
+        pending_amount = sum(w.get("amount", 0) for w in pending_withdrawals)
     
     return {
         **wallet,

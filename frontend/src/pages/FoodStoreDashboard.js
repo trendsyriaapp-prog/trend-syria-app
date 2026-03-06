@@ -8,7 +8,8 @@ import axios from 'axios';
 import { 
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
-  Image, Save, X, ChevronRight, AlertTriangle
+  Image, Save, X, ChevronRight, AlertTriangle, Check, 
+  ChefHat, Truck, Phone, MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -304,10 +305,7 @@ const FoodStoreDashboard = () => {
 
         {/* Orders Tab */}
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-            <ShoppingBag size={48} className="mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-600">لا توجد طلبات حالياً</p>
-          </div>
+          <StoreOrdersTab token={token} />
         )}
 
         {/* Settings Tab */}
@@ -627,5 +625,181 @@ const ProductModal = ({ store, product, token, onClose, onSave }) => {
     </div>
   );
 };
+
+// Store Orders Tab Component
+const StoreOrdersTab = ({ token }) => {
+  const { toast } = useToast();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    fetchOrders();
+    // Polling every 30 seconds
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+  }, [filter]);
+
+  const fetchOrders = async () => {
+    try {
+      const params = filter !== 'all' ? { status: filter } : {};
+      const res = await axios.get(`${API}/food/orders/store/orders`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOrders(res.data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStatus = async (orderId, newStatus) => {
+    try {
+      await axios.post(`${API}/food/orders/store/orders/${orderId}/status`, null, {
+        params: { new_status: newStatus },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم التحديث", description: "تم تحديث حالة الطلب" });
+      fetchOrders();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تحديث الحالة", variant: "destructive" });
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      confirmed: 'bg-blue-100 text-blue-700',
+      preparing: 'bg-orange-100 text-orange-700',
+      ready: 'bg-green-100 text-green-700',
+      out_for_delivery: 'bg-purple-100 text-purple-700',
+      delivered: 'bg-gray-100 text-gray-700',
+      cancelled: 'bg-red-100 text-red-700'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getNextAction = (status) => {
+    const actions = {
+      pending: { label: 'تأكيد', nextStatus: 'confirmed', icon: Check },
+      confirmed: { label: 'بدء التحضير', nextStatus: 'preparing', icon: ChefHat },
+      preparing: { label: 'جاهز', nextStatus: 'ready', icon: Package }
+    };
+    return actions[status];
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+        {[
+          { id: 'all', label: 'الكل' },
+          { id: 'pending', label: 'جديدة' },
+          { id: 'confirmed', label: 'مؤكدة' },
+          { id: 'preparing', label: 'قيد التحضير' },
+          { id: 'ready', label: 'جاهزة' },
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
+              filter === f.id ? 'bg-green-500 text-white' : 'bg-white text-gray-600 border'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+          <ShoppingBag size={48} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-600">لا توجد طلبات</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order) => {
+            const nextAction = getNextAction(order.status);
+            return (
+              <div key={order.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="font-bold text-gray-900">#{order.order_number}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full mr-2 ${getStatusColor(order.status)}`}>
+                        {order.status_label}
+                      </span>
+                    </div>
+                    <span className="font-bold text-green-600">{order.total.toLocaleString()} ل.س</span>
+                  </div>
+
+                  {/* Items */}
+                  <div className="space-y-1 mb-3">
+                    {order.items.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-gray-600">{item.name} x{item.quantity}</span>
+                        <span className="text-gray-900">{item.total.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                    <span className="flex items-center gap-1">
+                      <Phone size={14} />
+                      {order.customer_phone}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin size={14} />
+                      {order.delivery_city}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  {nextAction && order.status !== 'cancelled' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateStatus(order.id, nextAction.nextStatus)}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                      >
+                        <nextAction.icon size={16} />
+                        {nextAction.label}
+                      </button>
+                      {order.status === 'pending' && (
+                        <button
+                          onClick={() => updateStatus(order.id, 'cancelled')}
+                          className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                        >
+                          رفض
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {order.status === 'ready' && (
+                    <div className="bg-green-50 text-green-700 text-sm p-2 rounded-lg text-center">
+                      بانتظار موظف التوصيل
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default FoodStoreDashboard;
