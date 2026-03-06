@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Headphones, MessageCircle, Clock, CheckCircle, User,
   Phone, Calendar, Filter, Search, X, Send, AlertCircle,
-  Loader2, ChevronDown, ChevronUp, Star, TrendingUp
+  Loader2, ChevronDown, ChevronUp, Star, TrendingUp,
+  BarChart3, Users, Timer, PieChart
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -34,10 +35,13 @@ const SupportTicketsTab = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const [ratingStats, setRatingStats] = useState(null);
   const [showRatings, setShowRatings] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
     fetchTickets();
     fetchRatingStats();
+    fetchAnalytics();
   }, []);
 
   const fetchTickets = async () => {
@@ -58,6 +62,15 @@ const SupportTicketsTab = () => {
       setRatingStats(res.data);
     } catch (error) {
       console.error('Error fetching rating stats:', error);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await axios.get(`${API}/api/chatbot/admin/analytics`);
+      setAnalytics(res.data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
     }
   };
 
@@ -167,6 +180,35 @@ const SupportTicketsTab = () => {
           </p>
         </button>
       </div>
+
+      {/* Analytics Toggle Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowAnalytics(!showAnalytics)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            showAnalytics 
+              ? 'bg-purple-500 text-white' 
+              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+          }`}
+        >
+          <BarChart3 size={18} />
+          {showAnalytics ? 'إخفاء التحليلات' : 'عرض التحليلات المتقدمة'}
+        </button>
+      </div>
+
+      {/* Analytics Panel */}
+      <AnimatePresence>
+        {showAnalytics && analytics && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <AnalyticsPanel analytics={analytics} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Rating Stats Panel */}
       <AnimatePresence>
@@ -580,6 +622,180 @@ const RatingStatsPanel = ({ stats }) => {
           <Star size={14} className="text-yellow-400 fill-yellow-400" />
         </div>
       </div>
+    </div>
+  );
+};
+
+// مكون لوحة التحليلات المتقدمة
+const AnalyticsPanel = ({ analytics }) => {
+  const maxHourCount = Math.max(...(analytics.peak_hours?.map(h => h.count) || [1]), 1);
+  const maxDailyCount = Math.max(...(analytics.daily_tickets?.map(d => d.count) || [1]), 1);
+
+  const formatHour = (hour) => {
+    if (hour === 0) return '12 ص';
+    if (hour === 12) return '12 م';
+    if (hour < 12) return `${hour} ص`;
+    return `${hour - 12} م`;
+  };
+
+  const formatResponseTime = (minutes) => {
+    if (minutes < 60) return `${Math.round(minutes)} دقيقة`;
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return `${hours} ساعة ${mins > 0 ? `و ${mins} دقيقة` : ''}`;
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <BarChart3 size={24} className="text-purple-600" />
+        <h3 className="font-bold text-gray-900 text-lg">تحليلات الدعم المتقدمة</h3>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <Timer size={18} className="text-blue-500" />
+            <span className="text-xs text-gray-500">متوسط وقت الرد</span>
+          </div>
+          <p className="text-xl font-bold text-gray-900">
+            {formatResponseTime(analytics.avg_response_time_minutes)}
+          </p>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageCircle size={18} className="text-orange-500" />
+            <span className="text-xs text-gray-500">إجمالي التذاكر</span>
+          </div>
+          <p className="text-xl font-bold text-gray-900">{analytics.total_tickets}</p>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle size={18} className="text-green-500" />
+            <span className="text-xs text-gray-500">معدل الحل</span>
+          </div>
+          <p className="text-xl font-bold text-green-600">{analytics.resolved_rate}%</p>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={18} className="text-purple-500" />
+            <span className="text-xs text-gray-500">فريق الدعم</span>
+          </div>
+          <p className="text-xl font-bold text-gray-900">{analytics.staff_performance?.length || 0}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Peak Hours Chart */}
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <Clock size={16} className="text-blue-500" />
+            أوقات الذروة
+          </h4>
+          {analytics.peak_hours?.length > 0 ? (
+            <div className="flex items-end gap-1 h-32">
+              {analytics.peak_hours.map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(h.count / maxHourCount) * 100}%` }}
+                    className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t"
+                    style={{ minHeight: h.count > 0 ? '4px' : '0' }}
+                  />
+                  <span className="text-[8px] text-gray-400 mt-1 transform -rotate-45">
+                    {formatHour(h.hour)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">لا توجد بيانات</p>
+          )}
+        </div>
+
+        {/* Daily Tickets Chart */}
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <Calendar size={16} className="text-green-500" />
+            التذاكر اليومية (آخر 7 أيام)
+          </h4>
+          {analytics.daily_tickets?.length > 0 ? (
+            <div className="flex items-end gap-2 h-32">
+              {analytics.daily_tickets.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(d.count / maxDailyCount) * 100}%` }}
+                    className="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t"
+                    style={{ minHeight: d.count > 0 ? '4px' : '0' }}
+                  />
+                  <span className="text-[9px] text-gray-500 mt-1">{d.count}</span>
+                  <span className="text-[8px] text-gray-400">
+                    {new Date(d.date).toLocaleDateString('ar-SY', { weekday: 'short' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">لا توجد بيانات</p>
+          )}
+        </div>
+      </div>
+
+      {/* Staff Performance Table */}
+      {analytics.staff_performance?.length > 0 && (
+        <div className="mt-6 bg-white rounded-xl p-4 border border-gray-100">
+          <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <Users size={16} className="text-purple-500" />
+            أداء فريق الدعم
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-right py-2 px-3 text-gray-500 font-medium">الموظف</th>
+                  <th className="text-center py-2 px-3 text-gray-500 font-medium">التذاكر</th>
+                  <th className="text-center py-2 px-3 text-gray-500 font-medium">التقييم</th>
+                  <th className="text-center py-2 px-3 text-gray-500 font-medium">عدد التقييمات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.staff_performance.map((staff, i) => (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                          <User size={14} className="text-purple-600" />
+                        </div>
+                        <span className="font-medium text-gray-900">{staff.name}</span>
+                        {i === 0 && <span className="text-yellow-500">🏆</span>}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">
+                        {staff.tickets_handled}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-bold text-yellow-600">{staff.avg_rating || '-'}</span>
+                        {staff.avg_rating > 0 && <Star size={12} className="text-yellow-400 fill-yellow-400" />}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-center text-gray-500">
+                      {staff.total_ratings}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

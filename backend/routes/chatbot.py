@@ -534,3 +534,126 @@ async def check_and_send_rating_reminder(user: dict = Depends(get_current_user))
                 pass
     
     return {"reminders_sent": reminders_sent}
+
+
+@router.get("/admin/analytics")
+async def get_support_analytics(user: dict = Depends(get_current_user)):
+    """تحليلات متقدمة للدعم الفني"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from collections import defaultdict
+    
+    # جلب جميع التذاكر
+    all_tickets = await db.support_requests.find({}, {"_id": 0}).to_list(500)
+    
+    if not all_tickets:
+        return {
+            "peak_hours": [],
+            "avg_response_time_minutes": 0,
+            "staff_performance": [],
+            "daily_tickets": [],
+            "status_breakdown": {"pending": 0, "assigned": 0, "resolved": 0},
+            "total_tickets": 0,
+            "resolved_rate": 0
+        }
+    
+    # 1. أوقات الذروة (حسب الساعة)
+    hour_counts = defaultdict(int)
+    for ticket in all_tickets:
+        created_at = ticket.get("created_at")
+        if created_at:
+            try:
+                dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                hour_counts[dt.hour] += 1
+            except:
+                pass
+    
+    peak_hours = [{"hour": h, "count": c} for h, c in sorted(hour_counts.items())]
+    
+    # 2. متوسط وقت الرد (من إنشاء التذكرة إلى أول رد)
+    response_times = []
+    for ticket in all_tickets:
+        created_at = ticket.get("created_at")
+        first_reply = ticket.get("admin_replies", [{}])[0].get("created_at") if ticket.get("admin_replies") else None
+        
+        if created_at and first_reply:
+            try:
+                created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                reply_dt = datetime.fromisoformat(first_reply.replace('Z', '+00:00'))
+                diff_minutes = (reply_dt - created_dt).total_seconds() / 60
+                if diff_minutes > 0:
+                    response_times.append(diff_minutes)
+            except:
+                pass
+    
+    avg_response_time = round(sum(response_times) / len(response_times), 1) if response_times else 0
+    
+    # 3. أداء الموظفين
+    staff_stats = defaultdict(lambda: {"tickets": 0, "ratings": [], "name": ""})
+    
+    for ticket in all_tickets:
+        updated_by = ticket.get("updated_by")
+        if updated_by and ticket.get("status") in ["assigned", "resolved"]:
+            # جلب اسم الموظف من أول رد
+            admin_name = "غير معروف"
+            if ticket.get("admin_replies"):
+                admin_name = ticket["admin_replies"][0].get("admin_name", "غير معروف")
+            
+            staff_stats[updated_by]["tickets"] += 1
+            staff_stats[updated_by]["name"] = admin_name
+            
+            if ticket.get("rating"):
+                staff_stats[updated_by]["ratings"].append(ticket["rating"])
+    
+    staff_performance = []
+    for staff_id, data in staff_stats.items():
+        avg_rating = round(sum(data["ratings"]) / len(data["ratings"]), 1) if data["ratings"] else 0
+        staff_performance.append({
+            "id": staff_id,
+            "name": data["name"],
+            "tickets_handled": data["tickets"],
+            "avg_rating": avg_rating,
+            "total_ratings": len(data["ratings"])
+        })
+    
+    # ترتيب حسب عدد التذاكر
+    staff_performance.sort(key=lambda x: x["tickets_handled"], reverse=True)
+    
+    # 4. التذاكر اليومية (آخر 7 أيام)
+    daily_counts = defaultdict(int)
+    now = datetime.now(timezone.utc)
+    
+    for ticket in all_tickets:
+        created_at = ticket.get("created_at")
+        if created_at:
+            try:
+                dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                days_ago = (now - dt).days
+                if days_ago < 7:
+                    date_str = dt.strftime("%Y-%m-%d")
+                    daily_counts[date_str] += 1
+            except:
+                pass
+    
+    daily_tickets = [{"date": d, "count": c} for d, c in sorted(daily_counts.items())]
+    
+    # 5. توزيع الحالات
+    status_breakdown = {"pending": 0, "assigned": 0, "resolved": 0}
+    for ticket in all_tickets:
+        status = ticket.get("status", "pending")
+        if status in status_breakdown:
+            status_breakdown[status] += 1
+    
+    # 6. معدل الحل
+    resolved_rate = round((status_breakdown["resolved"] / len(all_tickets)) * 100, 1) if all_tickets else 0
+    
+    return {
+        "peak_hours": peak_hours,
+        "avg_response_time_minutes": avg_response_time,
+        "staff_performance": staff_performance[:10],  # أفضل 10
+        "daily_tickets": daily_tickets,
+        "status_breakdown": status_breakdown,
+        "total_tickets": len(all_tickets),
+        "resolved_rate": resolved_rate
+    }
