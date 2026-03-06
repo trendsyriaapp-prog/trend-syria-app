@@ -486,3 +486,51 @@ async def get_rating_stats(user: dict = Depends(get_current_user)):
         "rating_distribution": distribution,
         "recent_ratings": recent_with_comments
     }
+
+@router.post("/check-rating-reminder")
+async def check_and_send_rating_reminder(user: dict = Depends(get_current_user)):
+    """التحقق وإرسال تذكير بالتقييم للتذاكر القديمة (أكثر من 24 ساعة)"""
+    
+    from datetime import timedelta
+    
+    now = datetime.now(timezone.utc)
+    reminder_threshold = now - timedelta(hours=24)
+    
+    # البحث عن تذاكر محلولة منذ أكثر من 24 ساعة بدون تقييم وبدون تذكير سابق
+    old_tickets = await db.support_requests.find(
+        {
+            "user_id": user["id"],
+            "status": "resolved",
+            "rating": {"$exists": False},
+            "reminder_sent": {"$ne": True}
+        },
+        {"_id": 0, "id": 1, "updated_at": 1, "created_at": 1}
+    ).to_list(10)
+    
+    reminders_sent = 0
+    
+    for ticket in old_tickets:
+        # التحقق من أن التذكرة قديمة بما يكفي
+        ticket_time = ticket.get("updated_at") or ticket.get("created_at")
+        if ticket_time:
+            try:
+                ticket_datetime = datetime.fromisoformat(ticket_time.replace('Z', '+00:00'))
+                if ticket_datetime < reminder_threshold:
+                    # إرسال إشعار تذكيري
+                    await create_notification_for_user(
+                        user_id=user["id"],
+                        title="لم تقيّم تجربة الدعم بعد ⭐",
+                        message="نود سماع رأيك! قيّم تجربتك مع فريق الدعم لمساعدتنا على التحسين.",
+                        notification_type="rating_reminder"
+                    )
+                    
+                    # تسجيل أنه تم إرسال التذكير
+                    await db.support_requests.update_one(
+                        {"id": ticket["id"]},
+                        {"$set": {"reminder_sent": True, "reminder_sent_at": now.isoformat()}}
+                    )
+                    reminders_sent += 1
+            except:
+                pass
+    
+    return {"reminders_sent": reminders_sent}

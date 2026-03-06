@@ -35,6 +35,8 @@ const Chatbot = () => {
     // التحقق من وجود تذكرة تحتاج تقييم عند فتح الدردشة
     if (isOpen && token) {
       checkPendingRating();
+      // التحقق من التذكيرات (للتذاكر القديمة)
+      checkRatingReminder();
     }
   }, [isOpen]);
 
@@ -168,6 +170,17 @@ const Chatbot = () => {
       }
     } catch (error) {
       console.error('Error checking pending rating:', error);
+    }
+  };
+
+  // التحقق من التذكيرات للتذاكر القديمة
+  const checkRatingReminder = async () => {
+    try {
+      await axios.post(`${API}/api/chatbot/check-rating-reminder`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      // صامت - لا نريد إزعاج المستخدم بأخطاء التذكير
     }
   };
 
