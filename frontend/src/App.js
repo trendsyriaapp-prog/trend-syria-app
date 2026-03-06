@@ -30,6 +30,8 @@ import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
 import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
 import PackagingGuidePage from "./pages/PackagingGuidePage";
+import JoinAsSellerPage from "./pages/JoinAsSellerPage";
+import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
 
 function App() {
   return (
@@ -82,6 +84,10 @@ function App() {
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/returns" element={<ReturnPolicyPage />} />
                 <Route path="/packaging-guide" element={<PackagingGuidePage />} />
+                
+                {/* Landing Pages */}
+                <Route path="/join/seller" element={<JoinAsSellerPage />} />
+                <Route path="/join/delivery" element={<JoinAsDeliveryPage />} />
               </Routes>
             </main>
             <MobileNav />
