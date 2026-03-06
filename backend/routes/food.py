@@ -238,3 +238,96 @@ async def get_food_stats():
         "total_products": products_count,
         "by_type": stats_by_type
     }
+
+
+# ===============================
+# لوحة تحكم المتجر
+# ===============================
+
+@router.get("/my-store")
+async def get_my_store(user: dict = Depends(get_current_user)):
+    """جلب متجر المستخدم الحالي"""
+    store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
+    if not store:
+        raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
+    
+    # جلب منتجات المتجر
+    products = await db.food_products.find({"store_id": store["id"]}, {"_id": 0}).to_list(None)
+    
+    return {"store": store, "products": products}
+
+@router.put("/my-store")
+async def update_my_store(update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث معلومات متجر المستخدم"""
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
+    
+    # الحقول المسموح بتعديلها
+    allowed_fields = ["name", "description", "phone", "delivery_time", "minimum_order", "logo", "cover_image"]
+    update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.food_stores.update_one(
+        {"id": store["id"]},
+        {"$set": update_dict}
+    )
+    
+    return {"message": "تم تحديث المتجر بنجاح"}
+
+@router.put("/products/{product_id}")
+async def update_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث منتج طعام"""
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    # التحقق من ملكية المتجر
+    store = await db.food_stores.find_one({"id": product["store_id"]})
+    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # الحقول المسموح بتعديلها
+    allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time"]
+    update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.food_products.update_one(
+        {"id": product_id},
+        {"$set": update_dict}
+    )
+    
+    return {"message": "تم تحديث المنتج بنجاح"}
+
+@router.patch("/products/{product_id}")
+async def patch_food_product(product_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث جزئي لمنتج طعام (مثل تغيير حالة التوفر)"""
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    store = await db.food_stores.find_one({"id": product["store_id"]})
+    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    await db.food_products.update_one(
+        {"id": product_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "تم التحديث"}
+
+@router.delete("/products/{product_id}")
+async def delete_food_product(product_id: str, user: dict = Depends(get_current_user)):
+    """حذف منتج طعام"""
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    store = await db.food_stores.find_one({"id": product["store_id"]})
+    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    await db.food_products.delete_one({"id": product_id})
+    
+    return {"message": "تم حذف المنتج"}
