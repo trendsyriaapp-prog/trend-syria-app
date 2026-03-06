@@ -6,7 +6,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, X, Send, User, Bot, 
-  Headphones, ChevronDown, Loader2, HeadphonesIcon, Star
+  Headphones, ChevronDown, Loader2, HeadphonesIcon, Star, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -225,6 +225,14 @@ const Chatbot = () => {
             <div className="bg-gradient-to-l from-[#FF6B00] to-orange-600 p-4 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  {/* سهم الرجوع */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                    data-testid="chatbot-back-btn"
+                  >
+                    <ArrowRight size={18} />
+                  </button>
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                     <Bot size={24} />
                   </div>
@@ -236,6 +244,7 @@ const Chatbot = () => {
                 <button
                   onClick={() => setIsOpen(false)}
                   className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                  data-testid="chatbot-close-btn"
                 >
                   <X size={18} />
                 </button>
