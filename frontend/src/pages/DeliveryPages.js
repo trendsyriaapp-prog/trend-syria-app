@@ -367,9 +367,12 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // التحقق من أوقات العمل - معطل للاختبار
+  // التحقق من أوقات العمل (8 صباحاً - 6 مساءً)
   const isWorkingHours = () => {
-    return true; // تم تعطيل التحقق من أوقات العمل للاختبار
+    const now = new Date();
+    const hour = now.getHours();
+    // ساعات العمل: من 8 صباحاً إلى 6 مساءً (08:00 - 18:00)
+    return hour >= 8 && hour < 18;
   };
 
   if (loading) {
