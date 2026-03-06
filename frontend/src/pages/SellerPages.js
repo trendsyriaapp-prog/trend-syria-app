@@ -6,7 +6,7 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Edit, Trash2, Loader2,
   AlertCircle, Camera, Sun, Maximize, Image, Info, CheckCircle, AlertTriangle,
-  Megaphone, Wallet, TrendingUp, Gift
+  Megaphone, Wallet, TrendingUp, Gift, Printer, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -14,6 +14,7 @@ import SellerAdsTab from '../components/seller/SellerAdsTab';
 import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
 import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
 import ImageBackgroundSelector from '../components/seller/ImageBackgroundSelector';
+import OrderLabelPrint from '../components/seller/OrderLabelPrint';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -565,6 +566,7 @@ const SellerDashboardPage = () => {
   const [pendingImage, setPendingImage] = useState(null);
   const [showImageProcessor, setShowImageProcessor] = useState(false);
   const [activeStatView, setActiveStatView] = useState(null);
+  const [printLabelOrder, setPrintLabelOrder] = useState(null);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {
@@ -1116,6 +1118,15 @@ const SellerDashboardPage = () => {
                     
                     {/* أزرار التحكم */}
                     <div className="flex gap-2 pt-2 border-t border-gray-100">
+                      {/* زر طباعة الملصق */}
+                      <button
+                        onClick={() => setPrintLabelOrder(order)}
+                        className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200"
+                        title="طباعة ملصق الطلب"
+                      >
+                        <Printer size={14} className="text-gray-600" />
+                      </button>
+                      
                       {canConfirm && (
                         <button
                           onClick={() => handleSellerAction(order.id, 'confirm')}
@@ -1671,6 +1682,25 @@ const SellerDashboardPage = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Print Label Modal */}
+      {printLabelOrder && (
+        <OrderLabelPrint
+          order={printLabelOrder}
+          onClose={() => setPrintLabelOrder(null)}
+        />
+      )}
+
+      {/* Quick Access Buttons */}
+      <div className="fixed bottom-20 left-4 z-30">
+        <button
+          onClick={() => navigate('/packaging-guide')}
+          className="w-12 h-12 bg-[#FF6B00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#E65000]"
+          title="إرشادات التغليف"
+        >
+          <BookOpen size={20} />
+        </button>
+      </div>
     </div>
   );
 };

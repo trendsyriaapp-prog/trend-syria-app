@@ -9,6 +9,7 @@ import {
   CheckCircle, Upload, Camera, CreditCard, AlertTriangle,
   ChevronRight, Navigation, Wallet, DollarSign
 } from 'lucide-react';
+import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -266,6 +267,11 @@ const DeliveryDashboard = () => {
   const [activeTab, setActiveTab] = useState('available');
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
+  
+  // Checklist states
+  const [showPickupChecklist, setShowPickupChecklist] = useState(null);
+  const [showDeliveryChecklist, setShowDeliveryChecklist] = useState(null);
+  const [showReturnChecklist, setShowReturnChecklist] = useState(null);
 
   useEffect(() => {
     checkStatusAndFetch();
@@ -316,6 +322,7 @@ const DeliveryDashboard = () => {
         title: "تم بنجاح",
         description: "تم استلام الطلب من البائع"
       });
+      setShowPickupChecklist(null);
       fetchOrders();
     } catch (error) {
       toast({
@@ -343,13 +350,14 @@ const DeliveryDashboard = () => {
     }
   };
 
-  const handleCompleteOrder = async (orderId) => {
+  const handleCompleteOrder = async (orderId, note) => {
     try {
       await axios.post(`${API}/orders/${orderId}/delivery/delivered`);
       toast({
         title: "تم بنجاح",
         description: "تم تسليم الطلب وإضافة أجرتك للمحفظة"
       });
+      setShowDeliveryChecklist(null);
       fetchOrders();
       fetchWallet();
     } catch (error) {
@@ -558,7 +566,7 @@ const DeliveryDashboard = () => {
 
                     {/* زر أخذ الطلب */}
                     <button
-                      onClick={() => handleTakeOrder(order.id)}
+                      onClick={() => setShowPickupChecklist(order)}
                       disabled={!isWorkingHours()}
                       className="w-full bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -647,7 +655,7 @@ const DeliveryDashboard = () => {
                         )}
                         {canComplete && (
                           <button
-                            onClick={() => handleCompleteOrder(order.id)}
+                            onClick={() => setShowDeliveryChecklist(order)}
                             className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                           >
                             <CheckCircle size={14} />
@@ -680,6 +688,40 @@ const DeliveryDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Pickup Checklist Modal */}
+      {showPickupChecklist && (
+        <PickupChecklist
+          order={showPickupChecklist}
+          onComplete={() => handleTakeOrder(showPickupChecklist.id)}
+          onClose={() => setShowPickupChecklist(null)}
+        />
+      )}
+
+      {/* Delivery Checklist Modal */}
+      {showDeliveryChecklist && (
+        <DeliveryChecklist
+          order={showDeliveryChecklist}
+          onComplete={(note) => handleCompleteOrder(showDeliveryChecklist.id, note)}
+          onClose={() => setShowDeliveryChecklist(null)}
+        />
+      )}
+
+      {/* Return Checklist Modal */}
+      {showReturnChecklist && (
+        <ReturnChecklist
+          order={showReturnChecklist}
+          onComplete={(reason) => {
+            console.log('Return reason:', reason);
+            setShowReturnChecklist(null);
+            toast({
+              title: "تم تسجيل الإرجاع",
+              description: "سيتم مراجعة طلب الإرجاع"
+            });
+          }}
+          onClose={() => setShowReturnChecklist(null)}
+        />
+      )}
     </div>
   );
 };

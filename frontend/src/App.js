@@ -29,6 +29,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
 import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
+import PackagingGuidePage from "./pages/PackagingGuidePage";
 
 function App() {
   return (
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/returns" element={<ReturnPolicyPage />} />
+                <Route path="/packaging-guide" element={<PackagingGuidePage />} />
               </Routes>
             </main>
             <MobileNav />
