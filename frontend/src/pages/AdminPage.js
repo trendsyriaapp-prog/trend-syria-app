@@ -30,6 +30,7 @@ import LowStockTab from '../components/admin/LowStockTab';
 import DeliveryBoxesTab from '../components/admin/DeliveryBoxesTab';
 import ChallengesTab from '../components/admin/ChallengesTab';
 import DeliverySettingsTab from '../components/admin/DeliverySettingsTab';
+import SupportTicketsTab from '../components/admin/SupportTicketsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -276,7 +277,8 @@ const AdminDashboardPage = () => {
     'low-stock': 'تقرير المخزون المنخفض',
     'delivery-boxes': 'صناديق التوصيل',
     'challenges': 'التحديات والمكافآت',
-    'delivery-settings': 'إعدادات التوصيل'
+    'delivery-settings': 'إعدادات التوصيل',
+    'support-tickets': 'تذاكر الدعم الفني'
   };
 
   return (
@@ -372,6 +374,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'delivery-settings' && user.user_type === 'admin' && (
               <DeliverySettingsTab />
+            )}
+            {activeTab === 'support-tickets' && (
+              <SupportTicketsTab />
             )}
           </>
         ) : (
@@ -513,6 +518,17 @@ const AdminDashboardPage = () => {
                       <Clock size={16} className="text-cyan-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">إعدادات التوصيل</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('support-tickets')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-rose-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="support-tickets-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
+                      <Users size={16} className="text-rose-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">تذاكر الدعم</span>
                   </button>
                 </>
               )}
