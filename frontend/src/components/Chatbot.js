@@ -237,7 +237,7 @@ const Chatbot = () => {
                     <Bot size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold">مساعد تريند سورية</h3>
+                    <h3 className="font-bold">المجيب الآلي</h3>
                     <p className="text-xs text-white/80">نحن هنا لمساعدتك</p>
                   </div>
                 </div>
