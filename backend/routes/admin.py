@@ -570,3 +570,146 @@ async def get_low_stock_products(user: dict = Depends(get_current_user)):
         "count": len(products),
         "products": products
     }
+
+
+# ============== إدارة البلاغات الأخلاقية ==============
+
+from core.database import create_notification_for_user
+
+@router.get("/driver-reports")
+async def get_driver_reports(user: dict = Depends(get_current_user)):
+    """جلب البلاغات الأخلاقية ضد موظفي التوصيل"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    reports = await db.driver_reports.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # إحصائيات
+    stats = {
+        "pending": len([r for r in reports if r["status"] == "pending"]),
+        "reviewed": len([r for r in reports if r["status"] == "reviewed"]),
+        "dismissed": len([r for r in reports if r["status"] == "dismissed"]),
+        "terminated": len([r for r in reports if r["status"] == "terminated"]),
+        "total": len(reports)
+    }
+    
+    return {"reports": reports, "stats": stats}
+
+@router.put("/driver-reports/{report_id}")
+async def handle_driver_report(report_id: str, action: str, admin_notes: str = "", user: dict = Depends(get_current_user)):
+    """اتخاذ إجراء بشأن البلاغ"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    if action not in ["dismiss", "terminate"]:
+        raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو terminate")
+    
+    report = await db.driver_reports.find_one({"id": report_id})
+    if not report:
+        raise HTTPException(status_code=404, detail="البلاغ غير موجود")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    driver_id = report["driver_id"]
+    
+    if action == "dismiss":
+        # رفض البلاغ - إعادة تفعيل الموظف
+        await db.driver_reports.update_one(
+            {"id": report_id},
+            {
+                "$set": {
+                    "status": "dismissed",
+                    "reviewed_at": now,
+                    "reviewed_by": user["id"],
+                    "admin_notes": admin_notes
+                }
+            }
+        )
+        
+        # إعادة تفعيل الموظف
+        await db.users.update_one(
+            {"id": driver_id},
+            {
+                "$set": {
+                    "is_suspended": False
+                },
+                "$unset": {
+                    "suspended_at": "",
+                    "suspension_reason": ""
+                }
+            }
+        )
+        
+        # إعادة تفعيل وثائق التوصيل
+        await db.delivery_documents.update_one(
+            {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+            {
+                "$set": {
+                    "status": "approved"
+                },
+                "$unset": {
+                    "suspended_at": "",
+                    "suspension_reason": ""
+                }
+            }
+        )
+        
+        # إشعار الموظف
+        await create_notification_for_user(
+            user_id=driver_id,
+            title="✅ تم رفع التعليق عن حسابك",
+            message="تمت مراجعة البلاغ وتقرر رفع التعليق عن حسابك. يمكنك استئناف العمل.",
+            notification_type="account_reactivated"
+        )
+        
+        return {"message": "تم رفض البلاغ وإعادة تفعيل حساب الموظف"}
+    
+    else:  # terminate
+        # فصل الموظف نهائياً
+        await db.driver_reports.update_one(
+            {"id": report_id},
+            {
+                "$set": {
+                    "status": "terminated",
+                    "reviewed_at": now,
+                    "reviewed_by": user["id"],
+                    "admin_notes": admin_notes
+                }
+            }
+        )
+        
+        # تحديث حالة الموظف
+        await db.users.update_one(
+            {"id": driver_id},
+            {
+                "$set": {
+                    "is_terminated": True,
+                    "terminated_at": now,
+                    "termination_reason": f"فصل نهائي بسبب بلاغ أخلاقي: {report.get('category_label')}"
+                }
+            }
+        )
+        
+        # تحديث وثائق التوصيل
+        await db.delivery_documents.update_one(
+            {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+            {
+                "$set": {
+                    "status": "terminated",
+                    "terminated_at": now,
+                    "termination_reason": "فصل نهائي بسبب بلاغ أخلاقي"
+                }
+            }
+        )
+        
+        # إشعار الموظف
+        await create_notification_for_user(
+            user_id=driver_id,
+            title="❌ تم إنهاء خدماتك",
+            message=f"تمت مراجعة البلاغ وتقرر إنهاء خدماتك. السبب: {report.get('category_label')}",
+            notification_type="account_terminated"
+        )
+        
+        return {"message": "تم فصل الموظف نهائياً"}

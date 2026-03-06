@@ -31,6 +31,7 @@ import DeliveryBoxesTab from '../components/admin/DeliveryBoxesTab';
 import ChallengesTab from '../components/admin/ChallengesTab';
 import DeliverySettingsTab from '../components/admin/DeliverySettingsTab';
 import SupportTicketsTab from '../components/admin/SupportTicketsTab';
+import DriverReportsTab from '../components/admin/DriverReportsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -278,7 +279,8 @@ const AdminDashboardPage = () => {
     'delivery-boxes': 'صناديق التوصيل',
     'challenges': 'التحديات والمكافآت',
     'delivery-settings': 'إعدادات التوصيل',
-    'support-tickets': 'تذاكر الدعم الفني'
+    'support-tickets': 'تذاكر الدعم الفني',
+    'driver-reports': 'البلاغات الأخلاقية'
   };
 
   return (
@@ -377,6 +379,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'support-tickets' && (
               <SupportTicketsTab />
+            )}
+            {activeTab === 'driver-reports' && (
+              <DriverReportsTab />
             )}
           </>
         ) : (
@@ -529,6 +534,18 @@ const AdminDashboardPage = () => {
                       <Users size={16} className="text-rose-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">تذاكر الدعم</span>
+                  </button>
+
+                  {/* البلاغات الأخلاقية */}
+                  <button
+                    onClick={() => setActiveTab('driver-reports')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-red-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="driver-reports-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                      <AlertTriangle size={16} className="text-red-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">البلاغات الأخلاقية</span>
                   </button>
                 </>
               )}

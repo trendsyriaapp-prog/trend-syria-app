@@ -715,3 +715,145 @@ async def check_order_rating(order_id: str, user: dict = Depends(get_current_use
         "rating": existing_rating
     }
 
+
+# ============== نظام البلاغات الأخلاقية ==============
+
+from pydantic import BaseModel
+from typing import Optional
+
+class DriverReport(BaseModel):
+    driver_id: str
+    order_id: str
+    category: str  # سلوك_غير_لائق, تحرش, سرقة_احتيال, أخرى
+    details: str
+
+REPORT_CATEGORIES = {
+    "سلوك_غير_لائق": "سلوك غير لائق",
+    "تحرش": "تحرش",
+    "سرقة_احتيال": "سرقة / احتيال",
+    "أخرى": "أخرى"
+}
+
+@router.post("/report-driver")
+async def report_driver(data: DriverReport, user: dict = Depends(get_current_user)):
+    """تقديم بلاغ أخلاقي ضد موظف توصيل (للعميل أو البائع)"""
+    
+    # التحقق من أن المستخدم عميل أو بائع
+    if user["user_type"] not in ["buyer", "seller"]:
+        raise HTTPException(status_code=403, detail="للعملاء والبائعين فقط")
+    
+    # التحقق من صحة التصنيف
+    if data.category not in REPORT_CATEGORIES:
+        raise HTTPException(status_code=400, detail="تصنيف البلاغ غير صحيح")
+    
+    # التحقق من أن التفاصيل ليست فارغة
+    if not data.details or len(data.details.strip()) < 10:
+        raise HTTPException(status_code=400, detail="يرجى كتابة تفاصيل البلاغ (10 أحرف على الأقل)")
+    
+    # التحقق من وجود الطلب
+    order = await db.orders.find_one({"id": data.order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن المستخدم مرتبط بالطلب
+    is_customer = order.get("user_id") == user["id"]
+    is_seller = order.get("seller_id") == user["id"]
+    
+    if not is_customer and not is_seller:
+        raise HTTPException(status_code=403, detail="لست مرتبطاً بهذا الطلب")
+    
+    # التحقق من وجود موظف التوصيل
+    driver = await db.users.find_one({"id": data.driver_id, "user_type": "delivery"}, {"_id": 0})
+    if not driver:
+        raise HTTPException(status_code=404, detail="موظف التوصيل غير موجود")
+    
+    # التحقق من عدم وجود بلاغ سابق على نفس الطلب من نفس المستخدم
+    existing_report = await db.driver_reports.find_one({
+        "reporter_id": user["id"],
+        "order_id": data.order_id
+    })
+    if existing_report:
+        raise HTTPException(status_code=400, detail="لقد قدمت بلاغاً على هذا الطلب مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إنشاء البلاغ
+    report = {
+        "id": str(uuid.uuid4()),
+        "driver_id": data.driver_id,
+        "driver_name": driver.get("full_name") or driver.get("name"),
+        "driver_phone": driver.get("phone"),
+        "reporter_id": user["id"],
+        "reporter_name": user.get("full_name") or user.get("name"),
+        "reporter_phone": user.get("phone"),
+        "reporter_type": "عميل" if is_customer else "بائع",
+        "order_id": data.order_id,
+        "category": data.category,
+        "category_label": REPORT_CATEGORIES[data.category],
+        "details": data.details.strip(),
+        "status": "pending",  # pending, reviewed, dismissed, terminated
+        "created_at": now
+    }
+    
+    await db.driver_reports.insert_one(report)
+    
+    # تعليق موظف التوصيل فوراً
+    await db.users.update_one(
+        {"id": data.driver_id},
+        {
+            "$set": {
+                "is_suspended": True,
+                "suspended_at": now,
+                "suspension_reason": f"بلاغ أخلاقي: {REPORT_CATEGORIES[data.category]}"
+            }
+        }
+    )
+    
+    # تحديث وثائق التوصيل
+    await db.delivery_documents.update_one(
+        {"$or": [{"driver_id": data.driver_id}, {"delivery_id": data.driver_id}]},
+        {
+            "$set": {
+                "status": "suspended",
+                "suspended_at": now,
+                "suspension_reason": f"بلاغ أخلاقي قيد المراجعة"
+            }
+        }
+    )
+    
+    # إشعار المدير
+    from core.database import create_notification_for_role
+    await create_notification_for_role(
+        role="admin",
+        title="⚠️ بلاغ أخلاقي جديد",
+        message=f"بلاغ ضد موظف التوصيل {report['driver_name']} - {REPORT_CATEGORIES[data.category]}",
+        notification_type="driver_report"
+    )
+    
+    # إشعار موظف التوصيل
+    await create_notification_for_user(
+        user_id=data.driver_id,
+        title="⚠️ تم تعليق حسابك مؤقتاً",
+        message="تم استلام بلاغ أخلاقي بحقك وتم تعليق حسابك مؤقتاً لحين مراجعة الإدارة.",
+        notification_type="account_suspended"
+    )
+    
+    return {
+        "message": "تم تقديم البلاغ بنجاح. سيتم مراجعته من قبل الإدارة.",
+        "report_id": report["id"]
+    }
+
+@router.get("/my-suspension-status")
+async def get_suspension_status(user: dict = Depends(get_current_user)):
+    """التحقق من حالة التعليق (لموظف التوصيل)"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    driver = await db.users.find_one({"id": user["id"]}, {"_id": 0, "is_suspended": 1, "suspended_at": 1, "suspension_reason": 1})
+    
+    return {
+        "is_suspended": driver.get("is_suspended", False),
+        "suspended_at": driver.get("suspended_at"),
+        "reason": driver.get("suspension_reason")
+    }
+

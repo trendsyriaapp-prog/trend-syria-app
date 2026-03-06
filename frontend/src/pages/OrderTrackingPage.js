@@ -5,11 +5,12 @@ import axios from 'axios';
 import { 
   Package, Clock, Truck, Check, MapPin, Phone, User, 
   MessageSquare, ChevronRight, ArrowRight, Camera, 
-  Store, Navigation, CheckCircle2, Circle, Loader2, Star
+  Store, Navigation, CheckCircle2, Circle, Loader2, Star, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import RateDriverModal from '../components/delivery/RateDriverModal';
+import ReportDriverModal from '../components/delivery/ReportDriverModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -54,6 +55,7 @@ const OrderTrackingPage = () => {
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [showRateModal, setShowRateModal] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -267,6 +269,18 @@ const OrderTrackingPage = () => {
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl text-center">
                 <p className="text-green-700 text-sm">✓ شكراً لتقييمك!</p>
               </div>
+            )}
+
+            {/* زر البلاغ الأخلاقي */}
+            {tracking.delivery_driver?.id && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="w-full mt-3 border border-red-200 text-red-600 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-red-50 text-sm"
+                data-testid="report-driver-btn"
+              >
+                <AlertTriangle size={16} />
+                بلاغ أخلاقي
+              </button>
             )}
           </motion.div>
         )}
@@ -489,6 +503,21 @@ const OrderTrackingPage = () => {
           }}
         />
       )}
+
+      {/* Report Driver Modal */}
+      <ReportDriverModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        driverId={tracking?.delivery_driver?.id}
+        driverName={tracking?.delivery_driver?.name || 'موظف التوصيل'}
+        orderId={orderId}
+        onSuccess={() => {
+          toast({
+            title: "تم إرسال البلاغ",
+            description: "سيتم مراجعته من قبل الإدارة",
+          });
+        }}
+      />
     </div>
   );
 };
