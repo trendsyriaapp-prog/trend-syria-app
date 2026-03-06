@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
-  MessageCircle, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
+  Bot, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
   Clock, Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -127,15 +127,15 @@ const Header = () => {
               </button>
             )}
             
-            {/* أيقونة مساعد تريند سورية - تظهر دائماً */}
+            {/* أيقونة المجيب الآلي - تظهر دائماً */}
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
               className="p-2 hover:bg-orange-50 rounded-full transition-colors text-[#FF6B00] flex-shrink-0"
-              title="مساعد تريند سورية"
+              title="المجيب الآلي"
               data-testid="chatbot-icon"
             >
-              <MessageCircle size={22} />
+              <Bot size={22} />
             </button>
             
             {isProductPage ? (
