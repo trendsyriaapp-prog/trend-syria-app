@@ -28,6 +28,13 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
 
+  // الاستماع لحدث فتح الدردشة من الأيقونة في شريط البحث
+  useEffect(() => {
+    const handleOpenChatbot = () => setIsOpen(true);
+    window.addEventListener('openChatbot', handleOpenChatbot);
+    return () => window.removeEventListener('openChatbot', handleOpenChatbot);
+  }, []);
+
   useEffect(() => {
     if (isOpen && quickQuestions.length === 0) {
       fetchQuickQuestions();
