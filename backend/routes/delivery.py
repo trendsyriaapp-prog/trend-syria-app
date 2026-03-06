@@ -315,17 +315,44 @@ async def get_driver_performance(user: dict = Depends(get_current_user)):
     })
     
     # ======= مستوى الأداء =======
+    # جلب إعدادات المستويات من قاعدة البيانات
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    levels = settings.get("performance_levels", {}) if settings else {}
+    
+    beginner_max = levels.get("beginner_max", 9)
+    bronze_max = levels.get("bronze_max", 29)
+    silver_max = levels.get("silver_max", 59)
+    gold_max = levels.get("gold_max", 99)
+    
     # بناءً على معدل الطلبات الشهرية
-    if month_orders >= 100:
+    if month_orders > gold_max:
         performance_level = {"level": "ماسي", "color": "#7c3aed", "icon": "💎"}
-    elif month_orders >= 60:
+    elif month_orders > silver_max:
         performance_level = {"level": "ذهبي", "color": "#f59e0b", "icon": "🥇"}
-    elif month_orders >= 30:
+    elif month_orders > bronze_max:
         performance_level = {"level": "فضي", "color": "#6b7280", "icon": "🥈"}
-    elif month_orders >= 10:
+    elif month_orders > beginner_max:
         performance_level = {"level": "برونزي", "color": "#b45309", "icon": "🥉"}
     else:
         performance_level = {"level": "مبتدئ", "color": "#10b981", "icon": "🌱"}
+    
+    # إضافة معلومات الحدود للواجهة
+    performance_level["thresholds"] = {
+        "beginner": f"0-{beginner_max}",
+        "bronze": f"{beginner_max+1}-{bronze_max}",
+        "silver": f"{bronze_max+1}-{silver_max}",
+        "gold": f"{silver_max+1}-{gold_max}",
+        "diamond": f"{gold_max+1}+"
+    }
+    performance_level["next_level"] = None
+    if month_orders <= beginner_max:
+        performance_level["next_level"] = {"name": "برونزي", "orders_needed": beginner_max + 1 - month_orders}
+    elif month_orders <= bronze_max:
+        performance_level["next_level"] = {"name": "فضي", "orders_needed": bronze_max + 1 - month_orders}
+    elif month_orders <= silver_max:
+        performance_level["next_level"] = {"name": "ذهبي", "orders_needed": silver_max + 1 - month_orders}
+    elif month_orders <= gold_max:
+        performance_level["next_level"] = {"name": "ماسي", "orders_needed": gold_max + 1 - month_orders}
     
     return {
         "overview": {

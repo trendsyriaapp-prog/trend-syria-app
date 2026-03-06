@@ -28,6 +28,8 @@ import SettingsTab from '../components/admin/SettingsTab';
 import AdsTab from '../components/admin/AdsTab';
 import LowStockTab from '../components/admin/LowStockTab';
 import DeliveryBoxesTab from '../components/admin/DeliveryBoxesTab';
+import ChallengesTab from '../components/admin/ChallengesTab';
+import DeliverySettingsTab from '../components/admin/DeliverySettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -272,7 +274,9 @@ const AdminDashboardPage = () => {
     'settings': 'إعدادات المنصة',
     'ads': 'إدارة الإعلانات',
     'low-stock': 'تقرير المخزون المنخفض',
-    'delivery-boxes': 'صناديق التوصيل'
+    'delivery-boxes': 'صناديق التوصيل',
+    'challenges': 'التحديات والمكافآت',
+    'delivery-settings': 'إعدادات التوصيل'
   };
 
   return (
@@ -362,6 +366,12 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'delivery-boxes' && user.user_type === 'admin' && (
               <DeliveryBoxesTab />
+            )}
+            {activeTab === 'challenges' && user.user_type === 'admin' && (
+              <ChallengesTab />
+            )}
+            {activeTab === 'delivery-settings' && user.user_type === 'admin' && (
+              <DeliverySettingsTab />
             )}
           </>
         ) : (
@@ -481,6 +491,28 @@ const AdminDashboardPage = () => {
                       <Package size={16} className="text-emerald-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">صناديق التوصيل</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('challenges')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="challenges-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <DollarSign size={16} className="text-purple-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">التحديات والمكافآت</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('delivery-settings')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-cyan-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="delivery-settings-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center">
+                      <Clock size={16} className="text-cyan-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">إعدادات التوصيل</span>
                   </button>
                 </>
               )}

@@ -12,6 +12,7 @@ import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
 import MyOrdersList from '../components/delivery/MyOrdersList';
 import MyBoxCard from '../components/delivery/MyBoxCard';
 import DriverPerformance from '../components/delivery/DriverPerformance';
+import DriverChallenges from '../components/delivery/DriverChallenges';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -261,12 +262,27 @@ const DeliveryDashboard = () => {
   
   // Ratings
   const [myRatings, setMyRatings] = useState({ ratings: [], average_rating: 0, total_ratings: 0 });
+  
+  // Working hours settings
+  const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
 
   useEffect(() => {
     checkStatusAndFetch();
     fetchWallet();
     fetchMyRatings();
+    fetchWorkingHours();
   }, []);
+
+  const fetchWorkingHours = async () => {
+    try {
+      const res = await axios.get(`${API}/settings/delivery-settings`);
+      if (res.data.working_hours) {
+        setWorkingHoursSettings(res.data.working_hours);
+      }
+    } catch (error) {
+      console.error('Error fetching working hours:', error);
+    }
+  };
 
   const fetchMyRatings = async () => {
     try {
@@ -368,12 +384,22 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // التحقق من أوقات العمل (8 صباحاً - 6 مساءً)
+  // التحقق من أوقات العمل
   const isWorkingHours = () => {
+    if (!workingHoursSettings.is_enabled) {
+      return true; // إذا كان القيد معطلاً، السماح بالعمل في أي وقت
+    }
     const now = new Date();
     const hour = now.getHours();
-    // ساعات العمل: من 8 صباحاً إلى 6 مساءً (08:00 - 18:00)
-    return hour >= 8 && hour < 18;
+    return hour >= workingHoursSettings.start_hour && hour < workingHoursSettings.end_hour;
+  };
+  
+  // للحصول على نص ساعات العمل
+  const getWorkingHoursText = () => {
+    if (!workingHoursSettings.is_enabled) {
+      return 'متاح على مدار الساعة';
+    }
+    return `${workingHoursSettings.start_hour} صباحاً - ${workingHoursSettings.end_hour > 12 ? workingHoursSettings.end_hour - 12 : workingHoursSettings.end_hour} ${workingHoursSettings.end_hour >= 12 ? 'مساءً' : 'صباحاً'}`;
   };
 
   if (loading) {
@@ -421,7 +447,11 @@ const DeliveryDashboard = () => {
           walletBalance={walletBalance}
           myRatings={myRatings}
           isWorkingHours={isWorkingHours()}
+          workingHoursText={getWorkingHoursText()}
         />
+
+        {/* التحديات والمكافآت */}
+        <DriverChallenges />
 
         {/* تقارير الأداء */}
         <div className="mb-4">

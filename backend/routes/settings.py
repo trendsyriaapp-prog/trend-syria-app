@@ -216,3 +216,128 @@ async def get_wallet_settings():
         "seller_min_withdrawal": settings.get("min_seller_withdrawal", 50000),
         "delivery_min_withdrawal": settings.get("min_delivery_withdrawal", 25000)
     }
+
+# ============== Delivery Performance Levels ==============
+
+class PerformanceLevels(BaseModel):
+    beginner_max: int = 9      # مبتدئ: 0-9
+    bronze_max: int = 29       # برونزي: 10-29
+    silver_max: int = 59       # فضي: 30-59
+    gold_max: int = 99         # ذهبي: 60-99
+    # ماسي: 100+
+
+class DeliveryWorkingHours(BaseModel):
+    start_hour: int = 8        # ساعة البدء (0-23)
+    end_hour: int = 18         # ساعة الانتهاء (0-23)
+    is_enabled: bool = True    # هل التقييد مفعل؟
+
+@router.get("/delivery-settings")
+async def get_delivery_settings():
+    """جلب إعدادات التوصيل (مستويات الأداء وساعات العمل)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_levels = {
+        "beginner_max": 9,
+        "bronze_max": 29,
+        "silver_max": 59,
+        "gold_max": 99
+    }
+    
+    default_hours = {
+        "start_hour": 8,
+        "end_hour": 18,
+        "is_enabled": True
+    }
+    
+    if not settings:
+        return {
+            "performance_levels": default_levels,
+            "working_hours": default_hours
+        }
+    
+    return {
+        "performance_levels": settings.get("performance_levels", default_levels),
+        "working_hours": settings.get("working_hours", default_hours)
+    }
+
+@router.put("/performance-levels")
+async def update_performance_levels(
+    levels: PerformanceLevels,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث حدود مستويات الأداء"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    if not (levels.beginner_max < levels.bronze_max < levels.silver_max < levels.gold_max):
+        raise HTTPException(status_code=400, detail="يجب أن تكون الحدود تصاعدية")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "performance_levels": {
+                    "beginner_max": levels.beginner_max,
+                    "bronze_max": levels.bronze_max,
+                    "silver_max": levels.silver_max,
+                    "gold_max": levels.gold_max
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث مستويات الأداء بنجاح",
+        "performance_levels": {
+            "beginner_max": levels.beginner_max,
+            "bronze_max": levels.bronze_max,
+            "silver_max": levels.silver_max,
+            "gold_max": levels.gold_max
+        }
+    }
+
+@router.put("/working-hours")
+async def update_working_hours(
+    hours: DeliveryWorkingHours,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث ساعات عمل التوصيل"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة الساعات
+    if hours.start_hour < 0 or hours.start_hour > 23:
+        raise HTTPException(status_code=400, detail="ساعة البدء غير صحيحة (0-23)")
+    if hours.end_hour < 0 or hours.end_hour > 23:
+        raise HTTPException(status_code=400, detail="ساعة الانتهاء غير صحيحة (0-23)")
+    if hours.start_hour >= hours.end_hour:
+        raise HTTPException(status_code=400, detail="ساعة البدء يجب أن تكون قبل ساعة الانتهاء")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "working_hours": {
+                    "start_hour": hours.start_hour,
+                    "end_hour": hours.end_hour,
+                    "is_enabled": hours.is_enabled
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث ساعات العمل بنجاح",
+        "working_hours": {
+            "start_hour": hours.start_hour,
+            "end_hour": hours.end_hour,
+            "is_enabled": hours.is_enabled
+        }
+    }

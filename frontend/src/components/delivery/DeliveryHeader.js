@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Wallet, DollarSign, Star, Clock, ChevronRight } from 'lucide-react';
 
-const DeliveryHeader = ({ user, walletBalance, myRatings, isWorkingHours }) => {
+const DeliveryHeader = ({ user, walletBalance, myRatings, isWorkingHours, workingHoursText }) => {
   const navigate = useNavigate();
 
   return (
@@ -27,7 +27,7 @@ const DeliveryHeader = ({ user, walletBalance, myRatings, isWorkingHours }) => {
       {/* أوقات العمل */}
       <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-center gap-2">
         <Clock size={16} className="text-blue-600" />
-        <span className="text-xs text-blue-700">أوقات العمل: 8 صباحاً - 6 مساءً</span>
+        <span className="text-xs text-blue-700">أوقات العمل: {workingHoursText || '8 صباحاً - 6 مساءً'}</span>
       </div>
 
       {/* Wallet Quick Access Card */}
