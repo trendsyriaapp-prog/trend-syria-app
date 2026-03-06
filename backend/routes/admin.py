@@ -604,8 +604,8 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    if action not in ["dismiss", "terminate"]:
-        raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو terminate")
+    if action not in ["dismiss", "penalize", "terminate"]:
+        raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو penalize أو terminate")
     
     report = await db.driver_reports.find_one({"id": report_id})
     if not report:
@@ -613,6 +613,15 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
     
     now = datetime.now(timezone.utc).isoformat()
     driver_id = report["driver_id"]
+    
+    # نقاط الخصم حسب نوع البلاغ
+    PENALTY_POINTS = {
+        "سلوك_غير_لائق": 15,
+        "تحرش": 50,
+        "سرقة_احتيال": 100,
+        "أخرى": 10
+    }
+    MAX_POINTS = 100
     
     if action == "dismiss":
         # رفض البلاغ - إعادة تفعيل الموظف
@@ -665,6 +674,119 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
         )
         
         return {"message": "تم رفض البلاغ وإعادة تفعيل حساب الموظف"}
+    
+    elif action == "penalize":
+        # خصم نقاط بدون فصل (إذا كانت النقاط كافية)
+        penalty = PENALTY_POINTS.get(report.get("category"), 10)
+        
+        # جلب النقاط الحالية
+        driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "penalty_points": 1})
+        current_points = driver.get("penalty_points", MAX_POINTS)
+        new_points = max(0, current_points - penalty)
+        
+        # تحديث البلاغ
+        await db.driver_reports.update_one(
+            {"id": report_id},
+            {
+                "$set": {
+                    "status": "penalized",
+                    "reviewed_at": now,
+                    "reviewed_by": user["id"],
+                    "admin_notes": admin_notes,
+                    "penalty_applied": penalty
+                }
+            }
+        )
+        
+        # تحديث نقاط الموظف
+        penalty_record = {
+            "date": now,
+            "report_id": report_id,
+            "category": report.get("category_label"),
+            "points_deducted": penalty,
+            "points_before": current_points,
+            "points_after": new_points
+        }
+        
+        await db.users.update_one(
+            {"id": driver_id},
+            {
+                "$set": {
+                    "penalty_points": new_points,
+                    "is_suspended": False  # رفع التعليق بعد الخصم
+                },
+                "$push": {
+                    "penalty_history": penalty_record
+                },
+                "$unset": {
+                    "suspended_at": "",
+                    "suspension_reason": ""
+                }
+            }
+        )
+        
+        # إعادة تفعيل وثائق التوصيل
+        await db.delivery_documents.update_one(
+            {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+            {
+                "$set": {"status": "approved"},
+                "$unset": {"suspended_at": "", "suspension_reason": ""}
+            }
+        )
+        
+        # التحقق من الفصل التلقائي
+        if new_points == 0:
+            # فصل تلقائي
+            await db.users.update_one(
+                {"id": driver_id},
+                {
+                    "$set": {
+                        "is_terminated": True,
+                        "terminated_at": now,
+                        "termination_reason": "فصل تلقائي - استنفاد نقاط السلوك"
+                    }
+                }
+            )
+            
+            await db.delivery_documents.update_one(
+                {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+                {
+                    "$set": {
+                        "status": "terminated",
+                        "terminated_at": now,
+                        "termination_reason": "فصل تلقائي - استنفاد نقاط السلوك"
+                    }
+                }
+            )
+            
+            await create_notification_for_user(
+                user_id=driver_id,
+                title="❌ تم إنهاء خدماتك تلقائياً",
+                message="لقد استنفدت جميع نقاط السلوك الخاصة بك. تم إنهاء خدماتك.",
+                notification_type="account_terminated"
+            )
+            
+            return {
+                "message": f"تم خصم {penalty} نقطة. الموظف مفصول تلقائياً (0 نقطة متبقية)",
+                "auto_terminated": True,
+                "penalty": penalty,
+                "new_points": 0
+            }
+        
+        # إشعار الموظف بالخصم
+        await create_notification_for_user(
+            user_id=driver_id,
+            title=f"⚠️ تم خصم {penalty} نقطة من رصيدك",
+            message=f"بسبب بلاغ مثبت: {report.get('category_label')}. رصيدك الحالي: {new_points} نقطة",
+            notification_type="penalty_applied"
+        )
+        
+        return {
+            "message": f"تم خصم {penalty} نقطة وإعادة تفعيل الموظف",
+            "penalty": penalty,
+            "new_points": new_points,
+            "auto_terminated": False
+        }
     
     else:  # terminate
         # فصل الموظف نهائياً

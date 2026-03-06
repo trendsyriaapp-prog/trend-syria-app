@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, User, Phone, Clock, CheckCircle, XCircle,
   Search, Filter, Loader2, ChevronDown, FileText, Shield,
-  Trash2, UserX, RefreshCw
+  Trash2, UserX, RefreshCw, MinusCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,9 +20,18 @@ const CATEGORY_COLORS = {
   'أخرى': 'bg-gray-100 text-gray-700'
 };
 
+// نقاط الخصم حسب نوع البلاغ
+const PENALTY_POINTS = {
+  'سلوك_غير_لائق': 15,
+  'تحرش': 50,
+  'سرقة_احتيال': 100,
+  'أخرى': 10
+};
+
 const STATUS_CONFIG = {
   pending: { label: 'قيد المراجعة', color: 'bg-amber-100 text-amber-700', icon: Clock },
   dismissed: { label: 'مرفوض', color: 'bg-green-100 text-green-700', icon: XCircle },
+  penalized: { label: 'تم الخصم', color: 'bg-orange-100 text-orange-700', icon: MinusCircle },
   terminated: { label: 'تم الفصل', color: 'bg-red-100 text-red-700', icon: UserX },
 };
 
@@ -381,28 +390,53 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
 
           {/* Actions */}
           {report.status === 'pending' ? (
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => onAction(report.id, 'dismiss')}
-                disabled={actionLoading}
-                className="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
-                رفض البلاغ (إعادة تفعيل)
-              </button>
-              <button
-                onClick={() => onAction(report.id, 'terminate')}
-                disabled={actionLoading}
-                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <UserX size={18} />}
-                فصل الموظف نهائياً
-              </button>
+            <div className="space-y-3 pt-2">
+              {/* معلومات الخصم */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <p className="text-xs text-orange-700 font-medium">
+                  💡 نقاط الخصم لهذا البلاغ: <span className="font-bold">{PENALTY_POINTS[report.category] || 10} نقطة</span>
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onAction(report.id, 'dismiss')}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                  رفض البلاغ
+                </button>
+                <button
+                  onClick={() => onAction(report.id, 'penalize')}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <MinusCircle size={16} />}
+                  خصم نقاط
+                </button>
+                <button
+                  onClick={() => onAction(report.id, 'terminate')}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} />}
+                  فصل فوري
+                </button>
+              </div>
             </div>
           ) : (
-            <div className={`p-4 rounded-xl ${report.status === 'dismissed' ? 'bg-green-50' : 'bg-red-50'}`}>
-              <p className={`text-sm font-medium ${report.status === 'dismissed' ? 'text-green-700' : 'text-red-700'}`}>
-                {report.status === 'dismissed' ? '✓ تم رفض البلاغ وإعادة تفعيل الموظف' : '✗ تم فصل الموظف نهائياً'}
+            <div className={`p-4 rounded-xl ${
+              report.status === 'dismissed' ? 'bg-green-50' : 
+              report.status === 'penalized' ? 'bg-orange-50' : 'bg-red-50'
+            }`}>
+              <p className={`text-sm font-medium ${
+                report.status === 'dismissed' ? 'text-green-700' : 
+                report.status === 'penalized' ? 'text-orange-700' : 'text-red-700'
+              }`}>
+                {report.status === 'dismissed' && '✓ تم رفض البلاغ وإعادة تفعيل الموظف'}
+                {report.status === 'penalized' && `⚠️ تم خصم ${report.penalty_applied || PENALTY_POINTS[report.category]} نقطة`}
+                {report.status === 'terminated' && '✗ تم فصل الموظف نهائياً'}
               </p>
               {report.admin_notes && (
                 <p className="text-xs text-gray-500 mt-2">ملاحظات: {report.admin_notes}</p>

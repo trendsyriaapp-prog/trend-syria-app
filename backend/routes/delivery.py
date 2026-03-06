@@ -734,6 +734,17 @@ REPORT_CATEGORIES = {
     "أخرى": "أخرى"
 }
 
+# نقاط الخصم حسب نوع البلاغ
+PENALTY_POINTS = {
+    "سلوك_غير_لائق": 15,  # خصم 15 نقطة
+    "تحرش": 50,           # خصم 50 نقطة - خطير جداً
+    "سرقة_احتيال": 100,   # فصل فوري
+    "أخرى": 10            # خصم 10 نقاط
+}
+
+# الحد الأقصى للنقاط
+MAX_PENALTY_POINTS = 100
+
 @router.post("/report-driver")
 async def report_driver(data: DriverReport, user: dict = Depends(get_current_user)):
     """تقديم بلاغ أخلاقي ضد موظف توصيل (للعميل أو البائع)"""
@@ -855,5 +866,52 @@ async def get_suspension_status(user: dict = Depends(get_current_user)):
         "is_suspended": driver.get("is_suspended", False),
         "suspended_at": driver.get("suspended_at"),
         "reason": driver.get("suspension_reason")
+    }
+
+
+@router.get("/my-penalty-points")
+async def get_my_penalty_points(user: dict = Depends(get_current_user)):
+    """جلب نقاط الموظف الحالية"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    driver = await db.users.find_one(
+        {"id": user["id"]}, 
+        {"_id": 0, "penalty_points": 1, "penalty_history": 1}
+    )
+    
+    current_points = driver.get("penalty_points", MAX_PENALTY_POINTS)
+    history = driver.get("penalty_history", [])
+    
+    return {
+        "current_points": current_points,
+        "max_points": MAX_PENALTY_POINTS,
+        "percentage": round((current_points / MAX_PENALTY_POINTS) * 100),
+        "history": history[-10:]  # آخر 10 سجلات
+    }
+
+
+@router.get("/penalty-info/{driver_id}")
+async def get_driver_penalty_info(driver_id: str, user: dict = Depends(get_current_user)):
+    """جلب نقاط موظف معين (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    driver = await db.users.find_one(
+        {"id": driver_id, "user_type": "delivery"}, 
+        {"_id": 0, "penalty_points": 1, "penalty_history": 1, "full_name": 1, "name": 1}
+    )
+    
+    if not driver:
+        raise HTTPException(status_code=404, detail="موظف التوصيل غير موجود")
+    
+    current_points = driver.get("penalty_points", MAX_PENALTY_POINTS)
+    
+    return {
+        "driver_name": driver.get("full_name") or driver.get("name"),
+        "current_points": current_points,
+        "max_points": MAX_PENALTY_POINTS,
+        "percentage": round((current_points / MAX_PENALTY_POINTS) * 100),
+        "history": driver.get("penalty_history", [])[-20:]
     }
 

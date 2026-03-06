@@ -15,6 +15,7 @@ import DriverPerformance from '../components/delivery/DriverPerformance';
 import DriverChallenges from '../components/delivery/DriverChallenges';
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverAchievements from '../components/delivery/DriverAchievements';
+import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -457,6 +458,11 @@ const DeliveryDashboard = () => {
 
         {/* لوحة الصدارة */}
         <DriverLeaderboard />
+
+        {/* نقاط السلوك */}
+        <div className="mb-4">
+          <DriverPenaltyPoints />
+        </div>
 
         {/* الإنجازات */}
         <DriverAchievements />
