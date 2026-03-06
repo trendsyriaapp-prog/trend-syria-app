@@ -53,6 +53,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="رمز غير صالح")
 
+async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """التحقق من صلاحيات المشرف"""
+    user = await get_current_user(credentials)
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح - صلاحيات المشرف مطلوبة")
+    return user
+
 async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if credentials is None:
         return None

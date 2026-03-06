@@ -10,6 +10,7 @@ import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../componen
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
 import MyOrdersList from '../components/delivery/MyOrdersList';
+import MyBoxCard from '../components/delivery/MyBoxCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -417,6 +418,11 @@ const DeliveryDashboard = () => {
           myRatings={myRatings}
           isWorkingHours={isWorkingHours()}
         />
+
+        {/* بطاقة الصندوق */}
+        <div className="mb-4">
+          <MyBoxCard />
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4">

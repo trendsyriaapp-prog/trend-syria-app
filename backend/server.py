@@ -39,6 +39,7 @@ from routes.ads import router as ads_router
 from routes.discounts import router as discounts_router
 from routes.loyalty import router as loyalty_router
 from routes.image_processing import router as image_router
+from routes.delivery_boxes import router as delivery_boxes_router
 
 # Create FastAPI app
 app = FastAPI(title="تريند سورية API", description="API لمتجر تريند سورية الإلكتروني")
@@ -68,6 +69,7 @@ api_router.include_router(ads_router)
 api_router.include_router(discounts_router)
 api_router.include_router(loyalty_router)
 api_router.include_router(image_router)
+api_router.include_router(delivery_boxes_router)
 
 # ============== Categories ==============
 

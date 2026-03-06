@@ -27,6 +27,7 @@ import WithdrawalsTab from '../components/admin/WithdrawalsTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import AdsTab from '../components/admin/AdsTab';
 import LowStockTab from '../components/admin/LowStockTab';
+import DeliveryBoxesTab from '../components/admin/DeliveryBoxesTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -270,7 +271,8 @@ const AdminDashboardPage = () => {
     'withdrawals': 'طلبات السحب',
     'settings': 'إعدادات المنصة',
     'ads': 'إدارة الإعلانات',
-    'low-stock': 'تقرير المخزون المنخفض'
+    'low-stock': 'تقرير المخزون المنخفض',
+    'delivery-boxes': 'صناديق التوصيل'
   };
 
   return (
@@ -357,6 +359,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'low-stock' && (
               <LowStockTab />
+            )}
+            {activeTab === 'delivery-boxes' && user.user_type === 'admin' && (
+              <DeliveryBoxesTab />
             )}
           </>
         ) : (
@@ -466,6 +471,16 @@ const AdminDashboardPage = () => {
                       <AlertTriangle size={16} className="text-yellow-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">المخزون المنخفض</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('delivery-boxes')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="delivery-boxes-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <Package size={16} className="text-emerald-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">صناديق التوصيل</span>
                   </button>
                 </>
               )}
