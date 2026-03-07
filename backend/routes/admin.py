@@ -1479,7 +1479,7 @@ async def reject_flash_sale_request(
         if wallet:
             await db.wallets.update_one(
                 {"user_id": store["owner_id"]},
-                {"$inc": {"available_balance": req["fee_paid"]}}
+                {"$inc": {"balance": req["fee_paid"]}}
             )
             
             # تسجيل المعاملة

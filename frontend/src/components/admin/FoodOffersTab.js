@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Gift, Zap, Plus, Edit, Trash2, Check, X, Clock, 
-  Store, Percent, Search, Filter, ToggleLeft, ToggleRight
+  Store, Percent, Search, Filter, ToggleLeft, ToggleRight,
+  UserPlus, CheckCircle, XCircle, RefreshCw
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -14,9 +15,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const FoodOffersTab = ({ token }) => {
   const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState('offers'); // offers, flash
+  const [activeSection, setActiveSection] = useState('offers'); // offers, flash, requests
   const [offers, setOffers] = useState([]);
   const [flashSales, setFlashSales] = useState([]);
+  const [flashRequests, setFlashRequests] = useState([]);
+  const [requestsStats, setRequestsStats] = useState({ pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [showFlashModal, setShowFlashModal] = useState(false);
@@ -28,16 +31,21 @@ const FoodOffersTab = ({ token }) => {
 
   const fetchData = async () => {
     try {
-      const [offersRes, flashRes] = await Promise.all([
+      const [offersRes, flashRes, requestsRes] = await Promise.all([
         axios.get(`${API}/admin/food-offers`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/admin/flash-sales`, {
           headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/flash-sale-requests`, {
+          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       setOffers(offersRes.data || []);
       setFlashSales(flashRes.data || []);
+      setFlashRequests(requestsRes.data?.requests || []);
+      setRequestsStats(requestsRes.data?.stats || { pending: 0, approved: 0, rejected: 0 });
     } catch (error) {
       console.error('Error fetching offers:', error);
     } finally {
@@ -130,10 +138,10 @@ const FoodOffersTab = ({ token }) => {
   return (
     <div className="space-y-6" data-testid="food-offers-tab">
       {/* Section Tabs */}
-      <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+      <div className="flex gap-2 bg-gray-100 p-1 rounded-xl overflow-x-auto">
         <button
           onClick={() => setActiveSection('offers')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
             activeSection === 'offers'
               ? 'bg-white text-purple-600 shadow'
               : 'text-gray-600 hover:text-gray-900'
@@ -144,7 +152,7 @@ const FoodOffersTab = ({ token }) => {
         </button>
         <button
           onClick={() => setActiveSection('flash')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
             activeSection === 'flash'
               ? 'bg-white text-orange-600 shadow'
               : 'text-gray-600 hover:text-gray-900'
@@ -152,6 +160,22 @@ const FoodOffersTab = ({ token }) => {
         >
           <Zap size={18} />
           عروض الفلاش ({flashSales.length})
+        </button>
+        <button
+          onClick={() => setActiveSection('requests')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all whitespace-nowrap relative ${
+            activeSection === 'requests'
+              ? 'bg-white text-green-600 shadow'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <UserPlus size={18} />
+          طلبات الانضمام
+          {requestsStats.pending > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              {requestsStats.pending}
+            </span>
+          )}
         </button>
       </div>
 
@@ -366,6 +390,16 @@ const FoodOffersTab = ({ token }) => {
         </div>
       )}
 
+      {/* Flash Sale Requests Section */}
+      {activeSection === 'requests' && (
+        <FlashRequestsSection 
+          requests={flashRequests}
+          stats={requestsStats}
+          token={token}
+          onUpdate={fetchData}
+        />
+      )}
+
       {/* Flash Sale Modal */}
       {showFlashModal && (
         <FlashSaleModal
@@ -382,6 +416,321 @@ const FoodOffersTab = ({ token }) => {
           }}
         />
       )}
+    </div>
+  );
+};
+
+// Flash Sale Requests Section
+const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
+  const { toast } = useToast();
+  const [filter, setFilter] = useState('pending');
+  const [processing, setProcessing] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(null);
+
+  const handleApprove = async (requestId) => {
+    setProcessing(requestId);
+    try {
+      await axios.put(`${API}/admin/flash-sale-requests/${requestId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تمت الموافقة", description: "تمت إضافة المنتجات لعرض الفلاش" });
+      onUpdate();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشلت العملية", variant: "destructive" });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleReject = async (requestId, reason, refund = true) => {
+    setProcessing(requestId);
+    try {
+      await axios.put(`${API}/admin/flash-sale-requests/${requestId}/reject?reason=${encodeURIComponent(reason)}&refund=${refund}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الرفض", description: refund ? "تم رفض الطلب واسترداد الرسوم" : "تم رفض الطلب" });
+      setShowRejectModal(null);
+      onUpdate();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشلت العملية", variant: "destructive" });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const filteredRequests = requests.filter(req => {
+    if (filter === 'all') return true;
+    return req.status === filter;
+  });
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      approved: 'bg-green-100 text-green-700',
+      rejected: 'bg-red-100 text-red-700'
+    };
+    const labels = {
+      pending: 'قيد المراجعة',
+      approved: 'موافق عليه',
+      rejected: 'مرفوض'
+    };
+    return { style: styles[status] || styles.pending, label: labels[status] || status };
+  };
+
+  const formatDateTime = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleString('ar-SY', { 
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center">
+          <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+          <div className="text-xs text-yellow-700">قيد المراجعة</div>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+          <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+          <div className="text-xs text-green-700">تمت الموافقة</div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+          <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+          <div className="text-xs text-red-700">مرفوض</div>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-2 overflow-x-auto">
+        {[
+          { id: 'pending', label: 'قيد المراجعة' },
+          { id: 'approved', label: 'موافق عليه' },
+          { id: 'rejected', label: 'مرفوض' },
+          { id: 'all', label: 'الكل' }
+        ].map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
+              filter === f.id
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Requests List */}
+      {filteredRequests.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+          <UserPlus size={48} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500">لا توجد طلبات {filter !== 'all' ? getStatusBadge(filter).label : ''}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredRequests.map((req) => {
+            const badge = getStatusBadge(req.status);
+            return (
+              <motion.div
+                key={req.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              >
+                <div className="p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Store size={16} className="text-gray-400" />
+                        <h4 className="font-bold text-gray-900">{req.store_name || 'متجر'}</h4>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${badge.style}`}>
+                          {badge.label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {req.owner_name} • {formatDateTime(req.created_at)}
+                      </p>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-bold text-green-600">{req.fee_paid?.toLocaleString()} ل.س</div>
+                      <div className="text-xs text-gray-500">{req.products_count} منتج</div>
+                    </div>
+                  </div>
+
+                  {/* Flash Sale Info */}
+                  <div className="bg-orange-50 rounded-lg p-3 mb-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Zap size={16} className="text-orange-500" />
+                      <span className="font-medium text-gray-900">{req.flash_sale_name || 'عرض فلاش'}</span>
+                      <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">
+                        {req.discount_percentage}% خصم
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Products */}
+                  {req.products && req.products.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-500 mb-2">المنتجات المطلوب إضافتها:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {req.products.map((product) => (
+                          <span key={product.id} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                            {product.name} ({product.price?.toLocaleString()} ل.س)
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {req.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApprove(req.id)}
+                        disabled={processing === req.id}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600 disabled:opacity-50"
+                      >
+                        {processing === req.id ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle size={18} />
+                            موافقة
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setShowRejectModal(req)}
+                        disabled={processing === req.id}
+                        className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-red-200 disabled:opacity-50"
+                      >
+                        <XCircle size={18} />
+                        رفض
+                      </button>
+                    </div>
+                  )}
+
+                  {req.status === 'rejected' && req.rejection_reason && (
+                    <div className="bg-red-50 rounded-lg p-3 text-sm">
+                      <span className="font-medium text-red-700">سبب الرفض:</span>
+                      <span className="text-red-600 mr-1">{req.rejection_reason}</span>
+                      {req.refunded && (
+                        <span className="block text-green-600 mt-1">✓ تم استرداد الرسوم</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <RejectModal
+          request={showRejectModal}
+          onReject={handleReject}
+          onClose={() => setShowRejectModal(null)}
+          processing={processing === showRejectModal.id}
+        />
+      )}
+    </div>
+  );
+};
+
+// Reject Modal
+const RejectModal = ({ request, onReject, onClose, processing }) => {
+  const [reason, setReason] = useState('');
+  const [refund, setRefund] = useState(true);
+
+  const reasons = [
+    'المنتجات لا تستوفي معايير الجودة',
+    'المتجر لديه تقييمات سلبية',
+    'المنتجات غير مناسبة للعرض',
+    'سعر المنتجات غير تنافسي',
+    'سبب آخر'
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl w-full max-w-md"
+      >
+        <div className="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">رفض طلب الانضمام</h3>
+          
+          <div className="space-y-3 mb-4">
+            {reasons.map((r) => (
+              <button
+                key={r}
+                onClick={() => setReason(r)}
+                className={`w-full text-right px-4 py-3 rounded-xl border ${
+                  reason === r
+                    ? 'border-red-500 bg-red-50 text-red-700'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
+          {reason === 'سبب آخر' && (
+            <textarea
+              placeholder="اكتب سبب الرفض..."
+              value={reason === 'سبب آخر' ? '' : reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4"
+            />
+          )}
+
+          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl mb-4">
+            <input
+              type="checkbox"
+              id="refund"
+              checked={refund}
+              onChange={(e) => setRefund(e.target.checked)}
+              className="w-5 h-5 rounded"
+            />
+            <label htmlFor="refund" className="text-sm text-gray-700">
+              استرداد الرسوم للمحفظة ({request.fee_paid?.toLocaleString()} ل.س)
+            </label>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={() => onReject(request.id, reason, refund)}
+              disabled={!reason || processing}
+              className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {processing ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <XCircle size={18} />
+                  تأكيد الرفض
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

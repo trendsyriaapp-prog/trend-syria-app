@@ -700,7 +700,8 @@ async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_c
     
     # التحقق من رصيد المحفظة
     wallet = await db.wallets.find_one({"user_id": user["id"]})
-    if not wallet or wallet.get("available_balance", 0) < total_fee:
+    wallet_balance = wallet.get("balance", 0) if wallet else 0
+    if not wallet or wallet_balance < total_fee:
         raise HTTPException(
             status_code=400, 
             detail=f"رصيد المحفظة غير كافٍ. المطلوب: {total_fee:,} ل.س"
@@ -709,7 +710,7 @@ async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_c
     # خصم الرسوم من المحفظة
     await db.wallets.update_one(
         {"user_id": user["id"]},
-        {"$inc": {"available_balance": -total_fee}}
+        {"$inc": {"balance": -total_fee}}
     )
     
     # تسجيل المعاملة
@@ -772,7 +773,7 @@ async def cancel_flash_sale_request(request_id: str, user: dict = Depends(get_cu
         if wallet:
             await db.wallets.update_one(
                 {"user_id": user["id"]},
-                {"$inc": {"available_balance": fee_paid}}
+                {"$inc": {"balance": fee_paid}}
             )
             
             # تسجيل المعاملة
