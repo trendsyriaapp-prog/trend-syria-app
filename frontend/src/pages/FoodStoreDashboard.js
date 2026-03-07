@@ -222,7 +222,19 @@ const FoodStoreDashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">الحد الأدنى للطلب</span>
-                  <span className="text-gray-900">{store.minimum_order?.toLocaleString()} ل.س</span>
+                  <span className="text-gray-900">{store.minimum_order?.toLocaleString() || 0} ل.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">رسوم التوصيل</span>
+                  <span className="text-gray-900">{store.delivery_fee?.toLocaleString() || 5000} ل.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">توصيل مجاني عند</span>
+                  <span className="text-gray-900">
+                    {store.free_delivery_minimum > 0 
+                      ? `${store.free_delivery_minimum.toLocaleString()} ل.س` 
+                      : 'غير مفعل'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">الهاتف</span>
@@ -344,6 +356,8 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     phone: store.phone || '',
     delivery_time: store.delivery_time || 30,
     minimum_order: store.minimum_order || 0,
+    delivery_fee: store.delivery_fee || 5000,
+    free_delivery_minimum: store.free_delivery_minimum || 0,
   });
   const [saving, setSaving] = useState(false);
 
@@ -405,6 +419,47 @@ const StoreSettings = ({ store, token, onUpdate }) => {
             className="w-full border border-gray-200 rounded-xl px-4 py-3"
           />
         </div>
+      </div>
+
+      {/* إعدادات التوصيل */}
+      <div className="border-t pt-4 mt-4">
+        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <Truck size={18} className="text-green-600" />
+          إعدادات التوصيل
+        </h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التوصيل (ل.س)</label>
+            <input
+              type="number"
+              value={formData.delivery_fee}
+              onChange={(e) => setFormData({ ...formData, delivery_fee: parseInt(e.target.value) })}
+              min="0"
+              step="500"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">توصيل مجاني عند</label>
+            <input
+              type="number"
+              value={formData.free_delivery_minimum}
+              onChange={(e) => setFormData({ ...formData, free_delivery_minimum: parseInt(e.target.value) })}
+              min="0"
+              step="5000"
+              placeholder="0 = معطل"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          اترك "توصيل مجاني عند" على 0 لتعطيل التوصيل المجاني
+        </p>
+        {formData.free_delivery_minimum > 0 && (
+          <div className="mt-3 bg-green-50 rounded-lg p-3 text-sm text-green-700">
+            ✓ سيحصل العملاء على توصيل مجاني عند الطلب بقيمة {formData.free_delivery_minimum.toLocaleString()} ل.س أو أكثر
+          </div>
+        )}
       </div>
 
       <button

@@ -34,6 +34,15 @@ const FoodCartPage = () => {
     payment_method: 'wallet'
   });
 
+  // حساب رسوم التوصيل
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const storeDeliveryFee = store?.delivery_fee || 5000;
+  const freeDeliveryMin = store?.free_delivery_minimum || 0;
+  const isFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
+  const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
+  const total = subtotal + deliveryFee;
+  const remainingForFree = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - subtotal) : 0;
+
   useEffect(() => {
     if (storeId) {
       fetchStore();
@@ -93,10 +102,6 @@ const FoodCartPage = () => {
     const newItems = cartItems.filter(item => item.product_id !== productId);
     saveCart(newItems);
   };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryFee = 5000;
-  const total = subtotal + deliveryFee;
 
   const handleSubmit = async () => {
     if (!token) {
@@ -356,6 +361,38 @@ const FoodCartPage = () => {
             </div>
           </div>
         )}
+
+        {/* Free Delivery Progress */}
+        {freeDeliveryMin > 0 && !isFreeDelivery && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-green-800">توصيل مجاني عند</span>
+              <span className="text-sm font-bold text-green-700">{freeDeliveryMin.toLocaleString()} ل.س</span>
+            </div>
+            <div className="w-full bg-green-200 rounded-full h-2.5 mb-2">
+              <div 
+                className="bg-green-500 h-2.5 rounded-full transition-all duration-300" 
+                style={{ width: `${Math.min(100, (subtotal / freeDeliveryMin) * 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-green-700">
+              أضف منتجات بقيمة {remainingForFree.toLocaleString()} ل.س للتوصيل المجاني
+            </p>
+          </div>
+        )}
+
+        {/* Free Delivery Achieved */}
+        {isFreeDelivery && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-lg">✓</span>
+            </div>
+            <div>
+              <p className="font-bold text-green-800">مبروك! توصيل مجاني 🎉</p>
+              <p className="text-xs text-green-600">لقد حصلت على توصيل مجاني لهذا الطلب</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Summary */}
@@ -368,7 +405,11 @@ const FoodCartPage = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">رسوم التوصيل</span>
-              <span className="text-gray-900">{deliveryFee.toLocaleString()} ل.س</span>
+              {isFreeDelivery ? (
+                <span className="text-green-600 font-medium">مجاني ✓</span>
+              ) : (
+                <span className="text-gray-900">{deliveryFee.toLocaleString()} ل.س</span>
+              )}
             </div>
             <div className="flex justify-between font-bold text-lg">
               <span className="text-gray-900">الإجمالي</span>

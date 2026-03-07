@@ -57,8 +57,60 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)):
 # Alias for frontend compatibility
 @router.get("/available-orders")
 async def get_available_orders_alias(user: dict = Depends(get_current_user)):
-    """الطلبات المتاحة للتوصيل - Alias"""
-    return await get_all_available_orders(user)
+    """جميع الطلبات المتاحة للتوصيل (طلبات المتجر + طلبات الطعام)"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0}
+    )
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    # جلب طلبات المتجر العادية
+    shop_orders = await db.orders.find(
+        {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # تحويل طلبات المتجر لتنسيق موحد
+    for order in shop_orders:
+        order["order_source"] = "shop"
+    
+    # جلب طلبات الطعام الجاهزة
+    food_orders = await db.food_orders.find(
+        {"status": "ready", "driver_id": None},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(50)
+    
+    # تحويل طلبات الطعام لتنسيق يناسب عرض السائق
+    for order in food_orders:
+        order["order_source"] = "food"
+        order["total"] = order.get("total", 0)
+        # إضافة معلومات المتجر كـ seller
+        store = await db.food_stores.find_one({"id": order["store_id"]}, {"_id": 0})
+        if store:
+            order["seller_addresses"] = [{
+                "name": store.get("name"),
+                "business_name": store.get("name"),
+                "address": store.get("address", ""),
+                "city": store.get("city", ""),
+                "phone": store.get("phone", "")
+            }]
+        # إضافة معلومات المشتري
+        order["buyer_address"] = {
+            "name": order.get("customer_name", ""),
+            "address": order.get("delivery_address", ""),
+            "city": order.get("delivery_city", ""),
+            "phone": order.get("delivery_phone", "")
+        }
+        order["items"] = order.get("items", [])
+    
+    # دمج الطلبات
+    all_orders = shop_orders + food_orders
+    
+    return all_orders
 
 @router.get("/my-orders")
 async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
@@ -919,7 +971,7 @@ async def report_driver(data: DriverReport, user: dict = Depends(get_current_use
             "$set": {
                 "status": "suspended",
                 "suspended_at": now,
-                "suspension_reason": f"بلاغ أخلاقي قيد المراجعة"
+                "suspension_reason": "بلاغ أخلاقي قيد المراجعة"
             }
         }
     )

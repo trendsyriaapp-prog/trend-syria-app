@@ -351,6 +351,23 @@ const DeliveryDashboard = () => {
     }
   };
 
+  const handleTakeFoodOrder = async (order) => {
+    try {
+      await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
+      toast({
+        title: "تم بنجاح",
+        description: "تم قبول طلب التوصيل"
+      });
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleOnTheWay = async (orderId) => {
     try {
       await axios.post(`${API}/orders/${orderId}/delivery/on-the-way`);
@@ -507,6 +524,7 @@ const DeliveryDashboard = () => {
             orders={availableOrders}
             isWorkingHours={isWorkingHours}
             onTakeOrder={(order) => setShowPickupChecklist(order)}
+            onTakeFoodOrder={handleTakeFoodOrder}
           />
         )}
 

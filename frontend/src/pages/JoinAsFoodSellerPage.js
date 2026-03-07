@@ -43,6 +43,8 @@ const JoinAsFoodSellerPage = () => {
     cover_image: '',
     delivery_time: 30,
     minimum_order: 0,
+    delivery_fee: 5000,
+    free_delivery_minimum: 0,
   });
 
   const handleTypeSelect = (typeId) => {
@@ -309,6 +311,38 @@ const JoinAsFoodSellerPage = () => {
                   />
                 </div>
               </div>
+
+              {/* رسوم التوصيل والتوصيل المجاني */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التوصيل (ل.س)</label>
+                  <input
+                    type="number"
+                    name="delivery_fee"
+                    value={formData.delivery_fee}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">توصيل مجاني عند</label>
+                  <input
+                    type="number"
+                    name="free_delivery_minimum"
+                    value={formData.free_delivery_minimum}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="5000"
+                    placeholder="0 = معطل"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 -mt-2">
+                اترك "توصيل مجاني عند" على 0 لتعطيل التوصيل المجاني
+              </p>
 
               {/* Logo Upload */}
               <div>

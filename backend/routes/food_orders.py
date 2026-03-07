@@ -80,8 +80,16 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             detail=f"الحد الأدنى للطلب هو {store['minimum_order']:,.0f} ل.س"
         )
     
-    # رسوم التوصيل (ثابتة حالياً)
-    delivery_fee = 5000
+    # حساب رسوم التوصيل
+    store_delivery_fee = store.get("delivery_fee", 5000)
+    free_delivery_min = store.get("free_delivery_minimum", 0)
+    
+    # توصيل مجاني إذا تجاوز المجموع الحد الأدنى
+    if free_delivery_min > 0 and subtotal >= free_delivery_min:
+        delivery_fee = 0
+    else:
+        delivery_fee = store_delivery_fee
+    
     total = subtotal + delivery_fee
     
     # التحقق من رصيد المحفظة إذا كان الدفع بالمحفظة
@@ -321,7 +329,7 @@ async def update_order_status(
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": order["customer_id"],
-        "title": f"📦 تحديث طلبك",
+        "title": "📦 تحديث طلبك",
         "message": f"طلبك #{order['order_number']}: {ORDER_STATUSES.get(new_status)}",
         "type": "order_status_update",
         "is_read": False,

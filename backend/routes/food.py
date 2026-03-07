@@ -30,6 +30,8 @@ class FoodStoreCreate(BaseModel):
     cover_image: Optional[str] = None
     delivery_time: Optional[int] = 30  # بالدقائق
     minimum_order: Optional[float] = 0
+    free_delivery_minimum: Optional[float] = 0  # الحد الأدنى للتوصيل المجاني
+    delivery_fee: Optional[float] = 5000  # رسوم التوصيل الافتراضية
     working_hours: Optional[dict] = None
 
 class FoodProductCreate(BaseModel):
@@ -124,6 +126,8 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
         "cover_image": store.cover_image,
         "delivery_time": store.delivery_time,
         "minimum_order": store.minimum_order,
+        "free_delivery_minimum": store.free_delivery_minimum,
+        "delivery_fee": store.delivery_fee,
         "working_hours": store.working_hours,
         "rating": 0,
         "reviews_count": 0,
@@ -264,7 +268,7 @@ async def update_my_store(update_data: dict, user: dict = Depends(get_current_us
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
     # الحقول المسموح بتعديلها
-    allowed_fields = ["name", "description", "phone", "delivery_time", "minimum_order", "logo", "cover_image"]
+    allowed_fields = ["name", "description", "phone", "delivery_time", "minimum_order", "free_delivery_minimum", "delivery_fee", "logo", "cover_image"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
