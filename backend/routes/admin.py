@@ -1123,6 +1123,8 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
         "end_time": sale_data["end_time"],
         "applicable_categories": sale_data.get("applicable_categories", []),  # فارغ = جميع الفئات
         "applicable_stores": sale_data.get("applicable_stores", []),  # فارغ = جميع المتاجر
+        "applicable_products": sale_data.get("applicable_products", []),  # منتجات معينة (جديد)
+        "flash_type": sale_data.get("flash_type", "all"),  # all, categories, products
         "is_active": sale_data.get("is_active", True),
         "banner_image": sale_data.get("banner_image", ""),
         "banner_color": sale_data.get("banner_color", "#FF4500"),
@@ -1152,7 +1154,8 @@ async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depend
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
     allowed_fields = ["name", "description", "discount_percentage", "start_time", "end_time",
-                     "applicable_categories", "applicable_stores", "is_active", "banner_image", "banner_color"]
+                     "applicable_categories", "applicable_stores", "applicable_products", 
+                     "flash_type", "is_active", "banner_image", "banner_color"]
     
     update = {k: v for k, v in update_data.items() if k in allowed_fields}
     update["updated_at"] = datetime.now(timezone.utc).isoformat()

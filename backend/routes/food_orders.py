@@ -90,6 +90,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # حساب خصم عروض الفلاش (Flash Sales)
     flash_discount = 0
     flash_sale_applied = None
+    flash_items = []  # المنتجات المشمولة بالفلاش
     now = datetime.now(timezone.utc).isoformat()
     
     active_flash = await db.flash_sales.find_one({
@@ -103,15 +104,44 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     }, {"_id": 0})
     
     if active_flash:
-        # التحقق من الفئات المشمولة
+        flash_type = active_flash.get("flash_type", "all")
         apply_flash = False
-        if not active_flash.get("applicable_categories"):
-            apply_flash = True  # جميع الفئات
-        elif store.get("store_type") in active_flash.get("applicable_categories", []):
-            apply_flash = True
+        eligible_subtotal = 0  # المجموع المؤهل للخصم
         
-        if apply_flash:
-            flash_discount = (subtotal - offer_discount) * (active_flash["discount_percentage"] / 100)
+        if flash_type == "all":
+            # جميع المنتجات
+            if not active_flash.get("applicable_categories"):
+                apply_flash = True
+                eligible_subtotal = subtotal - offer_discount
+            elif store.get("store_type") in active_flash.get("applicable_categories", []):
+                apply_flash = True
+                eligible_subtotal = subtotal - offer_discount
+                
+        elif flash_type == "categories":
+            # فئات محددة
+            if store.get("store_type") in active_flash.get("applicable_categories", []):
+                apply_flash = True
+                eligible_subtotal = subtotal - offer_discount
+                
+        elif flash_type == "products":
+            # منتجات محددة فقط
+            flash_product_ids = active_flash.get("applicable_products", [])
+            if flash_product_ids:
+                for item in order_items:
+                    if item["product_id"] in flash_product_ids:
+                        eligible_subtotal += item["price"] * item["quantity"]
+                        flash_items.append({
+                            "product_id": item["product_id"],
+                            "name": item.get("name", ""),
+                            "quantity": item["quantity"],
+                            "original_price": item["price"],
+                            "discount": item["price"] * item["quantity"] * (active_flash["discount_percentage"] / 100)
+                        })
+                if eligible_subtotal > 0:
+                    apply_flash = True
+        
+        if apply_flash and eligible_subtotal > 0:
+            flash_discount = eligible_subtotal * (active_flash["discount_percentage"] / 100)
             flash_sale_applied = active_flash
             # تحديث عداد الاستخدام
             await db.flash_sales.update_one(

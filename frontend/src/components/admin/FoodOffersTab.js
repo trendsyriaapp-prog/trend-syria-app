@@ -311,9 +311,18 @@ const FoodOffersTab = ({ token }) => {
                       </div>
                       
                       <div className="text-xs text-gray-400">
-                        الفئات: {flash.applicable_categories?.length > 0 
-                          ? flash.applicable_categories.join(', ') 
-                          : 'جميع الفئات'}
+                        {flash.flash_type === 'products' ? (
+                          <span className="text-purple-600 font-medium">
+                            منتجات محددة ({flash.applicable_products?.length || 0})
+                          </span>
+                        ) : flash.applicable_categories?.length > 0 ? (
+                          <>الفئات: {flash.applicable_categories.map(c => 
+                            c === 'restaurants' ? 'مطاعم' : 
+                            c === 'groceries' ? 'مواد غذائية' : 'خضروات'
+                          ).join(', ')}</>
+                        ) : (
+                          'جميع الفئات'
+                        )}
                         {' • '}
                         استُخدم {flash.usage_count || 0} مرة
                       </div>
@@ -386,11 +395,35 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
     discount_percentage: flash?.discount_percentage || 20,
     start_time: flash?.start_time ? flash.start_time.slice(0, 16) : '',
     end_time: flash?.end_time ? flash.end_time.slice(0, 16) : '',
+    flash_type: flash?.flash_type || 'all',  // all, categories, products
     applicable_categories: flash?.applicable_categories || [],
+    applicable_products: flash?.applicable_products || [],
     banner_color: flash?.banner_color || '#FF4500',
     is_active: flash?.is_active !== false,
   });
   const [saving, setSaving] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+
+  // جلب المنتجات عند اختيار نوع "منتجات محددة"
+  useEffect(() => {
+    if (formData.flash_type === 'products' && allProducts.length === 0) {
+      fetchAllProducts();
+    }
+  }, [formData.flash_type]);
+
+  const fetchAllProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const res = await axios.get(`${API}/food/products?limit=500`);
+      setAllProducts(res.data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const categories = [
     { id: 'restaurants', name: 'مطاعم' },
@@ -407,11 +440,30 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
     }));
   };
 
+  const toggleProduct = (productId) => {
+    setFormData(prev => ({
+      ...prev,
+      applicable_products: prev.applicable_products.includes(productId)
+        ? prev.applicable_products.filter(p => p !== productId)
+        : [...prev.applicable_products, productId]
+    }));
+  };
+
+  const filteredProducts = allProducts.filter(p => 
+    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.store_name?.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.name || !formData.start_time || !formData.end_time) {
       toast({ title: "تنبيه", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
+    }
+
+    if (formData.flash_type === 'products' && formData.applicable_products.length === 0) {
+      toast({ title: "تنبيه", description: "يرجى تحديد منتج واحد على الأقل", variant: "destructive" });
       return;
     }
 
@@ -519,34 +571,135 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">الفئات المشمولة</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">نطاق العرض</label>
+            <div className="flex flex-wrap gap-2 mb-3">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, applicable_categories: [] })}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                  formData.applicable_categories.length === 0
+                onClick={() => setFormData({ ...formData, flash_type: 'all', applicable_categories: [], applicable_products: [] })}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  formData.flash_type === 'all'
                     ? 'bg-orange-500 text-white'
                     : 'bg-gray-100 text-gray-600'
                 }`}
               >
-                جميع الفئات
+                جميع الأصناف
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => toggleCategory(cat.id)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                    formData.applicable_categories.includes(cat.id)
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, flash_type: 'categories', applicable_products: [] })}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  formData.flash_type === 'categories'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                فئات محددة
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, flash_type: 'products', applicable_categories: [] })}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  formData.flash_type === 'products'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                منتجات محددة
+              </button>
             </div>
+
+            {/* اختيار الفئات */}
+            {formData.flash_type === 'categories' && (
+              <div className="flex flex-wrap gap-2 p-3 bg-orange-50 rounded-xl">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                      formData.applicable_categories.includes(cat.id)
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-600 border'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* اختيار المنتجات */}
+            {formData.flash_type === 'products' && (
+              <div className="p-3 bg-purple-50 rounded-xl space-y-3">
+                {/* شريط البحث */}
+                <div className="relative">
+                  <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    placeholder="ابحث عن منتج..."
+                    className="w-full border border-gray-200 rounded-lg pr-10 pl-4 py-2 text-sm"
+                  />
+                </div>
+
+                {/* المنتجات المحددة */}
+                {formData.applicable_products.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.applicable_products.map(productId => {
+                      const product = allProducts.find(p => p.id === productId);
+                      return product ? (
+                        <span 
+                          key={productId}
+                          className="bg-purple-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1"
+                        >
+                          {product.name}
+                          <button 
+                            type="button"
+                            onClick={() => toggleProduct(productId)}
+                            className="hover:bg-white/20 rounded-full p-0.5"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+
+                {/* قائمة المنتجات */}
+                {loadingProducts ? (
+                  <div className="text-center py-4">
+                    <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {filteredProducts.slice(0, 50).map(product => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => toggleProduct(product.id)}
+                        className={`w-full text-right px-3 py-2 rounded-lg text-sm flex items-center justify-between ${
+                          formData.applicable_products.includes(product.id)
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        <div>
+                          <span className="font-medium">{product.name}</span>
+                          <span className="text-xs text-gray-500 mr-2">({product.store_name})</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{product.price?.toLocaleString()} ل.س</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-xs text-purple-600">
+                  تم تحديد {formData.applicable_products.length} منتج
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
