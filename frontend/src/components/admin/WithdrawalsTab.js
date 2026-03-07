@@ -9,6 +9,7 @@ import {
   ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import RejectModal from './RejectModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -22,6 +23,8 @@ const WithdrawalsTab = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [expandedId, setExpandedId] = useState(null);
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, withdrawalId: null, userName: '' });
+  const [rejectProcessing, setRejectProcessing] = useState(false);
   
   useEffect(() => {
     fetchWithdrawals();
@@ -56,12 +59,14 @@ const WithdrawalsTab = () => {
     }
   };
   
-  const rejectWithdrawal = async (withdrawalId) => {
-    const reason = window.prompt('سبب الرفض (اختياري):');
-    if (reason === null) return;
-    
+  const rejectWithdrawal = (withdrawalId, userName) => {
+    setRejectModal({ isOpen: true, withdrawalId, userName });
+  };
+
+  const handleRejectConfirm = async (reason) => {
+    setRejectProcessing(true);
     try {
-      await axios.post(`${API}/api/payment/admin/withdrawals/${withdrawalId}/reject`, null, {
+      await axios.post(`${API}/api/payment/admin/withdrawals/${rejectModal.withdrawalId}/reject`, null, {
         params: { reason }
       });
       toast({ title: "تم الرفض", description: "تم رفض طلب السحب" });
@@ -72,6 +77,9 @@ const WithdrawalsTab = () => {
         description: error.response?.data?.detail || "فشل العملية",
         variant: "destructive"
       });
+    } finally {
+      setRejectProcessing(false);
+      setRejectModal({ isOpen: false, withdrawalId: null, userName: '' });
     }
   };
   
@@ -228,8 +236,9 @@ const WithdrawalsTab = () => {
                         موافقة وتحويل
                       </button>
                       <button
-                        onClick={() => rejectWithdrawal(w.id)}
+                        onClick={() => rejectWithdrawal(w.id, w.user_name)}
                         className="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        data-testid={`reject-withdrawal-${w.id}`}
                       >
                         <XCircle size={16} />
                         رفض
@@ -248,6 +257,16 @@ const WithdrawalsTab = () => {
           ))}
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={rejectModal.isOpen}
+        onClose={() => setRejectModal({ isOpen: false, withdrawalId: null, userName: '' })}
+        onConfirm={handleRejectConfirm}
+        title="رفض طلب السحب"
+        itemName={rejectModal.userName}
+        processing={rejectProcessing}
+      />
     </section>
   );
 };

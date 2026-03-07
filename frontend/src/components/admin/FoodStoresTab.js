@@ -8,6 +8,7 @@ import {
   Clock, MapPin, Phone, ChevronDown, Percent, Save
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import RejectModal from './RejectModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -27,6 +28,8 @@ const FoodStoresTab = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [showCommissionsModal, setShowCommissionsModal] = useState(false);
   const [editingCommissions, setEditingCommissions] = useState({});
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, storeId: null, storeName: '' });
+  const [rejectProcessing, setRejectProcessing] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -66,16 +69,21 @@ const FoodStoresTab = () => {
     }
   };
 
-  const handleReject = async (storeId) => {
-    const reason = prompt('سبب الرفض:');
-    if (!reason) return;
+  const handleReject = async (storeId, storeName) => {
+    setRejectModal({ isOpen: true, storeId, storeName });
+  };
 
+  const handleRejectConfirm = async (reason) => {
+    setRejectProcessing(true);
     try {
-      await axios.post(`${API}/admin/food/stores/${storeId}/reject`, null, { params: { reason } });
+      await axios.post(`${API}/admin/food/stores/${rejectModal.storeId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض المتجر" });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في رفض المتجر", variant: "destructive" });
+    } finally {
+      setRejectProcessing(false);
+      setRejectModal({ isOpen: false, storeId: null, storeName: '' });
     }
   };
 
@@ -218,8 +226,9 @@ const FoodStoresTab = () => {
                           قبول
                         </button>
                         <button
-                          onClick={() => handleReject(store.id)}
+                          onClick={() => handleReject(store.id, store.name)}
                           className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-red-600"
+                          data-testid={`reject-store-${store.id}`}
                         >
                           <X size={14} />
                           رفض
@@ -289,6 +298,16 @@ const FoodStoresTab = () => {
           </div>
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={rejectModal.isOpen}
+        onClose={() => setRejectModal({ isOpen: false, storeId: null, storeName: '' })}
+        onConfirm={handleRejectConfirm}
+        title="رفض المتجر"
+        itemName={rejectModal.storeName}
+        processing={rejectProcessing}
+      />
     </div>
   );
 };

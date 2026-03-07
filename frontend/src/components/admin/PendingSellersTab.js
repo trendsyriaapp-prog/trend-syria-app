@@ -1,9 +1,26 @@
 // /app/frontend/src/components/admin/PendingSellersTab.js
 import { useState } from 'react';
 import { Check, X, Eye } from 'lucide-react';
+import RejectModal from './RejectModal';
 
 const PendingSellersTab = ({ pendingSellers, onApprove, onReject }) => {
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, sellerId: null, sellerName: '' });
+  const [processing, setProcessing] = useState(false);
+
+  const handleRejectClick = (sellerId, sellerName) => {
+    setRejectModal({ isOpen: true, sellerId, sellerName });
+  };
+
+  const handleRejectConfirm = async (reason) => {
+    setProcessing(true);
+    try {
+      await onReject(rejectModal.sellerId, reason);
+    } finally {
+      setProcessing(false);
+      setRejectModal({ isOpen: false, sellerId: null, sellerName: '' });
+    }
+  };
 
   return (
     <section>
@@ -39,7 +56,7 @@ const PendingSellersTab = ({ pendingSellers, onApprove, onReject }) => {
                       <Check size={14} />
                     </button>
                     <button
-                      onClick={() => onReject(doc.seller_id)}
+                      onClick={() => handleRejectClick(doc.seller_id, doc.business_name || doc.seller?.name)}
                       className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                       data-testid={`reject-seller-${doc.seller_id}`}
                     >
@@ -63,6 +80,16 @@ const PendingSellersTab = ({ pendingSellers, onApprove, onReject }) => {
           ))}
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={rejectModal.isOpen}
+        onClose={() => setRejectModal({ isOpen: false, sellerId: null, sellerName: '' })}
+        onConfirm={handleRejectConfirm}
+        title="رفض البائع"
+        itemName={rejectModal.sellerName}
+        processing={processing}
+      />
     </section>
   );
 };

@@ -139,43 +139,46 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
 
 @router.post("/sellers/{seller_id}/reject")
 async def reject_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)):
-    """رفض بائع مع سبب الرفض"""
+    """رفض بائع مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    # سبب الرفض إلزامي
-    reason = data.get("reason", "") if data else ""
-    if not reason or len(reason.strip()) < 5:
-        raise HTTPException(status_code=400, detail="يجب إدخال سبب الرفض (5 أحرف على الأقل)")
+    # سبب الرفض اختياري
+    reason = data.get("reason", "").strip() if data else ""
     
     now = datetime.now(timezone.utc).isoformat()
     
+    update_data = {
+        "status": "rejected",
+        "rejected_by": user["id"],
+        "rejected_at": now
+    }
+    if reason:
+        update_data["rejection_reason"] = reason
+    
     await db.seller_documents.update_one(
         {"seller_id": seller_id}, 
-        {
-            "$set": {
-                "status": "rejected",
-                "rejection_reason": reason.strip(),
-                "rejected_by": user["id"],
-                "rejected_at": now
-            }
-        }
+        {"$set": update_data}
     )
     
     # إرسال إشعار للبائع
     seller = await db.users.find_one({"id": seller_id})
     if seller:
+        message = "تم رفض طلبك للتسجيل كبائع."
+        if reason:
+            message += f"\n📝 السبب: {reason}"
+        
         await db.notifications.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": seller_id,
             "title": "❌ تم رفض طلب البائع",
-            "message": f"سبب الرفض: {reason}",
+            "message": message,
             "type": "seller_rejected",
             "is_read": False,
             "created_at": now
         })
     
-    return {"message": "تم رفض البائع", "reason": reason}
+    return {"message": "تم رفض البائع", "reason": reason if reason else None}
 
 # ============== Products Management ==============
 
@@ -302,44 +305,47 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
 
 @router.post("/delivery/{driver_id}/reject")
 async def reject_delivery_driver(driver_id: str, data: dict = None, user: dict = Depends(get_current_user)):
-    """رفض موظف توصيل مع سبب الرفض"""
+    """رفض موظف توصيل مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    # سبب الرفض إلزامي
-    reason = data.get("reason", "") if data else ""
-    if not reason or len(reason.strip()) < 5:
-        raise HTTPException(status_code=400, detail="يجب إدخال سبب الرفض (5 أحرف على الأقل)")
+    # سبب الرفض اختياري
+    reason = data.get("reason", "").strip() if data else ""
     
     now = datetime.now(timezone.utc).isoformat()
     
+    update_data = {
+        "status": "rejected",
+        "rejected_by": user["id"],
+        "rejected_at": now
+    }
+    if reason:
+        update_data["rejection_reason"] = reason
+    
     result = await db.delivery_documents.update_one(
         {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
-        {
-            "$set": {
-                "status": "rejected",
-                "rejection_reason": reason.strip(),
-                "rejected_by": user["id"],
-                "rejected_at": now
-            }
-        }
+        {"$set": update_data}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
     
     # إرسال إشعار لموظف التوصيل
+    message = "تم رفض طلبك للتسجيل كموظف توصيل."
+    if reason:
+        message += f"\n📝 السبب: {reason}"
+    
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": driver_id,
         "title": "❌ تم رفض طلب التوصيل",
-        "message": f"سبب الرفض: {reason}",
+        "message": message,
         "type": "delivery_rejected",
         "is_read": False,
         "created_at": now
     })
     
-    return {"message": "تم رفض موظف التوصيل", "reason": reason}
+    return {"message": "تم رفض موظف التوصيل", "reason": reason if reason else None}
 
 # ============== Sub-Admin Management ==============
 
@@ -992,14 +998,12 @@ async def reject_food_store(
     data: dict = None,
     user: dict = Depends(get_current_user)
 ):
-    """رفض متجر طعام مع سبب الرفض الإلزامي"""
+    """رفض متجر طعام مع سبب الرفض (اختياري)"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
-    # سبب الرفض إلزامي
-    reason = data.get("reason", "") if data else ""
-    if not reason or len(reason.strip()) < 5:
-        raise HTTPException(status_code=400, detail="يجب إدخال سبب الرفض (5 أحرف على الأقل)")
+    # سبب الرفض اختياري
+    reason = data.get("reason", "").strip() if data else ""
     
     store = await db.food_stores.find_one({"id": store_id})
     if not store:
@@ -1007,27 +1011,32 @@ async def reject_food_store(
     
     now = datetime.now(timezone.utc).isoformat()
     
+    update_data = {
+        "is_approved": False,
+        "rejected_by": user["id"],
+        "rejected_at": now
+    }
+    if reason:
+        update_data["rejection_reason"] = reason
+    
     await db.food_stores.update_one(
         {"id": store_id},
-        {
-            "$set": {
-                "is_approved": False,
-                "rejection_reason": reason.strip(),
-                "rejected_by": user["id"],
-                "rejected_at": now
-            }
-        }
+        {"$set": update_data}
     )
     
     # إشعار صاحب المتجر
+    message = f"تم رفض متجر {store['name']}."
+    if reason:
+        message += f"\n📝 سبب الرفض: {reason}"
+    
     await create_notification_for_user(
         user_id=store["owner_id"],
         title="❌ تم رفض متجرك",
-        message=f"تم رفض متجر {store['name']}.\n\n📝 سبب الرفض: {reason}",
+        message=message,
         notification_type="store_rejected"
     )
     
-    return {"message": "تم رفض المتجر", "reason": reason}
+    return {"message": "تم رفض المتجر", "reason": reason if reason else None}
 
 @router.get("/food/commissions")
 async def get_food_commissions(user: dict = Depends(get_current_user)):
@@ -1116,14 +1125,12 @@ async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_use
 
 @router.put("/food-offers/{offer_id}/reject")
 async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depends(get_current_user)):
-    """رفض المدير لعرض مع سبب الرفض الإلزامي"""
+    """رفض المدير لعرض مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    # سبب الرفض إلزامي
-    reason = data.get("reason", "") if data else ""
-    if not reason or len(reason.strip()) < 5:
-        raise HTTPException(status_code=400, detail="يجب إدخال سبب الرفض (5 أحرف على الأقل)")
+    # سبب الرفض اختياري
+    reason = data.get("reason", "").strip() if data else ""
     
     offer = await db.food_offers.find_one({"id": offer_id})
     if not offer:
@@ -1131,28 +1138,35 @@ async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depen
     
     now = datetime.now(timezone.utc).isoformat()
     
+    update_data = {
+        "is_active": False, 
+        "admin_rejected": True, 
+        "rejected_by": user["id"], 
+        "rejected_at": now
+    }
+    if reason:
+        update_data["rejection_reason"] = reason
+    
     result = await db.food_offers.update_one(
         {"id": offer_id},
-        {"$set": {
-            "is_active": False, 
-            "admin_rejected": True, 
-            "rejection_reason": reason.strip(),
-            "rejected_by": user["id"], 
-            "rejected_at": now
-        }}
+        {"$set": update_data}
     )
     
     # إشعار صاحب المتجر
     store = await db.food_stores.find_one({"id": offer.get("store_id")})
     if store:
+        message = f"تم رفض العرض: {offer.get('name', '')}."
+        if reason:
+            message += f"\n📝 سبب الرفض: {reason}"
+        
         await create_notification_for_user(
             user_id=store["owner_id"],
             title="❌ تم رفض العرض",
-            message=f"تم رفض العرض: {offer.get('name', '')}.\n\n📝 سبب الرفض: {reason}",
+            message=message,
             notification_type="offer_rejected"
         )
     
-    return {"message": "تم رفض العرض", "reason": reason}
+    return {"message": "تم رفض العرض", "reason": reason if reason else None}
 
 @router.put("/food-offers/{offer_id}")
 async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)):

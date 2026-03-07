@@ -1,5 +1,7 @@
 // /app/frontend/src/components/admin/DeliveryTab.js
+import { useState } from 'react';
 import { Truck, Check, X } from 'lucide-react';
+import RejectModal from './RejectModal';
 
 const DeliveryTab = ({ 
   allDelivery, 
@@ -8,6 +10,23 @@ const DeliveryTab = ({
   onApprove, 
   onReject 
 }) => {
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, driverId: null, driverName: '' });
+  const [processing, setProcessing] = useState(false);
+
+  const handleRejectClick = (driverId, driverName) => {
+    setRejectModal({ isOpen: true, driverId, driverName });
+  };
+
+  const handleRejectConfirm = async (reason) => {
+    setProcessing(true);
+    try {
+      await onReject(rejectModal.driverId, reason);
+    } finally {
+      setProcessing(false);
+      setRejectModal({ isOpen: false, driverId: null, driverName: '' });
+    }
+  };
+
   // Pending delivery drivers view
   if (isPending) {
     return (
@@ -33,12 +52,14 @@ const DeliveryTab = ({
                       <button
                         onClick={() => onApprove(doc.driver_id || doc.delivery_id)}
                         className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                        data-testid={`approve-driver-${doc.driver_id || doc.delivery_id}`}
                       >
                         <Check size={14} />
                       </button>
                       <button
-                        onClick={() => onReject(doc.driver_id || doc.delivery_id)}
+                        onClick={() => handleRejectClick(doc.driver_id || doc.delivery_id, doc.driver_name || doc.driver?.full_name || doc.driver?.name)}
                         className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                        data-testid={`reject-driver-${doc.driver_id || doc.delivery_id}`}
                       >
                         <X size={14} />
                       </button>
@@ -71,6 +92,16 @@ const DeliveryTab = ({
             ))}
           </div>
         )}
+
+        {/* Reject Modal */}
+        <RejectModal
+          isOpen={rejectModal.isOpen}
+          onClose={() => setRejectModal({ isOpen: false, driverId: null, driverName: '' })}
+          onConfirm={handleRejectConfirm}
+          title="رفض موظف التوصيل"
+          itemName={rejectModal.driverName}
+          processing={processing}
+        />
       </section>
     );
   }

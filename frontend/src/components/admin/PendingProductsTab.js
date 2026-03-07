@@ -1,11 +1,30 @@
 // /app/frontend/src/components/admin/PendingProductsTab.js
+import { useState } from 'react';
 import { Check, X } from 'lucide-react';
+import RejectModal from './RejectModal';
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
 const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, productId: null, productName: '' });
+  const [processing, setProcessing] = useState(false);
+
+  const handleRejectClick = (productId, productName) => {
+    setRejectModal({ isOpen: true, productId, productName });
+  };
+
+  const handleRejectConfirm = async (reason) => {
+    setProcessing(true);
+    try {
+      await onReject(rejectModal.productId, reason);
+    } finally {
+      setProcessing(false);
+      setRejectModal({ isOpen: false, productId: null, productName: '' });
+    }
+  };
+
   return (
     <section>
       {pendingProducts.length === 0 ? (
@@ -40,7 +59,7 @@ const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
                     <Check size={14} />
                   </button>
                   <button
-                    onClick={() => onReject(product.id)}
+                    onClick={() => handleRejectClick(product.id, product.name)}
                     className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                     data-testid={`reject-product-${product.id}`}
                   >
@@ -52,6 +71,16 @@ const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
           ))}
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={rejectModal.isOpen}
+        onClose={() => setRejectModal({ isOpen: false, productId: null, productName: '' })}
+        onConfirm={handleRejectConfirm}
+        title="رفض المنتج"
+        itemName={rejectModal.productName}
+        processing={processing}
+      />
     </section>
   );
 };

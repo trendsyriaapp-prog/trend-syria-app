@@ -133,10 +133,9 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleRejectSeller = async (sellerId) => {
-    if (!window.confirm('هل تريد رفض هذا البائع؟')) return;
+  const handleRejectSeller = async (sellerId, reason = '') => {
     try {
-      await axios.post(`${API}/admin/sellers/${sellerId}/reject`);
+      await axios.post(`${API}/admin/sellers/${sellerId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب البائع" });
       fetchData();
     } catch (error) {
@@ -154,8 +153,7 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleRejectProduct = async (productId) => {
-    const reason = window.prompt('سبب الرفض (اختياري):');
+  const handleRejectProduct = async (productId, reason = '') => {
     try {
       await axios.post(`${API}/admin/products/${productId}/reject`, { 
         approved: false, 
@@ -178,10 +176,9 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleRejectDelivery = async (driverId) => {
-    if (!window.confirm('هل تريد رفض موظف التوصيل هذا؟')) return;
+  const handleRejectDelivery = async (driverId, reason = '') => {
     try {
-      await axios.post(`${API}/admin/delivery/${driverId}/reject`);
+      await axios.post(`${API}/admin/delivery/${driverId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب موظف التوصيل" });
       fetchData();
     } catch (error) {
