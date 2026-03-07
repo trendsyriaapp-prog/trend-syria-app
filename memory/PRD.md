@@ -587,9 +587,18 @@
 - ✅ يمكن للمدير رفض (البائعين، موظفي التوصيل، المتاجر، العروض، طلبات السحب) مع أو بدون كتابة سبب
 - ✅ تم إضافة مكون `RejectModal.js` موحد لجميع نوافذ الرفض
 - ✅ يظهر النص "(اختياري)" بجانب حقل سبب الرفض
+- ✅ **قائمة أسباب رفض جاهزة (Preset Reasons):**
+  - الوثائق غير واضحة
+  - معلومات ناقصة أو غير صحيحة
+  - مخالفة لشروط الاستخدام
+  - جودة الصور غير مقبولة
+  - السعر غير مناسب
+  - المنتج غير مطابق للوصف
+  - عدم استيفاء الشروط المطلوبة
+  - تكرار أو نسخة مكررة
 - ✅ الملفات المحدثة:
   - `/app/backend/routes/admin.py` - جميع endpoints الرفض
-  - `/app/frontend/src/components/admin/RejectModal.js` - مكون جديد
+  - `/app/frontend/src/components/admin/RejectModal.js` - مكون جديد مع dropdown للأسباب الجاهزة
   - `/app/frontend/src/components/admin/PendingSellersTab.js`
   - `/app/frontend/src/components/admin/DeliveryTab.js`
   - `/app/frontend/src/components/admin/FoodStoresTab.js`

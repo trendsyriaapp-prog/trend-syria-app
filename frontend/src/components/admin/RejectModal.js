@@ -1,9 +1,21 @@
 // /app/frontend/src/components/admin/RejectModal.js
-// نافذة رفض موحدة مع حقل سبب اختياري
+// نافذة رفض موحدة مع حقل سبب اختياري وأسباب جاهزة
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, XCircle, AlertTriangle } from 'lucide-react';
+import { X, XCircle, AlertTriangle, ChevronDown } from 'lucide-react';
+
+// أسباب الرفض الجاهزة
+const PRESET_REASONS = [
+  "الوثائق غير واضحة",
+  "معلومات ناقصة أو غير صحيحة",
+  "مخالفة لشروط الاستخدام",
+  "جودة الصور غير مقبولة",
+  "السعر غير مناسب",
+  "المنتج غير مطابق للوصف",
+  "عدم استيفاء الشروط المطلوبة",
+  "تكرار أو نسخة مكررة",
+];
 
 const RejectModal = ({ 
   isOpen, 
@@ -14,17 +26,25 @@ const RejectModal = ({
   processing = false
 }) => {
   const [reason, setReason] = useState('');
+  const [showPresets, setShowPresets] = useState(false);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
     onConfirm(reason.trim());
     setReason('');
+    setShowPresets(false);
   };
 
   const handleClose = () => {
     setReason('');
+    setShowPresets(false);
     onClose();
+  };
+
+  const selectPreset = (preset) => {
+    setReason(preset);
+    setShowPresets(false);
   };
 
   return (
@@ -63,10 +83,43 @@ const RejectModal = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             سبب الرفض <span className="text-gray-400 font-normal">(اختياري)</span>
           </label>
+          
+          {/* Preset Reasons Dropdown */}
+          <div className="relative mb-3">
+            <button
+              type="button"
+              onClick={() => setShowPresets(!showPresets)}
+              className="w-full flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+              data-testid="preset-reasons-toggle"
+            >
+              <span>اختر من الأسباب الجاهزة</span>
+              <ChevronDown size={18} className={`transition-transform ${showPresets ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showPresets && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto"
+              >
+                {PRESET_REASONS.map((preset, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectPreset(preset)}
+                    className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b border-gray-50 last:border-0"
+                    data-testid={`preset-reason-${index}`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </div>
+
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="يمكنك كتابة سبب الرفض هنا ليصل إلى صاحب الطلب..."
+            placeholder="أو اكتب سبباً مخصصاً..."
             rows={3}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
             data-testid="reject-reason-input"
