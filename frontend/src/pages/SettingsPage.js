@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
-  Shield, FileText, RefreshCcw
+  Shield, FileText, RefreshCcw, Gift
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -175,6 +175,21 @@ const SettingsPage = () => {
       <div className="max-w-xl mx-auto px-3 py-3">
         {/* Header */}
         <h1 className="text-sm font-bold text-gray-900 mb-3">إعدادات الحساب</h1>
+
+        {/* Referral Banner */}
+        <button
+          onClick={() => navigate('/referrals')}
+          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-4 mb-4 flex items-center gap-3 text-white shadow-lg"
+        >
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <Gift size={24} className="text-white" />
+          </div>
+          <div className="flex-1 text-right">
+            <p className="font-bold">ادعُ أصدقاءك واربح!</p>
+            <p className="text-xs opacity-90">احصل على 10,000 ل.س لكل صديق</p>
+          </div>
+          <ChevronLeft size={20} />
+        </button>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-3 overflow-x-auto">

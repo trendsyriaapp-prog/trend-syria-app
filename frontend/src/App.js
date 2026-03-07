@@ -39,6 +39,7 @@ import FoodStoreDashboard from "./pages/FoodStoreDashboard";
 import FoodStorePage from "./pages/FoodStorePage";
 import FoodCartPage from "./pages/FoodCartPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
+import ReferralsPage from "./pages/ReferralsPage";
 
 function App() {
   return (
@@ -103,6 +104,9 @@ function App() {
                 <Route path="/food/store/:storeId" element={<FoodStorePage />} />
                 <Route path="/food/cart/:storeId" element={<FoodCartPage />} />
                 <Route path="/food/order/:orderId" element={<FoodOrderTracking />} />
+                
+                {/* Referrals */}
+                <Route path="/referrals" element={<ReferralsPage />} />
               </Routes>
             </main>
             <MobileNav />
