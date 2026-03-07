@@ -1179,3 +1179,80 @@ async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)
         raise HTTPException(status_code=404, detail="العرض غير موجود")
     
     return {"message": "تم حذف عرض الفلاش"}
+
+
+# ============== بانرات الصفحة الرئيسية ==============
+
+@router.get("/homepage-banners")
+async def get_homepage_banners(user: dict = Depends(get_current_user)):
+    """جلب بانرات الصفحة الرئيسية للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    banners = await db.homepage_banners.find({}, {"_id": 0}).sort("order", 1).to_list(50)
+    return banners
+
+@router.post("/homepage-banners")
+async def create_homepage_banner(banner_data: dict, user: dict = Depends(get_current_user)):
+    """إنشاء بانر جديد للصفحة الرئيسية"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    required = ["title"]
+    for field in required:
+        if field not in banner_data:
+            raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+    
+    banner_id = str(uuid.uuid4())
+    banner_doc = {
+        "id": banner_id,
+        "title": banner_data["title"],
+        "description": banner_data.get("description", ""),
+        "image": banner_data.get("image", ""),
+        "link": banner_data.get("link", "#"),
+        "background_color": banner_data.get("background_color", "#FF6B00"),
+        "text_color": banner_data.get("text_color", "#FFFFFF"),
+        "order": banner_data.get("order", 0),
+        "is_active": banner_data.get("is_active", True),
+        "start_date": banner_data.get("start_date"),
+        "end_date": banner_data.get("end_date"),
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.homepage_banners.insert_one(banner_doc)
+    del banner_doc["_id"]
+    
+    return banner_doc
+
+@router.put("/homepage-banners/{banner_id}")
+async def update_homepage_banner(banner_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث بانر"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    allowed_fields = ["title", "description", "image", "link", "background_color", 
+                     "text_color", "order", "is_active", "start_date", "end_date"]
+    
+    update = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.homepage_banners.update_one({"id": banner_id}, {"$set": update})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="البانر غير موجود")
+    
+    return {"message": "تم تحديث البانر"}
+
+@router.delete("/homepage-banners/{banner_id}")
+async def delete_homepage_banner(banner_id: str, user: dict = Depends(get_current_user)):
+    """حذف بانر"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    result = await db.homepage_banners.delete_one({"id": banner_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="البانر غير موجود")
+    
+    return {"message": "تم حذف البانر"}

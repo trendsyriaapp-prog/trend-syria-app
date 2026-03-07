@@ -59,6 +59,43 @@ async def get_ad_prices():
         return settings["prices"]
     return DEFAULT_AD_PRICES
 
+# الإعلانات النشطة للعرض على الصفحة الرئيسية
+@router.get("/active")
+async def get_active_ads():
+    """جلب البانرات والإعلانات النشطة للصفحة الرئيسية"""
+    now = datetime.now()
+    
+    # جلب البانرات النشطة
+    banners = await db.homepage_banners.find({
+        "is_active": True,
+        "$or": [
+            {"end_date": None},
+            {"end_date": {"$gte": now.isoformat()}}
+        ]
+    }, {"_id": 0}).sort("order", 1).to_list(10)
+    
+    # إذا لم يكن هناك بانرات، جلب إعلانات المنتجات النشطة
+    if not banners:
+        product_ads = await db.ads.find({
+            "status": "active",
+            "ad_type": "banner",
+            "end_date": {"$gte": now}
+        }, {"_id": 0}).to_list(5)
+        
+        for ad in product_ads:
+            product = await db.products.find_one({"id": ad.get("product_id")}, {"_id": 0})
+            if product:
+                banners.append({
+                    "id": ad["id"],
+                    "title": product.get("name", ""),
+                    "description": f"خصم {ad.get('discount', 0)}%" if ad.get('discount') else "",
+                    "image": product.get("images", [None])[0],
+                    "link": f"/product/{product['id']}",
+                    "background_color": "#FF6B00"
+                })
+    
+    return banners
+
 # إنشاء إعلان جديد
 @router.post("/create")
 async def create_ad(
