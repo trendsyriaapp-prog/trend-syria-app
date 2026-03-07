@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   ShoppingBag, Plus, Minus, Trash2, MapPin, Phone, 
-  CreditCard, Wallet, Clock, ArrowLeft, Store, AlertTriangle
+  CreditCard, Wallet, Clock, ArrowLeft, Store, AlertTriangle,
+  Ticket, Check, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -27,6 +28,12 @@ const FoodCartPage = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [offers, setOffers] = useState([]);
   const [appliedOffer, setAppliedOffer] = useState(null);
+  
+  // حالة الكوبون
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
   
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: user?.address || '',
@@ -89,13 +96,17 @@ const FoodCartPage = () => {
   const offerDiscount = offerResult.discount;
   const activeOffer = offerResult.offer;
   
+  // خصم الكوبون
+  const couponDiscount = appliedCoupon?.discount || 0;
+  const isCouponFreeDelivery = appliedCoupon?.coupon?.is_free_delivery || false;
+  
   const storeDeliveryFee = store?.delivery_fee || 5000;
   const freeDeliveryMin = store?.free_delivery_minimum || 0;
-  const finalSubtotal = subtotal - offerDiscount;
-  const isFreeDelivery = freeDeliveryMin > 0 && finalSubtotal >= freeDeliveryMin;
+  const finalSubtotal = subtotal - offerDiscount - couponDiscount;
+  const isFreeDelivery = isCouponFreeDelivery || (freeDeliveryMin > 0 && (subtotal - offerDiscount) >= freeDeliveryMin);
   const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
   const total = finalSubtotal + deliveryFee;
-  const remainingForFree = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - finalSubtotal) : 0;
+  const remainingForFree = freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - (subtotal - offerDiscount)) : 0;
 
   useEffect(() => {
     if (storeId) {
@@ -130,6 +141,43 @@ const FoodCartPage = () => {
     } catch (error) {
       console.error('Error fetching wallet:', error);
     }
+  };
+
+  // التحقق من كوبون الخصم
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('أدخل كود الكوبون');
+      return;
+    }
+    
+    setCouponLoading(true);
+    setCouponError('');
+    
+    try {
+      const res = await axios.post(`${API}/coupons/validate`, {
+        code: couponCode.toUpperCase(),
+        order_amount: subtotal - offerDiscount,
+        order_type: 'food',
+        store_id: storeId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setAppliedCoupon(res.data);
+      toast({ title: "تم!", description: res.data.message });
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || 'كوبون غير صالح';
+      setCouponError(errorMsg);
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
   };
 
   const loadCart = () => {
@@ -451,6 +499,73 @@ const FoodCartPage = () => {
             </div>
           </div>
         )}
+
+        {/* Coupon Section */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-3">
+            <Ticket size={18} className="text-purple-600" />
+            كوبون الخصم
+          </h2>
+          
+          {appliedCoupon ? (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <Check size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-purple-900">{appliedCoupon.coupon.code}</p>
+                    <p className="text-sm text-purple-600">
+                      {appliedCoupon.coupon.is_free_delivery 
+                        ? 'توصيل مجاني' 
+                        : `وفرت ${appliedCoupon.discount.toLocaleString()} ل.س`
+                      }
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={removeCoupon}
+                  className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => {
+                  setCouponCode(e.target.value.toUpperCase());
+                  setCouponError('');
+                }}
+                placeholder="أدخل كود الكوبون"
+                data-testid="coupon-input"
+                className={`flex-1 border rounded-xl px-4 py-2 font-mono uppercase ${
+                  couponError ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                }`}
+              />
+              <button
+                onClick={validateCoupon}
+                disabled={couponLoading || !couponCode.trim()}
+                data-testid="coupon-apply-btn"
+                className="px-4 py-2 bg-purple-500 text-white rounded-xl font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                {couponLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  'تطبيق'
+                )}
+              </button>
+            </div>
+          )}
+          
+          {couponError && (
+            <p className="text-sm text-red-500 mt-2">{couponError}</p>
+          )}
+        </div>
       </div>
 
       {/* Bottom Summary */}
@@ -473,6 +588,17 @@ const FoodCartPage = () => {
               </div>
             )}
             
+            {/* Coupon Discount */}
+            {couponDiscount > 0 && appliedCoupon && (
+              <div className="flex justify-between text-sm">
+                <span className="text-purple-600 flex items-center gap-1">
+                  <Ticket size={14} />
+                  كوبون {appliedCoupon.coupon.code}
+                </span>
+                <span className="text-purple-600 font-medium">-{couponDiscount.toLocaleString()} ل.س</span>
+              </div>
+            )}
+            
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">رسوم التوصيل</span>
               {isFreeDelivery ? (
@@ -487,10 +613,10 @@ const FoodCartPage = () => {
             </div>
             
             {/* Savings Summary */}
-            {(offerDiscount > 0 || isFreeDelivery) && (
+            {(offerDiscount > 0 || couponDiscount > 0 || isFreeDelivery) && (
               <div className="bg-green-50 rounded-lg p-2 text-center">
                 <span className="text-sm text-green-700 font-medium">
-                  وفّرت {(offerDiscount + (isFreeDelivery ? storeDeliveryFee : 0)).toLocaleString()} ل.س في هذا الطلب! 🎉
+                  🎉 وفرت {(offerDiscount + couponDiscount + (isFreeDelivery ? storeDeliveryFee : 0)).toLocaleString()} ل.س في هذا الطلب!
                 </span>
               </div>
             )}

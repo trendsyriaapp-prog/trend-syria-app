@@ -45,6 +45,7 @@ from routes.achievements import router as achievements_router
 from routes.chatbot import router as chatbot_router
 from routes.food import router as food_router
 from routes.food_orders import router as food_orders_router
+from routes.coupons import router as coupons_router
 
 # Create FastAPI app
 app = FastAPI(title="تريند سورية API", description="API لمتجر تريند سورية الإلكتروني")
@@ -80,6 +81,7 @@ api_router.include_router(achievements_router)
 api_router.include_router(chatbot_router)
 api_router.include_router(food_router)
 api_router.include_router(food_orders_router)
+api_router.include_router(coupons_router)
 
 # ============== Categories ==============
 
