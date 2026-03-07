@@ -80,17 +80,25 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             detail=f"الحد الأدنى للطلب هو {store['minimum_order']:,.0f} ل.س"
         )
     
+    # حساب خصم العروض
+    from routes.food import calculate_offer_discount
+    offer_result = await calculate_offer_discount(order.store_id, order_items, subtotal)
+    offer_discount = offer_result["discount"]
+    offer_applied = offer_result["offer_applied"]
+    free_items = offer_result["free_items"]
+    
     # حساب رسوم التوصيل
     store_delivery_fee = store.get("delivery_fee", 5000)
     free_delivery_min = store.get("free_delivery_minimum", 0)
     
-    # توصيل مجاني إذا تجاوز المجموع الحد الأدنى
-    if free_delivery_min > 0 and subtotal >= free_delivery_min:
+    # توصيل مجاني إذا تجاوز المجموع الحد الأدنى (بعد الخصم)
+    final_subtotal = subtotal - offer_discount
+    if free_delivery_min > 0 and final_subtotal >= free_delivery_min:
         delivery_fee = 0
     else:
         delivery_fee = store_delivery_fee
     
-    total = subtotal + delivery_fee
+    total = final_subtotal + delivery_fee
     
     # التحقق من رصيد المحفظة إذا كان الدفع بالمحفظة
     if order.payment_method == "wallet":
@@ -131,6 +139,13 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "store_type": store["store_type"],
         "items": order_items,
         "subtotal": subtotal,
+        "offer_discount": offer_discount,
+        "offer_applied": {
+            "id": offer_applied["id"] if offer_applied else None,
+            "name": offer_applied["name"] if offer_applied else None,
+            "type": offer_applied["offer_type"] if offer_applied else None
+        } if offer_applied else None,
+        "free_items": free_items,
         "delivery_fee": delivery_fee,
         "total": total,
         "delivery_address": order.delivery_address,
@@ -151,6 +166,13 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     }
     
     await db.food_orders.insert_one(order_doc)
+    
+    # تحديث عداد استخدام العرض
+    if offer_applied:
+        await db.food_offers.update_one(
+            {"id": offer_applied["id"]},
+            {"$inc": {"usage_count": 1}}
+        )
     
     # تحديث عدد طلبات المتجر
     await db.food_stores.update_one(

@@ -21,6 +21,7 @@ const FoodStorePage = () => {
   const { toast } = useToast();
 
   const [store, setStore] = useState(null);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -32,8 +33,12 @@ const FoodStorePage = () => {
 
   const fetchStore = async () => {
     try {
-      const res = await axios.get(`${API}/food/stores/${storeId}`);
-      setStore(res.data);
+      const [storeRes, offersRes] = await Promise.all([
+        axios.get(`${API}/food/stores/${storeId}`),
+        axios.get(`${API}/food/stores/${storeId}/offers`)
+      ]);
+      setStore(storeRes.data);
+      setOffers(offersRes.data || []);
     } catch (error) {
       toast({ title: "خطأ", description: "المتجر غير موجود", variant: "destructive" });
       navigate('/food');
@@ -169,6 +174,36 @@ const FoodStorePage = () => {
           <p className="text-gray-600 text-sm mt-3">{store.description}</p>
         )}
       </div>
+
+      {/* Active Offers Banner */}
+      {offers.length > 0 && (
+        <div className="px-4 mb-4">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 text-white">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">🎁</span>
+              <h3 className="font-bold">عروض المتجر</h3>
+            </div>
+            <div className="space-y-2">
+              {offers.slice(0, 2).map((offer) => (
+                <div 
+                  key={offer.id}
+                  className="bg-white/20 rounded-lg px-3 py-2 text-sm"
+                >
+                  <span className="font-bold">{offer.name}</span>
+                  {offer.offer_type === 'buy_x_get_y' && (
+                    <span className="mr-1">
+                      - اشترِ {offer.buy_quantity} واحصل على {offer.get_quantity} مجاناً!
+                    </span>
+                  )}
+                  {offer.offer_type === 'percentage' && (
+                    <span className="mr-1">- خصم {offer.discount_percentage}%</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Products */}
       <div className="px-4">

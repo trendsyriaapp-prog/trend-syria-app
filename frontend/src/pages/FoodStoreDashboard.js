@@ -23,9 +23,11 @@ const FoodStoreDashboard = () => {
 
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showAddOffer, setShowAddOffer] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
@@ -41,6 +43,12 @@ const FoodStoreDashboard = () => {
       });
       setStore(res.data.store);
       setProducts(res.data.products || []);
+      
+      // جلب العروض
+      const offersRes = await axios.get(`${API}/food/my-offers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOffers(offersRes.data || []);
     } catch (error) {
       if (error.response?.status === 404) {
         // No store found
@@ -174,6 +182,7 @@ const FoodStoreDashboard = () => {
           {[
             { id: 'overview', label: 'نظرة عامة' },
             { id: 'products', label: 'المنتجات' },
+            { id: 'offers', label: 'العروض' },
             { id: 'orders', label: 'الطلبات' },
             { id: 'settings', label: 'الإعدادات' },
           ].map((tab) => (
@@ -187,6 +196,11 @@ const FoodStoreDashboard = () => {
               }`}
             >
               {tab.label}
+              {tab.id === 'offers' && offers.length > 0 && (
+                <span className="mr-1 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
+                  {offers.filter(o => o.is_active).length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -313,6 +327,18 @@ const FoodStoreDashboard = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Offers Tab */}
+        {activeTab === 'offers' && (
+          <OffersTab 
+            offers={offers} 
+            products={products}
+            token={token} 
+            onUpdate={fetchStoreData}
+            showAddOffer={showAddOffer}
+            setShowAddOffer={setShowAddOffer}
+          />
         )}
 
         {/* Orders Tab */}
@@ -474,6 +500,393 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         )}
         حفظ التغييرات
       </button>
+    </div>
+  );
+};
+
+// Offers Tab Component
+const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAddOffer }) => {
+  const { toast } = useToast();
+  const [editingOffer, setEditingOffer] = useState(null);
+
+  const handleToggleOffer = async (offer) => {
+    try {
+      await axios.put(`${API}/food/offers/${offer.id}`, 
+        { is_active: !offer.is_active },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast({ 
+        title: offer.is_active ? "تم تعطيل العرض" : "تم تفعيل العرض",
+        description: offer.is_active ? "لن يظهر العرض للعملاء" : "سيظهر العرض للعملاء الآن"
+      });
+      onUpdate();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تحديث العرض", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteOffer = async (offerId) => {
+    if (!window.confirm('هل تريد حذف هذا العرض؟')) return;
+    
+    try {
+      await axios.delete(`${API}/food/offers/${offerId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الحذف", description: "تم حذف العرض" });
+      onUpdate();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حذف العرض", variant: "destructive" });
+    }
+  };
+
+  const getOfferTypeLabel = (type) => {
+    switch (type) {
+      case 'buy_x_get_y': return 'اشترِ واحصل مجاناً';
+      case 'percentage': return 'خصم نسبة مئوية';
+      case 'fixed_discount': return 'خصم مبلغ ثابت';
+      default: return type;
+    }
+  };
+
+  const getOfferDescription = (offer) => {
+    switch (offer.offer_type) {
+      case 'buy_x_get_y':
+        return `اشترِ ${offer.buy_quantity} واحصل على ${offer.get_quantity} مجاناً`;
+      case 'percentage':
+        return `خصم ${offer.discount_percentage}%`;
+      case 'fixed_discount':
+        return `خصم ${offer.discount_amount?.toLocaleString()} ل.س`;
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <button
+        onClick={() => {
+          setEditingOffer(null);
+          setShowAddOffer(true);
+        }}
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90"
+      >
+        <Plus size={20} />
+        إنشاء عرض جديد
+      </button>
+
+      {/* Quick Offer Templates */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <span className="text-lg">🎁</span>
+          عروض سريعة
+        </h4>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => {
+              setEditingOffer({
+                name: 'اشترِ 2 واحصل على 1 مجاناً',
+                offer_type: 'buy_x_get_y',
+                buy_quantity: 2,
+                get_quantity: 1,
+                is_active: true
+              });
+              setShowAddOffer(true);
+            }}
+            className="bg-white rounded-lg p-3 text-sm text-right hover:shadow-md transition-shadow border border-purple-100"
+          >
+            <span className="block font-bold text-purple-600">2+1 مجاناً</span>
+            <span className="text-xs text-gray-500">اشترِ 2 واحصل على الثالث</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingOffer({
+                name: 'اشترِ 3 واحصل على 1 مجاناً',
+                offer_type: 'buy_x_get_y',
+                buy_quantity: 3,
+                get_quantity: 1,
+                is_active: true
+              });
+              setShowAddOffer(true);
+            }}
+            className="bg-white rounded-lg p-3 text-sm text-right hover:shadow-md transition-shadow border border-purple-100"
+          >
+            <span className="block font-bold text-purple-600">3+1 مجاناً</span>
+            <span className="text-xs text-gray-500">اشترِ 3 واحصل على الرابع</span>
+          </button>
+        </div>
+      </div>
+
+      {offers.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+          <span className="text-5xl mb-3 block">🎉</span>
+          <p className="text-gray-600 mb-2">لم تقم بإنشاء أي عروض بعد</p>
+          <p className="text-sm text-gray-400">العروض تزيد المبيعات بنسبة 30% في المتوسط!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {offers.map((offer) => (
+            <motion.div
+              key={offer.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`bg-white rounded-xl p-4 border-2 ${
+                offer.is_active ? 'border-green-200' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h4 className="font-bold text-gray-900">{offer.name}</h4>
+                  <p className="text-sm text-purple-600">{getOfferDescription(offer)}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  offer.is_active 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {offer.is_active ? 'نشط' : 'معطل'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                <span className="bg-gray-100 px-2 py-1 rounded">
+                  {getOfferTypeLabel(offer.offer_type)}
+                </span>
+                <span>استُخدم {offer.usage_count || 0} مرة</span>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleToggleOffer(offer)}
+                  className={`flex-1 py-2 rounded-lg font-medium text-sm ${
+                    offer.is_active
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                >
+                  {offer.is_active ? 'تعطيل' : 'تفعيل'}
+                </button>
+                <button
+                  onClick={() => handleDeleteOffer(offer.id)}
+                  className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit Offer Modal */}
+      {showAddOffer && (
+        <OfferModal
+          offer={editingOffer}
+          products={products}
+          token={token}
+          onClose={() => {
+            setShowAddOffer(false);
+            setEditingOffer(null);
+          }}
+          onSave={() => {
+            setShowAddOffer(false);
+            setEditingOffer(null);
+            onUpdate();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Offer Modal Component
+const OfferModal = ({ offer, products, token, onClose, onSave }) => {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: offer?.name || '',
+    offer_type: offer?.offer_type || 'buy_x_get_y',
+    buy_quantity: offer?.buy_quantity || 2,
+    get_quantity: offer?.get_quantity || 1,
+    discount_percentage: offer?.discount_percentage || '',
+    discount_amount: offer?.discount_amount || '',
+    min_order_amount: offer?.min_order_amount || '',
+    applicable_products: offer?.applicable_products || [],
+    is_active: offer?.is_active !== false,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name) {
+      toast({ title: "تنبيه", description: "يرجى إدخال اسم العرض", variant: "destructive" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.post(`${API}/food/offers`, {
+        ...formData,
+        buy_quantity: parseInt(formData.buy_quantity),
+        get_quantity: parseInt(formData.get_quantity),
+        discount_percentage: formData.discount_percentage ? parseFloat(formData.discount_percentage) : null,
+        discount_amount: formData.discount_amount ? parseFloat(formData.discount_amount) : null,
+        min_order_amount: formData.min_order_amount ? parseFloat(formData.min_order_amount) : null,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الإنشاء", description: "تم إنشاء العرض بنجاح" });
+      onSave();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل إنشاء العرض", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        className="bg-white rounded-t-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      >
+        <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+          <h3 className="font-bold text-lg">
+            {offer?.id ? 'تعديل العرض' : 'عرض جديد'}
+          </h3>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">اسم العرض *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="مثال: عرض نهاية الأسبوع"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">نوع العرض</label>
+            <select
+              value={formData.offer_type}
+              onChange={(e) => setFormData({ ...formData, offer_type: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            >
+              <option value="buy_x_get_y">اشترِ X واحصل على Y مجاناً</option>
+              <option value="percentage">خصم نسبة مئوية</option>
+              <option value="fixed_discount">خصم مبلغ ثابت</option>
+            </select>
+          </div>
+
+          {formData.offer_type === 'buy_x_get_y' && (
+            <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اشترِ (كمية)</label>
+                  <input
+                    type="number"
+                    value={formData.buy_quantity}
+                    onChange={(e) => setFormData({ ...formData, buy_quantity: e.target.value })}
+                    min="1"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">احصل مجاناً</label>
+                  <input
+                    type="number"
+                    value={formData.get_quantity}
+                    onChange={(e) => setFormData({ ...formData, get_quantity: e.target.value })}
+                    min="1"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-purple-700 font-medium">
+                مثال: اشترِ {formData.buy_quantity} من أي منتج واحصل على {formData.get_quantity} مجاناً
+              </p>
+            </div>
+          )}
+
+          {formData.offer_type === 'percentage' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">نسبة الخصم (%)</label>
+              <input
+                type="number"
+                value={formData.discount_percentage}
+                onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
+                min="1"
+                max="100"
+                placeholder="مثال: 20"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              />
+            </div>
+          )}
+
+          {formData.offer_type === 'fixed_discount' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">مبلغ الخصم (ل.س)</label>
+              <input
+                type="number"
+                value={formData.discount_amount}
+                onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value })}
+                min="0"
+                step="1000"
+                placeholder="مثال: 5000"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">الحد الأدنى للطلب (اختياري)</label>
+            <input
+              type="number"
+              value={formData.min_order_amount}
+              onChange={(e) => setFormData({ ...formData, min_order_amount: e.target.value })}
+              min="0"
+              step="5000"
+              placeholder="اتركه فارغاً لتطبيق العرض على جميع الطلبات"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <input
+              type="checkbox"
+              id="is_active"
+              checked={formData.is_active}
+              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              className="w-5 h-5 rounded"
+            />
+            <label htmlFor="is_active" className="text-sm text-gray-700">
+              تفعيل العرض فوراً
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Check size={20} />
+                إنشاء العرض
+              </>
+            )}
+          </button>
+        </form>
+      </motion.div>
     </div>
   );
 };

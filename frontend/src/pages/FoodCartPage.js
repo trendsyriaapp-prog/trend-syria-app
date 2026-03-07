@@ -25,6 +25,8 @@ const FoodCartPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [offers, setOffers] = useState([]);
+  const [appliedOffer, setAppliedOffer] = useState(null);
   
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: user?.address || '',
@@ -34,14 +36,66 @@ const FoodCartPage = () => {
     payment_method: 'wallet'
   });
 
-  // حساب رسوم التوصيل
+  // حساب رسوم التوصيل والعروض
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  // حساب خصم العرض (للعروض اشترِ X واحصل على Y)
+  const calculateOfferDiscount = () => {
+    if (!offers.length || !cartItems.length) return { discount: 0, offer: null };
+    
+    let bestDiscount = 0;
+    let bestOffer = null;
+    
+    for (const offer of offers) {
+      if (!offer.is_active) continue;
+      if (offer.min_order_amount && subtotal < offer.min_order_amount) continue;
+      
+      let discount = 0;
+      
+      if (offer.offer_type === 'buy_x_get_y') {
+        const buyQty = offer.buy_quantity;
+        const getQty = offer.get_quantity;
+        
+        // ترتيب حسب السعر (الأرخص مجاني)
+        const sortedItems = [...cartItems].sort((a, b) => a.price - b.price);
+        const totalQty = sortedItems.reduce((sum, item) => sum + item.quantity, 0);
+        const sets = Math.floor(totalQty / (buyQty + getQty));
+        
+        if (sets > 0) {
+          let freeCount = sets * getQty;
+          for (const item of sortedItems) {
+            if (freeCount <= 0) break;
+            const freeFromItem = Math.min(item.quantity, freeCount);
+            discount += item.price * freeFromItem;
+            freeCount -= freeFromItem;
+          }
+        }
+      } else if (offer.offer_type === 'percentage' && offer.discount_percentage) {
+        discount = subtotal * (offer.discount_percentage / 100);
+      } else if (offer.offer_type === 'fixed_discount' && offer.discount_amount) {
+        discount = Math.min(offer.discount_amount, subtotal);
+      }
+      
+      if (discount > bestDiscount) {
+        bestDiscount = discount;
+        bestOffer = offer;
+      }
+    }
+    
+    return { discount: bestDiscount, offer: bestOffer };
+  };
+  
+  const offerResult = calculateOfferDiscount();
+  const offerDiscount = offerResult.discount;
+  const activeOffer = offerResult.offer;
+  
   const storeDeliveryFee = store?.delivery_fee || 5000;
   const freeDeliveryMin = store?.free_delivery_minimum || 0;
-  const isFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
+  const finalSubtotal = subtotal - offerDiscount;
+  const isFreeDelivery = freeDeliveryMin > 0 && finalSubtotal >= freeDeliveryMin;
   const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
-  const total = subtotal + deliveryFee;
-  const remainingForFree = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - subtotal) : 0;
+  const total = finalSubtotal + deliveryFee;
+  const remainingForFree = freeDeliveryMin > 0 ? Math.max(0, freeDeliveryMin - finalSubtotal) : 0;
 
   useEffect(() => {
     if (storeId) {
@@ -53,8 +107,12 @@ const FoodCartPage = () => {
 
   const fetchStore = async () => {
     try {
-      const res = await axios.get(`${API}/food/stores/${storeId}`);
-      setStore(res.data);
+      const [storeRes, offersRes] = await Promise.all([
+        axios.get(`${API}/food/stores/${storeId}`),
+        axios.get(`${API}/food/stores/${storeId}/offers`)
+      ]);
+      setStore(storeRes.data);
+      setOffers(offersRes.data || []);
     } catch (error) {
       toast({ title: "خطأ", description: "المتجر غير موجود", variant: "destructive" });
       navigate('/food');
@@ -403,6 +461,18 @@ const FoodCartPage = () => {
               <span className="text-gray-600">المجموع الفرعي</span>
               <span className="text-gray-900">{subtotal.toLocaleString()} ل.س</span>
             </div>
+            
+            {/* Offer Discount */}
+            {offerDiscount > 0 && activeOffer && (
+              <div className="flex justify-between text-sm">
+                <span className="text-purple-600 flex items-center gap-1">
+                  <span>🎁</span>
+                  {activeOffer.name}
+                </span>
+                <span className="text-purple-600 font-medium">-{offerDiscount.toLocaleString()} ل.س</span>
+              </div>
+            )}
+            
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">رسوم التوصيل</span>
               {isFreeDelivery ? (
@@ -415,6 +485,15 @@ const FoodCartPage = () => {
               <span className="text-gray-900">الإجمالي</span>
               <span className="text-green-600">{total.toLocaleString()} ل.س</span>
             </div>
+            
+            {/* Savings Summary */}
+            {(offerDiscount > 0 || isFreeDelivery) && (
+              <div className="bg-green-50 rounded-lg p-2 text-center">
+                <span className="text-sm text-green-700 font-medium">
+                  وفّرت {(offerDiscount + (isFreeDelivery ? storeDeliveryFee : 0)).toLocaleString()} ل.س في هذا الطلب! 🎉
+                </span>
+              </div>
+            )}
           </div>
           
           <button
