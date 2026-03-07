@@ -24,8 +24,6 @@ const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [ads, setAds] = useState([]);
-  const [flashSales, setFlashSales] = useState([]);
-  const [flashProducts, setFlashProducts] = useState([]);
   const [shopFlashProducts, setShopFlashProducts] = useState([]);
   const [shopFlashSale, setShopFlashSale] = useState(null);
   const [sponsoredProducts, setSponsoredProducts] = useState([]);
@@ -61,64 +59,23 @@ const HomePage = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, flashRes, shopFlashRes, sponsoredRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes] = await Promise.all([
         axios.get(`${API}/products/featured`),
         axios.get(`${API}/categories`),
         axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
-        axios.get(`${API}/food/flash-sales/active`).catch(() => ({ data: [] })),
         axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
         axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] }))
       ]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
       setAds(adsRes.data || []);
-      setFlashSales(flashRes.data || []);
       setShopFlashProducts(shopFlashRes.data?.products || []);
       setShopFlashSale(shopFlashRes.data?.flash_sale || null);
       setSponsoredProducts(sponsoredRes.data || []);
-      
-      // جلب منتجات الطعام للفلاش إذا كان هناك عرض فلاش نشط
-      if (flashRes.data?.length > 0) {
-        fetchFlashProducts(flashRes.data);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchFlashProducts = async (sales) => {
-    try {
-      // جلب منتجات الفلاش المحددة
-      const productSales = sales.filter(s => s.flash_type === 'products' && s.applicable_products?.length > 0);
-      const allSales = sales.filter(s => s.flash_type === 'all' || !s.flash_type);
-      
-      let productsToShow = [];
-      
-      // إذا كان هناك عروض على منتجات محددة
-      if (productSales.length > 0) {
-        const productIds = productSales.flatMap(s => s.applicable_products);
-        const res = await axios.get(`${API}/food/products`);
-        productsToShow = res.data.filter(p => productIds.includes(p.id)).map(p => ({
-          ...p,
-          flash_discount: productSales.find(s => s.applicable_products.includes(p.id))?.discount_percentage || 0
-        }));
-      }
-      
-      // إذا كان هناك عروض على جميع المنتجات
-      if (allSales.length > 0 && productsToShow.length < 10) {
-        const res = await axios.get(`${API}/food/products?limit=10`);
-        const allFlashProducts = res.data.slice(0, 10 - productsToShow.length).map(p => ({
-          ...p,
-          flash_discount: allSales[0]?.discount_percentage || 0
-        }));
-        productsToShow = [...productsToShow, ...allFlashProducts];
-      }
-      
-      setFlashProducts(productsToShow);
-    } catch (error) {
-      console.error('Error fetching flash products:', error);
     }
   };
 
@@ -286,84 +243,6 @@ const HomePage = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Flash Sale Products - Food */}
-      {flashSales.length > 0 && flashProducts.length > 0 && (
-        <section className="py-3">
-          <div className="max-w-7xl mx-auto px-4">
-            {/* Flash Sale Header with Countdown */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                  <UtensilsCrossed size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">فلاش الطعام</h2>
-                  <p className="text-xs text-gray-500">{flashSales[0]?.name}</p>
-                </div>
-              </div>
-              <FlashCountdown endTime={flashSales[0]?.end_time} color="green" />
-            </div>
-            
-            {/* Flash Products Horizontal Scroll */}
-            <div className="relative">
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {flashProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
-                    <Link to={`/food/store/${product.store_id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
-                        <div className="relative aspect-square bg-gray-100">
-                          {product.images?.[0] ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <UtensilsCrossed size={32} className="text-gray-300" />
-                            </div>
-                          )}
-                          {/* Discount Badge */}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
-                            -{product.flash_discount}%
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
-                          <p className="text-xs text-gray-500 truncate">{product.store_name}</p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-green-600 font-bold text-sm">
-                              {Math.round(product.price * (1 - product.flash_discount / 100)).toLocaleString()}
-                            </span>
-                            <span className="text-gray-400 text-xs line-through">
-                              {product.price?.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-              
-              {/* View All Arrow */}
-              <Link 
-                to="/food"
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-green-50 transition-colors"
-              >
-                <ChevronLeft size={20} className="text-green-500" />
-              </Link>
             </div>
           </div>
         </section>
