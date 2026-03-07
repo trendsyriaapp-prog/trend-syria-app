@@ -14,6 +14,41 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
+# ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============
+
+async def send_offer_notification_to_all_users(title: str, message: str, offer_type: str, offer_data: dict = None):
+    """إرسال إشعار عرض لجميع المستخدمين"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب جميع المستخدمين (عملاء)
+    users = await db.users.find(
+        {"user_type": {"$in": ["customer", "seller"]}},
+        {"_id": 0, "id": 1}
+    ).to_list(10000)
+    
+    if not users:
+        return 0
+    
+    # إنشاء الإشعارات
+    notifications = []
+    for u in users:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": u["id"],
+            "title": title,
+            "message": message,
+            "type": offer_type,
+            "data": offer_data or {},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # إدراج الإشعارات دفعة واحدة
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return len(notifications)
+
 # ============== Commission Constants ==============
 
 DEFAULT_CATEGORY_COMMISSIONS = {
@@ -1242,6 +1277,16 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
     
     await db.flash_sales.insert_one(sale_doc)
     del sale_doc["_id"]
+    
+    # إرسال إشعار لجميع المستخدمين إذا طلب ذلك
+    if sale_data.get("send_notification", False):
+        discount = int(sale_doc["discount_percentage"])
+        await send_offer_notification_to_all_users(
+            title=f"⚡ {sale_doc['name']}",
+            message=f"{sale_doc.get('description', 'عرض فلاش لفترة محدودة!')} - خصم {discount}%",
+            offer_type="flash_sale",
+            offer_data={"flash_sale_id": sale_id}
+        )
     
     return sale_doc
 
