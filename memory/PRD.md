@@ -582,6 +582,14 @@
 
 ## التحديثات الأخيرة (مارس 2026)
 
+### تكامل خرائط Google لموظفي التوصيل (7 مارس 2026)
+- ✅ زر "فتح في خرائط Google" في:
+  - `/app/frontend/src/components/delivery/MyOrdersList.js` - طلبات موظف التوصيل
+  - `/app/frontend/src/components/delivery/AvailableOrdersList.js` - الطلبات المتاحة
+  - `/app/frontend/src/pages/FoodOrderTracking.js` - صفحة تتبع الطلب
+- ✅ يفتح تطبيق Google Maps مباشرة مع عنوان العميل
+- ✅ يعمل على Android و iOS بدون API Key
+
 ### نظام إشعارات العروض للمستخدمين (7 مارس 2026)
 - ✅ دالة موحدة `send_offer_notification_to_all_users()` في `/app/backend/routes/admin.py`
 - ✅ إشعارات **صفقات اليوم** - إرسال إشعار عند إنشاء صفقة جديدة

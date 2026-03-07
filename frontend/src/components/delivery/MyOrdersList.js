@@ -1,7 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
+
+// فتح العنوان في خرائط Google
+const openInGoogleMaps = (address, city) => {
+  const fullAddress = `${address}, ${city}, سوريا`;
+  const encodedAddress = encodeURIComponent(fullAddress);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  window.open(mapsUrl, '_blank');
+};
 
 const MyOrdersList = ({ 
   orders, 
@@ -74,6 +82,16 @@ const MyOrdersList = ({
                   <Phone size={12} />
                   اتصال: {order.phone}
                 </a>
+                
+                {/* زر فتح في خرائط Google */}
+                <button
+                  onClick={() => openInGoogleMaps(order.address, order.city)}
+                  className="w-full mt-2 bg-green-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
+                  data-testid={`open-maps-${order.id}`}
+                >
+                  <Map size={14} />
+                  فتح في خرائط Google
+                </button>
                 
                 {/* ملاحظة العميل */}
                 {order.delivery_note && (

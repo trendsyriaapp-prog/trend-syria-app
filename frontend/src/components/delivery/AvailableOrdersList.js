@@ -1,6 +1,14 @@
 import { motion } from 'framer-motion';
-import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag } from 'lucide-react';
+import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
+
+// فتح العنوان في خرائط Google
+const openInGoogleMaps = (address, city) => {
+  const fullAddress = `${address}, ${city}, سوريا`;
+  const encodedAddress = encodeURIComponent(fullAddress);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  window.open(mapsUrl, '_blank');
+};
 
 const AvailableOrdersList = ({ orders, isWorkingHours, onTakeOrder, onTakeFoodOrder }) => {
   if (orders.length === 0) {
@@ -87,6 +95,17 @@ const AvailableOrdersList = ({ orders, isWorkingHours, onTakeOrder, onTakeFoodOr
                       <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-blue-600">
                         <Phone size={10} /> {order.buyer_address?.phone}
                       </a>
+                      {/* زر فتح في خرائط Google */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
+                        }}
+                        className="w-full mt-2 bg-blue-500 text-white py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                      >
+                        <Map size={12} />
+                        فتح في خرائط Google
+                      </button>
                     </div>
                   </div>
 
@@ -166,6 +185,17 @@ const AvailableOrdersList = ({ orders, isWorkingHours, onTakeOrder, onTakeFoodOr
                       <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-blue-600">
                         <Phone size={10} /> {order.buyer_address?.phone}
                       </a>
+                      {/* زر فتح في خرائط Google */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
+                        }}
+                        className="w-full mt-2 bg-blue-500 text-white py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                      >
+                        <Map size={12} />
+                        فتح في خرائط Google
+                      </button>
                     </div>
                   </div>
 

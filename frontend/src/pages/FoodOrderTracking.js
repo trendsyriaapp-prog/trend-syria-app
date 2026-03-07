@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Package, Clock, Check, Truck, MapPin, Phone, Store,
-  ArrowLeft, X, ChefHat, CheckCircle2, Star
+  ArrowLeft, X, ChefHat, CheckCircle2, Star, Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -244,6 +244,19 @@ const FoodOrderTracking = () => {
             <Phone size={16} />
             <span>{order.delivery_phone}</span>
           </div>
+          {/* زر فتح في خرائط Google */}
+          <button
+            onClick={() => {
+              const fullAddress = `${order.delivery_address}, ${order.delivery_city}, سوريا`;
+              const encodedAddress = encodeURIComponent(fullAddress);
+              window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+            }}
+            className="w-full bg-green-500 text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+            data-testid="open-maps-btn"
+          >
+            <Map size={16} />
+            فتح في خرائط Google
+          </button>
         </div>
 
         {/* Driver Info */}
