@@ -77,6 +77,21 @@ async def get_active_flash_sales():
     
     return sales
 
+@router.get("/banners")
+async def get_food_banners():
+    """جلب البانرات الخاصة بقسم الطعام"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    banners = await db.food_banners.find({
+        "is_active": True,
+        "$or": [
+            {"end_date": None},
+            {"end_date": {"$gte": now}}
+        ]
+    }, {"_id": 0}).sort("order", 1).to_list(10)
+    
+    return banners
+
 @router.get("/stores")
 async def get_food_stores(
     category: Optional[str] = None,

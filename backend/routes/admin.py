@@ -1121,9 +1121,12 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
         "discount_percentage": float(sale_data["discount_percentage"]),
         "start_time": sale_data["start_time"],
         "end_time": sale_data["end_time"],
-        "applicable_categories": sale_data.get("applicable_categories", []),  # فارغ = جميع الفئات
+        "sale_scope": sale_data.get("sale_scope", "all"),  # all, food_only, shop_only
+        "applicable_categories": sale_data.get("applicable_categories", []),  # فئات الطعام
+        "applicable_shop_categories": sale_data.get("applicable_shop_categories", []),  # فئات المتجر
         "applicable_stores": sale_data.get("applicable_stores", []),  # فارغ = جميع المتاجر
-        "applicable_products": sale_data.get("applicable_products", []),  # منتجات معينة (جديد)
+        "applicable_products": sale_data.get("applicable_products", []),  # منتجات طعام
+        "applicable_shop_products": sale_data.get("applicable_shop_products", []),  # منتجات متجر
         "flash_type": sale_data.get("flash_type", "all"),  # all, categories, products
         "is_active": sale_data.get("is_active", True),
         "banner_image": sale_data.get("banner_image", ""),
@@ -1251,6 +1254,79 @@ async def delete_homepage_banner(banner_id: str, user: dict = Depends(get_curren
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
     result = await db.homepage_banners.delete_one({"id": banner_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="البانر غير موجود")
+    
+    return {"message": "تم حذف البانر"}
+
+
+# ============== بانرات قسم الطعام ==============
+
+@router.get("/food-banners")
+async def get_all_food_banners(user: dict = Depends(get_current_user)):
+    """جلب جميع بانرات الطعام للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    banners = await db.food_banners.find({}, {"_id": 0}).sort("order", 1).to_list(50)
+    return banners
+
+@router.post("/food-banners")
+async def create_food_banner(banner_data: dict, user: dict = Depends(get_current_user)):
+    """إنشاء بانر جديد لقسم الطعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    banner_id = str(uuid.uuid4())
+    banner_doc = {
+        "id": banner_id,
+        "title": banner_data.get("title", ""),
+        "description": banner_data.get("description", ""),
+        "image": banner_data.get("image", ""),
+        "link": banner_data.get("link", "/food"),
+        "background_color": banner_data.get("background_color", "#22C55E"),
+        "text_color": banner_data.get("text_color", "#FFFFFF"),
+        "category": banner_data.get("category"),  # restaurants, groceries, vegetables
+        "order": banner_data.get("order", 0),
+        "is_active": banner_data.get("is_active", True),
+        "start_date": banner_data.get("start_date"),
+        "end_date": banner_data.get("end_date"),
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.food_banners.insert_one(banner_doc)
+    del banner_doc["_id"]
+    
+    return banner_doc
+
+@router.put("/food-banners/{banner_id}")
+async def update_food_banner(banner_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث بانر طعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    allowed_fields = ["title", "description", "image", "link", "background_color", 
+                     "text_color", "category", "order", "is_active", "start_date", "end_date"]
+    
+    update = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.food_banners.update_one({"id": banner_id}, {"$set": update})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="البانر غير موجود")
+    
+    return {"message": "تم تحديث البانر"}
+
+@router.delete("/food-banners/{banner_id}")
+async def delete_food_banner(banner_id: str, user: dict = Depends(get_current_user)):
+    """حذف بانر طعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    result = await db.food_banners.delete_one({"id": banner_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="البانر غير موجود")

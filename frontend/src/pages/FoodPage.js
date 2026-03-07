@@ -27,6 +27,8 @@ const FoodPage = () => {
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
   const [flashSales, setFlashSales] = useState([]);
+  const [foodBanners, setFoodBanners] = useState([]);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -34,23 +36,36 @@ const FoodPage = () => {
     fetchData();
   }, [activeCategory]);
 
+  // Auto-rotate banners
+  useEffect(() => {
+    if (foodBanners.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentBannerIndex((prev) => (prev + 1) % foodBanners.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [foodBanners.length]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      // جلب المتاجر والمنتجات الغذائية وعروض الفلاش
-      const [storesRes, productsRes, flashRes] = await Promise.all([
+      // جلب المتاجر والمنتجات الغذائية وعروض الفلاش والبانرات
+      const [storesRes, productsRes, flashRes, bannersRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
         axios.get(`${API}/food/products`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
-        axios.get(`${API}/food/flash-sales/active`)
+        axios.get(`${API}/food/flash-sales/active`),
+        axios.get(`${API}/food/banners`).catch(() => ({ data: [] }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
       setFlashSales(flashRes.data || []);
+      setFoodBanners(bannersRes.data || []);
     } catch (error) {
       console.error('Error fetching food data:', error);
       setStores([]);
       setProducts([]);
       setFlashSales([]);
+      setFoodBanners([]);
     } finally {
       setLoading(false);
     }
@@ -118,10 +133,64 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
+            {/* Food Banners Carousel */}
+            {foodBanners.length > 0 && (
+              <section className="mb-4">
+                <div className="relative overflow-hidden rounded-2xl">
+                  <motion.div
+                    key={currentBannerIndex}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Link to={foodBanners[currentBannerIndex]?.link || '/food'}>
+                      <div 
+                        className="relative h-32 md:h-40 rounded-2xl overflow-hidden"
+                        style={{ backgroundColor: foodBanners[currentBannerIndex]?.background_color || '#22C55E' }}
+                      >
+                        {foodBanners[currentBannerIndex]?.image ? (
+                          <img 
+                            src={foodBanners[currentBannerIndex].image} 
+                            alt={foodBanners[currentBannerIndex].title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center p-4">
+                            <div className="text-center text-white">
+                              <h3 className="text-xl md:text-2xl font-bold mb-1">{foodBanners[currentBannerIndex]?.title}</h3>
+                              {foodBanners[currentBannerIndex]?.description && (
+                                <p className="text-sm opacity-90">{foodBanners[currentBannerIndex].description}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  </motion.div>
+                  
+                  {/* Dots indicator */}
+                  {foodBanners.length > 1 && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {foodBanners.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentBannerIndex(i)}
+                          className={`w-2 h-2 rounded-full transition-all ${
+                            i === currentBannerIndex ? 'bg-white w-4' : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* Flash Sales Banner */}
             {flashSales.length > 0 && (
-              <section className="mb-6">
-                {flashSales.map((flash) => (
+              <section className="mb-4">
+                {flashSales.slice(0, 1).map((flash) => (
                   <FlashSaleBanner key={flash.id} flash={flash} />
                 ))}
               </section>

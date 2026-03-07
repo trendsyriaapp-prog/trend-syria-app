@@ -26,6 +26,9 @@ const HomePage = () => {
   const [ads, setAds] = useState([]);
   const [flashSales, setFlashSales] = useState([]);
   const [flashProducts, setFlashProducts] = useState([]);
+  const [shopFlashProducts, setShopFlashProducts] = useState([]);
+  const [shopFlashSale, setShopFlashSale] = useState(null);
+  const [sponsoredProducts, setSponsoredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const location = useLocation();
@@ -58,18 +61,23 @@ const HomePage = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, flashRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, flashRes, shopFlashRes, sponsoredRes] = await Promise.all([
         axios.get(`${API}/products/featured`),
         axios.get(`${API}/categories`),
         axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
-        axios.get(`${API}/food/flash-sales/active`).catch(() => ({ data: [] }))
+        axios.get(`${API}/food/flash-sales/active`).catch(() => ({ data: [] })),
+        axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
+        axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] }))
       ]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
       setAds(adsRes.data || []);
       setFlashSales(flashRes.data || []);
+      setShopFlashProducts(shopFlashRes.data?.products || []);
+      setShopFlashSale(shopFlashRes.data?.flash_sale || null);
+      setSponsoredProducts(sponsoredRes.data || []);
       
-      // جلب منتجات الفلاش إذا كان هناك عرض فلاش نشط
+      // جلب منتجات الطعام للفلاش إذا كان هناك عرض فلاش نشط
       if (flashRes.data?.length > 0) {
         fetchFlashProducts(flashRes.data);
       }
@@ -283,22 +291,22 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Flash Sale Products */}
+      {/* Flash Sale Products - Food */}
       {flashSales.length > 0 && flashProducts.length > 0 && (
         <section className="py-3">
           <div className="max-w-7xl mx-auto px-4">
             {/* Flash Sale Header with Countdown */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                  <Zap size={16} className="text-white" />
+                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                  <UtensilsCrossed size={16} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">عروض فلاش</h2>
+                  <h2 className="text-base font-bold text-gray-900">فلاش الطعام</h2>
                   <p className="text-xs text-gray-500">{flashSales[0]?.name}</p>
                 </div>
               </div>
-              <FlashCountdown endTime={flashSales[0]?.end_time} />
+              <FlashCountdown endTime={flashSales[0]?.end_time} color="green" />
             </div>
             
             {/* Flash Products Horizontal Scroll */}
@@ -313,7 +321,7 @@ const HomePage = () => {
                     className="flex-shrink-0 w-36"
                   >
                     <Link to={`/food/store/${product.store_id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
                             <img 
@@ -327,7 +335,7 @@ const HomePage = () => {
                             </div>
                           )}
                           {/* Discount Badge */}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
                             -{product.flash_discount}%
                           </div>
                         </div>
@@ -335,7 +343,7 @@ const HomePage = () => {
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
                           <p className="text-xs text-gray-500 truncate">{product.store_name}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-orange-600 font-bold text-sm">
+                            <span className="text-green-600 font-bold text-sm">
                               {Math.round(product.price * (1 - product.flash_discount / 100)).toLocaleString()}
                             </span>
                             <span className="text-gray-400 text-xs line-through">
@@ -352,10 +360,158 @@ const HomePage = () => {
               {/* View All Arrow */}
               <Link 
                 to="/food"
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-green-50 transition-colors"
+              >
+                <ChevronLeft size={20} className="text-green-500" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Flash Sale Products - Shop */}
+      {shopFlashProducts.length > 0 && shopFlashSale && (
+        <section className="py-3">
+          <div className="max-w-7xl mx-auto px-4">
+            {/* Flash Sale Header with Countdown */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                  <Zap size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">عروض فلاش</h2>
+                  <p className="text-xs text-gray-500">{shopFlashSale.name}</p>
+                </div>
+              </div>
+              <FlashCountdown endTime={shopFlashSale.end_time} color="orange" />
+            </div>
+            
+            {/* Flash Products Horizontal Scroll */}
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {shopFlashProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/product/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* Discount Badge */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            -{product.flash_discount}%
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-orange-600 font-bold text-sm">
+                              {product.flash_price?.toLocaleString()}
+                            </span>
+                            <span className="text-gray-400 text-xs line-through">
+                              {product.price?.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* View All Arrow */}
+              <Link 
+                to="/products"
                 className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-orange-50 transition-colors"
               >
                 <ChevronLeft size={20} className="text-orange-500" />
               </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Sponsored Products - المنتجات المُعلن عنها */}
+      {sponsoredProducts.length > 0 && (
+        <section className="py-3">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                  <Star size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">منتجات مُعلن عنها</h2>
+                  <p className="text-xs text-gray-500">إعلانات مميزة</p>
+                </div>
+              </div>
+              <Link 
+                to="/products"
+                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={16} />
+              </Link>
+            </div>
+            
+            {/* Sponsored Products Horizontal Scroll */}
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {sponsoredProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/product/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* Sponsored Badge */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            إعلان
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-purple-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -457,7 +613,7 @@ const HomePage = () => {
 };
 
 // Flash Countdown Component
-const FlashCountdown = ({ endTime }) => {
+const FlashCountdown = ({ endTime, color = 'orange' }) => {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -480,8 +636,14 @@ const FlashCountdown = ({ endTime }) => {
     return () => clearInterval(timer);
   }, [endTime]);
 
+  const gradients = {
+    orange: 'from-orange-500 to-red-500',
+    green: 'from-green-500 to-emerald-500',
+    purple: 'from-purple-500 to-pink-500'
+  };
+
   return (
-    <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-lg">
+    <div className={`flex items-center gap-1 bg-gradient-to-r ${gradients[color]} text-white px-2 py-1 rounded-lg`}>
       <span className="text-xs">ينتهي خلال</span>
       <div className="flex gap-0.5 font-mono font-bold text-sm">
         <span className="bg-white/20 px-1 rounded">{String(timeLeft.hours).padStart(2, '0')}</span>
