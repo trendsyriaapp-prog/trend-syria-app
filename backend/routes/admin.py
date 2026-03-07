@@ -994,3 +994,185 @@ async def update_food_commissions(
     )
     
     return {"message": "تم تحديث العمولات بنجاح", "commissions": commissions}
+
+
+# ============== إدارة عروض الطعام ==============
+
+@router.get("/food-offers")
+async def get_all_food_offers(
+    status: str = None,  # all, active, inactive, pending
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع عروض الطعام للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    query = {}
+    if status == "active":
+        query["is_active"] = True
+    elif status == "inactive":
+        query["is_active"] = False
+    elif status == "pending":
+        query["admin_approved"] = False
+    
+    offers = await db.food_offers.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    
+    # إضافة معلومات المتجر
+    for offer in offers:
+        store = await db.food_stores.find_one({"id": offer.get("store_id")}, {"_id": 0, "name": 1, "owner_name": 1})
+        if store:
+            offer["store_name"] = store.get("name", "")
+            offer["owner_name"] = store.get("owner_name", "")
+    
+    return offers
+
+@router.put("/food-offers/{offer_id}/approve")
+async def approve_food_offer(offer_id: str, user: dict = Depends(get_current_user)):
+    """موافقة المدير على عرض"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.food_offers.update_one(
+        {"id": offer_id},
+        {"$set": {"admin_approved": True, "approved_by": user["id"], "approved_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    return {"message": "تمت الموافقة على العرض"}
+
+@router.put("/food-offers/{offer_id}/reject")
+async def reject_food_offer(offer_id: str, reason: str = "", user: dict = Depends(get_current_user)):
+    """رفض المدير لعرض"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.food_offers.update_one(
+        {"id": offer_id},
+        {"$set": {
+            "is_active": False, 
+            "admin_rejected": True, 
+            "rejection_reason": reason,
+            "rejected_by": user["id"], 
+            "rejected_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    return {"message": "تم رفض العرض"}
+
+@router.put("/food-offers/{offer_id}")
+async def admin_update_food_offer(offer_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تعديل المدير لعرض (تغيير الكميات، التفعيل/التعطيل)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    offer = await db.food_offers.find_one({"id": offer_id})
+    if not offer:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    allowed_fields = ["name", "is_active", "buy_quantity", "get_quantity", 
+                     "discount_percentage", "discount_amount", "min_order_amount",
+                     "start_date", "end_date"]
+    
+    update = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update["updated_by_admin"] = user["id"]
+    update["admin_updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    if update:
+        await db.food_offers.update_one({"id": offer_id}, {"$set": update})
+    
+    return {"message": "تم تحديث العرض"}
+
+@router.delete("/food-offers/{offer_id}")
+async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_current_user)):
+    """حذف المدير لعرض"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.food_offers.delete_one({"id": offer_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    return {"message": "تم حذف العرض"}
+
+# ============== عروض الفلاش (Flash Sales) ==============
+
+@router.post("/flash-sales")
+async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_user)):
+    """إنشاء عرض فلاش محدود الوقت - للمدير فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    required = ["name", "discount_percentage", "start_time", "end_time"]
+    for field in required:
+        if field not in sale_data:
+            raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+    
+    sale_id = str(uuid.uuid4())
+    sale_doc = {
+        "id": sale_id,
+        "name": sale_data["name"],
+        "description": sale_data.get("description", ""),
+        "discount_percentage": float(sale_data["discount_percentage"]),
+        "start_time": sale_data["start_time"],
+        "end_time": sale_data["end_time"],
+        "applicable_categories": sale_data.get("applicable_categories", []),  # فارغ = جميع الفئات
+        "applicable_stores": sale_data.get("applicable_stores", []),  # فارغ = جميع المتاجر
+        "is_active": sale_data.get("is_active", True),
+        "banner_image": sale_data.get("banner_image", ""),
+        "banner_color": sale_data.get("banner_color", "#FF4500"),
+        "usage_count": 0,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.flash_sales.insert_one(sale_doc)
+    del sale_doc["_id"]
+    
+    return sale_doc
+
+@router.get("/flash-sales")
+async def get_all_flash_sales(user: dict = Depends(get_current_user)):
+    """جلب جميع عروض الفلاش - للمدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    sales = await db.flash_sales.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return sales
+
+@router.put("/flash-sales/{sale_id}")
+async def update_flash_sale(sale_id: str, update_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث عرض فلاش"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    allowed_fields = ["name", "description", "discount_percentage", "start_time", "end_time",
+                     "applicable_categories", "applicable_stores", "is_active", "banner_image", "banner_color"]
+    
+    update = {k: v for k, v in update_data.items() if k in allowed_fields}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.flash_sales.update_one({"id": sale_id}, {"$set": update})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    return {"message": "تم تحديث عرض الفلاش"}
+
+@router.delete("/flash-sales/{sale_id}")
+async def delete_flash_sale(sale_id: str, user: dict = Depends(get_current_user)):
+    """حذف عرض فلاش"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    result = await db.flash_sales.delete_one({"id": sale_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="العرض غير موجود")
+    
+    return {"message": "تم حذف عرض الفلاش"}

@@ -26,6 +26,7 @@ const FoodPage = () => {
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
+  const [flashSales, setFlashSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -36,17 +37,20 @@ const FoodPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // جلب المتاجر والمنتجات الغذائية
-      const [storesRes, productsRes] = await Promise.all([
+      // جلب المتاجر والمنتجات الغذائية وعروض الفلاش
+      const [storesRes, productsRes, flashRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
-        axios.get(`${API}/food/products`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } })
+        axios.get(`${API}/food/products`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
+        axios.get(`${API}/food/flash-sales/active`)
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
+      setFlashSales(flashRes.data || []);
     } catch (error) {
       console.error('Error fetching food data:', error);
       setStores([]);
       setProducts([]);
+      setFlashSales([]);
     } finally {
       setLoading(false);
     }
@@ -114,6 +118,15 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
+            {/* Flash Sales Banner */}
+            {flashSales.length > 0 && (
+              <section className="mb-6">
+                {flashSales.map((flash) => (
+                  <FlashSaleBanner key={flash.id} flash={flash} />
+                ))}
+              </section>
+            )}
+
             {/* Stores Section */}
             {stores.length > 0 && (
               <section className="mb-6">
@@ -216,6 +229,94 @@ const EmptyState = ({ category }) => {
         انضم كمتجر طعام
       </Link>
     </div>
+  );
+};
+
+// Flash Sale Banner with Countdown
+const FlashSaleBanner = ({ flash }) => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const endTime = new Date(flash.end_time).getTime();
+      const now = new Date().getTime();
+      const difference = endTime - now;
+
+      if (difference <= 0) {
+        setIsExpired(true);
+        return;
+      }
+
+      setTimeLeft({
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [flash.end_time]);
+
+  if (isExpired) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl overflow-hidden shadow-lg mb-4"
+      style={{ backgroundColor: flash.banner_color || '#FF4500' }}
+    >
+      <div className="px-4 py-4 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl animate-pulse">⚡</span>
+              <h3 className="text-xl font-bold">{flash.name}</h3>
+            </div>
+            {flash.description && (
+              <p className="text-white/90 text-sm">{flash.description}</p>
+            )}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="bg-white text-orange-600 px-3 py-1 rounded-full font-bold text-lg">
+                {flash.discount_percentage}% خصم
+              </span>
+              <span className="text-white/80 text-sm">
+                على {!flash.applicable_categories?.length ? 'جميع الأصناف' : 
+                  flash.applicable_categories.map(c => 
+                    c === 'restaurants' ? 'المطاعم' : 
+                    c === 'groceries' ? 'المواد الغذائية' : 'الخضروات'
+                  ).join(' و ')}
+              </span>
+            </div>
+          </div>
+
+          {/* Countdown Timer */}
+          <div className="text-center">
+            <p className="text-white/80 text-xs mb-1">ينتهي خلال</p>
+            <div className="flex gap-1">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
+                <span className="text-2xl font-bold block">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="text-[10px] text-white/70">ساعة</span>
+              </div>
+              <span className="text-2xl font-bold self-center">:</span>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
+                <span className="text-2xl font-bold block">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="text-[10px] text-white/70">دقيقة</span>
+              </div>
+              <span className="text-2xl font-bold self-center">:</span>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
+                <span className="text-2xl font-bold block">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="text-[10px] text-white/70">ثانية</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

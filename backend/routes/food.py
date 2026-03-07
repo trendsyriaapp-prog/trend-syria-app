@@ -64,6 +64,19 @@ class FoodOfferCreate(BaseModel):
 # المتاجر
 # ===============================
 
+@router.get("/flash-sales/active")
+async def get_active_flash_sales():
+    """جلب عروض الفلاش النشطة حالياً - للعملاء"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    sales = await db.flash_sales.find({
+        "is_active": True,
+        "start_time": {"$lte": now},
+        "end_time": {"$gte": now}
+    }, {"_id": 0}).to_list(10)
+    
+    return sales
+
 @router.get("/stores")
 async def get_food_stores(
     category: Optional[str] = None,

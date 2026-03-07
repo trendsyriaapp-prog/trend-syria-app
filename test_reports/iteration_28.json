@@ -1,0 +1,124 @@
+{
+  "summary": "Completed testing of Admin Food Offers Management & Flash Sales System. Backend: 18/18 tests passed (100%). Frontend: All components verified working via screenshots - Food Offers Tab, Flash Sales Tab, FlashSaleBanner with countdown timer on /food page.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: GET /api/admin/food-offers - Returns all food offers with store info",
+    "✅ Backend: GET /api/admin/food-offers?status=active - Filter active offers",
+    "✅ Backend: GET /api/admin/food-offers?status=inactive - Filter inactive offers",
+    "✅ Backend: PUT /api/admin/food-offers/{id} - Admin update offer status",
+    "✅ Backend: PUT /api/admin/food-offers/{id} - Admin update offer quantities",
+    "✅ Backend: DELETE /api/admin/food-offers/{id} - Admin delete offer",
+    "✅ Backend: Buyer cannot access admin/food-offers (403)",
+    "✅ Backend: POST /api/admin/flash-sales - Admin create flash sale",
+    "✅ Backend: GET /api/admin/flash-sales - Admin view all flash sales",
+    "✅ Backend: PUT /api/admin/flash-sales/{id} - Admin update flash sale",
+    "✅ Backend: PUT /api/admin/flash-sales/{id} - Admin toggle flash sale status",
+    "✅ Backend: Seller cannot create flash sales (403)",
+    "✅ Backend: Buyer cannot access admin/flash-sales (403)",
+    "✅ Backend: GET /api/food/flash-sales/active - Returns only active flash sales",
+    "✅ Backend: Flash sale response structure has required fields for frontend",
+    "✅ Frontend: /food page shows FlashSaleBanner with countdown timer",
+    "✅ Frontend: Flash banner shows '⚡ عرض الافتتاح - خصم 25%'",
+    "✅ Frontend: Countdown timer displays hours:minutes:seconds",
+    "✅ Frontend: Admin Panel shows 'عروض الفلاش' button with gradient",
+    "✅ Frontend: FoodOffersTab has two tabs: 'عروض المتاجر' and 'عروض الفلاش'",
+    "✅ Frontend: Store offers tab shows offers with toggle/delete actions",
+    "✅ Frontend: Flash sales tab shows 'إنشاء عرض فلاش جديد' button",
+    "✅ Frontend: Flash sales tab shows existing flash sale with 'نشط الآن!' badge",
+    "✅ Frontend: Flash sale shows edit/toggle/delete action buttons"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_admin_food_offers_flash_sales.py",
+    "/app/test_reports/pytest/admin_food_offers_flash_sales_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "admin.py: GET /api/admin/food-offers properly enriches offers with store_name and owner_name",
+    "admin.py: PUT /api/admin/food-offers/{id} allows admin to update offer status, quantities, dates",
+    "admin.py: POST/PUT/GET/DELETE /api/admin/flash-sales properly handles flash sale CRUD",
+    "food.py: GET /api/food/flash-sales/active correctly filters by is_active=True, start_time<=now<=end_time",
+    "food_orders.py: create_food_order correctly applies flash_discount in addition to offer_discount",
+    "FoodOffersTab.js: Proper tab navigation between Store Offers and Flash Sales sections",
+    "FoodOffersTab.js: FlashSaleModal with form for name, discount%, start/end time, categories, banner color",
+    "FoodPage.js: FlashSaleBanner component with useState/useEffect for countdown timer",
+    "AdminPage.js: food-offers tab button properly styled with gradient and data-testid"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_admin_food_offers_flash_sales.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "100% - All components verified"
+  },
+
+  "test_credentials": {
+    "admin": {"phone": "0911111111", "password": "admin123", "status": "working"},
+    "seller": {"phone": "0922222222", "password": "seller123", "status": "working"},
+    "buyer": {"phone": "0933333333", "password": "user123", "status": "working"}
+  },
+
+  "seed_data_creation": "Created and cleaned up TEST_ prefixed flash sales during testing. Existing flash sale 'عرض الافتتاح - خصم 25%' active for ~6 hours.",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Admin Food Offers & Flash Sales system fully tested. Features: 1) Admin can view/update/delete any store offer via /api/admin/food-offers, 2) Admin can CRUD flash sales via /api/admin/flash-sales, 3) Customers see active flash sales via /api/food/flash-sales/active, 4) FoodPage.js shows FlashSaleBanner with live countdown timer, 5) AdminPage.js has 'عروض الفلاش' tab with FoodOffersTab component, 6) Flash discount is added on top of regular offer discount in food orders. Mocked: Payment gateway (Sham Cash) - /api/payment/verify-otp",
+
+  "features_tested": {
+    "backend_api_endpoints": {
+      "GET /api/admin/food-offers": "Admin view all food offers - supports ?status=active|inactive|pending filter",
+      "PUT /api/admin/food-offers/{id}": "Admin update offer (is_active, quantities, dates) - returns 'تم تحديث العرض'",
+      "DELETE /api/admin/food-offers/{id}": "Admin delete offer - returns 'تم حذف العرض'",
+      "POST /api/admin/flash-sales": "Admin create flash sale with name, discount_percentage, start/end_time, categories",
+      "GET /api/admin/flash-sales": "Admin view all flash sales sorted by created_at desc",
+      "PUT /api/admin/flash-sales/{id}": "Admin update flash sale details and is_active status",
+      "DELETE /api/admin/flash-sales/{id}": "Admin delete flash sale",
+      "GET /api/food/flash-sales/active": "Public - returns only currently active flash sales for customer display"
+    },
+    "frontend_components": {
+      "FoodPage.js": {
+        "FlashSaleBanner": "Orange/red gradient banner with countdown timer (hours:minutes:seconds)",
+        "Countdown timer": "useEffect with setInterval updating every second until end_time"
+      },
+      "FoodOffersTab.js": {
+        "Section tabs": "'عروض المتاجر' and 'عروض الفلاش' toggle buttons",
+        "Store offers list": "Shows offers with name, store, type badge, toggle/delete buttons",
+        "Flash sales list": "Shows flash sales with discount %, date range, 'نشط الآن!' badge",
+        "FlashSaleModal": "Form for creating/editing flash sales with all fields"
+      },
+      "AdminPage.js": {
+        "food-offers tab button": "Orange gradient button with megaphone icon"
+      }
+    },
+    "flash_discount_calculation": {
+      "location": "food_orders.py create_food_order()",
+      "logic": "flash_discount = (subtotal - offer_discount) * (flash.discount_percentage / 100)",
+      "stacking": "Flash discount is ADDED to regular offer discount, not replaced"
+    },
+    "test_data": {
+      "active_flash_sale": "عرض الافتتاح - خصم 25% (active for ~6 hours)",
+      "existing_store_offer": "عرض اشتر 2 واحصل على 1 مجاناً from مطعم الشام الأصيل"
+    }
+  },
+
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["/api/payment/verify-otp"]
+  }
+}

@@ -87,12 +87,47 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     offer_applied = offer_result["offer_applied"]
     free_items = offer_result["free_items"]
     
+    # حساب خصم عروض الفلاش (Flash Sales)
+    flash_discount = 0
+    flash_sale_applied = None
+    now = datetime.now(timezone.utc).isoformat()
+    
+    active_flash = await db.flash_sales.find_one({
+        "is_active": True,
+        "start_time": {"$lte": now},
+        "end_time": {"$gte": now},
+        "$or": [
+            {"applicable_stores": []},
+            {"applicable_stores": order.store_id}
+        ]
+    }, {"_id": 0})
+    
+    if active_flash:
+        # التحقق من الفئات المشمولة
+        apply_flash = False
+        if not active_flash.get("applicable_categories"):
+            apply_flash = True  # جميع الفئات
+        elif store.get("store_type") in active_flash.get("applicable_categories", []):
+            apply_flash = True
+        
+        if apply_flash:
+            flash_discount = (subtotal - offer_discount) * (active_flash["discount_percentage"] / 100)
+            flash_sale_applied = active_flash
+            # تحديث عداد الاستخدام
+            await db.flash_sales.update_one(
+                {"id": active_flash["id"]},
+                {"$inc": {"usage_count": 1}}
+            )
+    
+    # المجموع النهائي بعد جميع الخصومات
+    total_discount = offer_discount + flash_discount
+    
     # حساب رسوم التوصيل
     store_delivery_fee = store.get("delivery_fee", 5000)
     free_delivery_min = store.get("free_delivery_minimum", 0)
     
     # توصيل مجاني إذا تجاوز المجموع الحد الأدنى (بعد الخصم)
-    final_subtotal = subtotal - offer_discount
+    final_subtotal = subtotal - total_discount
     if free_delivery_min > 0 and final_subtotal >= free_delivery_min:
         delivery_fee = 0
     else:
@@ -145,6 +180,13 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             "name": offer_applied["name"] if offer_applied else None,
             "type": offer_applied["offer_type"] if offer_applied else None
         } if offer_applied else None,
+        "flash_discount": flash_discount,
+        "flash_sale_applied": {
+            "id": flash_sale_applied["id"] if flash_sale_applied else None,
+            "name": flash_sale_applied["name"] if flash_sale_applied else None,
+            "percentage": flash_sale_applied["discount_percentage"] if flash_sale_applied else None
+        } if flash_sale_applied else None,
+        "total_discount": total_discount,
         "free_items": free_items,
         "delivery_fee": delivery_fee,
         "total": total,

@@ -34,6 +34,7 @@ import DeliverySettingsTab from '../components/admin/DeliverySettingsTab';
 import SupportTicketsTab from '../components/admin/SupportTicketsTab';
 import DriverReportsTab from '../components/admin/DriverReportsTab';
 import FoodStoresTab from '../components/admin/FoodStoresTab';
+import FoodOffersTab from '../components/admin/FoodOffersTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -283,7 +284,8 @@ const AdminDashboardPage = () => {
     'delivery-settings': 'إعدادات التوصيل',
     'support-tickets': 'تذاكر الدعم الفني',
     'driver-reports': 'البلاغات الأخلاقية',
-    'food-stores': 'متاجر الطعام'
+    'food-stores': 'متاجر الطعام',
+    'food-offers': 'عروض الطعام والفلاش'
   };
 
   return (
@@ -388,6 +390,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'food-stores' && (
               <FoodStoresTab />
+            )}
+            {activeTab === 'food-offers' && user.user_type === 'admin' && (
+              <FoodOffersTab token={localStorage.getItem('token')} />
             )}
           </>
         ) : (
@@ -564,6 +569,18 @@ const AdminDashboardPage = () => {
                       <UtensilsCrossed size={16} className="text-green-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">متاجر الطعام</span>
+                  </button>
+
+                  {/* عروض الطعام والفلاش */}
+                  <button
+                    onClick={() => setActiveTab('food-offers')}
+                    className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-3 border border-orange-200 hover:border-orange-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="food-offers-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                      <Megaphone size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">عروض الفلاش</span>
                   </button>
                 </>
               )}
