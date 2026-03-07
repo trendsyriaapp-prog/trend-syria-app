@@ -35,6 +35,7 @@ import SupportTicketsTab from '../components/admin/SupportTicketsTab';
 import DriverReportsTab from '../components/admin/DriverReportsTab';
 import FoodStoresTab from '../components/admin/FoodStoresTab';
 import FoodOffersTab from '../components/admin/FoodOffersTab';
+import BannersTab from '../components/admin/BannersTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -285,7 +286,8 @@ const AdminDashboardPage = () => {
     'support-tickets': 'تذاكر الدعم الفني',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
-    'food-offers': 'عروض الطعام والفلاش'
+    'food-offers': 'عروض الفلاش',
+    'banners': 'إدارة البانرات'
   };
 
   return (
@@ -393,6 +395,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'food-offers' && user.user_type === 'admin' && (
               <FoodOffersTab token={localStorage.getItem('token')} />
+            )}
+            {activeTab === 'banners' && user.user_type === 'admin' && (
+              <BannersTab token={localStorage.getItem('token')} />
             )}
           </>
         ) : (
@@ -571,7 +576,7 @@ const AdminDashboardPage = () => {
                     <span className="text-xs font-bold text-gray-700">متاجر الطعام</span>
                   </button>
 
-                  {/* عروض الطعام والفلاش */}
+                  {/* عروض الفلاش */}
                   <button
                     onClick={() => setActiveTab('food-offers')}
                     className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-3 border border-orange-200 hover:border-orange-500 hover:shadow-lg transition-all flex items-center gap-2.5"
@@ -581,6 +586,18 @@ const AdminDashboardPage = () => {
                       <Megaphone size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">عروض الفلاش</span>
+                  </button>
+
+                  {/* إدارة البانرات */}
+                  <button
+                    onClick={() => setActiveTab('banners')}
+                    className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-3 border border-blue-200 hover:border-blue-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="banners-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <Megaphone size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">البانرات الإعلانية</span>
                   </button>
                 </>
               )}

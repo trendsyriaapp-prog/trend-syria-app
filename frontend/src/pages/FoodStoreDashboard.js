@@ -183,6 +183,7 @@ const FoodStoreDashboard = () => {
             { id: 'overview', label: 'نظرة عامة' },
             { id: 'products', label: 'المنتجات' },
             { id: 'offers', label: 'العروض' },
+            { id: 'flash', label: 'الفلاش' },
             { id: 'orders', label: 'الطلبات' },
             { id: 'settings', label: 'الإعدادات' },
           ].map((tab) => (
@@ -191,7 +192,7 @@ const FoodStoreDashboard = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
-                  ? 'bg-green-500 text-white'
+                  ? tab.id === 'flash' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' : 'bg-green-500 text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -338,6 +339,15 @@ const FoodStoreDashboard = () => {
             onUpdate={fetchStoreData}
             showAddOffer={showAddOffer}
             setShowAddOffer={setShowAddOffer}
+          />
+        )}
+
+        {/* Flash Sales Tab */}
+        {activeTab === 'flash' && (
+          <FlashSalesTab 
+            store={store}
+            products={products}
+            token={token}
           />
         )}
 
@@ -1265,6 +1275,365 @@ const StoreOrdersTab = ({ token }) => {
           })}
         </div>
       )}
+    </div>
+  );
+};
+
+// Flash Sales Tab Component - طلب الانضمام لعروض الفلاش
+const FlashSalesTab = ({ store, products, token }) => {
+  const { toast } = useToast();
+  const [flashSales, setFlashSales] = useState([]);
+  const [myRequests, setMyRequests] = useState([]);
+  const [settings, setSettings] = useState({ join_fee: 5000 });
+  const [loading, setLoading] = useState(true);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [selectedFlashSale, setSelectedFlashSale] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+  }, [token]);
+
+  const fetchData = async () => {
+    try {
+      const [salesRes, requestsRes, settingsRes] = await Promise.all([
+        axios.get(`${API}/food/flash-sales/available`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/food/my-flash-requests`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/food/flash-sale-settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      
+      setFlashSales(salesRes.data || []);
+      setMyRequests(requestsRes.data || []);
+      setSettings(settingsRes.data || { join_fee: 5000 });
+    } catch (error) {
+      console.error('Error fetching flash data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelRequest = async (requestId) => {
+    if (!window.confirm('هل تريد إلغاء هذا الطلب؟ سيتم استرداد الرسوم.')) return;
+    
+    try {
+      const res = await axios.delete(`${API}/food/flash-sale-request/${requestId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: "تم الإلغاء", 
+        description: `تم استرداد ${res.data.refunded?.toLocaleString() || 0} ل.س` 
+      });
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل الإلغاء", variant: "destructive" });
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      approved: 'bg-green-100 text-green-700',
+      rejected: 'bg-red-100 text-red-700'
+    };
+    const labels = {
+      pending: 'قيد المراجعة',
+      approved: 'تمت الموافقة',
+      rejected: 'مرفوض'
+    };
+    return { style: styles[status] || styles.pending, label: labels[status] || status };
+  };
+
+  const formatDateTime = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleString('ar-SY', { 
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Info Card */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-4 text-white">
+        <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+          <span className="text-2xl">⚡</span>
+          انضم لعروض الفلاش
+        </h3>
+        <p className="text-sm opacity-90 mb-3">
+          شارك منتجاتك في عروض الفلاش لزيادة المبيعات! رسوم الانضمام {settings.join_fee?.toLocaleString()} ل.س لكل منتج.
+        </p>
+        <div className="flex items-center gap-2 text-xs bg-white/20 rounded-lg px-3 py-2">
+          <span>💡</span>
+          <span>يتم خصم الرسوم من محفظتك تلقائياً عند الطلب</span>
+        </div>
+      </div>
+
+      {/* Available Flash Sales */}
+      <div>
+        <h4 className="font-bold text-gray-900 mb-3">عروض الفلاش المتاحة</h4>
+        {flashSales.length === 0 ? (
+          <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
+            <p className="text-gray-500">لا توجد عروض فلاش متاحة حالياً</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {flashSales.map((sale) => (
+              <motion.div
+                key={sale.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl p-4 border-2 border-orange-200"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h5 className="font-bold text-gray-900">{sale.name}</h5>
+                    <p className="text-sm text-orange-600">خصم {sale.discount_percentage}%</p>
+                  </div>
+                  <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full">
+                    نشط
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                  <span>🕐 يبدأ: {formatDateTime(sale.start_time)}</span>
+                  <span>⏰ ينتهي: {formatDateTime(sale.end_time)}</span>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setSelectedFlashSale(sale);
+                    setShowJoinModal(true);
+                  }}
+                  className="w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:opacity-90"
+                >
+                  طلب الانضمام
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* My Requests */}
+      <div>
+        <h4 className="font-bold text-gray-900 mb-3">طلباتي السابقة</h4>
+        {myRequests.length === 0 ? (
+          <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
+            <p className="text-gray-500">لم تقدم أي طلبات بعد</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {myRequests.map((req) => {
+              const badge = getStatusBadge(req.status);
+              return (
+                <div key={req.id} className="bg-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h5 className="font-bold text-gray-900">{req.flash_sale?.name || 'عرض فلاش'}</h5>
+                      <p className="text-sm text-gray-500">{req.products_count} منتج</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs ${badge.style}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">الرسوم: {req.fee_paid?.toLocaleString()} ل.س</span>
+                    <span className="text-gray-400">{formatDateTime(req.created_at)}</span>
+                  </div>
+                  
+                  {req.status === 'pending' && (
+                    <button
+                      onClick={() => cancelRequest(req.id)}
+                      className="w-full mt-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+                    >
+                      إلغاء الطلب (استرداد الرسوم)
+                    </button>
+                  )}
+                  
+                  {req.status === 'rejected' && req.rejection_reason && (
+                    <div className="mt-2 p-2 bg-red-50 rounded-lg text-sm text-red-600">
+                      سبب الرفض: {req.rejection_reason}
+                      {req.refunded && <span className="block text-green-600 mt-1">✓ تم استرداد الرسوم</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Join Modal */}
+      {showJoinModal && selectedFlashSale && (
+        <JoinFlashSaleModal
+          flashSale={selectedFlashSale}
+          products={products}
+          settings={settings}
+          token={token}
+          onClose={() => {
+            setShowJoinModal(false);
+            setSelectedFlashSale(null);
+          }}
+          onSuccess={() => {
+            setShowJoinModal(false);
+            setSelectedFlashSale(null);
+            fetchData();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Join Flash Sale Modal
+const JoinFlashSaleModal = ({ flashSale, products, settings, token, onClose, onSuccess }) => {
+  const { toast } = useToast();
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const toggleProduct = (productId) => {
+    setSelectedProducts(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const totalFee = selectedProducts.length * (settings.join_fee || 5000);
+
+  const handleSubmit = async () => {
+    if (selectedProducts.length === 0) {
+      toast({ title: "تنبيه", description: "اختر منتجاً واحداً على الأقل", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/food/flash-sale-request`, {
+        flash_sale_id: flashSale.id,
+        product_ids: selectedProducts
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({ 
+        title: "تم الإرسال", 
+        description: `تم خصم ${totalFee.toLocaleString()} ل.س من محفظتك. طلبك قيد المراجعة.`
+      });
+      onSuccess();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل إرسال الطلب", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-lg">{flashSale.name}</h3>
+            <p className="text-sm opacity-90">خصم {flashSale.discount_percentage}%</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/20">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Products List */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <p className="text-sm text-gray-600 mb-4">
+            اختر المنتجات التي تريد إضافتها للعرض ({settings.join_fee?.toLocaleString()} ل.س / منتج)
+          </p>
+          
+          <div className="space-y-2">
+            {products.filter(p => p.is_available).map((product) => {
+              const isSelected = selectedProducts.includes(product.id);
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => toggleProduct(product.id)}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    isSelected ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    isSelected ? 'bg-orange-500 text-white' : 'bg-gray-200'
+                  }`}>
+                    {isSelected && <Check size={14} />}
+                  </div>
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    {product.images?.[0] ? (
+                      <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Package size={20} className="m-auto text-gray-400 mt-3" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-gray-900 truncate">{product.name}</h5>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-500 line-through">{product.price?.toLocaleString()}</span>
+                      <span className="text-orange-600 font-bold">
+                        {Math.round(product.price * (1 - flashSale.discount_percentage / 100)).toLocaleString()} ل.س
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-gray-600">المنتجات المختارة:</span>
+            <span className="font-bold text-gray-900">{selectedProducts.length}</span>
+          </div>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-gray-600">إجمالي الرسوم:</span>
+            <span className="font-bold text-orange-600 text-lg">{totalFee.toLocaleString()} ل.س</span>
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || selectedProducts.length === 0}
+            className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Check size={20} />
+                تأكيد وإرسال الطلب
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };

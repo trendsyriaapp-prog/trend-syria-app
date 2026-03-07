@@ -1,0 +1,72 @@
+{
+  "summary": "Tested Admin Banners Management (homepage + food banners) and Flash Sale Request System. All 21 backend API tests passed. Frontend UI tested for: Admin BannersTab, Homepage banners carousel, Food page banners, FoodStoreDashboard Flash tab.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Admin Flash Sale Requests UI",
+        "issue": "API /api/admin/flash-sale-requests exists but no UI component in FoodOffersTab to view/approve/reject seller flash sale join requests",
+        "affected_selectors": [],
+        "priority": "MEDIUM"
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_banners_flash_requests.py",
+    "/app/test_reports/pytest/banners_flash_requests_results.xml"
+  ],
+  "action_items": [
+    "Add UI component in admin FoodOffersTab to display/manage flash sale join requests (approve/reject)",
+    "The API /api/admin/flash-sale-requests returns requests and stats but there's no frontend to manage them"
+  ],
+  "critical_code_review_comments": [
+    "Missing admin UI for flash sale requests - API endpoint GET/PUT /api/admin/flash-sale-requests works but no React component to display seller requests for approval"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_banners_flash_requests.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "90% (Banners working, Flash tab working, Admin requests UI missing)"
+  },
+  "test_credentials": {
+    "admin": {"phone": "0911111111", "password": "admin123"},
+    "seller": {"phone": "0922222222", "password": "seller123"},
+    "buyer": {"phone": "0933333333", "password": "user123"}
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend APIs for banners and flash sale requests are all working. FoodStoreDashboard /food/dashboard has Flash tab where seller can request to join flash sales. Admin panel has BannersTab working for homepage and food banners. Missing: Admin UI for viewing/approving/rejecting flash sale join requests from sellers.",
+  "features_tested": {
+    "admin_banners_tab": {
+      "status": "PASS",
+      "details": "Homepage banners (2) and Food banners (2) visible, CRUD operations working via API"
+    },
+    "flash_sale_request_system": {
+      "status": "PASS",
+      "details": "Seller can see available flash sales in /food/dashboard Flash tab, can click 'طلب الانضمام' to join with product selection modal"
+    },
+    "admin_flash_requests": {
+      "status": "PARTIAL",
+      "details": "API /api/admin/flash-sale-requests works but NO UI in admin panel to view/approve/reject requests"
+    },
+    "wallet_integration": {
+      "status": "PASS (API)",
+      "details": "API shows fee info (5,000 ل.س per product), modal shows fee calculation"
+    },
+    "homepage_banners_carousel": {
+      "status": "PASS",
+      "details": "Homepage shows banners in carousel (Green 'منصة توصيل الطعام متاحة الآن!' banner visible)"
+    },
+    "food_page_banners": {
+      "status": "PASS",
+      "details": "Food page shows food banners and flash sale countdown banner"
+    }
+  }
+}

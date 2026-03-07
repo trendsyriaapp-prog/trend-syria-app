@@ -1332,3 +1332,222 @@ async def delete_food_banner(banner_id: str, user: dict = Depends(get_current_us
         raise HTTPException(status_code=404, detail="البانر غير موجود")
     
     return {"message": "تم حذف البانر"}
+
+
+# ============== طلبات البائعين للانضمام لعروض الفلاش ==============
+
+@router.get("/flash-sale-requests")
+async def get_flash_sale_requests(
+    status: str = None,  # pending, approved, rejected, all
+    user: dict = Depends(get_current_user)
+):
+    """جلب طلبات البائعين للانضمام لعروض الفلاش"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    
+    requests = await db.flash_sale_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    
+    # إضافة معلومات المتجر والمنتج
+    for req in requests:
+        store = await db.food_stores.find_one({"id": req.get("store_id")}, {"_id": 0, "name": 1, "owner_name": 1})
+        if store:
+            req["store_name"] = store.get("name", "")
+            req["owner_name"] = store.get("owner_name", "")
+        
+        # معلومات المنتجات المختارة
+        if req.get("product_ids"):
+            products = await db.food_products.find(
+                {"id": {"$in": req["product_ids"]}},
+                {"_id": 0, "id": 1, "name": 1, "price": 1}
+            ).to_list(None)
+            req["products"] = products
+        
+        # معلومات عرض الفلاش
+        flash_sale = await db.flash_sales.find_one({"id": req.get("flash_sale_id")}, {"_id": 0, "name": 1, "discount_percentage": 1})
+        if flash_sale:
+            req["flash_sale_name"] = flash_sale.get("name", "")
+            req["discount_percentage"] = flash_sale.get("discount_percentage", 0)
+    
+    # إحصائيات
+    stats = {
+        "pending": await db.flash_sale_requests.count_documents({"status": "pending"}),
+        "approved": await db.flash_sale_requests.count_documents({"status": "approved"}),
+        "rejected": await db.flash_sale_requests.count_documents({"status": "rejected"}),
+        "total": len(requests)
+    }
+    
+    return {"requests": requests, "stats": stats}
+
+@router.put("/flash-sale-requests/{request_id}/approve")
+async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+    """موافقة المدير على طلب انضمام لعرض فلاش"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    req = await db.flash_sale_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail="الطلب ليس في حالة انتظار")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الطلب
+    await db.flash_sale_requests.update_one(
+        {"id": request_id},
+        {
+            "$set": {
+                "status": "approved",
+                "approved_by": user["id"],
+                "approved_at": now
+            }
+        }
+    )
+    
+    # إضافة المنتجات لعرض الفلاش
+    flash_sale = await db.flash_sales.find_one({"id": req["flash_sale_id"]})
+    if flash_sale:
+        current_products = flash_sale.get("applicable_products", [])
+        new_products = list(set(current_products + req.get("product_ids", [])))
+        
+        await db.flash_sales.update_one(
+            {"id": req["flash_sale_id"]},
+            {
+                "$set": {
+                    "applicable_products": new_products,
+                    "flash_type": "products" if new_products else flash_sale.get("flash_type", "all")
+                }
+            }
+        )
+    
+    # إشعار صاحب المتجر
+    store = await db.food_stores.find_one({"id": req["store_id"]})
+    if store:
+        await create_notification_for_user(
+            user_id=store["owner_id"],
+            title="✅ تمت الموافقة على طلب الانضمام للفلاش",
+            message=f"تمت الموافقة على منتجاتك للانضمام لعرض الفلاش",
+            notification_type="flash_request_approved"
+        )
+    
+    return {"message": "تمت الموافقة على الطلب وإضافة المنتجات لعرض الفلاش"}
+
+@router.put("/flash-sale-requests/{request_id}/reject")
+async def reject_flash_sale_request(
+    request_id: str, 
+    reason: str = "لم يستوفِ الشروط",
+    refund: bool = True,
+    user: dict = Depends(get_current_user)
+):
+    """رفض طلب انضمام لعرض فلاش مع إمكانية استرداد الرسوم"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    req = await db.flash_sale_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail="الطلب ليس في حالة انتظار")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الطلب
+    await db.flash_sale_requests.update_one(
+        {"id": request_id},
+        {
+            "$set": {
+                "status": "rejected",
+                "rejection_reason": reason,
+                "rejected_by": user["id"],
+                "rejected_at": now,
+                "refunded": refund
+            }
+        }
+    )
+    
+    # استرداد الرسوم إذا تم الدفع
+    store = await db.food_stores.find_one({"id": req["store_id"]})
+    if store and refund and req.get("fee_paid", 0) > 0:
+        # استرداد للمحفظة
+        wallet = await db.wallets.find_one({"user_id": store["owner_id"]})
+        if wallet:
+            await db.wallets.update_one(
+                {"user_id": store["owner_id"]},
+                {"$inc": {"available_balance": req["fee_paid"]}}
+            )
+            
+            # تسجيل المعاملة
+            transaction = {
+                "id": str(uuid.uuid4()),
+                "wallet_id": wallet["id"],
+                "user_id": store["owner_id"],
+                "type": "refund",
+                "amount": req["fee_paid"],
+                "description": f"استرداد رسوم طلب الانضمام لعرض الفلاش - {reason}",
+                "created_at": now
+            }
+            await db.wallet_transactions.insert_one(transaction)
+    
+    # إشعار صاحب المتجر
+    if store:
+        message = f"تم رفض طلب الانضمام لعرض الفلاش. السبب: {reason}"
+        if refund and req.get("fee_paid", 0) > 0:
+            message += f"\n✅ تم استرداد الرسوم ({req['fee_paid']:,} ل.س) إلى محفظتك"
+        
+        await create_notification_for_user(
+            user_id=store["owner_id"],
+            title="❌ تم رفض طلب الانضمام للفلاش",
+            message=message,
+            notification_type="flash_request_rejected"
+        )
+    
+    return {"message": "تم رفض الطلب", "refunded": refund}
+
+
+# ============== إعدادات رسوم الفلاش ==============
+
+@router.get("/flash-sale-settings")
+async def get_flash_sale_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات رسوم الانضمام للفلاش"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
+    
+    if not settings:
+        # إعدادات افتراضية
+        settings = {
+            "id": "flash_sale",
+            "join_fee": 5000,  # رسوم الانضمام لكل منتج
+            "min_products": 1,
+            "max_products": 10,
+            "require_approval": True,
+            "allow_all_stores": True
+        }
+    
+    return settings
+
+@router.put("/flash-sale-settings")
+async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(get_current_user)):
+    """تحديث إعدادات رسوم الفلاش"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    allowed_fields = ["join_fee", "min_products", "max_products", "require_approval", "allow_all_stores"]
+    update = {k: v for k, v in settings_data.items() if k in allowed_fields}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update["updated_by"] = user["id"]
+    
+    await db.platform_settings.update_one(
+        {"id": "flash_sale"},
+        {"$set": update},
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث الإعدادات"}

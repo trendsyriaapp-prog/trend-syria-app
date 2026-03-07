@@ -577,3 +577,220 @@ async def calculate_offer_discount(store_id: str, items: list, subtotal: float) 
         "offer_applied": best_offer,
         "free_items": free_items
     }
+
+
+# ===============================
+# طلب الانضمام لعروض الفلاش
+# ===============================
+
+@router.get("/flash-sales/available")
+async def get_available_flash_sales(user: dict = Depends(get_current_user)):
+    """جلب عروض الفلاش المتاحة للانضمام"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب عروض الفلاش النشطة التي لم تنتهي
+    sales = await db.flash_sales.find({
+        "is_active": True,
+        "end_time": {"$gte": now}
+    }, {"_id": 0}).to_list(20)
+    
+    return sales
+
+@router.get("/flash-sale-settings")
+async def get_flash_settings_for_seller(user: dict = Depends(get_current_user)):
+    """جلب إعدادات رسوم الانضمام للفلاش"""
+    settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
+    
+    if not settings:
+        settings = {
+            "join_fee": 5000,
+            "min_products": 1,
+            "max_products": 10
+        }
+    
+    return settings
+
+@router.get("/my-flash-requests")
+async def get_my_flash_requests(user: dict = Depends(get_current_user)):
+    """جلب طلبات الانضمام للفلاش الخاصة بي"""
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="لا تمتلك متجراً")
+    
+    requests = await db.flash_sale_requests.find(
+        {"store_id": store["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # إضافة معلومات عرض الفلاش
+    for req in requests:
+        flash_sale = await db.flash_sales.find_one(
+            {"id": req.get("flash_sale_id")},
+            {"_id": 0, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
+        )
+        if flash_sale:
+            req["flash_sale"] = flash_sale
+        
+        # معلومات المنتجات
+        if req.get("product_ids"):
+            products = await db.food_products.find(
+                {"id": {"$in": req["product_ids"]}},
+                {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
+            ).to_list(None)
+            req["products"] = products
+    
+    return requests
+
+@router.post("/flash-sale-request")
+async def request_flash_sale_join(request_data: dict, user: dict = Depends(get_current_user)):
+    """طلب الانضمام لعرض فلاش"""
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=403, detail="يجب أن تمتلك متجراً")
+    
+    if not store.get("is_approved"):
+        raise HTTPException(status_code=403, detail="متجرك غير معتمد بعد")
+    
+    # التحقق من البيانات المطلوبة
+    flash_sale_id = request_data.get("flash_sale_id")
+    product_ids = request_data.get("product_ids", [])
+    
+    if not flash_sale_id:
+        raise HTTPException(status_code=400, detail="يجب تحديد عرض الفلاش")
+    
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="يجب تحديد منتج واحد على الأقل")
+    
+    # التحقق من عرض الفلاش
+    flash_sale = await db.flash_sales.find_one({"id": flash_sale_id})
+    if not flash_sale:
+        raise HTTPException(status_code=404, detail="عرض الفلاش غير موجود")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    if flash_sale["end_time"] < now:
+        raise HTTPException(status_code=400, detail="عرض الفلاش منتهي")
+    
+    # التحقق من المنتجات
+    products = await db.food_products.find({
+        "id": {"$in": product_ids},
+        "store_id": store["id"]
+    }).to_list(None)
+    
+    if len(products) != len(product_ids):
+        raise HTTPException(status_code=400, detail="بعض المنتجات غير موجودة أو لا تنتمي لمتجرك")
+    
+    # جلب الإعدادات
+    settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
+    join_fee = settings.get("join_fee", 5000) if settings else 5000
+    max_products = settings.get("max_products", 10) if settings else 10
+    
+    if len(product_ids) > max_products:
+        raise HTTPException(status_code=400, detail=f"الحد الأقصى للمنتجات هو {max_products}")
+    
+    total_fee = join_fee * len(product_ids)
+    
+    # التحقق من عدم وجود طلب سابق قيد الانتظار لنفس عرض الفلاش
+    existing = await db.flash_sale_requests.find_one({
+        "store_id": store["id"],
+        "flash_sale_id": flash_sale_id,
+        "status": "pending"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="لديك طلب قيد الانتظار لهذا العرض")
+    
+    # التحقق من رصيد المحفظة
+    wallet = await db.wallets.find_one({"user_id": user["id"]})
+    if not wallet or wallet.get("available_balance", 0) < total_fee:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"رصيد المحفظة غير كافٍ. المطلوب: {total_fee:,} ل.س"
+        )
+    
+    # خصم الرسوم من المحفظة
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"available_balance": -total_fee}}
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "wallet_id": wallet["id"],
+        "user_id": user["id"],
+        "type": "flash_sale_fee",
+        "amount": -total_fee,
+        "description": f"رسوم طلب الانضمام لعرض الفلاش: {flash_sale['name']} ({len(product_ids)} منتج)",
+        "created_at": now
+    }
+    await db.wallet_transactions.insert_one(transaction)
+    
+    # إنشاء الطلب
+    request_id = str(uuid.uuid4())
+    request_doc = {
+        "id": request_id,
+        "store_id": store["id"],
+        "store_name": store["name"],
+        "owner_id": user["id"],
+        "flash_sale_id": flash_sale_id,
+        "product_ids": product_ids,
+        "products_count": len(product_ids),
+        "fee_per_product": join_fee,
+        "fee_paid": total_fee,
+        "status": "pending",
+        "created_at": now
+    }
+    
+    await db.flash_sale_requests.insert_one(request_doc)
+    del request_doc["_id"]
+    
+    return {
+        "message": "تم إرسال طلب الانضمام بنجاح",
+        "request": request_doc,
+        "fee_deducted": total_fee
+    }
+
+@router.delete("/flash-sale-request/{request_id}")
+async def cancel_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء طلب انضمام للفلاش (فقط إذا كان قيد الانتظار)"""
+    req = await db.flash_sale_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    store = await db.food_stores.find_one({"id": req["store_id"]})
+    if not store or store["owner_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء طلب تمت معالجته")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # استرداد الرسوم
+    fee_paid = req.get("fee_paid", 0)
+    if fee_paid > 0:
+        wallet = await db.wallets.find_one({"user_id": user["id"]})
+        if wallet:
+            await db.wallets.update_one(
+                {"user_id": user["id"]},
+                {"$inc": {"available_balance": fee_paid}}
+            )
+            
+            # تسجيل المعاملة
+            transaction = {
+                "id": str(uuid.uuid4()),
+                "wallet_id": wallet["id"],
+                "user_id": user["id"],
+                "type": "refund",
+                "amount": fee_paid,
+                "description": "استرداد رسوم طلب الانضمام للفلاش (إلغاء من المستخدم)",
+                "created_at": now
+            }
+            await db.wallet_transactions.insert_one(transaction)
+    
+    # حذف الطلب
+    await db.flash_sale_requests.delete_one({"id": request_id})
+    
+    return {
+        "message": "تم إلغاء الطلب واسترداد الرسوم",
+        "refunded": fee_paid
+    }
