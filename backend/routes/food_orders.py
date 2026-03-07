@@ -386,22 +386,30 @@ async def update_order_status(
     note: Optional[str] = None,
     user: dict = Depends(get_current_user)
 ):
-    """تحديث حالة الطلب من المتجر"""
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
-    if not store:
-        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    """تحديث حالة الطلب من المتجر أو المدير"""
+    # المدير يمكنه تحديث أي طلب
+    if user["user_type"] in ["admin", "sub_admin"]:
+        order = await db.food_orders.find_one({"id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="الطلب غير موجود")
+        valid_statuses = list(ORDER_STATUSES.keys())
+    else:
+        store = await db.food_stores.find_one({"owner_id": user["id"]})
+        if not store:
+            raise HTTPException(status_code=403, detail="غير مصرح لك")
+        
+        order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
+        if not order:
+            raise HTTPException(status_code=404, detail="الطلب غير موجود")
+        valid_statuses = ["confirmed", "preparing", "ready", "cancelled"]
     
-    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
-    
-    valid_statuses = ["confirmed", "preparing", "ready", "cancelled"]
     if new_status not in valid_statuses:
         raise HTTPException(status_code=400, detail="حالة غير صالحة")
     
     # تحديث الحالة
     update_data = {
         "status": new_status,
+        "status_label": ORDER_STATUSES.get(new_status, new_status),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -413,7 +421,8 @@ async def update_order_status(
                 "status_history": {
                     "status": new_status,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "note": note or ORDER_STATUSES.get(new_status)
+                    "note": note or ORDER_STATUSES.get(new_status),
+                    "updated_by": user["id"]
                 }
             }
         }
@@ -560,3 +569,142 @@ async def get_my_food_deliveries(user: dict = Depends(get_current_user)):
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
     
     return orders
+
+
+# ===============================
+# التقييمات والمراجعات
+# ===============================
+
+@router.post("/{order_id}/rate")
+async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends(get_current_user)):
+    """تقييم طلب الطعام (المتجر وموظف التوصيل)"""
+    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order["status"] != "delivered":
+        raise HTTPException(status_code=400, detail="لا يمكن تقييم طلب لم يتم توصيله بعد")
+    
+    if order.get("rating"):
+        raise HTTPException(status_code=400, detail="تم تقييم هذا الطلب مسبقاً")
+    
+    store_rating = rating_data.get("store_rating")
+    driver_rating = rating_data.get("driver_rating")
+    comment = rating_data.get("comment", "")
+    
+    if not store_rating or store_rating < 1 or store_rating > 5:
+        raise HTTPException(status_code=400, detail="تقييم المتجر مطلوب (1-5)")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ التقييم
+    rating_doc = {
+        "id": str(uuid.uuid4()),
+        "order_id": order_id,
+        "order_number": order["order_number"],
+        "customer_id": user["id"],
+        "customer_name": user["name"],
+        "store_id": order["store_id"],
+        "store_rating": store_rating,
+        "driver_id": order.get("driver_id"),
+        "driver_rating": driver_rating,
+        "comment": comment,
+        "created_at": now
+    }
+    
+    await db.food_reviews.insert_one(rating_doc)
+    
+    # تحديث الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "rating": {
+                "store_rating": store_rating,
+                "driver_rating": driver_rating,
+                "comment": comment,
+                "rated_at": now
+            }
+        }}
+    )
+    
+    # تحديث متوسط تقييم المتجر
+    store_reviews = await db.food_reviews.find(
+        {"store_id": order["store_id"]},
+        {"store_rating": 1}
+    ).to_list(None)
+    
+    if store_reviews:
+        avg_rating = sum(r["store_rating"] for r in store_reviews) / len(store_reviews)
+        await db.food_stores.update_one(
+            {"id": order["store_id"]},
+            {
+                "$set": {"rating": round(avg_rating, 1)},
+                "$inc": {"reviews_count": 1}
+            }
+        )
+    
+    # تحديث تقييم موظف التوصيل
+    if driver_rating and order.get("driver_id"):
+        driver_reviews = await db.food_reviews.find(
+            {"driver_id": order["driver_id"], "driver_rating": {"$exists": True, "$ne": None}},
+            {"driver_rating": 1}
+        ).to_list(None)
+        
+        if driver_reviews:
+            driver_avg = sum(r["driver_rating"] for r in driver_reviews) / len(driver_reviews)
+            await db.users.update_one(
+                {"id": order["driver_id"]},
+                {"$set": {"rating": round(driver_avg, 1)}}
+            )
+            
+            # إضافة نقاط مكافأة إذا كان التقييم 5 نجوم
+            if driver_rating == 5:
+                from core.database import create_notification_for_user
+                await db.users.update_one(
+                    {"id": order["driver_id"]},
+                    {"$inc": {"behavior_points": 5}}
+                )
+                await create_notification_for_user(
+                    user_id=order["driver_id"],
+                    title="⭐ مكافأة تقييم!",
+                    message=f"حصلت على +5 نقاط سلوك من تقييم 5 نجوم",
+                    notification_type="bonus_points"
+                )
+    
+    return {"message": "شكراً لتقييمك!"}
+
+
+@router.get("/store/{store_id}/reviews")
+async def get_store_reviews(
+    store_id: str,
+    skip: int = 0,
+    limit: int = 20
+):
+    """جلب تقييمات متجر"""
+    reviews = await db.food_reviews.find(
+        {"store_id": store_id},
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(None)
+    
+    # حساب الإحصائيات
+    all_reviews = await db.food_reviews.find(
+        {"store_id": store_id},
+        {"store_rating": 1}
+    ).to_list(None)
+    
+    stats = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+    for r in all_reviews:
+        rating_key = str(int(r["store_rating"]))
+        stats[rating_key] = stats.get(rating_key, 0) + 1
+    
+    total = len(all_reviews)
+    avg = sum(r["store_rating"] for r in all_reviews) / total if total > 0 else 0
+    
+    return {
+        "reviews": reviews,
+        "stats": {
+            "total": total,
+            "average": round(avg, 1),
+            "distribution": stats
+        }
+    }

@@ -236,7 +236,7 @@ const FoodPage = () => {
 };
 
 const StoreCard = ({ store }) => (
-  <Link to={`/store/${store.id}`}>
+  <Link to={`/food/store/${store.id}`}>
     <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}

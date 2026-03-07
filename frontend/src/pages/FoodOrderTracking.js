@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Package, Clock, Check, Truck, MapPin, Phone, Store,
-  ArrowLeft, X, ChefHat, CheckCircle2
+  ArrowLeft, X, ChefHat, CheckCircle2, Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -31,6 +31,7 @@ const FoodOrderTracking = () => {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showRating, setShowRating] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -45,6 +46,11 @@ const FoodOrderTracking = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrder(res.data);
+      
+      // إظهار التقييم إذا تم التسليم ولم يتم التقييم بعد
+      if (res.data.status === 'delivered' && !res.data.rating) {
+        setTimeout(() => setShowRating(true), 1000);
+      }
     } catch (error) {
       toast({ title: "خطأ", description: "فشل تحميل الطلب", variant: "destructive" });
     } finally {
@@ -272,7 +278,171 @@ const FoodOrderTracking = () => {
             إلغاء الطلب
           </button>
         )}
+
+        {/* Rate Button (if delivered but not rated) */}
+        {order.status === 'delivered' && !order.rating && (
+          <button
+            onClick={() => setShowRating(true)}
+            className="w-full bg-yellow-50 text-yellow-700 py-3 rounded-xl font-bold border border-yellow-200 hover:bg-yellow-100 flex items-center justify-center gap-2"
+          >
+            <Star size={18} />
+            قيّم تجربتك
+          </button>
+        )}
+
+        {/* Show Rating if already rated */}
+        {order.rating && (
+          <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center">
+            <p className="text-sm text-green-700 mb-2">تم تقييم الطلب</p>
+            <div className="flex justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={20}
+                  className={order.rating.store_rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Rating Modal */}
+      {showRating && (
+        <RatingModal
+          order={order}
+          token={token}
+          onClose={() => setShowRating(false)}
+          onSuccess={() => {
+            setShowRating(false);
+            fetchOrder();
+            toast({ title: "شكراً!", description: "تم إرسال تقييمك" });
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Rating Modal Component
+const RatingModal = ({ order, token, onClose, onSuccess }) => {
+  const { toast } = useToast();
+  const [storeRating, setStoreRating] = useState(0);
+  const [driverRating, setDriverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (storeRating === 0) {
+      toast({ title: "تنبيه", description: "يرجى تقييم المتجر", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/food/orders/${order.id}/rate`, {
+        store_rating: storeRating,
+        driver_rating: order.driver_id ? driverRating : null,
+        comment
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onSuccess();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل إرسال التقييم", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" dir="rtl">
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        className="bg-white rounded-t-3xl w-full max-w-lg p-6"
+      >
+        <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">قيّم تجربتك</h3>
+        
+        {/* Store Rating */}
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 mb-2 text-center">تقييم {order.store_name}</p>
+          <div className="flex justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => setStoreRating(star)}
+                className={`p-1 transition-transform ${storeRating >= star ? 'scale-110' : ''}`}
+              >
+                <Star
+                  size={40}
+                  className={storeRating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Driver Rating */}
+        {order.driver_id && (
+          <div className="mb-6">
+            <p className="text-sm text-gray-600 mb-2 text-center">تقييم موظف التوصيل ({order.driver_name})</p>
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setDriverRating(star)}
+                  className={`p-1 transition-transform ${driverRating >= star ? 'scale-110' : ''}`}
+                >
+                  <Star
+                    size={40}
+                    className={driverRating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Comment */}
+        <div className="mb-6">
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="اكتب تعليقك (اختياري)..."
+            rows={3}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+          >
+            لاحقاً
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || storeRating === 0}
+            className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Star size={18} />
+                إرسال التقييم
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };

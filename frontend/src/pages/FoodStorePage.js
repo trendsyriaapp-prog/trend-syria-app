@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Store, Star, Clock, MapPin, Phone, Plus, Minus, ShoppingBag,
-  ArrowLeft, Heart, Share2, ChevronLeft
+  ArrowLeft, Heart, Share2, ChevronLeft, MessageCircle, User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -25,6 +25,8 @@ const FoodStorePage = () => {
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showReviews, setShowReviews] = useState(false);
+  const [reviews, setReviews] = useState({ reviews: [], stats: null });
 
   useEffect(() => {
     fetchStore();
@@ -148,11 +150,22 @@ const FoodStorePage = () => {
         
         <div className="flex flex-wrap items-center gap-4 mt-3">
           {store.rating > 0 && (
-            <div className="flex items-center gap-1">
+            <button
+              onClick={async () => {
+                if (!reviews.stats) {
+                  try {
+                    const res = await axios.get(`${API}/food/orders/store/${storeId}/reviews`);
+                    setReviews(res.data);
+                  } catch (e) {}
+                }
+                setShowReviews(true);
+              }}
+              className="flex items-center gap-1 hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors"
+            >
               <Star size={16} className="text-yellow-500 fill-yellow-500" />
               <span className="font-medium">{store.rating.toFixed(1)}</span>
-              <span className="text-gray-400 text-sm">({store.reviews_count})</span>
-            </div>
+              <span className="text-gray-400 text-sm">({store.reviews_count} تقييم)</span>
+            </button>
           )}
           <div className="flex items-center gap-1 text-gray-600">
             <Clock size={16} />
@@ -259,6 +272,15 @@ const FoodStorePage = () => {
               setSelectedProduct(null);
             }}
             onClose={() => setSelectedProduct(null)}
+          />
+        )}
+        
+        {showReviews && (
+          <ReviewsModal
+            reviews={reviews.reviews}
+            stats={reviews.stats}
+            storeName={store?.name}
+            onClose={() => setShowReviews(false)}
           />
         )}
       </AnimatePresence>
@@ -389,6 +411,113 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
             <Plus size={20} />
             إضافة للسلة - {(product.price * quantity).toLocaleString()} ل.س
           </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Reviews Modal Component
+const ReviewsModal = ({ reviews, stats, storeName, onClose }) => {
+  const formatDate = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleDateString('ar-SY', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-t-3xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white px-4 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xl font-bold text-gray-900">تقييمات {storeName}</h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
+          
+          {/* Stats */}
+          {stats && (
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="flex items-center gap-1">
+                  <Star size={24} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-3xl font-bold text-gray-900">{stats.average}</span>
+                </div>
+                <p className="text-sm text-gray-500">{stats.total} تقييم</p>
+              </div>
+              
+              <div className="flex-1 space-y-1">
+                {[5, 4, 3, 2, 1].map((rating) => {
+                  const count = stats.distribution?.[rating] || 0;
+                  const percent = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                  return (
+                    <div key={rating} className="flex items-center gap-2 text-sm">
+                      <span className="w-3 text-gray-500">{rating}</span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-yellow-400 rounded-full"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-gray-400 text-xs">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Reviews List */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {reviews.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageCircle size={48} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500">لا توجد تقييمات بعد</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review.id} className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <User size={18} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{review.customer_name}</p>
+                        <p className="text-xs text-gray-500">{formatDate(review.created_at)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={14}
+                          className={review.store_rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="text-gray-700 text-sm">{review.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </motion.div>
     </motion.div>
