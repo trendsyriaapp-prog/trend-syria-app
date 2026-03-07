@@ -580,6 +580,24 @@
 
 ---
 
+## التحديثات الأخيرة (مارس 2026)
+
+### سبب الرفض الاختياري (7 مارس 2026)
+- ✅ تم تحويل حقل سبب الرفض من إلزامي إلى اختياري
+- ✅ يمكن للمدير رفض (البائعين، موظفي التوصيل، المتاجر، العروض، طلبات السحب) مع أو بدون كتابة سبب
+- ✅ تم إضافة مكون `RejectModal.js` موحد لجميع نوافذ الرفض
+- ✅ يظهر النص "(اختياري)" بجانب حقل سبب الرفض
+- ✅ الملفات المحدثة:
+  - `/app/backend/routes/admin.py` - جميع endpoints الرفض
+  - `/app/frontend/src/components/admin/RejectModal.js` - مكون جديد
+  - `/app/frontend/src/components/admin/PendingSellersTab.js`
+  - `/app/frontend/src/components/admin/DeliveryTab.js`
+  - `/app/frontend/src/components/admin/FoodStoresTab.js`
+  - `/app/frontend/src/components/admin/PendingProductsTab.js`
+  - `/app/frontend/src/components/admin/WithdrawalsTab.js`
+
+---
+
 ## بيانات الاختبار
 
 | الدور | رقم الهاتف | كلمة المرور |
