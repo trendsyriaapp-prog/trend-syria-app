@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket
+  UtensilsCrossed, Ticket, Flame
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -37,6 +37,7 @@ import FoodStoresTab from '../components/admin/FoodStoresTab';
 import FoodOffersTab from '../components/admin/FoodOffersTab';
 import BannersTab from '../components/admin/BannersTab';
 import CouponsTab from '../components/admin/CouponsTab';
+import DailyDealsTab from '../components/admin/DailyDealsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -286,7 +287,8 @@ const AdminDashboardPage = () => {
     'food-stores': 'متاجر الطعام',
     'food-offers': 'عروض الفلاش',
     'banners': 'إدارة البانرات',
-    'coupons': 'كوبونات الخصم'
+    'coupons': 'كوبونات الخصم',
+    'daily-deals': 'صفقات اليوم'
   };
 
   return (
@@ -400,6 +402,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'coupons' && user.user_type === 'admin' && (
               <CouponsTab token={localStorage.getItem('token')} />
+            )}
+            {activeTab === 'daily-deals' && user.user_type === 'admin' && (
+              <DailyDealsTab />
             )}
           </>
         ) : (
@@ -612,6 +617,18 @@ const AdminDashboardPage = () => {
                       <Ticket size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">كوبونات الخصم</span>
+                  </button>
+
+                  {/* صفقات اليوم */}
+                  <button
+                    onClick={() => setActiveTab('daily-deals')}
+                    className="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-xl p-3 border border-orange-200 hover:border-orange-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="daily-deals-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                      <Flame size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">صفقات اليوم</span>
                   </button>
                 </>
               )}

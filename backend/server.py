@@ -47,6 +47,7 @@ from routes.food import router as food_router
 from routes.food_orders import router as food_orders_router
 from routes.coupons import router as coupons_router
 from routes.referrals import router as referrals_router
+from routes.daily_deals import router as daily_deals_router
 
 # Create FastAPI app
 app = FastAPI(title="تريند سورية API", description="API لمتجر تريند سورية الإلكتروني")
@@ -84,6 +85,7 @@ api_router.include_router(food_router)
 api_router.include_router(food_orders_router)
 api_router.include_router(coupons_router)
 api_router.include_router(referrals_router)
+api_router.include_router(daily_deals_router)
 
 # ============== Categories ==============
 

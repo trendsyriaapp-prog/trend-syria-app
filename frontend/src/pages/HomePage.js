@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
+import DailyDeal from '../components/DailyDeal';
 import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -247,6 +248,9 @@ const HomePage = () => {
           </div>
         </section>
       )}
+
+      {/* Daily Deal - صفقة اليوم */}
+      <DailyDeal />
 
       {/* Flash Sale Products - Shop */}
       {shopFlashProducts.length > 0 && shopFlashSale && (
