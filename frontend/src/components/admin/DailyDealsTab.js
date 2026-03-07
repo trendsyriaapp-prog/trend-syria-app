@@ -6,7 +6,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
   Flame, Plus, Trash2, Edit2, Clock, Package, 
-  Calendar, Percent, X, Check, Zap, ChevronDown
+  Calendar, Percent, X, Check, Zap, ChevronDown, Bell
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -41,7 +41,8 @@ const DailyDealsTab = () => {
     start_time: '',
     end_time: '',
     product_ids: [],
-    background_color: '#FF6B00'
+    background_color: '#FF6B00',
+    send_notification: true
   });
 
   useEffect(() => {
@@ -79,7 +80,8 @@ const DailyDealsTab = () => {
         start_time: deal.start_time?.slice(0, 16) || '',
         end_time: deal.end_time?.slice(0, 16) || '',
         product_ids: deal.product_ids || [],
-        background_color: deal.background_color || '#FF6B00'
+        background_color: deal.background_color || '#FF6B00',
+        send_notification: false
       });
     } else {
       setEditingDeal(null);
@@ -92,7 +94,8 @@ const DailyDealsTab = () => {
         start_time: now.toISOString().slice(0, 16),
         end_time: end.toISOString().slice(0, 16),
         product_ids: [],
-        background_color: '#FF6B00'
+        background_color: '#FF6B00',
+        send_notification: true
       });
     }
     setShowModal(true);
@@ -478,6 +481,31 @@ const DailyDealsTab = () => {
                   </div>
                 )}
               </div>
+
+              {/* Send Notification Toggle */}
+              {!editingDeal && (
+                <div className="flex items-center justify-between bg-blue-50 rounded-xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Bell size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">إرسال إشعار للمستخدمين</p>
+                      <p className="text-xs text-gray-500">سيتم إشعار جميع المستخدمين بالصفقة الجديدة</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.send_notification}
+                      onChange={(e) => setForm({ ...form, send_notification: e.target.checked })}
+                      className="sr-only peer"
+                      data-testid="send-notification-toggle"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}

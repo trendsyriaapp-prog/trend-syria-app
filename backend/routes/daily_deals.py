@@ -125,7 +125,43 @@ async def create_daily_deal(data: dict, user: dict = Depends(get_current_user)):
     await db.daily_deals.insert_one(deal)
     deal.pop("_id", None)
     
+    # إرسال إشعار لجميع المستخدمين إذا طلب ذلك
+    if data.get("send_notification", False):
+        await send_deal_notification(deal)
+    
     return {"message": "تم إنشاء صفقة اليوم", "deal": deal}
+
+
+async def send_deal_notification(deal: dict):
+    """إرسال إشعار صفقة اليوم لجميع المستخدمين"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب جميع المستخدمين النشطين
+    users = await db.users.find(
+        {"is_verified": True},
+        {"_id": 0, "id": 1}
+    ).to_list(10000)
+    
+    if not users:
+        return
+    
+    # إنشاء الإشعارات
+    notifications = []
+    for u in users:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": u["id"],
+            "title": f"🔥 {deal['title']}",
+            "message": f"{deal.get('description', 'عرض خاص لمدة محدودة!')} - خصم {deal['discount_percentage']}%",
+            "type": "daily_deal",
+            "data": {"deal_id": deal["id"]},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # إدراج الإشعارات دفعة واحدة
+    if notifications:
+        await db.notifications.insert_many(notifications)
 
 
 @router.put("/admin/{deal_id}")
@@ -201,5 +237,9 @@ async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_u
     
     await db.daily_deals.insert_one(deal)
     deal.pop("_id", None)
+    
+    # إرسال إشعار لجميع المستخدمين إذا طلب ذلك
+    if data.get("send_notification", False):
+        await send_deal_notification(deal)
     
     return {"message": "تم إنشاء صفقة اليوم (24 ساعة)", "deal": deal}
