@@ -42,12 +42,15 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
 
 @router.put("/settings")
 async def update_platform_settings(data: dict, user: dict = Depends(get_current_user)):
-    """تحديث إعدادات المنصة"""
+    """تحديث إعدادات المنصة مع إشعارات قابلة للتخصيص"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
     # جلب الإعدادات الحالية للمقارنة
     current_settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    # استخراج بيانات الإشعار المخصص (إن وجد)
+    custom_notification = data.pop("notification", None)
     
     allowed_fields = [
         "food_enabled", "shop_enabled", "delivery_enabled",
@@ -56,9 +59,17 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     ]
     
     update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    activated_sections = []
+    
     for field in allowed_fields:
         if field in data:
-            update[field] = bool(data[field])
+            new_value = bool(data[field])
+            update[field] = new_value
+            
+            # تتبع الأقسام التي تم تفعيلها
+            was_disabled = current_settings is None or current_settings.get(field, True) == False
+            if new_value and was_disabled:
+                activated_sections.append(field)
     
     await db.platform_settings.update_one(
         {"id": "main"},
@@ -66,37 +77,23 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
         upsert=True
     )
     
-    # إرسال إشعار عند تفعيل منصة الطعام
-    if data.get("food_enabled") == True:
-        was_disabled = current_settings is None or current_settings.get("food_enabled", True) == False
-        if was_disabled:
-            await send_platform_activation_notification(
-                "food",
-                "🍕 جديد! منصة الطعام متاحة الآن",
-                "اطلب الآن من مطاعمك المفضلة - توصيل سريع لباب بيتك!"
+    # إرسال الإشعار للأقسام المفعلة
+    notifications_sent = 0
+    for section in activated_sections:
+        if custom_notification:
+            # استخدام الإشعار المخصص من المدير
+            notifications_sent += await send_platform_activation_notification(
+                section,
+                custom_notification.get("title", ""),
+                custom_notification.get("message", "")
             )
+        # لا نرسل إشعار تلقائي إذا لم يحدد المدير إشعار
     
-    # إرسال إشعار عند تفعيل صفقات اليوم
-    if data.get("daily_deals_enabled") == True:
-        was_disabled = current_settings is None or current_settings.get("daily_deals_enabled", True) == False
-        if was_disabled:
-            await send_platform_activation_notification(
-                "daily_deals",
-                "🔥 صفقات اليوم عادت!",
-                "تصفح العروض الحصرية واحصل على خصومات مميزة!"
-            )
-    
-    # إرسال إشعار عند تفعيل عروض الفلاش
-    if data.get("flash_sales_enabled") == True:
-        was_disabled = current_settings is None or current_settings.get("flash_sales_enabled", True) == False
-        if was_disabled:
-            await send_platform_activation_notification(
-                "flash_sales",
-                "⚡ عروض الفلاش متاحة الآن!",
-                "خصومات محدودة الوقت - اغتنم الفرصة قبل انتهاء العرض!"
-            )
-    
-    return {"message": "تم تحديث الإعدادات", "settings": update}
+    return {
+        "message": "تم تحديث الإعدادات", 
+        "settings": update,
+        "notifications_sent": notifications_sent
+    }
 
 async def send_platform_activation_notification(platform: str, title: str, message: str):
     """إرسال إشعار تفعيل قسم لجميع المستخدمين"""
