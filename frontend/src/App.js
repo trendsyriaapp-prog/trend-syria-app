@@ -1,8 +1,8 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
-import { SettingsProvider } from "./context/SettingsContext";
+import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { ScrollProvider } from "./context/ScrollContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
@@ -40,6 +40,25 @@ import FoodStorePage from "./pages/FoodStorePage";
 import FoodCartPage from "./pages/FoodCartPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
 import ReferralsPage from "./pages/ReferralsPage";
+
+// مكون حماية صفحات الطعام
+const FoodRoute = ({ children }) => {
+  const { isFeatureEnabled, loading } = useSettings();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+  
+  if (!isFeatureEnabled('food_enabled')) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
   return (
@@ -97,13 +116,13 @@ function App() {
                 <Route path="/join/seller" element={<JoinAsSellerPage />} />
                 <Route path="/join/delivery" element={<JoinAsDeliveryPage />} />
                 
-                {/* Food Delivery Routes */}
-                <Route path="/food" element={<FoodPage />} />
-                <Route path="/join/food-seller" element={<JoinAsFoodSellerPage />} />
-                <Route path="/food/dashboard" element={<FoodStoreDashboard />} />
-                <Route path="/food/store/:storeId" element={<FoodStorePage />} />
-                <Route path="/food/cart/:storeId" element={<FoodCartPage />} />
-                <Route path="/food/order/:orderId" element={<FoodOrderTracking />} />
+                {/* Food Delivery Routes - محمية */}
+                <Route path="/food" element={<FoodRoute><FoodPage /></FoodRoute>} />
+                <Route path="/join/food-seller" element={<FoodRoute><JoinAsFoodSellerPage /></FoodRoute>} />
+                <Route path="/food/dashboard" element={<FoodRoute><FoodStoreDashboard /></FoodRoute>} />
+                <Route path="/food/store/:storeId" element={<FoodRoute><FoodStorePage /></FoodRoute>} />
+                <Route path="/food/cart/:storeId" element={<FoodRoute><FoodCartPage /></FoodRoute>} />
+                <Route path="/food/order/:orderId" element={<FoodRoute><FoodOrderTracking /></FoodRoute>} />
                 
                 {/* Referrals */}
                 <Route path="/referrals" element={<ReferralsPage />} />

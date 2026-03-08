@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MobileNav = () => {
@@ -10,6 +11,7 @@ const MobileNav = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { isFeatureEnabled } = useSettings();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const isActive = (path) => location.pathname === path;
@@ -17,6 +19,9 @@ const MobileNav = () => {
   // إخفاء الشريط في صفحة تفاصيل المنتج
   const isProductPage = location.pathname.startsWith('/products/');
   if (isProductPage) return null;
+
+  // التحقق من تفعيل منصة الطعام
+  const foodEnabled = isFeatureEnabled('food_enabled');
 
   const handleAccountClick = (e) => {
     if (user) {
@@ -31,13 +36,23 @@ const MobileNav = () => {
     navigate('/');
   };
 
-  const navItems = [
+  // بناء قائمة التنقل مع إخفاء الطعام إذا معطل
+  const baseNavItems = [
     { path: '/', icon: Home, label: 'الرئيسية' },
     { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
-    { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
-    { path: '/favorites', icon: Heart, label: 'المفضلة', isHeart: true },
-    { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true },
   ];
+  
+  // إضافة رابط الطعام فقط إذا كان مفعلاً
+  if (foodEnabled) {
+    baseNavItems.push({ path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true });
+  }
+  
+  baseNavItems.push(
+    { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
+    { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
+  );
+
+  const navItems = baseNavItems;
 
   return (
     <>
@@ -49,13 +64,17 @@ const MobileNav = () => {
               to={item.path}
               onClick={item.isAccount ? handleAccountClick : undefined}
               className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] transition-colors ${
-                isActive(item.path) || (item.isAccount && showAccountMenu) ? 'text-[#FF6B00]' : item.isHeart ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'
+                isActive(item.path) || (item.isAccount && showAccountMenu) 
+                  ? 'text-[#FF6B00]' 
+                  : item.isFood 
+                    ? 'text-green-600 hover:text-green-700'
+                    : 'text-gray-500 hover:text-gray-700'
               }`}
               data-testid={`nav-${item.label}`}
             >
               <div className="relative">
-                {item.isHeart ? (
-                  <Heart size={22} fill={isActive(item.path) ? '#FF6B00' : '#ef4444'} />
+                {item.isFood ? (
+                  <UtensilsCrossed size={22} className={isActive(item.path) ? 'text-green-600' : ''} />
                 ) : (
                   <item.icon size={22} />
                 )}
@@ -65,7 +84,7 @@ const MobileNav = () => {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] ${item.isHeart && !isActive(item.path) ? 'text-red-500' : ''}`}>{item.label}</span>
+              <span className={`text-[10px] ${item.isFood ? 'text-green-600' : ''}`}>{item.label}</span>
             </Link>
           ))}
         </div>

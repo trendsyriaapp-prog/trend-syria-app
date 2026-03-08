@@ -9,11 +9,13 @@ import {
   Users, Flame, Zap, Save, RefreshCw
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const PlatformSettingsTab = () => {
   const { toast } = useToast();
+  const { refreshSettings } = useSettings();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,7 +44,9 @@ const PlatformSettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/admin/settings`, settings);
-      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المنصة" });
+      // تحديث الإعدادات العامة في Context
+      await refreshSettings();
+      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المنصة - ستظهر التغييرات فوراً" });
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
     } finally {

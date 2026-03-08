@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame
+  UtensilsCrossed, Ticket, Flame, Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -38,6 +38,7 @@ import FoodOffersTab from '../components/admin/FoodOffersTab';
 import BannersTab from '../components/admin/BannersTab';
 import CouponsTab from '../components/admin/CouponsTab';
 import DailyDealsTab from '../components/admin/DailyDealsTab';
+import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -288,7 +289,8 @@ const AdminDashboardPage = () => {
     'food-offers': 'عروض الفلاش',
     'banners': 'إدارة البانرات',
     'coupons': 'كوبونات الخصم',
-    'daily-deals': 'صفقات اليوم'
+    'daily-deals': 'صفقات اليوم',
+    'platform-settings': 'تفعيل/إيقاف الأقسام'
   };
 
   return (
@@ -405,6 +407,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'daily-deals' && user.user_type === 'admin' && (
               <DailyDealsTab />
+            )}
+            {activeTab === 'platform-settings' && user.user_type === 'admin' && (
+              <PlatformSettingsTab />
             )}
           </>
         ) : (
@@ -629,6 +634,18 @@ const AdminDashboardPage = () => {
                       <Flame size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">صفقات اليوم</span>
+                  </button>
+
+                  {/* إعدادات المنصة - تفعيل/إيقاف الأقسام */}
+                  <button
+                    onClick={() => setActiveTab('platform-settings')}
+                    className="bg-gradient-to-r from-gray-100 to-slate-100 rounded-xl p-3 border border-gray-200 hover:border-gray-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="platform-settings-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 flex items-center justify-center">
+                      <Settings size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">تفعيل الأقسام</span>
                   </button>
                 </>
               )}

@@ -12,6 +12,7 @@ import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
 import DailyDeal from '../components/DailyDeal';
 import { useScroll } from '../context/ScrollContext';
+import { useSettings } from '../context/SettingsContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -32,6 +33,10 @@ const HomePage = () => {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
+  const { isFeatureEnabled } = useSettings();
+  
+  // التحقق من تفعيل منصة الطعام
+  const foodEnabled = isFeatureEnabled('food_enabled');
 
   // استعادة موقع التمرير عند العودة للصفحة بعد تحميل البيانات
   useEffect(() => {
@@ -159,7 +164,9 @@ const HomePage = () => {
           </div>
           
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-            {categories.map((cat, i) => {
+            {categories
+              .filter(cat => foodEnabled || cat.type !== 'food')
+              .map((cat, i) => {
               const IconComponent = iconMap[cat.icon] || Smartphone;
               const isFood = cat.type === 'food';
               return (

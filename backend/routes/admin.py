@@ -69,17 +69,36 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
 async def get_public_settings():
     """جلب الإعدادات العامة (بدون تسجيل دخول)"""
     settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    # الإعدادات الافتراضية
+    default_settings = {
+        "food_enabled": True,
+        "shop_enabled": True,
+        "delivery_enabled": True,
+        "wallet_enabled": True,
+        "referral_enabled": True,
+        "daily_deals_enabled": True,
+        "flash_sales_enabled": True
+    }
+    
     if not settings:
-        settings = {
-            "food_enabled": True,
-            "shop_enabled": True,
-            "delivery_enabled": True,
-            "wallet_enabled": True,
-            "referral_enabled": True,
-            "daily_deals_enabled": True,
-            "flash_sales_enabled": True
-        }
-    return settings
+        return default_settings
+    
+    # دمج الإعدادات الافتراضية مع المحفوظة
+    for key, value in default_settings.items():
+        if key not in settings:
+            settings[key] = value
+    
+    # إرجاع فقط الحقول المتعلقة بتفعيل الأقسام
+    return {
+        "food_enabled": settings.get("food_enabled", True),
+        "shop_enabled": settings.get("shop_enabled", True),
+        "delivery_enabled": settings.get("delivery_enabled", True),
+        "wallet_enabled": settings.get("wallet_enabled", True),
+        "referral_enabled": settings.get("referral_enabled", True),
+        "daily_deals_enabled": settings.get("daily_deals_enabled", True),
+        "flash_sales_enabled": settings.get("flash_sales_enabled", True)
+    }
 
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============
 

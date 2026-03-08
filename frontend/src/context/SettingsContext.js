@@ -15,17 +15,39 @@ export const SettingsProvider = ({ children }) => {
       far: 12000
     }
   });
+  
+  // إعدادات المنصة (تفعيل/إيقاف الأقسام)
+  const [platformSettings, setPlatformSettings] = useState({
+    food_enabled: true,
+    shop_enabled: true,
+    delivery_enabled: true,
+    wallet_enabled: true,
+    referral_enabled: true,
+    daily_deals_enabled: true,
+    flash_sales_enabled: true
+  });
+  
   const [loading, setLoading] = useState(true);
 
   // جلب الإعدادات عند تحميل التطبيق
   useEffect(() => {
-    fetchSettings();
+    fetchAllSettings();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchAllSettings = async () => {
     try {
-      const res = await axios.get(`${API}/api/settings/public`);
-      setSettings(res.data);
+      const [settingsRes, platformRes] = await Promise.all([
+        axios.get(`${API}/api/settings/public`).catch(() => ({ data: {} })),
+        axios.get(`${API}/api/admin/settings/public`).catch(() => ({ data: {} }))
+      ]);
+      
+      if (settingsRes.data) {
+        setSettings(prev => ({ ...prev, ...settingsRes.data }));
+      }
+      
+      if (platformRes.data) {
+        setPlatformSettings(prev => ({ ...prev, ...platformRes.data }));
+      }
     } catch (error) {
       console.error('Error fetching settings:', error);
     } finally {
@@ -35,11 +57,22 @@ export const SettingsProvider = ({ children }) => {
 
   // تحديث الإعدادات (يُستدعى بعد تعديل المدير)
   const refreshSettings = async () => {
-    await fetchSettings();
+    await fetchAllSettings();
+  };
+
+  // دالة للتحقق من تفعيل قسم معين
+  const isFeatureEnabled = (feature) => {
+    return platformSettings[feature] ?? true;
   };
 
   return (
-    <SettingsContext.Provider value={{ settings, loading, refreshSettings }}>
+    <SettingsContext.Provider value={{ 
+      settings, 
+      platformSettings,
+      loading, 
+      refreshSettings,
+      isFeatureEnabled
+    }}>
       {children}
     </SettingsContext.Provider>
   );
