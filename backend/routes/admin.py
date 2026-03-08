@@ -14,6 +14,73 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
+# ============== إعدادات المنصة ==============
+
+@router.get("/settings")
+async def get_platform_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات المنصة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    if not settings:
+        # إعدادات افتراضية
+        settings = {
+            "id": "main",
+            "food_enabled": True,
+            "shop_enabled": True,
+            "delivery_enabled": True,
+            "wallet_enabled": True,
+            "referral_enabled": True,
+            "daily_deals_enabled": True,
+            "flash_sales_enabled": True,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.platform_settings.insert_one(settings)
+    
+    return settings
+
+@router.put("/settings")
+async def update_platform_settings(data: dict, user: dict = Depends(get_current_user)):
+    """تحديث إعدادات المنصة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    allowed_fields = [
+        "food_enabled", "shop_enabled", "delivery_enabled",
+        "wallet_enabled", "referral_enabled", "daily_deals_enabled",
+        "flash_sales_enabled"
+    ]
+    
+    update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    for field in allowed_fields:
+        if field in data:
+            update[field] = bool(data[field])
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {"$set": update},
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث الإعدادات", "settings": update}
+
+@router.get("/settings/public")
+async def get_public_settings():
+    """جلب الإعدادات العامة (بدون تسجيل دخول)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    if not settings:
+        settings = {
+            "food_enabled": True,
+            "shop_enabled": True,
+            "delivery_enabled": True,
+            "wallet_enabled": True,
+            "referral_enabled": True,
+            "daily_deals_enabled": True,
+            "flash_sales_enabled": True
+        }
+    return settings
+
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============
 
 async def send_offer_notification_to_all_users(title: str, message: str, offer_type: str, offer_data: dict = None):
