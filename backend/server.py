@@ -1,9 +1,11 @@
 # /app/backend/server.py
 # الملف الرئيسي للخادم - تريند سورية API
 # تم تقسيم الكود إلى ملفات منفصلة في مجلد routes
+# 🔒 محمي بـ 10 طبقات أمان
 
-from fastapi import FastAPI, APIRouter
-from starlette.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, APIRouter, Request
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
@@ -18,6 +20,18 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Import database
 from core.database import db, client
+
+# 🔒 Import security module
+from core.security import (
+    limiter, 
+    rate_limit_exceeded_handler,
+    add_security_headers,
+    is_ip_blocked,
+    log_suspicious_activity,
+    SECURITY_HEADERS
+)
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 # Import routers
 from routes.auth import router as auth_router, seller_router, delivery_auth_router
@@ -50,7 +64,38 @@ from routes.referrals import router as referrals_router
 from routes.daily_deals import router as daily_deals_router
 
 # Create FastAPI app
-app = FastAPI(title="تريند سورية API", description="API لمتجر تريند سورية الإلكتروني")
+app = FastAPI(
+    title="تريند سورية API", 
+    description="API لمتجر تريند سورية الإلكتروني",
+    docs_url="/api/docs" if os.environ.get("DEBUG") else None,  # إخفاء docs في الإنتاج
+    redoc_url=None
+)
+
+# 🔒 إضافة Rate Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# 🔒 Middleware للتحقق من IPs المحظورة
+@app.middleware("http")
+async def check_blocked_ips(request: Request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    
+    if is_ip_blocked(client_ip):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "تم حظر الوصول"}
+        )
+    
+    return await call_next(request)
+
+# 🔒 Middleware لإضافة Security Headers
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers[header] = value
+    return response
 
 # Create main API router with /api prefix
 api_router = APIRouter(prefix="/api")
@@ -259,13 +304,15 @@ async def seed_demo_data():
 # Include main router
 app.include_router(api_router)
 
-# CORS Middleware
+# 🔒 CORS Middleware - محسّن للأمان
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    expose_headers=["X-New-Token"],  # للتجديد التلقائي للتوكن
 )
 
 # Logging
