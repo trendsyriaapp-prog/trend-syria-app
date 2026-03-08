@@ -46,6 +46,9 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
+    # جلب الإعدادات الحالية للمقارنة
+    current_settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
     allowed_fields = [
         "food_enabled", "shop_enabled", "delivery_enabled",
         "wallet_enabled", "referral_enabled", "daily_deals_enabled",
@@ -63,7 +66,66 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
         upsert=True
     )
     
+    # إرسال إشعار عند تفعيل منصة الطعام
+    if data.get("food_enabled") == True:
+        was_disabled = current_settings is None or current_settings.get("food_enabled", True) == False
+        if was_disabled:
+            await send_platform_activation_notification(
+                "food",
+                "🍕 جديد! منصة الطعام متاحة الآن",
+                "اطلب الآن من مطاعمك المفضلة - توصيل سريع لباب بيتك!"
+            )
+    
+    # إرسال إشعار عند تفعيل صفقات اليوم
+    if data.get("daily_deals_enabled") == True:
+        was_disabled = current_settings is None or current_settings.get("daily_deals_enabled", True) == False
+        if was_disabled:
+            await send_platform_activation_notification(
+                "daily_deals",
+                "🔥 صفقات اليوم عادت!",
+                "تصفح العروض الحصرية واحصل على خصومات مميزة!"
+            )
+    
+    # إرسال إشعار عند تفعيل عروض الفلاش
+    if data.get("flash_sales_enabled") == True:
+        was_disabled = current_settings is None or current_settings.get("flash_sales_enabled", True) == False
+        if was_disabled:
+            await send_platform_activation_notification(
+                "flash_sales",
+                "⚡ عروض الفلاش متاحة الآن!",
+                "خصومات محدودة الوقت - اغتنم الفرصة قبل انتهاء العرض!"
+            )
+    
     return {"message": "تم تحديث الإعدادات", "settings": update}
+
+async def send_platform_activation_notification(platform: str, title: str, message: str):
+    """إرسال إشعار تفعيل قسم لجميع المستخدمين"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    users = await db.users.find(
+        {"user_type": {"$in": ["customer", "seller"]}},
+        {"_id": 0, "id": 1}
+    ).to_list(10000)
+    
+    if not users:
+        return 0
+    
+    notifications = []
+    for u in users:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": u["id"],
+            "title": title,
+            "message": message,
+            "type": f"platform_{platform}_activated",
+            "read": False,
+            "created_at": now
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return len(notifications)
 
 @router.get("/settings/public")
 async def get_public_settings():
