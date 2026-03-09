@@ -9,7 +9,6 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
-import FreeShippingBanner from "./components/FreeShippingBanner";
 import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
 
@@ -75,7 +74,6 @@ function App() {
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
-                <FreeShippingBanner />
               <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}

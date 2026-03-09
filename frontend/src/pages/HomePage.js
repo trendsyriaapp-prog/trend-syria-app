@@ -203,9 +203,9 @@ const HomePage = () => {
 
       {/* Ads Banner Carousel */}
       {ads.length > 0 && (
-        <section className="py-2">
+        <section className="py-1">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="relative overflow-hidden rounded-2xl">
+            <div className="relative overflow-hidden rounded-xl">
               <motion.div
                 key={currentAdIndex}
                 initial={{ opacity: 0, x: 50 }}
@@ -215,7 +215,7 @@ const HomePage = () => {
               >
                 <Link to={ads[currentAdIndex]?.link || '#'}>
                   <div 
-                    className="relative h-32 md:h-40 rounded-2xl overflow-hidden"
+                    className="relative h-16 md:h-20 rounded-xl overflow-hidden"
                     style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
                   >
                     {ads[currentAdIndex]?.image ? (
@@ -225,11 +225,11 @@ const HomePage = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center p-4">
+                      <div className="absolute inset-0 flex items-center justify-center p-2">
                         <div className="text-center text-white">
-                          <h3 className="text-xl md:text-2xl font-bold mb-1">{ads[currentAdIndex]?.title}</h3>
+                          <h3 className="text-sm md:text-base font-bold">{ads[currentAdIndex]?.title}</h3>
                           {ads[currentAdIndex]?.description && (
-                            <p className="text-sm opacity-90">{ads[currentAdIndex].description}</p>
+                            <p className="text-xs opacity-90">{ads[currentAdIndex].description}</p>
                           )}
                         </div>
                       </div>
@@ -240,13 +240,13 @@ const HomePage = () => {
               
               {/* Dots indicator */}
               {ads.length > 1 && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
                   {ads.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentAdIndex(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        i === currentAdIndex ? 'bg-white w-4' : 'bg-white/50'
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                        i === currentAdIndex ? 'bg-white w-3' : 'bg-white/50'
                       }`}
                     />
                   ))}
