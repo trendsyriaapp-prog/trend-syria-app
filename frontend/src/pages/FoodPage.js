@@ -74,21 +74,23 @@ const FoodPage = () => {
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6">
+      <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-3">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold mb-2">توصيل الطعام</h1>
-          <p className="text-green-100 text-sm">مطاعم • مواد غذائية • خضروات طازجة</p>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-bold">توصيل الطعام</h1>
+            <p className="text-green-100 text-xs">مطاعم • غذائية • خضروات</p>
+          </div>
           
           {/* Search */}
-          <div className="mt-4 relative">
+          <div className="relative">
             <input
               type="text"
               placeholder="ابحث عن مطعم أو منتج..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl py-3 px-4 pr-10 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="w-full bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg py-2 px-4 pr-9 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
             />
-            <Search size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70" />
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70" />
           </div>
         </div>
       </div>
