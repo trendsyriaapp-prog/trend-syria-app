@@ -133,60 +133,6 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
-            {/* Food Banners Carousel */}
-            {foodBanners.length > 0 && (
-              <section className="mb-4">
-                <div className="relative overflow-hidden rounded-2xl">
-                  <motion.div
-                    key={currentBannerIndex}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Link to={foodBanners[currentBannerIndex]?.link || '/food'}>
-                      <div 
-                        className="relative h-32 md:h-40 rounded-2xl overflow-hidden"
-                        style={{ backgroundColor: foodBanners[currentBannerIndex]?.background_color || '#22C55E' }}
-                      >
-                        {foodBanners[currentBannerIndex]?.image ? (
-                          <img 
-                            src={foodBanners[currentBannerIndex].image} 
-                            alt={foodBanners[currentBannerIndex].title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center p-4">
-                            <div className="text-center text-white">
-                              <h3 className="text-xl md:text-2xl font-bold mb-1">{foodBanners[currentBannerIndex]?.title}</h3>
-                              {foodBanners[currentBannerIndex]?.description && (
-                                <p className="text-sm opacity-90">{foodBanners[currentBannerIndex].description}</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  </motion.div>
-                  
-                  {/* Dots indicator */}
-                  {foodBanners.length > 1 && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {foodBanners.map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setCurrentBannerIndex(i)}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            i === currentBannerIndex ? 'bg-white w-4' : 'bg-white/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
             {/* Flash Sales Banner */}
             {flashSales.length > 0 && (
               <section className="mb-4">
@@ -334,53 +280,44 @@ const FlashSaleBanner = ({ flash }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl overflow-hidden shadow-lg mb-4"
+      className="rounded-xl overflow-hidden shadow-md"
       style={{ backgroundColor: flash.banner_color || '#FF4500' }}
     >
-      <div className="px-4 py-4 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl animate-pulse">⚡</span>
-              <h3 className="text-xl font-bold">{flash.name}</h3>
-            </div>
-            {flash.description && (
-              <p className="text-white/90 text-sm">{flash.description}</p>
-            )}
-            <div className="flex items-center gap-2 mt-2">
-              <span className="bg-white text-orange-600 px-3 py-1 rounded-full font-bold text-lg">
-                {flash.discount_percentage}% خصم
-              </span>
-              <span className="text-white/80 text-sm">
-                على {!flash.applicable_categories?.length ? 'جميع الأصناف' : 
-                  flash.applicable_categories.map(c => 
-                    c === 'restaurants' ? 'المطاعم' : 
-                    c === 'groceries' ? 'المواد الغذائية' : 'الخضروات'
-                  ).join(' و ')}
-              </span>
+      <div className="px-3 py-2 text-white">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-lg animate-pulse">⚡</span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold truncate">{flash.name}</h3>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-white text-orange-600 px-2 py-0.5 rounded-full font-bold text-xs">
+                  {flash.discount_percentage}%
+                </span>
+                <span className="text-white/80 text-xs truncate">
+                  {!flash.applicable_categories?.length ? 'جميع الأصناف' : 
+                    flash.applicable_categories.map(c => 
+                      c === 'restaurants' ? 'مطاعم' : 
+                      c === 'groceries' ? 'غذائية' : 'خضروات'
+                    ).join(' • ')}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Countdown Timer */}
-          <div className="text-center">
-            <p className="text-white/80 text-xs mb-1">ينتهي خلال</p>
-            <div className="flex gap-1">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
-                <span className="text-2xl font-bold block">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="text-[10px] text-white/70">ساعة</span>
-              </div>
-              <span className="text-2xl font-bold self-center">:</span>
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
-                <span className="text-2xl font-bold block">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="text-[10px] text-white/70">دقيقة</span>
-              </div>
-              <span className="text-2xl font-bold self-center">:</span>
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-2 min-w-[50px]">
-                <span className="text-2xl font-bold block">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="text-[10px] text-white/70">ثانية</span>
-              </div>
+          <div className="flex items-center gap-1 text-xs">
+            <div className="bg-white/20 rounded px-1.5 py-1 text-center min-w-[28px]">
+              <span className="font-bold block">{String(timeLeft.hours).padStart(2, '0')}</span>
+            </div>
+            <span className="font-bold">:</span>
+            <div className="bg-white/20 rounded px-1.5 py-1 text-center min-w-[28px]">
+              <span className="font-bold block">{String(timeLeft.minutes).padStart(2, '0')}</span>
+            </div>
+            <span className="font-bold">:</span>
+            <div className="bg-white/20 rounded px-1.5 py-1 text-center min-w-[28px]">
+              <span className="font-bold block">{String(timeLeft.seconds).padStart(2, '0')}</span>
             </div>
           </div>
         </div>
