@@ -12,7 +12,6 @@ import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
 import DailyDeal from '../components/DailyDeal';
 import RecommendedProducts from '../components/RecommendedProducts';
-import { NewsletterFooter } from '../components/NewsletterSubscribe';
 import { useScroll } from '../context/ScrollContext';
 import { useSettings } from '../context/SettingsContext';
 
@@ -468,9 +467,6 @@ const HomePage = () => {
           <RecommendedProducts />
         </div>
       </section>
-
-      {/* قسم النشرة البريدية */}
-      <NewsletterFooter />
 
       {/* CTA Banner - Modern Style */}
       <section className="py-6">
