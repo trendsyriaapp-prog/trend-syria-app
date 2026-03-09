@@ -59,6 +59,8 @@ const FoodStorePage = () => {
   const saveCart = (newCart) => {
     localStorage.setItem(`food_cart_${storeId}`, JSON.stringify(newCart));
     setCart(newCart);
+    // إرسال حدث لتحديث شريط التوصيل
+    window.dispatchEvent(new CustomEvent('foodCartUpdated'));
   };
 
   const addToCart = (product, quantity = 1) => {
