@@ -569,7 +569,7 @@ const FoodCartPage = () => {
       </div>
 
       {/* Bottom Summary */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40 shadow-lg">
         <div className="max-w-2xl mx-auto">
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm">

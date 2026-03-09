@@ -247,10 +247,10 @@ const FoodStorePage = () => {
 
       {/* Cart Button */}
       {cartItemsCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+        <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-200 z-40 shadow-lg">
           <button
             onClick={() => navigate(`/food/cart/${storeId}`)}
-            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-green-600"
+            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-green-600"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag size={20} />
