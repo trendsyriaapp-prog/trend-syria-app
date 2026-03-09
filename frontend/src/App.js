@@ -134,7 +134,6 @@ function App() {
             <MobileNav />
             <Toaster />
             <Chatbot />
-            <WhatsAppButton />
           </div>
           </ScrollProvider>
         </BrowserRouter>

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
-  Shield, FileText, RefreshCcw, Gift, Moon, Sun
+  Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -212,6 +212,24 @@ const SettingsPage = () => {
           </div>
           <ChevronLeft size={20} />
         </button>
+
+        {/* WhatsApp Support */}
+        <a
+          href="https://wa.me/963551021618?text=مرحباً، أريد الاستفسار عن خدمات تريند سورية"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 mb-4 flex items-center gap-3 text-white shadow-lg"
+          data-testid="whatsapp-support-link"
+        >
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <MessageCircle size={24} className="text-white" />
+          </div>
+          <div className="flex-1 text-right">
+            <p className="font-bold">تواصل معنا عبر WhatsApp</p>
+            <p className="text-xs opacity-90">دعم فني على مدار الساعة</p>
+          </div>
+          <ChevronLeft size={20} />
+        </a>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-3 overflow-x-auto">
