@@ -66,6 +66,7 @@ from routes.analytics import router as analytics_router
 from routes.gifts import router as gifts_router
 from routes.recommendations import router as recommendations_router
 from routes.image_search import router as image_search_router
+from routes.newsletter import router as newsletter_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -139,6 +140,7 @@ api_router.include_router(analytics_router)
 api_router.include_router(gifts_router)
 api_router.include_router(recommendations_router)
 api_router.include_router(image_search_router)
+api_router.include_router(newsletter_router)
 
 # ============== Categories ==============
 
