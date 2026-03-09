@@ -9,6 +9,7 @@ import jwt
 import logging
 
 from core.database import db, get_current_user, get_optional_user, JWT_SECRET, ALGORITHM
+from core.performance import cache, cached
 from models.schemas import ProductCreate, ProductUpdate, ProductApproval, ProductQuestion, ProductAnswer
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -25,7 +26,12 @@ FOOD_CATEGORIES = ["مطاعم", "مواد غذائية", "خضروات وفوا
 
 @router.get("/categories")
 async def get_categories():
-    """إرجاع الأصناف مع الأيقونات والنوع"""
+    """إرجاع الأصناف مع الأيقونات والنوع - مع كاش"""
+    # التحقق من الكاش
+    cached_categories = cache.get("categories_list")
+    if cached_categories:
+        return cached_categories
+    
     categories_with_icons = [
         {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
         {"id": "fashion", "name": "أزياء", "icon": "Sparkles", "type": "shopping"},
@@ -39,6 +45,10 @@ async def get_categories():
         {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
         {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
     ]
+    
+    # حفظ في الكاش لمدة ساعة
+    cache.set("categories_list", categories_with_icons, ttl_seconds=3600)
+    
     return categories_with_icons
 
 @router.post("")

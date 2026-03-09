@@ -2,6 +2,7 @@
 # الملف الرئيسي للخادم - تريند سورية API
 # تم تقسيم الكود إلى ملفات منفصلة في مجلد routes
 # 🔒 محمي بـ 10 طبقات أمان
+# ⚡ محسّن للأداء
 
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,7 @@ import os
 from datetime import datetime, timezone
 import hashlib
 import uuid
+import time
 
 # Load environment
 ROOT_DIR = Path(__file__).parent
@@ -20,6 +22,14 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Import database
 from core.database import db, client
+
+# ⚡ Import performance module
+from core.performance import (
+    create_database_indexes, 
+    cache, 
+    performance_monitor,
+    IMAGE_OPTIMIZATION_CONFIG
+)
 
 # 🔒 Import security module
 from core.security import (
@@ -166,6 +176,17 @@ async def get_categories():
 @api_router.get("/")
 async def root():
     return {"message": "مرحباً بك في تريند سورية API"}
+
+# ============== Performance Stats ==============
+
+@api_router.get("/performance/stats")
+async def get_performance_stats():
+    """⚡ إحصائيات الأداء والكاش"""
+    return {
+        "cache_stats": cache.stats,
+        "performance_stats": performance_monitor.get_stats(),
+        "image_config": IMAGE_OPTIMIZATION_CONFIG
+    }
 
 # ============== Seed Demo Data ==============
 
@@ -358,6 +379,36 @@ async def init_commission_rates():
         })
         logger.info("تم تهيئة نسب العمولات الافتراضية")
 
+@app.on_event("startup")
+async def init_database_indexes():
+    """⚡ إنشاء فهارس قاعدة البيانات لتحسين الأداء"""
+    await create_database_indexes(db)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# ============== Performance Monitoring Middleware ==============
+
+@app.middleware("http")
+async def performance_middleware(request: Request, call_next):
+    """⚡ Middleware لمراقبة أداء الطلبات"""
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    # حساب مدة الطلب
+    duration_ms = (time.time() - start_time) * 1000
+    
+    # تسجيل في مراقب الأداء
+    performance_monitor.log_request(
+        path=request.url.path,
+        method=request.method,
+        duration_ms=duration_ms,
+        status_code=response.status_code
+    )
+    
+    # إضافة header لمدة المعالجة
+    response.headers["X-Response-Time"] = f"{duration_ms:.2f}ms"
+    
+    return response

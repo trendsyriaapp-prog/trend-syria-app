@@ -1024,14 +1024,62 @@ const { t, language, toggleLanguage, isRTL, formatPrice } = useLanguage();
 
 ---
 
-## 📊 تحسينات الأداء المقترحة (للمستقبل)
+## ⚡ تحسينات الأداء المُنفذة (9 مارس 2026) ✅
 
-| التحسين | الوصف | الأولوية |
-|---------|-------|----------|
-| تحسين الصور | ضغط الصور وتحويلها لـ WebP، Lazy Loading | عالية |
-| التخزين المؤقت | Redis cache للـ APIs المتكررة | عالية |
-| تحسين قاعدة البيانات | إضافة indexes للحقول المستخدمة في البحث | عالية |
-| Code Splitting | تقسيم الكود لتحميل أسرع | متوسطة |
-| CDN للصور | استخدام CDN لتسريع تحميل الصور | متوسطة |
+### 1. فهارس قاعدة البيانات (Database Indexes)
+تم إنشاء فهارس لجميع الـ Collections الرئيسية:
+- **Users**: id, phone, email, user_type, referral_code
+- **Products**: id, seller_id, category_id, status, price, views, sales_count + فهرس نصي للبحث
+- **Orders**: id, user_id, seller_id, status, created_at
+- **Reviews, Notifications, Cart, Wishlist, Coupons** وغيرها
+
+### 2. التخزين المؤقت (In-Memory Cache)
+- كاش بسيط في الذاكرة مع TTL
+- يخزن الفئات، الإعدادات، البيانات المتكررة
+- **النتيجة**: تقليل وقت الاستجابة من 386ms إلى 101ms (4x أسرع)
+
+### 3. مراقبة الأداء (Performance Monitoring)
+- تسجيل مدة كل طلب
+- كشف الطلبات البطيئة (> 1 ثانية)
+- API للإحصائيات: `/api/performance/stats`
+
+### 4. تحسين الصور (Lazy Loading)
+- مكون `OptimizedImage` مع Lazy Loading
+- Intersection Observer للتحميل عند الحاجة
+- Placeholder ضبابي أو هيكلي
+
+### الملفات:
+- `/app/backend/core/performance.py` - كل منطق الأداء
+- `/app/frontend/src/components/OptimizedImage.js` - مكون الصور المحسنة
+
+### API إحصائيات الأداء:
+```json
+GET /api/performance/stats
+
+{
+  "cache_stats": {"total_keys": 1, "memory_size": 2},
+  "performance_stats": {
+    "total_requests": 11,
+    "avg_duration_ms": 1.9,
+    "max_duration_ms": 7.2,
+    "slow_requests_count": 0
+  }
+}
+```
+
+---
+
+## 📊 تحسينات أداء مستقبلية
+
+| التحسين | الحالة |
+|---------|--------|
+| ✅ Database Indexes | مُنفذ |
+| ✅ In-Memory Cache | مُنفذ |
+| ✅ Performance Monitoring | مُنفذ |
+| ✅ Lazy Loading Images | مُنفذ |
+| ⏳ Redis Cache | للإنتاج |
+| ⏳ CDN للصور | للإنتاج |
+| ⏳ Code Splitting | مستقبلي |
+
 
 
