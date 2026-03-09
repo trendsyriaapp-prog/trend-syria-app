@@ -937,8 +937,54 @@
 
 ---
 
-## 🌐 دعم متعدد اللغات (9 مارس 2026) ✅
+## 🌐 دعم متعدد اللغات الكامل (9 مارس 2026) ✅
 
-- العربية (افتراضي)
-- الإنجليزية
-- `/app/frontend/src/context/LanguageContext.js`
+### اللغات المدعومة:
+- **العربية (افتراضي)** - RTL
+- **English** - LTR
+
+### الميزات:
+- زر تبديل اللغة في صفحة الإعدادات
+- أكثر من **200 ترجمة** شاملة
+- تغيير اتجاه الصفحة تلقائياً (RTL/LTR)
+- تنسيق الأرقام والأسعار والتواريخ حسب اللغة
+
+### الملفات:
+- `/app/frontend/src/context/LanguageContext.js` - السياق والترجمات
+- `/app/frontend/src/pages/SettingsPage.js` - زر التبديل
+
+### استخدام الترجمة:
+```javascript
+import { useLanguage } from '../context/LanguageContext';
+
+const { t, language, toggleLanguage, isRTL, formatPrice } = useLanguage();
+
+// استخدام
+<p>{t('add_to_cart')}</p>
+<p>{formatPrice(product.price)}</p>
+```
+
+---
+
+## 📷 البحث بالصورة (9 مارس 2026) ✅
+
+### الميزات:
+- تحليل الصور بالذكاء الاصطناعي (GPT-5.2 Vision)
+- استخراج الفئة، الألوان، النمط، الجنس
+- البحث عن منتجات مشابهة تلقائياً
+- دعم الرفع والتقاط الصور
+
+### APIs:
+- `POST /api/image-search/search` - بحث بصورة base64
+- `POST /api/image-search/upload` - رفع ملف صورة
+
+### الملفات:
+- `/app/backend/routes/image_search.py` - APIs البحث
+- `/app/frontend/src/components/ImageSearchModal.js` - مكون البحث
+- `/app/frontend/src/components/Header.js` - زر الكاميرا في شريط البحث
+
+### الاستخدام:
+- اضغط على أيقونة الكاميرا 📷 في شريط البحث
+- ارفع صورة أو التقط واحدة
+- سيتم تحليلها وعرض منتجات مشابهة
+

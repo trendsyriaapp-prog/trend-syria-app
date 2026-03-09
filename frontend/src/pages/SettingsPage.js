@@ -5,11 +5,12 @@ import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
-  Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle
+  Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import LoyaltyCard from '../components/LoyaltyCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -31,6 +32,7 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('loyalty');
   const [addresses, setAddresses] = useState([]);
@@ -183,9 +185,9 @@ const SettingsPage = () => {
           <div className="flex items-center gap-3">
             {isDarkMode ? <Moon size={24} className="text-yellow-400" /> : <Sun size={24} className="text-orange-500" />}
             <div>
-              <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>الوضع الليلي</p>
+              <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('dark_mode')}</p>
               <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {isDarkMode ? 'مفعّل - راحة للعين' : 'معطّل'}
+                {isDarkMode ? t('dark_mode_enabled') : t('dark_mode_disabled')}
               </p>
             </div>
           </div>
@@ -195,6 +197,30 @@ const SettingsPage = () => {
             data-testid="dark-mode-toggle"
           >
             <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${isDarkMode ? 'right-0.5' : 'left-0.5'}`} />
+          </button>
+        </div>
+
+        {/* Language Toggle */}
+        <div className={`rounded-xl p-4 mb-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+          <div className="flex items-center gap-3">
+            <Globe size={24} className="text-blue-500" />
+            <div>
+              <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{t('language')}</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {language === 'ar' ? 'العربية' : 'English'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleLanguage}
+            className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
+              language === 'ar' 
+                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+            data-testid="language-toggle"
+          >
+            {language === 'ar' ? 'English' : 'العربية'}
           </button>
         </div>
 
