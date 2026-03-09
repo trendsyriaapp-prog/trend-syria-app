@@ -11,6 +11,7 @@ import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
 import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
+import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -74,6 +75,7 @@ function App() {
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
+                  <FoodDeliveryBanner />
               <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}
