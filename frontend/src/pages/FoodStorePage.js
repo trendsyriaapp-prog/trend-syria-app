@@ -81,7 +81,7 @@ const FoodStorePage = () => {
       saveCart([...cart, newItem]);
     }
     
-    toast({ title: "تمت الإضافة", description: `${product.name} أُضيف للسلة` });
+    // لا نعرض رسالة toast - الشريط السفلي يُظهر التحديث
   };
 
   const getCartQuantity = (productId) => {

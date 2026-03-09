@@ -41,8 +41,13 @@ const FoodDeliveryBanner = () => {
       if (storeId) {
         fetchStoreInfo(storeId);
       }
+    } else {
+      // إعادة تعيين القيم عند مغادرة صفحة المتجر
+      setFreeDeliveryMin(0);
+      setCartTotal(0);
+      setHideAfterFreeDelivery(false);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isStorePage]);
 
   // مراقبة تغييرات السلة
   useEffect(() => {
@@ -59,37 +64,35 @@ const FoodDeliveryBanner = () => {
           // التحقق من الوصول للتوصيل المجاني
           if (freeDeliveryMin > 0 && total >= freeDeliveryMin && cartTotal < freeDeliveryMin) {
             setShowCelebration(true);
-            // إخفاء الاحتفال بعد 3 ثواني
             setTimeout(() => setShowCelebration(false), 3000);
-            // إخفاء الشريط بالكامل بعد 5 ثواني
             setTimeout(() => setHideAfterFreeDelivery(true), 5000);
           }
           
           setCartTotal(total);
         } else {
           setCartTotal(0);
-          setHideAfterFreeDelivery(false); // إعادة إظهار الشريط إذا فرغت السلة
+          setHideAfterFreeDelivery(false);
         }
       } catch (error) {
         console.error('Error loading cart:', error);
       }
     };
 
-    // Load initially
+    // تحميل السلة عند بدء التشغيل
     loadCart();
 
-    // Listen for custom event
+    // الاستماع لتحديثات السلة
     const handleCartUpdate = () => loadCart();
     window.addEventListener('foodCartUpdated', handleCartUpdate);
     
-    // Also poll every 500ms as backup
-    const interval = setInterval(loadCart, 500);
+    // تحديث دوري كاحتياط
+    const interval = setInterval(loadCart, 1000);
 
     return () => {
       window.removeEventListener('foodCartUpdated', handleCartUpdate);
       clearInterval(interval);
     };
-  }, [location.pathname, freeDeliveryMin, isStorePage]);
+  }, [location.pathname, freeDeliveryMin, isStorePage, cartTotal]);
 
   const fetchStoreInfo = async (storeId) => {
     try {
