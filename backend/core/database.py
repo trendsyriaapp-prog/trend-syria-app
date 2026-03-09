@@ -88,7 +88,7 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
 
 # ============== Notification Helpers ==============
 
-async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None, product_id: str = None):
+async def create_notification_for_user(user_id: str, title: str, message: str, notification_type: str = "order", order_id: str = None, product_id: str = None, extra_data: dict = None):
     notification = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -100,6 +100,9 @@ async def create_notification_for_user(user_id: str, title: str, message: str, n
         "target": "user",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+    # إضافة بيانات إضافية (مثل معلومات السائق)
+    if extra_data:
+        notification["data"] = extra_data
     await db.notifications.insert_one(notification)
     return notification
 

@@ -450,8 +450,8 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
     
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="تم تأكيد طلبك!",
-        message="البائع بدأ بتجهيز طلبك",
+        title=f"✅ تم تأكيد طلبك #{order_id[:8]}",
+        message=f"البائع: {user.get('full_name', 'المتجر')}\nسيبدأ التحضير قريباً",
         notification_type="order_status",
         order_id=order_id
     )
@@ -489,10 +489,16 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
         }
     )
     
+    # جلب أسماء المنتجات للإشعار التفصيلي
+    product_names = [item.get("product_name", "منتج") for item in order.get("items", [])[:2]]
+    products_text = "، ".join(product_names)
+    if len(order.get("items", [])) > 2:
+        products_text += f" و{len(order.get('items', [])) - 2} أخرى"
+    
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="جاري تحضير طلبك",
-        message="البائع يقوم بتجهيز طلبك الآن",
+        title=f"📦 جاري تحضير طلبك #{order_id[:8]}",
+        message=f"المنتجات: {products_text}\nالوقت المتوقع للشحن: اليوم",
         notification_type="order_status",
         order_id=order_id
     )
@@ -537,8 +543,8 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="تم شحن طلبك!",
-        message="طلبك جاهز وبانتظار موظف التوصيل",
+        title=f"🚚 تم شحن طلبك #{order_id[:8]}",
+        message="طلبك جاهز وبانتظار موظف التوصيل\nسيتم إعلامك فور استلامه",
         notification_type="order_status",
         order_id=order_id
     )
@@ -546,8 +552,8 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     # إشعار موظفي التوصيل
     await create_notification_for_role(
         role="delivery",
-        title="طلب جاهز للتوصيل",
-        message=f"طلب جديد جاهز للتوصيل إلى {order.get('city', '')}",
+        title="📦 طلب جاهز للتوصيل",
+        message=f"طلب جديد جاهز للتوصيل\nالمنطقة: {order.get('shipping_address', {}).get('area', order.get('city', ''))}",
         notification_type="delivery_ready",
         order_id=order_id
     )
@@ -603,13 +609,28 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
         }
     )
     
-    # إشعار العميل
+    # جلب تقييم موظف التوصيل
+    driver_rating = await db.reviews.aggregate([
+        {"$match": {"reviewed_id": user["id"], "review_type": "delivery"}},
+        {"$group": {"_id": None, "avg": {"$avg": "$rating"}}}
+    ]).to_list(1)
+    rating = driver_rating[0]["avg"] if driver_rating else 5.0
+    rating_stars = "⭐" * int(round(rating))
+    
+    # إشعار العميل التفصيلي مع معلومات السائق
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="تم استلام طلبك!",
-        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} استلم طلبك",
+        title=f"🚚 تم تسليم طلبك لموظف التوصيل",
+        message=f"السائق: {user.get('full_name', user.get('name', ''))}\nالتقييم: {rating_stars} ({rating:.1f})\n📞 للتواصل: {user.get('phone', '')}\nالوصول المتوقع: خلال 45 دقيقة",
         notification_type="delivery",
-        order_id=order_id
+        order_id=order_id,
+        extra_data={
+            "driver_id": user["id"],
+            "driver_name": user.get("full_name", user.get("name", "")),
+            "driver_phone": user.get("phone", ""),
+            "driver_photo": user.get("photo", ""),
+            "driver_rating": rating
+        }
     )
     
     # إشعار البائع
@@ -617,8 +638,8 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
     for seller_id in seller_ids:
         await create_notification_for_user(
             user_id=seller_id,
-            title="تم استلام الطلب من المتجر",
-            message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} استلم الطلب",
+            title="📦 تم استلام الطلب من المتجر",
+            message=f"موظف التوصيل: {user.get('full_name', user.get('name', ''))}\nرقم الطلب: #{order_id[:8]}",
             notification_type="delivery",
             order_id=order_id
         )
@@ -656,12 +677,22 @@ async def delivery_on_the_way(order_id: str, user: dict = Depends(get_current_us
         }
     )
     
+    # حساب الوقت المتوقع
+    shipping_address = order.get("shipping_address", {})
+    area = shipping_address.get("area", order.get("city", ""))
+    
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="طلبك في الطريق!",
-        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} في طريقه إليك الآن",
+        title="🚗 طلبك في الطريق!",
+        message=f"السائق: {user.get('full_name', user.get('name', ''))}\n📍 المنطقة: {area}\n⏱️ الوصول المتوقع: خلال 20-30 دقيقة\nيرجى التجهز للاستلام",
         notification_type="delivery",
-        order_id=order_id
+        order_id=order_id,
+        extra_data={
+            "driver_id": user["id"],
+            "driver_name": user.get("full_name", user.get("name", "")),
+            "driver_phone": user.get("phone", ""),
+            "driver_photo": user.get("photo", "")
+        }
     )
     
     return {"message": "تم تحديث الحالة"}
@@ -703,13 +734,18 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
         }
     )
     
-    # إشعار العميل
+    # إشعار العميل بالتسليم مع طلب التقييم
     await create_notification_for_user(
         user_id=order["user_id"],
-        title="تم التسليم!",
-        message="تم تسليم طلبك بنجاح. شكراً لتسوقك معنا!",
+        title="🎉 تم تسليم طلبك بنجاح!",
+        message=f"رقم الطلب: #{order_id[:8]}\n⭐ قيّم تجربتك مع موظف التوصيل\n🛍️ قيّم المنتجات\nشكراً لتسوقك معنا!",
         notification_type="delivery",
-        order_id=order_id
+        order_id=order_id,
+        extra_data={
+            "action": "rate",
+            "driver_id": user["id"],
+            "show_rating_prompt": True
+        }
     )
     
     # إشعار البائع
@@ -717,8 +753,8 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     for seller_id in seller_ids:
         await create_notification_for_user(
             user_id=seller_id,
-            title="تم تسليم الطلب",
-            message="تم تسليم طلبك للعميل بنجاح",
+            title="✅ تم تسليم الطلب",
+            message=f"رقم الطلب: #{order_id[:8]}\nتم تسليم طلبك للعميل بنجاح",
             notification_type="delivery",
             order_id=order_id
         )
