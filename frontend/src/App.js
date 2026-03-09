@@ -44,6 +44,7 @@ import FoodStorePage from "./pages/FoodStorePage";
 import FoodCartPage from "./pages/FoodCartPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
 import ReferralsPage from "./pages/ReferralsPage";
+import GiftsPage from "./pages/GiftsPage";
 
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
@@ -99,6 +100,7 @@ function App() {
                 <Route path="/following" element={<FollowingPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/gifts" element={<GiftsPage />} />
                 
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />

@@ -54,13 +54,13 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
     
     await db.gifts.insert_one(gift_doc)
     
-    # إرسال إشعار للمستلم
+    # إرسال إشعار للمستلم (بدون اسم المنتج - مفاجأة!)
     if recipient:
         notification = {
             "id": str(uuid.uuid4()),
             "user_id": recipient["id"],
             "title": "🎁 لديك هدية جديدة!",
-            "message": f"أرسل لك {'صديق' if gift.is_anonymous else user.get('full_name', 'شخص')} هدية: {product['name']}",
+            "message": f"أرسل لك {'صديق' if gift.is_anonymous else user.get('full_name', 'شخص')} هدية مفاجأة!",
             "type": "gift_received",
             "data": {"gift_id": gift_id},
             "read": False,
@@ -86,7 +86,7 @@ async def get_sent_gifts(user: dict = Depends(get_current_user)):
 
 @router.get("/received")
 async def get_received_gifts(user: dict = Depends(get_current_user)):
-    """الهدايا المُستلمة"""
+    """الهدايا المُستلمة - مع إخفاء تفاصيل المنتج للهدايا غير المقبولة"""
     gifts = await db.gifts.find(
         {"$or": [
             {"recipient_id": user["id"]},
@@ -95,7 +95,32 @@ async def get_received_gifts(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
-    return gifts
+    # إخفاء تفاصيل المنتج للهدايا غير المقبولة (مفاجأة!)
+    result = []
+    for gift in gifts:
+        if gift["status"] == "pending":
+            # إخفاء تفاصيل المنتج - مفاجأة!
+            gift_copy = {
+                "id": gift["id"],
+                "sender_name": gift["sender_name"],
+                "recipient_name": gift["recipient_name"],
+                "message": gift.get("message"),
+                "is_anonymous": gift.get("is_anonymous", False),
+                "status": gift["status"],
+                "created_at": gift["created_at"],
+                # إخفاء تفاصيل المنتج
+                "product_name": "🎁 مفاجأة!",
+                "product_image": None,
+                "product_price": None,
+                "is_surprise": True
+            }
+            result.append(gift_copy)
+        else:
+            # بعد القبول أو الرفض - يظهر كل شيء
+            gift["is_surprise"] = False
+            result.append(gift)
+    
+    return result
 
 @router.post("/{gift_id}/accept")
 async def accept_gift(gift_id: str, user: dict = Depends(get_current_user)):

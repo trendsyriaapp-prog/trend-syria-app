@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -152,6 +152,18 @@ const MobileNav = () => {
                     <MessageCircle size={20} className="text-blue-500" />
                   </div>
                   <span className="font-medium text-gray-900">الرسائل</span>
+                </Link>
+
+                <Link
+                  to="/gifts"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                  data-testid="gifts-menu-link"
+                >
+                  <div className="w-10 h-10 bg-pink-50 rounded-full flex items-center justify-center">
+                    <Gift size={20} className="text-pink-500" />
+                  </div>
+                  <span className="font-medium text-gray-900">هداياي</span>
                 </Link>
 
                 <Link
