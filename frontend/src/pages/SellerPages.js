@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
-  Megaphone, Wallet, TrendingUp, Gift, BookOpen
+  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -15,6 +15,7 @@ import { formatPrice } from '../utils/imageHelpers';
 import SellerAdsTab from '../components/seller/SellerAdsTab';
 import SellerAdAnalytics from '../components/seller/SellerAdAnalytics';
 import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
+import SellerReviewsTab from '../components/seller/SellerReviewsTab';
 import ImageBackgroundSelector from '../components/seller/ImageBackgroundSelector';
 import OrderLabelPrint from '../components/seller/OrderLabelPrint';
 import AddProductModal from '../components/seller/AddProductModal';
@@ -416,6 +417,7 @@ const SellerDashboardPage = () => {
         <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 border border-gray-200 overflow-x-auto">
           {[
             { id: 'products', icon: Package, label: 'منتجاتي' },
+            { id: 'reviews', icon: Star, label: 'التقييمات' },
             { id: 'ads', icon: Megaphone, label: 'الإعلانات' },
             { id: 'discounts', icon: Gift, label: 'الخصومات' },
             { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
@@ -447,6 +449,10 @@ const SellerDashboardPage = () => {
 
         {activeTab === 'analytics' && (
           <SellerAdAnalytics />
+        )}
+
+        {activeTab === 'reviews' && (
+          <SellerReviewsTab />
         )}
 
         {activeTab === 'products' && (

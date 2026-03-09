@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
-  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift
+  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift, MessageSquare, Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -199,8 +199,51 @@ const ReviewForm = ({ productId, onSuccess }) => {
 };
 
 // مكون عرض التقييم
-const ReviewCard = ({ review }) => {
+const ReviewCard = ({ review, sellerId, onReplyAdded }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [showFullImage, setShowFullImage] = useState(null);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replyLoading, setReplyLoading] = useState(false);
+  
+  const isProductSeller = user && user.id === sellerId;
+  const canReply = isProductSeller && !review.seller_reply;
+
+  const handleReply = async () => {
+    if (!replyText.trim()) return;
+    setReplyLoading(true);
+    try {
+      await axios.post(`${API}/reviews/${review.id}/reply`, { reply: replyText });
+      toast({ title: "تم إضافة الرد بنجاح" });
+      setShowReplyForm(false);
+      setReplyText('');
+      onReplyAdded?.();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive" 
+      });
+    } finally {
+      setReplyLoading(false);
+    }
+  };
+
+  const handleDeleteReply = async () => {
+    if (!window.confirm('هل تريد حذف ردك على هذا التقييم؟')) return;
+    try {
+      await axios.delete(`${API}/reviews/${review.id}/reply`);
+      toast({ title: "تم حذف الرد" });
+      onReplyAdded?.();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive" 
+      });
+    }
+  };
   
   return (
     <div className="bg-white rounded-lg p-3 border border-gray-200">
@@ -232,9 +275,73 @@ const ReviewCard = ({ review }) => {
         </div>
       )}
       
-      <p className="text-[10px] text-gray-400">
+      <p className="text-[10px] text-gray-400 mb-2">
         {new Date(review.created_at).toLocaleDateString('ar-SY')}
       </p>
+
+      {/* Seller Reply Section */}
+      {review.seller_reply && (
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-3 mt-2 border-r-4 border-[#FF6B00]">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Store size={14} className="text-[#FF6B00]" />
+              <span className="text-xs font-bold text-[#FF6B00]">رد البائع</span>
+            </div>
+            {isProductSeller && (
+              <button
+                onClick={handleDeleteReply}
+                className="text-red-500 hover:text-red-700 p-1"
+                title="حذف الرد"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-gray-700">{review.seller_reply}</p>
+          <p className="text-[10px] text-gray-400 mt-1">
+            {review.seller_reply_at && new Date(review.seller_reply_at).toLocaleDateString('ar-SY')}
+          </p>
+        </div>
+      )}
+
+      {/* Reply Form for Seller */}
+      {canReply && !showReplyForm && (
+        <button
+          onClick={() => setShowReplyForm(true)}
+          className="mt-2 text-xs text-[#FF6B00] hover:underline flex items-center gap-1"
+        >
+          <MessageSquare size={12} />
+          رد على هذا التقييم
+        </button>
+      )}
+
+      {showReplyForm && (
+        <div className="mt-3 bg-gray-50 rounded-lg p-3">
+          <textarea
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            className="w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none"
+            placeholder="اكتب ردك على تقييم العميل..."
+            rows={2}
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleReply}
+              disabled={replyLoading || !replyText.trim()}
+              className="bg-[#FF6B00] text-white text-xs font-bold py-2 px-4 rounded-full hover:bg-[#E65000] disabled:opacity-50 flex items-center gap-1"
+            >
+              {replyLoading ? <Loader2 className="animate-spin" size={12} /> : <Send size={12} />}
+              إرسال الرد
+            </button>
+            <button
+              onClick={() => { setShowReplyForm(false); setReplyText(''); }}
+              className="bg-gray-200 text-gray-700 text-xs font-bold py-2 px-4 rounded-full hover:bg-gray-300"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Full Image Modal */}
       {showFullImage && (
@@ -1133,7 +1240,12 @@ const ProductDetailPage = () => {
           {product.reviews?.length > 0 ? (
             <div className="space-y-3 mt-4">
               {product.reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard 
+                  key={review.id} 
+                  review={review} 
+                  sellerId={product.seller_id}
+                  onReplyAdded={fetchProduct}
+                />
               ))}
             </div>
           ) : (
