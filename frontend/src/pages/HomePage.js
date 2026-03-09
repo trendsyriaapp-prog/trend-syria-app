@@ -203,9 +203,9 @@ const HomePage = () => {
 
       {/* Ads Banner Carousel */}
       {ads.length > 0 && (
-        <section className="py-1">
+        <section className="py-2">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="relative overflow-hidden rounded-lg">
+            <div className="relative overflow-hidden rounded-2xl">
               <motion.div
                 key={currentAdIndex}
                 initial={{ opacity: 0, x: 50 }}
@@ -214,39 +214,77 @@ const HomePage = () => {
                 transition={{ duration: 0.3 }}
               >
                 <Link to={ads[currentAdIndex]?.link || '#'}>
-                  <div 
-                    className="relative h-10 md:h-12 rounded-lg overflow-hidden"
-                    style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
-                  >
-                    {ads[currentAdIndex]?.image ? (
-                      <img 
-                        src={ads[currentAdIndex].image} 
-                        alt={ads[currentAdIndex].title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center px-2">
-                        <div className="flex items-center gap-2 text-white">
-                          <span className="text-xs md:text-sm font-bold">{ads[currentAdIndex]?.title}</span>
-                          {ads[currentAdIndex]?.description && (
-                            <span className="text-[10px] opacity-80 hidden sm:inline">- {ads[currentAdIndex].description}</span>
-                          )}
+                  {/* تصميم بانر الطعام الجديد */}
+                  {ads[currentAdIndex]?.link === '/food' ? (
+                    <div className="relative h-24 md:h-28 rounded-2xl overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+                      {/* خلفية مزخرفة */}
+                      <div className="absolute inset-0 opacity-20">
+                        <div className="absolute top-2 right-4 text-6xl">🍕</div>
+                        <div className="absolute bottom-2 left-8 text-4xl">🍔</div>
+                        <div className="absolute top-4 left-1/3 text-3xl">🌮</div>
+                        <div className="absolute bottom-4 right-1/4 text-3xl">🍜</div>
+                      </div>
+                      
+                      {/* المحتوى */}
+                      <div className="relative h-full flex items-center justify-between px-4 md:px-6">
+                        <div className="text-white">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-medium">
+                              جديد ✨
+                            </span>
+                          </div>
+                          <h3 className="text-lg md:text-xl font-bold mb-0.5">قسم الطعام</h3>
+                          <p className="text-white/90 text-xs md:text-sm">توصيل سريع من أفضل المطاعم</p>
+                        </div>
+                        
+                        {/* زر الطلب */}
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="bg-white text-[#FF6B00] px-4 py-2 rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-shadow">
+                            اطلب الآن
+                          </div>
+                          <span className="text-white/80 text-[10px]">🚴 توصيل 30 دقيقة</span>
                         </div>
                       </div>
-                    )}
-                  </div>
+                      
+                      {/* تأثير لامع */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
+                    </div>
+                  ) : (
+                    /* البانرات الأخرى */
+                    <div 
+                      className="relative h-16 md:h-20 rounded-2xl overflow-hidden"
+                      style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
+                    >
+                      {ads[currentAdIndex]?.image ? (
+                        <img 
+                          src={ads[currentAdIndex].image} 
+                          alt={ads[currentAdIndex].title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center px-4">
+                          <div className="text-center text-white">
+                            <h3 className="text-sm md:text-base font-bold">{ads[currentAdIndex]?.title}</h3>
+                            {ads[currentAdIndex]?.description && (
+                              <p className="text-xs opacity-90 mt-0.5">{ads[currentAdIndex].description}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Link>
               </motion.div>
               
               {/* Dots indicator */}
               {ads.length > 1 && (
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {ads.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentAdIndex(i)}
-                      className={`w-1 h-1 rounded-full transition-all ${
-                        i === currentAdIndex ? 'bg-white w-2' : 'bg-white/50'
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i === currentAdIndex ? 'bg-white w-4' : 'bg-white/50'
                       }`}
                     />
                   ))}
