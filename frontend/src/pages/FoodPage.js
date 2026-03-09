@@ -77,7 +77,7 @@ const FoodPage = () => {
       <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-3">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-lg font-bold">توصيل الطعام</h1>
+            <h1 className="text-lg font-bold">قسم الطعام</h1>
             <p className="text-green-100 text-xs">مطاعم • غذائية • خضروات</p>
           </div>
           
