@@ -177,47 +177,17 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        {/* الصف الأول: الشعار + البحث + الأيقونات */}
-        <div className="flex items-center gap-3">
-          {/* سهم الرجوع + مساعد + Share/Notifications - على اليسار */}
-          <div className="flex items-center gap-1">
-            {/* سهم الرجوع - لا يظهر في الصفحة الرئيسية */}
-            {!isHomePage && (
-              <button 
-                onClick={() => navigate(-1)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
-                data-testid="back-btn"
-              >
-                <ArrowRight size={22} />
-              </button>
-            )}
-            
-            {/* أيقونة المجيب الآلي - تظهر دائماً */}
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
-              className="p-2 hover:bg-orange-50 rounded-full transition-colors text-[#FF6B00] flex-shrink-0"
-              title="المجيب الآلي"
-              data-testid="chatbot-icon"
-            >
-              <Bot size={22} />
-            </button>
-            
-            {isProductPage ? (
-              <button 
-                onClick={handleShare}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700 flex-shrink-0"
-                data-testid="share-icon"
-              >
-                <Share2 size={22} />
-              </button>
-            ) : (
-              <NotificationsDropdown />
-            )}
-          </div>
+      <div className="max-w-7xl mx-auto px-3 py-2">
+        {/* الصف الأول: البحث + الأيقونات */}
+        <div className="flex items-center gap-2">
+          {/* Home Button - على اليمين */}
+          <Link to="/" className="flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <Home size={16} className="text-white" />
+            </div>
+          </Link>
 
-          {/* Search Bar - مدمج في الشريط */}
+          {/* Search Bar - شريط البحث الطويل */}
           <form onSubmit={handleSearch} className="flex-1 relative">
             <div className="relative">
               <input
@@ -305,25 +275,38 @@ const Header = () => {
             </AnimatePresence>
           </form>
 
-          {/* Home Button - على اليمين */}
-          <Link to="/" className="flex-shrink-0">
-            <div className="w-9 h-9 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <Home size={18} className="text-white" />
-            </div>
-          </Link>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-
-            {/* User Name only (menu moved to bottom nav) */}
-            {user && (
-              <span className="text-sm font-bold text-gray-900 truncate max-w-[80px]">{user.name}</span>
+          {/* الأيقونات - على اليسار */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* سهم الرجوع */}
+            {!isHomePage && (
+              <button 
+                onClick={() => navigate(-1)}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
+                data-testid="back-btn"
+              >
+                <ArrowRight size={18} />
+              </button>
             )}
             
+            {/* المجيب الآلي */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
+              className="p-1.5 hover:bg-orange-50 rounded-full transition-colors text-[#FF6B00]"
+              title="المجيب الآلي"
+              data-testid="chatbot-icon"
+            >
+              <Bot size={18} />
+            </button>
+            
+            {/* الإشعارات */}
+            <NotificationsDropdown />
+            
+            {/* تسجيل الدخول */}
             {!user && (
               <Link 
                 to="/login"
-                className="bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full hover:bg-[#E65000] transition-colors text-sm"
+                className="bg-[#FF6B00] text-white font-bold px-3 py-1 rounded-full hover:bg-[#E65000] transition-colors text-xs"
                 data-testid="login-btn"
               >
                 دخول
