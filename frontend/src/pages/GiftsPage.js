@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Gift, Send, Inbox, Check, X, Loader2, 
   ChevronRight, User, MessageSquare, Clock,
-  Sparkles, Package, Heart, MapPin, Phone, Building, Home
+  Sparkles, Package, Heart, MapPin, Phone, Building, Home, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -387,6 +387,12 @@ const GiftsPage = () => {
                             <p className="text-sm text-blue-700 dark:text-blue-300">
                               🎉 لقد قبلت الهدية! أدخل عنوان الشحن لاستلامها
                             </p>
+                            {gift.shipping_paid_by_sender && (
+                              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center justify-center gap-1">
+                                <Truck size={14} />
+                                الشحن مدفوع مسبقاً من المُهدي 🎁
+                              </p>
+                            )}
                           </div>
                           <button
                             onClick={() => openAddressForm(gift)}

@@ -17,6 +17,7 @@ class GiftRequest(BaseModel):
     recipient_name: str
     message: Optional[str] = ""
     is_anonymous: bool = False
+    pay_shipping: bool = False  # جديد: المرسل يدفع رسوم الشحن
 
 class GiftResponse(BaseModel):
     gift_id: str
@@ -58,7 +59,8 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
         "product_price": product["price"],
         "message": gift.message,
         "is_anonymous": gift.is_anonymous,
-        "status": "pending",  # pending, accepted, rejected, completed
+        "shipping_paid_by_sender": gift.pay_shipping,  # جديد: هل المرسل يدفع الشحن
+        "status": "pending",  # pending, pending_address, completed, rejected
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -81,7 +83,8 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
     return {
         "message": "تم إرسال الهدية بنجاح!",
         "gift_id": gift_id,
-        "status": "pending"
+        "status": "pending",
+        "shipping_paid": gift.pay_shipping
     }
 
 @router.get("/sent")
@@ -96,7 +99,7 @@ async def get_sent_gifts(user: dict = Depends(get_current_user)):
 
 @router.get("/received")
 async def get_received_gifts(user: dict = Depends(get_current_user)):
-    """الهدايا المُستلمة - مع إخفاء تفاصيل المنتج للهدايا غير المقبولة"""
+    """الهدايا المُستلمة - مع إخفاء تفاصيل المنتج حتى التسليم الفعلي"""
     gifts = await db.gifts.find(
         {"$or": [
             {"recipient_id": user["id"]},
@@ -105,11 +108,17 @@ async def get_received_gifts(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
-    # إخفاء تفاصيل المنتج للهدايا غير المقبولة (مفاجأة!)
     result = []
     for gift in gifts:
-        if gift["status"] == "pending":
-            # إخفاء تفاصيل المنتج - مفاجأة!
+        # التحقق من حالة الطلب إذا كان موجوداً
+        order_delivered = False
+        if gift.get("order_id"):
+            order = await db.orders.find_one({"id": gift["order_id"]}, {"_id": 0, "status": 1})
+            if order and order.get("status") == "delivered":
+                order_delivered = True
+        
+        # إخفاء تفاصيل المنتج حتى التسليم الفعلي (مفاجأة كاملة!)
+        if gift["status"] in ["pending", "pending_address", "completed"] and not order_delivered:
             gift_copy = {
                 "id": gift["id"],
                 "sender_name": gift["sender_name"],
@@ -118,20 +127,20 @@ async def get_received_gifts(user: dict = Depends(get_current_user)):
                 "is_anonymous": gift.get("is_anonymous", False),
                 "status": gift["status"],
                 "created_at": gift["created_at"],
-                # إخفاء تفاصيل المنتج
+                "accepted_at": gift.get("accepted_at"),
+                "completed_at": gift.get("completed_at"),
+                "order_id": gift.get("order_id"),
+                "shipping_paid_by_sender": gift.get("shipping_paid_by_sender", False),
+                # إخفاء تفاصيل المنتج - مفاجأة!
                 "product_name": "🎁 مفاجأة!",
                 "product_image": None,
                 "product_price": None,
-                "is_surprise": True
+                "is_surprise": True,
+                "requires_address": gift["status"] == "pending_address"
             }
             result.append(gift_copy)
-        elif gift["status"] == "pending_address":
-            # بعد القبول - يظهر المنتج لكن ينتظر العنوان
-            gift["is_surprise"] = False
-            gift["requires_address"] = True
-            result.append(gift)
         else:
-            # بعد الإكمال أو الرفض - يظهر كل شيء
+            # بعد التسليم أو الرفض - يظهر كل شيء
             gift["is_surprise"] = False
             gift["requires_address"] = False
             result.append(gift)
@@ -189,6 +198,18 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
     
+    # حساب رسوم الشحن
+    shipping_paid_by_sender = gift.get("shipping_paid_by_sender", False)
+    
+    # جلب إعدادات الشحن
+    settings = await db.platform_settings.find_one({}, {"_id": 0})
+    base_shipping_fee = 5000  # رسوم شحن افتراضية
+    if settings:
+        base_shipping_fee = settings.get("delivery_fees", {}).get("same_city", 5000)
+    
+    # إذا المرسل دفع الشحن، يكون 0 على المستلم
+    shipping_fee = 0 if shipping_paid_by_sender else base_shipping_fee
+    
     # إنشاء الطلب
     order_id = str(uuid.uuid4())[:8].upper()
     
@@ -217,8 +238,9 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
             "seller_id": product.get("seller_id")
         }],
         "subtotal": product["price"],
-        "shipping_fee": 0,  # الهدية عادة بدون رسوم شحن على المستلم
-        "total": product["price"],
+        "shipping_fee": shipping_fee,
+        "shipping_paid_by_sender": shipping_paid_by_sender,
+        "total": product["price"] + shipping_fee,
         "shipping_address": shipping_address,
         "status": "paid",  # تعتبر مدفوعة (المرسل دفع)
         "payment_status": "paid",

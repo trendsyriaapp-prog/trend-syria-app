@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { Gift, X, Send, User, Phone, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { Gift, X, Send, User, Phone, MessageSquare, Eye, EyeOff, Truck } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -16,7 +16,8 @@ const GiftModal = ({ isOpen, onClose, product }) => {
     recipient_name: '',
     recipient_phone: '',
     message: '',
-    is_anonymous: false
+    is_anonymous: false,
+    pay_shipping: false
   });
 
   const handleSubmit = async (e) => {
@@ -38,7 +39,8 @@ const GiftModal = ({ isOpen, onClose, product }) => {
         recipient_phone: formData.recipient_phone,
         recipient_name: formData.recipient_name,
         message: formData.message,
-        is_anonymous: formData.is_anonymous
+        is_anonymous: formData.is_anonymous,
+        pay_shipping: formData.pay_shipping
       });
       
       toast({
@@ -51,7 +53,8 @@ const GiftModal = ({ isOpen, onClose, product }) => {
         recipient_name: '',
         recipient_phone: '',
         message: '',
-        is_anonymous: false
+        is_anonymous: false,
+        pay_shipping: false
       });
     } catch (error) {
       toast({
@@ -80,7 +83,7 @@ const GiftModal = ({ isOpen, onClose, product }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl w-full max-w-md overflow-hidden"
+          className="bg-white rounded-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-4 flex items-center justify-between">
@@ -167,25 +170,54 @@ const GiftModal = ({ isOpen, onClose, product }) => {
               </div>
             </div>
 
-            {/* إرسال مجهول */}
-            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.is_anonymous}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_anonymous: e.target.checked }))}
-                className="w-5 h-5 text-purple-500 rounded"
-              />
-              <div className="flex items-center gap-2">
-                {formData.is_anonymous ? <EyeOff size={18} className="text-gray-500" /> : <Eye size={18} className="text-gray-500" />}
-                <span className="text-sm text-gray-700">إرسال كهدية مجهولة المصدر</span>
-              </div>
-            </label>
+            {/* خيارات إضافية */}
+            <div className="space-y-2">
+              {/* إرسال مجهول */}
+              <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={formData.is_anonymous}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_anonymous: e.target.checked }))}
+                  className="w-5 h-5 text-purple-500 rounded"
+                />
+                <div className="flex items-center gap-2 flex-1">
+                  {formData.is_anonymous ? <EyeOff size={18} className="text-gray-500" /> : <Eye size={18} className="text-gray-500" />}
+                  <span className="text-sm text-gray-700">إرسال كهدية مجهولة المصدر</span>
+                </div>
+              </label>
+
+              {/* دفع رسوم الشحن */}
+              <label className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl cursor-pointer hover:from-green-100 hover:to-emerald-100 transition-colors border border-green-200">
+                <input
+                  type="checkbox"
+                  checked={formData.pay_shipping}
+                  onChange={(e) => setFormData(prev => ({ ...prev, pay_shipping: e.target.checked }))}
+                  className="w-5 h-5 text-green-500 rounded"
+                  data-testid="pay-shipping-checkbox"
+                />
+                <div className="flex items-center gap-2 flex-1">
+                  <Truck size={18} className="text-green-600" />
+                  <div>
+                    <span className="text-sm font-medium text-green-800">دفع رسوم الشحن عن المستلم</span>
+                    <p className="text-xs text-green-600">هدية كاملة بدون تكاليف على صديقك!</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* ملاحظة */}
+            <div className="p-3 bg-purple-50 rounded-xl">
+              <p className="text-xs text-purple-700 text-center">
+                🎁 المستلم لن يعرف ماهية الهدية حتى يستلمها فعلياً - مفاجأة كاملة!
+              </p>
+            </div>
 
             {/* زر الإرسال */}
             <button
               type="submit"
               disabled={loading}
               className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
+              data-testid="send-gift-btn"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
