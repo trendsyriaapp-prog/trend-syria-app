@@ -34,6 +34,10 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             "referral_enabled": True,
             "daily_deals_enabled": True,
             "flash_sales_enabled": True,
+            # إعدادات الدعم
+            "whatsapp_enabled": True,
+            "whatsapp_number": "963551021618",
+            "support_message": "مرحباً، أريد الاستفسار عن خدمات تريند سورية",
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(settings)
@@ -52,16 +56,21 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     # استخراج بيانات الإشعار المخصص (إن وجد)
     custom_notification = data.pop("notification", None)
     
-    allowed_fields = [
+    # الحقول المنطقية (boolean)
+    boolean_fields = [
         "food_enabled", "shop_enabled", "delivery_enabled",
         "wallet_enabled", "referral_enabled", "daily_deals_enabled",
-        "flash_sales_enabled"
+        "flash_sales_enabled", "whatsapp_enabled"
     ]
+    
+    # الحقول النصية (string)
+    string_fields = ["whatsapp_number", "support_message"]
     
     update = {"updated_at": datetime.now(timezone.utc).isoformat()}
     activated_sections = []
     
-    for field in allowed_fields:
+    # معالجة الحقول المنطقية
+    for field in boolean_fields:
         if field in data:
             new_value = bool(data[field])
             update[field] = new_value
@@ -70,6 +79,11 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
             was_disabled = current_settings is None or current_settings.get(field, True) == False
             if new_value and was_disabled:
                 activated_sections.append(field)
+    
+    # معالجة الحقول النصية (لا نحولها لـ bool)
+    for field in string_fields:
+        if field in data:
+            update[field] = str(data[field])
     
     await db.platform_settings.update_one(
         {"id": "main"},
@@ -137,7 +151,10 @@ async def get_public_settings():
         "wallet_enabled": True,
         "referral_enabled": True,
         "daily_deals_enabled": True,
-        "flash_sales_enabled": True
+        "flash_sales_enabled": True,
+        "whatsapp_enabled": True,
+        "whatsapp_number": "963551021618",
+        "support_message": "مرحباً، أريد الاستفسار عن خدمات تريند سورية"
     }
     
     if not settings:
@@ -148,7 +165,7 @@ async def get_public_settings():
         if key not in settings:
             settings[key] = value
     
-    # إرجاع فقط الحقول المتعلقة بتفعيل الأقسام
+    # إرجاع الحقول المطلوبة
     return {
         "food_enabled": settings.get("food_enabled", True),
         "shop_enabled": settings.get("shop_enabled", True),
@@ -156,7 +173,11 @@ async def get_public_settings():
         "wallet_enabled": settings.get("wallet_enabled", True),
         "referral_enabled": settings.get("referral_enabled", True),
         "daily_deals_enabled": settings.get("daily_deals_enabled", True),
-        "flash_sales_enabled": settings.get("flash_sales_enabled", True)
+        "flash_sales_enabled": settings.get("flash_sales_enabled", True),
+        # إعدادات الدعم
+        "whatsapp_enabled": settings.get("whatsapp_enabled", True),
+        "whatsapp_number": settings.get("whatsapp_number", "963551021618"),
+        "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات تريند سورية")
     }
 
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============

@@ -1,15 +1,39 @@
 // /app/frontend/src/components/WhatsAppButton.js
-// زر الدردشة مع WhatsApp
+// زر الدردشة مع WhatsApp - يقرأ الإعدادات من الـ API
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send } from 'lucide-react';
+import axios from 'axios';
 
-const WHATSAPP_NUMBER = '963551021618'; // رقم الدعم
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const WhatsAppButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [settings, setSettings] = useState({
+    whatsapp_enabled: true,
+    whatsapp_number: '963551021618',
+    support_message: 'مرحباً، أريد الاستفسار عن خدمات تريند سورية'
+  });
+
+  // جلب إعدادات الدعم من الـ API
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API}/api/admin/settings/public`);
+        setSettings(prev => ({
+          ...prev,
+          whatsapp_enabled: res.data.whatsapp_enabled ?? true,
+          whatsapp_number: res.data.whatsapp_number || '963551021618',
+          support_message: res.data.support_message || prev.support_message
+        }));
+      } catch (err) {
+        console.log('Using default WhatsApp settings');
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const predefinedMessages = [
     { text: 'أريد الاستفسار عن منتج', icon: '🛒' },
@@ -19,12 +43,17 @@ const WhatsAppButton = () => {
   ];
 
   const openWhatsApp = (text = '') => {
-    const finalMessage = text || message || 'مرحباً، أريد الاستفسار عن خدمات تريند سورية';
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(finalMessage)}`;
+    const finalMessage = text || message || settings.support_message;
+    const url = `https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent(finalMessage)}`;
     window.open(url, '_blank');
     setIsOpen(false);
     setMessage('');
   };
+
+  // إذا كان الدعم معطّل، لا نعرض الزر
+  if (!settings.whatsapp_enabled) {
+    return null;
+  }
 
   return (
     <>

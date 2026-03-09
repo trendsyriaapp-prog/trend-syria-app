@@ -6,7 +6,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, UtensilsCrossed, ShoppingBag, Truck, Wallet, 
-  Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare
+  Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare, MessageCircle, Phone
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
@@ -210,8 +210,33 @@ const PlatformSettingsTab = () => {
       description: 'تفعيل عروض الفلاش والخصومات السريعة',
       icon: Zap,
       color: 'from-purple-500 to-indigo-500'
+    },
+    {
+      key: 'whatsapp_enabled',
+      title: 'دعم WhatsApp 💬',
+      description: 'تفعيل/إيقاف زر الدردشة مع الدعم الفني',
+      icon: MessageCircle,
+      color: 'from-green-500 to-emerald-600',
+      hasInput: true,
+      inputKey: 'whatsapp_number',
+      inputLabel: 'رقم الواتساب',
+      inputPlaceholder: '963XXXXXXXXX'
     }
   ];
+
+  // حالة إدخال رقم الواتساب
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  
+  useEffect(() => {
+    if (settings?.whatsapp_number) {
+      setWhatsappNumber(settings.whatsapp_number);
+    }
+  }, [settings?.whatsapp_number]);
+
+  const handleWhatsappNumberChange = (value) => {
+    setWhatsappNumber(value);
+    setSettings(prev => ({ ...prev, whatsapp_number: value }));
+  };
 
   if (loading) {
     return (
@@ -295,6 +320,26 @@ const PlatformSettingsTab = () => {
                   {isEnabled ? '✓ مفعّل' : '✗ متوقف'}
                 </span>
               </div>
+              
+              {/* حقل إدخال رقم الواتساب */}
+              {config.hasInput && isEnabled && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <label className="text-xs text-gray-600 mb-1 block">{config.inputLabel}</label>
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-gray-400" />
+                    <input
+                      type="tel"
+                      value={whatsappNumber}
+                      onChange={(e) => handleWhatsappNumberChange(e.target.value)}
+                      placeholder={config.inputPlaceholder}
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500"
+                      dir="ltr"
+                      data-testid="whatsapp-number-input"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">مثال: 963551021618 (بدون + أو 00)</p>
+                </div>
+              )}
             </motion.div>
           );
         })}
