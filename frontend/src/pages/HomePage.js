@@ -326,7 +326,7 @@ const HomePage = () => {
                     transition={{ delay: i * 0.05 }}
                     className="flex-shrink-0 w-36"
                   >
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={`/products/${product.id}`}>
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
@@ -408,7 +408,7 @@ const HomePage = () => {
                     transition={{ delay: i * 0.05 }}
                     className="flex-shrink-0 w-36"
                   >
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={`/products/${product.id}`}>
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
