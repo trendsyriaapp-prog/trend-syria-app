@@ -501,38 +501,6 @@ const FoodCartPage = () => {
           </div>
         )}
 
-        {/* Free Delivery Progress */}
-        {freeDeliveryMin > 0 && !isFreeDelivery && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-green-800">توصيل مجاني عند</span>
-              <span className="text-sm font-bold text-green-700">{freeDeliveryMin.toLocaleString()} ل.س</span>
-            </div>
-            <div className="w-full bg-green-200 rounded-full h-2.5 mb-2">
-              <div 
-                className="bg-green-500 h-2.5 rounded-full transition-all duration-300" 
-                style={{ width: `${Math.min(100, (subtotal / freeDeliveryMin) * 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-green-700">
-              أضف منتجات بقيمة {remainingForFree.toLocaleString()} ل.س للتوصيل المجاني
-            </p>
-          </div>
-        )}
-
-        {/* Free Delivery Achieved */}
-        {isFreeDelivery && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-lg">✓</span>
-            </div>
-            <div>
-              <p className="font-bold text-green-800">مبروك! توصيل مجاني 🎉</p>
-              <p className="text-xs text-green-600">لقد حصلت على توصيل مجاني لهذا الطلب</p>
-            </div>
-          </div>
-        )}
-
         {/* Coupon Section */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-3">
