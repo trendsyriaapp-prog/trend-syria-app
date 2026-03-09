@@ -813,18 +813,30 @@
 - **apiKey:** AIzaSyA7ml-NqGBoOjjGGQ7MIt_-EPElvQBiKwY
 - **messagingSenderId:** 154439677377
 - **appId:** 1:154439677377:web:1aab558c5a5fceaa82ab40
+- **VAPID Key:** BEj7GLdDT7MElyacxbI23qQnWIgYqVVBGzESmZgyUeehvwPSMXj8a4ntZ7xdBNSM8BGI9WgS_Adncl1aemaK7ZA
 
 ### الملفات:
 - `/app/frontend/src/config/firebase.js`
 - `/app/frontend/public/firebase-messaging-sw.js`
 - `/app/frontend/src/components/NotificationManager.js`
-- `/app/backend/routes/notifications.py` (FCM Token endpoints)
+- `/app/backend/routes/notifications.py` (FCM Token + Push APIs)
+- `/app/backend/core/firebase_admin.py` (Firebase Admin SDK)
+- `/app/backend/config/firebase-service-account.json` (Service Account)
 
 ### الميزات:
 - إشعارات Push على المتصفح
 - إشعارات في الخلفية (Background)
 - تخزين FCM Token في السيرفر
+- إرسال إشعارات من لوحة الأدمن
+- إحصائيات الإشعارات
 - جاهز للعمل على APK
+
+### APIs:
+- `POST /api/notifications/fcm-token` - حفظ FCM Token
+- `DELETE /api/notifications/fcm-token` - إزالة FCM Token
+- `POST /api/notifications/push/send` - إرسال إشعار (أدمن)
+- `POST /api/notifications/push/test` - إشعار تجريبي
+- `GET /api/notifications/push/stats` - إحصائيات (أدمن)
 
 ---
 
@@ -849,6 +861,13 @@
 - `/app/backend/routes/gifts.py`
 - `/app/frontend/src/components/GiftModal.js`
 
+### الميزات:
+- زر "هدية" في صفحة تفاصيل المنتج (للمستخدمين المسجلين فقط)
+- نافذة منبثقة لإدخال بيانات المستلم
+- إمكانية إرسال رسالة مع الهدية
+- إرسال كهدية مجهولة المصدر
+- إشعارات للمستلم والمرسل
+
 ---
 
 ## 🤖 التوصيات الذكية (9 مارس 2026) ✅
@@ -863,6 +882,12 @@
 ### الملفات:
 - `/app/backend/routes/recommendations.py`
 - `/app/frontend/src/components/RecommendedProducts.js`
+
+### الميزات:
+- قسم "توصيات لك" في الصفحة الرئيسية
+- تبويبات: مقترح لك | رائج الآن | عروض
+- تصميم grid متجاوب
+- شارات لسبب التوصية
 
 ### آلية العمل:
 1. تتبع مشاهدات المستخدم
