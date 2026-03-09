@@ -897,12 +897,43 @@
 
 ---
 
-## 🗺️ تتبع الطلب على الخريطة (9 مارس 2026) ✅
+## 🗺️ تتبع الطلب الحي على الخريطة (9 مارس 2026) ✅
 
-- عرض حالة الطلب (Timeline)
-- معلومات السائق
-- فتح في Google Maps
-- `/app/frontend/src/components/OrderTrackingMap.js`
+### الميزات الجديدة:
+- **تتبع موقع السائق GPS في الوقت الفعلي**
+- **تحديث تلقائي كل 10 ثواني**
+- **عرض الوقت المتوقع للوصول (ETA)**
+- **عرض سرعة السائق واتجاه الحركة**
+- **فتح موقع السائق الدقيق في Google Maps**
+
+### APIs:
+- `POST /api/delivery/location/update` - تحديث موقع السائق (للسائقين فقط)
+- `GET /api/delivery/location/{driver_id}` - جلب موقع السائق
+- `GET /api/delivery/order-tracking/{order_id}/live` - بيانات التتبع الحي الكاملة
+- `DELETE /api/delivery/location` - حذف الموقع (عند انتهاء العمل)
+
+### الملفات:
+- `/app/backend/routes/delivery.py` - APIs الموقع الحي
+- `/app/frontend/src/components/OrderTrackingMap.js` - مكون خريطة التتبع
+- `/app/frontend/src/components/delivery/LocationTracker.js` - مكون تحديث موقع السائق
+- `/app/frontend/src/pages/OrderTrackingPage.js` - صفحة تتبع الطلب الكاملة
+
+### صلاحيات:
+- **السائق**: يمكنه تحديث وحذف موقعه فقط
+- **العميل**: يمكنه رؤية موقع السائق إذا كان لديه طلب نشط منه
+- **المدير/البائع**: يمكنهم رؤية موقع أي سائق
+
+### بيانات الموقع:
+```json
+{
+  "latitude": 33.5138,
+  "longitude": 36.2765,
+  "heading": 90,     // اتجاه الحركة بالدرجات
+  "speed": 35,       // السرعة بالكم/ساعة
+  "updated_at": "...",
+  "is_stale": false  // هل الموقع قديم (أكثر من 5 دقائق)
+}
+```
 
 ---
 
