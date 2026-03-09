@@ -4,11 +4,13 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { ScrollProvider } from "./context/ScrollContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
 import FreeShippingBanner from "./components/FreeShippingBanner";
 import Chatbot from "./components/Chatbot";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -62,14 +64,15 @@ const FoodRoute = ({ children }) => {
 
 function App() {
   return (
-    <SettingsProvider>
-      <AuthProvider>
-        <CartProvider>
-          <BrowserRouter>
-            <ScrollProvider>
-            <div className="App min-h-screen bg-[#050505]">
-              <Header />
-            <FreeShippingBanner />
+    <ThemeProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <ScrollProvider>
+              <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
+                <Header />
+              <FreeShippingBanner />
             <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}
@@ -131,12 +134,14 @@ function App() {
             <MobileNav />
             <Toaster />
             <Chatbot />
+            <WhatsAppButton />
           </div>
           </ScrollProvider>
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>
   </SettingsProvider>
+  </ThemeProvider>
   );
 }
 

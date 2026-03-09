@@ -5,10 +5,11 @@ import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
-  Shield, FileText, RefreshCcw, Gift
+  Shield, FileText, RefreshCcw, Gift, Moon, Sun
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import { useTheme } from '../context/ThemeContext';
 import LoyaltyCard from '../components/LoyaltyCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -29,6 +30,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   const [activeTab, setActiveTab] = useState('loyalty');
   const [addresses, setAddresses] = useState([]);
@@ -171,10 +173,30 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
+    <div className={`min-h-screen pb-20 md:pb-10 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-xl mx-auto px-3 py-3">
         {/* Header */}
-        <h1 className="text-sm font-bold text-gray-900 mb-3">إعدادات الحساب</h1>
+        <h1 className={`text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>إعدادات الحساب</h1>
+
+        {/* Dark Mode Toggle */}
+        <div className={`rounded-xl p-4 mb-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+          <div className="flex items-center gap-3">
+            {isDarkMode ? <Moon size={24} className="text-yellow-400" /> : <Sun size={24} className="text-orange-500" />}
+            <div>
+              <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>الوضع الليلي</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {isDarkMode ? 'مفعّل - راحة للعين' : 'معطّل'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className={`relative w-14 h-7 rounded-full transition-colors ${isDarkMode ? 'bg-orange-500' : 'bg-gray-300'}`}
+            data-testid="dark-mode-toggle"
+          >
+            <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${isDarkMode ? 'right-0.5' : 'left-0.5'}`} />
+          </button>
+        </div>
 
         {/* Referral Banner */}
         <button

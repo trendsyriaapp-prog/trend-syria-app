@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
   Bot, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
-  Clock, Trash2
+  Clock, Trash2, Mic, MicOff
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -19,6 +19,8 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
@@ -84,6 +86,68 @@ const Header = () => {
       });
     } catch (error) {
       console.error('Error clearing history:', error);
+    }
+  };
+
+  // 🎤 البحث الصوتي
+  const startVoiceSearch = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast({
+        title: "غير مدعوم",
+        description: "المتصفح لا يدعم البحث الصوتي",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.lang = 'ar-SA';
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+
+    recognitionRef.current.onstart = () => {
+      setIsListening(true);
+      toast({
+        title: "🎤 جارٍ الاستماع...",
+        description: "تحدث الآن للبحث"
+      });
+    };
+
+    recognitionRef.current.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+      // البحث تلقائياً
+      navigate(`/products?search=${encodeURIComponent(transcript)}`);
+      toast({
+        title: "تم البحث",
+        description: `البحث عن: ${transcript}`
+      });
+    };
+
+    recognitionRef.current.onerror = (event) => {
+      setIsListening(false);
+      if (event.error === 'no-speech') {
+        toast({
+          title: "لم يتم سماع شيء",
+          description: "حاول مرة أخرى",
+          variant: "destructive"
+        });
+      }
+    };
+
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current.start();
+  };
+
+  const stopVoiceSearch = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
     }
   };
 
@@ -161,7 +225,7 @@ const Header = () => {
                 onFocus={() => user && searchHistory.length > 0 && setShowHistory(true)}
                 onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                 placeholder="ابحث عن منتجات..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-4 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2.5 px-4 pr-10 pl-12 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
                 data-testid="search-input"
               />
               <button 
@@ -170,6 +234,17 @@ const Header = () => {
                 data-testid="search-btn"
               >
                 <Search size={20} />
+              </button>
+              {/* 🎤 زر البحث الصوتي */}
+              <button
+                type="button"
+                onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                  isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#FF6B00]'
+                }`}
+                data-testid="voice-search-btn"
+              >
+                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
               </button>
             </div>
 

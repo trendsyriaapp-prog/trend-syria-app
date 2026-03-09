@@ -152,8 +152,9 @@ def sanitize_mongo_query(query: dict) -> dict:
     
     return clean_dict(query)
 
-# ============== 4. JWT محسّن مع تجديد تلقائي ==============
-JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
+# 🔒 JWT Settings - مفتاح أقوى
+# استخدام نفس المفتاح من database.py
+from core.database import JWT_SECRET
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 REFRESH_TOKEN_EXPIRE_DAYS = 30

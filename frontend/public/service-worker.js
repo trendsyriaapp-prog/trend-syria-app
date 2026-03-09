@@ -1,19 +1,31 @@
-const CACHE_NAME = 'trend-syria-v2';
+const CACHE_NAME = 'trend-syria-v3';
+const STATIC_CACHE = 'trend-syria-static-v3';
+const DYNAMIC_CACHE = 'trend-syria-dynamic-v3';
+const API_CACHE = 'trend-syria-api-v3';
+
 const urlsToCache = [
   '/',
   '/index.html',
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/offline.html'
+];
+
+// APIs للتخزين المؤقت (للعمل offline)
+const CACHEABLE_APIS = [
+  '/api/categories',
+  '/api/products',
+  '/api/admin/settings/public'
 ];
 
 // Install event
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('تم فتح الكاش');
+        console.log('✅ تم فتح الكاش');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
@@ -25,36 +37,72 @@ self.addEventListener('install', (event) => {
 
 // Fetch event
 self.addEventListener('fetch', (event) => {
-  // تجاهل API requests - لا نخزنها
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(fetch(event.request));
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // API Requests
+  if (url.pathname.includes('/api/')) {
+    // التحقق إذا كان API قابل للتخزين
+    const isCacheableApi = CACHEABLE_APIS.some(api => url.pathname.includes(api));
+    
+    if (isCacheableApi) {
+      // Network First, fallback to Cache
+      event.respondWith(
+        fetch(request)
+          .then(response => {
+            // تخزين النسخة الجديدة
+            const responseClone = response.clone();
+            caches.open(API_CACHE).then(cache => {
+              cache.put(request, responseClone);
+            });
+            return response;
+          })
+          .catch(() => {
+            // إذا فشل الاتصال، استخدم الكاش
+            return caches.match(request);
+          })
+      );
+    } else {
+      // API غير قابل للتخزين - اتصال مباشر فقط
+      event.respondWith(
+        fetch(request).catch(() => {
+          return new Response(JSON.stringify({ 
+            offline: true, 
+            message: 'أنت غير متصل بالإنترنت' 
+          }), {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        })
+      );
+    }
     return;
   }
   
+  // Static Files - Cache First
   event.respondWith(
-    caches.match(event.request)
+    caches.match(request)
       .then((response) => {
-        // Return cached version or fetch from network
         if (response) {
           return response;
         }
-        return fetch(event.request)
+        return fetch(request)
           .then((response) => {
-            // Don't cache non-successful responses
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
-            // Clone the response
             const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
+            caches.open(DYNAMIC_CACHE)
               .then((cache) => {
-                cache.put(event.request, responseToCache);
+                cache.put(request, responseToCache);
               });
             return response;
           });
       })
       .catch(() => {
-        // Return offline page if available
+        // عرض صفحة Offline
+        if (request.destination === 'document') {
+          return caches.match('/offline.html');
+        }
         return caches.match('/');
       })
   );
@@ -62,12 +110,14 @@ self.addEventListener('fetch', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
+  
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('حذف الكاش القديم:', cacheName);
+          if (!cacheWhitelist.includes(cacheName)) {
+            console.log('🗑️ حذف الكاش القديم:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -75,4 +125,36 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+// Push Notifications
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() || {};
+  const title = data.title || 'تريند سورية';
+  const options = {
+    body: data.message || 'لديك إشعار جديد',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-72.png',
+    vibrate: [100, 50, 100],
+    data: data.url || '/',
+    actions: [
+      { action: 'open', title: 'فتح' },
+      { action: 'close', title: 'إغلاق' }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Notification Click
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  if (event.action === 'open' || !event.action) {
+    event.waitUntil(
+      clients.openWindow(event.notification.data || '/')
+    );
+  }
 });

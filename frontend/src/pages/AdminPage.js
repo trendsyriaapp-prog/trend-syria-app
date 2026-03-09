@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -39,6 +39,7 @@ import BannersTab from '../components/admin/BannersTab';
 import CouponsTab from '../components/admin/CouponsTab';
 import DailyDealsTab from '../components/admin/DailyDealsTab';
 import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
+import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -290,7 +291,8 @@ const AdminDashboardPage = () => {
     'banners': 'إدارة البانرات',
     'coupons': 'كوبونات الخصم',
     'daily-deals': 'صفقات اليوم',
-    'platform-settings': 'تفعيل/إيقاف الأقسام'
+    'platform-settings': 'تفعيل/إيقاف الأقسام',
+    'analytics': 'التحليلات والإحصائيات'
   };
 
   return (
@@ -410,6 +412,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'platform-settings' && user.user_type === 'admin' && (
               <PlatformSettingsTab />
+            )}
+            {activeTab === 'analytics' && user.user_type === 'admin' && (
+              <AnalyticsDashboard />
             )}
           </>
         ) : (
@@ -646,6 +651,18 @@ const AdminDashboardPage = () => {
                       <Settings size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">تفعيل الأقسام</span>
+                  </button>
+
+                  {/* التحليلات والإحصائيات */}
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className="bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl p-3 border border-indigo-200 hover:border-indigo-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="analytics-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 flex items-center justify-center">
+                      <TrendingUp size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">التحليلات</span>
                   </button>
                 </>
               )}
