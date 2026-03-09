@@ -8,13 +8,19 @@ import axios from 'axios';
 import { 
   Gift, Send, Inbox, Check, X, Loader2, 
   ChevronRight, User, MessageSquare, Clock,
-  Sparkles, Package, Heart
+  Sparkles, Package, Heart, MapPin, Phone, Building, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useLanguage } from '../context/LanguageContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// المحافظات السورية
+const SYRIAN_CITIES = [
+  'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',
+  'إدلب', 'دير الزور', 'الحسكة', 'الرقة', 'السويداء', 'درعا', 'القنيطرة'
+];
 
 const GiftsPage = () => {
   const navigate = useNavigate();
@@ -27,6 +33,20 @@ const GiftsPage = () => {
   const [sentGifts, setSentGifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  
+  // نموذج العنوان
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [selectedGift, setSelectedGift] = useState(null);
+  const [addressForm, setAddressForm] = useState({
+    city: '',
+    area: '',
+    street: '',
+    building: '',
+    floor: '',
+    phone: '',
+    notes: ''
+  });
+  const [submittingAddress, setSubmittingAddress] = useState(false);
 
   // جلب الهدايا
   useEffect(() => {
@@ -61,13 +81,26 @@ const GiftsPage = () => {
   const acceptGift = async (giftId) => {
     setProcessingId(giftId);
     try {
-      await axios.post(`${API}/api/gifts/${giftId}/accept`, {}, {
+      const response = await axios.post(`${API}/api/gifts/${giftId}/accept`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast({
-        title: '🎉 تم قبول الهدية!',
-        description: 'يمكنك الآن رؤية هديتك'
-      });
+      
+      if (response.data.requires_address) {
+        // فتح نافذة إدخال العنوان
+        const gift = receivedGifts.find(g => g.id === giftId);
+        setSelectedGift(gift);
+        setAddressForm(prev => ({ ...prev, phone: user?.phone || '' }));
+        setShowAddressModal(true);
+        toast({
+          title: '🎁 تم قبول الهدية!',
+          description: 'يرجى إدخال عنوان الشحن لاستلام هديتك'
+        });
+      } else {
+        toast({
+          title: '🎉 تم قبول الهدية!',
+          description: 'يمكنك الآن رؤية هديتك'
+        });
+      }
       fetchGifts();
     } catch (err) {
       toast({
@@ -78,6 +111,62 @@ const GiftsPage = () => {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  // إرسال العنوان لإكمال استلام الهدية
+  const submitAddress = async (e) => {
+    e.preventDefault();
+    
+    if (!addressForm.city || !addressForm.area || !addressForm.phone) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال المحافظة والمنطقة ورقم الهاتف',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setSubmittingAddress(true);
+    try {
+      const response = await axios.post(
+        `${API}/api/gifts/${selectedGift.id}/submit-address`,
+        addressForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: '🎉 تم استلام الهدية!',
+        description: `رقم الطلب: ${response.data.order_id}. سيتم شحن هديتك قريباً.`
+      });
+      
+      setShowAddressModal(false);
+      setSelectedGift(null);
+      setAddressForm({
+        city: '',
+        area: '',
+        street: '',
+        building: '',
+        floor: '',
+        phone: '',
+        notes: ''
+      });
+      fetchGifts();
+    } catch (err) {
+      toast({
+        title: 'خطأ',
+        description: err.response?.data?.detail || 'فشل إرسال العنوان',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmittingAddress(false);
+    }
+  };
+
+  // فتح نموذج العنوان للهدايا التي تنتظر العنوان
+  const openAddressForm = (gift) => {
+    setSelectedGift(gift);
+    setAddressForm(prev => ({ ...prev, phone: user?.phone || '' }));
+    setShowAddressModal(true);
   };
 
   // رفض الهدية
@@ -117,7 +206,9 @@ const GiftsPage = () => {
   const getStatusBadge = (status) => {
     const badges = {
       pending: { text: 'بانتظار الرد', color: 'bg-yellow-100 text-yellow-700' },
+      pending_address: { text: 'بانتظار العنوان', color: 'bg-blue-100 text-blue-700' },
       accepted: { text: 'مقبولة', color: 'bg-green-100 text-green-700' },
+      completed: { text: 'تم الاستلام', color: 'bg-emerald-100 text-emerald-700' },
       rejected: { text: 'مرفوضة', color: 'bg-red-100 text-red-700' }
     };
     return badges[status] || badges.pending;
@@ -289,7 +380,50 @@ const GiftsPage = () => {
                         </div>
                       )}
 
-                      {/* بعد القبول - عرض المنتج */}
+                      {/* بانتظار العنوان - إدخال عنوان الشحن */}
+                      {gift.status === 'pending_address' && (
+                        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+                          <div className="text-center mb-3">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              🎉 لقد قبلت الهدية! أدخل عنوان الشحن لاستلامها
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => openAddressForm(gift)}
+                            className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                            data-testid={`enter-address-${gift.id}`}
+                          >
+                            <MapPin size={18} />
+                            إدخال عنوان الشحن
+                          </button>
+                        </div>
+                      )}
+
+                      {/* تم الاستلام - عرض الطلب */}
+                      {gift.status === 'completed' && (
+                        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-emerald-50 dark:bg-emerald-900/20">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => navigate(`/products/${gift.product_id}`)}
+                              className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                            >
+                              <Heart size={18} />
+                              شاهد هديتك
+                            </button>
+                            {gift.order_id && (
+                              <button
+                                onClick={() => navigate(`/orders/${gift.order_id}/tracking`)}
+                                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                              >
+                                <Package size={18} />
+                                تتبع الطلب
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* بعد القبول القديم - عرض المنتج (للتوافق) */}
                       {gift.status === 'accepted' && (
                         <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
                           <button
@@ -391,6 +525,210 @@ const GiftsPage = () => {
           </AnimatePresence>
         )}
       </div>
+
+      {/* نافذة إدخال عنوان الشحن */}
+      <AnimatePresence>
+        {showAddressModal && selectedGift && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center"
+            onClick={() => setShowAddressModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl max-h-[90vh] overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <MapPin size={24} className="text-white" />
+                  </div>
+                  <div className="text-white">
+                    <h3 className="font-bold">عنوان الشحن</h3>
+                    <p className="text-xs opacity-90">أين تريد استلام هديتك؟</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddressModal(false)}
+                  className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30"
+                >
+                  <X size={18} className="text-white" />
+                </button>
+              </div>
+
+              {/* معاينة الهدية */}
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <div className="flex gap-3">
+                  {selectedGift.product_image ? (
+                    <img
+                      src={selectedGift.product_image}
+                      alt={selectedGift.product_name}
+                      className="w-14 h-14 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center">
+                      <Gift size={24} className="text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">
+                      {selectedGift.product_name}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      من: {selectedGift.sender_name}
+                    </p>
+                    <p className="text-sm font-bold text-[#FF6B00]">
+                      {formatPrice(selectedGift.product_price)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* نموذج العنوان */}
+              <form onSubmit={submitAddress} className="p-4 space-y-4 overflow-y-auto max-h-[50vh]">
+                {/* المحافظة */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    المحافظة <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <select
+                      value={addressForm.city}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none"
+                      required
+                    >
+                      <option value="">اختر المحافظة</option>
+                      {SYRIAN_CITIES.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* المنطقة */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    المنطقة / الحي <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Home size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={addressForm.area}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
+                      placeholder="مثال: المزة، الروضة..."
+                      className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* الشارع والمبنى */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      الشارع
+                    </label>
+                    <input
+                      type="text"
+                      value={addressForm.street}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
+                      placeholder="اسم الشارع"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      رقم المبنى
+                    </label>
+                    <div className="relative">
+                      <Building size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={addressForm.building}
+                        onChange={(e) => setAddressForm(prev => ({ ...prev, building: e.target.value }))}
+                        placeholder="رقم المبنى"
+                        className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* الطابق ورقم الهاتف */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      الطابق
+                    </label>
+                    <input
+                      type="text"
+                      value={addressForm.floor}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, floor: e.target.value }))}
+                      placeholder="مثال: 3"
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      رقم الهاتف <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="tel"
+                        value={addressForm.phone}
+                        onChange={(e) => setAddressForm(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="09XXXXXXXX"
+                        className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ملاحظات */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    ملاحظات إضافية
+                  </label>
+                  <textarea
+                    value={addressForm.notes}
+                    onChange={(e) => setAddressForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="أي ملاحظات للتوصيل..."
+                    rows={2}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                  />
+                </div>
+
+                {/* زر التأكيد */}
+                <button
+                  type="submit"
+                  disabled={submittingAddress}
+                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  data-testid="confirm-address-btn"
+                >
+                  {submittingAddress ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Check size={20} />
+                      تأكيد العنوان واستلام الهدية
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
