@@ -11,6 +11,7 @@ import {
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
 import DailyDeal from '../components/DailyDeal';
+import RecommendedProducts from '../components/RecommendedProducts';
 import { useScroll } from '../context/ScrollContext';
 import { useSettings } from '../context/SettingsContext';
 
@@ -457,6 +458,13 @@ const HomePage = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* قسم التوصيات الذكية */}
+      <section className="py-4 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <RecommendedProducts />
         </div>
       </section>
 

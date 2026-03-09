@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import { useScroll } from '../context/ScrollContext';
+import GiftModal from '../components/GiftModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -446,6 +447,9 @@ const ProductDetailPage = () => {
   const [askingQuestion, setAskingQuestion] = useState(false);
   const [answeringId, setAnsweringId] = useState(null);
   const [newAnswer, setNewAnswer] = useState('');
+  
+  // Gift modal state
+  const [showGiftModal, setShowGiftModal] = useState(false);
   
   // Similar products state
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -1334,6 +1338,18 @@ const ProductDetailPage = () => {
 
           {/* أزرار الشراء */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* زر إرسال كهدية */}
+            {user && (
+              <button
+                onClick={() => setShowGiftModal(true)}
+                className="flex items-center justify-center gap-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-3 py-1.5 rounded-full text-xs hover:opacity-90 transition-colors"
+                data-testid="gift-btn"
+              >
+                <Gift size={14} />
+                <span className="hidden sm:inline">هدية</span>
+              </button>
+            )}
+            
             {/* زر إضافة للسلة */}
             <button
               onClick={handleAddToCart}
@@ -1461,6 +1477,13 @@ const ProductDetailPage = () => {
         isOpen={showSizeGuide} 
         onClose={() => setShowSizeGuide(false)} 
         sizeType={product?.size_type || 'clothes'} 
+      />
+
+      {/* Gift Modal */}
+      <GiftModal
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        product={product}
       />
     </div>
   );

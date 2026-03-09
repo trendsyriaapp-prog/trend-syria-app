@@ -24,6 +24,9 @@ try {
   console.log('Firebase Messaging not supported in this browser');
 }
 
+// VAPID Key للمشروع
+const VAPID_KEY = 'BEj7GLdDT7MElyacxbI23qQnWIgYqVVBGzESmZgyUeehvwPSMXj8a4ntZ7xdBNSM8BGI9WgS_Adncl1aemaK7ZA';
+
 // طلب إذن الإشعارات والحصول على Token
 export const requestNotificationPermission = async () => {
   try {
@@ -32,14 +35,24 @@ export const requestNotificationPermission = async () => {
       return null;
     }
 
+    // التحقق من دعم Service Worker
+    if (!('serviceWorker' in navigator)) {
+      console.log('Service Worker not supported');
+      return null;
+    }
+
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      // تسجيل Service Worker أولاً
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      
       // الحصول على FCM Token
       const token = await getToken(messaging, {
-        vapidKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U' // VAPID key افتراضي
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration
       });
       
-      console.log('FCM Token:', token);
+      console.log('✅ FCM Token:', token);
       return token;
     } else {
       console.log('Notification permission denied');
