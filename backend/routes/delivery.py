@@ -1035,6 +1035,186 @@ async def get_my_penalty_points(user: dict = Depends(get_current_user)):
     }
 
 
+# ============== Live Location Tracking ==============
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+    heading: Optional[float] = None  # اتجاه الحركة
+    speed: Optional[float] = None    # السرعة بالكم/ساعة
+
+@router.post("/location/update")
+async def update_driver_location(location: LocationUpdate, user: dict = Depends(get_current_user)):
+    """تحديث موقع السائق الحالي"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ الموقع في collection منفصل للأداء
+    await db.driver_locations.update_one(
+        {"driver_id": user["id"]},
+        {
+            "$set": {
+                "driver_id": user["id"],
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "heading": location.heading,
+                "speed": location.speed,
+                "updated_at": now
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث الموقع", "timestamp": now}
+
+@router.get("/location/{driver_id}")
+async def get_driver_location(driver_id: str, user: dict = Depends(get_current_user)):
+    """جلب موقع السائق الحالي (للعميل أو المدير)"""
+    
+    # التحقق من الصلاحية - العميل يمكنه رؤية موقع السائق الذي يوصل له
+    if user["user_type"] == "buyer":
+        # التحقق من وجود طلب نشط من هذا السائق لهذا العميل
+        active_order = await db.orders.find_one({
+            "user_id": user["id"],
+            "delivery_driver_id": driver_id,
+            "delivery_status": {"$in": ["out_for_delivery", "on_the_way", "picked_up"]}
+        })
+        
+        if not active_order:
+            raise HTTPException(status_code=403, detail="لا يوجد طلب نشط من هذا السائق")
+    
+    elif user["user_type"] not in ["admin", "sub_admin", "delivery", "seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # جلب الموقع
+    location = await db.driver_locations.find_one(
+        {"driver_id": driver_id},
+        {"_id": 0}
+    )
+    
+    if not location:
+        return {
+            "available": False,
+            "message": "موقع السائق غير متاح حالياً"
+        }
+    
+    # التحقق من أن الموقع حديث (آخر 5 دقائق)
+    from datetime import timedelta
+    location_time = datetime.fromisoformat(location["updated_at"].replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    
+    is_stale = (now - location_time) > timedelta(minutes=5)
+    
+    return {
+        "available": True,
+        "latitude": location["latitude"],
+        "longitude": location["longitude"],
+        "heading": location.get("heading"),
+        "speed": location.get("speed"),
+        "updated_at": location["updated_at"],
+        "is_stale": is_stale  # موقع قديم
+    }
+
+@router.get("/order-tracking/{order_id}/live")
+async def get_order_live_tracking(order_id: str, user: dict = Depends(get_current_user)):
+    """جلب بيانات التتبع الحي للطلب"""
+    
+    # جلب الطلب
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        # محاولة جلب من طلبات الطعام
+        order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+        if not order:
+            raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من الصلاحية
+    is_owner = order.get("user_id") == user["id"]
+    is_seller = order.get("seller_id") == user["id"]
+    is_driver = order.get("delivery_driver_id") == user["id"]
+    is_admin = user["user_type"] in ["admin", "sub_admin"]
+    
+    if not (is_owner or is_seller or is_driver or is_admin):
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # جلب موقع السائق إذا كان متاحاً
+    driver_location = None
+    driver_id = order.get("delivery_driver_id")
+    
+    if driver_id and order.get("delivery_status") in ["out_for_delivery", "on_the_way", "picked_up"]:
+        location = await db.driver_locations.find_one(
+            {"driver_id": driver_id},
+            {"_id": 0}
+        )
+        if location:
+            from datetime import timedelta
+            location_time = datetime.fromisoformat(location["updated_at"].replace("Z", "+00:00"))
+            now = datetime.now(timezone.utc)
+            is_stale = (now - location_time) > timedelta(minutes=5)
+            
+            driver_location = {
+                "latitude": location["latitude"],
+                "longitude": location["longitude"],
+                "heading": location.get("heading"),
+                "speed": location.get("speed"),
+                "updated_at": location["updated_at"],
+                "is_stale": is_stale
+            }
+    
+    # جلب معلومات السائق
+    driver_info = None
+    if driver_id:
+        driver = await db.users.find_one(
+            {"id": driver_id},
+            {"_id": 0, "id": 1, "name": 1, "full_name": 1, "phone": 1, "average_rating": 1}
+        )
+        if driver:
+            driver_info = {
+                "id": driver["id"],
+                "name": driver.get("full_name") or driver.get("name"),
+                "phone": driver.get("phone"),
+                "rating": driver.get("average_rating", 0)
+            }
+    
+    return {
+        "order_id": order_id,
+        "status": order.get("delivery_status") or order.get("status"),
+        "driver": driver_info,
+        "driver_location": driver_location,
+        "delivery_address": order.get("address") or order.get("delivery_address"),
+        "delivery_city": order.get("city") or order.get("delivery_city"),
+        "estimated_time": calculate_eta(driver_location, order) if driver_location else None
+    }
+
+def calculate_eta(driver_location: dict, order: dict) -> dict:
+    """حساب الوقت المتوقع للوصول (تقديري)"""
+    if not driver_location or driver_location.get("is_stale"):
+        return None
+    
+    # تقدير بسيط - في الواقع يحتاج حساب المسافة الفعلية
+    speed = driver_location.get("speed", 30)  # افتراضي 30 كم/ساعة
+    
+    # نفترض مسافة متوسطة 5 كم
+    estimated_minutes = max(5, min(30, int(5 / (speed / 60)) if speed > 0 else 15))
+    
+    return {
+        "minutes": estimated_minutes,
+        "text": f"خلال {estimated_minutes} دقيقة تقريباً"
+    }
+
+
+@router.delete("/location")
+async def clear_driver_location(user: dict = Depends(get_current_user)):
+    """حذف موقع السائق (عند انتهاء العمل)"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    await db.driver_locations.delete_one({"driver_id": user["id"]})
+    
+    return {"message": "تم حذف الموقع"}
+
+
 @router.get("/penalty-info/{driver_id}")
 async def get_driver_penalty_info(driver_id: str, user: dict = Depends(get_current_user)):
     """جلب نقاط موظف معين (للمدير)"""
