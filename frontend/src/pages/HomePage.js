@@ -238,11 +238,10 @@ const HomePage = () => {
                         </div>
                         
                         {/* زر الطلب */}
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex flex-col items-center">
                           <div className="bg-white text-[#FF6B00] px-4 py-2 rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-shadow">
                             اطلب الآن
                           </div>
-                          <span className="text-white/80 text-[10px]">🚴 توصيل 30 دقيقة</span>
                         </div>
                       </div>
                       
