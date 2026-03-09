@@ -373,6 +373,39 @@ const FoodCartPage = () => {
           </AnimatePresence>
         </div>
 
+        {/* Free Delivery Progress */}
+        {store?.free_delivery_minimum > 0 && (
+          <div className={`rounded-xl p-3 border ${
+            subtotal >= store.free_delivery_minimum 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-orange-50 border-orange-200'
+          }`}>
+            {subtotal >= store.free_delivery_minimum ? (
+              <div className="flex items-center gap-2 text-green-700">
+                <Check size={18} className="text-green-600" />
+                <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-orange-700 font-medium">
+                    أضف {(store.free_delivery_minimum - subtotal).toLocaleString()} ل.س للتوصيل المجاني
+                  </span>
+                  <span className="text-orange-600 font-bold">
+                    {Math.round((subtotal / store.free_delivery_minimum) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((subtotal / store.free_delivery_minimum) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Delivery Info */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
