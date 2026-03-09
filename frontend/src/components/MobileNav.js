@@ -24,6 +24,9 @@ const MobileNav = () => {
 
   // التحقق من تفعيل منصة الطعام
   const foodEnabled = isFeatureEnabled('food_enabled');
+  
+  // هل نحن في صفحات الطعام؟
+  const isInFoodSection = location.pathname.startsWith('/food');
 
   const handleAccountClick = (e) => {
     if (user) {
@@ -38,24 +41,34 @@ const MobileNav = () => {
     navigate('/');
   };
 
-  // بناء قائمة التنقل مع إخفاء الطعام إذا معطل
-  const baseNavItems = [
-    { path: '/', icon: Home, label: 'الرئيسية' },
-    { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
-  ];
+  // بناء قائمة التنقل حسب القسم الحالي
+  let navItems = [];
   
-  // إضافة رابط الطعام وسلة الطعام فقط إذا كان مفعلاً
-  if (foodEnabled) {
-    baseNavItems.push({ path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true });
-    baseNavItems.push({ path: '/food/my-cart', icon: ShoppingBag, label: 'سلة الطعام', badge: foodCartCount, isFoodCart: true });
+  if (isInFoodSection && foodEnabled) {
+    // في قسم الطعام: نعرض سلة الطعام فقط
+    navItems = [
+      { path: '/', icon: Home, label: 'الرئيسية' },
+      { path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true },
+      { path: '/food/my-cart', icon: ShoppingBag, label: 'السلة', badge: foodCartCount, isFoodCart: true },
+      { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
+    ];
+  } else {
+    // في باقي الصفحات: نعرض السلة العادية
+    navItems = [
+      { path: '/', icon: Home, label: 'الرئيسية' },
+      { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
+    ];
+    
+    // إضافة رابط الطعام فقط إذا كان مفعلاً
+    if (foodEnabled) {
+      navItems.push({ path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true });
+    }
+    
+    navItems.push(
+      { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
+      { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
+    );
   }
-  
-  baseNavItems.push(
-    { path: '/cart', icon: ShoppingCart, label: 'السلة', badge: cartCount },
-    { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
-  );
-
-  const navItems = baseNavItems;
 
   return (
     <>
