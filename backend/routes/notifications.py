@@ -78,3 +78,30 @@ async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
         )
     
     return {"message": "تم تحديد جميع الإشعارات كمقروءة"}
+
+# ============== Firebase Cloud Messaging ==============
+
+from pydantic import BaseModel
+
+class FCMTokenRequest(BaseModel):
+    fcm_token: str
+
+@router.post("/fcm-token")
+async def save_fcm_token(data: FCMTokenRequest, user: dict = Depends(get_current_user)):
+    """حفظ FCM Token للمستخدم"""
+    await db.fcm_tokens.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "user_id": user["id"],
+            "fcm_token": data.fcm_token,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "تم حفظ التوكن"}
+
+@router.delete("/fcm-token")
+async def remove_fcm_token(user: dict = Depends(get_current_user)):
+    """إزالة FCM Token للمستخدم"""
+    await db.fcm_tokens.delete_one({"user_id": user["id"]})
+    return {"message": "تم إزالة التوكن"}

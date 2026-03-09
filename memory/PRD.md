@@ -804,3 +804,85 @@
 - إعادة الاتصال التلقائي
 - `/app/frontend/public/service-worker.js`
 - `/app/frontend/public/offline.html`
+
+---
+
+## 🔔 إشعارات Firebase (9 مارس 2026) ✅
+
+### الإعدادات:
+- **apiKey:** AIzaSyA7ml-NqGBoOjjGGQ7MIt_-EPElvQBiKwY
+- **messagingSenderId:** 154439677377
+- **appId:** 1:154439677377:web:1aab558c5a5fceaa82ab40
+
+### الملفات:
+- `/app/frontend/src/config/firebase.js`
+- `/app/frontend/public/firebase-messaging-sw.js`
+- `/app/frontend/src/components/NotificationManager.js`
+- `/app/backend/routes/notifications.py` (FCM Token endpoints)
+
+### الميزات:
+- إشعارات Push على المتصفح
+- إشعارات في الخلفية (Background)
+- تخزين FCM Token في السيرفر
+- جاهز للعمل على APK
+
+---
+
+## 💬 دردشة WhatsApp (9 مارس 2026) ✅
+
+- رقم الدعم: **963551021618**
+- رابط ثابت في صفحة الإعدادات (ليس عائماً)
+- `/app/frontend/src/pages/SettingsPage.js`
+
+---
+
+## 🎁 نظام الهدايا (9 مارس 2026) ✅
+
+### APIs:
+- `POST /api/gifts/send` - إرسال هدية
+- `GET /api/gifts/sent` - الهدايا المُرسلة
+- `GET /api/gifts/received` - الهدايا المُستلمة
+- `POST /api/gifts/{id}/accept` - قبول الهدية
+- `POST /api/gifts/{id}/reject` - رفض الهدية
+
+### الملفات:
+- `/app/backend/routes/gifts.py`
+- `/app/frontend/src/components/GiftModal.js`
+
+---
+
+## 🤖 التوصيات الذكية (9 مارس 2026) ✅
+
+### APIs:
+- `GET /api/recommendations/for-you` - توصيات مخصصة للمستخدم
+- `GET /api/recommendations/similar/{id}` - منتجات مشابهة
+- `GET /api/recommendations/trending` - الرائج حالياً
+- `GET /api/recommendations/deals` - أفضل العروض
+- `POST /api/recommendations/track-view/{id}` - تتبع المشاهدات
+
+### الملفات:
+- `/app/backend/routes/recommendations.py`
+- `/app/frontend/src/components/RecommendedProducts.js`
+
+### آلية العمل:
+1. تتبع مشاهدات المستخدم
+2. تحليل مشترياته السابقة
+3. اقتراح منتجات من نفس الفئات
+4. عرض المنتجات الرائجة
+
+---
+
+## 🗺️ تتبع الطلب على الخريطة (9 مارس 2026) ✅
+
+- عرض حالة الطلب (Timeline)
+- معلومات السائق
+- فتح في Google Maps
+- `/app/frontend/src/components/OrderTrackingMap.js`
+
+---
+
+## 🌐 دعم متعدد اللغات (9 مارس 2026) ✅
+
+- العربية (افتراضي)
+- الإنجليزية
+- `/app/frontend/src/context/LanguageContext.js`

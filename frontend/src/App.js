@@ -10,7 +10,7 @@ import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
 import FreeShippingBanner from "./components/FreeShippingBanner";
 import Chatbot from "./components/Chatbot";
-import WhatsAppButton from "./components/WhatsAppButton";
+import NotificationManager from "./components/NotificationManager";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -134,6 +134,7 @@ function App() {
             <MobileNav />
             <Toaster />
             <Chatbot />
+            <NotificationManager />
           </div>
           </ScrollProvider>
         </BrowserRouter>
