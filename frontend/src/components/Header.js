@@ -227,35 +227,35 @@ const Header = () => {
                 onFocus={() => user && searchHistory.length > 0 && setShowHistory(true)}
                 onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                 placeholder="ابحث عن منتجات..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-full py-3.5 px-5 pr-12 pl-24 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 transition-all"
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-9 pl-16 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-1 focus:ring-[#FF6B00]/20 transition-all"
                 data-testid="search-input"
               />
               <button 
                 type="submit"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B00] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B00] transition-colors"
                 data-testid="search-btn"
               >
-                <Search size={20} />
+                <Search size={16} />
               </button>
               {/* 🎤 زر البحث الصوتي */}
               <button
                 type="button"
                 onClick={isListening ? stopVoiceSearch : startVoiceSearch}
-                className={`absolute left-14 top-1/2 -translate-y-1/2 transition-colors ${
+                className={`absolute left-9 top-1/2 -translate-y-1/2 transition-colors ${
                   isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#FF6B00]'
                 }`}
                 data-testid="voice-search-btn"
               >
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                {isListening ? <MicOff size={14} /> : <Mic size={14} />}
               </button>
               {/* 📷 زر البحث بالصورة */}
               <button
                 type="button"
                 onClick={() => setShowImageSearch(true)}
-                className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500 transition-colors"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500 transition-colors"
                 data-testid="image-search-btn"
               >
-                <Camera size={18} />
+                <Camera size={14} />
               </button>
             </div>
 
