@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useFoodCart } from '../context/FoodCartContext';
 import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +12,7 @@ const MobileNav = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { totalItems: foodCartCount } = useFoodCart();
   const { isFeatureEnabled } = useSettings();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -42,9 +44,10 @@ const MobileNav = () => {
     { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
   ];
   
-  // إضافة رابط الطعام فقط إذا كان مفعلاً
+  // إضافة رابط الطعام وسلة الطعام فقط إذا كان مفعلاً
   if (foodEnabled) {
     baseNavItems.push({ path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true });
+    baseNavItems.push({ path: '/food/my-cart', icon: ShoppingBag, label: 'سلة الطعام', badge: foodCartCount, isFoodCart: true });
   }
   
   baseNavItems.push(
@@ -63,28 +66,32 @@ const MobileNav = () => {
               key={item.path}
               to={item.path}
               onClick={item.isAccount ? handleAccountClick : undefined}
-              className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] transition-colors ${
                 isActive(item.path) || (item.isAccount && showAccountMenu) 
                   ? 'text-[#FF6B00]' 
-                  : item.isFood 
-                    ? 'text-green-600 hover:text-green-700'
+                  : (item.isFood || item.isFoodCart)
+                    ? 'text-[#FF6B00] hover:text-[#E65000]'
                     : 'text-gray-500 hover:text-gray-700'
               }`}
               data-testid={`nav-${item.label}`}
             >
               <div className="relative">
                 {item.isFood ? (
-                  <UtensilsCrossed size={22} className={isActive(item.path) ? 'text-green-600' : ''} />
+                  <UtensilsCrossed size={20} />
+                ) : item.isFoodCart ? (
+                  <ShoppingBag size={20} />
                 ) : (
-                  <item.icon size={22} />
+                  <item.icon size={20} />
                 )}
                 {item.badge > 0 && (
-                  <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF6B00] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge}
+                  <span className={`absolute -top-2 -right-2 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center ${
+                    item.isFoodCart ? 'bg-[#FF6B00]' : 'bg-[#FF6B00]'
+                  }`}>
+                    {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] ${item.isFood ? 'text-green-600' : ''}`}>{item.label}</span>
+              <span className="text-[9px]">{item.label}</span>
             </Link>
           ))}
         </div>

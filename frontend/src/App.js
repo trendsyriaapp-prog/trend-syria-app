@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { FoodCartProvider } from "./context/FoodCartContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { ScrollProvider } from "./context/ScrollContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -41,6 +42,7 @@ import JoinAsFoodSellerPage from "./pages/JoinAsFoodSellerPage";
 import FoodStoreDashboard from "./pages/FoodStoreDashboard";
 import FoodStorePage from "./pages/FoodStorePage";
 import FoodCartPage from "./pages/FoodCartPage";
+import FoodMyCartPage from "./pages/FoodMyCartPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
 import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
@@ -71,6 +73,7 @@ function App() {
         <SettingsProvider>
           <AuthProvider>
             <CartProvider>
+              <FoodCartProvider>
               <BrowserRouter>
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
@@ -129,6 +132,7 @@ function App() {
                 <Route path="/food/dashboard" element={<FoodRoute><FoodStoreDashboard /></FoodRoute>} />
                 <Route path="/food/store/:storeId" element={<FoodRoute><FoodStorePage /></FoodRoute>} />
                 <Route path="/food/cart/:storeId" element={<FoodRoute><FoodCartPage /></FoodRoute>} />
+                <Route path="/food/my-cart" element={<FoodRoute><FoodMyCartPage /></FoodRoute>} />
                 <Route path="/food/order/:orderId" element={<FoodRoute><FoodOrderTracking /></FoodRoute>} />
                 
                 {/* Referrals */}
@@ -142,6 +146,7 @@ function App() {
           </div>
           </ScrollProvider>
         </BrowserRouter>
+        </FoodCartProvider>
       </CartProvider>
     </AuthProvider>
   </SettingsProvider>
