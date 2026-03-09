@@ -205,7 +205,7 @@ const HomePage = () => {
       {ads.length > 0 && (
         <section className="py-1">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="relative overflow-hidden rounded-xl">
+            <div className="relative overflow-hidden rounded-lg">
               <motion.div
                 key={currentAdIndex}
                 initial={{ opacity: 0, x: 50 }}
@@ -215,7 +215,7 @@ const HomePage = () => {
               >
                 <Link to={ads[currentAdIndex]?.link || '#'}>
                   <div 
-                    className="relative h-16 md:h-20 rounded-xl overflow-hidden"
+                    className="relative h-10 md:h-12 rounded-lg overflow-hidden"
                     style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
                   >
                     {ads[currentAdIndex]?.image ? (
@@ -225,11 +225,11 @@ const HomePage = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center p-2">
-                        <div className="text-center text-white">
-                          <h3 className="text-sm md:text-base font-bold">{ads[currentAdIndex]?.title}</h3>
+                      <div className="absolute inset-0 flex items-center justify-center px-2">
+                        <div className="flex items-center gap-2 text-white">
+                          <span className="text-xs md:text-sm font-bold">{ads[currentAdIndex]?.title}</span>
                           {ads[currentAdIndex]?.description && (
-                            <p className="text-xs opacity-90">{ads[currentAdIndex].description}</p>
+                            <span className="text-[10px] opacity-80 hidden sm:inline">- {ads[currentAdIndex].description}</span>
                           )}
                         </div>
                       </div>
@@ -245,8 +245,8 @@ const HomePage = () => {
                     <button
                       key={i}
                       onClick={() => setCurrentAdIndex(i)}
-                      className={`w-1.5 h-1.5 rounded-full transition-all ${
-                        i === currentAdIndex ? 'bg-white w-3' : 'bg-white/50'
+                      className={`w-1 h-1 rounded-full transition-all ${
+                        i === currentAdIndex ? 'bg-white w-2' : 'bg-white/50'
                       }`}
                     />
                   ))}
