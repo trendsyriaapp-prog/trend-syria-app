@@ -5,6 +5,7 @@ import { CartProvider } from "./context/CartContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { ScrollProvider } from "./context/ScrollContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -65,15 +66,16 @@ const FoodRoute = ({ children }) => {
 function App() {
   return (
     <ThemeProvider>
-      <SettingsProvider>
-        <AuthProvider>
-          <CartProvider>
-            <BrowserRouter>
-              <ScrollProvider>
-              <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
-                <Header />
-              <FreeShippingBanner />
-            <main className="pb-16 md:pb-0">
+      <LanguageProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <CartProvider>
+              <BrowserRouter>
+                <ScrollProvider>
+                <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
+                  <Header />
+                <FreeShippingBanner />
+              <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
@@ -141,6 +143,7 @@ function App() {
       </CartProvider>
     </AuthProvider>
   </SettingsProvider>
+  </LanguageProvider>
   </ThemeProvider>
   );
 }

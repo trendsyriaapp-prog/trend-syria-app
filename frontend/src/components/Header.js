@@ -5,12 +5,13 @@ import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
   Bot, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
-  Clock, Trash2, Mic, MicOff
+  Clock, Trash2, Mic, MicOff, Camera
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import NotificationsDropdown from './NotificationsDropdown';
+import ImageSearchModal from './ImageSearchModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -20,6 +21,7 @@ const Header = () => {
   const [searchHistory, setSearchHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [showImageSearch, setShowImageSearch] = useState(false);
   const recognitionRef = useRef(null);
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
@@ -239,12 +241,21 @@ const Header = () => {
               <button
                 type="button"
                 onClick={isListening ? stopVoiceSearch : startVoiceSearch}
-                className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                className={`absolute left-10 top-1/2 -translate-y-1/2 transition-colors ${
                   isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#FF6B00]'
                 }`}
                 data-testid="voice-search-btn"
               >
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+              </button>
+              {/* 📷 زر البحث بالصورة */}
+              <button
+                type="button"
+                onClick={() => setShowImageSearch(true)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500 transition-colors"
+                data-testid="image-search-btn"
+              >
+                <Camera size={20} />
               </button>
             </div>
 
@@ -352,6 +363,12 @@ const Header = () => {
           </nav>
         </motion.div>
       )}
+
+      {/* Image Search Modal */}
+      <ImageSearchModal 
+        isOpen={showImageSearch} 
+        onClose={() => setShowImageSearch(false)} 
+      />
     </header>
   );
 };
