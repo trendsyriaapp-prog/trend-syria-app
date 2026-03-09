@@ -38,6 +38,9 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             "whatsapp_enabled": True,
             "whatsapp_number": "963551021618",
             "support_message": "مرحباً، أريد الاستفسار عن خدمات تريند سورية",
+            # إعدادات الشحن المجاني
+            "products_free_shipping_threshold": 150000,  # حد الشحن المجاني للمنتجات
+            "food_free_delivery_threshold": 100000,      # حد التوصيل المجاني للطعام
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(settings)
@@ -66,6 +69,9 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     # الحقول النصية (string)
     string_fields = ["whatsapp_number", "support_message"]
     
+    # الحقول الرقمية (number)
+    number_fields = ["products_free_shipping_threshold", "food_free_delivery_threshold"]
+    
     update = {"updated_at": datetime.now(timezone.utc).isoformat()}
     activated_sections = []
     
@@ -84,6 +90,14 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     for field in string_fields:
         if field in data:
             update[field] = str(data[field])
+    
+    # معالجة الحقول الرقمية
+    for field in number_fields:
+        if field in data:
+            try:
+                update[field] = int(data[field])
+            except (ValueError, TypeError):
+                pass
     
     await db.platform_settings.update_one(
         {"id": "main"},
@@ -177,7 +191,10 @@ async def get_public_settings():
         # إعدادات الدعم
         "whatsapp_enabled": settings.get("whatsapp_enabled", True),
         "whatsapp_number": settings.get("whatsapp_number", "963551021618"),
-        "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات تريند سورية")
+        "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات تريند سورية"),
+        # إعدادات الشحن المجاني
+        "products_free_shipping_threshold": settings.get("products_free_shipping_threshold", 150000),
+        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000)
     }
 
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============

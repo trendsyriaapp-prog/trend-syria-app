@@ -17,6 +17,7 @@ const FoodDeliveryBanner = () => {
   const [freeDeliveryMin, setFreeDeliveryMin] = useState(0);
   const [storeName, setStoreName] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+  const [hideAfterFreeDelivery, setHideAfterFreeDelivery] = useState(false);
 
   // إظهار الشريط فقط في صفحات الطعام
   const isFoodPage = location.pathname.startsWith('/food');
@@ -58,12 +59,16 @@ const FoodDeliveryBanner = () => {
           // التحقق من الوصول للتوصيل المجاني
           if (freeDeliveryMin > 0 && total >= freeDeliveryMin && cartTotal < freeDeliveryMin) {
             setShowCelebration(true);
+            // إخفاء الاحتفال بعد 3 ثواني
             setTimeout(() => setShowCelebration(false), 3000);
+            // إخفاء الشريط بالكامل بعد 5 ثواني
+            setTimeout(() => setHideAfterFreeDelivery(true), 5000);
           }
           
           setCartTotal(total);
         } else {
           setCartTotal(0);
+          setHideAfterFreeDelivery(false); // إعادة إظهار الشريط إذا فرغت السلة
         }
       } catch (error) {
         console.error('Error loading cart:', error);
@@ -140,6 +145,9 @@ const FoodDeliveryBanner = () => {
   const progress = freeDeliveryMin > 0 ? Math.min((cartTotal / freeDeliveryMin) * 100, 100) : 0;
   const remaining = Math.max(freeDeliveryMin - cartTotal, 0);
   const isFreeDelivery = freeDeliveryMin > 0 && cartTotal >= freeDeliveryMin;
+  
+  // إخفاء الشريط بعد الحصول على التوصيل المجاني
+  if (hideAfterFreeDelivery && isFreeDelivery) return null;
 
   return (
     <AnimatePresence>

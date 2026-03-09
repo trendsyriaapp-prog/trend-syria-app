@@ -226,16 +226,36 @@ const PlatformSettingsTab = () => {
 
   // حالة إدخال رقم الواتساب
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [productsFreeShipping, setProductsFreeShipping] = useState(150000);
+  const [foodFreeDelivery, setFoodFreeDelivery] = useState(100000);
   
   useEffect(() => {
     if (settings?.whatsapp_number) {
       setWhatsappNumber(settings.whatsapp_number);
     }
-  }, [settings?.whatsapp_number]);
+    if (settings?.products_free_shipping_threshold) {
+      setProductsFreeShipping(settings.products_free_shipping_threshold);
+    }
+    if (settings?.food_free_delivery_threshold) {
+      setFoodFreeDelivery(settings.food_free_delivery_threshold);
+    }
+  }, [settings?.whatsapp_number, settings?.products_free_shipping_threshold, settings?.food_free_delivery_threshold]);
 
   const handleWhatsappNumberChange = (value) => {
     setWhatsappNumber(value);
     setSettings(prev => ({ ...prev, whatsapp_number: value }));
+  };
+
+  const handleProductsFreeShippingChange = (value) => {
+    const numValue = parseInt(value) || 0;
+    setProductsFreeShipping(numValue);
+    setSettings(prev => ({ ...prev, products_free_shipping_threshold: numValue }));
+  };
+
+  const handleFoodFreeDeliveryChange = (value) => {
+    const numValue = parseInt(value) || 0;
+    setFoodFreeDelivery(numValue);
+    setSettings(prev => ({ ...prev, food_free_delivery_threshold: numValue }));
   };
 
   if (loading) {
@@ -350,6 +370,57 @@ const PlatformSettingsTab = () => {
         <p className="text-sm text-yellow-800">
           <strong>⚠️ ملاحظة:</strong> عند إيقاف أي قسم، سيختفي من التطبيق للمستخدمين ولكن البيانات ستبقى محفوظة. عند التفعيل، يمكنك إرسال إشعار للمستخدمين.
         </p>
+      </div>
+
+      {/* إعدادات الشحن المجاني */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+            <Truck size={20} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">إعدادات الشحن المجاني</h3>
+            <p className="text-xs text-gray-500">تحديد الحد الأدنى للحصول على شحن مجاني</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* حد الشحن المجاني للمنتجات */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              🛒 الحد الأدنى للشحن المجاني (المنتجات)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={productsFreeShipping}
+                onChange={(e) => handleProductsFreeShippingChange(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                placeholder="150000"
+              />
+              <span className="text-sm text-gray-500">ل.س</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">عند طلب منتجات بهذا المبلغ أو أكثر، يحصل المشتري على شحن مجاني</p>
+          </div>
+
+          {/* حد التوصيل المجاني للطعام */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              🍕 الحد الأدنى للتوصيل المجاني (الطعام)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={foodFreeDelivery}
+                onChange={(e) => handleFoodFreeDeliveryChange(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                placeholder="100000"
+              />
+              <span className="text-sm text-gray-500">ل.س</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">عند طلب طعام بهذا المبلغ أو أكثر، يحصل المشتري على توصيل مجاني</p>
+          </div>
+        </div>
       </div>
 
       {/* نافذة الإشعار */}
