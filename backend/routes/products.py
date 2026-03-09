@@ -282,7 +282,7 @@ async def get_flash_products(limit: int = Query(default=10, le=20)):
 @router.get("/sponsored")
 async def get_sponsored_products(limit: int = Query(default=10, le=20)):
     """جلب المنتجات المُعلن عنها (Sponsored)"""
-    now = datetime.now()
+    now = datetime.now(timezone.utc).isoformat()
     
     # جلب الإعلانات النشطة
     active_ads = await db.ads.find({
@@ -296,7 +296,11 @@ async def get_sponsored_products(limit: int = Query(default=10, le=20)):
     # جلب المنتجات المُعلن عنها
     product_ids = [ad["product_id"] for ad in active_ads]
     products = await db.products.find(
-        {"id": {"$in": product_ids}, "is_active": True, "is_approved": True},
+        {
+            "id": {"$in": product_ids}, 
+            "is_approved": True,
+            "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
+        },
         {"_id": 0}
     ).to_list(limit)
     
