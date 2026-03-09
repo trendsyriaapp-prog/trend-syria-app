@@ -17,7 +17,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const STORE_TYPES = [
   { id: 'restaurants', name: 'مطعم', icon: UtensilsCrossed, color: 'bg-red-500', description: 'وجبات جاهزة، مطاعم، كافيهات' },
   { id: 'groceries', name: 'مواد غذائية', icon: ShoppingBasket, color: 'bg-blue-500', description: 'سوبرماركت، بقالة، مواد استهلاكية' },
-  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-green-500', description: 'خضار طازجة، فواكه، منتجات زراعية' },
+  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-[#FF6B00]', description: 'خضار طازجة، فواكه، منتجات زراعية' },
 ];
 
 const CITIES = [
@@ -105,13 +105,13 @@ const JoinAsFoodSellerPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full shadow-lg">
-          <Store size={48} className="mx-auto text-green-500 mb-4" />
+          <Store size={48} className="mx-auto text-[#FF6B00] mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">سجّل دخولك أولاً</h2>
           <p className="text-gray-600 mb-6">لتتمكن من إنشاء متجر طعام، يجب تسجيل الدخول أو إنشاء حساب جديد</p>
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/login')}
-              className="flex-1 bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600"
+              className="flex-1 bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000]"
             >
               تسجيل الدخول
             </button>
@@ -128,9 +128,9 @@ const JoinAsFoodSellerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6">
+      <div className="bg-gradient-to-b from-[#E65000] to-[#FF6B00] text-white px-4 py-6">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
@@ -140,7 +140,7 @@ const JoinAsFoodSellerPage = () => {
             رجوع
           </button>
           <h1 className="text-2xl font-bold">انضم كمتجر طعام</h1>
-          <p className="text-green-100 text-sm mt-1">ابدأ ببيع منتجاتك في تريند سورية</p>
+          <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في تريند سورية</p>
           
           {/* Progress */}
           {step < 4 && (
@@ -171,7 +171,7 @@ const JoinAsFoodSellerPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleTypeSelect(type.id)}
-                className="w-full bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-green-500 transition-all flex items-center gap-4 text-right"
+                className="w-full bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-4 text-right"
               >
                 <div className={`w-14 h-14 ${type.color} rounded-xl flex items-center justify-center text-white`}>
                   <type.icon size={28} />
@@ -201,7 +201,7 @@ const JoinAsFoodSellerPage = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="مثال: مطعم الشام"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   required
                 />
               </div>
@@ -214,7 +214,7 @@ const JoinAsFoodSellerPage = () => {
                   onChange={handleInputChange}
                   placeholder="وصف قصير عن متجرك ومنتجاتك..."
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                 />
               </div>
 
@@ -226,7 +226,7 @@ const JoinAsFoodSellerPage = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="09xxxxxxxx"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   required
                 />
               </div>
@@ -237,7 +237,7 @@ const JoinAsFoodSellerPage = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   required
                 >
                   <option value="">اختر المدينة</option>
@@ -255,7 +255,7 @@ const JoinAsFoodSellerPage = () => {
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="الحي، الشارع، بالقرب من..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   required
                 />
               </div>
@@ -269,7 +269,7 @@ const JoinAsFoodSellerPage = () => {
                     toast({ title: "تنبيه", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
                   }
                 }}
-                className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition-colors"
+                className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] transition-colors"
               >
                 التالي
               </button>
@@ -295,7 +295,7 @@ const JoinAsFoodSellerPage = () => {
                     onChange={handleInputChange}
                     min="10"
                     max="120"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   />
                 </div>
                 <div>
@@ -307,7 +307,7 @@ const JoinAsFoodSellerPage = () => {
                     onChange={handleInputChange}
                     min="0"
                     step="1000"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   />
                 </div>
               </div>
@@ -323,7 +323,7 @@ const JoinAsFoodSellerPage = () => {
                     onChange={handleInputChange}
                     min="0"
                     step="500"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   />
                 </div>
                 <div>
@@ -336,7 +336,7 @@ const JoinAsFoodSellerPage = () => {
                     min="0"
                     step="5000"
                     placeholder="0 = معطل"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00]"
                   />
                 </div>
               </div>
@@ -356,7 +356,7 @@ const JoinAsFoodSellerPage = () => {
                     </div>
                   )}
                   <label className="flex-1 cursor-pointer">
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-green-500 transition-colors">
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#FF6B00] transition-colors">
                       <Upload size={24} className="mx-auto text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600">اختر صورة الشعار</span>
                     </div>
@@ -377,7 +377,7 @@ const JoinAsFoodSellerPage = () => {
                   {formData.cover_image ? (
                     <img src={formData.cover_image} alt="Cover" className="w-full h-32 rounded-xl object-cover" />
                   ) : (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-green-500 transition-colors">
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-[#FF6B00] transition-colors">
                       <Image size={32} className="mx-auto text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600">اختر صورة الغلاف (اختياري)</span>
                     </div>
@@ -394,7 +394,7 @@ const JoinAsFoodSellerPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -416,8 +416,8 @@ const JoinAsFoodSellerPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8"
           >
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={40} className="text-green-500" />
+            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={40} className="text-[#FF6B00]" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">تم إرسال طلبك بنجاح! 🎉</h2>
             <p className="text-gray-600 mb-6">
@@ -434,7 +434,7 @@ const JoinAsFoodSellerPage = () => {
               </button>
               <button
                 onClick={() => navigate('/food')}
-                className="flex-1 bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600"
+                className="flex-1 bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000]"
               >
                 تصفح الطعام
               </button>

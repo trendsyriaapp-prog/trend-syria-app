@@ -16,7 +16,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const foodCategories = [
   { id: 'restaurants', name: 'مطاعم', icon: UtensilsCrossed, color: 'bg-red-500' },
   { id: 'groceries', name: 'مواد غذائية', icon: ShoppingBasket, color: 'bg-blue-500' },
-  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-green-500' },
+  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-emerald-500' },
 ];
 
 const FoodPage = () => {
@@ -73,12 +73,23 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-3">
-        <div className="max-w-7xl mx-auto">
+      {/* Header with Food Image */}
+      <div className="relative bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
+        {/* Background Food Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <img 
+            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="relative max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-lg font-bold">قسم الطعام</h1>
-            <p className="text-green-100 text-xs">مطاعم • غذائية • خضروات</p>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🍕</span>
+              <h1 className="text-lg font-bold">قسم الطعام</h1>
+            </div>
+            <p className="text-orange-100 text-xs">مطاعم • غذائية • خضروات</p>
           </div>
           
           {/* Search */}
@@ -95,7 +106,7 @@ const FoodPage = () => {
         </div>
       </div>
 
-      {/* Categories */}
+      {/* Categories with Food Images */}
       <div className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto hide-scrollbar">
@@ -103,7 +114,7 @@ const FoodPage = () => {
               onClick={() => setActiveCategory('all')}
               className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                 activeCategory === 'all'
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-[#FF6B00] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -116,7 +127,7 @@ const FoodPage = () => {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                   activeCategory === cat.id
-                    ? `${cat.color} text-white`
+                    ? 'bg-[#FF6B00] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -131,7 +142,7 @@ const FoodPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-4">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
@@ -149,7 +160,7 @@ const FoodPage = () => {
               <section className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
-                  <Link to="/food/stores" className="text-green-600 text-sm flex items-center gap-1">
+                  <Link to="/food/stores" className="text-[#FF6B00] text-sm flex items-center gap-1">
                     عرض الكل <ChevronLeft size={14} />
                   </Link>
                 </div>
@@ -190,14 +201,25 @@ const StoreCard = ({ store }) => (
       whileTap={{ scale: 0.98 }}
       className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
     >
-      <div className="h-24 bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
-        {store.logo ? (
-          <img src={store.logo} alt={store.name} className="w-16 h-16 rounded-full object-cover" />
+      <div className="h-24 bg-gradient-to-br from-orange-100 to-orange-50 relative overflow-hidden">
+        {store.cover_image ? (
+          <img src={store.cover_image} alt={store.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-            <Store size={24} className="text-white" />
-          </div>
+          <img 
+            src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" 
+            alt="" 
+            className="w-full h-full object-cover opacity-30"
+          />
         )}
+        <div className="absolute bottom-2 right-2">
+          {store.logo ? (
+            <img src={store.logo} alt={store.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg" />
+          ) : (
+            <div className="w-12 h-12 bg-[#FF6B00] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+              <Store size={20} className="text-white" />
+            </div>
+          )}
+        </div>
       </div>
       <div className="p-3">
         <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
@@ -231,8 +253,8 @@ const EmptyState = ({ category }) => {
 
   return (
     <div className="text-center py-12">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <UtensilsCrossed size={32} className="text-green-500" />
+      <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <UtensilsCrossed size={32} className="text-[#FF6B00]" />
       </div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">{messages[category] || messages.all}</h3>
       <p className="text-gray-500 text-sm mb-4">
@@ -240,7 +262,7 @@ const EmptyState = ({ category }) => {
       </p>
       <Link
         to="/join/food-seller"
-        className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-2 rounded-full font-medium hover:bg-green-600 transition-colors"
+        className="inline-flex items-center gap-2 bg-[#FF6B00] text-white px-6 py-2 rounded-full font-medium hover:bg-[#E65000] transition-colors"
       >
         <Store size={18} />
         انضم كمتجر طعام

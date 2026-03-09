@@ -275,7 +275,7 @@ const FoodCartPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -289,7 +289,7 @@ const FoodCartPage = () => {
           <p className="text-gray-600 mb-6">أضف بعض المنتجات من المتجر</p>
           <button
             onClick={() => navigate(`/food/store/${storeId}`)}
-            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600"
+            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000]"
           >
             تصفح المنتجات
           </button>
@@ -318,7 +318,7 @@ const FoodCartPage = () => {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-4 border-b border-gray-100">
             <h2 className="font-bold text-gray-900 flex items-center gap-2">
-              <Store size={18} className="text-green-600" />
+              <Store size={18} className="text-[#E65000]" />
               {store?.name}
             </h2>
           </div>
@@ -344,7 +344,7 @@ const FoodCartPage = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-                    <p className="text-green-600 font-bold">{item.price.toLocaleString()} ل.س</p>
+                    <p className="text-[#E65000] font-bold">{item.price.toLocaleString()} ل.س</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -356,7 +356,7 @@ const FoodCartPage = () => {
                     <span className="w-8 text-center font-bold">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.product_id, 1)}
-                      className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center hover:bg-green-200"
+                      className="w-8 h-8 bg-orange-100 text-[#E65000] rounded-full flex items-center justify-center hover:bg-orange-200"
                     >
                       <Plus size={16} />
                     </button>
@@ -377,12 +377,12 @@ const FoodCartPage = () => {
         {store?.free_delivery_minimum > 0 && (
           <div className={`rounded-xl p-3 border ${
             subtotal >= store.free_delivery_minimum 
-              ? 'bg-green-50 border-green-200' 
+              ? 'bg-orange-50 border-orange-200' 
               : 'bg-orange-50 border-orange-200'
           }`}>
             {subtotal >= store.free_delivery_minimum ? (
-              <div className="flex items-center gap-2 text-green-700">
-                <Check size={18} className="text-green-600" />
+              <div className="flex items-center gap-2 text-orange-700">
+                <Check size={18} className="text-[#E65000]" />
                 <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
               </div>
             ) : (
@@ -409,7 +409,7 @@ const FoodCartPage = () => {
         {/* Delivery Info */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
-            <MapPin size={18} className="text-green-600" />
+            <MapPin size={18} className="text-[#E65000]" />
             معلومات التوصيل
           </h2>
           
@@ -464,7 +464,7 @@ const FoodCartPage = () => {
         {/* Payment Method */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
-            <CreditCard size={18} className="text-green-600" />
+            <CreditCard size={18} className="text-[#E65000]" />
             طريقة الدفع
           </h2>
           
@@ -475,9 +475,9 @@ const FoodCartPage = () => {
               value="wallet"
               checked={deliveryInfo.payment_method === 'wallet'}
               onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
-              className="w-4 h-4 text-green-600"
+              className="w-4 h-4 text-[#E65000]"
             />
-            <Wallet size={20} className="text-green-600" />
+            <Wallet size={20} className="text-[#E65000]" />
             <div className="flex-1">
               <p className="font-medium text-gray-900">المحفظة</p>
               <p className="text-sm text-gray-500">الرصيد: {walletBalance.toLocaleString()} ل.س</p>
@@ -603,20 +603,20 @@ const FoodCartPage = () => {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">رسوم التوصيل</span>
               {isFreeDelivery ? (
-                <span className="text-green-600 font-medium">مجاني ✓</span>
+                <span className="text-[#E65000] font-medium">مجاني ✓</span>
               ) : (
                 <span className="text-gray-900">{deliveryFee.toLocaleString()} ل.س</span>
               )}
             </div>
             <div className="flex justify-between font-bold text-lg">
               <span className="text-gray-900">الإجمالي</span>
-              <span className="text-green-600">{total.toLocaleString()} ل.س</span>
+              <span className="text-[#E65000]">{total.toLocaleString()} ل.س</span>
             </div>
             
             {/* Savings Summary */}
             {(offerDiscount > 0 || couponDiscount > 0 || isFreeDelivery) && (
-              <div className="bg-green-50 rounded-lg p-2 text-center">
-                <span className="text-sm text-green-700 font-medium">
+              <div className="bg-orange-50 rounded-lg p-2 text-center">
+                <span className="text-sm text-orange-700 font-medium">
                   🎉 وفرت {(offerDiscount + couponDiscount + (isFreeDelivery ? storeDeliveryFee : 0)).toLocaleString()} ل.س في هذا الطلب!
                 </span>
               </div>
@@ -626,7 +626,7 @@ const FoodCartPage = () => {
           <button
             onClick={handleSubmit}
             disabled={submitting || (store?.minimum_order && subtotal < store.minimum_order)}
-            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -103,7 +103,7 @@ const FoodStorePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ const FoodStorePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header Image */}
-      <div className="relative h-48 bg-gradient-to-br from-green-500 to-green-600">
+      <div className="relative h-48 bg-gradient-to-br from-[#FF6B00] to-[#E65000]">
         {store.cover_image && (
           <img 
             src={store.cover_image} 
@@ -139,7 +139,7 @@ const FoodStorePage = () => {
             {store.logo ? (
               <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
             ) : (
-              <Store size={40} className="text-green-500" />
+              <Store size={40} className="text-[#FF6B00]" />
             )}
           </div>
         </div>
@@ -252,7 +252,7 @@ const FoodStorePage = () => {
         <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-200 z-40 shadow-lg">
           <button
             onClick={() => navigate(`/food/cart/${storeId}`)}
-            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-green-600"
+            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-[#E65000]"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag size={20} />
@@ -312,7 +312,7 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
       )}
       <div className="flex items-center justify-between mt-2">
         <div>
-          <span className="font-bold text-green-600">{product.price.toLocaleString()} ل.س</span>
+          <span className="font-bold text-[#E65000]">{product.price.toLocaleString()} ل.س</span>
           {product.original_price && (
             <span className="text-sm text-gray-400 line-through mr-2">
               {product.original_price.toLocaleString()}
@@ -326,8 +326,8 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
           }}
           className={`w-8 h-8 rounded-full flex items-center justify-center ${
             cartQuantity > 0 
-              ? 'bg-green-500 text-white' 
-              : 'bg-green-100 text-green-600'
+              ? 'bg-[#FF6B00] text-white' 
+              : 'bg-orange-100 text-[#E65000]'
           }`}
         >
           {cartQuantity > 0 ? cartQuantity : <Plus size={18} />}
@@ -373,7 +373,7 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
           )}
           
           <div className="flex items-center gap-2 mt-3">
-            <span className="text-2xl font-bold text-green-600">{product.price.toLocaleString()} ل.س</span>
+            <span className="text-2xl font-bold text-[#E65000]">{product.price.toLocaleString()} ل.س</span>
             {product.original_price && (
               <span className="text-lg text-gray-400 line-through">
                 {product.original_price.toLocaleString()}
@@ -399,7 +399,7 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
             <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center hover:bg-green-200"
+              className="w-12 h-12 bg-orange-100 text-[#E65000] rounded-full flex items-center justify-center hover:bg-orange-200"
             >
               <Plus size={20} />
             </button>
@@ -408,7 +408,7 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
           {/* Add Button */}
           <button
             onClick={() => onAdd(quantity)}
-            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold mt-6 mb-20 flex items-center justify-center gap-2 hover:bg-green-600"
+            className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold mt-6 mb-20 flex items-center justify-center gap-2 hover:bg-[#E65000]"
           >
             <Plus size={20} />
             إضافة للسلة - {(product.price * quantity).toLocaleString()} ل.س
@@ -495,8 +495,8 @@ const ReviewsModal = ({ reviews, stats, storeName, onClose }) => {
                 <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <User size={18} className="text-green-600" />
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <User size={18} className="text-[#E65000]" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{review.customer_name}</p>

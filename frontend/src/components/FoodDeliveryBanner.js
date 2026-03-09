@@ -176,7 +176,7 @@ const FoodDeliveryBanner = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="bg-gradient-to-r from-green-600 to-green-500 text-white"
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white"
         >
           <div className="max-w-7xl mx-auto px-3 py-1.5">
             <div className="flex items-center justify-between gap-2">
