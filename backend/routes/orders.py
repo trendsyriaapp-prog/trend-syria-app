@@ -338,15 +338,25 @@ async def get_order_tracking(order_id: str, user: dict = Depends(get_current_use
     if order.get("delivery_driver_id") and (is_customer or is_seller or is_admin):
         driver = await db.users.find_one({"id": order["delivery_driver_id"]}, {"_id": 0, "password": 0})
         if driver:
+            # جلب تقييم السائق
+            driver_rating = await db.reviews.aggregate([
+                {"$match": {"reviewed_id": driver["id"], "review_type": "delivery"}},
+                {"$group": {"_id": None, "avg": {"$avg": "$rating"}}}
+            ]).to_list(1)
+            rating = driver_rating[0]["avg"] if driver_rating else 5.0
+            
             driver_info = {
                 "id": driver["id"],
                 "name": driver.get("full_name", driver.get("name", "")),
-                "photo": driver.get("photo", "")
+                "photo": driver.get("photo", ""),
+                "phone": driver.get("phone", ""),  # رقم الهاتف يظهر للجميع
+                "rating": rating
             }
-            # رقم الهاتف يظهر فقط للبائع والأدمن، ليس للعميل
-            if is_seller or is_admin:
-                driver_info["phone"] = driver.get("phone", "")
             tracking_info["delivery_driver"] = driver_info
+            
+            # الوقت المتوقع للوصول
+            if order.get("estimated_arrival_minutes"):
+                tracking_info["estimated_arrival_minutes"] = order["estimated_arrival_minutes"]
     
     # معلومات البائع (لموظف التوصيل)
     if is_delivery:

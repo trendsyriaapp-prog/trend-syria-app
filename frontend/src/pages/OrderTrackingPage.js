@@ -5,12 +5,13 @@ import axios from 'axios';
 import { 
   Package, Clock, Truck, Check, MapPin, Phone, User, 
   MessageSquare, ChevronRight, ArrowRight, Camera, 
-  Store, Navigation, CheckCircle2, Circle, Loader2, Star, AlertTriangle
+  Store, Navigation, CheckCircle2, Circle, Loader2, Star, AlertTriangle, Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 import ReportDriverModal from '../components/delivery/ReportDriverModal';
+import OrderTrackingMap from '../components/OrderTrackingMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -268,7 +269,7 @@ const OrderTrackingPage = () => {
             </div>
 
             {/* الوقت المتوقع للوصول */}
-            {order.estimated_arrival_minutes && order.delivery_status === 'on_the_way' && (
+            {order.estimated_arrival_minutes && ['picked_up', 'on_the_way'].includes(order.delivery_status) && (
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -309,6 +310,29 @@ const OrderTrackingPage = () => {
                 بلاغ أخلاقي
               </button>
             )}
+          </motion.div>
+        )}
+
+        {/* خريطة تتبع السائق */}
+        {tracking.delivery_driver && ['picked_up', 'on_the_way'].includes(order.delivery_status) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-2xl overflow-hidden shadow-sm"
+          >
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                <Map size={18} className="text-[#FF6B00]" />
+                تتبع موقع السائق
+              </h2>
+            </div>
+            <OrderTrackingMap 
+              orderId={orderId}
+              order={order}
+              trackingData={tracking}
+              userType="buyer"
+            />
           </motion.div>
         )}
 
