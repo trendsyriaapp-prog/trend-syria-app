@@ -30,6 +30,7 @@ const PENALTY_POINTS = {
 
 const STATUS_CONFIG = {
   pending: { label: 'قيد المراجعة', color: 'bg-amber-100 text-amber-700', icon: Clock },
+  suspended: { label: 'معلّق', color: 'bg-yellow-100 text-yellow-700', icon: Shield },
   dismissed: { label: 'مرفوض', color: 'bg-green-100 text-green-700', icon: XCircle },
   penalized: { label: 'تم الخصم', color: 'bg-orange-100 text-orange-700', icon: MinusCircle },
   terminated: { label: 'تم الفصل', color: 'bg-red-100 text-red-700', icon: UserX },
@@ -118,7 +119,7 @@ const DriverReportsTab = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
           icon={Clock}
           label="قيد المراجعة"
@@ -126,6 +127,14 @@ const DriverReportsTab = () => {
           color="amber"
           onClick={() => setFilter('pending')}
           active={filter === 'pending'}
+        />
+        <StatCard
+          icon={Shield}
+          label="معلّق"
+          value={stats.suspended || 0}
+          color="yellow"
+          onClick={() => setFilter('suspended')}
+          active={filter === 'suspended'}
         />
         <StatCard
           icon={XCircle}
@@ -217,6 +226,7 @@ const DriverReportsTab = () => {
 const StatCard = ({ icon: Icon, label, value, color, onClick, active }) => {
   const colors = {
     amber: 'bg-amber-100 text-amber-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
     green: 'bg-green-100 text-green-600',
     red: 'bg-red-100 text-red-600',
     gray: 'bg-gray-100 text-gray-600',
@@ -398,6 +408,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 </p>
               </div>
               
+              {/* الصف الأول: رفض وتعليق */}
               <div className="flex gap-2">
                 <button
                   onClick={() => onAction(report.id, 'dismiss')}
@@ -407,6 +418,18 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                   {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                   رفض البلاغ
                 </button>
+                <button
+                  onClick={() => onAction(report.id, 'suspend')}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-yellow-500 text-white rounded-xl font-medium hover:bg-yellow-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                  تعليق مؤقت
+                </button>
+              </div>
+              
+              {/* الصف الثاني: خصم وفصل */}
+              <div className="flex gap-2">
                 <button
                   onClick={() => onAction(report.id, 'penalize')}
                   disabled={actionLoading}
@@ -428,13 +451,16 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
           ) : (
             <div className={`p-4 rounded-xl ${
               report.status === 'dismissed' ? 'bg-green-50' : 
+              report.status === 'suspended' ? 'bg-yellow-50' :
               report.status === 'penalized' ? 'bg-orange-50' : 'bg-red-50'
             }`}>
               <p className={`text-sm font-medium ${
                 report.status === 'dismissed' ? 'text-green-700' : 
+                report.status === 'suspended' ? 'text-yellow-700' :
                 report.status === 'penalized' ? 'text-orange-700' : 'text-red-700'
               }`}>
-                {report.status === 'dismissed' && '✓ تم رفض البلاغ وإعادة تفعيل الموظف'}
+                {report.status === 'dismissed' && '✓ تم رفض البلاغ'}
+                {report.status === 'suspended' && '⏸️ تم تعليق حساب الموظف مؤقتاً'}
                 {report.status === 'penalized' && `⚠️ تم خصم ${report.penalty_applied || PENALTY_POINTS[report.category]} نقطة`}
                 {report.status === 'terminated' && '✗ تم فصل الموظف نهائياً'}
               </p>

@@ -886,8 +886,10 @@ async def get_driver_reports(user: dict = Depends(get_current_user)):
     # إحصائيات
     stats = {
         "pending": len([r for r in reports if r["status"] == "pending"]),
+        "suspended": len([r for r in reports if r["status"] == "suspended"]),
         "reviewed": len([r for r in reports if r["status"] == "reviewed"]),
         "dismissed": len([r for r in reports if r["status"] == "dismissed"]),
+        "penalized": len([r for r in reports if r["status"] == "penalized"]),
         "terminated": len([r for r in reports if r["status"] == "terminated"]),
         "total": len(reports)
     }
@@ -900,8 +902,8 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    if action not in ["dismiss", "penalize", "terminate"]:
-        raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو penalize أو terminate")
+    if action not in ["dismiss", "suspend", "penalize", "terminate"]:
+        raise HTTPException(status_code=400, detail="الإجراء يجب أن يكون dismiss أو suspend أو penalize أو terminate")
     
     report = await db.driver_reports.find_one({"id": report_id})
     if not report:
@@ -919,8 +921,56 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
     }
     MAX_POINTS = 100
     
-    if action == "dismiss":
-        # رفض البلاغ - إعادة تفعيل الموظف
+    if action == "suspend":
+        # تعليق الحساب مؤقتاً
+        await db.driver_reports.update_one(
+            {"id": report_id},
+            {
+                "$set": {
+                    "status": "suspended",
+                    "reviewed_at": now,
+                    "reviewed_by": user["id"],
+                    "admin_notes": admin_notes
+                }
+            }
+        )
+        
+        # تعليق الموظف
+        await db.users.update_one(
+            {"id": driver_id},
+            {
+                "$set": {
+                    "is_suspended": True,
+                    "suspended_at": now,
+                    "suspension_reason": f"بلاغ أخلاقي: {report.get('category_label', 'غير محدد')}"
+                }
+            }
+        )
+        
+        # تحديث وثائق التوصيل
+        await db.delivery_documents.update_one(
+            {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+            {
+                "$set": {
+                    "status": "suspended",
+                    "suspended_at": now,
+                    "suspension_reason": "بلاغ أخلاقي - تعليق بقرار إداري"
+                }
+            }
+        )
+        
+        # إشعار الموظف
+        await create_notification_for_user(
+            user_id=driver_id,
+            title="⚠️ تم تعليق حسابك مؤقتاً",
+            message="تمت مراجعة البلاغ المقدم بحقك وتقرر تعليق حسابك مؤقتاً. يرجى التواصل مع الإدارة.",
+            notification_type="account_suspended"
+        )
+        
+        return {"message": "تم تعليق حساب الموظف مؤقتاً"}
+    
+    elif action == "dismiss":
+        # رفض البلاغ - الموظف غير معلق أساساً، فقط نرفض البلاغ
         await db.driver_reports.update_one(
             {"id": report_id},
             {
@@ -933,43 +983,55 @@ async def handle_driver_report(report_id: str, action: str, admin_notes: str = "
             }
         )
         
-        # إعادة تفعيل الموظف
-        await db.users.update_one(
-            {"id": driver_id},
-            {
-                "$set": {
-                    "is_suspended": False
-                },
-                "$unset": {
-                    "suspended_at": "",
-                    "suspension_reason": ""
+        # إذا كان الموظف معلقاً (تم تعليقه يدوياً)، نعيد تفعيله
+        driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "is_suspended": 1})
+        if driver and driver.get("is_suspended"):
+            await db.users.update_one(
+                {"id": driver_id},
+                {
+                    "$set": {
+                        "is_suspended": False
+                    },
+                    "$unset": {
+                        "suspended_at": "",
+                        "suspension_reason": ""
+                    }
                 }
-            }
-        )
-        
-        # إعادة تفعيل وثائق التوصيل
-        await db.delivery_documents.update_one(
-            {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
-            {
-                "$set": {
-                    "status": "approved"
-                },
-                "$unset": {
-                    "suspended_at": "",
-                    "suspension_reason": ""
+            )
+            
+            # إعادة تفعيل وثائق التوصيل
+            await db.delivery_documents.update_one(
+                {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+                {
+                    "$set": {
+                        "status": "approved"
+                    },
+                    "$unset": {
+                        "suspended_at": "",
+                        "suspension_reason": ""
+                    }
                 }
-            }
-        )
-        
-        # إشعار الموظف
-        await create_notification_for_user(
-            user_id=driver_id,
-            title="✅ تم رفع التعليق عن حسابك",
-            message="تمت مراجعة البلاغ وتقرر رفع التعليق عن حسابك. يمكنك استئناف العمل.",
-            notification_type="account_reactivated"
-        )
-        
-        return {"message": "تم رفض البلاغ وإعادة تفعيل حساب الموظف"}
+            )
+            
+            # إشعار الموظف
+            await create_notification_for_user(
+                user_id=driver_id,
+                title="✅ تم رفع التعليق عن حسابك",
+                message="تمت مراجعة البلاغ وتقرر رفضه ورفع التعليق عن حسابك. يمكنك استئناف العمل.",
+                notification_type="account_reactivated"
+            )
+            
+            return {"message": "تم رفض البلاغ وإعادة تفعيل حساب الموظف"}
+        else:
+            # الموظف ليس معلقاً، فقط نُشعره برفض البلاغ
+            await create_notification_for_user(
+                user_id=driver_id,
+                title="✅ تم رفض البلاغ المقدم بحقك",
+                message="تمت مراجعة البلاغ من قبل الإدارة وتقرر رفضه. لا يوجد إجراء ضدك.",
+                notification_type="report_dismissed"
+            )
+            
+            return {"message": "تم رفض البلاغ"}
     
     elif action == "penalize":
         # خصم نقاط بدون فصل (إذا كانت النقاط كافية)

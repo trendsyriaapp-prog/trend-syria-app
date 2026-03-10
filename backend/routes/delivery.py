@@ -952,45 +952,24 @@ async def report_driver(data: DriverReport, user: dict = Depends(get_current_use
     
     await db.driver_reports.insert_one(report)
     
-    # تعليق موظف التوصيل فوراً
-    await db.users.update_one(
-        {"id": data.driver_id},
-        {
-            "$set": {
-                "is_suspended": True,
-                "suspended_at": now,
-                "suspension_reason": f"بلاغ أخلاقي: {REPORT_CATEGORIES[data.category]}"
-            }
-        }
-    )
-    
-    # تحديث وثائق التوصيل
-    await db.delivery_documents.update_one(
-        {"$or": [{"driver_id": data.driver_id}, {"delivery_id": data.driver_id}]},
-        {
-            "$set": {
-                "status": "suspended",
-                "suspended_at": now,
-                "suspension_reason": "بلاغ أخلاقي قيد المراجعة"
-            }
-        }
-    )
+    # ملاحظة: لا نقوم بتعليق الحساب مباشرة، فقط نُشعر المدير للمراجعة
+    # المدير هو من يقرر تعليق الحساب أو رفض البلاغ
     
     # إشعار المدير
     from core.database import create_notification_for_role
     await create_notification_for_role(
         role="admin",
-        title="⚠️ بلاغ أخلاقي جديد",
-        message=f"بلاغ ضد موظف التوصيل {report['driver_name']} - {REPORT_CATEGORIES[data.category]}",
+        title="⚠️ بلاغ أخلاقي جديد - يتطلب مراجعة",
+        message=f"بلاغ ضد موظف التوصيل {report['driver_name']} - {REPORT_CATEGORIES[data.category]}. يرجى مراجعة البلاغ واتخاذ الإجراء المناسب.",
         notification_type="driver_report"
     )
     
-    # إشعار موظف التوصيل
+    # إشعار موظف التوصيل بوجود بلاغ (بدون تعليق)
     await create_notification_for_user(
         user_id=data.driver_id,
-        title="⚠️ تم تعليق حسابك مؤقتاً",
-        message="تم استلام بلاغ أخلاقي بحقك وتم تعليق حسابك مؤقتاً لحين مراجعة الإدارة.",
-        notification_type="account_suspended"
+        title="📋 تم استلام بلاغ بحقك",
+        message="تم تقديم بلاغ بحقك وسيتم مراجعته من قبل الإدارة. سيتم إبلاغك بالنتيجة.",
+        notification_type="report_received"
     )
     
     return {
