@@ -775,3 +775,150 @@ async def get_store_reviews(
             "distribution": stats
         }
     }
+
+
+
+# ============== إلغاء الطلب من الأدمن ==============
+
+class AdminCancelRequest(BaseModel):
+    reason: str
+    notify_customer: bool = True
+    offer_replacement: bool = True
+
+@router.post("/admin/{order_id}/cancel-with-penalty")
+async def admin_cancel_order_with_penalty(
+    order_id: str, 
+    request: AdminCancelRequest,
+    user: dict = Depends(get_current_user)
+):
+    """إلغاء طلب من الأدمن مع خصم من السائق (بعد الاستلام)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    order = await db.food_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order["status"] == "cancelled":
+        raise HTTPException(status_code=400, detail="الطلب ملغي بالفعل")
+    
+    if order["status"] == "delivered":
+        raise HTTPException(status_code=400, detail="الطلب تم توصيله بالفعل")
+    
+    driver_id = order.get("driver_id")
+    penalty_amount = 0
+    
+    # إذا كان السائق قد استلم الطلب، نخصم منه قيمة الطعام (بدون رسوم التوصيل)
+    if driver_id and order["status"] == "out_for_delivery":
+        # قيمة الطعام فقط (بدون رسوم التوصيل)
+        penalty_amount = order["subtotal"] - order.get("total_discount", 0)
+        
+        # خصم من رصيد السائق
+        await db.wallets.update_one(
+            {"user_id": driver_id},
+            {"$inc": {"balance": -penalty_amount}},
+            upsert=True
+        )
+        
+        # تسجيل العملية
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": driver_id,
+            "type": "penalty",
+            "amount": -penalty_amount,
+            "description": f"خصم بسبب إلغاء طلب #{order['order_number']} - {request.reason}",
+            "order_id": order_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # إشعار السائق بالخصم
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": driver_id,
+            "title": "⚠️ تم خصم مبلغ من رصيدك",
+            "message": f"تم خصم {penalty_amount:,.0f} ل.س بسبب إلغاء طلب #{order['order_number']}",
+            "type": "penalty",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # استرجاع المبلغ للعميل إذا كان الدفع بالمحفظة
+    if order["payment_method"] == "wallet" and order["payment_status"] == "paid":
+        await db.wallets.update_one(
+            {"user_id": order["customer_id"]},
+            {"$inc": {"balance": order["total"]}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": order["customer_id"],
+            "type": "refund",
+            "amount": order["total"],
+            "description": f"استرجاع طلب #{order['order_number']} - {request.reason}",
+            "order_id": order_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # تحديث حالة الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancelled_at": datetime.now(timezone.utc).isoformat(),
+                "cancelled_by": "admin",
+                "cancel_reason": request.reason,
+                "driver_penalty": penalty_amount
+            },
+            "$push": {
+                "status_history": {
+                    "status": "cancelled",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "note": f"تم الإلغاء من الإدارة: {request.reason}"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    if request.notify_customer:
+        message = f"تم إلغاء طلبك #{order['order_number']}\nالسبب: {request.reason}"
+        if request.offer_replacement:
+            message += "\n\nهل تريد إعادة الطلب؟ تواصل معنا عبر الدعم."
+        
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": order["customer_id"],
+            "title": "❌ تم إلغاء طلبك",
+            "message": message,
+            "type": "order_cancelled",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # إشعار المتجر
+    store = await db.food_stores.find_one({"id": order["store_id"]})
+    if store:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": store["owner_id"],
+            "title": "❌ تم إلغاء طلب",
+            "message": f"تم إلغاء طلب #{order['order_number']} من الإدارة\nالسبب: {request.reason}",
+            "type": "order_cancelled",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {
+        "message": "تم إلغاء الطلب",
+        "penalty_applied": penalty_amount > 0,
+        "penalty_amount": penalty_amount,
+        "refund_to_customer": order["total"] if order["payment_method"] == "wallet" else 0
+    }
+
+
+@router.get("/admin/support-phone")
+async def get_support_phone():
+    """جلب رقم الدعم"""
+    setting = await db.settings.find_one({"key": "support_phone"})
+    return {"phone": setting["value"] if setting else "0911111111"}

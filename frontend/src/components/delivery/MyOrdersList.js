@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
+import axios from 'axios';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 // فتح العنوان في خرائط Google
 const openInGoogleMaps = (address, city) => {
@@ -18,6 +22,15 @@ const MyOrdersList = ({
   onOpenETAModal
 }) => {
   const navigate = useNavigate();
+  const [showOrderCode, setShowOrderCode] = useState(null);
+  const [supportPhone, setSupportPhone] = useState('0911111111');
+
+  useEffect(() => {
+    // جلب رقم الدعم
+    axios.get(`${API}/food/orders/admin/support-phone`)
+      .then(res => setSupportPhone(res.data.phone))
+      .catch(() => {});
+  }, []);
 
   if (orders.length === 0) {
     return (
@@ -33,6 +46,7 @@ const MyOrdersList = ({
       case 'delivered': return 'تم التسليم';
       case 'on_the_way': return 'في الطريق';
       case 'picked_up': return 'تم الاستلام';
+      case 'out_for_delivery': return 'جاري التوصيل';
       default: return 'قيد التوصيل';
     }
   };
@@ -42,16 +56,42 @@ const MyOrdersList = ({
       case 'delivered': return 'bg-green-100 text-green-600';
       case 'on_the_way': return 'bg-orange-100 text-orange-600';
       case 'picked_up': return 'bg-blue-100 text-blue-600';
+      case 'out_for_delivery': return 'bg-purple-100 text-purple-600';
       default: return 'bg-yellow-100 text-yellow-600';
     }
   };
 
+  // فتح الاتصال بالدعم
+  const callSupport = () => {
+    window.location.href = `tel:${supportPhone}`;
+  };
+
   return (
     <div className="space-y-3">
+      {/* زر الاتصال بالدعم */}
+      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={18} className="text-red-500" />
+            <span className="text-sm text-red-700 font-medium">حدث مشكلة؟</span>
+          </div>
+          <button
+            onClick={callSupport}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+          >
+            <PhoneCall size={16} />
+            اتصل بالدعم
+          </button>
+        </div>
+        <p className="text-xs text-red-600 mt-1">رقم الدعم: {supportPhone}</p>
+      </div>
+
       {orders.map((order) => {
-        const canStartDelivery = order.delivery_status === 'picked_up';
-        const canComplete = order.delivery_status === 'on_the_way';
-        const isDelivered = order.delivery_status === 'delivered';
+        const isProductOrder = !order.order_type || order.order_type !== 'food';
+        const orderNumber = order.order_number || order.id?.slice(0, 8).toUpperCase();
+        const canStartDelivery = order.delivery_status === 'picked_up' || order.status === 'out_for_delivery';
+        const canComplete = order.delivery_status === 'on_the_way' || order.status === 'out_for_delivery';
+        const isDelivered = order.delivery_status === 'delivered' || order.status === 'delivered';
         
         return (
           <motion.div
@@ -61,10 +101,37 @@ const MyOrdersList = ({
             className="bg-white rounded-xl border border-gray-200 overflow-hidden"
           >
             <div className="p-3">
+              {/* رقم الطلب الكبير */}
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white p-3 rounded-xl mb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs opacity-80">رقم الطلب</p>
+                    <p className="text-2xl font-bold">#{orderNumber}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowOrderCode(showOrderCode === order.id ? null : order.id)}
+                    className="bg-white/20 p-2 rounded-lg"
+                  >
+                    <QrCode size={24} />
+                  </button>
+                </div>
+              </div>
+
+              {/* عرض رقم الطلب للبائع */}
+              {showOrderCode === order.id && (
+                <div className="bg-gray-900 text-white p-4 rounded-xl mb-3 text-center">
+                  <p className="text-xs text-gray-400 mb-2">اعرض هذا الرقم للبائع</p>
+                  <p className="text-4xl font-bold tracking-widest">#{orderNumber}</p>
+                  <p className="text-xs text-gray-400 mt-2">للتحقق من صحة الطلب</p>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.delivery_status)}`}>
-                  {getStatusLabel(order.delivery_status)}
+                <span className="font-bold text-sm text-gray-900">
+                  {isProductOrder ? 'طلب منتجات' : order.store_name || 'طلب طعام'}
+                </span>
+                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.delivery_status || order.status)}`}>
+                  {getStatusLabel(order.delivery_status || order.status)}
                 </span>
               </div>
 
@@ -73,11 +140,11 @@ const MyOrdersList = ({
                 <p className="text-xs font-bold text-gray-700 mb-1">معلومات العميل:</p>
                 <p className="text-xs text-gray-600">
                   <User size={12} className="inline ml-1" />
-                  {order.user_name}
+                  {order.user_name || order.customer_name}
                 </p>
                 <p className="text-xs text-gray-600">
                   <MapPin size={12} className="inline ml-1" />
-                  {order.address}, {order.city}
+                  {order.address || order.delivery_address}, {order.city || order.delivery_city}
                 </p>
                 <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1 font-bold">
                   <Phone size={12} />
