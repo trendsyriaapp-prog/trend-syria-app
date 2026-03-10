@@ -100,13 +100,31 @@ const GiftsPage = () => {
       const res = await axios.get(`${API}/api/user/addresses`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSavedAddresses(res.data || []);
+      
+      let addresses = res.data || [];
+      
+      // إذا لم توجد عناوين محفوظة، نستخدم عنوان المستخدم الافتراضي
+      if (addresses.length === 0 && (user?.address || user?.city || user?.area)) {
+        addresses = [{
+          id: 'default',
+          label: 'عنواني الافتراضي',
+          city: user.city || '',
+          area: user.area || user.address || '',
+          street: user.street || '',
+          building: user.building || '',
+          floor: user.floor || '',
+          phone: user.phone || '',
+          notes: ''
+        }];
+      }
+      
+      setSavedAddresses(addresses);
     } catch (err) {
-      // إذا لم يكن هناك عناوين محفوظة، نستخدم عنوان المستخدم الافتراضي
-      if (user?.address || user?.city) {
+      // في حالة خطأ، نستخدم عنوان المستخدم الافتراضي
+      if (user?.address || user?.city || user?.area) {
         setSavedAddresses([{
           id: 'default',
-          label: 'العنوان الافتراضي',
+          label: 'عنواني الافتراضي',
           city: user.city || '',
           area: user.area || user.address || '',
           street: user.street || '',
@@ -221,7 +239,33 @@ const GiftsPage = () => {
   // فتح نموذج العنوان للهدايا التي تنتظر العنوان
   const openAddressForm = (gift) => {
     setSelectedGift(gift);
-    setAddressForm(prev => ({ ...prev, phone: user?.phone || '' }));
+    
+    // إذا كان هناك عنوان محفوظ، نختاره تلقائياً
+    if (savedAddresses.length > 0) {
+      const defaultAddress = savedAddresses.find(a => a.is_default) || savedAddresses[0];
+      setSelectedSavedAddress(defaultAddress.id);
+      setAddressForm({
+        city: defaultAddress.city || '',
+        area: defaultAddress.area || '',
+        street: defaultAddress.street || '',
+        building: defaultAddress.building || '',
+        floor: defaultAddress.floor || '',
+        phone: defaultAddress.phone || user?.phone || '',
+        notes: defaultAddress.notes || ''
+      });
+    } else {
+      setSelectedSavedAddress(null);
+      setAddressForm({
+        city: user?.city || '',
+        area: user?.area || '',
+        street: user?.street || '',
+        building: user?.building || '',
+        floor: user?.floor || '',
+        phone: user?.phone || '',
+        notes: ''
+      });
+    }
+    
     setShowAddressModal(true);
   };
 
