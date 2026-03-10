@@ -142,7 +142,8 @@ const FoodDeliveryBanner = () => {
     }
   };
 
-  if (!isFoodPage || dismissed) return null;
+  // إظهار الشريط فقط في صفحات المتاجر (وليس الصفحة الرئيسية للطعام)
+  if (!isStorePage || dismissed) return null;
 
   // حساب نسبة التقدم
   const progress = freeDeliveryMin > 0 ? Math.min((cartTotal / freeDeliveryMin) * 100, 100) : 0;
@@ -171,7 +172,7 @@ const FoodDeliveryBanner = () => {
         </motion.div>
       )}
 
-      {/* الشريط الرئيسي - ثابت أعلى الشاشة */}
+      {/* شريط التقدم للشحن المجاني - يظهر فقط في صفحات المتاجر */}
       {!showCelebration && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -191,8 +192,8 @@ const FoodDeliveryBanner = () => {
                   <span className="text-xs font-medium">توصيل سريع</span>
                 </div>
 
-                {/* عرض شريط التقدم في صفحة المتجر */}
-                {isStorePage && freeDeliveryMin > 0 && !isFreeDelivery && (
+                {/* عرض شريط التقدم */}
+                {freeDeliveryMin > 0 && !isFreeDelivery && (
                   <div className="flex items-center gap-2 flex-1 max-w-[200px]">
                     <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
                       <motion.div
@@ -209,29 +210,11 @@ const FoodDeliveryBanner = () => {
                 )}
 
                 {/* رسالة التوصيل المجاني */}
-                {isStorePage && isFreeDelivery && (
+                {isFreeDelivery && (
                   <div className="flex items-center gap-1 text-xs bg-white/20 rounded-full px-2 py-0.5">
                     <Truck size={12} />
                     <span className="font-bold">توصيل مجاني ✓</span>
                   </div>
-                )}
-
-                {/* عرض الفلاش إذا وجد (في الصفحة الرئيسية) */}
-                {!isStorePage && flashSale && (
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="animate-pulse">⚡</span>
-                    <span className="font-bold">{flashSale.discount_percentage}% خصم</span>
-                    <span className="text-white/80">•</span>
-                    <div className="flex items-center gap-1 bg-white/20 rounded px-1.5 py-0.5">
-                      <Clock size={10} />
-                      <span>{String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* رسالة افتراضية */}
-                {!isStorePage && !flashSale && (
-                  <span className="text-xs text-white/90">اطلب الآن من أفضل المطاعم</span>
                 )}
               </Link>
 
