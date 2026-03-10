@@ -49,35 +49,44 @@ const CartPage = () => {
   
   // Fetch customer address and calculate shipping
   useEffect(() => {
-    if (user && cart.items.length > 0) {
-      fetchAddressAndShipping();
-    }
-  }, [user, cart.total, cart.items.length]);
-  
-  const fetchAddressAndShipping = async () => {
-    try {
-      // Get customer address
-      const addressRes = await axios.get(`${API}/user/addresses`);
-      const addresses = addressRes.data;
-      const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
-      setCustomerAddress(defaultAddr || null);
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      if (!user || cart.items.length === 0) return;
       
-      if (defaultAddr?.city) {
-        // Calculate shipping based on address
-        setShippingLoading(true);
-        const shippingRes = await axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`);
-        setShippingInfo(shippingRes.data);
+      try {
+        // Get customer address
+        const addressRes = await axios.get(`${API}/user/addresses`);
+        if (!isMounted) return;
         
-        // Fetch detailed shipping per seller
-        const detailedRes = await axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(defaultAddr.city)}`);
-        setSellerShippingDetails(detailedRes.data.sellers || []);
+        const addresses = addressRes.data;
+        const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+        setCustomerAddress(defaultAddr || null);
+        
+        if (defaultAddr?.city) {
+          // Calculate shipping based on address
+          setShippingLoading(true);
+          const [shippingRes, detailedRes] = await Promise.all([
+            axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`),
+            axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(defaultAddr.city)}`)
+          ]);
+          
+          if (!isMounted) return;
+          
+          setShippingInfo(shippingRes.data);
+          setSellerShippingDetails(detailedRes.data.sellers || []);
+        }
+      } catch (error) {
+        console.error('Error fetching shipping:', error);
+      } finally {
+        if (isMounted) setShippingLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching shipping:', error);
-    } finally {
-      setShippingLoading(false);
-    }
-  };
+    };
+    
+    fetchData();
+    
+    return () => { isMounted = false; };
+  }, [user, cart.items.length > 0]); // تبسيط الـ dependency
   
   // تحليل السلة لمعرفة حالة الشحن
   const cartAnalysis = () => {
