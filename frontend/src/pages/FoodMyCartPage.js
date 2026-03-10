@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFoodCart } from '../context/FoodCartContext';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const FoodMyCartPage = () => {
   const navigate = useNavigate();
@@ -19,12 +19,17 @@ const FoodMyCartPage = () => {
   }, [stores]);
 
   const fetchStoreDetails = async () => {
+    if (stores.length === 0) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const details = {};
     
     for (const store of stores) {
       try {
-        const res = await axios.get(`${API}/api/food/stores/${store.storeId}`);
+        const res = await axios.get(`${API}/food/stores/${store.storeId}`);
         details[store.storeId] = res.data;
       } catch (error) {
         console.error('Error fetching store:', error);
