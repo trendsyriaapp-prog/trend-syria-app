@@ -6,7 +6,8 @@ import {
   Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, Heart, SprayCan, ChevronLeft, TrendingUp,
-  Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight
+  Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight,
+  Pill, Car
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -20,7 +21,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Sparkles, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, Heart, SprayCan,
-  ShoppingBasket, Apple
+  ShoppingBasket, Apple, Pill, Car
 };
 
 const HomePage = () => {
@@ -111,7 +112,7 @@ const HomePage = () => {
             className="text-center mb-2"
           >
             <h1 className="text-2xl md:text-3xl font-extrabold mb-3 text-gray-900 tracking-tight">
-              تريند <span className="text-[#FF6B00] relative inline-block">
+              ترند <span className="text-[#FF6B00] relative inline-block">
                 سورية
                 <svg className="absolute -bottom-1 left-0 right-0 w-full h-1" viewBox="0 0 100 8">
                   <path d="M0 6 Q50 0 100 6" stroke="#FF6B00" strokeWidth="2" fill="none" strokeLinecap="round"/>

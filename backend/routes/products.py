@@ -41,6 +41,8 @@ async def get_categories():
         {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
         {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
         {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+        {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
+        {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
         {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
         {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
         {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
