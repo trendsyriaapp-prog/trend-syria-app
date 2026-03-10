@@ -124,7 +124,7 @@ const HomePage = () => {
           </motion.div>
           
           {/* Features - Compact Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5">
             {[
               { icon: Truck, text: 'توصيل مجاني', color: 'bg-emerald-50 text-emerald-600' },
               { icon: Shield, text: 'ضمان الجودة', color: 'bg-blue-50 text-blue-600' },
@@ -133,16 +133,15 @@ const HomePage = () => {
             ].map((feature, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                className="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-default"
+                transition={{ delay: i * 0.05 }}
+                className="flex flex-col items-center gap-1 p-1.5 bg-white rounded-lg border border-gray-100 shadow-sm"
               >
-                <div className={`p-2 rounded-lg ${feature.color}`}>
-                  <feature.icon size={16} />
+                <div className={`p-1.5 rounded-md ${feature.color}`}>
+                  <feature.icon size={12} />
                 </div>
-                <span className="font-semibold text-xs text-gray-700">{feature.text}</span>
+                <span className="font-medium text-[10px] text-gray-600 text-center leading-tight">{feature.text}</span>
               </motion.div>
             ))}
           </div>
