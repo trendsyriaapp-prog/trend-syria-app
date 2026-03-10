@@ -190,11 +190,17 @@ const FreeShippingBanner = () => {
 
   // شروط عدم الإظهار
   const isCustomer = user?.user_type === 'buyer' || user?.user_type === 'customer';
+  
   if (!user || !isCustomer || !shouldShowOnCurrentPage) return null;
   if (dismissed || !analysis.hasItems) return null;
   
   // إذا وصل للشحن المجاني لكل المتاجر ولا يوجد احتفال، لا تُظهر
-  if (analysis.qualifiesForFree && !showCelebration) return null;
+  if (analysis.qualifiesForFree && !showCelebration) {
+    console.log('FreeShippingBanner: Not showing - qualifies for free and no celebration');
+    return null;
+  }
+  
+  console.log('FreeShippingBanner: SHOULD SHOW NOW!');
 
   // شريط النجاح (الشحن المجاني) - يظهر فقط لحظة الوصول لمتجر جديد
   if (showCelebration) {
@@ -205,7 +211,7 @@ const FreeShippingBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="sticky top-[52px] z-40 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-md"
+          className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
         >
           <div className="max-w-4xl mx-auto px-2 py-1">
             <div className="flex items-center justify-between gap-1">
@@ -245,7 +251,7 @@ const FreeShippingBanner = () => {
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -50, opacity: 0 }}
-        className="sticky top-[52px] z-40 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-md"
+        className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-lg"
       >
         <div className="max-w-4xl mx-auto px-2 py-1">
           {/* صف واحد مضغوط */}
