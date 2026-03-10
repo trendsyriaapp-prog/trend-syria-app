@@ -280,8 +280,18 @@ const Header = () => {
           </form>
           )}
           
-          {/* في صفحات الطعام - مساحة فارغة للحفاظ على التخطيط */}
-          {isFoodPage && <div className="flex-1" />}
+          {/* شريط البحث عن الطعام - يظهر فقط في صفحات الطعام */}
+          {isFoodPage && (
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="ابحث عن مطعم أو منتج..."
+                className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-1 focus:ring-[#FF6B00]/20 transition-all"
+                data-testid="food-search-input"
+              />
+              <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          )}
 
           {/* الأيقونات - على اليسار */}
           <div className="flex items-center gap-1 flex-shrink-0">
