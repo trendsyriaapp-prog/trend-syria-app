@@ -60,10 +60,16 @@ const OrderTrackingMap = ({ order, orderId, onClose, trackingData: externalTrack
 
   // فتح Google Maps للتنقل
   const openGoogleMaps = () => {
-    const destination = trackingData?.delivery_address;
+    // البحث عن العنوان في عدة مصادر محتملة
+    const destination = trackingData?.delivery_address || 
+                       order?.shipping_address?.full_address ||
+                       order?.address ||
+                       (order?.shipping_address ? `${order.shipping_address.city}, ${order.shipping_address.area}, ${order.shipping_address.street}` : null);
     if (destination) {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
       window.open(url, '_blank');
+    } else {
+      alert('عنوان التوصيل غير متوفر');
     }
   };
 
@@ -429,10 +435,10 @@ const OrderTrackingMap = ({ order, orderId, onClose, trackingData: externalTrack
                     <MapPin size={20} className="text-orange-500 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-700">
-                        {trackingData?.delivery_address || order?.address || 'لم يتم تحديد العنوان'}
+                        {trackingData?.delivery_address || order?.shipping_address?.full_address || order?.address || 'لم يتم تحديد العنوان'}
                       </p>
-                      {trackingData?.delivery_city && (
-                        <p className="text-xs text-gray-500 mt-1">{trackingData.delivery_city}</p>
+                      {(trackingData?.delivery_city || order?.shipping_address?.city) && (
+                        <p className="text-xs text-gray-500 mt-1">{trackingData?.delivery_city || order?.shipping_address?.city}</p>
                       )}
                     </div>
                   </div>
