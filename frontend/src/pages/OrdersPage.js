@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift, UtensilsCrossed, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 
@@ -87,10 +87,12 @@ const OrdersPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [foodOrders, setFoodOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [rateOrder, setRateOrder] = useState(null);
   const [ratedOrders, setRatedOrders] = useState({});
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'products', 'food'
 
   useEffect(() => {
     if (user) {
@@ -100,11 +102,16 @@ const OrdersPage = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${API}/orders`);
-      setOrders(res.data);
+      const [ordersRes, foodRes] = await Promise.all([
+        axios.get(`${API}/orders`),
+        axios.get(`${API}/food/orders/my-orders`).catch(() => ({ data: [] }))
+      ]);
+      
+      setOrders(ordersRes.data);
+      setFoodOrders(foodRes.data);
       
       // Check which orders have been rated
-      const delivered = res.data.filter(o => o.delivery_status === 'delivered');
+      const delivered = ordersRes.data.filter(o => o.delivery_status === 'delivered');
       for (const order of delivered) {
         try {
           const ratingRes = await axios.get(`${API}/delivery/check-rating/${order.id}`);
@@ -120,6 +127,20 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // دمج وترتيب جميع الطلبات
+  const getAllOrders = () => {
+    const productOrdersFormatted = orders.map(o => ({ ...o, type: 'product' }));
+    const foodOrdersFormatted = foodOrders.map(o => ({ ...o, type: 'food' }));
+    return [...productOrdersFormatted, ...foodOrdersFormatted]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  };
+
+  const getFilteredOrders = () => {
+    if (activeTab === 'products') return orders.map(o => ({ ...o, type: 'product' }));
+    if (activeTab === 'food') return foodOrders.map(o => ({ ...o, type: 'food' }));
+    return getAllOrders();
   };
 
   if (!user) {
@@ -138,23 +159,119 @@ const OrdersPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">طلباتي</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">طلباتي</h1>
+        
+        {/* التبويبات */}
+        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl border border-gray-200">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'all' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            الكل ({orders.length + foodOrders.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'products' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <ShoppingBag size={16} />
+            منتجات ({orders.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('food')}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'food' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <UtensilsCrossed size={16} />
+            طعام ({foodOrders.length})
+          </button>
+        </div>
 
-        {orders.length === 0 ? (
+        {getFilteredOrders().length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
             <Package size={64} className="text-gray-300 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-gray-900 mb-2">لا توجد طلبات</h2>
             <p className="text-gray-500 mb-6">لم تقم بأي طلبات بعد</p>
-            <Link
-              to="/products"
-              className="bg-[#FF6B00] text-white font-bold px-6 py-3 rounded-full hover:bg-[#E65000] transition-colors"
-            >
-              تصفح المنتجات
-            </Link>
+            <div className="flex gap-3 justify-center">
+              <Link
+                to="/products"
+                className="bg-[#FF6B00] text-white font-bold px-6 py-3 rounded-full hover:bg-[#E65000] transition-colors"
+              >
+                تصفح المنتجات
+              </Link>
+              <Link
+                to="/food"
+                className="bg-orange-100 text-[#FF6B00] font-bold px-6 py-3 rounded-full hover:bg-orange-200 transition-colors"
+              >
+                اطلب طعام
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => {
+            {getFilteredOrders().map((order) => {
+              // إذا كان طلب طعام
+              if (order.type === 'food') {
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-orange-100 text-[#FF6B00]">
+                            <UtensilsCrossed size={18} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900">#{order.order_number}</p>
+                            <p className="text-xs text-gray-500">{formatDate(order.created_at)}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          order.status === 'out_for_delivery' ? 'bg-purple-100 text-purple-700' :
+                          order.status === 'ready' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {order.status_label || order.status}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                        <MapPin size={14} />
+                        <span>{order.store_name}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <span className="font-bold text-[#FF6B00]">{formatPrice(order.total)}</span>
+                        <Link
+                          to={`/food/order/${order.id}`}
+                          className="text-sm text-[#FF6B00] font-medium hover:underline flex items-center gap-1"
+                        >
+                          تتبع الطلب
+                          <ChevronLeft size={16} />
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // طلب منتجات عادي
               const status = statusConfig[order.status] || statusConfig.pending_payment;
               const delivery = deliveryConfig[order.delivery_status] || deliveryConfig.pending;
               const StatusIcon = status.icon;
