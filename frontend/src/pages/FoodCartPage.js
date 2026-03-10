@@ -36,12 +36,36 @@ const FoodCartPage = () => {
   const [couponError, setCouponError] = useState('');
   
   const [deliveryInfo, setDeliveryInfo] = useState({
-    address: user?.address || '',
-    city: user?.city || '',
-    phone: user?.phone || '',
+    address: '',
+    city: '',
+    phone: '',
     notes: '',
     payment_method: 'wallet'
   });
+  
+  // تحميل بيانات المستخدم المثبتة
+  useEffect(() => {
+    if (user) {
+      setDeliveryInfo(prev => ({
+        ...prev,
+        address: user.address || prev.address || '',
+        city: user.city || prev.city || '',
+        phone: user.phone || prev.phone || ''
+      }));
+    }
+  }, [user]);
+  
+  // تحديث البيانات عند تحميل الصفحة
+  useEffect(() => {
+    if (user && !deliveryInfo.city && user.city) {
+      setDeliveryInfo(prev => ({
+        ...prev,
+        address: user.address || '',
+        city: user.city || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user, deliveryInfo.city]);
 
   // حساب رسوم التوصيل والعروض
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -299,7 +323,7 @@ const FoodCartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-gray-50 pb-72">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
@@ -412,6 +436,16 @@ const FoodCartPage = () => {
             <MapPin size={18} className="text-[#E65000]" />
             معلومات التوصيل
           </h2>
+          
+          {/* إشعار بالعنوان المحفوظ */}
+          {user?.address && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="text-sm text-blue-700 flex items-center gap-2">
+                <Check size={16} className="text-blue-600" />
+                تم تحميل عنوانك المحفوظ
+              </p>
+            </div>
+          )}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>

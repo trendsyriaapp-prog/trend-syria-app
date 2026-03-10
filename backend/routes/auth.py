@@ -198,6 +198,7 @@ async def get_me(user: dict = Depends(get_current_user)):
         "full_name": user.get("full_name", user.get("name", "")),
         "phone": user.get("phone", ""),
         "city": user.get("city", ""),
+        "address": user.get("address", ""),
         "user_type": user["user_type"],
         "is_approved": user.get("is_approved", False)
     }
