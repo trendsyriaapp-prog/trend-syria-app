@@ -125,14 +125,6 @@ const FoodStorePage = () => {
         )}
         <div className="absolute inset-0 bg-black/30" />
         
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/food')}
-          className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        
         {/* Store Logo */}
         <div className="absolute -bottom-12 right-4">
           <div className="w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden">
@@ -175,7 +167,7 @@ const FoodStorePage = () => {
           </div>
           <div className="flex items-center gap-1 text-gray-600">
             <MapPin size={16} />
-            <span className="text-sm">{store.city}</span>
+            <span className="text-sm">{store.address || store.city}</span>
           </div>
         </div>
 
@@ -353,10 +345,18 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white w-full max-w-lg rounded-t-2xl overflow-hidden max-h-[85vh] overflow-y-auto pb-16"
+        className="bg-white w-full max-w-lg rounded-t-2xl overflow-hidden max-h-[85vh] overflow-y-auto pb-16 relative"
       >
+        {/* زر الإغلاق */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 left-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 shadow-md"
+        >
+          ✕
+        </button>
+        
         {/* Product Image */}
-        <div className="h-48 bg-gray-100">
+        <div className="h-48 bg-gray-100 relative">
           {product.images?.[0] ? (
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
           ) : (
