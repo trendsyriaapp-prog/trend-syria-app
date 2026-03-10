@@ -9,6 +9,7 @@ import {
   UtensilsCrossed, ShoppingBasket, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -18,9 +19,13 @@ const foodCategories = [
   { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-emerald-500' },
 ];
 
+// قائمة المدن السورية
+const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'];
+
 const FoodPage = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
+  const { user } = useAuth();
   
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
   const [stores, setStores] = useState([]);
@@ -30,10 +35,27 @@ const FoodPage = () => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userCity, setUserCity] = useState(null);
+  const [showCitySelector, setShowCitySelector] = useState(false);
+
+  // جلب مدينة المستخدم
+  useEffect(() => {
+    const savedCity = localStorage.getItem('food_delivery_city');
+    if (savedCity) {
+      setUserCity(savedCity);
+    } else if (user?.city) {
+      setUserCity(user.city);
+      localStorage.setItem('food_delivery_city', user.city);
+    } else {
+      setShowCitySelector(true);
+    }
+  }, [user]);
 
   useEffect(() => {
-    fetchData();
-  }, [activeCategory]);
+    if (userCity) {
+      fetchData();
+    }
+  }, [activeCategory, userCity]);
 
   // Auto-rotate banners
   useEffect(() => {
@@ -46,12 +68,20 @@ const FoodPage = () => {
   }, [foodBanners.length]);
 
   const fetchData = async () => {
+    if (!userCity) return;
+    
     setLoading(true);
     try {
-      // جلب المتاجر والمنتجات الغذائية وعروض الفلاش والبانرات
+      // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
       const [storesRes, productsRes, flashRes, bannersRes] = await Promise.all([
-        axios.get(`${API}/food/stores`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
-        axios.get(`${API}/food/products`, { params: { category: activeCategory !== 'all' ? activeCategory : undefined } }),
+        axios.get(`${API}/food/stores`, { params: { 
+          category: activeCategory !== 'all' ? activeCategory : undefined,
+          city: userCity
+        }}),
+        axios.get(`${API}/food/products`, { params: { 
+          category: activeCategory !== 'all' ? activeCategory : undefined,
+          city: userCity
+        }}),
         axios.get(`${API}/food/flash-sales/active`),
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] }))
       ]);
@@ -70,15 +100,60 @@ const FoodPage = () => {
     }
   };
 
+  const handleCitySelect = (city) => {
+    setUserCity(city);
+    localStorage.setItem('food_delivery_city', city);
+    setShowCitySelector(false);
+  };
+
+  // نافذة اختيار المدينة
+  if (showCitySelector) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin size={32} className="text-[#FF6B00]" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">اختر مدينتك</h2>
+            <p className="text-sm text-gray-500 mt-2">سنعرض لك المتاجر والمطاعم في مدينتك فقط</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+            {SYRIAN_CITIES.map((city) => (
+              <button
+                key={city}
+                onClick={() => handleCitySelect(city)}
+                className="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-[#FF6B00] hover:text-white transition-colors"
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* شريط قسم الطعام - بدون البحث */}
+      {/* شريط قسم الطعام مع المدينة */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <span className="text-xl">🍕</span>
             <h1 className="text-base font-bold">قسم الطعام</h1>
-            <p className="text-orange-100 text-[10px] mr-auto">مطاعم • غذائية • خضروات</p>
+            {/* زر تغيير المدينة */}
+            <button 
+              onClick={() => setShowCitySelector(true)}
+              className="mr-auto flex items-center gap-1 bg-white/20 rounded-full px-3 py-1 text-xs hover:bg-white/30 transition-colors"
+            >
+              <MapPin size={12} />
+              <span>{userCity}</span>
+            </button>
           </div>
         </div>
       </div>

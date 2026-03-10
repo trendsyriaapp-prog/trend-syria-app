@@ -191,15 +191,18 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
 async def get_food_products(
     category: Optional[str] = None,
     store_id: Optional[str] = None,
+    city: Optional[str] = None,
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = 20
 ):
     """جلب منتجات الطعام"""
-    # أولاً نجلب المتاجر المعتمدة من الفئة المطلوبة
+    # أولاً نجلب المتاجر المعتمدة من الفئة المطلوبة والمدينة
     store_query = {"is_active": True, "is_approved": True}
     if category and category != 'all':
         store_query["store_type"] = category
+    if city:
+        store_query["city"] = city
     
     approved_stores = await db.food_stores.find(store_query, {"id": 1}).to_list(None)
     approved_store_ids = [s["id"] for s in approved_stores]
