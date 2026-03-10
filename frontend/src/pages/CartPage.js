@@ -288,13 +288,16 @@ const CartPage = () => {
                   {/* منتجات هذا البائع */}
                   <div className="p-2 space-y-2">
                     {seller.items.map((sellerItem) => {
-                      // العثور على العنصر الأصلي في السلة
-                      const cartItem = cart.items.find(ci => ci.product_id === sellerItem.product_id);
+                      // العثور على العنصر الأصلي في السلة (بنفس المنتج والمقاس)
+                      const cartItem = cart.items.find(ci => 
+                        ci.product_id === sellerItem.product_id && 
+                        ci.selected_size === sellerItem.selected_size
+                      );
                       if (!cartItem) return null;
                       
                       return (
                         <div
-                          key={sellerItem.product_id}
+                          key={`${sellerItem.product_id}-${sellerItem.selected_size || 'no-size'}`}
                           className="flex gap-2"
                           data-testid={`cart-item-${sellerItem.product_id}`}
                         >

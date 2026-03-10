@@ -297,7 +297,8 @@ async def calculate_cart_shipping_detailed(customer_city: str, user: dict = Depe
                 "price": product["price"],
                 "quantity": item["quantity"],
                 "total": product["price"] * item["quantity"],
-                "image": product.get("images", [""])[0] if product.get("images") else ""
+                "image": product.get("images", [""])[0] if product.get("images") else "",
+                "selected_size": item.get("selected_size")
             })
             sellers_data[seller_id]["subtotal"] += product["price"] * item["quantity"]
     
