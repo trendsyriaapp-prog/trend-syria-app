@@ -214,7 +214,7 @@ async def test_push_notification(user: dict = Depends(get_current_user)):
         success = await send_push_notification(
             fcm_token=token_doc["fcm_token"],
             title="إشعار تجريبي 🔔",
-            body="هذا إشعار تجريبي من تريند سورية",
+            body="هذا إشعار تجريبي من ترند سورية",
             data={"type": "test", "url": "/"}
         )
         

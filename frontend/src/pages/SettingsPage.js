@@ -241,7 +241,7 @@ const SettingsPage = () => {
 
         {/* WhatsApp Support */}
         <a
-          href="https://wa.me/963551021618?text=مرحباً، أريد الاستفسار عن خدمات تريند سورية"
+          href="https://wa.me/963551021618?text=مرحباً، أريد الاستفسار عن خدمات ترند سورية"
           target="_blank"
           rel="noopener noreferrer"
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 mb-4 flex items-center gap-3 text-white shadow-lg"

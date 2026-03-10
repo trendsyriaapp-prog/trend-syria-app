@@ -140,7 +140,7 @@ const JoinAsFoodSellerPage = () => {
             رجوع
           </button>
           <h1 className="text-2xl font-bold">انضم كمتجر طعام</h1>
-          <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في تريند سورية</p>
+          <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في ترند سورية</p>
           
           {/* Progress */}
           {step < 4 && (

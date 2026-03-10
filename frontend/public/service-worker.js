@@ -130,7 +130,7 @@ self.addEventListener('activate', (event) => {
 // Push Notifications
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
-  const title = data.title || 'تريند سورية';
+  const title = data.title || 'ترند سورية';
   const options = {
     body: data.message || 'لديك إشعار جديد',
     icon: '/icons/icon-192.png',

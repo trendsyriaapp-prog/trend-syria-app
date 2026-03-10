@@ -14,7 +14,7 @@ const WhatsAppButton = () => {
   const [settings, setSettings] = useState({
     whatsapp_enabled: true,
     whatsapp_number: '963551021618',
-    support_message: 'مرحباً، أريد الاستفسار عن خدمات تريند سورية'
+    support_message: 'مرحباً، أريد الاستفسار عن خدمات ترند سورية'
   });
 
   // جلب إعدادات الدعم من الـ API
@@ -87,7 +87,7 @@ const WhatsAppButton = () => {
                   <MessageCircle size={20} className="text-green-500" />
                 </div>
                 <div className="text-white">
-                  <p className="font-bold">تريند سورية</p>
+                  <p className="font-bold">ترند سورية</p>
                   <p className="text-xs opacity-90">متصل الآن</p>
                 </div>
               </div>

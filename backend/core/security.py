@@ -1,5 +1,5 @@
 # /app/backend/core/security.py
-# طبقات الأمان الشاملة لتطبيق تريند سورية
+# طبقات الأمان الشاملة لتطبيق ترند سورية
 
 import os
 import re

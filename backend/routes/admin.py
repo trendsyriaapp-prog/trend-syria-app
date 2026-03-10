@@ -37,7 +37,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             # إعدادات الدعم
             "whatsapp_enabled": True,
             "whatsapp_number": "963551021618",
-            "support_message": "مرحباً، أريد الاستفسار عن خدمات تريند سورية",
+            "support_message": "مرحباً، أريد الاستفسار عن خدمات ترند سورية",
             # إعدادات الشحن المجاني
             "products_free_shipping_threshold": 150000,  # حد الشحن المجاني للمنتجات
             "food_free_delivery_threshold": 100000,      # حد التوصيل المجاني للطعام
@@ -168,7 +168,7 @@ async def get_public_settings():
         "flash_sales_enabled": True,
         "whatsapp_enabled": True,
         "whatsapp_number": "963551021618",
-        "support_message": "مرحباً، أريد الاستفسار عن خدمات تريند سورية"
+        "support_message": "مرحباً، أريد الاستفسار عن خدمات ترند سورية"
     }
     
     if not settings:
@@ -191,7 +191,7 @@ async def get_public_settings():
         # إعدادات الدعم
         "whatsapp_enabled": settings.get("whatsapp_enabled", True),
         "whatsapp_number": settings.get("whatsapp_number", "963551021618"),
-        "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات تريند سورية"),
+        "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات ترند سورية"),
         # إعدادات الشحن المجاني
         "products_free_shipping_threshold": settings.get("products_free_shipping_threshold", 150000),
         "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000)

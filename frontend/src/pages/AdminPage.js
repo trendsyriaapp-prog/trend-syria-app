@@ -1,5 +1,5 @@
 // /app/frontend/src/pages/AdminPage.js
-// لوحة تحكم المدير - تريند سورية
+// لوحة تحكم المدير - ترند سورية
 // تم تقسيم الملف إلى مكونات منفصلة في /components/admin/
 
 import { useState, useEffect } from 'react';

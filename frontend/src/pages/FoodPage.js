@@ -399,7 +399,7 @@ const EmptyState = ({ category }) => {
       </div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">{messages[category] || messages.all}</h3>
       <p className="text-gray-500 text-sm mb-4">
-        كن أول من ينضم كمتجر طعام في تريند سورية!
+        كن أول من ينضم كمتجر طعام في ترند سورية!
       </p>
       <Link
         to="/join/food-seller"

@@ -47,7 +47,7 @@ const OrderLabelPrint = ({ order, onClose }) => {
               {/* Logo Header */}
               <div style={{ textAlign: 'center', borderBottom: '2px solid #FF6B00', paddingBottom: '10px', marginBottom: '10px' }}>
                 <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: '#FF6B00', margin: 0 }}>
-                  🛒 تريند سورية
+                  🛒 ترند سورية
                 </h1>
                 <p style={{ fontSize: '10px', color: '#666', margin: '5px 0 0 0' }}>
                   Trend Syria - توصيل سريع وآمن
@@ -149,7 +149,7 @@ const OrderLabelPrint = ({ order, onClose }) => {
               {/* Footer */}
               <div style={{ textAlign: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
                 <p style={{ fontSize: '9px', color: '#999', margin: 0 }}>
-                  شكراً لتسوقك من تريند سورية
+                  شكراً لتسوقك من ترند سورية
                 </p>
               </div>
             </div>

@@ -1,5 +1,5 @@
 # /app/backend/server.py
-# الملف الرئيسي للخادم - تريند سورية API
+# الملف الرئيسي للخادم - ترند سورية API
 # تم تقسيم الكود إلى ملفات منفصلة في مجلد routes
 # 🔒 محمي بـ 10 طبقات أمان
 # ⚡ محسّن للأداء
@@ -79,8 +79,8 @@ from routes.image_search import router as image_search_router
 
 # Create FastAPI app
 app = FastAPI(
-    title="تريند سورية API", 
-    description="API لمتجر تريند سورية الإلكتروني",
+    title="ترند سورية API", 
+    description="API لمتجر ترند سورية الإلكتروني",
     docs_url="/api/docs" if os.environ.get("DEBUG") else None,  # إخفاء docs في الإنتاج
     redoc_url=None
 )
@@ -173,7 +173,7 @@ async def get_categories():
 
 @api_router.get("/")
 async def root():
-    return {"message": "مرحباً بك في تريند سورية API"}
+    return {"message": "مرحباً بك في ترند سورية API"}
 
 # ============== Performance Stats ==============
 

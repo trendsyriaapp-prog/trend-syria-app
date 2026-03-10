@@ -1,5 +1,5 @@
 # /app/backend/tests/test_trend_syria_api.py
-# اختبار API تريند سورية بعد إعادة الهيكلة
+# اختبار API ترند سورية بعد إعادة الهيكلة
 # Testing Trend Syria API after backend refactoring
 
 import pytest

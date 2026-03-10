@@ -143,7 +143,7 @@ async def redeem_points(
     discount = {
         "id": str(uuid.uuid4()),
         "seller_id": "platform",  # خصم من المنصة
-        "seller_name": "تريند سورية",
+        "seller_name": "ترند سورية",
         "name": f"استبدال {points_to_redeem} نقطة",
         "discount_type": "fixed",
         "discount_value": discount_value,

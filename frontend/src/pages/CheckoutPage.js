@@ -244,7 +244,7 @@ const CheckoutPage = () => {
               <Check size={32} className="text-green-500" />
             </div>
             <h2 className="text-lg font-bold mb-2 text-gray-900">تم الطلب بنجاح!</h2>
-            <p className="text-gray-500 text-sm mb-4">شكراً لتسوقك من تريند سورية<br />سيتم التوصيل خلال 2-5 أيام</p>
+            <p className="text-gray-500 text-sm mb-4">شكراً لتسوقك من ترند سورية<br />سيتم التوصيل خلال 2-5 أيام</p>
             <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <p className="text-xs text-gray-500">رقم الطلب</p>
               <p className="font-bold text-[#FF6B00] text-lg">{orderId?.slice(0, 8).toUpperCase()}</p>

@@ -62,8 +62,8 @@ const ReferralsPage = () => {
   const shareLink = async () => {
     if (referralData?.share_link) {
       const shareData = {
-        title: 'تريند سورية',
-        text: `سجّل في تريند سورية واحصل على خصم ${referralData.rewards.friend_gets} باستخدام كودي: ${referralData.code}`,
+        title: 'ترند سورية',
+        text: `سجّل في ترند سورية واحصل على خصم ${referralData.rewards.friend_gets} باستخدام كودي: ${referralData.code}`,
         url: referralData.share_link
       };
       

@@ -1,5 +1,5 @@
 """
-Test Shipping Cart API - تريند سورية
+Test Shipping Cart API - ترند سورية
 Tests for conditional free shipping feature:
 1. Single seller + same city + total >= 150,000 = FREE
 2. Single seller + same city + total < 150,000 = 15,000 + message

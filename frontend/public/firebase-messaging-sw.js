@@ -19,7 +19,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('📬 Received background message:', payload);
   
-  const notificationTitle = payload.notification?.title || 'تريند سورية';
+  const notificationTitle = payload.notification?.title || 'ترند سورية';
   const notificationOptions = {
     body: payload.notification?.body || 'لديك إشعار جديد',
     icon: '/icons/icon-192.png',

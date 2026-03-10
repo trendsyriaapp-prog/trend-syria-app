@@ -815,7 +815,7 @@ const ProductDetailPage = () => {
   // دالة المشاركة
   const handleShare = async () => {
     const shareUrl = window.location.href;
-    const shareText = `${product.name} - ${formatPrice(product.price)} | تريند سورية`;
+    const shareText = `${product.name} - ${formatPrice(product.price)} | ترند سورية`;
     
     if (navigator.share) {
       try {

@@ -163,7 +163,7 @@ const Header = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'تريند سورية',
+          title: 'ترند سورية',
           url: shareUrl,
         });
       } catch (error) {

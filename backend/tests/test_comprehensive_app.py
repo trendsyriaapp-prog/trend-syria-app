@@ -1,5 +1,5 @@
 # /app/backend/tests/test_comprehensive_app.py
-# فحص شامل للتطبيق - تريند سورية
+# فحص شامل للتطبيق - ترند سورية
 # Comprehensive testing: Auth, Products, Cart, Gifts, WhatsApp Support, Settings, Order Tracking, Firebase
 
 import pytest

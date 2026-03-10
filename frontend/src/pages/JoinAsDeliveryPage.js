@@ -130,7 +130,7 @@ const JoinAsDeliveryPage = () => {
               <ChevronRight size={20} />
               <span className="text-sm">الرئيسية</span>
             </button>
-            <img src="/logo.png" alt="تريند سورية" className="h-8" onError={(e) => e.target.style.display = 'none'} />
+            <img src="/logo.png" alt="ترند سورية" className="h-8" onError={(e) => e.target.style.display = 'none'} />
           </div>
         </div>
         
@@ -147,7 +147,7 @@ const JoinAsDeliveryPage = () => {
               انضم لفريق التوصيل
             </h1>
             <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
-              اشتغل بوقتك واكسب دخل ممتاز مع تريند سورية
+              اشتغل بوقتك واكسب دخل ممتاز مع ترند سورية
             </p>
             <Link
               to="/register"
@@ -349,7 +349,7 @@ const JoinAsDeliveryPage = () => {
       <div className="bg-gray-900 py-6">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 تريند سورية - جميع الحقوق محفوظة
+            © 2024 ترند سورية - جميع الحقوق محفوظة
           </p>
           <p className="text-gray-500 text-xs mt-2">
             للاستفسارات: <a href="tel:+963XXXXXXXXX" className="text-green-400">+963 XXX XXX XXX</a>

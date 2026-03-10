@@ -9,7 +9,7 @@ const LanguageContext = createContext();
 const translations = {
   ar: {
     // =============== عام ===============
-    app_name: 'تريند سورية',
+    app_name: 'ترند سورية',
     home: 'الرئيسية',
     categories: 'الأصناف',
     cart: 'السلة',
@@ -33,7 +33,7 @@ const translations = {
     currency: 'ل.س',
     
     // =============== الصفحة الرئيسية ===============
-    welcome: 'مرحباً بك في تريند سورية',
+    welcome: 'مرحباً بك في ترند سورية',
     featured_products: 'منتجات مميزة',
     trending_now: 'الرائج الآن',
     daily_deals: 'عروض اليوم',

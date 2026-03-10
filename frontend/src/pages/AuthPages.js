@@ -58,7 +58,7 @@ const LoginPage = () => {
             <span className="text-white font-bold text-2xl">ت</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
-          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى تريند سورية</p>
+          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى ترند سورية</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
@@ -168,7 +168,7 @@ const RegisterPage = () => {
 
     try {
       const res = await register(formData);
-      toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في تريند سورية" });
+      toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
       
       if (formData.user_type === 'seller') {
         navigate('/seller/documents');
@@ -200,7 +200,7 @@ const RegisterPage = () => {
             <span className="text-white font-bold text-2xl">ت</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
-          <p className="text-gray-500 mt-2">انضم إلى تريند سورية الآن</p>
+          <p className="text-gray-500 mt-2">انضم إلى ترند سورية الآن</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">

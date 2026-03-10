@@ -107,7 +107,7 @@ const JoinAsSellerPage = () => {
               <ChevronRight size={20} />
               <span className="text-sm">الرئيسية</span>
             </button>
-            <img src="/logo.png" alt="تريند سورية" className="h-8" onError={(e) => e.target.style.display = 'none'} />
+            <img src="/logo.png" alt="ترند سورية" className="h-8" onError={(e) => e.target.style.display = 'none'} />
           </div>
         </div>
         
@@ -124,7 +124,7 @@ const JoinAsSellerPage = () => {
               افتح متجرك الإلكتروني مجاناً
             </h1>
             <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
-              انضم لآلاف البائعين على تريند سورية ووصّل منتجاتك لعملاء في كل سوريا
+              انضم لآلاف البائعين على ترند سورية ووصّل منتجاتك لعملاء في كل سوريا
             </p>
             <Link
               to="/register"
@@ -161,7 +161,7 @@ const JoinAsSellerPage = () => {
       <div className="py-12">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-            لماذا تريند سورية؟
+            لماذا ترند سورية؟
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {benefits.map((benefit, i) => (
@@ -270,7 +270,7 @@ const JoinAsSellerPage = () => {
       <div className="bg-gray-900 py-6">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <p className="text-gray-400 text-sm">
-            © 2024 تريند سورية - جميع الحقوق محفوظة
+            © 2024 ترند سورية - جميع الحقوق محفوظة
           </p>
         </div>
       </div>
