@@ -1,18 +1,21 @@
 // /app/frontend/src/pages/FoodOrderTracking.js
 // صفحة تتبع طلب الطعام
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Package, Clock, Check, Truck, MapPin, Phone, Store,
-  ArrowLeft, X, ChefHat, CheckCircle2, Star, Map
+  ArrowLeft, X, ChefHat, CheckCircle2, Star, Map, AlertTriangle, Timer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// مدة السماح بالإلغاء بالثواني (3 دقائق)
+const CANCEL_WINDOW_SECONDS = 3 * 60;
 
 const ORDER_STEPS = [
   { key: 'pending', label: 'تم الاستلام', icon: Package },
@@ -32,6 +35,19 @@ const FoodOrderTracking = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRating, setShowRating] = useState(false);
+  const [cancelTimeLeft, setCancelTimeLeft] = useState(0);
+
+  // حساب الوقت المتبقي للإلغاء
+  const calculateCancelTimeLeft = useCallback((orderData) => {
+    if (!orderData?.created_at) return 0;
+    
+    const createdAt = new Date(orderData.created_at);
+    const now = new Date();
+    const elapsedSeconds = Math.floor((now - createdAt) / 1000);
+    const remaining = CANCEL_WINDOW_SECONDS - elapsedSeconds;
+    
+    return Math.max(0, remaining);
+  }, []);
 
   useEffect(() => {
     fetchOrder();
@@ -40,12 +56,33 @@ const FoodOrderTracking = () => {
     return () => clearInterval(interval);
   }, [orderId]);
 
+  // مؤقت العد التنازلي للإلغاء
+  useEffect(() => {
+    if (!order || cancelTimeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setCancelTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [order, cancelTimeLeft > 0]);
+
   const fetchOrder = async () => {
     try {
       const res = await axios.get(`${API}/food/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrder(res.data);
+      
+      // حساب الوقت المتبقي للإلغاء
+      const timeLeft = calculateCancelTimeLeft(res.data);
+      setCancelTimeLeft(timeLeft);
       
       // إظهار التقييم إذا تم التسليم ولم يتم التقييم بعد
       if (res.data.status === 'delivered' && !res.data.rating) {
@@ -59,6 +96,16 @@ const FoodOrderTracking = () => {
   };
 
   const handleCancel = async () => {
+    // التحقق من الوقت المتبقي
+    if (cancelTimeLeft <= 0) {
+      toast({ 
+        title: "لا يمكن الإلغاء", 
+        description: "انتهت مهلة الـ 3 دقائق للإلغاء", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     if (!window.confirm('هل تريد إلغاء الطلب؟')) return;
 
     try {
@@ -74,6 +121,13 @@ const FoodOrderTracking = () => {
         variant: "destructive" 
       });
     }
+  };
+
+  // تنسيق الوقت المتبقي
+  const formatTimeLeft = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getCurrentStepIndex = () => {
@@ -110,7 +164,8 @@ const FoodOrderTracking = () => {
   const currentStep = getCurrentStepIndex();
   const isCancelled = order.status === 'cancelled';
   const isDelivered = order.status === 'delivered';
-  const canCancel = !['out_for_delivery', 'delivered', 'cancelled'].includes(order.status);
+  // يمكن الإلغاء فقط إذا كان الوقت المتبقي > 0 والحالة تسمح بذلك
+  const canCancel = cancelTimeLeft > 0 && !['out_for_delivery', 'delivered', 'cancelled'].includes(order.status);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -282,14 +337,48 @@ const FoodOrderTracking = () => {
           </div>
         )}
 
-        {/* Cancel Button */}
-        {canCancel && (
-          <button
-            onClick={handleCancel}
-            className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold border border-red-200 hover:bg-red-100"
-          >
-            إلغاء الطلب
-          </button>
+        {/* Cancel Section */}
+        {!isCancelled && !isDelivered && (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {/* مؤقت الإلغاء */}
+            {cancelTimeLeft > 0 ? (
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <Timer size={18} />
+                    <span className="text-sm font-medium">يمكنك إلغاء الطلب خلال</span>
+                  </div>
+                  <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-bold text-sm">
+                    {formatTimeLeft(cancelTimeLeft)}
+                  </span>
+                </div>
+                
+                {/* شريط التقدم */}
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: '100%' }}
+                    animate={{ width: `${(cancelTimeLeft / CANCEL_WINDOW_SECONDS) * 100}%` }}
+                    className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full"
+                  />
+                </div>
+                
+                <button
+                  onClick={handleCancel}
+                  className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold border border-red-200 hover:bg-red-100 flex items-center justify-center gap-2"
+                >
+                  <X size={18} />
+                  إلغاء الطلب
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <AlertTriangle size={18} />
+                  <span className="text-sm">انتهت مهلة الإلغاء (3 دقائق)</span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Rate Button (if delivered but not rated) */}
