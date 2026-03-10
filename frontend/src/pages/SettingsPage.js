@@ -180,8 +180,221 @@ const SettingsPage = () => {
         {/* Header */}
         <h1 className={`text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>إعدادات الحساب</h1>
 
+        {/* Tabs - في الأعلى */}
+        <div className="flex gap-1 mb-3 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('loyalty')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'loyalty' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            <Award size={12} />
+            نقاط الولاء
+          </button>
+          <button
+            onClick={() => setActiveTab('addresses')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'addresses' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            <MapPin size={12} />
+            العناوين
+          </button>
+          <button
+            onClick={() => setActiveTab('payments')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'payments' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            <CreditCard size={12} />
+            طرق الدفع
+          </button>
+        </div>
+
+        {/* Loyalty Tab */}
+        {activeTab === 'loyalty' && (
+          <section data-testid="loyalty-tab">
+            <LoyaltyCard />
+          </section>
+        )}
+
+        {/* Addresses Tab */}
+        {activeTab === 'addresses' && (
+          <section>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className={`font-bold text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>عناوين التوصيل</h2>
+              <button
+                onClick={() => { setShowAddAddress(true); setEditingAddress(null); setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false }); }}
+                className="flex items-center gap-0.5 text-[#FF6B00] text-[10px] font-bold"
+              >
+                <Plus size={14} />
+                إضافة
+              </button>
+            </div>
+
+            {showAddAddress && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border p-3 mb-3 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <h3 className={`font-bold text-xs mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{editingAddress ? 'تعديل' : 'إضافة عنوان'}</h3>
+                <form onSubmit={handleAddAddress} className="space-y-2">
+                  <input type="text" placeholder="اسم العنوان (المنزل، العمل)" value={newAddress.title} onChange={(e) => setNewAddress({...newAddress, title: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  <select value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300 bg-white'}`} required>
+                    {SYRIAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+                  </select>
+                  <input type="text" placeholder="المنطقة / الحي *" value={newAddress.area} onChange={(e) => setNewAddress({...newAddress, area: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="text" placeholder="رقم الشارع *" value={newAddress.street_number} onChange={(e) => setNewAddress({...newAddress, street_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                    <input type="text" placeholder="رقم البناء *" value={newAddress.building_number} onChange={(e) => setNewAddress({...newAddress, building_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                    <input type="text" placeholder="رقم المنزل *" value={newAddress.apartment_number} onChange={(e) => setNewAddress({...newAddress, apartment_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  </div>
+                  <input type="tel" placeholder="رقم الهاتف *" value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  <label className={`flex items-center gap-1.5 text-[10px] ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <input type="checkbox" checked={newAddress.is_default} onChange={(e) => setNewAddress({...newAddress, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
+                    عنوان افتراضي
+                  </label>
+                  <div className="flex gap-2">
+                    <button type="submit" className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-xs">{editingAddress ? 'تحديث' : 'إضافة'}</button>
+                    <button type="button" onClick={() => { setShowAddAddress(false); setEditingAddress(null); }} className={`flex-1 py-2 rounded-lg font-bold text-xs ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>إلغاء</button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {addresses.length === 0 ? (
+              <div className={`rounded-lg p-6 text-center border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <MapPin size={32} className="text-gray-300 mx-auto mb-2" />
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>لا يوجد عناوين</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {addresses.map((address) => (
+                  <div key={address.id} className={`rounded-lg border p-2 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${address.is_default ? 'bg-[#FF6B00]/10' : isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <MapPin size={14} className={address.is_default ? 'text-[#FF6B00]' : 'text-gray-500'} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1">
+                            <h3 className={`font-bold text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{address.title}</h3>
+                            {address.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">افتراضي</span>}
+                          </div>
+                          <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{address.city} - {address.area}</p>
+                          <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                            شارع {address.street_number} - بناء {address.building_number} - منزل {address.apartment_number}
+                          </p>
+                          <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{address.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {!address.is_default && <button onClick={() => handleSetDefaultAddress(address.id)} className={`p-1 rounded ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}><Check size={12} /></button>}
+                        <button onClick={() => handleEditAddress(address)} className="p-1 text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
+                        <button onClick={() => handleDeleteAddress(address.id)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Payments Tab */}
+        {activeTab === 'payments' && (
+          <section>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className={`font-bold text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>طرق الدفع</h2>
+              <button
+                onClick={() => { setShowAddPayment(true); setEditingPayment(null); setNewPayment({ type: 'shamcash', phone: '', holder_name: '', is_default: false }); }}
+                className="flex items-center gap-0.5 text-[#FF6B00] text-[10px] font-bold"
+              >
+                <Plus size={14} />
+                إضافة
+              </button>
+            </div>
+
+            {showAddPayment && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-lg border p-3 mb-3 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <h3 className={`font-bold text-xs mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{editingPayment ? 'تعديل' : 'إضافة طريقة دفع'}</h3>
+                <form onSubmit={handleAddPayment} className="space-y-2">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {PAYMENT_TYPES.map((type) => (
+                      <button key={type.id} type="button" onClick={() => setNewPayment({...newPayment, type: type.id})}
+                        className={`p-2 rounded-lg border text-center transition-colors ${newPayment.type === type.id ? 'border-[#FF6B00] bg-[#FF6B00]/10' : isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                        <span className="text-lg block">{type.icon}</span>
+                        <span className={`text-[9px] ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{type.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <input type="tel" placeholder="رقم المحفظة" value={newPayment.phone} onChange={(e) => setNewPayment({...newPayment, phone: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  <input type="text" placeholder="اسم صاحب الحساب" value={newPayment.holder_name} onChange={(e) => setNewPayment({...newPayment, holder_name: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  <label className={`flex items-center gap-1.5 text-[10px] ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <input type="checkbox" checked={newPayment.is_default} onChange={(e) => setNewPayment({...newPayment, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
+                    طريقة دفع افتراضية
+                  </label>
+                  <div className="flex gap-2">
+                    <button type="submit" className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-xs">{editingPayment ? 'تحديث' : 'إضافة'}</button>
+                    <button type="button" onClick={() => { setShowAddPayment(false); setEditingPayment(null); }} className={`flex-1 py-2 rounded-lg font-bold text-xs ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>إلغاء</button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {paymentMethods.length === 0 ? (
+              <div className={`rounded-lg p-6 text-center border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <CreditCard size={32} className="text-gray-300 mx-auto mb-2" />
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>لا يوجد طرق دفع</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {paymentMethods.map((payment) => {
+                  const paymentType = PAYMENT_TYPES.find(t => t.id === payment.type);
+                  return (
+                    <div key={payment.id} className={`rounded-lg border p-2 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${payment.is_default ? 'bg-[#FF6B00]/10' : isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                            {paymentType?.icon || '💳'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1">
+                              <h3 className={`font-bold text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{paymentType?.name}</h3>
+                              {payment.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">افتراضي</span>}
+                            </div>
+                            <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{payment.phone}</p>
+                            <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{payment.holder_name}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-0.5">
+                          {!payment.is_default && <button onClick={() => handleSetDefaultPayment(payment.id)} className={`p-1 rounded ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}><Check size={12} /></button>}
+                          <button onClick={() => handleEditPayment(payment)} className="p-1 text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
+                          <button onClick={() => handleDeletePayment(payment.id)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Referral Banner */}
+        <button
+          onClick={() => navigate('/referrals')}
+          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-4 mt-6 mb-3 flex items-center gap-3 text-white shadow-lg"
+        >
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <Gift size={24} className="text-white" />
+          </div>
+          <div className="flex-1 text-right">
+            <p className="font-bold">ادعُ أصدقاءك واربح!</p>
+            <p className="text-xs opacity-90">احصل على 10,000 ل.س لكل صديق</p>
+          </div>
+          <ChevronLeft size={20} />
+        </button>
+
         {/* Dark Mode Toggle */}
-        <div className={`rounded-xl p-4 mb-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+        <div className={`rounded-xl p-4 mb-3 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
           <div className="flex items-center gap-3">
             {isDarkMode ? <Moon size={24} className="text-yellow-400" /> : <Sun size={24} className="text-orange-500" />}
             <div>
@@ -201,7 +414,7 @@ const SettingsPage = () => {
         </div>
 
         {/* Language Toggle */}
-        <div className={`rounded-xl p-4 mb-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+        <div className={`rounded-xl p-4 mb-3 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
           <div className="flex items-center gap-3">
             <Globe size={24} className="text-blue-500" />
             <div>
@@ -224,21 +437,6 @@ const SettingsPage = () => {
           </button>
         </div>
 
-        {/* Referral Banner */}
-        <button
-          onClick={() => navigate('/referrals')}
-          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-4 mb-4 flex items-center gap-3 text-white shadow-lg"
-        >
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-            <Gift size={24} className="text-white" />
-          </div>
-          <div className="flex-1 text-right">
-            <p className="font-bold">ادعُ أصدقاءك واربح!</p>
-            <p className="text-xs opacity-90">احصل على 10,000 ل.س لكل صديق</p>
-          </div>
-          <ChevronLeft size={20} />
-        </button>
-
         {/* WhatsApp Support */}
         <a
           href="https://wa.me/963551021618?text=مرحباً، أريد الاستفسار عن خدمات ترند سورية"
@@ -256,204 +454,6 @@ const SettingsPage = () => {
           </div>
           <ChevronLeft size={20} />
         </a>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-3 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('loyalty')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'loyalty' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
-            }`}
-          >
-            <Award size={12} />
-            نقاط الولاء
-          </button>
-          <button
-            onClick={() => setActiveTab('addresses')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'addresses' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
-            }`}
-          >
-            <MapPin size={12} />
-            العناوين
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
-              activeTab === 'payments' ? 'bg-[#FF6B00] text-white' : 'bg-white border border-gray-200 text-gray-700'
-            }`}
-          >
-            <CreditCard size={12} />
-            طرق الدفع
-          </button>
-        </div>
-
-        {/* Loyalty Tab */}
-        {activeTab === 'loyalty' && (
-          <section data-testid="loyalty-tab">
-            <LoyaltyCard />
-          </section>
-        )}
-
-        {/* Addresses Tab */}
-        {activeTab === 'addresses' && (
-          <section>
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="font-bold text-xs text-gray-900">عناوين التوصيل</h2>
-              <button
-                onClick={() => { setShowAddAddress(true); setEditingAddress(null); setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false }); }}
-                className="flex items-center gap-0.5 text-[#FF6B00] text-[10px] font-bold"
-              >
-                <Plus size={14} />
-                إضافة
-              </button>
-            </div>
-
-            {showAddAddress && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                <h3 className="font-bold text-xs text-gray-900 mb-2">{editingAddress ? 'تعديل' : 'إضافة عنوان'}</h3>
-                <form onSubmit={handleAddAddress} className="space-y-2">
-                  <input type="text" placeholder="اسم العنوان (المنزل، العمل)" value={newAddress.title} onChange={(e) => setNewAddress({...newAddress, title: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <select value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs bg-white" required>
-                    {SYRIAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
-                  </select>
-                  <input type="text" placeholder="المنطقة / الحي *" value={newAddress.area} onChange={(e) => setNewAddress({...newAddress, area: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <div className="grid grid-cols-3 gap-2">
-                    <input type="text" placeholder="رقم الشارع *" value={newAddress.street_number} onChange={(e) => setNewAddress({...newAddress, street_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                    <input type="text" placeholder="رقم البناء *" value={newAddress.building_number} onChange={(e) => setNewAddress({...newAddress, building_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                    <input type="text" placeholder="رقم المنزل *" value={newAddress.apartment_number} onChange={(e) => setNewAddress({...newAddress, apartment_number: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  </div>
-                  <input type="tel" placeholder="رقم الهاتف *" value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <label className="flex items-center gap-1.5 text-[10px] text-gray-700">
-                    <input type="checkbox" checked={newAddress.is_default} onChange={(e) => setNewAddress({...newAddress, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
-                    عنوان افتراضي
-                  </label>
-                  <div className="flex gap-2">
-                    <button type="submit" className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-xs">{editingAddress ? 'تحديث' : 'إضافة'}</button>
-                    <button type="button" onClick={() => { setShowAddAddress(false); setEditingAddress(null); }} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-xs">إلغاء</button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-
-            {addresses.length === 0 ? (
-              <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
-                <MapPin size={32} className="text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-xs">لا يوجد عناوين</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {addresses.map((address) => (
-                  <div key={address.id} className="bg-white rounded-lg border border-gray-200 p-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${address.is_default ? 'bg-[#FF6B00]/10' : 'bg-gray-100'}`}>
-                          <MapPin size={14} className={address.is_default ? 'text-[#FF6B00]' : 'text-gray-500'} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1">
-                            <h3 className="font-bold text-xs text-gray-900">{address.title}</h3>
-                            {address.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">افتراضي</span>}
-                          </div>
-                          <p className="text-[10px] text-gray-600">{address.city} - {address.area}</p>
-                          <p className="text-[10px] text-gray-500">
-                            شارع {address.street_number} - بناء {address.building_number} - منزل {address.apartment_number}
-                          </p>
-                          <p className="text-[10px] text-gray-500">{address.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-0.5">
-                        {!address.is_default && <button onClick={() => handleSetDefaultAddress(address.id)} className="p-1 text-gray-500 hover:bg-gray-100 rounded"><Check size={12} /></button>}
-                        <button onClick={() => handleEditAddress(address)} className="p-1 text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
-                        <button onClick={() => handleDeleteAddress(address.id)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Payments Tab */}
-        {activeTab === 'payments' && (
-          <section>
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="font-bold text-xs text-gray-900">طرق الدفع</h2>
-              <button
-                onClick={() => { setShowAddPayment(true); setEditingPayment(null); setNewPayment({ type: 'shamcash', phone: '', holder_name: '', is_default: false }); }}
-                className="flex items-center gap-0.5 text-[#FF6B00] text-[10px] font-bold"
-              >
-                <Plus size={14} />
-                إضافة
-              </button>
-            </div>
-
-            {showAddPayment && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                <h3 className="font-bold text-xs text-gray-900 mb-2">{editingPayment ? 'تعديل' : 'إضافة طريقة دفع'}</h3>
-                <form onSubmit={handleAddPayment} className="space-y-2">
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {PAYMENT_TYPES.map((type) => (
-                      <button key={type.id} type="button" onClick={() => setNewPayment({...newPayment, type: type.id})}
-                        className={`p-2 rounded-lg border text-center transition-colors ${newPayment.type === type.id ? 'border-[#FF6B00] bg-[#FF6B00]/10' : 'border-gray-200'}`}>
-                        <span className="text-lg block">{type.icon}</span>
-                        <span className="text-[9px] text-gray-700">{type.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <input type="tel" placeholder="رقم المحفظة" value={newPayment.phone} onChange={(e) => setNewPayment({...newPayment, phone: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <input type="text" placeholder="اسم صاحب الحساب" value={newPayment.holder_name} onChange={(e) => setNewPayment({...newPayment, holder_name: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg text-xs" required />
-                  <label className="flex items-center gap-1.5 text-[10px] text-gray-700">
-                    <input type="checkbox" checked={newPayment.is_default} onChange={(e) => setNewPayment({...newPayment, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
-                    طريقة دفع افتراضية
-                  </label>
-                  <div className="flex gap-2">
-                    <button type="submit" className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-xs">{editingPayment ? 'تحديث' : 'إضافة'}</button>
-                    <button type="button" onClick={() => { setShowAddPayment(false); setEditingPayment(null); }} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-xs">إلغاء</button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-
-            {paymentMethods.length === 0 ? (
-              <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
-                <CreditCard size={32} className="text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-xs">لا يوجد طرق دفع</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {paymentMethods.map((payment) => {
-                  const paymentType = PAYMENT_TYPES.find(t => t.id === payment.type);
-                  return (
-                    <div key={payment.id} className="bg-white rounded-lg border border-gray-200 p-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${payment.is_default ? 'bg-[#FF6B00]/10' : 'bg-gray-100'}`}>
-                            {paymentType?.icon || '💳'}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1">
-                              <h3 className="font-bold text-xs text-gray-900">{paymentType?.name}</h3>
-                              {payment.is_default && <span className="text-[8px] bg-[#FF6B00] text-white px-1.5 py-0.5 rounded-full">افتراضي</span>}
-                            </div>
-                            <p className="text-[10px] text-gray-600">{payment.phone}</p>
-                            <p className="text-[10px] text-gray-500">{payment.holder_name}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-0.5">
-                          {!payment.is_default && <button onClick={() => handleSetDefaultPayment(payment.id)} className="p-1 text-gray-500 hover:bg-gray-100 rounded"><Check size={12} /></button>}
-                          <button onClick={() => handleEditPayment(payment)} className="p-1 text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
-                          <button onClick={() => handleDeletePayment(payment.id)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        )}
 
         {/* Legal Links Section */}
         <section className="mt-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
