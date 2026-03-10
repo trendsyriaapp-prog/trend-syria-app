@@ -72,8 +72,8 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* Header with Food Image */}
-      <div className="relative bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
+      {/* Header with Food Image - Sticky */}
+      <div className="sticky top-[88px] z-30 relative bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
         {/* Background Food Pattern */}
         <div className="absolute inset-0 opacity-10">
           <img 
