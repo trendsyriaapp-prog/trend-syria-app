@@ -300,6 +300,11 @@ const CartPage = () => {
                             >
                               {sellerItem.name}
                             </Link>
+                            {/* مدينة المنتج */}
+                            <div className="flex items-center gap-1 text-[9px] text-gray-500">
+                              <MapPin size={9} className="text-gray-400" />
+                              <span>{seller.seller_city}</span>
+                            </div>
                             <p className="text-[#FF6B00] font-bold text-[11px]">
                               {formatPrice(sellerItem.price)}
                             </p>
@@ -373,6 +378,13 @@ const CartPage = () => {
                       >
                         {item.product?.name}
                       </Link>
+                      {/* مدينة المنتج */}
+                      {item.product?.city && (
+                        <div className="flex items-center gap-1 text-[9px] text-gray-500">
+                          <MapPin size={9} className="text-gray-400" />
+                          <span>{item.product.city}</span>
+                        </div>
+                      )}
                       <p className="text-[#FF6B00] font-bold text-xs mt-0.5">
                         {formatPrice(item.product?.price)}
                       </p>
