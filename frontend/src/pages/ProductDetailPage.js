@@ -546,6 +546,7 @@ const ProductDetailPage = () => {
   const [galleryTouchStart, setGalleryTouchStart] = useState(null);
   const [galleryTouchEnd, setGalleryTouchEnd] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedWeight, setSelectedWeight] = useState(null);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   
   // Q&A states
@@ -767,9 +768,19 @@ const ProductDetailPage = () => {
       return;
     }
 
+    // التحقق من اختيار الوزن إذا كان المنتج يحتوي على خيارات وزن
+    if (product.weight_variants && product.weight_variants.length > 0 && !selectedWeight) {
+      toast({
+        title: "يرجى اختيار الوزن",
+        description: "اختر الوزن المناسب قبل الإضافة للسلة",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setAddingToCart(true);
     try {
-      const newCart = await addToCart(product.id, quantity, selectedSize);
+      const newCart = await addToCart(product.id, quantity, selectedSize, selectedWeight);
       
       // تحديث حساب الشحن بعد إضافة المنتج باستخدام إجمالي السلة الجديد
       if (customerAddress?.city && newCart?.total) {
@@ -1186,6 +1197,41 @@ const ProductDetailPage = () => {
                     <p className="text-[10px] text-red-500">* يرجى اختيار المقاس</p>
                   ) : (
                     <p className="text-[10px] text-green-600 font-bold">✓ المقاس المختار: {selectedSize}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Weight Variants Selection */}
+            {product.weight_variants && product.weight_variants.length > 0 && (
+              <div className="mt-2 p-2 bg-white rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[10px] font-bold text-gray-700">اختر الوزن</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.weight_variants.map((variant) => (
+                    <button
+                      key={variant.weight}
+                      onClick={() => setSelectedWeight(variant.weight)}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-medium transition-all border ${
+                        selectedWeight === variant.weight
+                          ? 'bg-[#FF6B00] text-white border-[#FF6B00]'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-[#FF6B00]'
+                      }`}
+                      data-testid={`weight-${variant.weight}`}
+                    >
+                      <span>{variant.weight}</span>
+                      <span className="mr-1 text-[10px] opacity-80">
+                        ({variant.price.toLocaleString()} ل.س)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  {!selectedWeight ? (
+                    <p className="text-[10px] text-red-500">* يرجى اختيار الوزن</p>
+                  ) : (
+                    <p className="text-[10px] text-green-600 font-bold">✓ الوزن المختار: {selectedWeight}</p>
                   )}
                 </div>
               </div>

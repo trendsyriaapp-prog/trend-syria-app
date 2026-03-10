@@ -204,15 +204,24 @@ const NotificationsDropdown = () => {
             {/* الهيدر */}
             <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white">
               <h3 className="font-bold text-sm">الإشعارات</h3>
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs flex items-center gap-1 hover:underline"
+                  >
+                    <CheckCheck size={14} />
+                    تحديد الكل كمقروء
+                  </button>
+                )}
                 <button
-                  onClick={markAllAsRead}
-                  className="text-xs flex items-center gap-1 hover:underline"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                  data-testid="close-notifications-btn"
                 >
-                  <CheckCheck size={14} />
-                  تحديد الكل كمقروء
+                  <X size={18} />
                 </button>
-              )}
+              </div>
             </div>
 
             {/* قائمة الإشعارات */}

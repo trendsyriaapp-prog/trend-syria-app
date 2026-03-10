@@ -22,8 +22,8 @@ const CartPage = () => {
   const { toast } = useToast();
   
   // دالة لتحديث الكمية مع إظهار رسالة خطأ
-  const updateQuantity = async (productId, quantity, selectedSize = null) => {
-    const result = await updateCartQuantity(productId, quantity, selectedSize);
+  const updateQuantity = async (productId, quantity, selectedSize = null, selectedWeight = null) => {
+    const result = await updateCartQuantity(productId, quantity, selectedSize, selectedWeight);
     if (!result.success) {
       toast({
         title: "تنبيه",
@@ -288,16 +288,17 @@ const CartPage = () => {
                   {/* منتجات هذا البائع */}
                   <div className="p-2 space-y-2">
                     {seller.items.map((sellerItem) => {
-                      // العثور على العنصر الأصلي في السلة (بنفس المنتج والمقاس)
+                      // العثور على العنصر الأصلي في السلة (بنفس المنتج والمقاس والوزن)
                       const cartItem = cart.items.find(ci => 
                         ci.product_id === sellerItem.product_id && 
-                        ci.selected_size === sellerItem.selected_size
+                        ci.selected_size === sellerItem.selected_size &&
+                        ci.selected_weight === sellerItem.selected_weight
                       );
                       if (!cartItem) return null;
                       
                       return (
                         <div
-                          key={`${sellerItem.product_id}-${sellerItem.selected_size || 'no-size'}`}
+                          key={`${sellerItem.product_id}-${sellerItem.selected_size || 'no-size'}-${sellerItem.selected_weight || 'no-weight'}`}
                           className="flex gap-2"
                           data-testid={`cart-item-${sellerItem.product_id}`}
                         >
@@ -321,32 +322,37 @@ const CartPage = () => {
                               <span>{seller.seller_city}</span>
                             </div>
                             <p className="text-[#FF6B00] font-bold text-[11px]">
-                              {formatPrice(sellerItem.price)}
+                              {formatPrice(cartItem.item_price || sellerItem.price)}
                             </p>
                             {cartItem.selected_size && (
                               <p className="text-[9px] text-gray-500">
                                 المقاس: <span className="font-bold bg-gray-100 px-1 rounded">{cartItem.selected_size}</span>
                               </p>
                             )}
+                            {cartItem.selected_weight && (
+                              <p className="text-[9px] text-gray-500">
+                                الوزن: <span className="font-bold bg-gray-100 px-1 rounded">{cartItem.selected_weight}</span>
+                              </p>
+                            )}
                             
                             <div className="flex items-center justify-between mt-1">
                               <div className="flex items-center gap-1 bg-gray-100 rounded-full">
                                 <button
-                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity - 1, cartItem.selected_size)}
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity - 1, cartItem.selected_size, cartItem.selected_weight)}
                                   className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                                 >
                                   <Minus size={10} className="text-gray-600" />
                                 </button>
                                 <span className="w-4 text-center text-[10px] font-bold text-gray-900">{cartItem.quantity}</span>
                                 <button
-                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity + 1, cartItem.selected_size)}
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity + 1, cartItem.selected_size, cartItem.selected_weight)}
                                   className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                                 >
                                   <Plus size={10} className="text-gray-600" />
                                 </button>
                               </div>
                               <button
-                                onClick={() => removeFromCart(sellerItem.product_id, cartItem.selected_size)}
+                                onClick={() => removeFromCart(sellerItem.product_id, cartItem.selected_size, cartItem.selected_weight)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                               >
                                 <Trash2 size={12} />
@@ -408,11 +414,16 @@ const CartPage = () => {
                           المقاس: <span className="font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{item.selected_size}</span>
                         </p>
                       )}
+                      {item.selected_weight && (
+                        <p className="text-[10px] text-gray-500">
+                          الوزن: <span className="font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">{item.selected_weight}</span>
+                        </p>
+                      )}
                       
                       <div className="flex items-center justify-between mt-1">
                         <div className="flex items-center gap-1 bg-gray-100 rounded-full">
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.selected_size)}
+                            onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.selected_size, item.selected_weight)}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                             data-testid={`decrease-${item.product_id}`}
                           >
@@ -420,7 +431,7 @@ const CartPage = () => {
                           </button>
                           <span className="w-5 text-center text-xs font-bold text-gray-900">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.selected_size)}
+                            onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.selected_size, item.selected_weight)}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                             data-testid={`increase-${item.product_id}`}
                           >
@@ -428,7 +439,7 @@ const CartPage = () => {
                           </button>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.product_id, item.selected_size)}
+                          onClick={() => removeFromCart(item.product_id, item.selected_size, item.selected_weight)}
                           className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                           data-testid={`remove-${item.product_id}`}
                         >

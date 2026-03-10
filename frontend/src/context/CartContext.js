@@ -31,12 +31,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (productId, quantity = 1, selectedSize = null) => {
+  const addToCart = async (productId, quantity = 1, selectedSize = null, selectedWeight = null) => {
     try {
       await axios.post(`${API}/cart/add`, { 
         product_id: productId, 
         quantity,
-        selected_size: selectedSize 
+        selected_size: selectedSize,
+        selected_weight: selectedWeight
       });
       // جلب السلة وإرجاع البيانات الجديدة
       const res = await axios.get(`${API}/cart`);
@@ -48,12 +49,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateQuantity = async (productId, quantity, selectedSize = null) => {
+  const updateQuantity = async (productId, quantity, selectedSize = null, selectedWeight = null) => {
     try {
       await axios.put(`${API}/cart/update`, { 
         product_id: productId, 
         quantity,
-        selected_size: selectedSize 
+        selected_size: selectedSize,
+        selected_weight: selectedWeight
       });
       // جلب السلة مباشرة وتحديث الـ state
       const res = await axios.get(`${API}/cart`);
@@ -67,12 +69,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (productId, selectedSize = null) => {
+  const removeFromCart = async (productId, selectedSize = null, selectedWeight = null) => {
     try {
       let url = `${API}/cart/${productId}`;
-      if (selectedSize) {
-        url += `?selected_size=${encodeURIComponent(selectedSize)}`;
-      }
+      const params = [];
+      if (selectedSize) params.push(`selected_size=${encodeURIComponent(selectedSize)}`);
+      if (selectedWeight) params.push(`selected_weight=${encodeURIComponent(selectedWeight)}`);
+      if (params.length > 0) url += `?${params.join('&')}`;
+      
       await axios.delete(url);
       // جلب السلة مباشرة وتحديث الـ state
       const res = await axios.get(`${API}/cart`);

@@ -30,6 +30,11 @@ class SellerDocuments(BaseModel):
 
 # ============== Product Models ==============
 
+class WeightVariant(BaseModel):
+    weight: str  # مثل "250g", "500g", "1kg"
+    price: float
+    stock: Optional[int] = None
+
 class ProductCreate(BaseModel):
     name: str
     description: str
@@ -47,6 +52,7 @@ class ProductCreate(BaseModel):
     size_type: Optional[str] = None
     available_sizes: Optional[List[str]] = None
     max_per_customer: Optional[int] = None
+    weight_variants: Optional[List[WeightVariant]] = None  # خيارات الوزن مع الأسعار
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -65,6 +71,7 @@ class ProductUpdate(BaseModel):
     size_type: Optional[str] = None
     available_sizes: Optional[List[str]] = None
     max_per_customer: Optional[int] = None
+    weight_variants: Optional[List[WeightVariant]] = None  # خيارات الوزن مع الأسعار
 
 class ProductApproval(BaseModel):
     approved: bool
@@ -82,6 +89,7 @@ class CartItem(BaseModel):
     product_id: str
     quantity: int
     selected_size: Optional[str] = None
+    selected_weight: Optional[str] = None  # الوزن المحدد مثل "250g", "500g"
 
 class OrderCreate(BaseModel):
     items: List[CartItem]

@@ -27,12 +27,14 @@ const AddProductModal = ({
     weight_kg: '',
     size_type: 'none',
     available_sizes: [],
-    max_per_customer: ''
+    max_per_customer: '',
+    weight_variants: []
   });
   
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
+  const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', price: '' });
   const [imageWarnings, setImageWarnings] = useState([]);
   const [pendingImage, setPendingImage] = useState(null);
   const [showImageProcessor, setShowImageProcessor] = useState(false);
@@ -120,6 +122,28 @@ const AddProductModal = ({
     }
   };
 
+  // إضافة خيار وزن جديد
+  const addWeightVariant = () => {
+    if (newWeightVariant.weight && newWeightVariant.price) {
+      setNewProduct(prev => ({
+        ...prev,
+        weight_variants: [...prev.weight_variants, {
+          weight: newWeightVariant.weight,
+          price: parseFloat(newWeightVariant.price)
+        }]
+      }));
+      setNewWeightVariant({ weight: '', price: '' });
+    }
+  };
+
+  // حذف خيار وزن
+  const removeWeightVariant = (index) => {
+    setNewProduct(prev => ({
+      ...prev,
+      weight_variants: prev.weight_variants.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newProduct.images.length === 0) {
@@ -142,7 +166,8 @@ const AddProductModal = ({
       weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null,
       size_type: newProduct.size_type !== 'none' ? newProduct.size_type : null,
       available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null,
-      max_per_customer: newProduct.max_per_customer ? parseInt(newProduct.max_per_customer) : null
+      max_per_customer: newProduct.max_per_customer ? parseInt(newProduct.max_per_customer) : null,
+      weight_variants: newProduct.weight_variants.length > 0 ? newProduct.weight_variants : null
     });
 
     // Reset form
@@ -160,7 +185,8 @@ const AddProductModal = ({
       weight_kg: '',
       size_type: 'none',
       available_sizes: [],
-      max_per_customer: ''
+      max_per_customer: '',
+      weight_variants: []
     });
   };
 
@@ -238,6 +264,68 @@ const AddProductModal = ({
                 data-testid="product-max-per-customer-input"
               />
               <p className="text-[9px] text-gray-500 mt-0.5">حدد الحد الأقصى من القطع التي يمكن للعميل الواحد شراؤها</p>
+            </div>
+
+            {/* خيارات الوزن */}
+            <div>
+              <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                خيارات الوزن (اختياري - للمنتجات التي تُباع بأوزان مختلفة)
+              </label>
+              
+              {/* عرض خيارات الوزن المضافة */}
+              {newProduct.weight_variants.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {newProduct.weight_variants.map((variant, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center gap-1 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"
+                    >
+                      <span className="text-[10px] font-medium text-orange-700">
+                        {variant.weight} - {variant.price.toLocaleString()} ل.س
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeWeightVariant(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* إضافة خيار وزن جديد */}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={newWeightVariant.weight}
+                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="الوزن (مثال: 250g, 500g, 1kg)"
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={newWeightVariant.price}
+                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="السعر"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addWeightVariant}
+                  className="px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs hover:bg-[#E55A00] transition-colors"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              <p className="text-[9px] text-gray-500 mt-0.5">
+                أضف خيارات الوزن المختلفة مع أسعارها (مثال: قهوة 250g بـ 50,000 ل.س)
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
