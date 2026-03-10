@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 
 // فتح العنوان في خرائط Google
@@ -14,7 +14,8 @@ const openInGoogleMaps = (address, city) => {
 const MyOrdersList = ({ 
   orders, 
   onStartDelivery, 
-  onShowDeliveryChecklist 
+  onShowDeliveryChecklist,
+  onOpenETAModal
 }) => {
   const navigate = useNavigate();
 
@@ -123,10 +124,10 @@ const MyOrdersList = ({
               <div className="space-y-2">
                 {canStartDelivery && (
                   <button
-                    onClick={() => onStartDelivery(order.id)}
+                    onClick={() => onOpenETAModal ? onOpenETAModal(order.id) : onStartDelivery(order.id)}
                     className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
-                    <Navigation size={14} />
+                    <Clock size={14} />
                     في الطريق للعميل
                   </button>
                 )}

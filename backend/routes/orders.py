@@ -647,7 +647,7 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
     return {"message": "تم استلام الطلب"}
 
 @router.post("/orders/{order_id}/delivery/on-the-way")
-async def delivery_on_the_way(order_id: str, user: dict = Depends(get_current_user)):
+async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Depends(get_current_user)):
     """موظف التوصيل في الطريق للعميل"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -659,32 +659,39 @@ async def delivery_on_the_way(order_id: str, user: dict = Depends(get_current_us
     if order.get("delivery_driver_id") != user["id"]:
         raise HTTPException(status_code=403, detail="هذا الطلب ليس مسنداً إليك")
     
+    # الوقت المتوقع من السائق
+    estimated_minutes = 30
+    if body and body.get("estimated_minutes"):
+        estimated_minutes = body.get("estimated_minutes")
+    
     await db.orders.update_one(
         {"id": order_id},
         {
             "$set": {
                 "delivery_status": "on_the_way",
-                "on_the_way_at": datetime.now(timezone.utc).isoformat()
+                "on_the_way_at": datetime.now(timezone.utc).isoformat(),
+                "estimated_arrival_minutes": estimated_minutes
             },
             "$push": {
                 "tracking_history": {
                     "status": "on_the_way",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "actor": user.get("full_name", user.get("name", "")),
-                    "actor_type": "delivery"
+                    "actor_type": "delivery",
+                    "estimated_minutes": estimated_minutes
                 }
             }
         }
     )
     
-    # حساب الوقت المتوقع
+    # إشعار العميل مع الوقت المتوقع من السائق
     shipping_address = order.get("shipping_address", {})
     area = shipping_address.get("area", order.get("city", ""))
     
     await create_notification_for_user(
         user_id=order["user_id"],
         title="🚗 طلبك في الطريق!",
-        message=f"السائق: {user.get('full_name', user.get('name', ''))}\n📍 المنطقة: {area}\n⏱️ الوصول المتوقع: خلال 20-30 دقيقة\nيرجى التجهز للاستلام",
+        message=f"السائق: {user.get('full_name', user.get('name', ''))}\n📍 المنطقة: {area}\n⏱️ الوصول المتوقع: خلال {estimated_minutes} دقيقة\nيرجى التجهز للاستلام",
         notification_type="delivery",
         order_id=order_id,
         extra_data={

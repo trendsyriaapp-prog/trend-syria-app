@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
@@ -263,6 +264,10 @@ const DeliveryDashboard = () => {
   const [showDeliveryChecklist, setShowDeliveryChecklist] = useState(null);
   const [showReturnChecklist, setShowReturnChecklist] = useState(null);
   
+  // ETA Modal - الوقت المتوقع للوصول
+  const [showETAModal, setShowETAModal] = useState(null);
+  const [estimatedTime, setEstimatedTime] = useState(30);
+  
   // Ratings
   const [myRatings, setMyRatings] = useState({ ratings: [], average_rating: 0, total_ratings: 0 });
   
@@ -368,13 +373,17 @@ const DeliveryDashboard = () => {
     }
   };
 
-  const handleOnTheWay = async (orderId) => {
+  const handleOnTheWay = async (orderId, eta = null) => {
     try {
-      await axios.post(`${API}/orders/${orderId}/delivery/on-the-way`);
+      await axios.post(`${API}/orders/${orderId}/delivery/on-the-way`, {
+        estimated_minutes: eta || estimatedTime
+      });
       toast({
         title: "تم التحديث",
-        description: "تم إعلام العميل أنك في الطريق"
+        description: `تم إعلام العميل أنك في الطريق - الوصول خلال ${eta || estimatedTime} دقيقة`
       });
+      setShowETAModal(null);
+      setEstimatedTime(30);
       fetchOrders();
     } catch (error) {
       toast({
@@ -383,6 +392,12 @@ const DeliveryDashboard = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // فتح نافذة إدخال الوقت المتوقع
+  const openETAModal = (orderId) => {
+    setShowETAModal(orderId);
+    setEstimatedTime(30);
   };
 
   const handleCompleteOrder = async (orderId, note) => {
@@ -534,9 +549,80 @@ const DeliveryDashboard = () => {
             orders={myOrders}
             onStartDelivery={handleOnTheWay}
             onShowDeliveryChecklist={(order) => setShowDeliveryChecklist(order)}
+            onOpenETAModal={openETAModal}
           />
         )}
       </div>
+
+      {/* ETA Modal - نافذة الوقت المتوقع */}
+      {showETAModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl w-full max-w-sm overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <Clock size={24} />
+                الوقت المتوقع للوصول
+              </h3>
+              <p className="text-sm text-white/80">حدد المدة المتوقعة للوصول للعميل</p>
+            </div>
+            
+            <div className="p-4">
+              {/* خيارات سريعة */}
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {[15, 20, 30, 45].map((mins) => (
+                  <button
+                    key={mins}
+                    onClick={() => setEstimatedTime(mins)}
+                    className={`py-3 rounded-xl font-bold text-sm transition-all ${
+                      estimatedTime === mins
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {mins} د
+                  </button>
+                ))}
+              </div>
+
+              {/* إدخال مخصص */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  أو أدخل وقت مخصص (بالدقائق)
+                </label>
+                <input
+                  type="number"
+                  value={estimatedTime}
+                  onChange={(e) => setEstimatedTime(parseInt(e.target.value) || 30)}
+                  min="5"
+                  max="120"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 text-center text-xl font-bold"
+                />
+              </div>
+
+              {/* أزرار */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowETAModal(null)}
+                  className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-700"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={() => handleOnTheWay(showETAModal, estimatedTime)}
+                  className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  <Navigation size={18} />
+                  انطلق
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Pickup Checklist Modal */}
       {showPickupChecklist && (
