@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import uuid
 
@@ -191,6 +191,10 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # إنشاء الطلب
     order_id = str(uuid.uuid4())
     order_number = f"FO{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:4].upper()}"
+    now = datetime.now(timezone.utc)
+    # مهلة الإلغاء لطلبات الطعام: 3 دقائق
+    CANCEL_WINDOW_MINUTES = 3
+    can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
     
     order_doc = {
         "id": order_id,
@@ -229,12 +233,16 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "status": "pending",
         "status_history": [{
             "status": "pending",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "note": "تم استلام الطلب"
+            "timestamp": now.isoformat(),
+            "note": "تم استلام الطلب - ينتظر انتهاء مهلة الإلغاء"
         }],
         "estimated_delivery_time": store.get("delivery_time", 30),
         "driver_id": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now.isoformat(),
+        "can_process_after": can_process_after.isoformat(),
+        "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
+        "seller_notified": False,
+        "driver_notified": False
     }
     
     await db.food_orders.insert_one(order_doc)
@@ -252,23 +260,16 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         {"$inc": {"orders_count": 1}}
     )
     
-    # إرسال إشعار للمتجر
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": store["owner_id"],
-        "title": "🍽️ طلب جديد!",
-        "message": f"لديك طلب جديد #{order_number} بقيمة {total:,.0f} ل.س",
-        "type": "new_food_order",
-        "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    # لا نرسل إشعار للمتجر فوراً - سيُرسل بعد انتهاء مهلة الإلغاء (3 دقائق)
+    # الإشعار سيُرسل عند جلب الطلبات من قبل المتجر أو السائق
     
     return {
         "order_id": order_id,
         "order_number": order_number,
         "total": total,
         "estimated_time": store.get("delivery_time", 30),
-        "message": "تم إنشاء الطلب بنجاح"
+        "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
+        "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال 3 دقائق."
     }
 
 @router.get("/my-orders")
@@ -376,19 +377,45 @@ async def get_store_orders(
     status: Optional[str] = None,
     user: dict = Depends(get_current_user)
 ):
-    """جلب طلبات المتجر"""
+    """جلب طلبات المتجر - فقط الطلبات التي انتهت مهلة إلغائها"""
     store = await db.food_stores.find_one({"owner_id": user["id"]})
     if not store:
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
-    query = {"store_id": store["id"]}
+    now = datetime.now(timezone.utc).isoformat()
+    
+    query = {
+        "store_id": store["id"],
+        "$or": [
+            {"can_process_after": {"$lte": now}},
+            {"can_process_after": {"$exists": False}}  # للطلبات القديمة
+        ]
+    }
     if status:
         query["status"] = status
     
     orders = await db.food_orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
     
+    # إرسال إشعارات للطلبات الجديدة التي لم يُبلّغ عنها بعد
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
+        
+        # إرسال إشعار للمتجر إذا لم يُرسل بعد
+        if not order.get("seller_notified", False) and order["status"] == "pending":
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "title": "🍽️ طلب جديد!",
+                "message": f"لديك طلب جديد #{order['order_number']} بقيمة {order['total']:,.0f} ل.س",
+                "type": "new_food_order",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            # تحديث حالة الإشعار
+            await db.food_orders.update_one(
+                {"id": order["id"]},
+                {"$set": {"seller_notified": True}}
+            )
     
     return orders
 
@@ -460,18 +487,45 @@ async def update_order_status(
 
 @router.get("/delivery/available")
 async def get_available_food_orders(user: dict = Depends(get_current_user)):
-    """جلب الطلبات المتاحة للتوصيل"""
+    """جلب الطلبات المتاحة للتوصيل - فقط بعد انتهاء مهلة الإلغاء"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    # الطلبات الجاهزة للاستلام
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # الطلبات الجاهزة للاستلام وانتهت مهلة إلغائها
     orders = await db.food_orders.find(
-        {"status": "ready", "driver_id": None},
+        {
+            "status": "ready",
+            "driver_id": None,
+            "$or": [
+                {"can_process_after": {"$lte": now}},
+                {"can_process_after": {"$exists": False}}
+            ]
+        },
         {"_id": 0}
     ).sort("created_at", 1).to_list(None)
     
+    # إرسال إشعارات للطلبات الجديدة
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
+        
+        # إرسال إشعار للسائق إذا لم يُرسل بعد
+        if not order.get("driver_notified", False):
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "title": "🛵 طلب جاهز للتوصيل!",
+                "message": f"طلب #{order['order_number']} من {order['store_name']} جاهز للاستلام",
+                "type": "food_order_ready",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            # تحديث حالة الإشعار
+            await db.food_orders.update_one(
+                {"id": order["id"]},
+                {"$set": {"driver_notified": True}}
+            )
     
     return orders
 

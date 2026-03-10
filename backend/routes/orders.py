@@ -4,7 +4,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user, create_notification_for_role
@@ -125,6 +125,11 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     total_seller_amount = total - total_commission
     
     order_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    # مهلة الإلغاء للمنتجات: ساعة واحدة
+    CANCEL_WINDOW_MINUTES = 60
+    can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
+    
     order_doc = {
         "id": order_id,
         "user_id": user["id"],
@@ -140,7 +145,9 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "payment_phone": order.payment_phone,
         "status": "pending_payment",
         "delivery_status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now.isoformat(),
+        "can_process_after": can_process_after.isoformat(),
+        "cancel_window_minutes": CANCEL_WINDOW_MINUTES
     }
     await db.orders.insert_one(order_doc)
     
@@ -169,27 +176,42 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
                 product_id=item["product_id"]
             )
     
-    # Send notifications to sellers
-    seller_ids = set(item["seller_id"] for item in items_details)
-    for seller_id in seller_ids:
-        await create_notification_for_user(
-            user_id=seller_id,
-            title="طلب جديد!",
-            message=f"لديك طلب جديد بقيمة {total:,.0f} ل.س",
-            notification_type="new_order",
-            order_id=order_id
-        )
+    # لا نرسل إشعار للبائع فوراً - سيُرسل بعد انتهاء مهلة الإلغاء (ساعة)
+    # البائع سيرى الطلب فقط بعد انتهاء المهلة
+    # الإشعار سيُرسل عند تأكيد الطلب تلقائياً
     
-    return {"order_id": order_id, "total": total, "commission": total_commission, "message": "تم إنشاء الطلب"}
+    return {"order_id": order_id, "total": total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال ساعة."}
 
 @router.get("/orders")
 async def get_orders(user: dict = Depends(get_current_user)):
+    now = datetime.now(timezone.utc).isoformat()
+    
     if user["user_type"] == "seller":
+        # البائع يرى فقط الطلبات التي انتهت مهلة إلغائها
         orders = await db.orders.find(
-            {"items.seller_id": user["id"]},
+            {
+                "items.seller_id": user["id"],
+                "$or": [
+                    {"can_process_after": {"$lte": now}},
+                    {"can_process_after": {"$exists": False}}  # للطلبات القديمة
+                ]
+            },
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+    elif user["user_type"] == "delivery":
+        # السائق يرى فقط الطلبات الجاهزة للتوصيل
+        orders = await db.orders.find(
+            {
+                "delivery_status": {"$in": ["shipped", "picked_up", "on_the_way"]},
+                "$or": [
+                    {"can_process_after": {"$lte": now}},
+                    {"can_process_after": {"$exists": False}}
+                ]
+            },
             {"_id": 0}
         ).sort("created_at", -1).to_list(100)
     else:
+        # العميل يرى جميع طلباته
         orders = await db.orders.find(
             {"user_id": user["id"]},
             {"_id": 0}
