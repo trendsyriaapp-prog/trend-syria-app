@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   ShoppingBag, Plus, Minus, Trash2, MapPin, Phone, 
   CreditCard, Wallet, Clock, ArrowLeft, Store, AlertTriangle,
-  Ticket, Check, X
+  Ticket, Check, X, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -502,6 +502,7 @@ const FoodCartPage = () => {
             طريقة الدفع
           </h2>
           
+          {/* المحفظة */}
           <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
             <input
               type="radio"
@@ -516,9 +517,43 @@ const FoodCartPage = () => {
               <p className="font-medium text-gray-900">المحفظة</p>
               <p className="text-sm text-gray-500">الرصيد: {walletBalance.toLocaleString()} ل.س</p>
             </div>
-            {walletBalance < total && (
+            {walletBalance < total && deliveryInfo.payment_method === 'wallet' && (
               <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
             )}
+          </label>
+          
+          {/* بطاقة البنك */}
+          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="payment"
+              value="card"
+              checked={deliveryInfo.payment_method === 'card'}
+              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
+              className="w-4 h-4 text-[#E65000]"
+            />
+            <CreditCard size={20} className="text-blue-600" />
+            <div className="flex-1">
+              <p className="font-medium text-gray-900">بطاقة بنكية</p>
+              <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
+            </div>
+          </label>
+          
+          {/* الدفع عند الاستلام */}
+          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="payment"
+              value="cash"
+              checked={deliveryInfo.payment_method === 'cash'}
+              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
+              className="w-4 h-4 text-[#E65000]"
+            />
+            <Truck size={20} className="text-green-600" />
+            <div className="flex-1">
+              <p className="font-medium text-gray-900">الدفع عند الاستلام</p>
+              <p className="text-sm text-gray-500">نقداً للسائق</p>
+            </div>
           </label>
         </div>
 

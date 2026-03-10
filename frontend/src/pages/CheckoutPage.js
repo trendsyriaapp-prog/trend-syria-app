@@ -15,9 +15,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة', 'ريف دمشق'];
 
 const PAYMENT_METHODS = [
-  { id: 'shamcash', name: 'شام كاش', icon: '💳' },
-  { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱' },
-  { id: 'mtn_cash', name: 'MTN', icon: '📲' },
+  { id: 'card', name: 'بطاقة بنكية', icon: '💳', description: 'Visa / Mastercard' },
+  { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية' },
+  { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش' },
+  { id: 'mtn_cash', name: 'MTN', icon: '📲', description: 'MTN كاش' },
+  { id: 'cash', name: 'عند الاستلام', icon: '💵', description: 'نقداً للسائق' },
 ];
 
 const formatPrice = (price) => {
@@ -129,7 +131,7 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال جميع بيانات العنوان", variant: "destructive" });
       return;
     }
-    if (useNewPayment && (!newPayment.phone || !newPayment.holder_name)) {
+    if (useNewPayment && newPayment.type !== 'card' && newPayment.type !== 'cash' && (!newPayment.phone || !newPayment.holder_name)) {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
     }
@@ -149,8 +151,11 @@ const CheckoutPage = () => {
 
       let paymentData;
       if (useNewPayment) {
-        await axios.post(`${API}/user/payment-methods`, newPayment);
-        paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone };
+        // لا نحفظ طريقة الدفع للبطاقة والدفع عند الاستلام
+        if (newPayment.type !== 'card' && newPayment.type !== 'cash') {
+          await axios.post(`${API}/user/payment-methods`, newPayment);
+        }
+        paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone || '' };
       } else {
         const pay = savedPayments.find(p => p.id === selectedPaymentId);
         paymentData = { payment_method: pay.type, payment_phone: pay.phone };
@@ -166,8 +171,24 @@ const CheckoutPage = () => {
       });
 
       setOrderId(res.data.order_id);
-      await axios.post(`${API}/payment/shamcash/init?order_id=${res.data.order_id}`);
-      toast({ title: "تم إنشاء الطلب", description: "أدخل رمز التحقق لإتمام الدفع" });
+      
+      // معالجة مختلفة حسب طريقة الدفع
+      if (paymentData.payment_method === 'cash') {
+        // الدفع عند الاستلام - لا نحتاج OTP
+        toast({ title: "تم إنشاء الطلب بنجاح! 🎉", description: "سيتم التواصل معك لتأكيد الطلب" });
+        clearCart();
+        setOrderComplete(true);
+      } else if (paymentData.payment_method === 'card') {
+        // البطاقة البنكية - سيتم التوجيه لصفحة الدفع
+        toast({ title: "تم إنشاء الطلب", description: "جاري التوجيه لصفحة الدفع الآمن..." });
+        // هنا يمكن إضافة التوجيه لبوابة الدفع
+        clearCart();
+        setOrderComplete(true);
+      } else {
+        // المحافظ الإلكترونية - نحتاج OTP
+        await axios.post(`${API}/payment/shamcash/init?order_id=${res.data.order_id}`);
+        toast({ title: "تم إنشاء الطلب", description: "أدخل رمز التحقق لإتمام الدفع" });
+      }
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || "حدث خطأ", variant: "destructive" });
     } finally {
@@ -439,22 +460,42 @@ const CheckoutPage = () => {
                     </button>
                   ))}
                 </div>
-                <input
-                  type="tel"
-                  value={newPayment.phone}
-                  onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
-                  placeholder="رقم المحفظة *"
-                  className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
-                  data-testid="new-payment-phone"
-                />
-                <input
-                  type="text"
-                  value={newPayment.holder_name}
-                  onChange={(e) => setNewPayment({ ...newPayment, holder_name: e.target.value })}
-                  placeholder="اسم صاحب الحساب *"
-                  className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
-                  data-testid="new-payment-holder"
-                />
+                
+                {/* إخفاء حقول الإدخال للبطاقة والدفع عند الاستلام */}
+                {newPayment.type !== 'card' && newPayment.type !== 'cash' && (
+                  <>
+                    <input
+                      type="tel"
+                      value={newPayment.phone}
+                      onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
+                      placeholder="رقم المحفظة *"
+                      className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                      data-testid="new-payment-phone"
+                    />
+                    <input
+                      type="text"
+                      value={newPayment.holder_name}
+                      onChange={(e) => setNewPayment({ ...newPayment, holder_name: e.target.value })}
+                      placeholder="اسم صاحب الحساب *"
+                      className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                      data-testid="new-payment-holder"
+                    />
+                  </>
+                )}
+                
+                {/* رسالة توضيحية للبطاقة البنكية */}
+                {newPayment.type === 'card' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
+                  </div>
+                )}
+                
+                {/* رسالة للدفع عند الاستلام */}
+                {newPayment.type === 'cash' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-green-700">ستدفع نقداً للسائق عند استلام الطلب</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
