@@ -603,10 +603,10 @@ const GiftsPage = () => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl max-h-[90vh] overflow-hidden"
+              className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl max-h-[90vh] flex flex-col"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                     <MapPin size={24} className="text-white" />
@@ -625,17 +625,17 @@ const GiftsPage = () => {
               </div>
 
               {/* معاينة الهدية */}
-              <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex-shrink-0">
                 <div className="flex gap-3">
                   {selectedGift.product_image ? (
                     <img
                       src={selectedGift.product_image}
                       alt={selectedGift.product_name}
-                      className="w-14 h-14 rounded-xl object-cover"
+                      className="w-12 h-12 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="w-14 h-14 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center">
-                      <Gift size={24} className="text-gray-400" />
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center">
+                      <Gift size={20} className="text-gray-400" />
                     </div>
                   )}
                   <div className="flex-1">
@@ -652,8 +652,9 @@ const GiftsPage = () => {
                 </div>
               </div>
 
-              {/* نموذج العنوان */}
-              <form onSubmit={submitAddress} className="p-4 space-y-4 overflow-y-auto max-h-[50vh]">
+              {/* نموذج العنوان - قابل للتمرير */}
+              <form onSubmit={submitAddress} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-4 space-y-3 overflow-y-auto flex-1">
                 
                 {/* العناوين المحفوظة */}
                 {savedAddresses.length > 0 && (
@@ -854,23 +855,26 @@ const GiftsPage = () => {
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
                   />
                 </div>
+                </div>
 
-                {/* زر التأكيد */}
-                <button
-                  type="submit"
-                  disabled={submittingAddress}
-                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
-                  data-testid="confirm-address-btn"
-                >
-                  {submittingAddress ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Check size={20} />
-                      تأكيد العنوان واستلام الهدية
-                    </>
-                  )}
-                </button>
+                {/* زر التأكيد - ثابت في الأسفل */}
+                <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+                  <button
+                    type="submit"
+                    disabled={submittingAddress}
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg"
+                    data-testid="confirm-address-btn"
+                  >
+                    {submittingAddress ? (
+                      <Loader2 size={20} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Check size={20} />
+                        تأكيد العنوان واستلام الهدية
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             </motion.div>
           </motion.div>
