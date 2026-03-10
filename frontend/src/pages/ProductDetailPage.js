@@ -1474,7 +1474,7 @@ const ProductDetailPage = () => {
               ) : (
                 <>
                   <ShoppingCart size={14} />
-                  <span className="hidden sm:inline">السلة</span>
+                  <span>أضف للسلة</span>
                 </>
               )}
             </button>
@@ -1490,7 +1490,7 @@ const ProductDetailPage = () => {
               data-testid="buy-now-btn"
             >
               <Zap size={14} />
-              <span>اشتري</span>
+              <span>اشتري الآن</span>
             </button>
           </div>
         </div>
