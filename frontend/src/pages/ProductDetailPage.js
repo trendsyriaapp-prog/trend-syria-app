@@ -633,11 +633,9 @@ const ProductDetailPage = () => {
   const calculateShipping = async () => {
     if (!product?.id || !customerAddress?.city) return;
     try {
-      // استخدام إجمالي السلة الحالي + سعر المنتج المعروض
+      // استخدام إجمالي السلة الحالي فقط (بدون سعر المنتج المعروض)
       const cartTotal = cart?.total || 0;
-      const productTotal = product.price * quantity;
-      const totalWithProduct = cartTotal + productTotal;
-      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${totalWithProduct}`);
+      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${cartTotal}`);
       setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
       console.error('Error calculating shipping:', error);
