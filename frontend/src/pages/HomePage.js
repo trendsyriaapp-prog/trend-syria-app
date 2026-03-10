@@ -215,37 +215,31 @@ const HomePage = () => {
                 <Link to={ads[currentAdIndex]?.link || '#'}>
                   {/* تصميم بانر الطعام الجديد */}
                   {ads[currentAdIndex]?.link === '/food' ? (
-                    <div className="relative h-24 md:h-28 rounded-2xl overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+                    <div className="relative h-16 md:h-20 rounded-xl overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
                       {/* خلفية مزخرفة */}
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-2 right-4 text-6xl">🍕</div>
-                        <div className="absolute bottom-2 left-8 text-4xl">🍔</div>
-                        <div className="absolute top-4 left-1/3 text-3xl">🌮</div>
-                        <div className="absolute bottom-4 right-1/4 text-3xl">🍜</div>
+                      <div className="absolute inset-0 opacity-15">
+                        <div className="absolute top-1 right-3 text-3xl">🍕</div>
+                        <div className="absolute bottom-1 left-6 text-2xl">🍔</div>
+                        <div className="absolute top-2 left-1/4 text-xl">🌮</div>
                       </div>
                       
                       {/* المحتوى */}
-                      <div className="relative h-full flex items-center justify-between px-4 md:px-6">
+                      <div className="relative h-full flex items-center justify-between px-3 md:px-4">
                         <div className="text-white">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-medium">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
                               جديد ✨
                             </span>
                           </div>
-                          <h3 className="text-lg md:text-xl font-bold mb-0.5">قسم الطعام</h3>
-                          <p className="text-white/90 text-xs md:text-sm">توصيل سريع من أفضل المطاعم</p>
+                          <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
+                          <p className="text-white/90 text-[10px] md:text-xs">توصيل سريع من أفضل المطاعم</p>
                         </div>
                         
                         {/* زر الطلب */}
-                        <div className="flex flex-col items-center">
-                          <div className="bg-white text-[#FF6B00] px-4 py-2 rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-shadow">
-                            اطلب الآن
-                          </div>
+                        <div className="bg-white text-[#FF6B00] px-3 py-1.5 rounded-full font-bold text-xs shadow-md">
+                          اطلب الآن
                         </div>
                       </div>
-                      
-                      {/* تأثير لامع */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
                     </div>
                   ) : (
                     /* البانرات الأخرى */
