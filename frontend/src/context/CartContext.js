@@ -38,8 +38,11 @@ export const CartProvider = ({ children }) => {
         quantity,
         selected_size: selectedSize 
       });
-      await fetchCart();
-      return true;
+      // جلب السلة وإرجاع البيانات الجديدة
+      const res = await axios.get(`${API}/cart`);
+      const newCart = {...res.data};
+      setCart(newCart);
+      return newCart; // إرجاع السلة الجديدة
     } catch (error) {
       throw error;
     }
