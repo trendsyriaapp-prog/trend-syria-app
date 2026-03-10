@@ -193,9 +193,17 @@ const FreeShippingBanner = () => {
   
   if (!user || !isCustomer || !shouldShowOnCurrentPage) return null;
   if (dismissed || !analysis.hasItems) return null;
+  
+  // إذا وصل للشحن المجاني لكل المتاجر ولا يوجد احتفال، لا تُظهر
+  if (analysis.qualifiesForFree && !showCelebration) {
+    console.log('FreeShippingBanner: Not showing - qualifies for free and no celebration');
+    return null;
+  }
+  
+  console.log('FreeShippingBanner: SHOULD SHOW NOW!');
 
-  // شريط النجاح (الشحن المجاني) - يظهر دائماً عند تجاوز الحد
-  if (analysis.qualifiesForFree) {
+  // شريط النجاح (الشحن المجاني) - يظهر فقط لحظة الوصول لمتجر جديد
+  if (showCelebration) {
     return (
       <AnimatePresence>
         <motion.div
@@ -229,6 +237,11 @@ const FreeShippingBanner = () => {
         </motion.div>
       </AnimatePresence>
     );
+  }
+
+  // لا تظهر شريط التقدم إذا وصل للشحن المجاني من أي متجر
+  if (analysis.qualifiesForFree) {
+    return null;
   }
 
   // شريط التقدم العادي (لم يصل للشحن المجاني بعد)
