@@ -17,6 +17,7 @@ class GiftRequest(BaseModel):
     recipient_name: str
     message: Optional[str] = ""
     is_anonymous: bool = False
+    is_surprise: bool = False  # هل الهدية مفاجأة (تخفي تفاصيل المنتج)
     pay_shipping: bool = False  # جديد: المرسل يدفع رسوم الشحن
 
 class GiftResponse(BaseModel):
@@ -59,6 +60,7 @@ async def send_gift(gift: GiftRequest, user: dict = Depends(get_current_user)):
         "product_price": product["price"],
         "message": gift.message,
         "is_anonymous": gift.is_anonymous,
+        "is_surprise": gift.is_surprise,  # هل الهدية مفاجأة؟
         "shipping_paid_by_sender": gift.pay_shipping,  # جديد: هل المرسل يدفع الشحن
         "status": "pending",  # pending, pending_address, completed, rejected
         "created_at": datetime.now(timezone.utc).isoformat()
