@@ -47,14 +47,19 @@ const GiftsPage = () => {
     notes: ''
   });
   const [submittingAddress, setSubmittingAddress] = useState(false);
+  
+  // العناوين المحفوظة
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState(null);
 
-  // جلب الهدايا
+  // جلب الهدايا والعناوين المحفوظة
   useEffect(() => {
     if (!user || !token) {
       navigate('/login');
       return;
     }
     fetchGifts();
+    fetchSavedAddresses();
   }, [user, token]);
 
   const fetchGifts = async () => {
@@ -75,6 +80,45 @@ const GiftsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // جلب العناوين المحفوظة
+  const fetchSavedAddresses = async () => {
+    try {
+      const res = await axios.get(`${API}/api/user/addresses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSavedAddresses(res.data || []);
+    } catch (err) {
+      // إذا لم يكن هناك عناوين محفوظة، نستخدم عنوان المستخدم الافتراضي
+      if (user?.address || user?.city) {
+        setSavedAddresses([{
+          id: 'default',
+          label: 'العنوان الافتراضي',
+          city: user.city || '',
+          area: user.area || user.address || '',
+          street: user.street || '',
+          building: user.building || '',
+          floor: user.floor || '',
+          phone: user.phone || '',
+          notes: ''
+        }]);
+      }
+    }
+  };
+
+  // اختيار عنوان محفوظ
+  const selectSavedAddress = (address) => {
+    setSelectedSavedAddress(address.id);
+    setAddressForm({
+      city: address.city || '',
+      area: address.area || '',
+      street: address.street || '',
+      building: address.building || '',
+      floor: address.floor || '',
+      phone: address.phone || user?.phone || '',
+      notes: address.notes || ''
+    });
   };
 
   // قبول الهدية
@@ -598,6 +642,85 @@ const GiftsPage = () => {
 
               {/* نموذج العنوان */}
               <form onSubmit={submitAddress} className="p-4 space-y-4 overflow-y-auto max-h-[50vh]">
+                
+                {/* العناوين المحفوظة */}
+                {savedAddresses.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      العناوين المحفوظة
+                    </label>
+                    <div className="space-y-2">
+                      {savedAddresses.map((addr) => (
+                        <div
+                          key={addr.id}
+                          onClick={() => selectSavedAddress(addr)}
+                          className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
+                            selectedSavedAddress === addr.id
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              selectedSavedAddress === addr.id
+                                ? 'border-blue-500 bg-blue-500'
+                                : 'border-gray-300'
+                            }`}>
+                              {selectedSavedAddress === addr.id && (
+                                <Check size={12} className="text-white" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {addr.label || `${addr.city}، ${addr.area}`}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {addr.city} - {addr.area} {addr.street && `- ${addr.street}`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* خيار إدخال عنوان جديد */}
+                      <div
+                        onClick={() => {
+                          setSelectedSavedAddress(null);
+                          setAddressForm({
+                            city: '',
+                            area: '',
+                            street: '',
+                            building: '',
+                            floor: '',
+                            phone: user?.phone || '',
+                            notes: ''
+                          });
+                        }}
+                        className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
+                          selectedSavedAddress === null
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedSavedAddress === null
+                              ? 'border-blue-500 bg-blue-500'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedSavedAddress === null && (
+                              <Check size={12} className="text-white" />
+                            )}
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            إدخال عنوان جديد
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* المحافظة */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
@@ -607,7 +730,10 @@ const GiftsPage = () => {
                     <MapPin size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <select
                       value={addressForm.city}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                      onChange={(e) => {
+                        setAddressForm(prev => ({ ...prev, city: e.target.value }));
+                        setSelectedSavedAddress(null);
+                      }}
                       className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none"
                       required
                     >
@@ -629,7 +755,10 @@ const GiftsPage = () => {
                     <input
                       type="text"
                       value={addressForm.area}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, area: e.target.value }))}
+                      onChange={(e) => {
+                        setAddressForm(prev => ({ ...prev, area: e.target.value }));
+                        setSelectedSavedAddress(null);
+                      }}
                       placeholder="مثال: المزة، الروضة..."
                       className="w-full pr-10 pl-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
