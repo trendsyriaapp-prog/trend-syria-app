@@ -234,7 +234,7 @@ const OrderTrackingPage = () => {
             
             <div className="flex items-center gap-4">
               {/* صورة الموظف */}
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-[#FF6B00]">
                 {tracking.delivery_driver.photo ? (
                   <img 
                     src={tracking.delivery_driver.photo} 
@@ -246,12 +246,39 @@ const OrderTrackingPage = () => {
                 )}
               </div>
               
-              {/* معلومات الموظف - الاسم فقط للعميل */}
+              {/* معلومات الموظف */}
               <div className="flex-1">
                 <p className="font-bold text-gray-900">{tracking.delivery_driver.name}</p>
-                <p className="text-sm text-gray-500 mt-1">موظف التوصيل المسؤول عن طلبك</p>
+                {tracking.delivery_driver.rating && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-medium text-gray-700">{tracking.delivery_driver.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                {tracking.delivery_driver.phone && (
+                  <a 
+                    href={`tel:${tracking.delivery_driver.phone}`}
+                    className="text-sm text-[#FF6B00] flex items-center gap-1 mt-1"
+                  >
+                    <Phone size={12} />
+                    {tracking.delivery_driver.phone}
+                  </a>
+                )}
               </div>
             </div>
+
+            {/* الوقت المتوقع للوصول */}
+            {order.estimated_arrival_minutes && order.delivery_status === 'on_the_way' && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock size={18} className="text-orange-600" />
+                    <span className="text-sm font-medium text-orange-800">الوقت المتوقع للوصول</span>
+                  </div>
+                  <span className="font-bold text-orange-600 text-lg">{order.estimated_arrival_minutes} دقيقة</span>
+                </div>
+              </div>
+            )}
 
             {/* زر التقييم - يظهر بعد التسليم */}
             {isDelivered && !hasRated && (

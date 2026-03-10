@@ -688,21 +688,31 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
     shipping_address = order.get("shipping_address", {})
     area = shipping_address.get("area", order.get("city", ""))
     
+    # جلب تقييم موظف التوصيل
+    driver_rating = await db.reviews.aggregate([
+        {"$match": {"reviewed_id": user["id"], "review_type": "delivery"}},
+        {"$group": {"_id": None, "avg": {"$avg": "$rating"}}}
+    ]).to_list(1)
+    rating = driver_rating[0]["avg"] if driver_rating else 5.0
+    rating_stars = "⭐" * int(round(rating))
+    
     await create_notification_for_user(
         user_id=order["user_id"],
         title="🚗 طلبك في الطريق!",
-        message=f"السائق: {user.get('full_name', user.get('name', ''))}\n📍 المنطقة: {area}\n⏱️ الوصول المتوقع: خلال {estimated_minutes} دقيقة\nيرجى التجهز للاستلام",
+        message=f"السائق: {user.get('full_name', user.get('name', ''))}\nالتقييم: {rating_stars} ({rating:.1f})\n📞 {user.get('phone', '')}\n📍 {area}\n⏱️ الوصول خلال: {estimated_minutes} دقيقة",
         notification_type="delivery",
         order_id=order_id,
         extra_data={
             "driver_id": user["id"],
             "driver_name": user.get("full_name", user.get("name", "")),
             "driver_phone": user.get("phone", ""),
-            "driver_photo": user.get("photo", "")
+            "driver_photo": user.get("photo", ""),
+            "driver_rating": rating,
+            "estimated_minutes": estimated_minutes
         }
     )
     
-    return {"message": "تم تحديث الحالة"}
+    return {"message": "تم تحديث الحالة", "estimated_minutes": estimated_minutes}
 
 @router.post("/orders/{order_id}/delivery/delivered")
 async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None, user: dict = Depends(get_current_user)):
