@@ -13,10 +13,20 @@ const FoodMyCartPage = () => {
   const { stores, totalItems, totalAmount, clearStoreCart, clearAllFoodCarts, refresh } = useFoodCart();
   const [storeDetails, setStoreDetails] = useState({});
   const [loading, setLoading] = useState(true);
+  const [fetchedStoreIds, setFetchedStoreIds] = useState([]);
 
   useEffect(() => {
-    fetchStoreDetails();
-  }, [stores]);
+    // فقط اجلب البيانات إذا تغيرت المتاجر
+    const currentStoreIds = stores.map(s => s.storeId).sort().join(',');
+    const prevStoreIds = fetchedStoreIds.sort().join(',');
+    
+    if (currentStoreIds !== prevStoreIds) {
+      fetchStoreDetails();
+      setFetchedStoreIds(stores.map(s => s.storeId));
+    } else if (stores.length === 0) {
+      setLoading(false);
+    }
+  }, [stores.length]);
 
   const fetchStoreDetails = async () => {
     if (stores.length === 0) {
@@ -27,17 +37,31 @@ const FoodMyCartPage = () => {
     setLoading(true);
     const details = {};
     
-    for (const store of stores) {
-      try {
-        const res = await axios.get(`${API}/food/stores/${store.storeId}`);
-        details[store.storeId] = res.data;
-      } catch (error) {
-        console.error('Error fetching store:', error);
-      }
+    try {
+      // جلب جميع المتاجر بالتوازي
+      const promises = stores.map(store => 
+        axios.get(`${API}/food/stores/${store.storeId}`)
+          .then(res => ({ storeId: store.storeId, data: res.data }))
+          .catch(err => {
+            console.error('Error fetching store:', store.storeId, err);
+            return { storeId: store.storeId, data: null };
+          })
+      );
+      
+      const results = await Promise.all(promises);
+      
+      results.forEach(result => {
+        if (result.data) {
+          details[result.storeId] = result.data;
+        }
+      });
+      
+      setStoreDetails(details);
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+    } finally {
+      setLoading(false);
     }
-    
-    setStoreDetails(details);
-    setLoading(false);
   };
 
   const updateItemQuantity = (storeId, itemId, newQuantity) => {
