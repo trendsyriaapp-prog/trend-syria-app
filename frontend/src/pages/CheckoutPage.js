@@ -19,7 +19,6 @@ const PAYMENT_METHODS = [
   { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية' },
   { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش' },
   { id: 'mtn_cash', name: 'MTN', icon: '📲', description: 'MTN كاش' },
-  { id: 'cash', name: 'عند الاستلام', icon: '💵', description: 'نقداً للسائق' },
 ];
 
 const formatPrice = (price) => {
@@ -131,7 +130,7 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال جميع بيانات العنوان", variant: "destructive" });
       return;
     }
-    if (useNewPayment && newPayment.type !== 'card' && newPayment.type !== 'cash' && (!newPayment.phone || !newPayment.holder_name)) {
+    if (useNewPayment && newPayment.type !== 'card' && (!newPayment.phone || !newPayment.holder_name)) {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
     }
@@ -151,8 +150,8 @@ const CheckoutPage = () => {
 
       let paymentData;
       if (useNewPayment) {
-        // لا نحفظ طريقة الدفع للبطاقة والدفع عند الاستلام
-        if (newPayment.type !== 'card' && newPayment.type !== 'cash') {
+        // لا نحفظ طريقة الدفع للبطاقة
+        if (newPayment.type !== 'card') {
           await axios.post(`${API}/user/payment-methods`, newPayment);
         }
         paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone || '' };
@@ -173,15 +172,9 @@ const CheckoutPage = () => {
       setOrderId(res.data.order_id);
       
       // معالجة مختلفة حسب طريقة الدفع
-      if (paymentData.payment_method === 'cash') {
-        // الدفع عند الاستلام - لا نحتاج OTP
-        toast({ title: "تم إنشاء الطلب بنجاح! 🎉", description: "سيتم التواصل معك لتأكيد الطلب" });
-        clearCart();
-        setOrderComplete(true);
-      } else if (paymentData.payment_method === 'card') {
+      if (paymentData.payment_method === 'card') {
         // البطاقة البنكية - سيتم التوجيه لصفحة الدفع
         toast({ title: "تم إنشاء الطلب", description: "جاري التوجيه لصفحة الدفع الآمن..." });
-        // هنا يمكن إضافة التوجيه لبوابة الدفع
         clearCart();
         setOrderComplete(true);
       } else {
@@ -461,8 +454,8 @@ const CheckoutPage = () => {
                   ))}
                 </div>
                 
-                {/* إخفاء حقول الإدخال للبطاقة والدفع عند الاستلام */}
-                {newPayment.type !== 'card' && newPayment.type !== 'cash' && (
+                {/* إخفاء حقول الإدخال للبطاقة */}
+                {newPayment.type !== 'card' && (
                   <>
                     <input
                       type="tel"
@@ -487,13 +480,6 @@ const CheckoutPage = () => {
                 {newPayment.type === 'card' && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
                     <p className="text-[10px] text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
-                  </div>
-                )}
-                
-                {/* رسالة للدفع عند الاستلام */}
-                {newPayment.type === 'cash' && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
-                    <p className="text-[10px] text-green-700">ستدفع نقداً للسائق عند استلام الطلب</p>
                   </div>
                 )}
               </div>

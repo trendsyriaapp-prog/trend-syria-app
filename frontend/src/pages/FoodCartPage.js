@@ -538,23 +538,6 @@ const FoodCartPage = () => {
               <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
             </div>
           </label>
-          
-          {/* الدفع عند الاستلام */}
-          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
-            <input
-              type="radio"
-              name="payment"
-              value="cash"
-              checked={deliveryInfo.payment_method === 'cash'}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
-              className="w-4 h-4 text-[#E65000]"
-            />
-            <Truck size={20} className="text-green-600" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">الدفع عند الاستلام</p>
-              <p className="text-sm text-gray-500">نقداً للسائق</p>
-            </div>
-          </label>
         </div>
 
         {/* Minimum Order Warning */}
