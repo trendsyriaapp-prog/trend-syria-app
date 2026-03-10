@@ -12,7 +12,7 @@ const MobileNav = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
-  const { totalItems: foodCartCount } = useFoodCart();
+  const { totalItems: foodCartCount, stores: foodStores } = useFoodCart();
   const { isFeatureEnabled } = useSettings();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -27,6 +27,19 @@ const MobileNav = () => {
   
   // هل نحن في صفحات الطعام؟
   const isInFoodSection = location.pathname.startsWith('/food');
+
+  // تحديد رابط سلة الطعام بذكاء
+  const getFoodCartPath = () => {
+    if (foodStores.length === 0) {
+      return '/food/my-cart'; // سلة فارغة
+    } else if (foodStores.length === 1) {
+      // متجر واحد فقط → مباشرة لصفحة إكمال الطلب
+      return `/food/cart/${foodStores[0].storeId}`;
+    } else {
+      // متاجر متعددة → الصفحة المجمعة
+      return '/food/my-cart';
+    }
+  };
 
   const handleAccountClick = (e) => {
     if (user) {
@@ -49,7 +62,7 @@ const MobileNav = () => {
     navItems = [
       { path: '/', icon: Home, label: 'الرئيسية' },
       { path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true },
-      { path: '/food/my-cart', icon: ShoppingBag, label: 'السلة', badge: foodCartCount, isFoodCart: true },
+      { path: getFoodCartPath(), icon: ShoppingBag, label: 'السلة', badge: foodCartCount, isFoodCart: true },
       { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
     ];
   } else {
