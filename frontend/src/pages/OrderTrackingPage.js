@@ -332,6 +332,7 @@ const OrderTrackingPage = () => {
               order={order}
               trackingData={tracking}
               userType="buyer"
+              embedded={true}
             />
           </motion.div>
         )}

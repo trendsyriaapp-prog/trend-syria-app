@@ -12,9 +12,9 @@ import {
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const OrderTrackingMap = ({ order, orderId, onClose }) => {
-  const [trackingData, setTrackingData] = useState(null);
-  const [loading, setLoading] = useState(true);
+const OrderTrackingMap = ({ order, orderId, onClose, trackingData: externalTrackingData, userType, embedded = false }) => {
+  const [trackingData, setTrackingData] = useState(externalTrackingData || null);
+  const [loading, setLoading] = useState(!externalTrackingData);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(false);
@@ -101,7 +101,7 @@ const OrderTrackingMap = ({ order, orderId, onClose }) => {
     });
   };
 
-  if (loading) {
+  if (loading && !embedded) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -113,6 +113,61 @@ const OrderTrackingMap = ({ order, orderId, onClose }) => {
           <p className="text-gray-600">جاري تحميل بيانات التتبع...</p>
         </div>
       </motion.div>
+    );
+  }
+
+  // نسخة مضمنة في الصفحة
+  if (embedded) {
+    return (
+      <div className="p-4">
+        {/* معلومات السائق والموقع */}
+        <div className="space-y-4">
+          {/* موقع السائق */}
+          {trackingData?.driver_location ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <Navigation size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-green-800">السائق في الطريق</p>
+                    <p className="text-sm text-green-600">آخر تحديث: {lastUpdate ? formatTime(lastUpdate) : 'الآن'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={openDriverLocation}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
+                >
+                  <MapPin size={16} />
+                  فتح الخريطة
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Truck size={20} className="text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-blue-800">السائق استلم الطلب</p>
+                  <p className="text-sm text-blue-600">سيتم تحديث الموقع عند انطلاقه</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* زر فتح Google Maps للعنوان */}
+          <button
+            onClick={openGoogleMaps}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+          >
+            <MapPinned size={18} />
+            فتح عنوان التوصيل في الخريطة
+          </button>
+        </div>
+      </div>
     );
   }
 
