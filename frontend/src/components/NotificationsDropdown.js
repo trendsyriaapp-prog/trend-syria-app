@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart, Gift, Star, Tag, Utensils } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -11,11 +12,63 @@ const NotificationIcon = ({ type }) => {
       return <ShoppingCart size={16} className="text-green-500" />;
     case 'order_status':
       return <Package size={16} className="text-blue-500" />;
+    case 'delivery':
     case 'delivery_ready':
       return <Truck size={16} className="text-orange-500" />;
+    case 'gift_received':
+    case 'gift_accepted':
+    case 'gift_completed':
+      return <Gift size={16} className="text-pink-500" />;
+    case 'review':
+      return <Star size={16} className="text-yellow-500" />;
+    case 'promotion':
+    case 'flash_sale':
+      return <Tag size={16} className="text-red-500" />;
+    case 'food_order':
+      return <Utensils size={16} className="text-orange-500" />;
     default:
       return <Bell size={16} className="text-gray-500" />;
   }
+};
+
+// تحديد الرابط المناسب للإشعار
+const getNotificationLink = (notification) => {
+  const { type, order_id, product_id, data } = notification;
+  
+  switch (type) {
+    case 'order_status':
+    case 'delivery':
+    case 'delivery_ready':
+    case 'new_order':
+      if (order_id) return `/orders/${order_id}/tracking`;
+      break;
+    case 'gift_received':
+    case 'gift_accepted':
+    case 'gift_completed':
+    case 'gift_order_created':
+      return '/gifts';
+    case 'review':
+    case 'product':
+      if (product_id) return `/products/${product_id}`;
+      break;
+    case 'food_order':
+      if (order_id) return `/food/order/${order_id}`;
+      if (data?.order_id) return `/food/order/${data.order_id}`;
+      break;
+    case 'promotion':
+    case 'flash_sale':
+    case 'daily_deal':
+      return '/';
+    case 'low_stock':
+      if (product_id) return `/seller/products`;
+      break;
+    default:
+      if (order_id) return `/orders/${order_id}/tracking`;
+      if (product_id) return `/products/${product_id}`;
+      if (data?.order_id) return `/orders/${data.order_id}/tracking`;
+      if (data?.gift_id) return '/gifts';
+  }
+  return null;
 };
 
 const formatTimeAgo = (dateString) => {
@@ -35,6 +88,7 @@ const formatTimeAgo = (dateString) => {
 
 const NotificationsDropdown = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -103,6 +157,25 @@ const NotificationsDropdown = () => {
     }
   };
 
+  // الضغط على إشعار
+  const handleNotificationClick = async (notification) => {
+    // تحديد كمقروء
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+    
+    // الحصول على الرابط
+    const link = getNotificationLink(notification);
+    
+    // إغلاق القائمة
+    setIsOpen(false);
+    
+    // الانتقال للصفحة المطلوبة
+    if (link) {
+      navigate(link);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -156,7 +229,7 @@ const NotificationsDropdown = () => {
                     className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${
                       !notification.is_read ? 'bg-orange-50' : ''
                     }`}
-                    onClick={() => !notification.is_read && markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex-shrink-0 mt-1">
                       <NotificationIcon type={notification.type} />
