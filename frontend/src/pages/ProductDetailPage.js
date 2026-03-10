@@ -610,11 +610,11 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     // Calculate shipping when product and customer address are available
-    // أيضاً عند تغيير السلة
-    if (product && customerAddress?.city) {
+    // وأيضاً عند تغيير السلة (لكن ليس أثناء الإضافة للسلة)
+    if (product && customerAddress?.city && !addingToCart) {
       calculateShipping();
     }
-  }, [product, customerAddress, quantity, cart?.total]);
+  }, [product, customerAddress, quantity, cart?.total, addingToCart]);
 
   const fetchUserAddress = async () => {
     try {
