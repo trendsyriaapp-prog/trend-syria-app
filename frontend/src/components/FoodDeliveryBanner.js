@@ -153,6 +153,7 @@ const FoodDeliveryBanner = () => {
   if (hideAfterFreeDelivery && isFreeDelivery) return null;
 
   return (
+    <div className="sticky top-[52px] z-40">
     <AnimatePresence>
       {/* شريط الاحتفال */}
       {showCelebration && (
@@ -170,7 +171,7 @@ const FoodDeliveryBanner = () => {
         </motion.div>
       )}
 
-      {/* الشريط الرئيسي */}
+      {/* الشريط الرئيسي - ثابت أعلى الشاشة */}
       {!showCelebration && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -246,6 +247,7 @@ const FoodDeliveryBanner = () => {
         </motion.div>
       )}
     </AnimatePresence>
+    </div>
   );
 };
 
