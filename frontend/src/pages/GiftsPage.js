@@ -52,6 +52,18 @@ const GiftsPage = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedSavedAddress, setSelectedSavedAddress] = useState(null);
 
+  // منع تمرير الصفحة عند فتح نافذة العنوان
+  useEffect(() => {
+    if (showAddressModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddressModal]);
+
   // جلب الهدايا والعناوين المحفوظة
   useEffect(() => {
     if (!user || !token) {
