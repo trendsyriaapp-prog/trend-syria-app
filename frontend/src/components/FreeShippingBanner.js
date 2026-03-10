@@ -144,12 +144,12 @@ const FreeShippingBanner = () => {
         setShowCelebration(false);
         setShowBanner(false);
       }, 4000);
-    } else if (!analysis.qualifiesForFree && !dismissed) {
+    } else if (!analysis.qualifiesForFree && analysis.hasItems && !dismissed) {
       // لم يصل لأي شحن مجاني بعد - أظهر شريط التقدم
       setShowBanner(true);
       setShowCelebration(false);
     } else {
-      // وصل للشحن المجاني لكن ليس متجر جديد
+      // وصل للشحن المجاني لكل المتاجر أو تم الإغلاق
       setShowBanner(false);
       setShowCelebration(false);
     }
@@ -191,7 +191,10 @@ const FreeShippingBanner = () => {
   // شروط عدم الإظهار
   const isCustomer = user?.user_type === 'buyer' || user?.user_type === 'customer';
   if (!user || !isCustomer || !shouldShowOnCurrentPage) return null;
-  if (dismissed || !showBanner || !analysis.hasItems) return null;
+  if (dismissed || !analysis.hasItems) return null;
+  
+  // إذا وصل للشحن المجاني لكل المتاجر ولا يوجد احتفال، لا تُظهر
+  if (analysis.qualifiesForFree && !showCelebration) return null;
 
   // شريط النجاح (الشحن المجاني) - يظهر فقط لحظة الوصول لمتجر جديد
   if (showCelebration) {

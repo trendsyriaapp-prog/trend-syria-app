@@ -13,6 +13,7 @@ import MobileNav from "./components/MobileNav";
 import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
 import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
+import FreeShippingBanner from "./components/FreeShippingBanner";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -143,6 +144,7 @@ function App() {
             <Toaster />
             <Chatbot />
             <NotificationManager />
+            <FreeShippingBanner />
           </div>
           </ScrollProvider>
         </BrowserRouter>
