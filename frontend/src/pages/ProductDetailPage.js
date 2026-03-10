@@ -768,12 +768,18 @@ const ProductDetailPage = () => {
     setAddingToCart(true);
     try {
       await addToCart(product.id, quantity, selectedSize);
-      // تحديث حساب الشحن بعد إضافة المنتج
-      if (customerCity) {
-        // حساب الإجمالي الجديد مباشرة (السلة الحالية + المنتج الجديد)
+      
+      // عرض رسالة نجاح
+      toast({
+        title: "تمت الإضافة",
+        description: `تم إضافة ${product.name} للسلة`,
+      });
+      
+      // تحديث حساب الشحن بعد إضافة المنتج (بدون إظهار خطأ إذا فشل)
+      if (customerAddress?.city) {
         const newTotal = (cart?.total || 0) + (product.price * quantity);
         try {
-          const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerCity)}&order_total=${newTotal}`);
+          const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${newTotal}`);
           setShippingInfo({ ...res.data, _timestamp: Date.now() });
         } catch (err) {
           console.error('Error updating shipping:', err);
@@ -782,7 +788,7 @@ const ProductDetailPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        description: error.response?.data?.detail || "حدث خطأ أثناء الإضافة للسلة",
         variant: "destructive"
       });
     } finally {
