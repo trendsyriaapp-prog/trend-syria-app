@@ -7,9 +7,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingBasket, Apple, Search, MapPin, 
-  Star, Clock, ChevronLeft, Filter, Truck, Store
+  Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles
 } from 'lucide-react';
-import ProductCard from '../components/ProductCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -180,7 +179,7 @@ const FoodPage = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <FoodProductCard key={product.id} product={product} />
                   ))}
                 </div>
               </section>
@@ -242,6 +241,88 @@ const StoreCard = ({ store }) => (
     </motion.div>
   </Link>
 );
+
+// بطاقة منتج الطعام - توجه للمتجر وليس لصفحة المنتج
+const FoodProductCard = ({ product }) => {
+  const isNew = product.created_at && 
+    (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+  };
+
+  return (
+    <Link to={`/food/store/${product.store_id}`}>
+      <motion.div
+        whileHover={{ y: -4 }}
+        className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all"
+      >
+        <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+          {product.images?.[0] ? (
+            <img 
+              src={product.images[0]} 
+              alt={product.name} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-orange-50">
+              <UtensilsCrossed size={32} className="text-orange-300" />
+            </div>
+          )}
+          
+          {/* Badges */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {isNew && (
+              <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Sparkles size={10} />
+                جديد
+              </span>
+            )}
+            {product.original_price && product.original_price > product.price && (
+              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                خصم {Math.round((1 - product.price / product.original_price) * 100)}%
+              </span>
+            )}
+          </div>
+          
+          {/* Favorite */}
+          <button 
+            className="absolute top-2 left-2 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
+            onClick={(e) => e.preventDefault()}
+          >
+            <Heart size={14} className="text-gray-500" />
+          </button>
+        </div>
+        
+        <div className="p-3">
+          <h3 className="font-bold text-gray-900 text-sm truncate mb-1">{product.name}</h3>
+          {product.store_name && (
+            <p className="text-xs text-gray-500 mb-2 truncate flex items-center gap-1">
+              <Store size={10} />
+              {product.store_name}
+            </p>
+          )}
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[#FF6B00] font-bold text-sm">{formatPrice(product.price)}</span>
+              {product.original_price && product.original_price > product.price && (
+                <span className="text-gray-400 text-xs line-through mr-1">
+                  {formatPrice(product.original_price)}
+                </span>
+              )}
+            </div>
+            {product.rating > 0 && (
+              <div className="flex items-center gap-0.5 text-xs text-gray-600">
+                <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                {product.rating.toFixed(1)}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+};
 
 const EmptyState = ({ category }) => {
   const messages = {
