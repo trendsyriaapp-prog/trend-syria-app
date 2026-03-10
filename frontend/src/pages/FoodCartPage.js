@@ -71,36 +71,86 @@ const FoodCartPage = () => {
     payment_method: 'wallet'
   });
   
-  // جلب العناوين وطرق الدفع المحفوظة
+  // جلب البيانات الأولية (المتجر + العناوين + طرق الدفع)
   useEffect(() => {
-    const fetchSavedData = async () => {
-      if (!user) return;
+    let isMounted = true;
+    
+    const fetchAllData = async () => {
+      if (!storeId) return;
+      
+      setLoading(true);
+      
       try {
-        const [addressesRes, paymentsRes] = await Promise.all([
-          axios.get(`${API}/user/addresses`),
-          axios.get(`${API}/user/payment-methods`)
+        // جلب بيانات المتجر
+        const [storeRes, offersRes] = await Promise.all([
+          axios.get(`${API}/food/stores/${storeId}`),
+          axios.get(`${API}/food/stores/${storeId}/offers`)
         ]);
-        setSavedAddresses(addressesRes.data);
-        setSavedPayments(paymentsRes.data);
         
-        // تعيين الافتراضي
-        const defaultAddress = addressesRes.data.find(a => a.is_default);
-        const defaultPayment = paymentsRes.data.find(p => p.is_default);
+        if (!isMounted) return;
         
-        if (defaultAddress) setSelectedAddressId(defaultAddress.id);
-        else if (addressesRes.data.length > 0) setSelectedAddressId(addressesRes.data[0].id);
-        else setUseNewAddress(true);
+        setStore(storeRes.data);
+        setOffers(offersRes.data || []);
         
-        if (defaultPayment) setSelectedPaymentId(defaultPayment.id);
-        else if (paymentsRes.data.length > 0) setSelectedPaymentId(paymentsRes.data[0].id);
-        else setUseNewPayment(true);
+        // جلب المحفظة إذا كان المستخدم مسجل
+        if (token) {
+          try {
+            const walletRes = await axios.get(`${API}/wallet/balance`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (isMounted) setWalletBalance(walletRes.data.balance || 0);
+          } catch (e) {}
+        }
+        
+        // جلب العناوين وطرق الدفع المحفوظة
+        if (user) {
+          try {
+            const [addressesRes, paymentsRes] = await Promise.all([
+              axios.get(`${API}/user/addresses`),
+              axios.get(`${API}/user/payment-methods`)
+            ]);
+            
+            if (!isMounted) return;
+            
+            setSavedAddresses(addressesRes.data);
+            setSavedPayments(paymentsRes.data);
+            
+            const defaultAddress = addressesRes.data.find(a => a.is_default);
+            const defaultPayment = paymentsRes.data.find(p => p.is_default);
+            
+            if (defaultAddress) setSelectedAddressId(defaultAddress.id);
+            else if (addressesRes.data.length > 0) setSelectedAddressId(addressesRes.data[0].id);
+            else setUseNewAddress(true);
+            
+            if (defaultPayment) setSelectedPaymentId(defaultPayment.id);
+            else if (paymentsRes.data.length > 0) setSelectedPaymentId(paymentsRes.data[0].id);
+            else setUseNewPayment(true);
+          } catch (e) {
+            if (isMounted) {
+              setUseNewAddress(true);
+              setUseNewPayment(true);
+            }
+          }
+        } else {
+          setUseNewAddress(true);
+          setUseNewPayment(true);
+        }
+        
       } catch (error) {
-        setUseNewAddress(true);
-        setUseNewPayment(true);
+        if (isMounted) {
+          toast({ title: "خطأ", description: "المتجر غير موجود", variant: "destructive" });
+          navigate('/food');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
-    fetchSavedData();
-  }, [user]);
+    
+    fetchAllData();
+    loadCart();
+    
+    return () => { isMounted = false; };
+  }, [storeId]);
   
   // تحميل بيانات المستخدم للعنوان الجديد
   useEffect(() => {
@@ -177,41 +227,6 @@ const FoodCartPage = () => {
   const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
   const total = finalSubtotal + deliveryFee;
   const remainingForFree = freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - (subtotal - offerDiscount)) : 0;
-
-  useEffect(() => {
-    if (storeId) {
-      fetchStore();
-      loadCart();
-      if (token) fetchWallet();
-    }
-  }, [storeId, token]);
-
-  const fetchStore = async () => {
-    try {
-      const [storeRes, offersRes] = await Promise.all([
-        axios.get(`${API}/food/stores/${storeId}`),
-        axios.get(`${API}/food/stores/${storeId}/offers`)
-      ]);
-      setStore(storeRes.data);
-      setOffers(offersRes.data || []);
-    } catch (error) {
-      toast({ title: "خطأ", description: "المتجر غير موجود", variant: "destructive" });
-      navigate('/food');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchWallet = async () => {
-    try {
-      const res = await axios.get(`${API}/wallet/balance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWalletBalance(res.data.balance || 0);
-    } catch (error) {
-      console.error('Error fetching wallet:', error);
-    }
-  };
 
   // التحقق من كوبون الخصم
   const validateCoupon = async () => {
