@@ -11,7 +11,7 @@ router = APIRouter(prefix="/delivery", tags=["Delivery"])
 
 @router.get("/orders")
 async def get_delivery_orders(user: dict = Depends(get_current_user)):
-    """الطلبات المتاحة للتوصيل"""
+    """الطلبات المتاحة للتوصيل - في نفس مدينة السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -23,12 +23,16 @@ async def get_delivery_orders(user: dict = Depends(get_current_user)):
     if not doc or doc.get("status") != "approved":
         raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
     
+    # الحصول على مدينة السائق
+    driver_city = user.get("city") or doc.get("city")
+    
     # Get orders ready for delivery in driver's city
+    query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
+    if driver_city:
+        query["shipping_city"] = driver_city
+    
     orders = await db.orders.find(
-        {
-            "delivery_status": {"$in": ["shipped", "out_for_delivery"]},
-            "city": user.get("city")
-        },
+        query,
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
@@ -36,7 +40,7 @@ async def get_delivery_orders(user: dict = Depends(get_current_user)):
 
 @router.get("/orders/all")
 async def get_all_available_orders(user: dict = Depends(get_current_user)):
-    """جميع الطلبات المتاحة للتوصيل"""
+    """جميع الطلبات المتاحة للتوصيل - في نفس مدينة السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -47,8 +51,15 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)):
     if not doc or doc.get("status") != "approved":
         raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
     
+    # الحصول على مدينة السائق
+    driver_city = user.get("city") or doc.get("city")
+    
+    query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
+    if driver_city:
+        query["shipping_city"] = driver_city
+    
     orders = await db.orders.find(
-        {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}},
+        query,
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
@@ -57,7 +68,7 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)):
 # Alias for frontend compatibility
 @router.get("/available-orders")
 async def get_available_orders_alias(user: dict = Depends(get_current_user)):
-    """جميع الطلبات المتاحة للتوصيل (طلبات المتجر + طلبات الطعام)"""
+    """جميع الطلبات المتاحة للتوصيل (طلبات المتجر + طلبات الطعام) - في نفس مدينة السائق فقط"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -68,9 +79,16 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     if not doc or doc.get("status") != "approved":
         raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
     
-    # جلب طلبات المتجر العادية
+    # الحصول على مدينة السائق
+    driver_city = user.get("city") or doc.get("city")
+    
+    # جلب طلبات المتجر العادية - في نفس مدينة السائق فقط
+    shop_query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
+    if driver_city:
+        shop_query["shipping_city"] = driver_city
+    
     shop_orders = await db.orders.find(
-        {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}},
+        shop_query,
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
@@ -78,9 +96,13 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     for order in shop_orders:
         order["order_source"] = "shop"
     
-    # جلب طلبات الطعام الجاهزة
+    # جلب طلبات الطعام الجاهزة - في نفس مدينة السائق فقط
+    food_query = {"status": "ready", "driver_id": None}
+    if driver_city:
+        food_query["delivery_city"] = driver_city
+    
     food_orders = await db.food_orders.find(
-        {"status": "ready", "driver_id": None},
+        food_query,
         {"_id": 0}
     ).sort("created_at", 1).to_list(50)
     
