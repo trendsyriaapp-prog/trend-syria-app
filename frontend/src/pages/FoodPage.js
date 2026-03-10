@@ -201,6 +201,13 @@ const StoreCard = ({ store }) => (
       <div className="p-3">
         <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
         <p className="text-xs text-gray-500 truncate">{store.category_name}</p>
+        {/* العنوان الكامل */}
+        {store.address && (
+          <div className="flex items-center gap-1 mt-1">
+            <MapPin size={10} className="text-gray-400 flex-shrink-0" />
+            <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+          </div>
+        )}
         <div className="flex items-center gap-2 mt-2">
           {store.rating > 0 && (
             <div className="flex items-center gap-1 text-xs">
