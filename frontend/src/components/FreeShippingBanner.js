@@ -106,6 +106,7 @@ const FreeShippingBanner = () => {
   }, [cart.items, cart.total, FREE_SHIPPING_THRESHOLD]);
 
   const analysis = analyzeCart();
+  const celebrationTimeoutRef = useRef(null);
 
   // التحقق من وجود متجر جديد مؤهل
   useEffect(() => {
@@ -116,6 +117,9 @@ const FreeShippingBanner = () => {
       setDismissed(false);
       clearQualifiedSellers();
       prevQualifiedSellersRef.current = new Set();
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
       return;
     }
 
@@ -140,7 +144,10 @@ const FreeShippingBanner = () => {
       saveQualifiedSellers(savedQualifiedSellers);
       
       // أخفِ بعد 4 ثواني
-      setTimeout(() => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
         setShowBanner(false);
       }, 4000);
@@ -149,9 +156,10 @@ const FreeShippingBanner = () => {
       setShowBanner(true);
       setShowCelebration(false);
     } else {
-      // وصل للشحن المجاني لكل المتاجر أو تم الإغلاق
-      setShowBanner(false);
-      setShowCelebration(false);
+      // وصل للشحن المجاني لكل المتاجر أو تم الإغلاق - لا تُخفِ إذا كان هناك احتفال جاري
+      if (!showCelebration) {
+        setShowBanner(false);
+      }
     }
 
     // تحديث المتاجر المؤهلة في الذاكرة المؤقتة
@@ -168,7 +176,7 @@ const FreeShippingBanner = () => {
     }
 
     prevQualifiedSellersRef.current = currentQualifiedSellers;
-  }, [analysis.hasItems, analysis.qualifiesForFree, analysis.qualifiedSellers, dismissed]);
+  }, [analysis.hasItems, analysis.qualifiesForFree, analysis.qualifiedSellers, dismissed, showCelebration]);
 
   // إعادة تعيين عند إفراغ السلة
   useEffect(() => {
