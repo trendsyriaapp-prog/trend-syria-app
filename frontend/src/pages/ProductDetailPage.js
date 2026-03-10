@@ -769,12 +769,6 @@ const ProductDetailPage = () => {
     try {
       await addToCart(product.id, quantity, selectedSize);
       
-      // عرض رسالة نجاح
-      toast({
-        title: "تمت الإضافة",
-        description: `تم إضافة ${product.name} للسلة`,
-      });
-      
       // تحديث حساب الشحن بعد إضافة المنتج (بدون إظهار خطأ إذا فشل)
       if (customerAddress?.city) {
         const newTotal = (cart?.total || 0) + (product.price * quantity);

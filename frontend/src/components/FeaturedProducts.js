@@ -56,10 +56,7 @@ const FeaturedProducts = () => {
     setAddingToCart(prev => ({ ...prev, [product.id]: true }));
     try {
       await addToCart(product, 1);
-      toast({
-        title: "تمت الإضافة",
-        description: `تم إضافة ${product.name} للسلة`
-      });
+      // لا نُظهر إشعار - شريط الشحن العائم سيُظهر التقدم
     } catch (error) {
       toast({
         title: "خطأ",
