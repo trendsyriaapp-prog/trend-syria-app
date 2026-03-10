@@ -858,11 +858,11 @@ const GiftsPage = () => {
                 </div>
 
                 {/* زر التأكيد - ثابت في الأسفل */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+                <div className="p-4 pb-8 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 safe-area-bottom">
                   <button
                     type="submit"
                     disabled={submittingAddress}
-                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg"
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg mb-16"
                     data-testid="confirm-address-btn"
                   >
                     {submittingAddress ? (
