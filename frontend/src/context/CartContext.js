@@ -54,8 +54,12 @@ export const CartProvider = ({ children }) => {
       // جلب السلة مباشرة وتحديث الـ state
       const res = await axios.get(`${API}/cart`);
       setCart({...res.data});
+      return { success: true };
     } catch (error) {
       console.error('Error updating cart:', error);
+      // إرجاع رسالة الخطأ
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث السلة';
+      return { success: false, error: errorMessage };
     }
   };
 

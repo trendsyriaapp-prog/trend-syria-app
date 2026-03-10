@@ -990,6 +990,12 @@ const ProductDetailPage = () => {
               ) : (
                 <span className="text-red-500 font-medium text-xs">غير متوفر</span>
               )}
+              {/* الحد الأقصى لكل عميل */}
+              {product.max_per_customer && product.max_per_customer > 0 && (
+                <span className="mr-2 text-orange-600 font-medium text-xs bg-orange-50 px-2 py-0.5 rounded-full">
+                  الحد الأقصى: {product.max_per_customer} {product.max_per_customer === 1 ? 'قطعة' : 'قطع'} لكل عميل
+                </span>
+              )}
             </div>
 
             {/* Shipping Cost Calculator */}
@@ -1431,7 +1437,12 @@ const ProductDetailPage = () => {
           <div className="flex-1 flex items-center justify-center gap-3 min-w-0">
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                onClick={() => {
+                  const maxAllowed = product.max_per_customer && product.max_per_customer > 0 
+                    ? Math.min(product.stock, product.max_per_customer) 
+                    : product.stock;
+                  setQuantity(Math.min(maxAllowed, quantity + 1));
+                }}
                 className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"
                 data-testid="increase-qty"
               >

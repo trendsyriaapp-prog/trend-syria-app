@@ -17,9 +17,21 @@ const formatPrice = (price) => {
 const CartPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cart, updateQuantity, removeFromCart, loading } = useCart();
+  const { cart, updateQuantity: updateCartQuantity, removeFromCart, loading } = useCart();
   const { settings } = useSettings();
   const { toast } = useToast();
+  
+  // دالة لتحديث الكمية مع إظهار رسالة خطأ
+  const updateQuantity = async (productId, quantity) => {
+    const result = await updateCartQuantity(productId, quantity);
+    if (!result.success) {
+      toast({
+        title: "تنبيه",
+        description: result.error,
+        variant: "destructive"
+      });
+    }
+  };
   
   // Coupon state
   const [couponCode, setCouponCode] = useState('');

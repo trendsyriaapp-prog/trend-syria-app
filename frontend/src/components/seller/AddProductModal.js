@@ -26,7 +26,8 @@ const AddProductModal = ({
     height_cm: '',
     weight_kg: '',
     size_type: 'none',
-    available_sizes: []
+    available_sizes: [],
+    max_per_customer: ''
   });
   
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -140,7 +141,8 @@ const AddProductModal = ({
       height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
       weight_kg: newProduct.weight_kg ? parseFloat(newProduct.weight_kg) : null,
       size_type: newProduct.size_type !== 'none' ? newProduct.size_type : null,
-      available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null
+      available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null,
+      max_per_customer: newProduct.max_per_customer ? parseInt(newProduct.max_per_customer) : null
     });
 
     // Reset form
@@ -157,7 +159,8 @@ const AddProductModal = ({
       height_cm: '',
       weight_kg: '',
       size_type: 'none',
-      available_sizes: []
+      available_sizes: [],
+      max_per_customer: ''
     });
   };
 
@@ -218,6 +221,23 @@ const AddProductModal = ({
                   data-testid="product-stock-input"
                 />
               </div>
+            </div>
+
+            {/* الحد الأقصى لكل عميل */}
+            <div>
+              <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                الحد الأقصى لكل عميل (اختياري)
+              </label>
+              <input
+                type="number"
+                value={newProduct.max_per_customer}
+                onChange={(e) => setNewProduct({ ...newProduct, max_per_customer: e.target.value })}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                placeholder="مثال: 2 (اتركه فارغاً للسماح بأي كمية)"
+                min="1"
+                data-testid="product-max-per-customer-input"
+              />
+              <p className="text-[9px] text-gray-500 mt-0.5">حدد الحد الأقصى من القطع التي يمكن للعميل الواحد شراؤها</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

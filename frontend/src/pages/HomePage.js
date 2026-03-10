@@ -367,6 +367,13 @@ const HomePage = () => {
         </section>
       )}
 
+      {/* قسم التوصيات الذكية - بعد فلاش مباشرة */}
+      <section className="py-4 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <RecommendedProducts />
+        </div>
+      </section>
+
       {/* Sponsored Products - المنتجات المُعلن عنها */}
       {sponsoredProducts.length > 0 && (
         <section className="py-3">
@@ -488,13 +495,6 @@ const HomePage = () => {
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* قسم التوصيات الذكية */}
-      <section className="py-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <RecommendedProducts />
         </div>
       </section>
 

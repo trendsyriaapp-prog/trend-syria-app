@@ -46,6 +46,7 @@ class ProductCreate(BaseModel):
     weight_kg: Optional[float] = None
     size_type: Optional[str] = None
     available_sizes: Optional[List[str]] = None
+    max_per_customer: Optional[int] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -63,6 +64,7 @@ class ProductUpdate(BaseModel):
     weight_kg: Optional[float] = None
     size_type: Optional[str] = None
     available_sizes: Optional[List[str]] = None
+    max_per_customer: Optional[int] = None
 
 class ProductApproval(BaseModel):
     approved: bool
