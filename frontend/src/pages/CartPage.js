@@ -22,8 +22,8 @@ const CartPage = () => {
   const { toast } = useToast();
   
   // دالة لتحديث الكمية مع إظهار رسالة خطأ
-  const updateQuantity = async (productId, quantity) => {
-    const result = await updateCartQuantity(productId, quantity);
+  const updateQuantity = async (productId, quantity, selectedSize = null) => {
+    const result = await updateCartQuantity(productId, quantity, selectedSize);
     if (!result.success) {
       toast({
         title: "تنبيه",
@@ -329,21 +329,21 @@ const CartPage = () => {
                             <div className="flex items-center justify-between mt-1">
                               <div className="flex items-center gap-1 bg-gray-100 rounded-full">
                                 <button
-                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity - 1)}
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity - 1, cartItem.selected_size)}
                                   className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                                 >
                                   <Minus size={10} className="text-gray-600" />
                                 </button>
                                 <span className="w-4 text-center text-[10px] font-bold text-gray-900">{cartItem.quantity}</span>
                                 <button
-                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity + 1)}
+                                  onClick={() => updateQuantity(sellerItem.product_id, cartItem.quantity + 1, cartItem.selected_size)}
                                   className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                                 >
                                   <Plus size={10} className="text-gray-600" />
                                 </button>
                               </div>
                               <button
-                                onClick={() => removeFromCart(sellerItem.product_id)}
+                                onClick={() => removeFromCart(sellerItem.product_id, cartItem.selected_size)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                               >
                                 <Trash2 size={12} />
@@ -409,7 +409,7 @@ const CartPage = () => {
                       <div className="flex items-center justify-between mt-1">
                         <div className="flex items-center gap-1 bg-gray-100 rounded-full">
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.selected_size)}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                             data-testid={`decrease-${item.product_id}`}
                           >
@@ -417,7 +417,7 @@ const CartPage = () => {
                           </button>
                           <span className="w-5 text-center text-xs font-bold text-gray-900">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.selected_size)}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                             data-testid={`increase-${item.product_id}`}
                           >
@@ -425,7 +425,7 @@ const CartPage = () => {
                           </button>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.product_id)}
+                          onClick={() => removeFromCart(item.product_id, item.selected_size)}
                           className="p-1 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                           data-testid={`remove-${item.product_id}`}
                         >

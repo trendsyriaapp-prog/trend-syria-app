@@ -48,9 +48,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateQuantity = async (productId, quantity) => {
+  const updateQuantity = async (productId, quantity, selectedSize = null) => {
     try {
-      await axios.put(`${API}/cart/update`, { product_id: productId, quantity });
+      await axios.put(`${API}/cart/update`, { 
+        product_id: productId, 
+        quantity,
+        selected_size: selectedSize 
+      });
       // جلب السلة مباشرة وتحديث الـ state
       const res = await axios.get(`${API}/cart`);
       setCart({...res.data});
@@ -63,9 +67,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (productId, selectedSize = null) => {
     try {
-      await axios.delete(`${API}/cart/${productId}`);
+      let url = `${API}/cart/${productId}`;
+      if (selectedSize) {
+        url += `?selected_size=${encodeURIComponent(selectedSize)}`;
+      }
+      await axios.delete(url);
       // جلب السلة مباشرة وتحديث الـ state
       const res = await axios.get(`${API}/cart`);
       setCart({...res.data});
