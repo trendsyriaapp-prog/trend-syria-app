@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   ShoppingBag, Plus, Minus, Trash2, MapPin, Phone, 
   CreditCard, Wallet, Clock, ArrowLeft, Store, AlertTriangle,
-  Ticket, Check, X, Truck
+  Ticket, Check, X, Truck, Home, Building, Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -29,11 +29,39 @@ const FoodCartPage = () => {
   const [offers, setOffers] = useState([]);
   const [appliedOffer, setAppliedOffer] = useState(null);
   
+  // العناوين وطرق الدفع المحفوظة
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [savedPayments, setSavedPayments] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [useNewPayment, setUseNewPayment] = useState(false);
+  
   // حالة الكوبون
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  
+  // عنوان جديد
+  const [newAddress, setNewAddress] = useState({
+    title: 'المنزل',
+    city: 'دمشق',
+    area: '',
+    street_number: '',
+    building_number: '',
+    apartment_number: '',
+    phone: '',
+    is_default: false
+  });
+  
+  // طريقة دفع جديدة
+  const [newPayment, setNewPayment] = useState({
+    type: 'card',
+    phone: '',
+    holder_name: '',
+    is_default: false
+  });
   
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
@@ -43,29 +71,47 @@ const FoodCartPage = () => {
     payment_method: 'wallet'
   });
   
-  // تحميل بيانات المستخدم المثبتة
+  // جلب العناوين وطرق الدفع المحفوظة
   useEffect(() => {
-    if (user) {
-      setDeliveryInfo(prev => ({
-        ...prev,
-        address: user.address || prev.address || '',
-        city: user.city || prev.city || '',
-        phone: user.phone || prev.phone || ''
-      }));
-    }
+    const fetchSavedData = async () => {
+      if (!user) return;
+      try {
+        const [addressesRes, paymentsRes] = await Promise.all([
+          axios.get(`${API}/user/addresses`),
+          axios.get(`${API}/user/payment-methods`)
+        ]);
+        setSavedAddresses(addressesRes.data);
+        setSavedPayments(paymentsRes.data);
+        
+        // تعيين الافتراضي
+        const defaultAddress = addressesRes.data.find(a => a.is_default);
+        const defaultPayment = paymentsRes.data.find(p => p.is_default);
+        
+        if (defaultAddress) setSelectedAddressId(defaultAddress.id);
+        else if (addressesRes.data.length > 0) setSelectedAddressId(addressesRes.data[0].id);
+        else setUseNewAddress(true);
+        
+        if (defaultPayment) setSelectedPaymentId(defaultPayment.id);
+        else if (paymentsRes.data.length > 0) setSelectedPaymentId(paymentsRes.data[0].id);
+        else setUseNewPayment(true);
+      } catch (error) {
+        setUseNewAddress(true);
+        setUseNewPayment(true);
+      }
+    };
+    fetchSavedData();
   }, [user]);
   
-  // تحديث البيانات عند تحميل الصفحة
+  // تحميل بيانات المستخدم للعنوان الجديد
   useEffect(() => {
-    if (user && !deliveryInfo.city && user.city) {
-      setDeliveryInfo(prev => ({
+    if (user && useNewAddress) {
+      setNewAddress(prev => ({
         ...prev,
-        address: user.address || '',
-        city: user.city || '',
-        phone: user.phone || ''
+        city: user.city || prev.city,
+        phone: user.phone || prev.phone
       }));
     }
-  }, [user, deliveryInfo.city]);
+  }, [user, useNewAddress]);
 
   // حساب رسوم التوصيل والعروض
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -240,12 +286,22 @@ const FoodCartPage = () => {
       return;
     }
 
-    if (!deliveryInfo.address || !deliveryInfo.city || !deliveryInfo.phone) {
-      toast({ title: "تنبيه", description: "يرجى ملء جميع بيانات التوصيل", variant: "destructive" });
+    // التحقق من العنوان
+    if (useNewAddress || savedAddresses.length === 0) {
+      if (!newAddress.area || !newAddress.city || !newAddress.phone) {
+        toast({ title: "تنبيه", description: "يرجى ملء جميع بيانات العنوان", variant: "destructive" });
+        return;
+      }
+    } else if (!selectedAddressId) {
+      toast({ title: "تنبيه", description: "يرجى اختيار عنوان التوصيل", variant: "destructive" });
       return;
     }
 
-    if (deliveryInfo.payment_method === 'wallet' && walletBalance < total) {
+    // التحقق من طريقة الدفع
+    const paymentType = useNewPayment || savedPayments.length === 0 ? newPayment.type : 
+                        selectedPaymentId ? savedPayments.find(p => p.id === selectedPaymentId)?.type : 'wallet';
+    
+    if (paymentType === 'wallet' && walletBalance < total) {
       toast({ title: "تنبيه", description: "رصيد المحفظة غير كافي", variant: "destructive" });
       return;
     }
@@ -261,6 +317,40 @@ const FoodCartPage = () => {
 
     setSubmitting(true);
     try {
+      // حفظ العنوان الجديد إذا طلب ذلك
+      let addressData;
+      if (useNewAddress || savedAddresses.length === 0) {
+        if (newAddress.is_default || savedAddresses.length === 0) {
+          await axios.post(`${API}/user/addresses`, newAddress);
+        }
+        const fullAddress = `${newAddress.area}${newAddress.street_number ? ' - شارع ' + newAddress.street_number : ''}${newAddress.building_number ? ' - بناء ' + newAddress.building_number : ''}${newAddress.apartment_number ? ' - شقة ' + newAddress.apartment_number : ''}`;
+        addressData = { 
+          address: fullAddress, 
+          city: newAddress.city, 
+          phone: newAddress.phone 
+        };
+      } else {
+        const addr = savedAddresses.find(a => a.id === selectedAddressId);
+        const fullAddress = `${addr.area}${addr.street_number ? ' - شارع ' + addr.street_number : ''}${addr.building_number ? ' - بناء ' + addr.building_number : ''}${addr.apartment_number ? ' - شقة ' + addr.apartment_number : ''}`;
+        addressData = { 
+          address: fullAddress, 
+          city: addr.city, 
+          phone: addr.phone 
+        };
+      }
+
+      // حفظ طريقة الدفع الجديدة إذا طلب ذلك
+      let paymentMethod = 'wallet';
+      if (useNewPayment || savedPayments.length === 0) {
+        paymentMethod = newPayment.type;
+        if (newPayment.type !== 'wallet' && newPayment.type !== 'card' && newPayment.is_default) {
+          await axios.post(`${API}/user/payment-methods`, newPayment);
+        }
+      } else if (selectedPaymentId) {
+        const pay = savedPayments.find(p => p.id === selectedPaymentId);
+        paymentMethod = pay?.type || 'wallet';
+      }
+
       const orderData = {
         store_id: storeId,
         items: cartItems.map(item => ({
@@ -269,11 +359,11 @@ const FoodCartPage = () => {
           price: item.price,
           quantity: item.quantity
         })),
-        delivery_address: deliveryInfo.address,
-        delivery_city: deliveryInfo.city,
-        delivery_phone: deliveryInfo.phone,
+        delivery_address: addressData.address,
+        delivery_city: addressData.city,
+        delivery_phone: addressData.phone,
         notes: deliveryInfo.notes,
-        payment_method: deliveryInfo.payment_method
+        payment_method: paymentMethod
       };
 
       const res = await axios.post(`${API}/food/orders`, orderData, {
@@ -434,55 +524,161 @@ const FoodCartPage = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
             <MapPin size={18} className="text-[#E65000]" />
-            معلومات التوصيل
+            عنوان التوصيل
           </h2>
           
-          {/* إشعار بالعنوان المحفوظ */}
-          {user?.address && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-sm text-blue-700 flex items-center gap-2">
-                <Check size={16} className="text-blue-600" />
-                تم تحميل عنوانك المحفوظ
-              </p>
+          {/* العناوين المحفوظة */}
+          {savedAddresses.length > 0 && !useNewAddress && (
+            <div className="space-y-2">
+              {savedAddresses.map((addr) => (
+                <label
+                  key={addr.id}
+                  className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                    selectedAddressId === addr.id 
+                      ? 'border-[#FF6B00] bg-orange-50' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="address"
+                    checked={selectedAddressId === addr.id}
+                    onChange={() => setSelectedAddressId(addr.id)}
+                    className="w-4 h-4 text-[#E65000]"
+                  />
+                  <Home size={18} className="text-gray-500" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">{addr.title || 'عنوان'}</p>
+                      {addr.is_default && (
+                        <span className="text-xs bg-orange-100 text-[#E65000] px-2 py-0.5 rounded-full">افتراضي</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {addr.city} - {addr.area}
+                      {addr.street_number && ` - شارع ${addr.street_number}`}
+                    </p>
+                    <p className="text-xs text-gray-400">{addr.phone}</p>
+                  </div>
+                </label>
+              ))}
+              
+              <button
+                onClick={() => setUseNewAddress(true)}
+                className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-[#FF6B00] hover:text-[#E65000] transition-all flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                إضافة عنوان جديد
+              </button>
             </div>
           )}
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-            <select
-              value={deliveryInfo.city}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, city: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
-            >
-              <option value="">اختر المدينة</option>
-              {['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس'].map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي</label>
-            <input
-              type="text"
-              value={deliveryInfo.address}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
-              placeholder="الحي، الشارع، بالقرب من..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-            <input
-              type="tel"
-              value={deliveryInfo.phone}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, phone: e.target.value })}
-              placeholder="09xxxxxxxx"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
-            />
-          </div>
-
+          {/* إضافة عنوان جديد */}
+          {(useNewAddress || savedAddresses.length === 0) && (
+            <div className="space-y-3">
+              {savedAddresses.length > 0 && (
+                <button
+                  onClick={() => setUseNewAddress(false)}
+                  className="text-sm text-[#E65000] hover:underline flex items-center gap-1"
+                >
+                  <ArrowLeft size={14} />
+                  العودة للعناوين المحفوظة
+                </button>
+              )}
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم العنوان</label>
+                  <input
+                    type="text"
+                    value={newAddress.title}
+                    onChange={(e) => setNewAddress({ ...newAddress, title: e.target.value })}
+                    placeholder="المنزل، العمل..."
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+                  <select
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  >
+                    {['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس'].map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">المنطقة</label>
+                <input
+                  type="text"
+                  value={newAddress.area}
+                  onChange={(e) => setNewAddress({ ...newAddress, area: e.target.value })}
+                  placeholder="المزة، المالكي..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم الشارع</label>
+                  <input
+                    type="text"
+                    value={newAddress.street_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, street_number: e.target.value })}
+                    placeholder="15"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم البناء</label>
+                  <input
+                    type="text"
+                    value={newAddress.building_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, building_number: e.target.value })}
+                    placeholder="3"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رقم الشقة</label>
+                  <input
+                    type="text"
+                    value={newAddress.apartment_number}
+                    onChange={(e) => setNewAddress({ ...newAddress, apartment_number: e.target.value })}
+                    placeholder="5"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                <input
+                  type="tel"
+                  value={newAddress.phone}
+                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+                  placeholder="09xxxxxxxx"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+              
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={newAddress.is_default}
+                  onChange={(e) => setNewAddress({ ...newAddress, is_default: e.target.checked })}
+                  className="w-4 h-4 text-[#E65000] rounded"
+                />
+                حفظ كعنوان افتراضي
+              </label>
+            </div>
+          )}
+          
+          {/* ملاحظات التوصيل */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
             <textarea
@@ -490,7 +686,7 @@ const FoodCartPage = () => {
               onChange={(e) => setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })}
               placeholder="تعليمات خاصة للتوصيل..."
               rows={2}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
             />
           </div>
         </div>
@@ -502,42 +698,180 @@ const FoodCartPage = () => {
             طريقة الدفع
           </h2>
           
-          {/* المحفظة */}
-          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
-            <input
-              type="radio"
-              name="payment"
-              value="wallet"
-              checked={deliveryInfo.payment_method === 'wallet'}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
-              className="w-4 h-4 text-[#E65000]"
-            />
-            <Wallet size={20} className="text-[#E65000]" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">المحفظة</p>
-              <p className="text-sm text-gray-500">الرصيد: {walletBalance.toLocaleString()} ل.س</p>
+          {/* طرق الدفع المحفوظة */}
+          {savedPayments.length > 0 && !useNewPayment && (
+            <div className="space-y-2">
+              {savedPayments.map((pay) => (
+                <label
+                  key={pay.id}
+                  className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                    selectedPaymentId === pay.id 
+                      ? 'border-[#FF6B00] bg-orange-50' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={selectedPaymentId === pay.id}
+                    onChange={() => setSelectedPaymentId(pay.id)}
+                    className="w-4 h-4 text-[#E65000]"
+                  />
+                  <CreditCard size={18} className="text-blue-600" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">
+                        {pay.type === 'card' ? 'بطاقة بنكية' : 
+                         pay.type === 'shamcash' ? 'شام كاش' :
+                         pay.type === 'syriatel_cash' ? 'سيرياتيل' : 
+                         pay.type === 'mtn_cash' ? 'MTN' : pay.type}
+                      </p>
+                      {pay.is_default && (
+                        <span className="text-xs bg-orange-100 text-[#E65000] px-2 py-0.5 rounded-full">افتراضي</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">{pay.holder_name} - {pay.phone}</p>
+                  </div>
+                </label>
+              ))}
+              
+              {/* المحفظة */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                !selectedPaymentId && !useNewPayment
+                  ? 'border-[#FF6B00] bg-orange-50' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={!selectedPaymentId && !useNewPayment}
+                  onChange={() => { setSelectedPaymentId(null); setUseNewPayment(false); }}
+                  className="w-4 h-4 text-[#E65000]"
+                />
+                <Wallet size={18} className="text-[#E65000]" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">المحفظة</p>
+                  <p className="text-sm text-gray-500">الرصيد: {walletBalance.toLocaleString()} ل.س</p>
+                </div>
+                {walletBalance < total && !selectedPaymentId && !useNewPayment && (
+                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
+                )}
+              </label>
+              
+              <button
+                onClick={() => setUseNewPayment(true)}
+                className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-[#FF6B00] hover:text-[#E65000] transition-all flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                إضافة طريقة دفع جديدة
+              </button>
             </div>
-            {walletBalance < total && deliveryInfo.payment_method === 'wallet' && (
-              <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
-            )}
-          </label>
+          )}
           
-          {/* بطاقة البنك */}
-          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
-            <input
-              type="radio"
-              name="payment"
-              value="card"
-              checked={deliveryInfo.payment_method === 'card'}
-              onChange={(e) => setDeliveryInfo({ ...deliveryInfo, payment_method: e.target.value })}
-              className="w-4 h-4 text-[#E65000]"
-            />
-            <CreditCard size={20} className="text-blue-600" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">بطاقة بنكية</p>
-              <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
+          {/* إضافة طريقة دفع جديدة */}
+          {(useNewPayment || savedPayments.length === 0) && (
+            <div className="space-y-3">
+              {savedPayments.length > 0 && (
+                <button
+                  onClick={() => setUseNewPayment(false)}
+                  className="text-sm text-[#E65000] hover:underline flex items-center gap-1"
+                >
+                  <ArrowLeft size={14} />
+                  العودة لطرق الدفع المحفوظة
+                </button>
+              )}
+              
+              {/* المحفظة */}
+              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="wallet"
+                  checked={newPayment.type === 'wallet'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'wallet' })}
+                  className="w-4 h-4 text-[#E65000]"
+                />
+                <Wallet size={20} className="text-[#E65000]" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">المحفظة</p>
+                  <p className="text-sm text-gray-500">الرصيد: {walletBalance.toLocaleString()} ل.س</p>
+                </div>
+                {walletBalance < total && newPayment.type === 'wallet' && (
+                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
+                )}
+              </label>
+              
+              {/* بطاقة بنكية */}
+              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="card"
+                  checked={newPayment.type === 'card'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'card' })}
+                  className="w-4 h-4 text-[#E65000]"
+                />
+                <CreditCard size={20} className="text-blue-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">بطاقة بنكية</p>
+                  <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
+                </div>
+              </label>
+              
+              {/* شام كاش */}
+              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="shamcash"
+                  checked={newPayment.type === 'shamcash'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'shamcash' })}
+                  className="w-4 h-4 text-[#E65000]"
+                />
+                <span className="text-xl">🏦</span>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">شام كاش</p>
+                  <p className="text-sm text-gray-500">محفظة إلكترونية</p>
+                </div>
+              </label>
+              
+              {/* حقول إضافية للمحافظ الإلكترونية */}
+              {newPayment.type !== 'wallet' && newPayment.type !== 'card' && (
+                <div className="space-y-2 pt-2 border-t border-gray-100">
+                  <input
+                    type="tel"
+                    value={newPayment.phone}
+                    onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
+                    placeholder="رقم المحفظة *"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={newPayment.holder_name}
+                    onChange={(e) => setNewPayment({ ...newPayment, holder_name: e.target.value })}
+                    placeholder="اسم صاحب الحساب *"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={newPayment.is_default}
+                      onChange={(e) => setNewPayment({ ...newPayment, is_default: e.target.checked })}
+                      className="w-4 h-4 text-[#E65000] rounded"
+                    />
+                    حفظ كطريقة دفع افتراضية
+                  </label>
+                </div>
+              )}
+              
+              {/* رسالة للبطاقة */}
+              {newPayment.type === 'card' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                  <p className="text-sm text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
+                </div>
+              )}
             </div>
-          </label>
+          )}
         </div>
 
         {/* Minimum Order Warning */}
