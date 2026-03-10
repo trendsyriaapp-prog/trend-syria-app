@@ -72,23 +72,13 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* Header with Food Image - Sticky */}
-      <div className="sticky top-[88px] z-30 relative bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
-        {/* Background Food Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <img 
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" 
-            alt="" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🍕</span>
-              <h1 className="text-lg font-bold">قسم الطعام</h1>
-            </div>
-            <p className="text-orange-100 text-xs">مطاعم • غذائية • خضروات</p>
+      {/* شريط البحث عن الطعام - في الأعلى مباشرة */}
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">🍕</span>
+            <h1 className="text-base font-bold">قسم الطعام</h1>
+            <p className="text-orange-100 text-[10px] mr-auto">مطاعم • غذائية • خضروات</p>
           </div>
           
           {/* Search */}
@@ -98,7 +88,7 @@ const FoodPage = () => {
               placeholder="ابحث عن مطعم أو منتج..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg py-2 px-4 pr-9 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="w-full bg-white/20 backdrop-blur-sm border border-white/30 rounded-full py-2 px-4 pr-9 text-sm text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
             />
             <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70" />
           </div>
@@ -106,8 +96,8 @@ const FoodPage = () => {
       </div>
 
       {/* Categories with Food Images */}
-      <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex gap-2 overflow-x-auto hide-scrollbar">
             <button
               onClick={() => setActiveCategory('all')}

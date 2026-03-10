@@ -34,6 +34,9 @@ const Header = () => {
   
   // التحقق إذا كنا في الصفحة الرئيسية
   const isHomePage = location.pathname === '/';
+  
+  // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
+  const isFoodPage = location.pathname.startsWith('/food');
 
   // جلب سجل البحث
   useEffect(() => {
@@ -187,7 +190,8 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Search Bar - شريط البحث الطويل */}
+          {/* Search Bar - شريط البحث الطويل - يختفي في صفحات الطعام */}
+          {!isFoodPage && (
           <form onSubmit={handleSearch} className="flex-1 relative">
             <div className="relative">
               <input
@@ -274,6 +278,10 @@ const Header = () => {
               )}
             </AnimatePresence>
           </form>
+          )}
+          
+          {/* في صفحات الطعام - مساحة فارغة للحفاظ على التخطيط */}
+          {isFoodPage && <div className="flex-1" />}
 
           {/* الأيقونات - على اليسار */}
           <div className="flex items-center gap-1 flex-shrink-0">
