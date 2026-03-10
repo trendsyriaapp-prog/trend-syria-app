@@ -246,8 +246,10 @@ async def submit_gift_address(gift_id: str, address: GiftShippingAddress, user: 
         "payment_status": "paid",
         "payment_method": "gift",
         "is_gift": True,
+        "is_surprise": gift.get("is_surprise", False),  # هل الهدية مفاجأة؟
         "gift_id": gift_id,
         "gift_sender_id": gift["sender_id"],
+        "gift_sender_name": gift.get("sender_name", "صديق"),  # اسم المرسل
         "gift_message": gift.get("message", ""),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()

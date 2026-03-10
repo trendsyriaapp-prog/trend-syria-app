@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 
@@ -189,24 +189,64 @@ const OrdersPage = () => {
 
                     {/* Items preview */}
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-                      {order.items.slice(0, 4).map((item, i) => (
-                        <div key={i} className="flex-shrink-0 relative">
-                          <img
-                            src={item.image || 'https://via.placeholder.com/60'}
-                            alt={item.product_name}
-                            className="w-14 h-14 rounded-lg object-cover border border-gray-200"
-                          />
-                          {item.quantity > 1 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center">
-                              {item.quantity}
-                            </span>
+                      {/* إذا كان الطلب هدية مفاجئة، نخفي تفاصيل المنتج */}
+                      {order.is_gift && order.is_surprise ? (
+                        <div className="flex items-center gap-3 bg-gradient-to-r from-pink-50 to-purple-50 p-3 rounded-xl w-full">
+                          <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Gift size={28} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-purple-800">🎁 هدية مفاجأة</p>
+                            <p className="text-sm text-purple-600">
+                              من {order.gift_sender_name || 'صديق'}
+                            </p>
+                          </div>
+                        </div>
+                      ) : order.is_gift ? (
+                        // هدية عادية (ليست مفاجأة) - نعرض التفاصيل مع إشارة أنها هدية
+                        <>
+                          <div className="flex items-center gap-2 bg-pink-50 p-2 rounded-lg flex-shrink-0">
+                            <Gift size={16} className="text-pink-500" />
+                            <span className="text-xs text-pink-600 font-medium">هدية من {order.gift_sender_name || 'صديق'}</span>
+                          </div>
+                          {order.items.slice(0, 4).map((item, i) => (
+                            <div key={i} className="flex-shrink-0 relative">
+                              <img
+                                src={item.image || item.product_image || 'https://via.placeholder.com/60'}
+                                alt={item.product_name}
+                                className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                              />
+                              {item.quantity > 1 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center">
+                                  {item.quantity}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        // طلب عادي
+                        <>
+                          {order.items.slice(0, 4).map((item, i) => (
+                            <div key={i} className="flex-shrink-0 relative">
+                              <img
+                                src={item.image || item.product_image || 'https://via.placeholder.com/60'}
+                                alt={item.product_name}
+                                className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                              />
+                              {item.quantity > 1 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center">
+                                  {item.quantity}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {order.items.length > 4 && (
+                            <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-sm text-gray-500 border border-gray-200">
+                              +{order.items.length - 4}
+                            </div>
                           )}
-                        </div>
-                      ))}
-                      {order.items.length > 4 && (
-                        <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-sm text-gray-500 border border-gray-200">
-                          +{order.items.length - 4}
-                        </div>
+                        </>
                       )}
                     </div>
 

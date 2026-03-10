@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Package, Clock, Truck, Check, MapPin, Phone, User, 
   MessageSquare, ChevronRight, ArrowRight, Camera, 
-  Store, Navigation, CheckCircle2, Circle, Loader2, Star, AlertTriangle, Map
+  Store, Navigation, CheckCircle2, Circle, Loader2, Star, AlertTriangle, Map, Gift
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -408,27 +408,74 @@ const OrderTrackingPage = () => {
           
           {/* Products */}
           <div className="space-y-3 mb-4">
-            {order.items?.map((item, index) => (
-              <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
-                <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
-                  {item.image ? (
-                    <img src={item.image} alt={item.product_name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <Package size={20} />
-                    </div>
-                  )}
+            {/* إذا كان الطلب هدية مفاجئة، نخفي تفاصيل المنتج */}
+            {order.is_gift && order.is_surprise ? (
+              <div className="flex gap-3 p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl">
+                <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Gift size={28} className="text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{item.product_name}</p>
-                  <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
-                  {item.selected_size && (
-                    <p className="text-xs text-gray-500">المقاس: {item.selected_size}</p>
+                <div className="flex-1">
+                  <p className="font-bold text-purple-800">🎁 هدية مفاجأة!</p>
+                  <p className="text-sm text-purple-600">من {order.gift_sender_name || 'صديق'}</p>
+                  {order.gift_message && (
+                    <p className="text-xs text-purple-500 mt-1 italic">"{order.gift_message}"</p>
                   )}
+                  <p className="text-xs text-gray-500 mt-2">ستكتشف محتوى الهدية عند التوصيل!</p>
                 </div>
-                <p className="font-bold text-[#FF6B00] text-sm">{formatPrice(item.item_total)}</p>
               </div>
-            ))}
+            ) : order.is_gift ? (
+              // هدية عادية (ليست مفاجأة)
+              <>
+                <div className="flex items-center gap-2 bg-pink-50 p-2 rounded-lg mb-2">
+                  <Gift size={16} className="text-pink-500" />
+                  <span className="text-sm text-pink-600 font-medium">هدية من {order.gift_sender_name || 'صديق'}</span>
+                </div>
+                {order.items?.map((item, index) => (
+                  <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
+                    <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                      {item.image || item.product_image ? (
+                        <img src={item.image || item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <Package size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{item.product_name}</p>
+                      <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
+                      {item.selected_size && (
+                        <p className="text-xs text-gray-500">المقاس: {item.selected_size}</p>
+                      )}
+                    </div>
+                    <p className="font-bold text-[#FF6B00] text-sm">{formatPrice(item.item_total || item.price)}</p>
+                  </div>
+                ))}
+              </>
+            ) : (
+              // طلب عادي
+              order.items?.map((item, index) => (
+                <div key={index} className="flex gap-3 p-2 bg-gray-50 rounded-xl">
+                  <div className="w-14 h-14 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                    {item.image || item.product_image ? (
+                      <img src={item.image || item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <Package size={20} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm truncate">{item.product_name}</p>
+                    <p className="text-xs text-gray-500">الكمية: {item.quantity}</p>
+                    {item.selected_size && (
+                      <p className="text-xs text-gray-500">المقاس: {item.selected_size}</p>
+                    )}
+                  </div>
+                  <p className="font-bold text-[#FF6B00] text-sm">{formatPrice(item.item_total || item.price)}</p>
+                </div>
+              ))
+            )}
           </div>
           
           {/* Delivery Address */}
