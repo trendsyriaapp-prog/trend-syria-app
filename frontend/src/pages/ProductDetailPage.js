@@ -610,10 +610,11 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     // Calculate shipping when product and customer address are available
+    // أيضاً عند تغيير السلة
     if (product && customerAddress?.city) {
       calculateShipping();
     }
-  }, [product, customerAddress, quantity]);
+  }, [product, customerAddress, quantity, cart?.total]);
 
   const fetchUserAddress = async () => {
     try {
@@ -632,8 +633,11 @@ const ProductDetailPage = () => {
   const calculateShipping = async () => {
     if (!product?.id || !customerAddress?.city) return;
     try {
+      // استخدام إجمالي السلة الحالي + سعر المنتج المعروض
+      const cartTotal = cart?.total || 0;
       const productTotal = product.price * quantity;
-      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${productTotal}`);
+      const totalWithProduct = cartTotal + productTotal;
+      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${totalWithProduct}`);
       setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
       console.error('Error calculating shipping:', error);
