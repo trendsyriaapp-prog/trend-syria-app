@@ -21,6 +21,7 @@ import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import PushNotificationButton from '../components/PushNotificationButton';
+import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -797,6 +798,12 @@ const DeliveryDashboard = () => {
           onClose={() => setShowReturnChecklist(null)}
         />
       )}
+
+      {/* Popup طلب تفعيل الإشعارات */}
+      <PushNotificationPrompt 
+        userType="delivery" 
+        userName={user?.full_name || 'سائق التوصيل'} 
+      />
     </div>
   );
 };

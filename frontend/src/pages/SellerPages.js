@@ -14,6 +14,7 @@ import { formatPrice } from '../utils/imageHelpers';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import PushNotificationButton from '../components/PushNotificationButton';
+import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
 // Imported Components
 import SellerAdsTab from '../components/seller/SellerAdsTab';
@@ -951,6 +952,14 @@ const SellerDashboardPage = () => {
         <OrderLabelPrint
           order={printLabelOrder}
           onClose={() => setPrintLabelOrder(null)}
+        />
+      )}
+
+      {/* Popup طلب تفعيل الإشعارات - فقط لبائع الطعام */}
+      {isFoodSeller && (
+        <PushNotificationPrompt 
+          userType="food_seller" 
+          userName={user?.store_name || user?.full_name || 'المطعم'} 
         />
       )}
     </div>
