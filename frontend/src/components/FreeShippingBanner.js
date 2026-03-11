@@ -9,9 +9,13 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// الصفحات المسموحة لعرض الشريط
-const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
+// الصفحات المسموحة لعرض الشريط (بدون صفحات سلة الطعام لأنها تحتوي على شريط خاص)
+const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food'];
 const isAllowedPath = (pathname) => {
+  // إخفاء الشريط في صفحات سلة الطعام (لديها شريط خاص)
+  if (pathname.startsWith('/food/cart') || pathname.startsWith('/food/checkout')) {
+    return false;
+  }
   if (pathname === '/') return true;
   if (ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith('/products/')) return true;
