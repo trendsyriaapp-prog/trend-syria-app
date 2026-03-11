@@ -316,13 +316,13 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
             e.stopPropagation();
             onAdd();
           }}
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${
             cartQuantity > 0 
               ? 'bg-[#FF6B00] text-white' 
               : 'bg-orange-100 text-[#E65000]'
-          }`}
+          } shadow-sm`}
         >
-          {cartQuantity > 0 ? cartQuantity : <Plus size={18} />}
+          {cartQuantity > 0 ? cartQuantity : <Plus size={20} />}
         </button>
       </div>
     </div>
