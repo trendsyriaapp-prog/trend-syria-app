@@ -39,17 +39,17 @@ const Header = () => {
   // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
   const isFoodPage = location.pathname.startsWith('/food');
   
-  // التحقق إذا كان البائع في لوحة التحكم - لإخفاء شريط البحث
-  const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
-  
-  // التحقق إذا كان موظف التوصيل في لوحة التحكم
-  const isDeliveryDashboard = location.pathname === '/delivery/dashboard' && user?.user_type === 'delivery';
-  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
-  // إخفاء شريط البحث للبائع في لوحة التحكم (إلا إذا كان يتصفح كعميل)
-  const hideSearchBar = (isSellerDashboard && !isViewingAsCustomer) || isFoodPage;
+  // إخفاء الهيدر الكامل للبائع في جميع صفحاته (إلا إذا كان يتصفح كعميل)
+  const isSellerPage = user?.user_type === 'seller' && !isViewingAsCustomer;
+  
+  // إخفاء الهيدر الكامل لموظف التوصيل في جميع صفحاته (إلا إذا كان يتصفح كعميل)
+  const isDeliveryPage = user?.user_type === 'delivery' && !isViewingAsCustomer;
+  
+  // إخفاء شريط البحث في صفحات الطعام
+  const hideSearchBar = isFoodPage;
 
   // جلب سجل البحث
   useEffect(() => {
@@ -191,8 +191,8 @@ const Header = () => {
     }
   };
 
-  // إخفاء الهيدر الكامل في لوحة تحكم البائع أو التوصيل (إلا إذا كان يتصفح كعميل)
-  if ((isSellerDashboard || isDeliveryDashboard) && !isViewingAsCustomer) return null;
+  // إخفاء الهيدر الكامل للبائع وموظف التوصيل (إلا إذا كان يتصفح كعميل)
+  if (isSellerPage || isDeliveryPage) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">

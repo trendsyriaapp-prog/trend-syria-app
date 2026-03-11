@@ -29,14 +29,14 @@ const MobileNav = () => {
   // هل نحن في صفحات الطعام؟
   const isInFoodSection = location.pathname.startsWith('/food');
   
-  // هل البائع في لوحة التحكم الخاصة به؟
-  const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
-  
-  // هل موظف التوصيل في صفحته الرئيسية؟
-  const isDeliveryHome = (location.pathname === '/' || location.pathname === '/delivery/dashboard') && user?.user_type === 'delivery' && user?.is_approved;
-  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
+  
+  // هل البائع في أي صفحة من صفحاته؟
+  const isSellerPage = user?.user_type === 'seller' && user?.is_approved && !isViewingAsCustomer;
+  
+  // هل موظف التوصيل في أي صفحة من صفحاته؟
+  const isDeliveryPage = user?.user_type === 'delivery' && user?.is_approved && !isViewingAsCustomer;
 
   // تحديد رابط سلة الطعام بذكاء
   const getFoodCartPath = () => {
@@ -67,16 +67,16 @@ const MobileNav = () => {
   // بناء قائمة التنقل حسب القسم الحالي
   let navItems = [];
   
-  // شريط خاص بالبائع في لوحة التحكم
-  if (isSellerDashboard && !isViewingAsCustomer) {
+  // شريط خاص بالبائع في جميع صفحاته
+  if (isSellerPage) {
     navItems = [
       { path: '/seller/dashboard', icon: Home, label: 'لوحة التحكم' },
       { path: '/seller/orders', icon: ClipboardList, label: 'الطلبات' },
       { path: '/wallet', icon: Wallet, label: 'المحفظة' },
       { path: '/seller/dashboard?tab=store', icon: Settings, label: 'الإعدادات' }
     ];
-  } else if (isDeliveryHome && !isViewingAsCustomer) {
-    // شريط خاص بموظف التوصيل
+  } else if (isDeliveryPage) {
+    // شريط خاص بموظف التوصيل في جميع صفحاته
     navItems = [
       { path: '/delivery/dashboard', icon: Home, label: 'الرئيسية' },
       { path: '/delivery/orders', icon: ClipboardList, label: 'الطلبات' },
