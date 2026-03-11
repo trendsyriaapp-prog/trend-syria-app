@@ -219,20 +219,26 @@ const FreeShippingBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg"
+          className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white shadow-lg"
         >
           <div className="max-w-4xl mx-auto px-2 py-1">
             <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-1.5 flex-1">
+              <div className="flex items-center gap-1.5 flex-1 justify-center">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5, repeat: 2 }}
                 >
-                  <PartyPopper size={12} />
+                  <PartyPopper size={12} className="animate-bounce" />
                 </motion.div>
                 <span className="text-[9px] font-bold">
-                  🎉 مبروك! التوصيل مجاني
+                  مبروك! حصلت على توصيل مجاني
                 </span>
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.5, repeat: 2 }}
+                >
+                  <PartyPopper size={12} className="animate-bounce" />
+                </motion.div>
               </div>
               <button 
                 onClick={handleDismiss} 
