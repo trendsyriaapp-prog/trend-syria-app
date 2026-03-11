@@ -183,12 +183,14 @@ const FreeShippingBanner = () => {
   // شروط عدم الإظهار
   const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  // إخفاء الشريط إذا كان المستخدم في مدينة مختلفة عن المتجر (للطعام)
-  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems || (isFoodPage && !citiesMatch)) {
-    return null;
-  }
-
-  if (qualifiesForFree && !showCelebration) {
+  // في صفحات الطعام: نظهر الشريط حتى لو السلة فارغة (لتشجيع الشراء)
+  // لكن نخفيه فقط إذا كان المستخدم في مدينة مختلفة عن المتجر
+  const shouldHide = !isCustomer || !shouldShowOnCurrentPage || dismissed;
+  
+  // إذا كنا في صفحة منتجات ولا يوجد منتجات، نخفي الشريط
+  const hideForEmptyProductCart = !isFoodPage && !hasItems;
+  
+  if (shouldHide || hideForEmptyProductCart) {
     return null;
   }
 
@@ -219,6 +221,11 @@ const FreeShippingBanner = () => {
         </motion.div>
       </AnimatePresence>
     );
+  }
+  
+  // إذا الشحن مجاني (بدون احتفال) - نخفي الشريط
+  if (qualifiesForFree) {
+    return null;
   }
 
   // شريط التقدم
