@@ -266,3 +266,204 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
     if not doc:
         return {"status": "not_submitted"}
     return {"status": doc["status"]}
+
+
+# ============================================
+# 🏪 إعدادات المتجر للبائع
+# ============================================
+
+from pydantic import BaseModel
+from typing import Optional, List
+
+class StoreSettingsUpdate(BaseModel):
+    store_name: Optional[str] = None
+    store_description: Optional[str] = None
+    store_address: Optional[str] = None
+    store_city: Optional[str] = None
+    store_phone: Optional[str] = None
+
+class PaymentAccountUpdate(BaseModel):
+    type: str  # shamcash, syriatel_cash, mtn_cash
+    account_number: str
+    holder_name: str
+    is_default: bool = False
+
+@router.get("/seller/store-settings")
+async def get_store_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات المتجر للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    seller = await db.users.find_one(
+        {"id": user["id"]},
+        {"_id": 0, "store_name": 1, "store_description": 1, "store_address": 1, "store_city": 1, "store_phone": 1, "city": 1, "phone": 1}
+    )
+    
+    return {
+        "store_name": seller.get("store_name", ""),
+        "store_description": seller.get("store_description", ""),
+        "store_address": seller.get("store_address", ""),
+        "store_city": seller.get("store_city", seller.get("city", "")),
+        "store_phone": seller.get("store_phone", seller.get("phone", ""))
+    }
+
+@router.put("/seller/store-settings")
+async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depends(get_current_user)):
+    """تحديث إعدادات المتجر للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    update_data = {}
+    if settings.store_name is not None:
+        update_data["store_name"] = sanitize_input(settings.store_name)
+    if settings.store_description is not None:
+        update_data["store_description"] = sanitize_input(settings.store_description)
+    if settings.store_address is not None:
+        update_data["store_address"] = sanitize_input(settings.store_address)
+    if settings.store_city is not None:
+        update_data["store_city"] = sanitize_input(settings.store_city)
+    if settings.store_phone is not None:
+        update_data["store_phone"] = settings.store_phone
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    
+    return {"message": "تم تحديث إعدادات المتجر بنجاح"}
+
+# ============================================
+# 💳 حسابات الاستلام المالي للبائع
+# ============================================
+
+@router.get("/seller/payment-accounts")
+async def get_seller_payment_accounts(user: dict = Depends(get_current_user)):
+    """جلب حسابات الاستلام المالي للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    accounts = await db.seller_payment_accounts.find(
+        {"seller_id": user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return accounts
+
+@router.post("/seller/payment-accounts")
+async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+    """إضافة حساب استلام مالي جديد للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    # التحقق من نوع الحساب
+    valid_types = ["shamcash", "syriatel_cash", "mtn_cash"]
+    if account.type not in valid_types:
+        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح")
+    
+    # إذا كان هذا الحساب افتراضي، إلغاء الافتراضي من الحسابات الأخرى
+    if account.is_default:
+        await db.seller_payment_accounts.update_many(
+            {"seller_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    # التحقق من عدم تكرار نفس الحساب
+    existing = await db.seller_payment_accounts.find_one({
+        "seller_id": user["id"],
+        "type": account.type,
+        "account_number": account.account_number
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا الحساب موجود مسبقاً")
+    
+    new_account = {
+        "id": str(uuid.uuid4()),
+        "seller_id": user["id"],
+        "type": account.type,
+        "account_number": account.account_number,
+        "holder_name": sanitize_input(account.holder_name),
+        "is_default": account.is_default,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.seller_payment_accounts.insert_one(new_account)
+    del new_account["_id"]
+    
+    return new_account
+
+@router.put("/seller/payment-accounts/{account_id}")
+async def update_seller_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+    """تحديث حساب استلام مالي للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    existing = await db.seller_payment_accounts.find_one({
+        "id": account_id,
+        "seller_id": user["id"]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    # إذا كان هذا الحساب افتراضي، إلغاء الافتراضي من الحسابات الأخرى
+    if account.is_default:
+        await db.seller_payment_accounts.update_many(
+            {"seller_id": user["id"], "id": {"$ne": account_id}},
+            {"$set": {"is_default": False}}
+        )
+    
+    update_data = {
+        "type": account.type,
+        "account_number": account.account_number,
+        "holder_name": sanitize_input(account.holder_name),
+        "is_default": account.is_default,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.seller_payment_accounts.update_one(
+        {"id": account_id, "seller_id": user["id"]},
+        {"$set": update_data}
+    )
+    
+    return {"message": "تم تحديث الحساب بنجاح"}
+
+@router.delete("/seller/payment-accounts/{account_id}")
+async def delete_seller_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+    """حذف حساب استلام مالي للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    result = await db.seller_payment_accounts.delete_one({
+        "id": account_id,
+        "seller_id": user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    return {"message": "تم حذف الحساب بنجاح"}
+
+@router.post("/seller/payment-accounts/{account_id}/default")
+async def set_default_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+    """تعيين حساب كافتراضي"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    existing = await db.seller_payment_accounts.find_one({
+        "id": account_id,
+        "seller_id": user["id"]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    # إلغاء الافتراضي من كل الحسابات
+    await db.seller_payment_accounts.update_many(
+        {"seller_id": user["id"]},
+        {"$set": {"is_default": False}}
+    )
+    
+    # تعيين هذا الحساب كافتراضي
+    await db.seller_payment_accounts.update_one(
+        {"id": account_id},
+        {"$set": {"is_default": True}}
+    )
+    
+    return {"message": "تم تعيين الحساب كافتراضي"}

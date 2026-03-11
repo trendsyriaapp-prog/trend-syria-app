@@ -5,7 +5,8 @@ import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
-  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home
+  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
+  Store, CreditCard, Edit2, Trash2, Save
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -18,6 +19,7 @@ import SellerDiscountsTab from '../components/seller/SellerDiscountsTab';
 import SellerReviewsTab from '../components/seller/SellerReviewsTab';
 import ImageBackgroundSelector from '../components/seller/ImageBackgroundSelector';
 import OrderLabelPrint from '../components/seller/OrderLabelPrint';
+import StoreSettingsTab from '../components/seller/StoreSettingsTab';
 import AddProductModal from '../components/seller/AddProductModal';
 import EditProductModal from '../components/seller/EditProductModal';
 import SellerStatsCard from '../components/seller/SellerStatsCard';
@@ -437,6 +439,7 @@ const SellerDashboardPage = () => {
             { id: 'ads', icon: Megaphone, label: 'الإعلانات' },
             { id: 'discounts', icon: Gift, label: 'الخصومات' },
             { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
+            { id: 'store', icon: Store, label: 'المتجر' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -465,6 +468,10 @@ const SellerDashboardPage = () => {
 
         {activeTab === 'analytics' && (
           <SellerAdAnalytics />
+        )}
+
+        {activeTab === 'store' && (
+          <StoreSettingsTab />
         )}
 
         {activeTab === 'reviews' && (
