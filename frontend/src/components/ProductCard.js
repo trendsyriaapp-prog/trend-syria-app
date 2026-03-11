@@ -244,14 +244,6 @@ const ProductCard = ({ product, variant = 'default' }) => {
               <span className="text-[10px] font-medium">فيديو</span>
             </motion.div>
           )}
-          
-          {/* City Badge */}
-          {product.city && (
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 text-gray-700 px-2 py-1 rounded-full z-20 shadow-sm">
-              <MapPin size={12} className="text-[#FF6B00]" />
-              <span className="text-[10px] font-medium">{product.city}</span>
-            </div>
-          )}
         </div>
 
         {/* Content Section */}
