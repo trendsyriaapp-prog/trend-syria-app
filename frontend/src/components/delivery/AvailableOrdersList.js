@@ -1,6 +1,12 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map } from 'lucide-react';
+import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
+import { 
+  getCurrentLocation, 
+  calculateOrderDistances, 
+  formatDistance 
+} from '../../utils/distanceCalculator';
 
 // فتح العنوان في خرائط Google
 const openInGoogleMaps = (address, city) => {
@@ -11,6 +17,35 @@ const openInGoogleMaps = (address, city) => {
 };
 
 const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all' }) => {
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [orderDistances, setOrderDistances] = useState({});
+
+  // حساب المسافات عند تغيير موقع السائق أو الطلبات
+  useEffect(() => {
+    if (driverLocation) {
+      const allOrders = [...orders, ...foodOrders];
+      const distances = {};
+      allOrders.forEach(order => {
+        distances[order.id] = calculateOrderDistances(driverLocation, order);
+      });
+      setOrderDistances(distances);
+    }
+  }, [driverLocation, orders, foodOrders]);
+
+  // الحصول على موقع السائق
+  const handleGetLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const location = await getCurrentLocation();
+      setDriverLocation(location);
+    } catch (error) {
+      console.error('خطأ في الحصول على الموقع:', error);
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
   // دمج كل الطلبات أو الاعتماد على الفلتر
   const allOrders = [...orders, ...foodOrders];
   
@@ -31,8 +66,89 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
   const displayFoodOrders = foodOrders.length > 0 ? foodOrders : orders.filter(o => o.order_source === 'food');
   const shopOrders = orders.filter(o => o.order_source !== 'food');
 
+  // مكون عرض المسافة
+  const DistanceInfo = ({ orderId }) => {
+    const distance = orderDistances[orderId];
+    if (!driverLocation) {
+      return (
+        <button
+          onClick={handleGetLocation}
+          disabled={loadingLocation}
+          className="w-full mb-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          {loadingLocation ? (
+            <span className="animate-spin">⏳</span>
+          ) : (
+            <Locate size={14} />
+          )}
+          {loadingLocation ? 'جاري تحديد موقعك...' : 'تحديد موقعي لرؤية المسافات'}
+        </button>
+      );
+    }
+
+    if (!distance) return null;
+
+    return (
+      <div className="bg-blue-50 rounded-lg p-2 mb-3 border border-blue-100">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-[9px] text-gray-500">🚗 للمطعم</p>
+            <p className="text-xs font-bold text-blue-600">{formatDistance(distance.toSeller)}</p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-500">🏠 للعميل</p>
+            <p className="text-xs font-bold text-green-600">{formatDistance(distance.toCustomer)}</p>
+          </div>
+          <div>
+            <p className="text-[9px] text-gray-500">⏱️ الوقت</p>
+            <p className="text-xs font-bold text-orange-600">~{distance.estimatedTime} د</p>
+          </div>
+        </div>
+        <p className="text-[9px] text-gray-400 text-center mt-1">
+          المجموع: {formatDistance(distance.total)}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
+      {/* زر تحديد الموقع إذا لم يتم تحديده */}
+      {!driverLocation && allOrders.length > 0 && (
+        <button
+          onClick={handleGetLocation}
+          disabled={loadingLocation}
+          className="w-full py-3 bg-blue-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50"
+        >
+          {loadingLocation ? (
+            <>
+              <span className="animate-spin">⏳</span>
+              جاري تحديد موقعك...
+            </>
+          ) : (
+            <>
+              <Locate size={18} />
+              📍 تحديد موقعي لرؤية المسافات
+            </>
+          )}
+        </button>
+      )}
+
+      {/* إظهار حالة الموقع */}
+      {driverLocation && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-2 flex items-center justify-between">
+          <span className="text-xs text-green-700 flex items-center gap-1">
+            <Locate size={12} /> تم تحديد موقعك ✓
+          </span>
+          <button
+            onClick={handleGetLocation}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            تحديث الموقع
+          </button>
+        </div>
+      )}
+
       {/* طلبات الطعام */}
       {displayFoodOrders.length > 0 && (
         <div>
@@ -104,6 +220,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       </a>
                     </div>
                   </div>
+
+                  {/* معلومات المسافة */}
+                  <DistanceInfo orderId={order.id} />
 
                   {/* أزرار الخرائط - زر للمطعم وزر للعميل */}
                   <div className="grid grid-cols-2 gap-2 mb-3">
@@ -207,18 +326,35 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-blue-600">
                         <Phone size={10} /> {order.buyer_address?.phone}
                       </a>
-                      {/* زر فتح في خرائط Google */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
-                        }}
-                        className="w-full mt-2 bg-blue-500 text-white py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
-                      >
-                        <Map size={12} />
-                        فتح في خرائط Google
-                      </button>
                     </div>
+                  </div>
+
+                  {/* معلومات المسافة */}
+                  <DistanceInfo orderId={order.id} />
+
+                  {/* أزرار الخرائط */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const sellerAddr = order.seller_addresses?.[0];
+                        openInGoogleMaps(sellerAddr?.address || sellerAddr?.business_name, sellerAddr?.city);
+                      }}
+                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Map size={12} />
+                      🏪 البائع
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
+                      }}
+                      className="bg-blue-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Map size={12} />
+                      🏠 المشتري
+                    </button>
                   </div>
 
                   {/* عدد المنتجات */}
