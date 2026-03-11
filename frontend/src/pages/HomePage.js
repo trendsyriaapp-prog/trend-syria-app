@@ -291,7 +291,78 @@ const HomePage = () => {
       {/* Daily Deal - صفقة اليوم */}
       <DailyDeal />
 
-      {/* Flash Sale Products - Shop */}
+      {/* 1. Sponsored Products - المنتجات المُعلن عنها */}
+      {sponsoredProducts.length > 0 && (
+        <section className="py-3">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                  <Star size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">منتجات مُعلن عنها</h2>
+                  <p className="text-xs text-gray-500">إعلانات مميزة</p>
+                </div>
+              </div>
+              <Link 
+                to="/products"
+                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={16} />
+              </Link>
+            </div>
+            
+            {/* Sponsored Products Horizontal Scroll */}
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {sponsoredProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* Sponsored Badge */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            إعلان
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-purple-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 2. Flash Sale Products - عروض فلاش */}
       {shopFlashProducts.length > 0 && shopFlashSale && (
         <section className="py-3">
           <div className="max-w-7xl mx-auto px-4">
@@ -368,88 +439,14 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* قسم التوصيات الذكية - بعد فلاش مباشرة */}
+      {/* 3. قسم التوصيات الذكية */}
       <section className="py-4 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">
           <RecommendedProducts />
         </div>
       </section>
 
-      {/* Sponsored Products - المنتجات المُعلن عنها */}
-      {sponsoredProducts.length > 0 && (
-        <section className="py-3">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                  <Star size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">منتجات مُعلن عنها</h2>
-                  <p className="text-xs text-gray-500">إعلانات مميزة</p>
-                </div>
-              </div>
-              <Link 
-                to="/products"
-                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={16} />
-              </Link>
-            </div>
-            
-            {/* Sponsored Products Horizontal Scroll */}
-            <div className="relative">
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {sponsoredProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
-                    <Link to={`/products/${product.id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
-                        <div className="relative aspect-square bg-gray-100">
-                          {product.images?.[0] ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package size={32} className="text-gray-300" />
-                            </div>
-                          )}
-                          {/* Sponsored Badge */}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
-                            إعلان
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-purple-600 font-bold text-sm">
-                              {product.price?.toLocaleString()} ل.س
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Products - Sponsored */}
-      <FeaturedProducts />
-
-      {/* Featured Products */}
+      {/* 4. المنتجات الرائجة */}
       <section className="py-2">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-2">
