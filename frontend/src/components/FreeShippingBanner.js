@@ -147,77 +147,71 @@ const FreeShippingBanner = () => {
   // شريط الاحتفال
   if (showCelebration) {
     return (
-      <>
-        <div className="h-10" /> {/* Spacer */}
-        <AnimatePresence>
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -50, opacity: 0 }}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-40 fixed top-[60px] left-0 right-0"
-            data-testid="free-shipping-celebration"
-          >
-            <div className="flex items-center gap-2 flex-1 justify-center">
-              <PartyPopper className="w-5 h-5 animate-bounce" />
-              <span className="font-bold text-sm">
-                🎉 مبروك! حصلت على توصيل مجاني
-              </span>
-              <PartyPopper className="w-5 h-5 animate-bounce" />
-            </div>
-            <button
-              onClick={handleDismiss}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors mr-2"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        </AnimatePresence>
-      </>
-    );
-  }
-
-  // شريط التقدم
-  return (
-    <>
-      <div className="h-10" /> {/* Spacer */}
       <AnimatePresence>
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
-          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-40 fixed top-[60px] left-0 right-0"
-          data-testid="free-shipping-progress"
+          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-40 sticky top-[56px] left-0 right-0"
+          data-testid="free-shipping-celebration"
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 flex-1">
-              <Truck className="w-5 h-5 flex-shrink-0" />
-              <div className="flex-1">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-medium">
-                    أضف {formatPrice(remaining)} ل.س للشحن المجاني
-                  </span>
-                  <span className="text-white/80">{Math.round(progress)}%</span>
-                </div>
-                <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="h-full bg-white rounded-full"
-                  />
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={handleDismiss}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <PartyPopper className="w-5 h-5 animate-bounce" />
+            <span className="font-bold text-sm">
+              🎉 مبروك! حصلت على توصيل مجاني
+            </span>
+            <PartyPopper className="w-5 h-5 animate-bounce" />
           </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors mr-2"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </motion.div>
       </AnimatePresence>
-    </>
+    );
+  }
+
+  // شريط التقدم
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -50, opacity: 0 }}
+        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-40 sticky top-[56px] left-0 right-0"
+        data-testid="free-shipping-progress"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Truck className="w-5 h-5 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="font-medium">
+                  أضف {formatPrice(remaining)} ل.س للشحن المجاني
+                </span>
+                <span className="text-white/80">{Math.round(progress)}%</span>
+              </div>
+              <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="h-full bg-white rounded-full"
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
