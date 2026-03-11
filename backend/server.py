@@ -195,58 +195,195 @@ def hash_password(password: str) -> str:
 
 @api_router.post("/seed")
 async def seed_demo_data():
-    # Check if already seeded
-    existing = await db.products.count_documents({})
-    if existing > 0:
+    # Check if already seeded - التحقق من وجود بائع الطعام
+    existing_food_seller = await db.users.count_documents({"user_type": "food_seller"})
+    existing_products = await db.products.count_documents({})
+    if existing_food_seller > 0 and existing_products > 0:
         return {"message": "البيانات موجودة مسبقاً"}
     
-    # Create admin user
+    # Create admin user if not exists
+    existing_admin = await db.users.find_one({"phone": "0911111111"})
     admin_id = str(uuid.uuid4())
-    await db.users.insert_one({
-        "id": admin_id,
-        "name": "أحمد محمد علي",
-        "full_name": "أحمد محمد علي",
-        "password": hash_password("admin123"),
-        "phone": "0911111111",
-        "city": "دمشق",
-        "user_type": "admin",
-        "is_verified": True,
-        "is_approved": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    if not existing_admin:
+        await db.users.insert_one({
+            "id": admin_id,
+            "name": "أحمد محمد علي",
+            "full_name": "أحمد محمد علي",
+            "password": hash_password("admin123"),
+            "phone": "0911111111",
+            "city": "دمشق",
+            "user_type": "admin",
+            "is_verified": True,
+            "is_approved": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        admin_id = existing_admin.get("id")
     
-    # Create demo seller
+    # Create demo seller if not exists
+    existing_seller = await db.users.find_one({"phone": "0922222222"})
     seller_id = str(uuid.uuid4())
-    await db.users.insert_one({
-        "id": seller_id,
-        "name": "خالد سعيد حسن",
-        "full_name": "خالد سعيد حسن",
-        "password": hash_password("seller123"),
-        "phone": "0922222222",
-        "city": "حلب",
-        "user_type": "seller",
-        "is_verified": True,
-        "is_approved": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    if not existing_seller:
+        await db.users.insert_one({
+            "id": seller_id,
+            "name": "خالد سعيد حسن",
+            "full_name": "خالد سعيد حسن",
+            "password": hash_password("seller123"),
+            "phone": "0922222222",
+            "city": "حلب",
+            "user_type": "seller",
+            "is_verified": True,
+            "is_approved": True,
+            "store_name": "متجر الأناقة",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        seller_id = existing_seller.get("id")
     
-    # Create demo buyer
+    # Create demo buyer if not exists
+    existing_buyer = await db.users.find_one({"phone": "0933333333"})
     buyer_id = str(uuid.uuid4())
-    await db.users.insert_one({
-        "id": buyer_id,
-        "name": "محمد أحمد",
-        "full_name": "محمد أحمد",
-        "password": hash_password("user123"),
-        "phone": "0933333333",
-        "city": "دمشق",
-        "user_type": "buyer",
-        "is_verified": True,
-        "is_approved": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    if not existing_buyer:
+        await db.users.insert_one({
+            "id": buyer_id,
+            "name": "محمد أحمد",
+            "full_name": "محمد أحمد",
+            "password": hash_password("user123"),
+            "phone": "0933333333",
+            "city": "دمشق",
+            "user_type": "buyer",
+            "is_verified": True,
+            "is_approved": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        buyer_id = existing_buyer.get("id")
     
-    # Demo products
-    demo_products = [
+    # Create demo food seller (restaurant) if not exists
+    existing_food = await db.users.find_one({"phone": "0944444444"})
+    food_seller_id = str(uuid.uuid4())
+    if not existing_food:
+        await db.users.insert_one({
+            "id": food_seller_id,
+            "name": "مطعم الشام",
+            "full_name": "مطعم الشام الدمشقي",
+            "password": hash_password("food123"),
+            "phone": "0944444444",
+            "city": "دمشق",
+            "user_type": "food_seller",
+            "is_verified": True,
+            "is_approved": True,
+            "store_name": "مطعم الشام",
+            "store_description": "أشهى المأكولات الشامية التقليدية",
+            "store_address": "دمشق - شارع الحمرا",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        food_seller_id = existing_food.get("id")
+    
+    # Create demo delivery driver if not exists
+    existing_delivery = await db.users.find_one({"phone": "0900000000"})
+    delivery_id = str(uuid.uuid4())
+    if not existing_delivery:
+        await db.users.insert_one({
+            "id": delivery_id,
+            "name": "سامر التوصيل",
+            "full_name": "سامر محمود",
+            "password": hash_password("delivery123"),
+            "phone": "0900000000",
+            "city": "دمشق",
+            "user_type": "delivery",
+            "is_verified": True,
+            "is_approved": True,
+            "vehicle_type": "motorcycle",
+            "vehicle_number": "دمشق 123456",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    else:
+        delivery_id = existing_delivery.get("id")
+    
+    # Create demo food store if not exists
+    existing_food_store = await db.food_stores.find_one({"owner_id": food_seller_id})
+    if not existing_food_store:
+        await db.food_stores.insert_one({
+            "id": str(uuid.uuid4()),
+            "owner_id": food_seller_id,
+            "name": "مطعم الشام",
+            "description": "أشهى المأكولات الشامية التقليدية",
+            "category": "restaurant",
+            "cuisine_type": "syrian",
+            "address": "دمشق - شارع الحمرا",
+            "phone": "0944444444",
+            "city": "دمشق",
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
+            "cover_image": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400",
+            "rating": 4.5,
+            "reviews_count": 120,
+            "delivery_time": "30-45",
+            "min_order": 15000,
+            "delivery_fee": 5000,
+            "is_open": True,
+            "is_approved": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Demo food items for the restaurant
+    food_store = await db.food_stores.find_one({"owner_id": food_seller_id})
+    if food_store:
+        existing_items = await db.food_items.count_documents({"store_id": food_store["id"]})
+        if existing_items == 0:
+            demo_food_items = [
+        {
+            "name": "شاورما دجاج",
+            "description": "شاورما دجاج طازجة مع الثوم والمخللات",
+            "price": 25000,
+            "category": "shawarma",
+            "preparation_time": 15,
+            "is_available": True,
+            "image": "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400"
+        },
+        {
+            "name": "فتة حمص",
+            "description": "فتة حمص بالسمنة والصنوبر",
+            "price": 35000,
+            "category": "appetizers",
+            "preparation_time": 10,
+            "is_available": True,
+            "image": "https://images.unsplash.com/photo-1547058881-aa0edd92aab3?w=400"
+        },
+        {
+            "name": "كباب حلبي",
+            "description": "كباب لحم غنم مشوي على الفحم",
+            "price": 85000,
+            "category": "grills",
+            "preparation_time": 25,
+            "is_available": True,
+            "image": "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"
+        },
+        {
+            "name": "فلافل",
+            "description": "فلافل مقرمشة مع الطحينة",
+            "price": 15000,
+            "category": "sandwiches",
+            "preparation_time": 10,
+            "is_available": True,
+            "image": "https://images.unsplash.com/photo-1593001874117-c99c800e3eb7?w=400"
+            }
+        ]
+        
+            for item in demo_food_items:
+                await db.food_items.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "store_id": food_store["id"],
+                    "seller_id": food_seller_id,
+                    **item,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+    
+    # Demo products - check if exist
+    existing_products_count = await db.products.count_documents({})
+    if existing_products_count == 0:
+        demo_products = [
         {
             "name": "هاتف سامسونج Galaxy S24",
             "description": "هاتف ذكي بشاشة AMOLED وكاميرا 108 ميجابكسل",
@@ -313,22 +450,22 @@ async def seed_demo_data():
         }
     ]
     
-    for product in demo_products:
-        await db.products.insert_one({
-            "id": str(uuid.uuid4()),
-            "seller_id": seller_id,
-            "seller_name": "متجر الأناقة",
-            "business_name": "متجر الأناقة",
-            "city": "حلب",
-            **product,
-            "rating": round(3.5 + (hash(product["name"]) % 15) / 10, 1),
-            "reviews_count": hash(product["name"]) % 50,
-            "sales_count": hash(product["name"]) % 100,
-            "is_active": True,
-            "is_approved": True,
-            "approval_status": "approved",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
+        for product in demo_products:
+            await db.products.insert_one({
+                "id": str(uuid.uuid4()),
+                "seller_id": seller_id,
+                "seller_name": "متجر الأناقة",
+                "business_name": "متجر الأناقة",
+                "city": "حلب",
+                **product,
+                "rating": round(3.5 + (hash(product["name"]) % 15) / 10, 1),
+                "reviews_count": hash(product["name"]) % 50,
+                "sales_count": hash(product["name"]) % 100,
+                "is_active": True,
+                "is_approved": True,
+                "approval_status": "approved",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
     
     return {"message": "تم إنشاء البيانات التجريبية بنجاح"}
 

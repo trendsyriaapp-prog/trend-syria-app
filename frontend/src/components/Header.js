@@ -43,7 +43,7 @@ const Header = () => {
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
   // إخفاء الهيدر الكامل للبائع في جميع صفحاته (إلا إذا كان يتصفح كعميل)
-  const isSellerPage = user?.user_type === 'seller' && !isViewingAsCustomer;
+  const isSellerPage = (user?.user_type === 'seller' || user?.user_type === 'food_seller') && !isViewingAsCustomer;
   
   // إخفاء الهيدر الكامل لموظف التوصيل في جميع صفحاته (إلا إذا كان يتصفح كعميل)
   const isDeliveryPage = user?.user_type === 'delivery' && !isViewingAsCustomer;

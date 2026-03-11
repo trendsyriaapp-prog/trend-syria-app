@@ -294,6 +294,79 @@ async def get_food_stats():
 # لوحة تحكم المتجر
 # ===============================
 
+@router.get("/my-items")
+async def get_my_food_items(user: dict = Depends(get_current_user)):
+    """جلب أطباق المطعم للبائع"""
+    if user.get("user_type") != "food_seller":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    
+    # البحث عن متجر البائع
+    store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
+    if not store:
+        return []
+    
+    # جلب أطباق المتجر
+    items = await db.food_items.find({"store_id": store["id"]}, {"_id": 0}).to_list(None)
+    return items or []
+
+@router.post("/items")
+async def create_food_item(item_data: dict, user: dict = Depends(get_current_user)):
+    """إضافة طبق جديد"""
+    if user.get("user_type") != "food_seller":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    
+    # البحث عن متجر البائع
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
+    
+    item_id = str(uuid.uuid4())
+    new_item = {
+        "id": item_id,
+        "store_id": store["id"],
+        "seller_id": user["id"],
+        "name": item_data.get("name"),
+        "description": item_data.get("description", ""),
+        "price": item_data.get("price", 0),
+        "category": item_data.get("category", "main"),
+        "preparation_time": item_data.get("preparation_time", 15),
+        "image": item_data.get("images", [None])[0] if item_data.get("images") else None,
+        "is_available": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.food_items.insert_one(new_item)
+    return {"message": "تم إضافة الطبق بنجاح", "id": item_id}
+
+@router.put("/items/{item_id}/availability")
+async def toggle_food_item_availability(item_id: str, data: dict, user: dict = Depends(get_current_user)):
+    """تغيير حالة توفر الطبق"""
+    if user.get("user_type") != "food_seller":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    
+    item = await db.food_items.find_one({"id": item_id, "seller_id": user["id"]})
+    if not item:
+        raise HTTPException(status_code=404, detail="الطبق غير موجود")
+    
+    await db.food_items.update_one(
+        {"id": item_id},
+        {"$set": {"is_available": data.get("is_available", True)}}
+    )
+    
+    return {"message": "تم تحديث حالة الطبق"}
+
+@router.delete("/items/{item_id}")
+async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)):
+    """حذف طبق"""
+    if user.get("user_type") != "food_seller":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    
+    result = await db.food_items.delete_one({"id": item_id, "seller_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الطبق غير موجود")
+    
+    return {"message": "تم حذف الطبق بنجاح"}
+
 @router.get("/my-store")
 async def get_my_store(user: dict = Depends(get_current_user)):
     """جلب متجر المستخدم الحالي"""

@@ -33,7 +33,7 @@ const MobileNav = () => {
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
   // هل البائع في أي صفحة من صفحاته؟
-  const isSellerPage = user?.user_type === 'seller' && user?.is_approved && !isViewingAsCustomer;
+  const isSellerPage = (user?.user_type === 'seller' || user?.user_type === 'food_seller') && user?.is_approved && !isViewingAsCustomer;
   
   // هل موظف التوصيل في أي صفحة من صفحاته؟
   const isDeliveryPage = user?.user_type === 'delivery' && user?.is_approved && !isViewingAsCustomer;

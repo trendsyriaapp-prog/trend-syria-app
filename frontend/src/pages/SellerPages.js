@@ -30,6 +30,170 @@ import StatDetailsModal from '../components/seller/StatDetailsModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// مكون عرض أطباق الطعام
+const FoodItemsGrid = ({ items, onEdit, onDelete, onToggleAvailability }) => {
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
+        <Package className="mx-auto mb-2 text-gray-300" size={40} />
+        <p className="text-gray-500 text-sm">لا توجد أطباق بعد</p>
+        <p className="text-gray-400 text-xs">أضف أول طبق لقائمة الطعام</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {items.map(item => (
+        <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="relative">
+            <img 
+              src={item.image || 'https://via.placeholder.com/150?text=طبق'} 
+              alt={item.name} 
+              className={`w-full h-24 object-cover ${!item.is_available ? 'opacity-50 grayscale' : ''}`}
+            />
+            {!item.is_available && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="text-white text-xs font-bold bg-red-500 px-2 py-1 rounded">غير متاح</span>
+              </div>
+            )}
+          </div>
+          <div className="p-2">
+            <h3 className="font-bold text-xs text-gray-900 truncate">{item.name}</h3>
+            <p className="text-[10px] text-gray-500 truncate">{item.description}</p>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-[#FF6B00] font-bold text-xs">{item.price?.toLocaleString()} ل.س</span>
+              <span className="text-gray-400 text-[9px]">{item.preparation_time} دقيقة</span>
+            </div>
+            <div className="flex gap-1 mt-2">
+              <button
+                onClick={() => onToggleAvailability(item.id, item.is_available)}
+                className={`flex-1 py-1 rounded text-[9px] font-bold ${
+                  item.is_available 
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                    : 'bg-green-100 text-green-600 hover:bg-green-200'
+                }`}
+              >
+                {item.is_available ? 'إيقاف' : 'تفعيل'}
+              </button>
+              <button
+                onClick={() => onEdit(item)}
+                className="flex-1 bg-gray-100 text-gray-600 py-1 rounded text-[9px] font-bold hover:bg-gray-200"
+              >
+                تعديل
+              </button>
+              <button
+                onClick={() => onDelete(item.id)}
+                className="px-2 bg-red-50 text-red-500 py-1 rounded text-[9px] hover:bg-red-100"
+              >
+                <Trash2 size={10} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// مكون عرض طلبات الطعام
+const FoodOrdersSection = ({ orders, onStatusChange }) => {
+  if (!orders || orders.length === 0) {
+    return (
+      <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
+        <ShoppingBag className="mx-auto mb-2 text-gray-300" size={40} />
+        <p className="text-gray-500 text-sm">لا توجد طلبات</p>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'pending': 'bg-yellow-100 text-yellow-700',
+      'accepted': 'bg-blue-100 text-blue-700',
+      'preparing': 'bg-orange-100 text-orange-700',
+      'ready': 'bg-green-100 text-green-700',
+      'out_for_delivery': 'bg-purple-100 text-purple-700',
+      'delivered': 'bg-emerald-100 text-emerald-700',
+      'cancelled': 'bg-red-100 text-red-700'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getStatusText = (status) => {
+    const texts = {
+      'pending': 'جديد',
+      'accepted': 'مقبول',
+      'preparing': 'قيد التحضير',
+      'ready': 'جاهز',
+      'out_for_delivery': 'في الطريق',
+      'delivered': 'تم التسليم',
+      'cancelled': 'ملغي'
+    };
+    return texts[status] || status;
+  };
+
+  return (
+    <div className="space-y-2">
+      {orders.slice(0, 10).map(order => (
+        <div key={order.id} className="bg-white rounded-lg border border-gray-200 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs text-gray-900">#{order.id?.slice(-6)}</span>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${getStatusColor(order.status)}`}>
+                {getStatusText(order.status)}
+              </span>
+            </div>
+            <span className="text-[#FF6B00] font-bold text-xs">{order.total?.toLocaleString()} ل.س</span>
+          </div>
+          
+          {/* تفاصيل الطلب */}
+          <div className="text-[10px] text-gray-600 mb-2">
+            <p>العميل: {order.customer_name || 'غير معروف'}</p>
+            <p>العنوان: {order.delivery_address || 'غير محدد'}</p>
+          </div>
+
+          {/* أزرار الإجراءات حسب الحالة */}
+          {order.status === 'pending' && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onStatusChange(order.id, 'accepted')}
+                className="flex-1 bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600"
+              >
+                قبول الطلب
+              </button>
+              <button
+                onClick={() => onStatusChange(order.id, 'rejected')}
+                className="flex-1 bg-red-100 text-red-600 py-1.5 rounded text-[10px] font-bold hover:bg-red-200"
+              >
+                رفض
+              </button>
+            </div>
+          )}
+          
+          {order.status === 'accepted' && (
+            <button
+              onClick={() => onStatusChange(order.id, 'preparing')}
+              className="w-full bg-orange-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-orange-600"
+            >
+              بدء التحضير
+            </button>
+          )}
+          
+          {order.status === 'preparing' && (
+            <button
+              onClick={() => onStatusChange(order.id, 'ready')}
+              className="w-full bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600"
+            >
+              الطلب جاهز
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
   const navigate = useNavigate();
@@ -230,13 +394,19 @@ const SellerDashboardPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // تحديد نوع البائع (منتجات أو طعام)
+  const isFoodSeller = user?.user_type === 'food_seller';
+  
   const [products, setProducts] = useState([]);
+  const [foodItems, setFoodItems] = useState([]); // للأطباق
   const [orders, setOrders] = useState([]);
+  const [foodOrders, setFoodOrders] = useState([]); // طلبات الطعام
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [saving, setSaving] = useState(false);
   // قراءة التبويب من URL أو استخدام 'products' كافتراضي
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'products');
+  const defaultTab = isFoodSeller ? 'menu' : 'products';
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || defaultTab);
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
@@ -247,13 +417,14 @@ const SellerDashboardPage = () => {
 
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
-    if (activeTab === 'products') {
+    const defaultTabForUser = isFoodSeller ? 'menu' : 'products';
+    if (activeTab === defaultTabForUser) {
       searchParams.delete('tab');
     } else {
       searchParams.set('tab', activeTab);
     }
     setSearchParams(searchParams, { replace: true });
-  }, [activeTab]);
+  }, [activeTab, isFoodSeller]);
 
   // قراءة التبويب من URL عند التحميل
   useEffect(() => {
@@ -264,7 +435,7 @@ const SellerDashboardPage = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (user?.user_type === 'seller') {
+    if (user?.user_type === 'seller' || user?.user_type === 'food_seller') {
       fetchData();
       fetchWallet();
     }
@@ -281,12 +452,23 @@ const SellerDashboardPage = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, ordersRes] = await Promise.all([
-        axios.get(`${API}/seller/my-products`),
-        axios.get(`${API}/orders`)
-      ]);
-      setProducts(productsRes.data);
-      setOrders(ordersRes.data);
+      if (isFoodSeller) {
+        // بائع طعام - جلب الأطباق وطلبات الطعام
+        const [menuRes, foodOrdersRes] = await Promise.all([
+          axios.get(`${API}/food/my-items`),
+          axios.get(`${API}/food-orders/seller`)
+        ]);
+        setFoodItems(menuRes.data || []);
+        setFoodOrders(foodOrdersRes.data || []);
+      } else {
+        // بائع منتجات - جلب المنتجات والطلبات
+        const [productsRes, ordersRes] = await Promise.all([
+          axios.get(`${API}/seller/my-products`),
+          axios.get(`${API}/orders`)
+        ]);
+        setProducts(productsRes.data);
+        setOrders(ordersRes.data);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -297,11 +479,21 @@ const SellerDashboardPage = () => {
   const handleAddProduct = async (productData) => {
     setSaving(true);
     try {
-      await axios.post(`${API}/products`, productData);
-      toast({
-        title: "تم الإضافة",
-        description: "تمت إضافة المنتج بنجاح"
-      });
+      if (isFoodSeller) {
+        // إضافة طبق جديد
+        await axios.post(`${API}/food/items`, productData);
+        toast({
+          title: "تم الإضافة",
+          description: "تمت إضافة الطبق بنجاح"
+        });
+      } else {
+        // إضافة منتج جديد
+        await axios.post(`${API}/products`, productData);
+        toast({
+          title: "تم الإضافة",
+          description: "تمت إضافة المنتج بنجاح"
+        });
+      }
       setShowAddProduct(false);
       fetchData();
     } catch (error) {
@@ -316,19 +508,24 @@ const SellerDashboardPage = () => {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('هل تريد حذف هذا المنتج؟')) return;
+    const itemName = isFoodSeller ? 'الطبق' : 'المنتج';
+    if (!window.confirm(`هل تريد حذف هذا ${itemName}؟`)) return;
 
     try {
-      await axios.delete(`${API}/products/${productId}`);
+      if (isFoodSeller) {
+        await axios.delete(`${API}/food/items/${productId}`);
+      } else {
+        await axios.delete(`${API}/products/${productId}`);
+      }
       toast({
         title: "تم الحذف",
-        description: "تم حذف المنتج بنجاح"
+        description: `تم حذف ${itemName} بنجاح`
       });
       fetchData();
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل حذف المنتج",
+        description: `فشل حذف ${itemName}`,
         variant: "destructive"
       });
     }
@@ -398,7 +595,52 @@ const SellerDashboardPage = () => {
     }
   };
 
-  if (!user || user.user_type !== 'seller') {
+  // دوال خاصة ببائع الطعام
+  const handleToggleFoodAvailability = async (itemId, currentStatus) => {
+    try {
+      await axios.put(`${API}/food/items/${itemId}/availability`, {
+        is_available: !currentStatus
+      });
+      toast({
+        title: currentStatus ? "تم إيقاف الطبق" : "تم تفعيل الطبق",
+        description: currentStatus ? "الطبق غير متاح الآن" : "الطبق متاح الآن للطلب"
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في تغيير حالة الطبق",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleFoodOrderStatus = async (orderId, newStatus) => {
+    try {
+      await axios.put(`${API}/food-orders/${orderId}/status`, { status: newStatus });
+      
+      const statusMessages = {
+        'accepted': 'تم قبول الطلب',
+        'preparing': 'جاري تحضير الطلب',
+        'ready': 'الطلب جاهز للاستلام',
+        'rejected': 'تم رفض الطلب'
+      };
+      
+      toast({
+        title: "تم بنجاح",
+        description: statusMessages[newStatus] || 'تم تحديث حالة الطلب'
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في تحديث الطلب",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (!user || (user.user_type !== 'seller' && user.user_type !== 'food_seller')) {
     navigate('/');
     return null;
   }
@@ -416,8 +658,28 @@ const SellerDashboardPage = () => {
     );
   }
 
-  const totalSales = orders.reduce((sum, o) => sum + (o.status === 'paid' ? o.total : 0), 0);
-  const paidOrders = orders.filter(o => o.status === 'paid').length;
+  // حساب الإحصائيات حسب نوع البائع
+  const displayOrders = isFoodSeller ? foodOrders : orders;
+  const displayItems = isFoodSeller ? foodItems : products;
+  const totalSales = displayOrders.reduce((sum, o) => sum + (o.status === 'paid' || o.status === 'delivered' ? (o.total || 0) : 0), 0);
+  const paidOrders = displayOrders.filter(o => o.status === 'paid' || o.status === 'delivered').length;
+
+  // التسميات حسب نوع البائع
+  const labels = isFoodSeller ? {
+    dashboardTitle: user?.store_name || 'لوحة تحكم المطعم',
+    addButton: 'إضافة طبق',
+    itemsTab: 'قائمة الطعام',
+    itemsTabId: 'menu',
+    guideButton: 'إعدادات المطعم',
+    guideIcon: Store
+  } : {
+    dashboardTitle: user?.store_name || user?.full_name || 'لوحة تحكم البائع',
+    addButton: 'إضافة منتج',
+    itemsTab: 'منتجاتي',
+    itemsTabId: 'products',
+    guideButton: 'إرشادات التغليف',
+    guideIcon: BookOpen
+  };
 
   return (
     <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
@@ -425,7 +687,14 @@ const SellerDashboardPage = () => {
         {/* Header with store name and notifications */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-sm font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-gray-900">{labels.dashboardTitle}</h1>
+              {isFoodSeller && (
+                <span className="text-[8px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
+                  مطعم
+                </span>
+              )}
+            </div>
             <NotificationsDropdown />
           </div>
           {/* أزرار الإجراءات - شريط ممتلئ */}
@@ -437,34 +706,41 @@ const SellerDashboardPage = () => {
               <Home size={12} />
               <span>تصفح كعميل</span>
             </Link>
-            <button
-              onClick={() => navigate('/packaging-guide')}
-              className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
-            >
-              <BookOpen size={12} />
-              <span>إرشادات التغليف</span>
-            </button>
+            {!isFoodSeller && (
+              <button
+                onClick={() => navigate('/packaging-guide')}
+                className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
+              >
+                <BookOpen size={12} />
+                <span>إرشادات التغليف</span>
+              </button>
+            )}
             <button
               onClick={() => setShowAddProduct(true)}
               className="flex-1 flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold py-2 rounded-lg text-[10px]"
               data-testid="add-product-btn"
             >
               <Plus size={12} />
-              <span>إضافة منتج</span>
+              <span>{labels.addButton}</span>
             </button>
           </div>
         </div>
 
         {/* Tabs - تصغير للجوال */}
         <div className="flex gap-0.5 mb-3 bg-white rounded-lg p-0.5 border border-gray-200 overflow-x-auto no-scrollbar">
-          {[
+          {(isFoodSeller ? [
+            { id: 'menu', icon: Package, label: 'قائمة الطعام' },
+            { id: 'reviews', icon: Star, label: 'التقييمات' },
+            { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
+            { id: 'store', icon: Store, label: 'إعدادات المطعم' },
+          ] : [
             { id: 'products', icon: Package, label: 'منتجاتي' },
             { id: 'reviews', icon: Star, label: 'التقييمات' },
             { id: 'ads', icon: Megaphone, label: 'الإعلانات' },
             { id: 'discounts', icon: Gift, label: 'الخصومات' },
             { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
             { id: 'store', icon: Store, label: 'المتجر' },
-          ].map(tab => (
+          ]).map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -482,11 +758,11 @@ const SellerDashboardPage = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'ads' && (
+        {activeTab === 'ads' && !isFoodSeller && (
           <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
         )}
 
-        {activeTab === 'discounts' && (
+        {activeTab === 'discounts' && !isFoodSeller && (
           <SellerDiscountsTab products={products} />
         )}
 
@@ -495,14 +771,15 @@ const SellerDashboardPage = () => {
         )}
 
         {activeTab === 'store' && (
-          <StoreSettingsTab />
+          <StoreSettingsTab isFoodSeller={isFoodSeller} />
         )}
 
         {activeTab === 'reviews' && (
           <SellerReviewsTab />
         )}
 
-        {activeTab === 'products' && (
+        {/* محتوى تبويب المنتجات/قائمة الطعام */}
+        {(activeTab === 'products' || activeTab === 'menu') && (
           <>
             {/* Wallet Quick Access Card */}
             <div 
@@ -536,29 +813,50 @@ const SellerDashboardPage = () => {
 
             {/* Stats */}
             <SellerStatsCard 
-              products={products} 
-              orders={orders} 
-              onStatClick={setActiveStatView} 
+              products={displayItems} 
+              orders={displayOrders} 
+              onStatClick={setActiveStatView}
+              isFoodSeller={isFoodSeller}
             />
 
-            {/* Products */}
+            {/* Products/Menu Items */}
             <section className="mb-4">
-              <h2 className="text-xs font-bold mb-2 text-gray-900">منتجاتي</h2>
-              <SellerProductsGrid 
-                products={products} 
-                onEdit={handleEditProduct} 
-                onDelete={handleDeleteProduct} 
-              />
+              <h2 className="text-xs font-bold mb-2 text-gray-900">
+                {isFoodSeller ? 'قائمة الطعام' : 'منتجاتي'}
+              </h2>
+              {isFoodSeller ? (
+                <FoodItemsGrid 
+                  items={foodItems} 
+                  onEdit={handleEditProduct} 
+                  onDelete={handleDeleteProduct}
+                  onToggleAvailability={handleToggleFoodAvailability}
+                />
+              ) : (
+                <SellerProductsGrid 
+                  products={products} 
+                  onEdit={handleEditProduct} 
+                  onDelete={handleDeleteProduct} 
+                />
+              )}
             </section>
 
             {/* Recent Orders */}
             <section>
-              <h2 className="text-xs font-bold mb-2 text-gray-900">الطلبات الأخيرة</h2>
-              <SellerOrdersSection 
-                orders={orders} 
-                onSellerAction={handleSellerAction} 
-                onPrintLabel={setPrintLabelOrder} 
-              />
+              <h2 className="text-xs font-bold mb-2 text-gray-900">
+                {isFoodSeller ? 'طلبات الطعام' : 'الطلبات الأخيرة'}
+              </h2>
+              {isFoodSeller ? (
+                <FoodOrdersSection 
+                  orders={foodOrders}
+                  onStatusChange={handleFoodOrderStatus}
+                />
+              ) : (
+                <SellerOrdersSection 
+                  orders={orders} 
+                  onSellerAction={handleSellerAction} 
+                  onPrintLabel={setPrintLabelOrder} 
+                />
+              )}
             </section>
           </>
         )}
@@ -571,6 +869,7 @@ const SellerDashboardPage = () => {
         onSave={handleAddProduct}
         saving={saving}
         toast={toast}
+        isFoodSeller={isFoodSeller}
       />
 
       {/* Edit Product Modal */}

@@ -372,6 +372,23 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
 # طلبات المتجر
 # ===============================
 
+@router.get("/seller")
+async def get_seller_food_orders(user: dict = Depends(get_current_user)):
+    """جلب طلبات الطعام للبائع"""
+    if user.get("user_type") != "food_seller":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول")
+    
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        return []
+    
+    orders = await db.food_orders.find(
+        {"store_id": store["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return orders or []
+
 @router.get("/store/orders")
 async def get_store_orders(
     status: Optional[str] = None,
@@ -734,7 +751,7 @@ async def rate_food_order(order_id: str, rating_data: dict, user: dict = Depends
                 await create_notification_for_user(
                     user_id=order["driver_id"],
                     title="⭐ مكافأة تقييم!",
-                    message=f"حصلت على +5 نقاط سلوك من تقييم 5 نجوم",
+                    message="حصلت على +5 نقاط سلوك من تقييم 5 نجوم",
                     notification_type="bonus_points"
                 )
     

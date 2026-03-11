@@ -33,7 +33,8 @@ const HomeRouter = () => {
       return <Navigate to="/admin" replace />;
       
     case 'seller':
-      // البائع المعتمد يُوجّه مباشرة للوحة التحكم الكاملة
+    case 'food_seller':
+      // البائع المعتمد (منتجات أو طعام) يُوجّه مباشرة للوحة التحكم الكاملة
       if (user.is_approved) {
         return <Navigate to="/seller/dashboard" replace />;
       }

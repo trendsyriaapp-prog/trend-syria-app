@@ -11,13 +11,14 @@ const AddProductModal = ({
   onClose, 
   onSave, 
   saving,
-  toast 
+  toast,
+  isFoodSeller = false
 }) => {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
     price: '',
-    category: 'electronics',
+    category: isFoodSeller ? 'main' : 'electronics',
     stock: '',
     images: [],
     video: null,
@@ -28,7 +29,10 @@ const AddProductModal = ({
     size_type: 'none',
     available_sizes: [],
     max_per_customer: '',
-    weight_variants: []
+    weight_variants: [],
+    // حقول خاصة بالطعام
+    preparation_time: '15',
+    is_available: true
   });
   
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -149,13 +153,21 @@ const AddProductModal = ({
     if (newProduct.images.length === 0) {
       toast({
         title: "خطأ",
-        description: "يرجى إضافة صورة واحدة على الأقل",
+        description: isFoodSeller ? "يرجى إضافة صورة للطبق" : "يرجى إضافة صورة واحدة على الأقل",
         variant: "destructive"
       });
       return;
     }
 
-    await onSave({
+    const submitData = isFoodSeller ? {
+      name: newProduct.name,
+      description: newProduct.description,
+      price: parseFloat(newProduct.price),
+      category: newProduct.category,
+      preparation_time: parseInt(newProduct.preparation_time) || 15,
+      is_available: newProduct.is_available,
+      images: newProduct.images
+    } : {
       ...newProduct,
       price: parseFloat(newProduct.price),
       stock: parseInt(newProduct.stock),
@@ -168,14 +180,16 @@ const AddProductModal = ({
       available_sizes: newProduct.available_sizes.length > 0 ? newProduct.available_sizes : null,
       max_per_customer: newProduct.max_per_customer ? parseInt(newProduct.max_per_customer) : null,
       weight_variants: newProduct.weight_variants.length > 0 ? newProduct.weight_variants : null
-    });
+    };
+
+    await onSave(submitData);
 
     // Reset form
     setNewProduct({
       name: '',
       description: '',
       price: '',
-      category: 'electronics',
+      category: isFoodSeller ? 'main' : 'electronics',
       stock: '',
       images: [],
       video: null,
@@ -186,9 +200,48 @@ const AddProductModal = ({
       size_type: 'none',
       available_sizes: [],
       max_per_customer: '',
-      weight_variants: []
+      weight_variants: [],
+      preparation_time: '15',
+      is_available: true
     });
   };
+
+  // التسميات حسب نوع البائع
+  const labels = isFoodSeller ? {
+    title: 'إضافة طبق جديد',
+    nameLabel: 'اسم الطبق',
+    namePlaceholder: 'مثال: شاورما دجاج',
+    descLabel: 'وصف الطبق',
+    descPlaceholder: 'وصف قصير للطبق ومكوناته',
+    priceLabel: 'السعر (ل.س)',
+    categoryLabel: 'تصنيف الطبق',
+    submitButton: 'إضافة الطبق'
+  } : {
+    title: 'إضافة منتج جديد',
+    nameLabel: 'اسم المنتج',
+    namePlaceholder: '',
+    descLabel: 'الوصف',
+    descPlaceholder: '',
+    priceLabel: 'السعر (ل.س)',
+    categoryLabel: 'الفئة',
+    submitButton: 'إضافة المنتج'
+  };
+
+  // أصناف الطعام
+  const foodCategories = [
+    { id: 'appetizers', name: 'مقبلات' },
+    { id: 'main', name: 'أطباق رئيسية' },
+    { id: 'grills', name: 'مشويات' },
+    { id: 'sandwiches', name: 'سندويشات' },
+    { id: 'shawarma', name: 'شاورما' },
+    { id: 'pizza', name: 'بيتزا' },
+    { id: 'burgers', name: 'برغر' },
+    { id: 'salads', name: 'سلطات' },
+    { id: 'soups', name: 'شوربات' },
+    { id: 'desserts', name: 'حلويات' },
+    { id: 'beverages', name: 'مشروبات' },
+    { id: 'breakfast', name: 'فطور' }
+  ];
 
   return (
     <>
@@ -198,26 +251,37 @@ const AddProductModal = ({
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-xl p-4 w-full max-w-md max-h-[85vh] overflow-y-auto"
         >
-          <h2 className="text-sm font-bold mb-3 text-gray-900">إضافة منتج جديد</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold text-gray-900">{labels.title}</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-full"
+            >
+              <X size={16} className="text-gray-500" />
+            </button>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-2">
             <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">اسم المنتج</label>
+              <label className="block text-[10px] font-medium mb-1 text-gray-700">{labels.nameLabel}</label>
               <input
                 type="text"
                 value={newProduct.name}
                 onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                placeholder={labels.namePlaceholder}
                 required
                 data-testid="product-name-input"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">الوصف</label>
+              <label className="block text-[10px] font-medium mb-1 text-gray-700">{labels.descLabel}</label>
               <textarea
                 value={newProduct.description}
                 onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                placeholder={labels.descPlaceholder}
                 rows={2}
                 required
                 data-testid="product-desc-input"
@@ -226,7 +290,7 @@ const AddProductModal = ({
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">السعر (ل.س)</label>
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">{labels.priceLabel}</label>
                 <input
                   type="number"
                   value={newProduct.price}
@@ -236,44 +300,79 @@ const AddProductModal = ({
                   data-testid="product-price-input"
                 />
               </div>
+              {isFoodSeller ? (
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">وقت التحضير (دقيقة)</label>
+                  <input
+                    type="number"
+                    value={newProduct.preparation_time}
+                    onChange={(e) => setNewProduct({ ...newProduct, preparation_time: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    min="1"
+                    required
+                    data-testid="food-prep-time-input"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية</label>
+                  <input
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    required
+                    data-testid="product-stock-input"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* تصنيف الطعام */}
+            {isFoodSeller && (
               <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الكمية</label>
-                <input
-                  type="number"
-                  value={newProduct.stock}
-                  onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                <label className="block text-[10px] font-medium mb-1 text-gray-700">{labels.categoryLabel}</label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  required
-                  data-testid="product-stock-input"
-                />
+                  data-testid="food-category-select"
+                >
+                  {foodCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
-            </div>
+            )}
 
-            {/* الحد الأقصى لكل عميل */}
-            <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">
-                الحد الأقصى لكل عميل (اختياري)
-              </label>
-              <input
-                type="number"
-                value={newProduct.max_per_customer}
-                onChange={(e) => setNewProduct({ ...newProduct, max_per_customer: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                placeholder="مثال: 2 (اتركه فارغاً للسماح بأي كمية)"
-                min="1"
-                data-testid="product-max-per-customer-input"
-              />
-              <p className="text-[9px] text-gray-500 mt-0.5">حدد الحد الأقصى من القطع التي يمكن للعميل الواحد شراؤها</p>
-            </div>
+            {/* الحقول الخاصة بالمنتجات فقط */}
+            {!isFoodSeller && (
+              <>
+                {/* الحد الأقصى لكل عميل */}
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                    الحد الأقصى لكل عميل (اختياري)
+                  </label>
+                  <input
+                    type="number"
+                    value={newProduct.max_per_customer}
+                    onChange={(e) => setNewProduct({ ...newProduct, max_per_customer: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="مثال: 2 (اتركه فارغاً للسماح بأي كمية)"
+                    min="1"
+                    data-testid="product-max-per-customer-input"
+                  />
+                  <p className="text-[9px] text-gray-500 mt-0.5">حدد الحد الأقصى من القطع التي يمكن للعميل الواحد شراؤها</p>
+                </div>
 
-            {/* خيارات الوزن */}
-            <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">
-                خيارات الوزن (اختياري - للمنتجات التي تُباع بأوزان مختلفة)
-              </label>
-              
-              {/* عرض خيارات الوزن المضافة */}
-              {newProduct.weight_variants.length > 0 && (
+                {/* خيارات الوزن */}
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                    خيارات الوزن (اختياري - للمنتجات التي تُباع بأوزان مختلفة)
+                  </label>
+                  
+                  {/* عرض خيارات الوزن المضافة */}
+                  {newProduct.weight_variants.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                   {newProduct.weight_variants.map((variant, index) => (
                     <div 
@@ -292,102 +391,104 @@ const AddProductModal = ({
                       </button>
                     </div>
                   ))}
+                  </div>
+                  )}
+                  
+                  {/* إضافة خيار وزن جديد */}
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={newWeightVariant.weight}
+                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                        placeholder="الوزن (مثال: 250g, 500g, 1kg)"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        value={newWeightVariant.price}
+                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                        placeholder="السعر"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addWeightVariant}
+                      className="px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs hover:bg-[#E55A00] transition-colors"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-gray-500 mt-0.5">
+                    أضف خيارات الوزن المختلفة مع أسعارها (مثال: قهوة 250g بـ 50,000 ل.س)
+                  </p>
                 </div>
-              )}
-              
-              {/* إضافة خيار وزن جديد */}
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={newWeightVariant.weight}
-                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    placeholder="الوزن (مثال: 250g, 500g, 1kg)"
-                  />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
+                    <select
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      data-testid="product-category-select"
+                    >
+                      {CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="flex-1">
+
+                {/* أبعاد المنتج */}
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="number"
+                      value={newProduct.length_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="الطول"
+                      data-testid="product-length-input"
+                    />
+                    <input
+                      type="number"
+                      value={newProduct.width_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="العرض"
+                      data-testid="product-width-input"
+                    />
+                    <input
+                      type="number"
+                      value={newProduct.height_cm}
+                      onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      placeholder="الارتفاع"
+                      data-testid="product-height-input"
+                    />
+                  </div>
+                </div>
+
+                {/* الوزن */}
+                <div>
+                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
                   <input
                     type="number"
-                    value={newWeightVariant.price}
-                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
+                    step="0.1"
+                    value={newProduct.weight_kg}
+                    onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                    placeholder="السعر"
+                    placeholder="مثال: 1.5"
+                    data-testid="product-weight-input"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={addWeightVariant}
-                  className="px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs hover:bg-[#E55A00] transition-colors"
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-              <p className="text-[9px] text-gray-500 mt-0.5">
-                أضف خيارات الوزن المختلفة مع أسعارها (مثال: قهوة 250g بـ 50,000 ل.س)
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
-                <select
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  data-testid="product-category-select"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* أبعاد المنتج */}
-            <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
-              <div className="grid grid-cols-3 gap-2">
-                <input
-                  type="number"
-                  value={newProduct.length_cm}
-                  onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="الطول"
-                  data-testid="product-length-input"
-                />
-                <input
-                  type="number"
-                  value={newProduct.width_cm}
-                  onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="العرض"
-                  data-testid="product-width-input"
-                />
-                <input
-                  type="number"
-                  value={newProduct.height_cm}
-                  onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="الارتفاع"
-                  data-testid="product-height-input"
-                />
-              </div>
-            </div>
-
-            {/* الوزن */}
-            <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
-              <input
-                type="number"
-                step="0.1"
-                value={newProduct.weight_kg}
-                onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                placeholder="مثال: 1.5"
-                data-testid="product-weight-input"
-              />
-            </div>
+              </>
+            )}
 
             {/* Images Section */}
             <div>
@@ -593,7 +694,7 @@ const AddProductModal = ({
                     جاري الحفظ...
                   </>
                 ) : (
-                  'حفظ المنتج'
+                  labels.submitButton
                 )}
               </button>
             </div>
