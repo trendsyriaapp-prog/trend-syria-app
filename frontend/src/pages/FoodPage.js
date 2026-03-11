@@ -43,10 +43,13 @@ const FoodPage = () => {
     const savedCity = localStorage.getItem('food_delivery_city');
     if (savedCity) {
       setUserCity(savedCity);
+      setShowCitySelector(false);
     } else if (user?.city) {
       setUserCity(user.city);
       localStorage.setItem('food_delivery_city', user.city);
+      setShowCitySelector(false);
     } else {
+      // إظهار نافذة اختيار المدينة
       setShowCitySelector(true);
     }
   }, [user]);
@@ -139,7 +142,7 @@ const FoodPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-gray-50">
+    <div className="min-h-screen pb-20 bg-gray-50 pt-10">
       {/* شريط قسم الطعام مع المدينة */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto">
@@ -152,7 +155,7 @@ const FoodPage = () => {
               className="mr-auto flex items-center gap-1 bg-white/20 rounded-full px-3 py-1 text-xs hover:bg-white/30 transition-colors"
             >
               <MapPin size={12} />
-              <span>{userCity}</span>
+              <span>{userCity || 'اختر مدينة'}</span>
             </button>
           </div>
         </div>
