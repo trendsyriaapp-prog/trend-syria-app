@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
-  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send
+  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -557,10 +557,17 @@ const SellerDashboardPage = () => {
       )}
 
       {/* Quick Access Buttons */}
-      <div className="fixed bottom-20 left-4 z-30">
+      <div className="fixed bottom-20 left-4 z-30 flex flex-col gap-2">
+        <Link
+          to="/?view=customer"
+          className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all"
+          title="تصفح كعميل"
+        >
+          <Home size={20} />
+        </Link>
         <button
           onClick={() => navigate('/packaging-guide')}
-          className="w-12 h-12 bg-[#FF6B00] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#E65000]"
+          className="w-12 h-12 bg-white text-[#FF6B00] border-2 border-[#FF6B00] rounded-full shadow-lg flex items-center justify-center hover:bg-orange-50"
           title="إرشادات التغليف"
         >
           <BookOpen size={20} />

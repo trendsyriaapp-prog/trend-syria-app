@@ -5,7 +5,6 @@ import { useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import HomePage from './HomePage';
 import DeliveryHomePage from './DeliveryHomePage';
-import SellerHomePage from './SellerHomePage';
 
 const HomeRouter = () => {
   const { user } = useAuth();
@@ -34,9 +33,9 @@ const HomeRouter = () => {
       return <Navigate to="/admin" replace />;
       
     case 'seller':
-      // التحقق من أن الحساب معتمد
+      // البائع المعتمد يُوجّه مباشرة للوحة التحكم الكاملة
       if (user.is_approved) {
-        return <SellerHomePage />;
+        return <Navigate to="/seller/dashboard" replace />;
       }
       return <HomePage />;
       
