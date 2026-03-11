@@ -249,20 +249,107 @@ const CartPage = () => {
           </div>
         )}
 
-        {/* رسالة الشحن المجاني عند الوصول - احتفال */}
+        {/* رسالة الشحن المجاني عند الوصول - احتفال كبير */}
         {isFreeShipping && (
           <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 mb-3 shadow-lg"
+            initial={{ scale: 0.8, opacity: 0, y: -20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-xl p-4 mb-3 shadow-xl overflow-hidden"
           >
-            <div className="flex items-center justify-center gap-3 text-white">
-              <span className="text-2xl">🎉</span>
+            {/* خلفية متحركة */}
+            <div className="absolute inset-0 overflow-hidden">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-10"
+                style={{
+                  background: 'conic-gradient(from 0deg, transparent, white, transparent, white, transparent)'
+                }}
+              />
+            </div>
+            
+            {/* النجوم المتساقطة */}
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(12)].map((_, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ y: -20, x: Math.random() * 100 + '%', opacity: 0 }}
+                  animate={{ 
+                    y: ['0%', '100%'], 
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.5, 1, 0.5]
+                  }}
+                  transition={{ 
+                    duration: 2 + Math.random() * 2,
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                    ease: "easeOut"
+                  }}
+                  className="absolute text-yellow-300"
+                  style={{ left: `${Math.random() * 100}%`, fontSize: `${10 + Math.random() * 10}px` }}
+                >
+                  ✨
+                </motion.span>
+              ))}
+            </div>
+
+            <div className="relative flex items-center justify-center gap-3 text-white">
+              <motion.span 
+                animate={{ scale: [1, 1.3, 1], rotate: [0, 15, -15, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
+                className="text-3xl"
+              >
+                🎉
+              </motion.span>
               <div className="text-center">
-                <span className="font-bold text-lg block">مبروك! حصلت على شحن مجاني</span>
-                <span className="text-sm text-green-100">وفرت مبلغ الشحن في هذا الطلب!</span>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                >
+                  <span className="font-bold text-xl block drop-shadow-lg">🎊 مبروك! 🎊</span>
+                  <span className="font-bold text-lg block">حصلت على شحن مجاني!</span>
+                </motion.div>
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm text-green-100 block mt-1"
+                >
+                  وفرت مبلغ الشحن في هذا الطلب! 💰
+                </motion.span>
               </div>
-              <span className="text-2xl">🎉</span>
+              <motion.span 
+                animate={{ scale: [1, 1.3, 1], rotate: [0, -15, 15, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
+                className="text-3xl"
+              >
+                🎉
+              </motion.span>
+            </div>
+            
+            {/* شريط التقدم الممتلئ */}
+            <div className="relative mt-3">
+              <div className="h-3 bg-white/30 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 rounded-full relative"
+                >
+                  <motion.div
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                  />
+                </motion.div>
+              </div>
+              <div className="flex justify-center mt-1">
+                <span className="text-xs text-white/90 font-bold bg-white/20 px-3 py-0.5 rounded-full">
+                  ✓ 100% - شحن مجاني!
+                </span>
+              </div>
             </div>
           </motion.div>
         )}
