@@ -1,0 +1,55 @@
+{
+  "summary": "Frontend testing completed for login button visibility on mobile. All 4 test scenarios passed: Login button 'دخول' appears in Header and bottom nav for non-logged-in users, changes to 'حسابي' after login, and all 5 bottom nav items are present.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Header.js line 340-349: Login button correctly shows only when !user with data-testid='login-btn'",
+    "MobileNav.js line 108: Bottom nav correctly shows 'دخول' for non-logged users and 'حسابي' for logged users",
+    "AuthContext.js: Token is stored in localStorage and user state is managed correctly",
+    "All data-testid attributes are properly implemented for testing"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A - Frontend only testing",
+    "frontend": "100% - All 4 scenarios verified working"
+  },
+  "test_credentials": {
+    "buyer": {"phone": "0933333333", "password": "user123"}
+  },
+  "seed_data_creation": "No seed data created - used existing test user",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login button visibility feature works correctly on mobile (390x844). Header shows 'دخول' for non-logged users, hidden after login. Bottom nav shows 'دخول' → 'حسابي' transition. Test with data-testid selectors: login-btn, phone-input, password-input, login-submit-btn, nav-دخول, nav-حسابي",
+  "features_tested": {
+    "Header login button for non-logged user": {
+      "status": "PASS",
+      "details": "data-testid='login-btn' visible with text 'دخول' when user is null"
+    },
+    "Bottom nav login for non-logged user": {
+      "status": "PASS",
+      "details": "data-testid='nav-دخول' visible with text 'دخول'"
+    },
+    "All 5 bottom nav items": {
+      "status": "PASS",
+      "details": "الرئيسية، الأصناف، طعام، السلة، دخول - all present"
+    },
+    "After login - header login hidden": {
+      "status": "PASS",
+      "details": "data-testid='login-btn' not found after login"
+    },
+    "After login - bottom nav shows حسابي": {
+      "status": "PASS",
+      "details": "data-testid='nav-حسابي' visible, nav-دخول not found"
+    }
+  },
+  "user_complaint_analysis": "User screenshot showed 'حسابي' instead of 'دخول' which means user WAS logged in. The feature is working correctly - 'حسابي' appears for logged-in users, 'دخول' for non-logged users. No bug found."
+}
