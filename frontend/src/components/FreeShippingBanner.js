@@ -223,9 +223,42 @@ const FreeShippingBanner = () => {
     );
   }
   
-  // إذا الشحن مجاني (بدون احتفال) - نخفي الشريط
+  // إذا الشحن مجاني - نعرض شريط أخضر يشجع على الشراء من متجر آخر
   if (qualifiesForFree) {
-    return null;
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -50, opacity: 0 }}
+          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
+          data-testid="free-shipping-achieved"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-1">
+              <Truck className="w-5 h-5 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium">
+                    ✓ توصيل مجاني! {isFoodPage && <span className="text-white/80">(أضف من متجر آخر لشحن مجاني إضافي)</span>}
+                  </span>
+                  <span className="text-white/80">100%</span>
+                </div>
+                <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden mt-1">
+                  <div className="h-full bg-white rounded-full w-full" />
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
   }
 
   // شريط التقدم
