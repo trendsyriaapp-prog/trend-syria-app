@@ -110,8 +110,10 @@ const CartPage = () => {
     };
   })();
   
-  // Check if shipping is free
-  const isFreeShipping = shippingInfo?.qualifies_for_free === true;
+  // Check if shipping is free - نتحقق من عدة مصادر
+  const allSellersFreeShipping = sellerShippingDetails.length > 0 && 
+    sellerShippingDetails.every(s => s.shipping_status === 'free');
+  const isFreeShipping = shippingInfo?.qualifies_for_free === true || allSellersFreeShipping;
   const shippingCost = shippingInfo?.shipping_cost || 0;
   
   // Apply coupon

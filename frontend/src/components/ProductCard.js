@@ -257,9 +257,17 @@ const ProductCard = ({ product, variant = 'default' }) => {
         {/* Content Section */}
         <div className="p-3 bg-white">
           {/* Product Name */}
-          <h3 className="font-bold text-sm line-clamp-2 mb-2 text-gray-800 group-hover:text-[#FF6B00] transition-colors leading-snug min-h-[2.5rem]">
+          <h3 className="font-bold text-sm line-clamp-2 mb-1 text-gray-800 group-hover:text-[#FF6B00] transition-colors leading-snug min-h-[2.5rem]">
             {product.name}
           </h3>
+          
+          {/* City - تحت اسم المنتج */}
+          {product.city && (
+            <div className="flex items-center gap-1 mb-2 text-gray-600">
+              <MapPin size={12} className="text-[#FF6B00]" />
+              <span className="text-xs">{product.city}</span>
+            </div>
+          )}
           
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
