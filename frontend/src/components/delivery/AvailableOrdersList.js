@@ -102,18 +102,33 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-blue-600">
                         <Phone size={10} /> {order.buyer_address?.phone}
                       </a>
-                      {/* زر فتح في خرائط Google */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
-                        }}
-                        className="w-full mt-2 bg-blue-500 text-white py-1.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
-                      >
-                        <Map size={12} />
-                        فتح في خرائط Google
-                      </button>
                     </div>
+                  </div>
+
+                  {/* أزرار الخرائط - زر للمطعم وزر للعميل */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // فتح موقع المطعم
+                        const storeAddr = order.seller_addresses?.[0];
+                        openInGoogleMaps(storeAddr?.address || order.store_name, storeAddr?.city || 'دمشق');
+                      }}
+                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Map size={12} />
+                      🏪 المطعم
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
+                      }}
+                      className="bg-blue-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Map size={12} />
+                      🏠 العميل
+                    </button>
                   </div>
 
                   {/* عدد المنتجات */}

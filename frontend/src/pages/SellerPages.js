@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -6,12 +6,13 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
-  Store, CreditCard, Edit2, Trash2, Save, Bell
+  Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
 import NotificationsDropdown from '../components/NotificationsDropdown';
+import useNotificationSound from '../hooks/useNotificationSound';
 
 // Imported Components
 import SellerAdsTab from '../components/seller/SellerAdsTab';
@@ -415,6 +416,11 @@ const SellerDashboardPage = () => {
   const [activeStatView, setActiveStatView] = useState(null);
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
 
+  // صوت التنبيه للطلبات الجديدة
+  const { playSound } = useNotificationSound();
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const previousPendingCountRef = useRef(0);
+
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
     const defaultTabForUser = isFoodSeller ? 'menu' : 'products';
@@ -433,6 +439,32 @@ const SellerDashboardPage = () => {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
+
+  // التحقق من الطلبات الجديدة وتشغيل الصوت
+  useEffect(() => {
+    if (isFoodSeller && soundEnabled) {
+      const pendingCount = foodOrders.filter(o => o.status === 'pending').length;
+      if (pendingCount > previousPendingCountRef.current && previousPendingCountRef.current !== 0) {
+        // هناك طلب جديد!
+        playSound();
+        toast({
+          title: "🔔 طلب جديد!",
+          description: `لديك ${pendingCount} طلب في الانتظار`,
+        });
+      }
+      previousPendingCountRef.current = pendingCount;
+    }
+  }, [foodOrders, isFoodSeller, soundEnabled, playSound, toast]);
+
+  // تحديث الطلبات كل 30 ثانية لبائع الطعام
+  useEffect(() => {
+    if (isFoodSeller && user?.is_approved) {
+      const interval = setInterval(() => {
+        fetchData();
+      }, 30000); // كل 30 ثانية
+      return () => clearInterval(interval);
+    }
+  }, [isFoodSeller, user?.is_approved]);
 
   useEffect(() => {
     if (user?.user_type === 'seller' || user?.user_type === 'food_seller') {
@@ -695,7 +727,22 @@ const SellerDashboardPage = () => {
                 </span>
               )}
             </div>
-            <NotificationsDropdown />
+            <div className="flex items-center gap-2">
+              {/* زر تفعيل/إيقاف صوت التنبيه */}
+              {isFoodSeller && (
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    soundEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
+                  }`}
+                  title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
+                  data-testid="sound-toggle-btn"
+                >
+                  {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
+              )}
+              <NotificationsDropdown />
+            </div>
           </div>
           {/* أزرار الإجراءات - شريط ممتلئ */}
           <div className="flex gap-1.5">

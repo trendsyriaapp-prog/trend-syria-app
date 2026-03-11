@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
@@ -19,6 +19,7 @@ import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 import NotificationsDropdown from '../components/NotificationsDropdown';
+import useNotificationSound from '../hooks/useNotificationSound';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -262,6 +263,11 @@ const DeliveryDashboard = () => {
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
 
+  // صوت التنبيه للطلبات الجديدة
+  const { playSound } = useNotificationSound();
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const previousAvailableCountRef = useRef(0);
+
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
     if (activeTab === 'available') {
@@ -299,6 +305,32 @@ const DeliveryDashboard = () => {
   
   // Working hours settings
   const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
+
+  // التحقق من الطلبات الجديدة وتشغيل الصوت
+  useEffect(() => {
+    if (soundEnabled) {
+      const totalAvailable = availableOrders.length + availableFoodOrders.length;
+      if (totalAvailable > previousAvailableCountRef.current && previousAvailableCountRef.current !== 0) {
+        // هناك طلب جديد متاح!
+        playSound();
+        toast({
+          title: "🔔 طلب جديد متاح!",
+          description: `هناك ${totalAvailable} طلب متاح للتوصيل`,
+        });
+      }
+      previousAvailableCountRef.current = totalAvailable;
+    }
+  }, [availableOrders, availableFoodOrders, soundEnabled, playSound, toast]);
+
+  // تحديث الطلبات كل 45 ثانية
+  useEffect(() => {
+    if (docStatus === 'approved') {
+      const interval = setInterval(() => {
+        fetchOrders();
+      }, 45000); // كل 45 ثانية
+      return () => clearInterval(interval);
+    }
+  }, [docStatus]);
 
   useEffect(() => {
     checkStatusAndFetch();
@@ -511,6 +543,17 @@ const DeliveryDashboard = () => {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-sm font-bold text-gray-900">{user?.full_name || 'موظف التوصيل'}</h1>
           <div className="flex items-center gap-2">
+            {/* زر تفعيل/إيقاف صوت التنبيه */}
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`p-1.5 rounded-full transition-colors ${
+                soundEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
+              }`}
+              title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
+              data-testid="delivery-sound-toggle-btn"
+            >
+              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
             <NotificationsDropdown />
             <Link
               to="/?view=customer"
