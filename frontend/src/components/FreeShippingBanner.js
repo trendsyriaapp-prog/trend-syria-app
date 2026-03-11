@@ -9,13 +9,9 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// الصفحات المسموحة لعرض الشريط (بدون صفحات سلة الطعام لأنها تحتوي على شريط خاص)
-const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food'];
+// الصفحات المسموحة لعرض الشريط
+const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
 const isAllowedPath = (pathname) => {
-  // إخفاء الشريط في صفحات سلة الطعام (لديها شريط خاص)
-  if (pathname.startsWith('/food/cart') || pathname.startsWith('/food/checkout')) {
-    return false;
-  }
   if (pathname === '/') return true;
   if (ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith('/products/')) return true;
@@ -35,7 +31,11 @@ const FreeShippingBanner = () => {
   // سلة الطعام - من Context
   const foodCart = useFoodCart();
   
-  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 3000000;
+  // تحديد إذا كنا في صفحات الطعام
+  const isFoodPage = location.pathname.startsWith('/food');
+  
+  // استخدام threshold المتجر (50,000) في صفحات الطعام، وإلا استخدام الإعدادات العامة
+  const FREE_SHIPPING_THRESHOLD = isFoodPage ? 50000 : (settings?.free_shipping_threshold || 3000000);
   
   const [dismissed, setDismissed] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
