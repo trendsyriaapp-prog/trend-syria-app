@@ -225,7 +225,9 @@ const FoodCartPage = () => {
   const finalSubtotal = subtotal - offerDiscount - couponDiscount;
   
   // التحقق من تطابق مدينة المستخدم مع مدينة المتجر
-  const userCity = user?.city?.trim() || '';
+  // نستخدم مدينة العنوان المثبت أولاً، ثم مدينة المستخدم كبديل
+  const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId);
+  const userCity = selectedAddress?.city?.trim() || user?.city?.trim() || '';
   const storeCity = store?.city?.trim() || '';
   const citiesMatch = !userCity || !storeCity || 
     userCity === storeCity ||
