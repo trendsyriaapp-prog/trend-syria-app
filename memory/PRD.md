@@ -35,6 +35,7 @@
 - تفعيل/إيقاف الأطباق
 - عرض طلبات الطعام
 - **زر صوت الإشعار** للتنبيه عند وصول طلب جديد
+- **زر إشعارات Push** للتنبيه حتى عند إغلاق التطبيق ✅ NEW
 
 ### 4. لوحة تحكم سائق التوصيل ✅
 - عرض الطلبات المتاحة (منتجات + طعام)
@@ -43,17 +44,26 @@
 - **أزرار خرائط مزدوجة** (للبائع/المطعم + للعميل)
 - **أزرار ديناميكية** تتغير حسب حالة الطلب
 - **زر صوت الإشعار** للتنبيه عند توفر طلب جديد
+- **زر إشعارات Push** للتنبيه حتى عند إغلاق التطبيق ✅ NEW
 - المحفظة والأرباح
 - لوحة الصدارة والتحديات
 - نقاط السلوك والإنجازات
 
-### 5. واجهة المشتري ✅
+### 5. نظام إشعارات Push ✅ NEW (11 مارس 2026)
+- **Service Worker** للتعامل مع الإشعارات في الخلفية
+- **VAPID Keys** للمصادقة الآمنة
+- **اشتراك تلقائي** حسب نوع المستخدم (delivery, food_seller)
+- **إرسال تلقائي** عند إنشاء طلب طعام جديد:
+  - إشعار لبائع الطعام
+  - إشعار لسائقي التوصيل
+
+### 6. واجهة المشتري ✅
 - تصفح المنتجات والمتاجر
 - تصفح المطاعم والأطباق
 - سلة المشتريات
 - تتبع الطلبات
 
-### 6. لوحة تحكم المدير ✅
+### 7. لوحة تحكم المدير ✅
 - إدارة المستخدمين
 - الموافقة على البائعين والسائقين
 - إعدادات التطبيق
@@ -82,11 +92,13 @@
 - TailwindCSS + Shadcn/UI
 - Framer Motion للحركات
 - Axios للـ API
+- **Service Worker** لـ Push Notifications
 
 ### Backend
 - FastAPI (Python)
 - MongoDB
 - JWT Authentication
+- **pywebpush** لإرسال Push Notifications
 
 ### الملفات الرئيسية
 ```
@@ -96,22 +108,40 @@
 │   │   ├── auth.py
 │   │   ├── delivery.py
 │   │   ├── food.py
-│   │   └── food_orders.py
+│   │   ├── food_orders.py
+│   │   └── push_notifications.py  ✅ NEW
 │   └── server.py
 └── frontend/
+    ├── public/
+    │   ├── sw-push.js  ✅ NEW (Service Worker)
+    │   └── notification.mp3
     └── src/
         ├── pages/
-        │   ├── SellerPages.js (seller + food_seller)
+        │   ├── SellerPages.js
         │   └── DeliveryPages.js
         ├── components/
+        │   ├── PushNotificationButton.js  ✅ NEW
         │   └── delivery/
         │       ├── AvailableOrdersList.js
         │       └── MyOrdersList.js
         ├── hooks/
-        │   └── useNotificationSound.js
+        │   ├── useNotificationSound.js
+        │   └── usePushNotifications.js  ✅ NEW
         └── utils/
             └── distanceCalculator.js
 ```
+
+---
+
+## API Endpoints الجديدة
+
+### Push Notifications
+- `GET /api/push/vapid-public-key` - الحصول على المفتاح العام
+- `POST /api/push/subscribe` - الاشتراك في الإشعارات
+- `POST /api/push/unsubscribe` - إلغاء الاشتراك
+- `POST /api/push/notify/sellers` - إرسال إشعار للبائعين
+- `POST /api/push/notify/food-sellers` - إرسال إشعار لبائعي الطعام
+- `POST /api/push/notify/delivery` - إرسال إشعار للسائقين
 
 ---
 
@@ -122,3 +152,7 @@
 - ✅ تحسين أزرار الخرائط لتكون ديناميكية حسب حالة الطلب
 - ✅ إضافة زر تحديد الموقع لرؤية المسافات قبل قبول الطلب
 - ✅ إضافة تلميحات للسائق حسب مرحلة التوصيل
+- ✅ **إضافة نظام إشعارات Push الكامل**:
+  - Service Worker للتعامل مع الإشعارات في الخلفية
+  - زر الاشتراك/إلغاء الاشتراك في لوحات التحكم
+  - إرسال تلقائي عند إنشاء طلب جديد

@@ -247,6 +247,26 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     
     await db.food_orders.insert_one(order_doc)
     
+    # إرسال إشعار Push للمتجر والسائقين
+    try:
+        from routes.push_notifications import (
+            send_new_order_notification_to_food_seller,
+            send_new_order_notification_to_delivery
+        )
+        # إشعار المتجر
+        await send_new_order_notification_to_food_seller(
+            store_id=order.store_id,
+            order_number=order_number,
+            total=total
+        )
+        # إشعار سائقي التوصيل
+        await send_new_order_notification_to_delivery(
+            order_type="طعام",
+            city=order.delivery_city
+        )
+    except Exception as e:
+        print(f"Push notification error: {e}")
+    
     # تحديث عداد استخدام العرض
     if offer_applied:
         await db.food_offers.update_one(

@@ -20,6 +20,7 @@ import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
+import PushNotificationButton from '../components/PushNotificationButton';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -543,6 +544,8 @@ const DeliveryDashboard = () => {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-sm font-bold text-gray-900">{user?.full_name || 'موظف التوصيل'}</h1>
           <div className="flex items-center gap-2">
+            {/* زر إشعارات Push */}
+            <PushNotificationButton userType="delivery" size="small" />
             {/* زر تفعيل/إيقاف صوت التنبيه */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}

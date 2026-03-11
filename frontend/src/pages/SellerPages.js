@@ -13,6 +13,7 @@ import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
+import PushNotificationButton from '../components/PushNotificationButton';
 
 // Imported Components
 import SellerAdsTab from '../components/seller/SellerAdsTab';
@@ -728,6 +729,10 @@ const SellerDashboardPage = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* زر إشعارات Push */}
+              {isFoodSeller && (
+                <PushNotificationButton userType="food_seller" size="small" />
+              )}
               {/* زر تفعيل/إيقاف صوت التنبيه */}
               {isFoodSeller && (
                 <button
