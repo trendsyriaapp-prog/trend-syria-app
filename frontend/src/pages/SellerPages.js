@@ -399,18 +399,41 @@ const SellerDashboardPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-3 py-4">
+        {/* Header with store name */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-sm font-bold text-gray-900">لوحة تحكم البائع</h1>
-          {activeTab === 'products' && (
-            <button
-              onClick={() => setShowAddProduct(true)}
-              className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
-              data-testid="add-product-btn"
+          <div>
+            <p className="text-[10px] text-gray-500">متجرك</p>
+            <h1 className="text-base font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* تصفح كعميل */}
+            <Link
+              to="/?view=customer"
+              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200 transition-colors"
             >
-              <Plus size={14} />
-              إضافة منتج
+              <Home size={14} />
+              <span>تصفح كعميل</span>
+            </Link>
+            {/* إرشادات التغليف */}
+            <button
+              onClick={() => navigate('/packaging-guide')}
+              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200 transition-colors"
+              title="إرشادات التغليف"
+            >
+              <BookOpen size={14} />
             </button>
-          )}
+            {/* إضافة منتج */}
+            {activeTab === 'products' && (
+              <button
+                onClick={() => setShowAddProduct(true)}
+                className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
+                data-testid="add-product-btn"
+              >
+                <Plus size={14} />
+                إضافة منتج
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -555,24 +578,6 @@ const SellerDashboardPage = () => {
           onClose={() => setPrintLabelOrder(null)}
         />
       )}
-
-      {/* Quick Access Buttons */}
-      <div className="fixed bottom-20 left-4 z-30 flex flex-col gap-2">
-        <Link
-          to="/?view=customer"
-          className="w-12 h-12 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all"
-          title="تصفح كعميل"
-        >
-          <Home size={20} />
-        </Link>
-        <button
-          onClick={() => navigate('/packaging-guide')}
-          className="w-12 h-12 bg-white text-[#FF6B00] border-2 border-[#FF6B00] rounded-full shadow-lg flex items-center justify-center hover:bg-orange-50"
-          title="إرشادات التغليف"
-        >
-          <BookOpen size={20} />
-        </button>
-      </div>
     </div>
   );
 };
