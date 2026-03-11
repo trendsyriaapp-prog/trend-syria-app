@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Truck, X, PartyPopper } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { useFoodCart } from '../context/FoodCartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
@@ -27,6 +28,15 @@ const FreeShippingBanner = () => {
   const { settings } = useSettings();
   const location = useLocation();
   
+  // سلة الطعام
+  let foodCartData = { totalItems: 0, totalAmount: 0 };
+  try {
+    const foodCart = useFoodCart();
+    foodCartData = { totalItems: foodCart.totalItems, totalAmount: foodCart.totalAmount };
+  } catch (e) {
+    // FoodCartContext غير متاح
+  }
+  
   const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 3000000;
   
   const [dismissed, setDismissed] = useState(false);
@@ -41,15 +51,17 @@ const FreeShippingBanner = () => {
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
   const isFoodPage = location.pathname.startsWith('/food');
 
-  // جلب بيانات السلة مباشرة من الـ API
+  // جلب بيانات السلة مباشرة من الـ API + سلة الطعام من Context
   const fetchCartData = async () => {
-    if (!token) return;
+    let total = 0;
+    let itemsCount = 0;
     
-    try {
-      let total = 0;
-      let itemsCount = 0;
-      
-      // جلب سلة المنتجات
+    // إضافة سلة الطعام (من Context/localStorage)
+    total += foodCartData.totalAmount || 0;
+    itemsCount += foodCartData.totalItems || 0;
+    
+    // جلب سلة المنتجات من API
+    if (token) {
       try {
         const productRes = await axios.get(`${API}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -57,24 +69,13 @@ const FreeShippingBanner = () => {
         total += productRes.data?.total || 0;
         itemsCount += productRes.data?.items?.length || 0;
       } catch (e) {}
-      
-      // جلب سلة الطعام
-      try {
-        const foodRes = await axios.get(`${API}/api/food/cart`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        total += foodRes.data?.subtotal || 0;
-        itemsCount += foodRes.data?.items?.length || 0;
-      } catch (e) {}
-      
-      setCartTotal(total);
-      setCartItemsCount(itemsCount);
-    } catch (error) {
-      // تجاهل الأخطاء
     }
+    
+    setCartTotal(total);
+    setCartItemsCount(itemsCount);
   };
 
-  // جلب بيانات السلة عند تحميل المكون وعند تغيير الصفحة
+  // جلب بيانات السلة عند تحميل المكون وعند تغيير الصفحة أو سلة الطعام
   useEffect(() => {
     fetchCartData();
     
@@ -86,7 +87,7 @@ const FreeShippingBanner = () => {
         clearInterval(fetchIntervalRef.current);
       }
     };
-  }, [token, location.pathname]);
+  }, [token, location.pathname, foodCartData.totalAmount, foodCartData.totalItems]);
 
   // الاستماع لتغييرات السلة
   useEffect(() => {
