@@ -253,6 +253,14 @@ const ProductCard = ({ product, variant = 'default' }) => {
             {product.name}
           </h3>
           
+          {/* المدينة */}
+          {product.city && (
+            <div className="flex items-center gap-1 mb-1 text-gray-500">
+              <MapPin size={10} className="text-[#FF6B00]" />
+              <span className="text-[10px]">{product.city}</span>
+            </div>
+          )}
+          
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
             <div className="flex items-center">
