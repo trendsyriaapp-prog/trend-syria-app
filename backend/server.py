@@ -315,7 +315,7 @@ async def seed_demo_data():
             "store_type": "restaurants",  # Required for API filter
             "category": "restaurant",
             "cuisine_type": "syrian",
-            "address": "دمشق - شارع الحمرا",
+            "address": "دمشق، سوريا",
             "phone": "0944444444",
             "city": "دمشق",
             "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
@@ -325,11 +325,25 @@ async def seed_demo_data():
             "delivery_time": "30-45",
             "min_order": 15000,
             "delivery_fee": 5000,
+            "free_delivery_minimum": 50000,
+            "minimum_order": 20000,
             "is_open": True,
             "is_active": True,  # Required for API filter
             "is_approved": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
+    else:
+        # تحديث المتجر الموجود لإضافة الحقول الناقصة
+        await db.food_stores.update_one(
+            {"owner_id": food_seller_id},
+            {"$set": {
+                "free_delivery_minimum": 50000,
+                "delivery_fee": 5000,
+                "minimum_order": 20000,
+                "city": "دمشق",
+                "address": "دمشق، سوريا"
+            }}
+        )
     
     # Demo food items for the restaurant
     food_store = await db.food_stores.find_one({"owner_id": food_seller_id})
