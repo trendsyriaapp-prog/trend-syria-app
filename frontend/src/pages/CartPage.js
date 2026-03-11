@@ -228,23 +228,22 @@ const CartPage = () => {
 
         {/* شريط الشحن المثبت - يظهر فقط إذا لم يصل للشحن المجاني */}
         {cart?.total > 0 && !isFreeShipping && (
-          <div className="bg-gradient-to-r from-[#FF6B00] to-orange-500 rounded-xl p-3 mb-3 shadow-md">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-white">
-                <div className="flex items-center gap-2">
-                  <Truck size={18} />
-                  <span className="text-sm font-medium">
-                    أضف {formatPrice(cartAnalysis.remainingForFree)} للشحن المجاني
-                  </span>
-                </div>
-                <span className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-full">
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 mb-3 shadow-sm">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-orange-700">
+                  أضف {formatPrice(cartAnalysis.remainingForFree)} للتوصيل المجاني
+                </span>
+                <span className="text-sm font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
                   {Math.round(cartAnalysis.progressToFree)}%
                 </span>
               </div>
-              <div className="h-2.5 bg-white/30 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-white rounded-full transition-all duration-500"
-                  style={{ width: `${cartAnalysis.progressToFree}%` }}
+              <div className="h-3 bg-orange-100 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${cartAnalysis.progressToFree}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-orange-300 to-[#FF6B00] rounded-full"
                 />
               </div>
             </div>
@@ -254,33 +253,20 @@ const CartPage = () => {
         {/* رسالة الشحن المجاني عند الوصول - احتفال كبير */}
         {isFreeShipping && (
           <motion.div 
-            initial={{ scale: 0.8, opacity: 0, y: -20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-xl p-4 mb-3 shadow-xl overflow-hidden"
+            className="relative bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-4 mb-3 shadow-md overflow-hidden"
           >
-            {/* خلفية متحركة */}
-            <div className="absolute inset-0 overflow-hidden">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-10"
-                style={{
-                  background: 'conic-gradient(from 0deg, transparent, white, transparent, white, transparent)'
-                }}
-              />
-            </div>
-            
             {/* النجوم المتساقطة */}
-            <div className="absolute inset-0 pointer-events-none">
-              {[...Array(12)].map((_, i) => (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(8)].map((_, i) => (
                 <motion.span
                   key={i}
-                  initial={{ y: -20, x: Math.random() * 100 + '%', opacity: 0 }}
+                  initial={{ y: -20, opacity: 0 }}
                   animate={{ 
                     y: ['0%', '100%'], 
                     opacity: [0, 1, 1, 0],
-                    scale: [0.5, 1, 0.5]
                   }}
                   transition={{ 
                     duration: 2 + Math.random() * 2,
@@ -288,44 +274,30 @@ const CartPage = () => {
                     delay: Math.random() * 2,
                     ease: "easeOut"
                   }}
-                  className="absolute text-yellow-300"
-                  style={{ left: `${Math.random() * 100}%`, fontSize: `${10 + Math.random() * 10}px` }}
+                  className="absolute text-yellow-400"
+                  style={{ left: `${10 + Math.random() * 80}%`, fontSize: '16px' }}
                 >
                   ✨
                 </motion.span>
               ))}
             </div>
 
-            <div className="relative flex items-center justify-center gap-3 text-white">
+            <div className="relative flex items-center justify-center gap-3">
               <motion.span 
-                animate={{ scale: [1, 1.3, 1], rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
-                className="text-3xl"
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }}
+                className="text-2xl"
               >
                 🎉
               </motion.span>
               <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                >
-                  <span className="font-bold text-xl block drop-shadow-lg">🎊 مبروك! 🎊</span>
-                  <span className="font-bold text-lg block">حصلت على شحن مجاني!</span>
-                </motion.div>
-                <motion.span 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-sm text-green-100 block mt-1"
-                >
-                  وفرت مبلغ الشحن في هذا الطلب! 💰
-                </motion.span>
+                <span className="font-bold text-lg text-green-700 block">مبروك! حصلت على توصيل مجاني!</span>
+                <span className="text-sm text-green-600">وفرت مبلغ التوصيل في هذا الطلب 💰</span>
               </div>
               <motion.span 
-                animate={{ scale: [1, 1.3, 1], rotate: [0, -15, 15, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 1 }}
-                className="text-3xl"
+                animate={{ scale: [1, 1.2, 1], rotate: [0, -10, 10, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }}
+                className="text-2xl"
               >
                 🎉
               </motion.span>
@@ -333,23 +305,23 @@ const CartPage = () => {
             
             {/* شريط التقدم الممتلئ */}
             <div className="relative mt-3">
-              <div className="h-3 bg-white/30 rounded-full overflow-hidden">
+              <div className="h-3 bg-green-100 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: '100%' }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 rounded-full relative"
+                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full relative"
                 >
                   <motion.div
                     animate={{ x: ['-100%', '100%'] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
                   />
                 </motion.div>
               </div>
-              <div className="flex justify-center mt-1">
-                <span className="text-xs text-white/90 font-bold bg-white/20 px-3 py-0.5 rounded-full">
-                  ✓ 100% - شحن مجاني!
+              <div className="flex justify-center mt-2">
+                <span className="text-xs text-green-700 font-bold bg-green-100 px-3 py-1 rounded-full">
+                  ✓ 100% - توصيل مجاني!
                 </span>
               </div>
             </div>
