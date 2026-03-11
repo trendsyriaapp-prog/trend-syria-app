@@ -123,7 +123,9 @@ const MobileNav = () => {
                   ? 'text-[#FF6B00]' 
                   : (item.isFood || item.isFoodCart)
                     ? 'text-[#FF6B00] hover:text-[#E65000]'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : (item.isAccount && !user)
+                      ? 'text-[#FF6B00] font-bold'
+                      : 'text-gray-500 hover:text-gray-700'
               }`}
               data-testid={`nav-${item.label}`}
             >
