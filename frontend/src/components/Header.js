@@ -42,6 +42,9 @@ const Header = () => {
   // التحقق إذا كان البائع في لوحة التحكم - لإخفاء شريط البحث
   const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
   
+  // التحقق إذا كان موظف التوصيل في لوحة التحكم
+  const isDeliveryDashboard = location.pathname === '/delivery/dashboard' && user?.user_type === 'delivery';
+  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
@@ -187,6 +190,9 @@ const Header = () => {
       });
     }
   };
+
+  // إخفاء الهيدر الكامل في لوحة تحكم البائع أو التوصيل (إلا إذا كان يتصفح كعميل)
+  if ((isSellerDashboard || isDeliveryDashboard) && !isViewingAsCustomer) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">

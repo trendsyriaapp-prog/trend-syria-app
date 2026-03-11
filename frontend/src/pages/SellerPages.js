@@ -6,11 +6,12 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
-  Store, CreditCard, Edit2, Trash2, Save
+  Store, CreditCard, Edit2, Trash2, Save, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
+import NotificationsDropdown from '../components/NotificationsDropdown';
 
 // Imported Components
 import SellerAdsTab from '../components/seller/SellerAdsTab';
@@ -421,9 +422,12 @@ const SellerDashboardPage = () => {
   return (
     <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
-        {/* Header with store name */}
+        {/* Header with store name and notifications */}
         <div className="mb-3">
-          <h1 className="text-sm font-bold text-gray-900 mb-2">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-sm font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+            <NotificationsDropdown />
+          </div>
           {/* أزرار الإجراءات - شريط ممتلئ */}
           <div className="flex gap-1.5">
             <Link

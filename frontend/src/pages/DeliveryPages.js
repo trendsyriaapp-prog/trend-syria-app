@@ -18,6 +18,7 @@ import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
+import NotificationsDropdown from '../components/NotificationsDropdown';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -497,15 +498,19 @@ const DeliveryDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
-        {/* Header مع زر تصفح كعميل */}
-        <div className="flex items-center justify-end mb-2">
-          <Link
-            to="/?view=customer"
-            className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200"
-          >
-            <Home size={14} />
-            <span>تصفح كعميل</span>
-          </Link>
+        {/* Header مع زر تصفح كعميل والإشعارات */}
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-sm font-bold text-gray-900">{user?.full_name || 'موظف التوصيل'}</h1>
+          <div className="flex items-center gap-2">
+            <NotificationsDropdown />
+            <Link
+              to="/?view=customer"
+              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200"
+            >
+              <Home size={14} />
+              <span>تصفح كعميل</span>
+            </Link>
+          </div>
         </div>
 
         <DeliveryHeader 
