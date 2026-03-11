@@ -3,12 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  Package, DollarSign, ShoppingBag, TrendingUp, Plus,
-  Clock, AlertCircle, Star, Wallet, BarChart3,
-  Megaphone, Gift, ChevronLeft, Eye
+  Package, DollarSign, ShoppingBag, Plus, Clock, AlertCircle, 
+  Star, Wallet, BarChart3, Megaphone, Gift, ChevronLeft, Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/imageHelpers';
@@ -60,209 +58,157 @@ const SellerHomePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full" />
+        <div className="animate-spin w-6 h-6 border-3 border-purple-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-purple-200 text-sm">متجرك</p>
-              <h1 className="text-xl font-bold">{user?.business_name || user?.full_name}</h1>
-            </div>
-            <Link 
-              to="/seller/dashboard?tab=add-product"
-              className="bg-white text-purple-600 px-4 py-2 rounded-full font-bold text-sm flex items-center gap-1"
-            >
-              <Plus size={16} />
-              منتج جديد
-            </Link>
+      {/* Header مصغر */}
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-purple-200 text-[10px]">متجرك</p>
+            <h1 className="text-base font-bold">{user?.business_name || user?.full_name}</h1>
           </div>
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-4 gap-2">
-            <div className="bg-white/20 rounded-xl p-3 text-center">
-              <DollarSign size={20} className="mx-auto mb-1" />
-              <p className="text-lg font-bold">{formatPrice(stats.todaySales)}</p>
-              <p className="text-[10px] text-purple-200">مبيعات اليوم</p>
+          <Link 
+            to="/seller/dashboard?tab=add-product"
+            className="bg-white text-purple-600 px-3 py-1.5 rounded-full font-bold text-[10px] flex items-center gap-1"
+          >
+            <Plus size={12} />
+            منتج جديد
+          </Link>
+        </div>
+        
+        {/* Stats مصغرة */}
+        <div className="grid grid-cols-4 gap-1.5">
+          {[
+            { icon: DollarSign, value: formatPrice(stats.todaySales), label: 'المبيعات' },
+            { icon: ShoppingBag, value: stats.todayOrders, label: 'الطلبات' },
+            { icon: Star, value: stats.rating.toFixed(1), label: 'التقييم' },
+            { icon: Wallet, value: formatPrice(stats.walletBalance), label: 'المحفظة' }
+          ].map((item, i) => (
+            <div key={i} className="bg-white/15 rounded-lg p-2 text-center">
+              <item.icon size={12} className="mx-auto mb-0.5" />
+              <p className="text-sm font-bold">{item.value}</p>
+              <p className="text-[8px] text-purple-200">{item.label}</p>
             </div>
-            <div className="bg-white/20 rounded-xl p-3 text-center">
-              <ShoppingBag size={20} className="mx-auto mb-1" />
-              <p className="text-lg font-bold">{stats.todayOrders}</p>
-              <p className="text-[10px] text-purple-200">طلبات اليوم</p>
-            </div>
-            <div className="bg-white/20 rounded-xl p-3 text-center">
-              <Star size={20} className="mx-auto mb-1" />
-              <p className="text-lg font-bold">{stats.rating.toFixed(1)}</p>
-              <p className="text-[10px] text-purple-200">التقييم</p>
-            </div>
-            <div className="bg-white/20 rounded-xl p-3 text-center">
-              <Wallet size={20} className="mx-auto mb-1" />
-              <p className="text-lg font-bold">{formatPrice(stats.walletBalance)}</p>
-              <p className="text-[10px] text-purple-200">المحفظة</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        {/* Pending Orders Alert */}
+      <div className="px-3 py-3">
+        {/* تنبيه طلبات معلقة */}
         {stats.pendingOrders > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6"
-          >
-            <Link to="/seller/dashboard?tab=orders" className="flex items-center gap-3">
-              <AlertCircle size={24} className="text-orange-600" />
+          <Link to="/seller/dashboard?tab=orders">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+              <AlertCircle size={16} className="text-orange-600" />
               <div className="flex-1">
-                <h3 className="font-bold text-orange-800">لديك {stats.pendingOrders} طلب بانتظار المعالجة</h3>
-                <p className="text-orange-600 text-sm">اضغط هنا لمعالجة الطلبات</p>
+                <span className="font-bold text-orange-800 text-xs">{stats.pendingOrders} طلب بانتظار المعالجة</span>
               </div>
-              <ChevronLeft size={20} className="text-orange-600" />
-            </Link>
-          </motion.div>
+              <ChevronLeft size={14} className="text-orange-600" />
+            </div>
+          </Link>
         )}
 
-        {/* Recent Orders */}
-        <section className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <ShoppingBag size={18} className="text-blue-600" />
-              </div>
-              <h2 className="font-bold text-gray-900">آخر الطلبات</h2>
+        {/* آخر الطلبات */}
+        <section className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <ShoppingBag size={14} className="text-blue-600" />
+              <h2 className="font-bold text-gray-900 text-sm">آخر الطلبات</h2>
             </div>
-            <Link to="/seller/dashboard?tab=orders" className="text-[#FF6B00] text-sm font-medium">
-              عرض الكل
-            </Link>
+            <Link to="/seller/dashboard?tab=orders" className="text-purple-600 text-[10px] font-medium">الكل</Link>
           </div>
 
           {recentOrders.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-              <ShoppingBag size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">لا توجد طلبات جديدة</p>
+            <div className="bg-white rounded-lg p-6 text-center border">
+              <ShoppingBag size={28} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-xs">لا توجد طلبات جديدة</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {recentOrders.map((order) => (
+            <div className="space-y-2">
+              {recentOrders.slice(0, 3).map((order) => (
                 <Link key={order.id} to={`/seller/order/${order.id}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:border-purple-300 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-gray-900">طلب #{order.id?.slice(-6)}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                        order.status === 'shipped' ? 'bg-purple-100 text-purple-700' :
-                        'bg-green-100 text-green-700'
+                  <div className="bg-white rounded-lg border p-2.5 hover:border-purple-300 transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-xs">#{order.id?.slice(-6)}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
                       }`}>
-                        {order.status === 'pending' ? 'جديد' :
-                         order.status === 'processing' ? 'قيد المعالجة' :
-                         order.status === 'shipped' ? 'تم الشحن' : 'مكتمل'}
+                        {order.status === 'pending' ? 'جديد' : 'مكتمل'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">{order.items?.length || 0} منتج</span>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-gray-600">{order.items?.length || 0} منتج</span>
                       <span className="font-bold text-purple-600">{formatPrice(order.total)}</span>
                     </div>
-                  </motion.div>
+                  </div>
                 </Link>
               ))}
             </div>
           )}
         </section>
 
-        {/* Store Stats */}
-        <section className="mb-6">
-          <h2 className="font-bold text-gray-900 mb-3">إحصائيات المتجر</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+        {/* إحصائيات */}
+        <section className="mb-4">
+          <h2 className="font-bold text-gray-900 text-sm mb-2">إحصائيات</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white rounded-lg p-3 border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-xs">عدد المنتجات</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+                  <p className="text-gray-500 text-[10px]">المنتجات</p>
+                  <p className="text-xl font-bold">{stats.totalProducts}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Package size={24} className="text-purple-600" />
-                </div>
+                <Package size={20} className="text-purple-500" />
               </div>
             </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <div className="bg-white rounded-lg p-3 border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-xs">المشاهدات</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalViews}</p>
+                  <p className="text-gray-500 text-[10px]">المشاهدات</p>
+                  <p className="text-xl font-bold">{stats.totalViews}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Eye size={24} className="text-blue-600" />
-                </div>
+                <Eye size={20} className="text-blue-500" />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Quick Actions */}
-        <section className="mb-6">
-          <h2 className="font-bold text-gray-900 mb-3">إجراءات سريعة</h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Link to="/seller/dashboard?tab=products">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <Package size={24} className="text-purple-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">منتجاتي</p>
-              </div>
-            </Link>
-            <Link to="/seller/dashboard?tab=ads">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <Megaphone size={24} className="text-orange-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">الإعلانات</p>
-              </div>
-            </Link>
-            <Link to="/seller/dashboard?tab=discounts">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <Gift size={24} className="text-pink-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">الخصومات</p>
-              </div>
-            </Link>
-            <Link to="/seller/dashboard?tab=wallet">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <Wallet size={24} className="text-green-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">المحفظة</p>
-              </div>
-            </Link>
-            <Link to="/seller/dashboard?tab=analytics">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <BarChart3 size={24} className="text-blue-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">التحليلات</p>
-              </div>
-            </Link>
-            <Link to="/seller/dashboard?tab=reviews">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 text-center hover:border-purple-300 transition-colors">
-                <Star size={24} className="text-yellow-500 mx-auto mb-2" />
-                <p className="font-medium text-gray-900 text-xs">التقييمات</p>
-              </div>
-            </Link>
+        {/* اختصارات */}
+        <section className="mb-4">
+          <h2 className="font-bold text-gray-900 text-sm mb-2">اختصارات</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { to: '/seller/dashboard?tab=products', icon: Package, label: 'منتجاتي', color: 'text-purple-500' },
+              { to: '/seller/dashboard?tab=ads', icon: Megaphone, label: 'الإعلانات', color: 'text-orange-500' },
+              { to: '/seller/dashboard?tab=discounts', icon: Gift, label: 'الخصومات', color: 'text-pink-500' },
+              { to: '/seller/dashboard?tab=wallet', icon: Wallet, label: 'المحفظة', color: 'text-green-500' },
+              { to: '/seller/dashboard?tab=analytics', icon: BarChart3, label: 'التحليلات', color: 'text-blue-500' },
+              { to: '/seller/dashboard?tab=reviews', icon: Star, label: 'التقييمات', color: 'text-yellow-500' }
+            ].map((item, i) => (
+              <Link key={i} to={item.to}>
+                <div className="bg-white rounded-lg p-3 border text-center hover:border-purple-300 transition-colors">
+                  <item.icon size={16} className={`${item.color} mx-auto mb-1`} />
+                  <p className="text-[9px] text-gray-700 font-medium">{item.label}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
-        {/* Browse as Customer */}
+        {/* تصفح كعميل */}
         <Link to="/?view=customer">
-          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-xl p-4 text-white flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ShoppingBag size={24} />
+          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-lg p-3 text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingBag size={16} />
               <div>
-                <p className="font-bold">تصفح كعميل</p>
-                <p className="text-xs text-orange-100">شاهد متجرك كما يراه العملاء</p>
+                <p className="font-bold text-sm">تصفح كعميل</p>
+                <p className="text-[9px] text-orange-100">شاهد متجرك كما يراه العملاء</p>
               </div>
             </div>
-            <ChevronLeft size={20} />
+            <ChevronLeft size={16} />
           </div>
         </Link>
       </div>
