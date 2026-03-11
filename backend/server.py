@@ -312,6 +312,7 @@ async def seed_demo_data():
             "owner_id": food_seller_id,
             "name": "مطعم الشام",
             "description": "أشهى المأكولات الشامية التقليدية",
+            "store_type": "restaurants",  # Required for API filter
             "category": "restaurant",
             "cuisine_type": "syrian",
             "address": "دمشق - شارع الحمرا",
@@ -325,6 +326,7 @@ async def seed_demo_data():
             "min_order": 15000,
             "delivery_fee": 5000,
             "is_open": True,
+            "is_active": True,  # Required for API filter
             "is_approved": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
@@ -332,7 +334,7 @@ async def seed_demo_data():
     # Demo food items for the restaurant
     food_store = await db.food_stores.find_one({"owner_id": food_seller_id})
     if food_store:
-        existing_items = await db.food_items.count_documents({"store_id": food_store["id"]})
+        existing_items = await db.food_products.count_documents({"store_id": food_store["id"]})
         if existing_items == 0:
             demo_food_items = [
         {
@@ -374,7 +376,7 @@ async def seed_demo_data():
         ]
         
             for item in demo_food_items:
-                await db.food_items.insert_one({
+                await db.food_products.insert_one({
                     "id": str(uuid.uuid4()),
                     "store_id": food_store["id"],
                     "seller_id": food_seller_id,
