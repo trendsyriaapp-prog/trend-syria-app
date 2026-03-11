@@ -64,8 +64,8 @@ const FoodDeliveryBanner = () => {
           // التحقق من الوصول للتوصيل المجاني
           if (freeDeliveryMin > 0 && total >= freeDeliveryMin && cartTotal < freeDeliveryMin) {
             setShowCelebration(true);
+            setHideAfterFreeDelivery(true); // إخفاء الشريط العادي فوراً
             setTimeout(() => setShowCelebration(false), 3000);
-            setTimeout(() => setHideAfterFreeDelivery(true), 5000);
           }
           
           setCartTotal(total);
@@ -150,13 +150,13 @@ const FoodDeliveryBanner = () => {
   const remaining = Math.max(freeDeliveryMin - cartTotal, 0);
   const isFreeDelivery = freeDeliveryMin > 0 && cartTotal >= freeDeliveryMin;
   
-  // إخفاء الشريط بعد الحصول على التوصيل المجاني
-  if (hideAfterFreeDelivery && isFreeDelivery) return null;
+  // إخفاء الشريط بالكامل بعد انتهاء الاحتفال
+  if (hideAfterFreeDelivery && !showCelebration) return null;
 
   return (
     <div className="sticky top-[52px] z-40">
     <AnimatePresence>
-      {/* شريط الاحتفال */}
+      {/* شريط الاحتفال فقط - لا يظهر شريط آخر بعده */}
       {showCelebration && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -172,8 +172,8 @@ const FoodDeliveryBanner = () => {
         </motion.div>
       )}
 
-      {/* شريط التقدم للشحن المجاني - يظهر فقط في صفحات المتاجر */}
-      {!showCelebration && (
+      {/* شريط التقدم للشحن المجاني - يظهر فقط قبل الحصول على التوصيل المجاني */}
+      {!showCelebration && !isFreeDelivery && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -193,7 +193,7 @@ const FoodDeliveryBanner = () => {
                 </div>
 
                 {/* عرض شريط التقدم */}
-                {freeDeliveryMin > 0 && !isFreeDelivery && (
+                {freeDeliveryMin > 0 && (
                   <div className="flex items-center gap-2 flex-1 max-w-[200px]">
                     <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
                       <motion.div
@@ -206,14 +206,6 @@ const FoodDeliveryBanner = () => {
                     <span className="text-[10px] whitespace-nowrap">
                       {cartTotal > 0 ? `${formatPrice(remaining)} للمجاني` : `توصيل مجاني من ${formatPrice(freeDeliveryMin)}`}
                     </span>
-                  </div>
-                )}
-
-                {/* رسالة التوصيل المجاني */}
-                {isFreeDelivery && (
-                  <div className="flex items-center gap-1 text-xs bg-white/20 rounded-full px-2 py-0.5">
-                    <Truck size={12} />
-                    <span className="font-bold">توصيل مجاني ✓</span>
                   </div>
                 )}
               </Link>
