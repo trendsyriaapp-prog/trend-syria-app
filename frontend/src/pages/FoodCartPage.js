@@ -223,10 +223,12 @@ const FoodCartPage = () => {
   const storeDeliveryFee = store?.delivery_fee || 5000;
   const freeDeliveryMin = store?.free_delivery_minimum || 0;
   const finalSubtotal = subtotal - offerDiscount - couponDiscount;
-  const isFreeDelivery = isCouponFreeDelivery || (freeDeliveryMin > 0 && (subtotal - offerDiscount) >= freeDeliveryMin);
+  // التحقق من التوصيل المجاني: فقط إذا كان هناك حد أدنى محدد وتم الوصول إليه
+  const qualifiesForFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
+  const isFreeDelivery = isCouponFreeDelivery || qualifiesForFreeDelivery;
   const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
   const total = finalSubtotal + deliveryFee;
-  const remainingForFree = freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - (subtotal - offerDiscount)) : 0;
+  const remainingForFree = freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - subtotal) : 0;
 
   // التحقق من كوبون الخصم
   const validateCoupon = async () => {
