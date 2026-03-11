@@ -515,14 +515,23 @@ const FoodCartPage = () => {
           </AnimatePresence>
         </div>
 
-        {/* Free Delivery Progress - فقط إذا كانت المدن متطابقة */}
-        {store?.free_delivery_minimum > 0 && citiesMatch && (
+        {/* Free Delivery Progress - شريط التوصيل المجاني */}
+        {store?.free_delivery_minimum > 0 && (
           <div className={`rounded-xl p-3 border ${
-            subtotal >= store.free_delivery_minimum 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-orange-50 border-orange-200'
+            !citiesMatch 
+              ? 'bg-yellow-50 border-yellow-200'
+              : subtotal >= store.free_delivery_minimum 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-orange-50 border-orange-200'
           }`}>
-            {subtotal >= store.free_delivery_minimum ? (
+            {!citiesMatch ? (
+              <div className="flex items-center gap-2 text-yellow-700">
+                <AlertCircle size={18} className="text-yellow-600" />
+                <span className="text-sm font-medium">
+                  ملاحظة: أنت في {userCity} والمتجر في {storeCity}. التوصيل المجاني غير متاح.
+                </span>
+              </div>
+            ) : subtotal >= store.free_delivery_minimum ? (
               <div className="flex items-center gap-2 text-green-700">
                 <Check size={18} className="text-green-600" />
                 <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
@@ -545,18 +554,6 @@ const FoodCartPage = () => {
                 </div>
               </div>
             )}
-          </div>
-        )}
-        
-        {/* تنبيه إذا كان المستخدم في مدينة مختلفة */}
-        {store && userCity && storeCity && !citiesMatch && (
-          <div className="rounded-xl p-3 border border-yellow-300 bg-yellow-50">
-            <div className="flex items-center gap-2 text-yellow-800">
-              <AlertCircle size={18} className="text-yellow-600" />
-              <span className="text-sm font-medium">
-                ملاحظة: أنت في {userCity} والمتجر في {storeCity}. قد تختلف تكلفة التوصيل.
-              </span>
-            </div>
           </div>
         )}
 
