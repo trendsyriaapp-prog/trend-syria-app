@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag } from 'lucide-react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const MobileNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const { totalItems: foodCartCount, stores: foodStores } = useFoodCart();
@@ -27,6 +28,12 @@ const MobileNav = () => {
   
   // هل نحن في صفحات الطعام؟
   const isInFoodSection = location.pathname.startsWith('/food');
+  
+  // هل البائع في لوحة التحكم الخاصة به؟
+  const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
+  
+  // هل يتصفح كعميل؟
+  const isViewingAsCustomer = searchParams.get('view') === 'customer';
 
   // تحديد رابط سلة الطعام بذكاء
   const getFoodCartPath = () => {
@@ -57,7 +64,15 @@ const MobileNav = () => {
   // بناء قائمة التنقل حسب القسم الحالي
   let navItems = [];
   
-  if (isInFoodSection && foodEnabled) {
+  // شريط خاص بالبائع في لوحة التحكم
+  if (isSellerDashboard && !isViewingAsCustomer) {
+    navItems = [
+      { path: '/seller/dashboard', icon: Home, label: 'لوحة التحكم' },
+      { path: '/seller/orders', icon: ClipboardList, label: 'الطلبات' },
+      { path: '/wallet', icon: Wallet, label: 'المحفظة' },
+      { path: '/settings', icon: Settings, label: 'الإعدادات' }
+    ];
+  } else if (isInFoodSection && foodEnabled) {
     // في قسم الطعام: نعرض سلة الطعام فقط
     navItems = [
       { path: '/', icon: Home, label: 'الرئيسية' },

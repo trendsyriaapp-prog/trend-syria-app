@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -27,6 +27,7 @@ const Header = () => {
   const { cartCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
   // التحقق إذا كنا في صفحة المنتج
@@ -37,6 +38,15 @@ const Header = () => {
   
   // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
   const isFoodPage = location.pathname.startsWith('/food');
+  
+  // التحقق إذا كان البائع في لوحة التحكم - لإخفاء شريط البحث
+  const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
+  
+  // هل يتصفح كعميل؟
+  const isViewingAsCustomer = searchParams.get('view') === 'customer';
+  
+  // إخفاء شريط البحث للبائع في لوحة التحكم (إلا إذا كان يتصفح كعميل)
+  const hideSearchBar = (isSellerDashboard && !isViewingAsCustomer) || isFoodPage;
 
   // جلب سجل البحث
   useEffect(() => {
@@ -190,8 +200,8 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Search Bar - شريط البحث الطويل - يختفي في صفحات الطعام */}
-          {!isFoodPage && (
+          {/* Search Bar - شريط البحث الطويل - يختفي في صفحات الطعام ولوحة تحكم البائع */}
+          {!hideSearchBar && (
           <form onSubmit={handleSearch} className="flex-1 relative">
             <div className="relative">
               <input
