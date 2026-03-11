@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, Heart, Play, Flame, Sparkles, ShoppingCart, Truck } from 'lucide-react';
+import { Star, Heart, Play, Flame, Sparkles, ShoppingCart, Truck, MapPin } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -243,6 +243,14 @@ const ProductCard = ({ product, variant = 'default' }) => {
               <Play size={12} className="fill-current" />
               <span className="text-[10px] font-medium">فيديو</span>
             </motion.div>
+          )}
+          
+          {/* City Badge */}
+          {product.city && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 text-gray-700 px-2 py-1 rounded-full z-20 shadow-sm">
+              <MapPin size={12} className="text-[#FF6B00]" />
+              <span className="text-[10px] font-medium">{product.city}</span>
+            </div>
           )}
         </div>
 
