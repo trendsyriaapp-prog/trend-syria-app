@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   ShoppingBag, Plus, Minus, Trash2, MapPin, Phone, 
   CreditCard, Wallet, Clock, ArrowLeft, Store, AlertTriangle,
-  Ticket, Check, X, Truck, Home, Building, Star
+  Ticket, Check, X, Truck, Home, Building, Star, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -223,12 +223,21 @@ const FoodCartPage = () => {
   const storeDeliveryFee = store?.delivery_fee || 5000;
   const freeDeliveryMin = store?.free_delivery_minimum || 0;
   const finalSubtotal = subtotal - offerDiscount - couponDiscount;
-  // التحقق من التوصيل المجاني: فقط إذا كان هناك حد أدنى محدد وتم الوصول إليه
-  const qualifiesForFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
+  
+  // التحقق من تطابق مدينة المستخدم مع مدينة المتجر
+  const userCity = user?.city?.trim() || '';
+  const storeCity = store?.city?.trim() || '';
+  const citiesMatch = !userCity || !storeCity || 
+    userCity === storeCity ||
+    userCity.includes(storeCity) || storeCity.includes(userCity);
+  
+  // التحقق من التوصيل المجاني: فقط إذا كان هناك حد أدنى محدد وتم الوصول إليه والمدن متطابقة
+  const qualifiesForFreeDelivery = citiesMatch && freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
   const isFreeDelivery = isCouponFreeDelivery || qualifiesForFreeDelivery;
   const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
   const total = finalSubtotal + deliveryFee;
-  const remainingForFree = freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - subtotal) : 0;
+  // إظهار المتبقي للشحن المجاني فقط إذا كانت المدن متطابقة
+  const remainingForFree = citiesMatch && freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - subtotal) : 0;
 
   // التحقق من كوبون الخصم
   const validateCoupon = async () => {
@@ -504,16 +513,16 @@ const FoodCartPage = () => {
           </AnimatePresence>
         </div>
 
-        {/* Free Delivery Progress */}
-        {store?.free_delivery_minimum > 0 && (
+        {/* Free Delivery Progress - فقط إذا كانت المدن متطابقة */}
+        {store?.free_delivery_minimum > 0 && citiesMatch && (
           <div className={`rounded-xl p-3 border ${
             subtotal >= store.free_delivery_minimum 
-              ? 'bg-orange-50 border-orange-200' 
+              ? 'bg-green-50 border-green-200' 
               : 'bg-orange-50 border-orange-200'
           }`}>
             {subtotal >= store.free_delivery_minimum ? (
-              <div className="flex items-center gap-2 text-orange-700">
-                <Check size={18} className="text-[#E65000]" />
+              <div className="flex items-center gap-2 text-green-700">
+                <Check size={18} className="text-green-600" />
                 <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
               </div>
             ) : (
@@ -534,6 +543,18 @@ const FoodCartPage = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* تنبيه إذا كان المستخدم في مدينة مختلفة */}
+        {store && userCity && storeCity && !citiesMatch && (
+          <div className="rounded-xl p-3 border border-yellow-300 bg-yellow-50">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <AlertCircle size={18} className="text-yellow-600" />
+              <span className="text-sm font-medium">
+                ملاحظة: أنت في {userCity} والمتجر في {storeCity}. قد تختلف تكلفة التوصيل.
+              </span>
+            </div>
           </div>
         )}
 

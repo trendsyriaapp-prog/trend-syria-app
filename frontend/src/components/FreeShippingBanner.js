@@ -34,6 +34,38 @@ const FreeShippingBanner = () => {
   // تحديد إذا كنا في صفحات الطعام
   const isFoodPage = location.pathname.startsWith('/food');
   
+  // الحصول على مدينة المستخدم
+  const userCity = user?.city || '';
+  
+  // في صفحات الطعام: التحقق من أن المستخدم في نفس مدينة المتجر
+  // إذا كان المستخدم في مدينة مختلفة، لا نظهر شريط الشحن المجاني
+  const [storeCity, setStoreCity] = useState('');
+  
+  // جلب مدينة المتجر من سلة الطعام
+  useEffect(() => {
+    if (isFoodPage && foodCart?.stores?.length > 0) {
+      // جلب معلومات المتجر الأول في السلة
+      const fetchStoreCity = async () => {
+        try {
+          const storeId = foodCart.stores[0]?.storeId;
+          if (storeId) {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/food/stores/${storeId}`);
+            const data = await response.json();
+            setStoreCity(data?.city || '');
+          }
+        } catch (e) {
+          console.error('Error fetching store city:', e);
+        }
+      };
+      fetchStoreCity();
+    }
+  }, [isFoodPage, foodCart?.stores]);
+  
+  // التحقق من تطابق المدن (للطعام فقط)
+  const citiesMatch = !isFoodPage || !userCity || !storeCity || 
+    userCity.trim() === storeCity.trim() ||
+    userCity.includes(storeCity) || storeCity.includes(userCity);
+  
   // استخدام threshold المتجر (50,000) في صفحات الطعام، وإلا استخدام الإعدادات العامة
   const FREE_SHIPPING_THRESHOLD = isFoodPage ? 50000 : (settings?.free_shipping_threshold || 3000000);
   
@@ -148,7 +180,8 @@ const FreeShippingBanner = () => {
   // شروط عدم الإظهار
   const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems) {
+  // إخفاء الشريط إذا كان المستخدم في مدينة مختلفة عن المتجر (للطعام)
+  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems || (isFoodPage && !citiesMatch)) {
     return null;
   }
 

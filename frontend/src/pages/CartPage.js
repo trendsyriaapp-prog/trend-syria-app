@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle, Store, MapPin } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle, Store, MapPin, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -89,8 +89,8 @@ const CartPage = () => {
   }, [user, cart.items.length > 0]); // تبسيط الـ dependency
   
   // تحليل السلة لمعرفة حالة الشحن
-  const cartAnalysis = () => {
-    if (!cart.items.length) return { sellerCount: 0, isSingleSeller: false };
+  const cartAnalysis = (() => {
+    if (!cart?.items?.length) return { sellerCount: 0, isSingleSeller: false, remainingForFree: FREE_SHIPPING_THRESHOLD, progressToFree: 0 };
     
     const sellerIds = new Set();
     cart.items.forEach(item => {
@@ -99,14 +99,16 @@ const CartPage = () => {
       }
     });
     
+    const remaining = shippingInfo?.remaining_for_free || Math.max(0, FREE_SHIPPING_THRESHOLD - (cart.total || 0));
+    const progress = Math.min(((cart.total || 0) / FREE_SHIPPING_THRESHOLD) * 100, 100);
+    
     return {
       sellerCount: sellerIds.size,
       isSingleSeller: sellerIds.size === 1,
-      remainingForFree: shippingInfo?.remaining_for_free || Math.max(0, FREE_SHIPPING_THRESHOLD - cart.total)
+      remainingForFree: remaining,
+      progressToFree: isNaN(progress) ? 0 : progress
     };
-  };
-  
-  const analysis = cartAnalysis();
+  })();
   
   // Check if shipping is free
   const isFreeShipping = shippingInfo?.qualifies_for_free === true;
@@ -224,15 +226,64 @@ const CartPage = () => {
 
         {/* شريط التقدم للشحن المجاني - فقط للمتاجر من نفس المحافظة */}
         {sellerShippingDetails.length > 0 && sellerShippingDetails.some(s => s.shipping_status === 'paid_can_be_free') && (
-          <div className="bg-gradient-to-l from-[#FF6B00] to-orange-400 rounded-lg p-2 mb-3">
-            {sellerShippingDetails.filter(s => s.shipping_status === 'paid_can_be_free').map((seller) => (
-              <div key={seller.seller_id} className="flex items-center gap-2 text-white">
-                <Truck size={14} />
-                <span className="text-xs">
-                  أضف <strong>{formatPrice(seller.remaining_for_free)}</strong> من "{seller.seller_name}" للشحن المجاني
+          <div className="bg-gradient-to-l from-[#FF6B00] to-orange-400 rounded-lg p-3 mb-3">
+            {sellerShippingDetails.filter(s => s.shipping_status === 'paid_can_be_free').map((seller) => {
+              const progress = Math.min(((seller.seller_subtotal || 0) / (seller.free_shipping_threshold || FREE_SHIPPING_THRESHOLD)) * 100, 100);
+              return (
+                <div key={seller.seller_id} className="space-y-2">
+                  <div className="flex items-center justify-between text-white">
+                    <div className="flex items-center gap-2">
+                      <Truck size={16} />
+                      <span className="text-sm font-medium">
+                        أضف {formatPrice(seller.remaining_for_free)} من "{seller.seller_name}" للشحن المجاني
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="h-2 bg-white/30 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-white rounded-full transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* شريط الشحن المجاني الإجمالي */}
+        {cart?.total > 0 && !isFreeShipping && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <Truck size={16} />
+                  <span className="text-sm font-medium">
+                    أضف {formatPrice(cartAnalysis.remainingForFree)} للشحن المجاني
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-orange-600">
+                  {Math.round(cartAnalysis.progressToFree)}%
                 </span>
               </div>
-            ))}
+              <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
+                  style={{ width: `${cartAnalysis.progressToFree}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* رسالة الشحن المجاني عند الوصول */}
+        {isFreeShipping && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+            <div className="flex items-center gap-2 text-green-700">
+              <Check size={18} className="text-green-600" />
+              <span className="font-bold text-sm">🎉 مبروك! حصلت على شحن مجاني</span>
+            </div>
           </div>
         )}
 
