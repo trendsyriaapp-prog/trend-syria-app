@@ -1,11 +1,10 @@
 // /app/frontend/src/pages/HomeRouter.js
 // موجه الصفحة الرئيسية حسب نوع المستخدم
 
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import HomePage from './HomePage';
 import DeliveryHomePage from './DeliveryHomePage';
-import AdminHomePage from './AdminHomePage';
 import SellerHomePage from './SellerHomePage';
 
 const HomeRouter = () => {
@@ -30,7 +29,9 @@ const HomeRouter = () => {
       return <HomePage />;
       
     case 'admin':
-      return <AdminHomePage />;
+    case 'sub_admin':
+      // الأدمن والمدير التنفيذي يُوجّهون مباشرة لصفحة الأدمن الكاملة
+      return <Navigate to="/admin" replace />;
       
     case 'seller':
       // التحقق من أن الحساب معتمد

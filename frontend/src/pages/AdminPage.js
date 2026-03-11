@@ -3,12 +3,12 @@
 // تم تقسيم الملف إلى مكونات منفصلة في /components/admin/
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -45,6 +45,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -55,7 +56,8 @@ const AdminDashboardPage = () => {
   const [subAdmins, setSubAdmins] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  // قراءة التبويب من URL أو استخدام 'overview' كافتراضي
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [allUsers, setAllUsers] = useState([]);
   const [allSellers, setAllSellers] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
@@ -64,6 +66,24 @@ const AdminDashboardPage = () => {
   const [allDelivery, setAllDelivery] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
+
+  // تحديث URL عند تغيير التبويب
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', activeTab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [activeTab]);
+
+  // قراءة التبويب من URL عند التحميل
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   // Fetch all data
   useEffect(() => {
@@ -667,6 +687,22 @@ const AdminDashboardPage = () => {
                 </>
               )}
             </div>
+
+            {/* تصفح كعميل */}
+            <Link to="/?view=customer" className="block mt-4">
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-xl p-3 text-white flex items-center justify-between hover:shadow-lg transition-all">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <Home size={16} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold">تصفح كعميل</span>
+                    <p className="text-[10px] text-orange-100">شاهد التطبيق كما يراه العملاء</p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="rotate-180" />
+              </div>
+            </Link>
           </>
         )}
       </div>
