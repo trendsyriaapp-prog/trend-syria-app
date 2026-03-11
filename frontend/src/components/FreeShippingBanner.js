@@ -154,7 +154,7 @@ const FreeShippingBanner = () => {
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-50 fixed top-0 left-0 right-0"
+            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-40 fixed top-[60px] left-0 right-0"
             data-testid="free-shipping-celebration"
           >
             <div className="flex items-center gap-2 flex-1 justify-center">
@@ -185,7 +185,7 @@ const FreeShippingBanner = () => {
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
-          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 fixed top-0 left-0 right-0"
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-40 fixed top-[60px] left-0 right-0"
           data-testid="free-shipping-progress"
         >
           <div className="flex items-center justify-between gap-3">
