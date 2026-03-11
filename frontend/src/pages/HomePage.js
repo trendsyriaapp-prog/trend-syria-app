@@ -7,7 +7,7 @@ import {
   Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, Heart, SprayCan, ChevronLeft, TrendingUp,
   Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight,
-  Pill, Car
+  Pill, Car, MapPin
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -346,6 +346,12 @@ const HomePage = () => {
                         </div>
                         <div className="p-2">
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-purple-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-purple-600 font-bold text-sm">
                               {product.price?.toLocaleString()} ل.س
@@ -412,6 +418,12 @@ const HomePage = () => {
                         </div>
                         <div className="p-2">
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-orange-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-orange-600 font-bold text-sm">
                               {product.flash_price?.toLocaleString()}

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Sparkles, ChevronLeft, TrendingUp, Tag, Heart } from 'lucide-react';
+import { Sparkles, ChevronLeft, TrendingUp, Tag, Heart, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -162,9 +162,15 @@ const RecommendedProducts = () => {
               
               {/* Info */}
               <div className="p-3">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-0.5">
                   {product.name}
                 </h3>
+                {product.city && (
+                  <div className="flex items-center gap-1 text-gray-500 mb-1">
+                    <MapPin size={10} className="text-[#FF6B00]" />
+                    <span className="text-[10px]">{product.city}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <p className="text-orange-500 font-bold text-sm">
                     {formatPrice(product.price)} ل.س

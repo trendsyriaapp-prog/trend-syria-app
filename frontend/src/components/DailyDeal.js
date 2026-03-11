@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Flame, ChevronLeft, Percent, ShoppingCart } from 'lucide-react';
+import { Clock, Flame, ChevronLeft, Percent, ShoppingCart, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -155,6 +155,12 @@ const DailyDeal = ({ onAddToCart }) => {
 
               <div className="flex-1">
                 <h4 className="text-white font-bold text-sm line-clamp-1">{currentItem.name}</h4>
+                {currentItem.city && (
+                  <div className="flex items-center gap-1 text-white/70 mt-0.5">
+                    <MapPin size={10} />
+                    <span className="text-[10px]">{currentItem.city}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-white/60 text-xs line-through">
                     {formatPrice(currentItem.original_price)}

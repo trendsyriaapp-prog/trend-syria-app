@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Star, ChevronLeft, Sparkles, ShoppingCart, Truck, Loader2 } from 'lucide-react';
+import { Star, ChevronLeft, Sparkles, ShoppingCart, Truck, Loader2, MapPin } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../hooks/use-toast';
@@ -149,9 +149,15 @@ const FeaturedProducts = () => {
                 
                 {/* Info */}
                 <div className="p-2">
-                  <h3 className="text-[11px] font-medium text-gray-900 truncate mb-1">
+                  <h3 className="text-[11px] font-medium text-gray-900 truncate mb-0.5">
                     {item.product.name}
                   </h3>
+                  {item.product.city && (
+                    <div className="flex items-center gap-1 text-gray-500 mb-1">
+                      <MapPin size={9} className="text-yellow-500" />
+                      <span className="text-[9px]">{item.product.city}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between gap-1">
                     <div className="flex flex-col">
                       <p className="text-[#FF6B00] font-bold text-xs">
