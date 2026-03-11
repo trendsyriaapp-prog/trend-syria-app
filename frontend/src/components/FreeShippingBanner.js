@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Truck, X, PartyPopper } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -28,83 +28,75 @@ const FreeShippingBanner = () => {
   const { settings } = useSettings();
   const location = useLocation();
   
-  // سلة الطعام
-  let foodCartData = { totalItems: 0, totalAmount: 0 };
-  try {
-    const foodCart = useFoodCart();
-    foodCartData = { totalItems: foodCart.totalItems, totalAmount: foodCart.totalAmount };
-  } catch (e) {
-    // FoodCartContext غير متاح
-  }
+  // سلة الطعام - من Context
+  const foodCart = useFoodCart();
   
   const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 3000000;
   
   const [dismissed, setDismissed] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [cartTotal, setCartTotal] = useState(0);
-  const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [productCartTotal, setProductCartTotal] = useState(0);
+  const [productCartItems, setProductCartItems] = useState(0);
   
   const prevCartTotalRef = useRef(0);
   const celebrationTimeoutRef = useRef(null);
   const fetchIntervalRef = useRef(null);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
-  const isFoodPage = location.pathname.startsWith('/food');
 
-  // جلب بيانات السلة مباشرة من الـ API + سلة الطعام من Context
-  const fetchCartData = async () => {
-    let total = 0;
-    let itemsCount = 0;
-    
-    // إضافة سلة الطعام (من Context/localStorage)
-    total += foodCartData.totalAmount || 0;
-    itemsCount += foodCartData.totalItems || 0;
-    
-    // جلب سلة المنتجات من API
-    if (token) {
-      try {
-        const productRes = await axios.get(`${API}/api/cart`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        total += productRes.data?.total || 0;
-        itemsCount += productRes.data?.items?.length || 0;
-      } catch (e) {}
+  // جلب بيانات سلة المنتجات فقط من API
+  const fetchProductCart = useCallback(async () => {
+    if (!token) {
+      setProductCartTotal(0);
+      setProductCartItems(0);
+      return;
     }
     
-    setCartTotal(total);
-    setCartItemsCount(itemsCount);
-  };
+    try {
+      const productRes = await axios.get(`${API}/api/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProductCartTotal(productRes.data?.total || 0);
+      setProductCartItems(productRes.data?.items?.length || 0);
+    } catch (e) {
+      // تجاهل الأخطاء
+    }
+  }, [token]);
 
-  // جلب بيانات السلة عند تحميل المكون وعند تغيير الصفحة أو سلة الطعام
+  // جلب بيانات سلة المنتجات عند تحميل المكون
   useEffect(() => {
-    fetchCartData();
+    fetchProductCart();
     
-    // جلب البيانات كل 3 ثواني
-    fetchIntervalRef.current = setInterval(fetchCartData, 3000);
+    // جلب البيانات كل 5 ثواني للمنتجات فقط
+    fetchIntervalRef.current = setInterval(fetchProductCart, 5000);
     
     return () => {
       if (fetchIntervalRef.current) {
         clearInterval(fetchIntervalRef.current);
       }
     };
-  }, [token, location.pathname, foodCartData.totalAmount, foodCartData.totalItems]);
+  }, [fetchProductCart]);
 
-  // الاستماع لتغييرات السلة
+  // الاستماع لتغييرات سلة المنتجات
   useEffect(() => {
     const handleCartUpdate = () => {
-      fetchCartData();
+      fetchProductCart();
     };
 
     window.addEventListener('cart-updated', handleCartUpdate);
-    window.addEventListener('storage', handleCartUpdate);
     
     return () => {
       window.removeEventListener('cart-updated', handleCartUpdate);
-      window.removeEventListener('storage', handleCartUpdate);
     };
-  }, [token]);
+  }, [fetchProductCart]);
 
-  // حساب البيانات
+  // حساب الإجمالي - foodCart مباشرة + productCart من state
+  const foodTotal = foodCart?.totalAmount || 0;
+  const foodItems = foodCart?.totalItems || 0;
+  
+  const cartTotal = foodTotal + productCartTotal;
+  const cartItemsCount = foodItems + productCartItems;
+  
   const hasItems = cartItemsCount > 0;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
   const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
