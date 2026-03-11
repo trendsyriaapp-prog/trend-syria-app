@@ -16,6 +16,7 @@ import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 import FreeShippingBanner from "./components/FreeShippingBanner";
 
 // Pages
+import HomeRouter from "./pages/HomeRouter";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
@@ -83,7 +84,7 @@ function App() {
               <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={<HomeRouter />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
