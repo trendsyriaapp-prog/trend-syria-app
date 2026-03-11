@@ -159,15 +159,51 @@ const MyOrdersList = ({
                   اتصال: {order.phone}
                 </a>
                 
-                {/* زر فتح في خرائط Google */}
-                <button
-                  onClick={() => openInGoogleMaps(order.address, order.city)}
-                  className="w-full mt-2 bg-green-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
-                  data-testid={`open-maps-${order.id}`}
-                >
-                  <Map size={14} />
-                  فتح في خرائط Google
-                </button>
+                {/* أزرار الخرائط - ديناميكية حسب حالة الطلب */}
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {/* زر البائع/المطعم - يظهر كأساسي قبل استلام الطلب */}
+                  {order.seller_addresses?.[0] && (
+                    <button
+                      onClick={() => openInGoogleMaps(
+                        order.seller_addresses[0]?.address || order.seller_addresses[0]?.business_name, 
+                        order.seller_addresses[0]?.city
+                      )}
+                      className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${
+                        !canStartDelivery 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-green-100 text-green-700 border border-green-300'
+                      }`}
+                      data-testid={`open-seller-maps-${order.id}`}
+                    >
+                      <Map size={12} />
+                      🏪 {isProductOrder ? 'البائع' : 'المطعم'}
+                    </button>
+                  )}
+                  {/* زر العميل - يظهر كأساسي بعد استلام الطلب */}
+                  <button
+                    onClick={() => openInGoogleMaps(order.address || order.delivery_address, order.city || order.delivery_city)}
+                    className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${
+                      canStartDelivery || canComplete
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-blue-100 text-blue-700 border border-blue-300'
+                    }`}
+                    data-testid={`open-customer-maps-${order.id}`}
+                  >
+                    <Map size={12} />
+                    🏠 العميل
+                  </button>
+                </div>
+                {/* تلميح للسائق */}
+                {!canStartDelivery && !canComplete && !isDelivered && (
+                  <p className="text-[9px] text-center text-gray-400 mt-1">
+                    💡 اذهب للبائع أولاً لاستلام الطلب
+                  </p>
+                )}
+                {canStartDelivery && (
+                  <p className="text-[9px] text-center text-gray-400 mt-1">
+                    💡 تم استلام الطلب - اذهب للعميل الآن
+                  </p>
+                )}
                 
                 {/* ملاحظة العميل */}
                 {order.delivery_note && (
