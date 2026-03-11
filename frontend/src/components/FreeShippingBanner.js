@@ -39,18 +39,33 @@ const FreeShippingBanner = () => {
   const fetchIntervalRef = useRef(null);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
+  const isFoodPage = location.pathname.startsWith('/food');
 
   // جلب بيانات السلة مباشرة من الـ API
   const fetchCartData = async () => {
     if (!token) return;
     
     try {
-      const res = await axios.get(`${API}/api/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let total = 0;
+      let itemsCount = 0;
       
-      const total = res.data?.total || 0;
-      const itemsCount = res.data?.items?.length || 0;
+      // جلب سلة المنتجات
+      try {
+        const productRes = await axios.get(`${API}/api/cart`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        total += productRes.data?.total || 0;
+        itemsCount += productRes.data?.items?.length || 0;
+      } catch (e) {}
+      
+      // جلب سلة الطعام
+      try {
+        const foodRes = await axios.get(`${API}/api/food/cart`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        total += foodRes.data?.subtotal || 0;
+        itemsCount += foodRes.data?.items?.length || 0;
+      } catch (e) {}
       
       setCartTotal(total);
       setCartItemsCount(itemsCount);

@@ -9,19 +9,9 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const formatPrice = (price) => new Intl.NumberFormat('ar-SY').format(price);
 
 const FoodDeliveryBanner = () => {
-  const location = useLocation();
-  const [dismissed, setDismissed] = useState(false);
-  const [flashSale, setFlashSale] = useState(null);
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
-  const [cartTotal, setCartTotal] = useState(0);
-  const [freeDeliveryMin, setFreeDeliveryMin] = useState(0);
-  const [storeName, setStoreName] = useState('');
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [hideAfterFreeDelivery, setHideAfterFreeDelivery] = useState(false);
-
-  // إظهار الشريط فقط في صفحات الطعام
-  const isFoodPage = location.pathname.startsWith('/food');
-  const isStorePage = location.pathname.includes('/food/store/');
+  // تعطيل هذا الشريط - تم استبداله بـ FreeShippingBanner
+  return null;
+};
 
   // استخراج store ID من الرابط
   const getStoreId = () => {
