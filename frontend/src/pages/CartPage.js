@@ -228,62 +228,45 @@ const CartPage = () => {
 
         {/* شريط الشحن المثبت - يعرض حالة كل متجر */}
         {cart?.total > 0 && sellerShippingDetails.length > 0 && (
-          <div className="space-y-2 mb-2">
+          <div className="space-y-1 mb-2">
             {sellerShippingDetails.map((seller) => (
               <div key={seller.seller_id}>
                 {seller.shipping_status === 'free' ? (
                   // احتفال للمتجر الذي حقق الشحن المجاني
                   <motion.div 
-                    initial={{ scale: 0.9, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-lg p-2 shadow-sm overflow-hidden relative"
+                    className="bg-green-50 border border-green-200 rounded p-1.5 relative overflow-hidden"
                   >
-                    {/* النجوم المتساقطة */}
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {[...Array(4)].map((_, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ y: -10, opacity: 0 }}
-                          animate={{ y: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
-                          className="absolute text-yellow-400"
-                          style={{ left: `${20 + i * 20}%`, fontSize: '10px' }}
-                        >
-                          ✨
-                        </motion.span>
-                      ))}
-                    </div>
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
                         <motion.span 
-                          animate={{ scale: [1, 1.2, 1] }}
+                          animate={{ scale: [1, 1.15, 1] }}
                           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-                          className="text-base"
+                          className="text-sm"
                         >
                           🎉
                         </motion.span>
-                        <span className="text-xs font-bold text-green-700">
-                          {seller.seller_name}: توصيل مجاني!
-                        </span>
+                        <span className="text-[10px] font-bold text-green-700">توصيل مجاني!</span>
                       </div>
-                      <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">100%</span>
+                      <span className="text-[10px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">100%</span>
                     </div>
-                    <div className="h-1.5 bg-green-100 rounded-full overflow-hidden mt-1.5">
-                      <div className="h-full w-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" />
+                    <div className="h-1 bg-green-100 rounded-full overflow-hidden mt-1">
+                      <div className="h-full w-full bg-green-500 rounded-full" />
                     </div>
                   </motion.div>
                 ) : (
                   // شريط تقدم للمتجر الذي لم يحقق الشحن المجاني
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-2 shadow-sm">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-orange-700">
-                        {seller.seller_name}: أضف {formatPrice(seller.remaining_for_free || 0)} للتوصيل المجاني
+                  <div className="bg-orange-50 border border-orange-200 rounded p-1.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-orange-700">
+                        أضف {formatPrice(seller.remaining_for_free || 0)} للتوصيل المجاني
                       </span>
-                      <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
                         {Math.round((seller.subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                    <div className="h-1 bg-orange-100 rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min((seller.subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)}%` }}
@@ -300,24 +283,22 @@ const CartPage = () => {
 
         {/* شريط بديل إذا لم تتوفر تفاصيل البائعين */}
         {cart?.total > 0 && sellerShippingDetails.length === 0 && !isFreeShipping && (
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-2 mb-2 shadow-sm">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-orange-700">
-                  أضف {formatPrice(cartAnalysis.remainingForFree)} للتوصيل المجاني
-                </span>
-                <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
-                  {Math.round(cartAnalysis.progressToFree)}%
-                </span>
-              </div>
-              <div className="h-1.5 bg-orange-100 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${cartAnalysis.progressToFree}%` }}
-                  transition={{ duration: 0.8 }}
-                  className="h-full bg-gradient-to-r from-orange-300 to-[#FF6B00] rounded-full"
-                />
-              </div>
+          <div className="bg-orange-50 border border-orange-200 rounded p-1.5 mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold text-orange-700">
+                أضف {formatPrice(cartAnalysis.remainingForFree)} للتوصيل المجاني
+              </span>
+              <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
+                {Math.round(cartAnalysis.progressToFree)}%
+              </span>
+            </div>
+            <div className="h-1 bg-orange-100 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${cartAnalysis.progressToFree}%` }}
+                transition={{ duration: 0.8 }}
+                className="h-full bg-gradient-to-r from-orange-300 to-[#FF6B00] rounded-full"
+              />
             </div>
           </div>
         )}
