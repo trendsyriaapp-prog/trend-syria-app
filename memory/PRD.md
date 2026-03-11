@@ -62,6 +62,7 @@
 - تصفح المطاعم والأطباق
 - سلة المشتريات
 - تتبع الطلبات
+- **شريط الشحن المجاني** يظهر عند إضافة عناصر للسلة ✅ FIXED
 
 ### 7. لوحة تحكم المدير ✅
 - إدارة المستخدمين
@@ -109,24 +110,27 @@
 │   │   ├── delivery.py
 │   │   ├── food.py
 │   │   ├── food_orders.py
-│   │   └── push_notifications.py  ✅ NEW
+│   │   └── push_notifications.py
 │   └── server.py
 └── frontend/
     ├── public/
-    │   ├── sw-push.js  ✅ NEW (Service Worker)
+    │   ├── sw-push.js (Service Worker)
     │   └── notification.mp3
     └── src/
         ├── pages/
         │   ├── SellerPages.js
         │   └── DeliveryPages.js
         ├── components/
-        │   ├── PushNotificationButton.js  ✅ NEW
+        │   ├── FreeShippingBanner.js  ✅ FIXED
+        │   ├── PushNotificationButton.js
         │   └── delivery/
         │       ├── AvailableOrdersList.js
         │       └── MyOrdersList.js
+        ├── context/
+        │   └── FoodCartContext.js  (سلة الطعام)
         ├── hooks/
         │   ├── useNotificationSound.js
-        │   └── usePushNotifications.js  ✅ NEW
+        │   └── usePushNotifications.js
         └── utils/
             └── distanceCalculator.js
 ```
@@ -147,7 +151,14 @@
 
 ## آخر التحديثات
 
-### 11 مارس 2026
+### 11 مارس 2026 (الجلسة الثانية)
+- ✅ **إصلاح شريط الشحن المجاني على صفحات الطعام** (مشكلة متكررة):
+  - إعادة كتابة `FreeShippingBanner.js` ليقرأ مباشرة من `useFoodCart()`
+  - نقل موقع الشريط في DOM ليكون بعد `Header` (لعمل sticky بشكل صحيح)
+  - الشريط يجمع سلة المنتجات (من API) + سلة الطعام (من localStorage)
+  - اختبار شامل نجح 100%
+
+### 11 مارس 2026 (الجلسة الأولى)
 - ✅ تفعيل زر صوت الإشعار لبائع الطعام والسائق
 - ✅ تحسين أزرار الخرائط لتكون ديناميكية حسب حالة الطلب
 - ✅ إضافة زر تحديد الموقع لرؤية المسافات قبل قبول الطلب
