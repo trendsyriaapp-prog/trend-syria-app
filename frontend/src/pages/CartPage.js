@@ -224,6 +224,31 @@ const CartPage = () => {
           </div>
         )}
 
+        {/* شريط الشحن المثبت - يظهر فقط إذا لم يصل للشحن المجاني */}
+        {cart?.total > 0 && !isFreeShipping && (
+          <div className="bg-gradient-to-r from-[#FF6B00] to-orange-500 rounded-xl p-3 mb-3 shadow-md">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-white">
+                <div className="flex items-center gap-2">
+                  <Truck size={18} />
+                  <span className="text-sm font-medium">
+                    أضف {formatPrice(cartAnalysis.remainingForFree)} للشحن المجاني
+                  </span>
+                </div>
+                <span className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-full">
+                  {Math.round(cartAnalysis.progressToFree)}%
+                </span>
+              </div>
+              <div className="h-2.5 bg-white/30 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white rounded-full transition-all duration-500"
+                  style={{ width: `${cartAnalysis.progressToFree}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* رسالة الشحن المجاني عند الوصول - احتفال */}
         {isFreeShipping && (
           <motion.div 
