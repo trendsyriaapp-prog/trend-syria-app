@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Truck, X, PartyPopper } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -6,12 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// الصفحات المسموحة
+// الصفحات المسموحة لعرض الشريط
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
 const isAllowedPath = (pathname) => {
   if (pathname === '/') return true;
   if (ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith('/products/')) return true;
+  if (pathname.startsWith('/product/')) return true;
   if (pathname.startsWith('/food/')) return true;
   if (pathname.startsWith('/food-store/')) return true;
   return false;
@@ -19,200 +20,96 @@ const isAllowedPath = (pathname) => {
 
 const formatPrice = (price) => new Intl.NumberFormat('ar-SY').format(price);
 
-// مفتاح localStorage لتتبع المتاجر التي تم تحقيق الشحن المجاني معها
-const FREE_SHIPPING_SELLERS_KEY = 'free_shipping_qualified_sellers';
-
 const FreeShippingBanner = () => {
-  const { cart } = useCart();
+  const { cart, loading: cartLoading } = useCart();
   const { user } = useAuth();
   const { settings } = useSettings();
   const location = useLocation();
   
-  const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
+  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 150000;
   
   const [dismissed, setDismissed] = useState(false);
-  const [showBanner, setShowBanner] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [justQualified, setJustQualified] = useState(false);
   
-  const prevQualifiedSellersRef = useRef(new Set());
+  const prevCartTotalRef = useRef(0);
+  const celebrationTimeoutRef = useRef(null);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
-  // الحصول على المتاجر التي تم تحقيق الشحن المجاني معها من localStorage
-  const getQualifiedSellers = () => {
-    try {
-      const saved = localStorage.getItem(FREE_SHIPPING_SELLERS_KEY);
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  };
+  // حساب بيانات السلة
+  const cartTotal = cart?.total || 0;
+  const cartItemsCount = cart?.items?.length || 0;
+  const hasItems = cartItemsCount > 0;
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
+  const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const qualifiesForFree = cartTotal >= FREE_SHIPPING_THRESHOLD;
 
-  // حفظ المتاجر المؤهلة
-  const saveQualifiedSellers = (sellers) => {
-    localStorage.setItem(FREE_SHIPPING_SELLERS_KEY, JSON.stringify([...sellers]));
-  };
-
-  // مسح المتاجر المؤهلة
-  const clearQualifiedSellers = () => {
-    localStorage.removeItem(FREE_SHIPPING_SELLERS_KEY);
-  };
-
-  // تحليل السلة وتجميع المنتجات حسب المتجر
-  const analyzeCart = useCallback(() => {
-    if (!cart.items || cart.items.length === 0) {
-      return { 
-        hasItems: false, 
-        total: 0, 
-        remaining: FREE_SHIPPING_THRESHOLD,
-        progress: 0,
-        qualifiesForFree: false,
-        qualifiedSellers: new Set(),
-        sellerTotals: {}
-      };
-    }
-
-    const cartTotal = cart.total || 0;
-    const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
-    const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
-    
-    // تجميع حسب المتجر
-    const sellerTotals = {};
-    cart.items.forEach(item => {
-      const sellerId = item.product?.seller_id || item.seller_id;
-      if (sellerId) {
-        const itemTotal = (item.product?.price || item.price || 0) * (item.quantity || 1);
-        sellerTotals[sellerId] = (sellerTotals[sellerId] || 0) + itemTotal;
-      }
-    });
-
-    // المتاجر التي وصلت للحد
-    const qualifiedSellers = new Set();
-    Object.entries(sellerTotals).forEach(([sellerId, total]) => {
-      if (total >= FREE_SHIPPING_THRESHOLD) {
-        qualifiedSellers.add(sellerId);
-      }
-    });
-
-    const qualifiesForFree = qualifiedSellers.size > 0;
-
-    return {
-      hasItems: true,
-      total: cartTotal,
-      remaining,
-      progress,
-      qualifiesForFree,
-      qualifiedSellers,
-      sellerTotals
-    };
-  }, [cart.items, cart.total, FREE_SHIPPING_THRESHOLD]);
-
-  const analysis = analyzeCart();
-  const celebrationTimeoutRef = useRef(null);
-
-  // التحقق من وجود متجر جديد مؤهل
+  // التحقق من الوصول للشحن المجاني لأول مرة
   useEffect(() => {
-    // إذا السلة فارغة
-    if (!analysis.hasItems) {
-      setShowBanner(false);
-      setShowCelebration(false);
-      setDismissed(false);
-      clearQualifiedSellers();
-      prevQualifiedSellersRef.current = new Set();
-      if (celebrationTimeoutRef.current) {
-        clearTimeout(celebrationTimeoutRef.current);
-      }
-      return;
-    }
-
-    const savedQualifiedSellers = getQualifiedSellers();
-    const currentQualifiedSellers = analysis.qualifiedSellers;
-
-    // البحث عن متجر جديد مؤهل (لم يكن مؤهلاً من قبل)
-    let newQualifiedSeller = null;
-    currentQualifiedSellers.forEach(sellerId => {
-      if (!savedQualifiedSellers.has(sellerId)) {
-        newQualifiedSeller = sellerId;
-      }
-    });
-
-    if (newQualifiedSeller && !dismissed) {
-      // متجر جديد وصل للحد! أظهر الاحتفال
+    const prevTotal = prevCartTotalRef.current;
+    const prevQualified = prevTotal >= FREE_SHIPPING_THRESHOLD;
+    const nowQualified = cartTotal >= FREE_SHIPPING_THRESHOLD;
+    
+    // إذا وصل للحد الآن ولم يكن قد وصل من قبل
+    if (nowQualified && !prevQualified && hasItems && prevTotal > 0) {
       setShowCelebration(true);
-      setShowBanner(true);
+      setJustQualified(true);
       
-      // أضف المتجر للقائمة المحفوظة
-      savedQualifiedSellers.add(newQualifiedSeller);
-      saveQualifiedSellers(savedQualifiedSellers);
-      
-      // أخفِ بعد 4 ثواني
+      // إخفاء الاحتفال بعد 4 ثواني
       if (celebrationTimeoutRef.current) {
         clearTimeout(celebrationTimeoutRef.current);
       }
       celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
-        setShowBanner(false);
+        setJustQualified(false);
       }, 4000);
-    } else if (!analysis.qualifiesForFree && analysis.hasItems && !dismissed) {
-      // لم يصل لأي شحن مجاني بعد - أظهر شريط التقدم
-      setShowBanner(true);
-      setShowCelebration(false);
-    } else {
-      // وصل للشحن المجاني لكل المتاجر أو تم الإغلاق - لا تُخفِ إذا كان هناك احتفال جاري
-      if (!showCelebration) {
-        setShowBanner(false);
-      }
     }
-
-    // تحديث المتاجر المؤهلة في الذاكرة المؤقتة
-    // إزالة المتاجر التي لم تعد مؤهلة
-    const updatedSavedSellers = new Set();
-    savedQualifiedSellers.forEach(sellerId => {
-      if (currentQualifiedSellers.has(sellerId)) {
-        updatedSavedSellers.add(sellerId);
-      }
-    });
     
-    if (updatedSavedSellers.size !== savedQualifiedSellers.size) {
-      saveQualifiedSellers(updatedSavedSellers);
-    }
-
-    prevQualifiedSellersRef.current = currentQualifiedSellers;
-  }, [analysis.hasItems, analysis.qualifiesForFree, analysis.qualifiedSellers, dismissed, showCelebration]);
-
-  // إعادة تعيين عند إفراغ السلة
-  useEffect(() => {
-    if (!cart.items || cart.items.length === 0) {
-      setShowBanner(false);
-      setDismissed(false);
+    // إذا السلة فارغة، أعد التعيين
+    if (!hasItems) {
       setShowCelebration(false);
-      clearQualifiedSellers();
-      prevQualifiedSellersRef.current = new Set();
+      setJustQualified(false);
+      setDismissed(false);
     }
-  }, [cart.items]);
+    
+    prevCartTotalRef.current = cartTotal;
+  }, [cartTotal, hasItems, FREE_SHIPPING_THRESHOLD]);
+
+  // تنظيف عند إزالة المكون
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // الإغلاق
   const handleDismiss = () => {
     setDismissed(true);
-    setShowBanner(false);
     setShowCelebration(false);
   };
 
   // شروط عدم الإظهار
   const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  if (!isCustomer || !shouldShowOnCurrentPage) return null;
-  if (dismissed || !analysis.hasItems) return null;
-  
-  // إذا وصل للشحن المجاني لكل المتاجر ولا يوجد احتفال، لا تُظهر
-  if (analysis.qualifiesForFree && !showCelebration) {
-    console.log('FreeShippingBanner: Not showing - qualifies for free and no celebration');
+  // لا تظهر إذا:
+  // - ليس عميل
+  // - ليس في صفحة مسموحة
+  // - تم الإغلاق
+  // - السلة فارغة
+  // - السلة قيد التحميل
+  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems || cartLoading) {
     return null;
   }
-  
-  console.log('FreeShippingBanner: SHOULD SHOW NOW!');
 
-  // شريط النجاح (الشحن المجاني) - يظهر فقط لحظة الوصول لمتجر جديد
+  // إذا وصل للشحن المجاني ولا يوجد احتفال، لا تُظهر الشريط
+  if (qualifiesForFree && !showCelebration) {
+    return null;
+  }
+
+  // شريط الاحتفال - يظهر فقط لحظة الوصول للحد
   if (showCelebration) {
     return (
       <AnimatePresence>
@@ -220,87 +117,64 @@ const FreeShippingBanner = () => {
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white shadow-lg"
+          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-50 sticky top-0"
         >
-          <div className="max-w-4xl mx-auto px-2 py-1">
-            <div className="flex items-center justify-between gap-1">
-              <div className="flex items-center gap-1.5 flex-1 justify-center">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.5, repeat: 2 }}
-                >
-                  <PartyPopper size={12} className="animate-bounce" />
-                </motion.div>
-                <span className="text-[9px] font-bold">
-                  مبروك! حصلت على توصيل مجاني
-                </span>
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.5, repeat: 2 }}
-                >
-                  <PartyPopper size={12} className="animate-bounce" />
-                </motion.div>
-              </div>
-              <button 
-                onClick={handleDismiss} 
-                className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={10} />
-              </button>
-            </div>
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <PartyPopper className="w-5 h-5 animate-bounce" />
+            <span className="font-bold text-sm">
+              🎉 هيولا! حصلت على توصيل مجاني
+            </span>
+            <PartyPopper className="w-5 h-5 animate-bounce" />
           </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors mr-2"
+            aria-label="إغلاق"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </motion.div>
       </AnimatePresence>
     );
   }
 
-  // لا تظهر شريط التقدم إذا وصل للشحن المجاني من أي متجر
-  if (analysis.qualifiesForFree) {
-    return null;
-  }
-
-  // شريط التقدم العادي (لم يصل للشحن المجاني بعد)
+  // شريط التقدم - يظهر عندما لم يصل للحد بعد
   return (
     <AnimatePresence>
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -50, opacity: 0 }}
-        className="fixed top-[52px] left-0 right-0 z-50 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white shadow-lg"
+        className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 sticky top-0"
       >
-        <div className="max-w-4xl mx-auto px-2 py-1">
-          {/* صف واحد مضغوط */}
-          <div className="flex items-center justify-between gap-1">
-            <div className="flex items-center gap-1.5 flex-1">
-              <motion.div
-                animate={{ x: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              >
-                <Truck size={12} />
-              </motion.div>
-              <span className="text-[9px] font-medium">
-                أضف <span className="font-bold">{formatPrice(analysis.remaining)}</span> ل.س للتوصيل المجاني
-              </span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Truck className="w-5 h-5 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="font-medium">
+                  أضف {formatPrice(remaining)} ل.س للشحن المجاني
+                </span>
+                <span className="text-white/80">{Math.round(progress)}%</span>
+              </div>
+              {/* شريط التقدم */}
+              <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="h-full bg-white rounded-full"
+                />
+              </div>
             </div>
-            
-            {/* شريط التقدم المصغر */}
-            <div className="w-16 h-1.5 bg-white/30 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${analysis.progress}%` }}
-                transition={{ duration: 0.8 }}
-                className="h-full bg-white rounded-full"
-              />
-            </div>
-            
-            <button 
-              onClick={handleDismiss} 
-              className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
-            >
-              <X size={10} />
-            </button>
           </div>
+          <button
+            onClick={handleDismiss}
+            className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+            aria-label="إغلاق"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       </motion.div>
     </AnimatePresence>
