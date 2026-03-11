@@ -132,14 +132,46 @@ const FreeShippingBanner = () => {
   // حساب الإجمالي - foodCart مباشرة + productCart من state
   const foodTotal = foodCart?.totalAmount || 0;
   const foodItems = foodCart?.totalItems || 0;
+  const foodStores = foodCart?.stores || [];
   
-  const cartTotal = foodTotal + productCartTotal;
+  // في صفحات الطعام: نحسب لكل متجر على حدة
+  // نجد المتجر الذي لم يصل للشحن المجاني بعد
+  let currentStoreTotal = 0;
+  let currentStoreName = '';
+  let storesWithFreeShipping = 0;
+  let storesWithoutFreeShipping = 0;
+  
+  if (isFoodPage && foodStores.length > 0) {
+    for (const store of foodStores) {
+      if (store.totalAmount >= FREE_SHIPPING_THRESHOLD) {
+        storesWithFreeShipping++;
+      } else {
+        storesWithoutFreeShipping++;
+        // نعرض المتجر الذي لم يصل للشحن المجاني
+        if (currentStoreTotal === 0 || store.totalAmount > currentStoreTotal) {
+          currentStoreTotal = store.totalAmount;
+          currentStoreName = store.storeName || '';
+        }
+      }
+    }
+  }
+  
+  // في صفحات الطعام: نستخدم مجموع المتجر الحالي
+  // في صفحات المنتجات: نستخدم المجموع الكلي
+  const cartTotal = isFoodPage ? (currentStoreTotal || foodTotal) : (foodTotal + productCartTotal);
   const cartItemsCount = foodItems + productCartItems;
   
   const hasItems = cartItemsCount > 0;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
   const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
-  const qualifiesForFree = cartTotal >= FREE_SHIPPING_THRESHOLD;
+  const qualifiesForFree = isFoodPage 
+    ? (foodStores.length > 0 && foodStores.every(s => s.totalAmount >= FREE_SHIPPING_THRESHOLD))
+    : (cartTotal >= FREE_SHIPPING_THRESHOLD);
+  
+  // هل يوجد متجر واحد على الأقل وصل للشحن المجاني؟
+  const hasAnyFreeShipping = storesWithFreeShipping > 0;
+  // هل يوجد متجر لم يصل للشحن المجاني؟
+  const hasStoreNeedingMore = storesWithoutFreeShipping > 0;
 
   // التحقق من الوصول للشحن المجاني لأول مرة
   useEffect(() => {
@@ -223,8 +255,8 @@ const FreeShippingBanner = () => {
     );
   }
   
-  // إذا الشحن مجاني - نعرض شريط أخضر يشجع على الشراء من متجر آخر
-  if (qualifiesForFree) {
+  // إذا الشحن مجاني لكل المتاجر - نعرض شريط أخضر
+  if (qualifiesForFree && !hasStoreNeedingMore) {
     return (
       <AnimatePresence>
         <motion.div
