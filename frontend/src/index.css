@@ -221,3 +221,12 @@ input:-webkit-autofill:focus {
         display: contents !important;
     }
 }
+
+/* Hide scrollbar for tabs */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

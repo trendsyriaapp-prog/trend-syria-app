@@ -397,44 +397,44 @@ const SellerDashboardPage = () => {
   const paidOrders = orders.filter(o => o.status === 'paid').length;
 
   return (
-    <div className="min-h-screen pb-20 md:pb-10 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-3 py-4">
+    <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-3 py-4 relative z-0">
         {/* Header with store name */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-base font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h1 className="text-sm font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+          <div className="flex items-center gap-1.5">
             {/* تصفح كعميل */}
             <Link
               to="/?view=customer"
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-[10px] hover:bg-gray-200 transition-colors"
             >
-              <Home size={14} />
-              <span>تصفح كعميل</span>
+              <Home size={12} />
+              <span>كعميل</span>
             </Link>
             {/* إرشادات التغليف */}
             <button
               onClick={() => navigate('/packaging-guide')}
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-[10px] hover:bg-gray-200 transition-colors"
             >
-              <BookOpen size={14} />
-              <span>إرشادات التغليف</span>
+              <BookOpen size={12} />
+              <span>التغليف</span>
             </button>
             {/* إضافة منتج */}
             {activeTab === 'products' && (
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs"
+                className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-2 py-1 rounded-full text-[10px]"
                 data-testid="add-product-btn"
               >
-                <Plus size={14} />
-                إضافة منتج
+                <Plus size={12} />
+                منتج
               </button>
             )}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 border border-gray-200 overflow-x-auto">
+        {/* Tabs - تصغير للجوال */}
+        <div className="flex gap-0.5 mb-3 bg-white rounded-lg p-0.5 border border-gray-200 overflow-x-auto no-scrollbar">
           {[
             { id: 'products', icon: Package, label: 'منتجاتي' },
             { id: 'reviews', icon: Star, label: 'التقييمات' },
@@ -445,14 +445,14 @@ const SellerDashboardPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap px-2 ${
+              className={`flex-1 flex items-center justify-center gap-0.5 py-1.5 rounded-md text-[9px] font-bold transition-all whitespace-nowrap px-1.5 min-w-fit ${
                 activeTab === tab.id 
                   ? 'bg-[#FF6B00] text-white' 
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
               data-testid={`tab-${tab.id}`}
             >
-              <tab.icon size={12} />
+              <tab.icon size={10} />
               {tab.label}
             </button>
           ))}
