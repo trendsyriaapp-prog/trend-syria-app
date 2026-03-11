@@ -7,11 +7,13 @@ import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // الصفحات المسموحة
-const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout'];
+const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
 const isAllowedPath = (pathname) => {
   if (pathname === '/') return true;
   if (ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith('/products/')) return true;
+  if (pathname.startsWith('/food/')) return true;
+  if (pathname.startsWith('/food-store/')) return true;
   return false;
 };
 
@@ -197,9 +199,9 @@ const FreeShippingBanner = () => {
   };
 
   // شروط عدم الإظهار
-  const isCustomer = user?.user_type === 'buyer' || user?.user_type === 'customer';
+  const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  if (!user || !isCustomer || !shouldShowOnCurrentPage) return null;
+  if (!isCustomer || !shouldShowOnCurrentPage) return null;
   if (dismissed || !analysis.hasItems) return null;
   
   // إذا وصل للشحن المجاني لكل المتاجر ولا يوجد احتفال، لا تُظهر
