@@ -244,7 +244,7 @@ const FreeShippingBanner = () => {
             <div className="flex-1">
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-medium">
-                  أضف {formatPrice(remaining)} ل.س للشحن المجاني
+                  أضف {formatPrice(remaining)} ل.س للشحن المجاني {isFoodPage && <span className="text-white/90">(من نفس المتجر)</span>}
                 </span>
                 <span className="text-white/80">{Math.round(progress)}%</span>
               </div>
