@@ -318,9 +318,9 @@ const FoodProductCard = ({ product }) => {
         className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all"
       >
         <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-          {product.images?.[0] ? (
+          {(product.image || product.images?.[0]) ? (
             <img 
-              src={product.images[0]} 
+              src={product.image || product.images?.[0]} 
               alt={product.name} 
               className="w-full h-full object-cover"
             />

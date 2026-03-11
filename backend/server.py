@@ -197,12 +197,24 @@ def hash_password(password: str) -> str:
 
 @api_router.post("/seed")
 async def seed_demo_data():
-    # Check if already seeded - التحقق من وجود بائع الطعام
-    existing_food_seller = await db.users.count_documents({"user_type": "food_seller"})
-    existing_products = await db.products.count_documents({})
-    if existing_food_seller > 0 and existing_products > 0:
-        return {"message": "البيانات موجودة مسبقاً"}
+    """
+    ⚠️ هذا الـ endpoint للتطوير فقط - لا يُعيد كتابة البيانات الموجودة
+    البيانات محفوظة في قاعدة البيانات ولن تتغير
+    """
+    # التحقق من وجود البيانات - إذا موجودة لا نفعل شيء
+    existing_users = await db.users.count_documents({})
+    existing_food_stores = await db.food_stores.count_documents({})
+    existing_food_products = await db.food_products.count_documents({})
     
+    if existing_users > 0 and existing_food_stores > 0 and existing_food_products > 0:
+        return {
+            "message": "البيانات موجودة مسبقاً ولن يتم تغييرها",
+            "users": existing_users,
+            "food_stores": existing_food_stores,
+            "food_products": existing_food_products
+        }
+    
+    # فقط إذا كانت قاعدة البيانات فارغة تماماً
     # Create admin user if not exists
     existing_admin = await db.users.find_one({"phone": "0911111111"})
     admin_id = str(uuid.uuid4())
@@ -312,14 +324,15 @@ async def seed_demo_data():
             "owner_id": food_seller_id,
             "name": "مطعم الشام",
             "description": "أشهى المأكولات الشامية التقليدية",
-            "store_type": "restaurants",  # Required for API filter
+            "store_type": "restaurants",
             "category": "restaurant",
             "cuisine_type": "syrian",
             "address": "دمشق، سوريا",
             "phone": "0944444444",
             "city": "دمشق",
-            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
-            "cover_image": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400",
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
+            "cover_image": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1200",
+            "logo": "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400",
             "rating": 4.5,
             "reviews_count": 120,
             "delivery_time": "30-45",
@@ -328,22 +341,11 @@ async def seed_demo_data():
             "free_delivery_minimum": 50000,
             "minimum_order": 20000,
             "is_open": True,
-            "is_active": True,  # Required for API filter
+            "is_active": True,
             "is_approved": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
-    else:
-        # تحديث المتجر الموجود لإضافة الحقول الناقصة
-        await db.food_stores.update_one(
-            {"owner_id": food_seller_id},
-            {"$set": {
-                "free_delivery_minimum": 50000,
-                "delivery_fee": 5000,
-                "minimum_order": 20000,
-                "city": "دمشق",
-                "address": "دمشق، سوريا"
-            }}
-        )
+    # ⚠️ لا نُحدّث المتجر الموجود - البيانات محفوظة ولن تتغير
     
     # Demo food items for the restaurant
     food_store = await db.food_stores.find_one({"owner_id": food_seller_id})
