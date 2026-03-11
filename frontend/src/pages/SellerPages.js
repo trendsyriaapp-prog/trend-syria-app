@@ -398,38 +398,34 @@ const SellerDashboardPage = () => {
 
   return (
     <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-3 py-4 relative z-0">
+      <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
         {/* Header with store name */}
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h1 className="text-sm font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
-          <div className="flex items-center gap-1.5">
-            {/* تصفح كعميل */}
+        <div className="mb-3">
+          <h1 className="text-sm font-bold text-gray-900 mb-2">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
+          {/* أزرار الإجراءات - شريط ممتلئ */}
+          <div className="flex gap-1.5">
             <Link
               to="/?view=customer"
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-[10px] hover:bg-gray-200 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
             >
               <Home size={12} />
-              <span>كعميل</span>
+              <span>تصفح كعميل</span>
             </Link>
-            {/* إرشادات التغليف */}
             <button
               onClick={() => navigate('/packaging-guide')}
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-[10px] hover:bg-gray-200 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
             >
               <BookOpen size={12} />
-              <span>التغليف</span>
+              <span>إرشادات التغليف</span>
             </button>
-            {/* إضافة منتج */}
-            {activeTab === 'products' && (
-              <button
-                onClick={() => setShowAddProduct(true)}
-                className="flex items-center gap-1 bg-[#FF6B00] text-white font-bold px-2 py-1 rounded-full text-[10px]"
-                data-testid="add-product-btn"
-              >
-                <Plus size={12} />
-                منتج
-              </button>
-            )}
+            <button
+              onClick={() => setShowAddProduct(true)}
+              className="flex-1 flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold py-2 rounded-lg text-[10px]"
+              data-testid="add-product-btn"
+            >
+              <Plus size={12} />
+              <span>إضافة منتج</span>
+            </button>
           </div>
         </div>
 

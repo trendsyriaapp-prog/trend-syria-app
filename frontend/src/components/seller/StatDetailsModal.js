@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { X, Clock, Package } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
+import { useEffect } from 'react';
 
 const StatDetailsModal = ({ 
   activeStatView, 
@@ -10,14 +11,28 @@ const StatDetailsModal = ({
   totalSales, 
   paidOrders 
 }) => {
+  // منع scroll الصفحة عند فتح المودال
+  useEffect(() => {
+    if (activeStatView) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [activeStatView]);
+
   if (!activeStatView) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
+    <div 
+      className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-3"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-3 flex items-center justify-between">
