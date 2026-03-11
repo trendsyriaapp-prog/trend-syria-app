@@ -401,10 +401,7 @@ const SellerDashboardPage = () => {
       <div className="max-w-4xl mx-auto px-3 py-4">
         {/* Header with store name */}
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-[10px] text-gray-500">متجرك</p>
-            <h1 className="text-base font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
-          </div>
+          <h1 className="text-base font-bold text-gray-900">{user?.store_name || user?.full_name || 'لوحة تحكم البائع'}</h1>
           <div className="flex items-center gap-2">
             {/* تصفح كعميل */}
             <Link
@@ -418,9 +415,9 @@ const SellerDashboardPage = () => {
             <button
               onClick={() => navigate('/packaging-guide')}
               className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200 transition-colors"
-              title="إرشادات التغليف"
             >
               <BookOpen size={14} />
+              <span>إرشادات التغليف</span>
             </button>
             {/* إضافة منتج */}
             {activeTab === 'products' && (
