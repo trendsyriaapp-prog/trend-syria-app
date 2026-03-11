@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -225,6 +225,7 @@ const SellerDocumentsPage = () => {
 // Seller Dashboard
 const SellerDashboardPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -233,7 +234,8 @@ const SellerDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('products');
+  // قراءة التبويب من URL أو استخدام 'products' كافتراضي
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'products');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
@@ -241,6 +243,24 @@ const SellerDashboardPage = () => {
   const [savingEdit, setSavingEdit] = useState(false);
   const [activeStatView, setActiveStatView] = useState(null);
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
+
+  // تحديث URL عند تغيير التبويب
+  useEffect(() => {
+    if (activeTab === 'products') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', activeTab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [activeTab]);
+
+  // قراءة التبويب من URL عند التحميل
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user?.user_type === 'seller') {

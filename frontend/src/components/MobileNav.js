@@ -70,7 +70,7 @@ const MobileNav = () => {
       { path: '/seller/dashboard', icon: Home, label: 'لوحة التحكم' },
       { path: '/seller/orders', icon: ClipboardList, label: 'الطلبات' },
       { path: '/wallet', icon: Wallet, label: 'المحفظة' },
-      { path: '/settings', icon: Settings, label: 'الإعدادات' }
+      { path: '/seller/dashboard?tab=store', icon: Settings, label: 'الإعدادات' }
     ];
   } else if (isInFoodSection && foodEnabled) {
     // في قسم الطعام: نعرض سلة الطعام فقط
