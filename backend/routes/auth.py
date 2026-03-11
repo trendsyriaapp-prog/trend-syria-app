@@ -283,9 +283,10 @@ class StoreSettingsUpdate(BaseModel):
     store_phone: Optional[str] = None
 
 class PaymentAccountUpdate(BaseModel):
-    type: str  # shamcash, syriatel_cash, mtn_cash
+    type: str  # shamcash, syriatel_cash, mtn_cash, bank_account
     account_number: str
     holder_name: str
+    bank_name: Optional[str] = None
     is_default: bool = False
 
 @router.get("/seller/store-settings")
@@ -355,7 +356,7 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
     # التحقق من نوع الحساب
-    valid_types = ["shamcash", "syriatel_cash", "mtn_cash"]
+    valid_types = ["shamcash", "syriatel_cash", "mtn_cash", "bank_account"]
     if account.type not in valid_types:
         raise HTTPException(status_code=400, detail="نوع الحساب غير صالح")
     
@@ -381,6 +382,7 @@ async def add_seller_payment_account(account: PaymentAccountUpdate, user: dict =
         "type": account.type,
         "account_number": account.account_number,
         "holder_name": sanitize_input(account.holder_name),
+        "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -414,6 +416,7 @@ async def update_seller_payment_account(account_id: str, account: PaymentAccount
         "type": account.type,
         "account_number": account.account_number,
         "holder_name": sanitize_input(account.holder_name),
+        "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
         "is_default": account.is_default,
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -467,3 +470,188 @@ async def set_default_payment_account(account_id: str, user: dict = Depends(get_
     )
     
     return {"message": "تم تعيين الحساب كافتراضي"}
+
+
+# ============================================
+# 🚚 إعدادات موظف التوصيل
+# ============================================
+
+class DeliverySettingsUpdate(BaseModel):
+    vehicle_type: Optional[str] = None  # motorcycle, car, bicycle
+    vehicle_number: Optional[str] = None
+    working_city: Optional[str] = None
+    working_hours: Optional[str] = None
+
+@router.get("/delivery/settings")
+async def get_delivery_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات موظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    delivery = await db.users.find_one(
+        {"id": user["id"]},
+        {"_id": 0, "vehicle_type": 1, "vehicle_number": 1, "working_city": 1, "working_hours": 1, "city": 1}
+    )
+    
+    return {
+        "vehicle_type": delivery.get("vehicle_type", "motorcycle"),
+        "vehicle_number": delivery.get("vehicle_number", ""),
+        "working_city": delivery.get("working_city", delivery.get("city", "دمشق")),
+        "working_hours": delivery.get("working_hours", "")
+    }
+
+@router.put("/delivery/settings")
+async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict = Depends(get_current_user)):
+    """تحديث إعدادات موظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    update_data = {}
+    if settings.vehicle_type is not None:
+        update_data["vehicle_type"] = settings.vehicle_type
+    if settings.vehicle_number is not None:
+        update_data["vehicle_number"] = settings.vehicle_number
+    if settings.working_city is not None:
+        update_data["working_city"] = settings.working_city
+    if settings.working_hours is not None:
+        update_data["working_hours"] = settings.working_hours
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    
+    return {"message": "تم تحديث الإعدادات بنجاح"}
+
+# ============================================
+# 💳 حسابات الاستلام المالي لموظف التوصيل
+# ============================================
+
+@router.get("/delivery/payment-accounts")
+async def get_delivery_payment_accounts(user: dict = Depends(get_current_user)):
+    """جلب حسابات الاستلام المالي لموظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    accounts = await db.delivery_payment_accounts.find(
+        {"delivery_id": user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return accounts
+
+@router.post("/delivery/payment-accounts")
+async def add_delivery_payment_account(account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+    """إضافة حساب استلام مالي جديد لموظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    valid_types = ["shamcash", "syriatel_cash", "mtn_cash", "bank_account"]
+    if account.type not in valid_types:
+        raise HTTPException(status_code=400, detail="نوع الحساب غير صالح")
+    
+    if account.is_default:
+        await db.delivery_payment_accounts.update_many(
+            {"delivery_id": user["id"]},
+            {"$set": {"is_default": False}}
+        )
+    
+    existing = await db.delivery_payment_accounts.find_one({
+        "delivery_id": user["id"],
+        "type": account.type,
+        "account_number": account.account_number
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا الحساب موجود مسبقاً")
+    
+    new_account = {
+        "id": str(uuid.uuid4()),
+        "delivery_id": user["id"],
+        "type": account.type,
+        "account_number": account.account_number,
+        "holder_name": sanitize_input(account.holder_name),
+        "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
+        "is_default": account.is_default,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.delivery_payment_accounts.insert_one(new_account)
+    del new_account["_id"]
+    
+    return new_account
+
+@router.put("/delivery/payment-accounts/{account_id}")
+async def update_delivery_payment_account(account_id: str, account: PaymentAccountUpdate, user: dict = Depends(get_current_user)):
+    """تحديث حساب استلام مالي لموظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    existing = await db.delivery_payment_accounts.find_one({
+        "id": account_id,
+        "delivery_id": user["id"]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    if account.is_default:
+        await db.delivery_payment_accounts.update_many(
+            {"delivery_id": user["id"], "id": {"$ne": account_id}},
+            {"$set": {"is_default": False}}
+        )
+    
+    update_data = {
+        "type": account.type,
+        "account_number": account.account_number,
+        "holder_name": sanitize_input(account.holder_name),
+        "bank_name": sanitize_input(account.bank_name) if account.bank_name else None,
+        "is_default": account.is_default,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.delivery_payment_accounts.update_one(
+        {"id": account_id, "delivery_id": user["id"]},
+        {"$set": update_data}
+    )
+    
+    return {"message": "تم تحديث الحساب بنجاح"}
+
+@router.delete("/delivery/payment-accounts/{account_id}")
+async def delete_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+    """حذف حساب استلام مالي لموظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    result = await db.delivery_payment_accounts.delete_one({
+        "id": account_id,
+        "delivery_id": user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    return {"message": "تم حذف الحساب بنجاح"}
+
+@router.post("/delivery/payment-accounts/{account_id}/default")
+async def set_default_delivery_payment_account(account_id: str, user: dict = Depends(get_current_user)):
+    """تعيين حساب كافتراضي لموظف التوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    existing = await db.delivery_payment_accounts.find_one({
+        "id": account_id,
+        "delivery_id": user["id"]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="الحساب غير موجود")
+    
+    await db.delivery_payment_accounts.update_many(
+        {"delivery_id": user["id"]},
+        {"$set": {"is_default": False}}
+    )
+    
+    await db.delivery_payment_accounts.update_one(
+        {"id": account_id},
+        {"$set": {"is_default": True}}
+    )
+    
+    return {"message": "تم تعيين الحساب كافتراضي"}
+

@@ -21,9 +21,9 @@ const HomeRouter = () => {
   // توجيه حسب نوع المستخدم
   switch (user.user_type) {
     case 'delivery':
-      // التحقق من أن الحساب معتمد
+      // موظف التوصيل المعتمد يُوجّه مباشرة للوحة التحكم الكاملة
       if (user.is_approved) {
-        return <DeliveryHomePage />;
+        return <Navigate to="/delivery/dashboard" replace />;
       }
       return <HomePage />;
       

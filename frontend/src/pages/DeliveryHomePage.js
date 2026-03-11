@@ -2,21 +2,24 @@
 // الصفحة الرئيسية لموظف التوصيل
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Truck, Package, Wallet, Star, Clock, MapPin, 
   CheckCircle, TrendingUp, ShoppingBag,
-  Phone, DollarSign, ToggleLeft, ToggleRight, ChevronLeft
+  Phone, DollarSign, ToggleLeft, ToggleRight, ChevronLeft, Settings, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/imageHelpers';
+import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const DeliveryHomePage = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'home');
   const [stats, setStats] = useState({
     todayDeliveries: 0,
     todayEarnings: 0,
@@ -28,6 +31,24 @@ const DeliveryHomePage = () => {
   const [myOrders, setMyOrders] = useState([]);
   const [isAvailable, setIsAvailable] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // تحديث URL عند تغيير التبويب
+  useEffect(() => {
+    if (activeTab === 'home') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', activeTab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [activeTab]);
+
+  // قراءة التبويب من URL
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchData();
@@ -76,15 +97,24 @@ const DeliveryHomePage = () => {
             <p className="text-orange-100 text-[10px]">مرحباً</p>
             <h1 className="text-base font-bold">{user?.full_name}</h1>
           </div>
-          <button
-            onClick={toggleAvailability}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-[10px] ${
-              isAvailable ? 'bg-green-500' : 'bg-white/20'
-            }`}
-          >
-            {isAvailable ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-            {isAvailable ? 'متاح' : 'غير متاح'}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/?view=customer"
+              className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-[10px] hover:bg-white/30"
+            >
+              <Home size={12} />
+              <span>تصفح كعميل</span>
+            </Link>
+            <button
+              onClick={toggleAvailability}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-[10px] ${
+                isAvailable ? 'bg-green-500' : 'bg-white/20'
+              }`}
+            >
+              {isAvailable ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+              {isAvailable ? 'متاح' : 'غير متاح'}
+            </button>
+          </div>
         </div>
         
         {/* Stats مصغرة */}
@@ -105,8 +135,13 @@ const DeliveryHomePage = () => {
       </div>
 
       <div className="px-3 py-3">
-        {/* طلباتي الحالية */}
-        {myOrders.length > 0 && (
+        {/* تبويب الإعدادات */}
+        {activeTab === 'settings' ? (
+          <DeliverySettingsTab />
+        ) : (
+          <>
+            {/* طلباتي الحالية */}
+            {myOrders.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center gap-1.5 mb-2">
               <Truck size={14} className="text-blue-600" />
@@ -193,6 +228,8 @@ const DeliveryHomePage = () => {
             ))}
           </div>
         </section>
+          </>
+        )}
       </div>
     </div>
   );

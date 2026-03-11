@@ -1,10 +1,10 @@
-// /app/frontend/src/components/seller/StoreSettingsTab.js
-// تبويب إعدادات المتجر وحسابات الاستلام المالي
+// /app/frontend/src/components/delivery/DeliverySettingsTab.js
+// تبويب إعدادات موظف التوصيل وحسابات الاستلام المالي
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText
+  Truck, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Clock, Bike, Car
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -16,6 +16,12 @@ const SYRIAN_CITIES = [
   'القنيطرة', 'إدلب', 'ريف دمشق'
 ];
 
+const VEHICLE_TYPES = [
+  { id: 'motorcycle', name: 'دراجة نارية', icon: '🏍️' },
+  { id: 'car', name: 'سيارة', icon: '🚗' },
+  { id: 'bicycle', name: 'دراجة هوائية', icon: '🚲' },
+];
+
 const PAYMENT_TYPES = [
   { id: 'shamcash', name: 'شام كاش', icon: '💳' },
   { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱' },
@@ -23,18 +29,17 @@ const PAYMENT_TYPES = [
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 
-const StoreSettingsTab = () => {
+const DeliverySettingsTab = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  // إعدادات المتجر
-  const [storeSettings, setStoreSettings] = useState({
-    store_name: '',
-    store_description: '',
-    store_address: '',
-    store_city: 'دمشق',
-    store_phone: ''
+  // إعدادات التوصيل
+  const [deliverySettings, setDeliverySettings] = useState({
+    vehicle_type: 'motorcycle',
+    vehicle_number: '',
+    working_city: 'دمشق',
+    working_hours: ''
   });
   
   // حسابات الاستلام
@@ -56,10 +61,10 @@ const StoreSettingsTab = () => {
   const fetchData = async () => {
     try {
       const [settingsRes, accountsRes] = await Promise.all([
-        axios.get(`${API}/auth/seller/store-settings`),
-        axios.get(`${API}/auth/seller/payment-accounts`)
+        axios.get(`${API}/auth/delivery/settings`),
+        axios.get(`${API}/auth/delivery/payment-accounts`)
       ]);
-      setStoreSettings(settingsRes.data);
+      setDeliverySettings(settingsRes.data);
       setPaymentAccounts(accountsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -71,8 +76,8 @@ const StoreSettingsTab = () => {
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/auth/seller/store-settings`, storeSettings);
-      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المتجر بنجاح" });
+      await axios.put(`${API}/auth/delivery/settings`, deliverySettings);
+      toast({ title: "تم الحفظ", description: "تم تحديث الإعدادات بنجاح" });
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
     } finally {
@@ -84,15 +89,15 @@ const StoreSettingsTab = () => {
     e.preventDefault();
     try {
       if (editingAccount) {
-        await axios.put(`${API}/auth/seller/payment-accounts/${editingAccount.id}`, newAccount);
+        await axios.put(`${API}/auth/delivery/payment-accounts/${editingAccount.id}`, newAccount);
         toast({ title: "تم التحديث", description: "تم تحديث الحساب بنجاح" });
       } else {
-        await axios.post(`${API}/auth/seller/payment-accounts`, newAccount);
+        await axios.post(`${API}/auth/delivery/payment-accounts`, newAccount);
         toast({ title: "تمت الإضافة", description: "تم إضافة حساب الاستلام بنجاح" });
       }
       setShowAddAccount(false);
       setEditingAccount(null);
-      setNewAccount({ type: 'shamcash', account_number: '', holder_name: '', is_default: false });
+      setNewAccount({ type: 'shamcash', account_number: '', holder_name: '', bank_name: '', is_default: false });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل في حفظ الحساب", variant: "destructive" });
@@ -102,7 +107,7 @@ const StoreSettingsTab = () => {
   const handleDeleteAccount = async (accountId) => {
     if (!window.confirm('هل تريد حذف هذا الحساب؟')) return;
     try {
-      await axios.delete(`${API}/auth/seller/payment-accounts/${accountId}`);
+      await axios.delete(`${API}/auth/delivery/payment-accounts/${accountId}`);
       toast({ title: "تم الحذف", description: "تم حذف الحساب بنجاح" });
       fetchData();
     } catch (error) {
@@ -112,7 +117,7 @@ const StoreSettingsTab = () => {
 
   const handleSetDefault = async (accountId) => {
     try {
-      await axios.post(`${API}/auth/seller/payment-accounts/${accountId}/default`);
+      await axios.post(`${API}/auth/delivery/payment-accounts/${accountId}/default`);
       toast({ title: "تم التحديث", description: "تم تعيين الحساب كافتراضي" });
       fetchData();
     } catch (error) {
@@ -142,46 +147,57 @@ const StoreSettingsTab = () => {
 
   return (
     <div className="space-y-4">
-      {/* إعدادات المتجر */}
+      {/* إعدادات التوصيل */}
       <div className="bg-white rounded-xl p-4 border border-gray-200">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
-            <Store size={16} className="text-[#FF6B00]" />
+          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+            <Truck size={16} className="text-blue-600" />
           </div>
-          <h2 className="font-bold text-sm text-gray-900">إعدادات المتجر</h2>
+          <h2 className="font-bold text-sm text-gray-900">إعدادات التوصيل</h2>
         </div>
 
         <div className="space-y-3">
-          {/* اسم المتجر */}
+          {/* نوع المركبة */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">اسم المتجر</label>
-            <input
-              type="text"
-              value={storeSettings.store_name}
-              onChange={(e) => setStoreSettings({...storeSettings, store_name: e.target.value})}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="أدخل اسم المتجر"
-            />
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">نوع المركبة</label>
+            <div className="grid grid-cols-3 gap-2">
+              {VEHICLE_TYPES.map(vehicle => (
+                <button
+                  key={vehicle.id}
+                  type="button"
+                  onClick={() => setDeliverySettings({...deliverySettings, vehicle_type: vehicle.id})}
+                  className={`p-2 rounded-lg border text-center text-xs ${
+                    deliverySettings.vehicle_type === vehicle.id
+                      ? 'border-[#FF6B00] bg-orange-50 text-[#FF6B00]'
+                      : 'border-gray-200 text-gray-600'
+                  }`}
+                >
+                  <div className="text-lg mb-1">{vehicle.icon}</div>
+                  {vehicle.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* وصف المتجر */}
+          {/* رقم المركبة */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">وصف المتجر</label>
-            <textarea
-              value={storeSettings.store_description}
-              onChange={(e) => setStoreSettings({...storeSettings, store_description: e.target.value})}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none resize-none"
-              rows={2}
-              placeholder="وصف مختصر عن متجرك"
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">رقم المركبة</label>
+            <input
+              type="text"
+              value={deliverySettings.vehicle_number}
+              onChange={(e) => setDeliverySettings({...deliverySettings, vehicle_number: e.target.value})}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
+              placeholder="مثال: دمشق 123456"
+              dir="ltr"
             />
           </div>
 
           {/* المدينة */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">المدينة</label>
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">منطقة العمل</label>
             <select
-              value={storeSettings.store_city}
-              onChange={(e) => setStoreSettings({...storeSettings, store_city: e.target.value})}
+              value={deliverySettings.working_city}
+              onChange={(e) => setDeliverySettings({...deliverySettings, working_city: e.target.value})}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
             >
               {SYRIAN_CITIES.map(city => (
@@ -190,28 +206,15 @@ const StoreSettingsTab = () => {
             </select>
           </div>
 
-          {/* العنوان */}
+          {/* ساعات العمل */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">عنوان المتجر</label>
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">ساعات العمل</label>
             <input
               type="text"
-              value={storeSettings.store_address}
-              onChange={(e) => setStoreSettings({...storeSettings, store_address: e.target.value})}
+              value={deliverySettings.working_hours}
+              onChange={(e) => setDeliverySettings({...deliverySettings, working_hours: e.target.value})}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="الحي، الشارع، رقم البناء"
-            />
-          </div>
-
-          {/* رقم الهاتف */}
-          <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">رقم هاتف المتجر</label>
-            <input
-              type="tel"
-              value={storeSettings.store_phone}
-              onChange={(e) => setStoreSettings({...storeSettings, store_phone: e.target.value})}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="09xxxxxxxx"
-              dir="ltr"
+              placeholder="مثال: 9 صباحاً - 9 مساءً"
             />
           </div>
 
@@ -236,13 +239,13 @@ const StoreSettingsTab = () => {
             </div>
             <div>
               <h2 className="font-bold text-sm text-gray-900">حسابات الاستلام</h2>
-              <p className="text-[9px] text-gray-500">لاستلام أرباحك من المبيعات</p>
+              <p className="text-[9px] text-gray-500">لاستلام أرباحك من التوصيل</p>
             </div>
           </div>
           <button
             onClick={() => {
               setEditingAccount(null);
-              setNewAccount({ type: 'shamcash', account_number: '', holder_name: '', is_default: false });
+              setNewAccount({ type: 'shamcash', account_number: '', holder_name: '', bank_name: '', is_default: false });
               setShowAddAccount(true);
             }}
             className="bg-green-500 text-white p-1.5 rounded-lg hover:bg-green-600"
@@ -256,7 +259,7 @@ const StoreSettingsTab = () => {
           <div className="text-center py-6 text-gray-500 text-xs">
             <CreditCard size={32} className="mx-auto mb-2 opacity-30" />
             <p>لم تضف أي حساب للاستلام بعد</p>
-            <p className="text-[10px] text-gray-400">أضف حساب شام كاش أو سيرياتيل لاستلام أرباحك</p>
+            <p className="text-[10px] text-gray-400">أضف حساب شام كاش أو بنك لاستلام أرباحك</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -315,7 +318,7 @@ const StoreSettingsTab = () => {
       {/* نموذج إضافة/تعديل حساب */}
       {showAddAccount && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm">{editingAccount ? 'تعديل الحساب' : 'إضافة حساب جديد'}</h3>
               <button onClick={() => setShowAddAccount(false)} className="p-1 hover:bg-gray-100 rounded">
@@ -329,7 +332,7 @@ const StoreSettingsTab = () => {
                 <label className="block text-[10px] font-bold text-gray-600 mb-1">نوع الحساب</label>
                 <select
                   value={newAccount.type}
-                  onChange={(e) => setNewAccount({...newAccount, type: e.target.value, bank_name: '', iban: ''})}
+                  onChange={(e) => setNewAccount({...newAccount, type: e.target.value, bank_name: ''})}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
                 >
                   {PAYMENT_TYPES.map(type => (
@@ -428,4 +431,4 @@ const StoreSettingsTab = () => {
   );
 };
 
-export default StoreSettingsTab;
+export default DeliverySettingsTab;

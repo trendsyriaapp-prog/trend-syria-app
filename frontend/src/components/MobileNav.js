@@ -32,6 +32,9 @@ const MobileNav = () => {
   // هل البائع في لوحة التحكم الخاصة به؟
   const isSellerDashboard = location.pathname === '/seller/dashboard' && user?.user_type === 'seller';
   
+  // هل موظف التوصيل في صفحته الرئيسية؟
+  const isDeliveryHome = (location.pathname === '/' || location.pathname === '/delivery/dashboard') && user?.user_type === 'delivery' && user?.is_approved;
+  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
 
@@ -71,6 +74,14 @@ const MobileNav = () => {
       { path: '/seller/orders', icon: ClipboardList, label: 'الطلبات' },
       { path: '/wallet', icon: Wallet, label: 'المحفظة' },
       { path: '/seller/dashboard?tab=store', icon: Settings, label: 'الإعدادات' }
+    ];
+  } else if (isDeliveryHome && !isViewingAsCustomer) {
+    // شريط خاص بموظف التوصيل
+    navItems = [
+      { path: '/delivery/dashboard', icon: Home, label: 'الرئيسية' },
+      { path: '/delivery/orders', icon: ClipboardList, label: 'الطلبات' },
+      { path: '/wallet', icon: Wallet, label: 'المحفظة' },
+      { path: '/delivery/dashboard?tab=settings', icon: Settings, label: 'الإعدادات' }
     ];
   } else if (isInFoodSection && foodEnabled) {
     // في قسم الطعام: نعرض سلة الطعام فقط

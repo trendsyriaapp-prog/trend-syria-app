@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
@@ -17,6 +17,7 @@ import DriverChallenges from '../components/delivery/DriverChallenges';
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
+import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -252,12 +253,31 @@ const DeliveryDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [availableOrders, setAvailableOrders] = useState([]);
   const [myOrders, setMyOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('available');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'available');
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
+
+  // تحديث URL عند تغيير التبويب
+  useEffect(() => {
+    if (activeTab === 'available') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', activeTab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [activeTab]);
+
+  // قراءة التبويب من URL
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
   
   // Checklist states
   const [showPickupChecklist, setShowPickupChecklist] = useState(null);
@@ -477,6 +497,17 @@ const DeliveryDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
+        {/* Header مع زر تصفح كعميل */}
+        <div className="flex items-center justify-end mb-2">
+          <Link
+            to="/?view=customer"
+            className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200"
+          >
+            <Home size={14} />
+            <span>تصفح كعميل</span>
+          </Link>
+        </div>
+
         <DeliveryHeader 
           user={user}
           walletBalance={walletBalance}
@@ -531,7 +562,22 @@ const DeliveryDashboard = () => {
           >
             طلباتي ({myOrders.length})
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+              activeTab === 'settings' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            الإعدادات
+          </button>
         </div>
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <DeliverySettingsTab />
+        )}
 
         {/* Available Orders */}
         {activeTab === 'available' && (
