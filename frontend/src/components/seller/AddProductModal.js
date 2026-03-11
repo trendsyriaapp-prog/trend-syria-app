@@ -416,48 +416,89 @@ const AddProductModal = ({
                 </div>
               )}
               
-              <div className="grid grid-cols-5 gap-1.5 mb-1">
-                {newProduct.images.map((img, i) => (
-                  <div key={i} className="relative aspect-square group">
-                    <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNewProduct({
-                          ...newProduct,
-                          images: newProduct.images.filter((_, idx) => idx !== i)
-                        });
-                        setImageWarnings([]);
-                      }}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={10} />
-                    </button>
-                    {i === 0 && (
-                      <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[7px] text-center py-0.5 rounded-b">
-                        رئيسية
-                      </span>
-                    )}
-                  </div>
-                ))}
-                {newProduct.images.length < 5 && (
+              {/* أزرار إضافة الصور - كاميرا ومعرض */}
+              {newProduct.images.length < 5 && (
+                <div className="flex gap-2 mb-2">
                   <button
                     type="button"
-                    onClick={() => document.getElementById('product-images').click()}
-                    className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-[#FF6B00] hover:bg-orange-50 transition-colors"
+                    onClick={() => document.getElementById('product-camera').click()}
                     disabled={uploadingImage}
+                    className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E55A00] transition-colors disabled:opacity-50"
+                    data-testid="camera-capture-btn"
                   >
                     {uploadingImage ? (
-                      <Loader2 size={14} className="text-[#FF6B00] animate-spin" />
+                      <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <>
-                        <Plus size={14} className="text-gray-400" />
-                        <span className="text-[8px] text-gray-400 mt-0.5">إضافة</span>
+                        <Camera size={16} />
+                        تصوير بالكاميرا
                       </>
                     )}
                   </button>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('product-images').click()}
+                    disabled={uploadingImage}
+                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    data-testid="gallery-upload-btn"
+                  >
+                    {uploadingImage ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        من المعرض
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* معاينة الصور المضافة */}
+              {newProduct.images.length > 0 && (
+                <div className="grid grid-cols-5 gap-1.5 mb-1">
+                  {newProduct.images.map((img, i) => (
+                    <div key={i} className="relative aspect-square group">
+                      <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProduct({
+                            ...newProduct,
+                            images: newProduct.images.filter((_, idx) => idx !== i)
+                          });
+                          setImageWarnings([]);
+                        }}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={10} />
+                      </button>
+                      {i === 0 && (
+                        <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[7px] text-center py-0.5 rounded-b">
+                          رئيسية
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {newProduct.images.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('product-images').click()}
+                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-[#FF6B00] hover:bg-orange-50 transition-colors"
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage ? (
+                        <Loader2 size={14} className="text-[#FF6B00] animate-spin" />
+                      ) : (
+                        <>
+                          <Plus size={14} className="text-gray-400" />
+                          <span className="text-[8px] text-gray-400 mt-0.5">إضافة</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
               
               {newProduct.images.length === 0 && (
                 <p className="text-[9px] text-gray-400 flex items-center gap-1">
@@ -465,6 +506,17 @@ const AddProductModal = ({
                   استخدم خلفية بيضاء وإضاءة جيدة للحصول على أفضل النتائج
                 </p>
               )}
+              
+              {/* Input للكاميرا - يفتح الكاميرا مباشرة */}
+              <input
+                id="product-camera"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              {/* Input للمعرض - يفتح معرض الصور */}
               <input
                 id="product-images"
                 type="file"
