@@ -224,67 +224,22 @@ const CartPage = () => {
           </div>
         )}
 
-        {/* شريط التقدم للشحن المجاني - فقط للمتاجر من نفس المحافظة */}
-        {sellerShippingDetails.length > 0 && sellerShippingDetails.some(s => s.shipping_status === 'paid_can_be_free') && (
-          <div className="bg-gradient-to-l from-[#FF6B00] to-orange-400 rounded-lg p-3 mb-3">
-            {sellerShippingDetails.filter(s => s.shipping_status === 'paid_can_be_free').map((seller) => {
-              const progress = Math.min(((seller.seller_subtotal || 0) / (seller.free_shipping_threshold || FREE_SHIPPING_THRESHOLD)) * 100, 100);
-              return (
-                <div key={seller.seller_id} className="space-y-2">
-                  <div className="flex items-center justify-between text-white">
-                    <div className="flex items-center gap-2">
-                      <Truck size={16} />
-                      <span className="text-sm font-medium">
-                        أضف {formatPrice(seller.remaining_for_free)} من "{seller.seller_name}" للشحن المجاني
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold">{Math.round(progress)}%</span>
-                  </div>
-                  <div className="h-2 bg-white/30 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-white rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* شريط الشحن المجاني الإجمالي */}
-        {cart?.total > 0 && !isFreeShipping && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <Truck size={16} />
-                  <span className="text-sm font-medium">
-                    أضف {formatPrice(cartAnalysis.remainingForFree)} للشحن المجاني
-                  </span>
-                </div>
-                <span className="text-sm font-bold text-orange-600">
-                  {Math.round(cartAnalysis.progressToFree)}%
-                </span>
-              </div>
-              <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
-                  style={{ width: `${cartAnalysis.progressToFree}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* رسالة الشحن المجاني عند الوصول */}
+        {/* رسالة الشحن المجاني عند الوصول - احتفال */}
         {isFreeShipping && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-            <div className="flex items-center gap-2 text-green-700">
-              <Check size={18} className="text-green-600" />
-              <span className="font-bold text-sm">🎉 مبروك! حصلت على شحن مجاني</span>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 mb-3 shadow-lg"
+          >
+            <div className="flex items-center justify-center gap-3 text-white">
+              <span className="text-2xl">🎉</span>
+              <div className="text-center">
+                <span className="font-bold text-lg block">مبروك! حصلت على شحن مجاني</span>
+                <span className="text-sm text-green-100">وفرت مبلغ الشحن في هذا الطلب!</span>
+              </div>
+              <span className="text-2xl">🎉</span>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="grid md:grid-cols-3 gap-3">

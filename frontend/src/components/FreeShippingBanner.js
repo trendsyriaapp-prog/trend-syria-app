@@ -103,8 +103,8 @@ const FreeShippingBanner = () => {
   useEffect(() => {
     fetchProductCart();
     
-    // جلب البيانات كل 5 ثواني للمنتجات فقط
-    fetchIntervalRef.current = setInterval(fetchProductCart, 5000);
+    // جلب البيانات كل 2 ثانية للاستجابة السريعة
+    fetchIntervalRef.current = setInterval(fetchProductCart, 2000);
     
     return () => {
       if (fetchIntervalRef.current) {
@@ -113,16 +113,19 @@ const FreeShippingBanner = () => {
     };
   }, [fetchProductCart]);
 
-  // الاستماع لتغييرات سلة المنتجات
+  // الاستماع لتغييرات سلة المنتجات - استجابة فورية
   useEffect(() => {
     const handleCartUpdate = () => {
+      // تحديث فوري
       fetchProductCart();
     };
 
     window.addEventListener('cart-updated', handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
     
     return () => {
       window.removeEventListener('cart-updated', handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
     };
   }, [fetchProductCart]);
 
