@@ -43,6 +43,12 @@ export const CartProvider = ({ children }) => {
       const res = await axios.get(`${API}/cart`);
       const newCart = {...res.data};
       setCart(newCart);
+      
+      // إطلاق event لإعلام المكونات الأخرى
+      window.dispatchEvent(new CustomEvent('cart-updated', {
+        detail: { total: newCart.total, itemsCount: newCart.items?.length || 0 }
+      }));
+      
       return newCart; // إرجاع السلة الجديدة
     } catch (error) {
       throw error;

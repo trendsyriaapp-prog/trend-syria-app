@@ -79,6 +79,7 @@ function App() {
               <BrowserRouter>
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
+                  <FreeShippingBanner />
                   <Header />
                   <FoodDeliveryBanner />
               <main className="pb-16 md:pb-0">
@@ -145,7 +146,6 @@ function App() {
             <Toaster />
             <Chatbot />
             <NotificationManager />
-            <FreeShippingBanner />
           </div>
           </ScrollProvider>
         </BrowserRouter>

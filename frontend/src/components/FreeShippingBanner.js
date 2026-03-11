@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Truck, X, PartyPopper } from 'lucide-react';
-import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // الصفحات المسموحة لعرض الشريط
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
@@ -21,25 +23,72 @@ const isAllowedPath = (pathname) => {
 const formatPrice = (price) => new Intl.NumberFormat('ar-SY').format(price);
 
 const FreeShippingBanner = () => {
-  const { cart, loading: cartLoading } = useCart();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { settings } = useSettings();
   const location = useLocation();
   
-  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 150000;
+  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 50000;
   
   const [dismissed, setDismissed] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [justQualified, setJustQualified] = useState(false);
+  const [cartTotal, setCartTotal] = useState(0);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
   
   const prevCartTotalRef = useRef(0);
   const celebrationTimeoutRef = useRef(null);
+  const fetchIntervalRef = useRef(null);
 
   const shouldShowOnCurrentPage = isAllowedPath(location.pathname);
 
-  // حساب بيانات السلة
-  const cartTotal = cart?.total || 0;
-  const cartItemsCount = cart?.items?.length || 0;
+  // جلب بيانات السلة مباشرة من الـ API
+  const fetchCartData = async () => {
+    if (!token) return;
+    
+    try {
+      const res = await axios.get(`${API}/api/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const total = res.data?.total || 0;
+      const itemsCount = res.data?.items?.length || 0;
+      
+      setCartTotal(total);
+      setCartItemsCount(itemsCount);
+    } catch (error) {
+      // تجاهل الأخطاء
+    }
+  };
+
+  // جلب بيانات السلة عند تحميل المكون وعند تغيير الصفحة
+  useEffect(() => {
+    fetchCartData();
+    
+    // جلب البيانات كل 3 ثواني
+    fetchIntervalRef.current = setInterval(fetchCartData, 3000);
+    
+    return () => {
+      if (fetchIntervalRef.current) {
+        clearInterval(fetchIntervalRef.current);
+      }
+    };
+  }, [token, location.pathname]);
+
+  // الاستماع لتغييرات السلة
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      fetchCartData();
+    };
+
+    window.addEventListener('cart-updated', handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
+    };
+  }, [token]);
+
+  // حساب البيانات
   const hasItems = cartItemsCount > 0;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
   const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
@@ -51,32 +100,26 @@ const FreeShippingBanner = () => {
     const prevQualified = prevTotal >= FREE_SHIPPING_THRESHOLD;
     const nowQualified = cartTotal >= FREE_SHIPPING_THRESHOLD;
     
-    // إذا وصل للحد الآن ولم يكن قد وصل من قبل
     if (nowQualified && !prevQualified && hasItems && prevTotal > 0) {
       setShowCelebration(true);
-      setJustQualified(true);
       
-      // إخفاء الاحتفال بعد 4 ثواني
       if (celebrationTimeoutRef.current) {
         clearTimeout(celebrationTimeoutRef.current);
       }
       celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
-        setJustQualified(false);
       }, 4000);
     }
     
-    // إذا السلة فارغة، أعد التعيين
     if (!hasItems) {
       setShowCelebration(false);
-      setJustQualified(false);
       setDismissed(false);
     }
     
     prevCartTotalRef.current = cartTotal;
   }, [cartTotal, hasItems, FREE_SHIPPING_THRESHOLD]);
 
-  // تنظيف عند إزالة المكون
+  // تنظيف
   useEffect(() => {
     return () => {
       if (celebrationTimeoutRef.current) {
@@ -85,7 +128,6 @@ const FreeShippingBanner = () => {
     };
   }, []);
 
-  // الإغلاق
   const handleDismiss = () => {
     setDismissed(true);
     setShowCelebration(false);
@@ -94,22 +136,15 @@ const FreeShippingBanner = () => {
   // شروط عدم الإظهار
   const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  // لا تظهر إذا:
-  // - ليس عميل
-  // - ليس في صفحة مسموحة
-  // - تم الإغلاق
-  // - السلة فارغة
-  // - السلة قيد التحميل
-  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems || cartLoading) {
+  if (!isCustomer || !shouldShowOnCurrentPage || dismissed || !hasItems) {
     return null;
   }
 
-  // إذا وصل للشحن المجاني ولا يوجد احتفال، لا تُظهر الشريط
   if (qualifiesForFree && !showCelebration) {
     return null;
   }
 
-  // شريط الاحتفال - يظهر فقط لحظة الوصول للحد
+  // شريط الاحتفال
   if (showCelebration) {
     return (
       <AnimatePresence>
@@ -118,18 +153,18 @@ const FreeShippingBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
           className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 flex items-center justify-between shadow-lg z-50 sticky top-0"
+          data-testid="free-shipping-celebration"
         >
           <div className="flex items-center gap-2 flex-1 justify-center">
             <PartyPopper className="w-5 h-5 animate-bounce" />
             <span className="font-bold text-sm">
-              🎉 هيولا! حصلت على توصيل مجاني
+              🎉 مبروك! حصلت على توصيل مجاني
             </span>
             <PartyPopper className="w-5 h-5 animate-bounce" />
           </div>
           <button
             onClick={handleDismiss}
             className="p-1 hover:bg-white/20 rounded-full transition-colors mr-2"
-            aria-label="إغلاق"
           >
             <X className="w-4 h-4" />
           </button>
@@ -138,7 +173,7 @@ const FreeShippingBanner = () => {
     );
   }
 
-  // شريط التقدم - يظهر عندما لم يصل للحد بعد
+  // شريط التقدم
   return (
     <AnimatePresence>
       <motion.div
@@ -146,6 +181,7 @@ const FreeShippingBanner = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -50, opacity: 0 }}
         className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 sticky top-0"
+        data-testid="free-shipping-progress"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-1">
@@ -157,7 +193,6 @@ const FreeShippingBanner = () => {
                 </span>
                 <span className="text-white/80">{Math.round(progress)}%</span>
               </div>
-              {/* شريط التقدم */}
               <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
@@ -171,7 +206,6 @@ const FreeShippingBanner = () => {
           <button
             onClick={handleDismiss}
             className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
-            aria-label="إغلاق"
           >
             <X className="w-4 h-4" />
           </button>
