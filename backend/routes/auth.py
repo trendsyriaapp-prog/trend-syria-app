@@ -203,6 +203,37 @@ async def get_me(user: dict = Depends(get_current_user)):
         "is_approved": user.get("is_approved", False)
     }
 
+@router.get("/lookup/{phone}")
+async def lookup_user_by_phone(phone: str, user: dict = Depends(get_current_user)):
+    """البحث عن مستخدم برقم الهاتف - للتحقق قبل إرسال هدية"""
+    # تنظيف رقم الهاتف
+    clean_phone = sanitize_input(phone)
+    
+    if not validate_phone(clean_phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # لا يمكن إرسال هدية لنفسك
+    if clean_phone == user.get("phone"):
+        raise HTTPException(status_code=400, detail="لا يمكنك إرسال هدية لنفسك")
+    
+    # البحث عن المستخدم
+    recipient = await db.users.find_one(
+        {"phone": clean_phone},
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1, "profile_image": 1, "city": 1}
+    )
+    
+    if not recipient:
+        raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    return {
+        "found": True,
+        "id": recipient.get("id"),
+        "name": recipient.get("full_name") or recipient.get("name", "مستخدم"),
+        "phone": recipient.get("phone"),
+        "profile_image": recipient.get("profile_image"),
+        "city": recipient.get("city", "")
+    }
+
 # ============== Seller Routes ==============
 
 seller_router = APIRouter(prefix="/seller", tags=["Seller"])
