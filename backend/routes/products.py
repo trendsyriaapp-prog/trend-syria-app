@@ -200,7 +200,8 @@ async def get_featured_products(limit: int = Query(default=8, le=20)):
         "stock": 1,
         "created_at": 1,
         "available_sizes": 1,
-        "video": 1
+        "video": 1,
+        "city": 1
     }
     products = await db.products.find(
         {"is_active": True, "is_approved": True}, 
