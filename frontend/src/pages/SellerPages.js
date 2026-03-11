@@ -456,7 +456,7 @@ const SellerDashboardPage = () => {
         // بائع طعام - جلب الأطباق وطلبات الطعام
         const [menuRes, foodOrdersRes] = await Promise.all([
           axios.get(`${API}/food/my-items`),
-          axios.get(`${API}/food-orders/seller`)
+          axios.get(`${API}/food/orders/seller`)
         ]);
         setFoodItems(menuRes.data || []);
         setFoodOrders(foodOrdersRes.data || []);

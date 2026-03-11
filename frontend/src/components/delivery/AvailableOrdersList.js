@@ -10,31 +10,38 @@ const openInGoogleMaps = (address, city) => {
   window.open(mapsUrl, '_blank');
 };
 
-const AvailableOrdersList = ({ orders, isWorkingHours, onTakeOrder, onTakeFoodOrder }) => {
-  if (orders.length === 0) {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all' }) => {
+  // دمج كل الطلبات أو الاعتماد على الفلتر
+  const allOrders = [...orders, ...foodOrders];
+  
+  if (allOrders.length === 0) {
     return (
       <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
         <Package size={48} className="text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">لا توجد طلبات متاحة حالياً</p>
+        <p className="text-gray-500">
+          {orderTypeFilter === 'food' ? 'لا توجد طلبات طعام متاحة' : 
+           orderTypeFilter === 'products' ? 'لا توجد طلبات منتجات متاحة' : 
+           'لا توجد طلبات متاحة حالياً'}
+        </p>
       </div>
     );
   }
 
   // فصل طلبات الطعام عن طلبات المتجر
-  const foodOrders = orders.filter(o => o.order_source === 'food');
+  const displayFoodOrders = foodOrders.length > 0 ? foodOrders : orders.filter(o => o.order_source === 'food');
   const shopOrders = orders.filter(o => o.order_source !== 'food');
 
   return (
     <div className="space-y-4">
       {/* طلبات الطعام */}
-      {foodOrders.length > 0 && (
+      {displayFoodOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <UtensilsCrossed size={18} className="text-green-600" />
-            <h3 className="font-bold text-gray-900">طلبات الطعام ({foodOrders.length})</h3>
+            <h3 className="font-bold text-gray-900">طلبات الطعام ({displayFoodOrders.length})</h3>
           </div>
           <div className="space-y-3">
-            {foodOrders.map((order) => (
+            {displayFoodOrders.map((order) => (
               <motion.div
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}

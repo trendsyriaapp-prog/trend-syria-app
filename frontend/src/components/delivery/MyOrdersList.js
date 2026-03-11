@@ -17,9 +17,11 @@ const openInGoogleMaps = (address, city) => {
 
 const MyOrdersList = ({ 
   orders, 
+  foodOrders = [],
   onStartDelivery, 
   onShowDeliveryChecklist,
-  onOpenETAModal
+  onOpenETAModal,
+  orderTypeFilter = 'all'
 }) => {
   const navigate = useNavigate();
   const [showOrderCode, setShowOrderCode] = useState(null);
@@ -32,11 +34,17 @@ const MyOrdersList = ({
       .catch(() => {});
   }, []);
 
-  if (orders.length === 0) {
+  const allOrders = [...orders, ...foodOrders];
+  
+  if (allOrders.length === 0) {
     return (
       <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
         <Truck size={48} className="text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">لم تأخذ أي طلبات بعد</p>
+        <p className="text-gray-500">
+          {orderTypeFilter === 'food' ? 'لا توجد طلبات طعام لديك' : 
+           orderTypeFilter === 'products' ? 'لا توجد طلبات منتجات لديك' : 
+           'لم تأخذ أي طلبات بعد'}
+        </p>
       </div>
     );
   }

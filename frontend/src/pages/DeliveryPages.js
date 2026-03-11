@@ -292,6 +292,11 @@ const DeliveryDashboard = () => {
   // Ratings
   const [myRatings, setMyRatings] = useState({ ratings: [], average_rating: 0, total_ratings: 0 });
   
+  // Food orders states
+  const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
+  const [myFoodOrders, setMyFoodOrders] = useState([]);
+  const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food'
+  
   // Working hours settings
   const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
 
@@ -348,12 +353,16 @@ const DeliveryDashboard = () => {
 
   const fetchOrders = async () => {
     try {
-      const [availableRes, myRes] = await Promise.all([
+      const [availableRes, myRes, availableFoodRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/delivery/available-orders`),
-        axios.get(`${API}/delivery/my-orders`)
+        axios.get(`${API}/delivery/my-orders`),
+        axios.get(`${API}/delivery/available-food-orders`).catch(() => ({ data: [] })),
+        axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
       setAvailableOrders(availableRes.data);
       setMyOrders(myRes.data);
+      setAvailableFoodOrders(availableFoodRes.data || []);
+      setMyFoodOrders(myFoodRes.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -555,7 +564,7 @@ const DeliveryDashboard = () => {
                 : 'bg-white border border-gray-200 text-gray-700'
             }`}
           >
-            طلبات متاحة ({availableOrders.length})
+            طلبات متاحة ({availableOrders.length + availableFoodOrders.length})
           </button>
           <button
             onClick={() => setActiveTab('my')}
@@ -565,7 +574,7 @@ const DeliveryDashboard = () => {
                 : 'bg-white border border-gray-200 text-gray-700'
             }`}
           >
-            طلباتي ({myOrders.length})
+            طلباتي ({myOrders.length + myFoodOrders.length})
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -579,6 +588,36 @@ const DeliveryDashboard = () => {
           </button>
         </div>
 
+        {/* فلتر نوع الطلبات */}
+        {(activeTab === 'available' || activeTab === 'my') && (
+          <div className="flex gap-1 mb-3 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setOrderTypeFilter('all')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                orderTypeFilter === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+              }`}
+            >
+              الكل
+            </button>
+            <button
+              onClick={() => setOrderTypeFilter('products')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 ${
+                orderTypeFilter === 'products' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+              }`}
+            >
+              📦 منتجات
+            </button>
+            <button
+              onClick={() => setOrderTypeFilter('food')}
+              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 ${
+                orderTypeFilter === 'food' ? 'bg-white shadow text-orange-600' : 'text-gray-500'
+              }`}
+            >
+              🍔 طعام
+            </button>
+          </div>
+        )}
+
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <DeliverySettingsTab />
@@ -587,20 +626,24 @@ const DeliveryDashboard = () => {
         {/* Available Orders */}
         {activeTab === 'available' && (
           <AvailableOrdersList
-            orders={availableOrders}
+            orders={orderTypeFilter === 'food' ? [] : availableOrders}
+            foodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
             isWorkingHours={isWorkingHours}
             onTakeOrder={(order) => setShowPickupChecklist(order)}
             onTakeFoodOrder={handleTakeFoodOrder}
+            orderTypeFilter={orderTypeFilter}
           />
         )}
 
         {/* My Orders */}
         {activeTab === 'my' && (
           <MyOrdersList
-            orders={myOrders}
+            orders={orderTypeFilter === 'food' ? [] : myOrders}
+            foodOrders={orderTypeFilter === 'products' ? [] : myFoodOrders}
             onStartDelivery={handleOnTheWay}
             onShowDeliveryChecklist={(order) => setShowDeliveryChecklist(order)}
             onOpenETAModal={openETAModal}
+            orderTypeFilter={orderTypeFilter}
           />
         )}
       </div>

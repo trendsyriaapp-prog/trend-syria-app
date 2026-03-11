@@ -158,6 +158,78 @@ async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
     
     return orders
 
+@router.get("/available-food-orders")
+async def get_available_food_orders(user: dict = Depends(get_current_user)):
+    """طلبات الطعام المتاحة للتوصيل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0}
+    )
+    if not doc or doc.get("status") != "approved":
+        return []  # Return empty list instead of error
+    
+    driver_city = user.get("city") or doc.get("city")
+    
+    # طلبات الطعام الجاهزة
+    food_query = {"status": "ready", "driver_id": None}
+    if driver_city:
+        food_query["$or"] = [
+            {"delivery_city": driver_city},
+            {"delivery_city": {"$exists": False}}
+        ]
+    
+    food_orders = await db.food_orders.find(
+        food_query,
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(50)
+    
+    # تحويل طلبات الطعام لتنسيق يناسب عرض السائق
+    for order in food_orders:
+        order["order_source"] = "food"
+        # إضافة معلومات المتجر
+        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+        if store:
+            order["store_name"] = store.get("name", "متجر")
+            order["store_type"] = "restaurant"
+            order["seller_addresses"] = [{
+                "name": store.get("name"),
+                "address": store.get("address", ""),
+                "city": store.get("city", ""),
+                "phone": store.get("phone", "")
+            }]
+        order["buyer_address"] = {
+            "name": order.get("customer_name", ""),
+            "address": order.get("delivery_address", ""),
+            "city": order.get("delivery_city", ""),
+            "phone": order.get("customer_phone", "")
+        }
+    
+    return food_orders
+
+@router.get("/my-food-orders")
+async def get_my_food_orders(user: dict = Depends(get_current_user)):
+    """طلبات الطعام التي استلمها السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    food_orders = await db.food_orders.find(
+        {"driver_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # إضافة معلومات المتجر
+    for order in food_orders:
+        order["order_source"] = "food"
+        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+        if store:
+            order["store_name"] = store.get("name", "متجر")
+            order["seller_phone"] = store.get("phone", "")
+    
+    return food_orders
+
 @router.post("/orders/{order_id}/accept")
 async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_user)):
     """قبول طلب للتوصيل"""
