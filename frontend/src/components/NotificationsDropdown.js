@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart, Gift, Star, Tag, Utensils } from 'lucide-react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart, Gift, Star, Tag, Utensils, CreditCard, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -9,11 +9,14 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const NotificationIcon = ({ type }) => {
   switch (type) {
     case 'new_order':
+    case 'order_paid':
       return <ShoppingCart size={16} className="text-green-500" />;
     case 'order_status':
       return <Package size={16} className="text-blue-500" />;
     case 'delivery':
     case 'delivery_ready':
+    case 'delivery_available':
+    case 'delivery_assigned':
       return <Truck size={16} className="text-orange-500" />;
     case 'gift_received':
     case 'gift_accepted':
@@ -23,9 +26,16 @@ const NotificationIcon = ({ type }) => {
       return <Star size={16} className="text-yellow-500" />;
     case 'promotion':
     case 'flash_sale':
+    case 'daily_deal':
       return <Tag size={16} className="text-red-500" />;
     case 'food_order':
       return <Utensils size={16} className="text-orange-500" />;
+    case 'wallet_credit':
+    case 'withdrawal_approved':
+      return <CreditCard size={16} className="text-green-500" />;
+    case 'low_stock':
+    case 'delivery_penalty':
+      return <AlertTriangle size={16} className="text-red-500" />;
     default:
       return <Bell size={16} className="text-gray-500" />;
   }
@@ -89,6 +99,8 @@ const formatTimeAgo = (dateString) => {
 const NotificationsDropdown = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -96,12 +108,34 @@ const NotificationsDropdown = () => {
   const dropdownRef = useRef(null);
   const intervalRef = useRef(null);
 
+  // تحديد السياق الحالي
+  const getNotificationContext = () => {
+    const viewAsCustomer = searchParams.get('view') === 'customer';
+    
+    // إذا كان يتصفح كعميل
+    if (viewAsCustomer) return 'customer';
+    
+    // إذا كان في لوحة تحكم البائع
+    if (location.pathname === '/seller/dashboard' && user?.user_type === 'seller') {
+      return 'seller';
+    }
+    
+    // إذا كان في لوحة تحكم التوصيل
+    if (location.pathname === '/delivery/dashboard' && user?.user_type === 'delivery') {
+      return 'delivery';
+    }
+    
+    // الافتراضي: إشعارات العميل
+    return 'customer';
+  };
+
   // جلب الإشعارات
   const fetchNotifications = async () => {
     if (!user) return;
     
     try {
-      const res = await axios.get(`${API}/api/notifications`);
+      const context = getNotificationContext();
+      const res = await axios.get(`${API}/api/notifications?context=${context}`);
       setNotifications(res.data || []);
       setUnreadCount(res.data.filter(n => !n.is_read).length);
     } catch (err) {
@@ -109,7 +143,7 @@ const NotificationsDropdown = () => {
     }
   };
 
-  // تحديث الإشعارات كل 30 ثانية
+  // تحديث الإشعارات كل 30 ثانية وعند تغيير الصفحة
   useEffect(() => {
     if (user) {
       fetchNotifications();
@@ -119,7 +153,7 @@ const NotificationsDropdown = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [user]);
+  }, [user, location.pathname, searchParams]);
 
   // إغلاق القائمة عند النقر خارجها
   useEffect(() => {

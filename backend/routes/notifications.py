@@ -1,27 +1,75 @@
 # /app/backend/routes/notifications.py
 # مسارات الإشعارات
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from datetime import datetime, timezone
 import uuid
+from typing import Optional
 
 from core.database import db, get_current_user
 from models.schemas import NotificationCreate
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
+# تصنيف أنواع الإشعارات حسب السياق
+SELLER_NOTIFICATION_TYPES = [
+    'new_order', 'order_cancelled', 'order_paid', 'review', 'low_stock',
+    'product_approved', 'product_rejected', 'wallet_credit', 'withdrawal_approved',
+    'seller_approved', 'seller_offer'
+]
+
+DELIVERY_NOTIFICATION_TYPES = [
+    'delivery_available', 'delivery_assigned', 'delivery_completed', 'delivery_cancelled',
+    'delivery_bonus', 'delivery_penalty', 'wallet_credit', 'withdrawal_approved',
+    'delivery_approved', 'delivery_challenge'
+]
+
+CUSTOMER_NOTIFICATION_TYPES = [
+    'order_status', 'delivery', 'delivery_ready', 'gift_received', 'gift_accepted',
+    'gift_completed', 'promotion', 'flash_sale', 'daily_deal', 'loyalty_points',
+    'food_order', 'coupon', 'price_drop'
+]
+
 @router.get("")
-async def get_notifications(user: dict = Depends(get_current_user)):
+async def get_notifications(
+    user: dict = Depends(get_current_user),
+    context: Optional[str] = Query(None, description="seller, delivery, or customer")
+):
+    """جلب الإشعارات مع إمكانية الفلترة حسب السياق"""
     user_type = user.get("user_type", "buyer")
     target_role = user_type + "s" if not user_type.endswith("s") else user_type
     
+    # بناء الاستعلام الأساسي
+    base_query = {"$or": [
+        {"target": "all"},
+        {"target": target_role},
+        {"target": user_type},
+        {"user_id": user["id"]}
+    ]}
+    
+    # إذا تم تحديد سياق معين، فلتر حسب أنواع الإشعارات
+    if context:
+        if context == 'seller' and user_type == 'seller':
+            # إشعارات البائع فقط
+            base_query = {"$and": [
+                base_query,
+                {"type": {"$in": SELLER_NOTIFICATION_TYPES}}
+            ]}
+        elif context == 'delivery' and user_type == 'delivery':
+            # إشعارات التوصيل فقط
+            base_query = {"$and": [
+                base_query,
+                {"type": {"$in": DELIVERY_NOTIFICATION_TYPES}}
+            ]}
+        elif context == 'customer':
+            # إشعارات العميل فقط (للجميع عند التصفح كعميل)
+            base_query = {"$and": [
+                base_query,
+                {"type": {"$in": CUSTOMER_NOTIFICATION_TYPES}}
+            ]}
+    
     notifications = await db.notifications.find(
-        {"$or": [
-            {"target": "all"},
-            {"target": target_role},
-            {"target": user_type},
-            {"user_id": user["id"]}
-        ]},
+        base_query,
         {"_id": 0}
     ).sort("created_at", -1).limit(50).to_list(50)
     
