@@ -27,7 +27,7 @@ const FreeShippingBanner = () => {
   const { settings } = useSettings();
   const location = useLocation();
   
-  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 50000;
+  const FREE_SHIPPING_THRESHOLD = settings?.free_shipping_threshold || 3000000;
   
   const [dismissed, setDismissed] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
