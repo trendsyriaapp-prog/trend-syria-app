@@ -159,6 +159,46 @@ const OrdersMap = ({
     }
   }, [isOpen]);
 
+  // تتبع موقع السائق وتحديث المسار تلقائياً كل 2 ثانية
+  useEffect(() => {
+    let watchId;
+    let updateInterval;
+
+    if (isOpen && selectedOrderForRoute) {
+      // مراقبة موقع السائق باستمرار
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrentDriverLocation({ latitude, longitude });
+          },
+          (error) => {
+            console.log('Watch position error:', error);
+          },
+          { enableHighAccuracy: true, maximumAge: 1000 }
+        );
+      }
+
+      // تحديث المسار كل 2 ثانية
+      updateInterval = setInterval(() => {
+        if (currentDriverLocation && selectedOrderForRoute) {
+          const driverCoords = [currentDriverLocation.latitude, currentDriverLocation.longitude];
+          const storeCoords = [selectedOrderForRoute.store_latitude, selectedOrderForRoute.store_longitude];
+          const customerCoords = [selectedOrderForRoute.latitude, selectedOrderForRoute.longitude];
+          
+          if (storeCoords[0] && customerCoords[0]) {
+            fetchRoute(driverCoords, storeCoords, customerCoords);
+          }
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+      if (updateInterval) clearInterval(updateInterval);
+    };
+  }, [isOpen, selectedOrderForRoute, currentDriverLocation]);
+
   // الحصول على إحداثيات الطلب - GPS حقيقي فقط
   const getOrderCoordinates = (order) => {
     // إذا كان الطلب يحتوي على إحداثيات GPS حقيقية
