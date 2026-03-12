@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // إصلاح مشكلة أيقونات Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -77,11 +80,41 @@ const OrdersMap = ({
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
   const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
   
+  // رسالة الخطأ داخل الخريطة
+  const [mapError, setMapError] = useState(null);
+  
   // التنقل خطوة بخطوة
   const [stepByStepMode, setStepByStepMode] = useState(false); // وضع خطوة بخطوة
   const [currentStepIndex, setCurrentStepIndex] = useState(0); // المحطة الحالية
   const [allStepsData, setAllStepsData] = useState([]); // جميع المحطات
   const [currentStepRoute, setCurrentStepRoute] = useState([]); // مسار المحطة الحالية
+
+  // قبول طلب الطعام من الخريطة مع عرض الخطأ داخلها
+  const handleAcceptFoodOrderFromMap = async (order) => {
+    try {
+      await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`);
+      setMapError(null);
+      onTakeFoodOrder?.(order); // استدعاء الـ callback الأصلي لتحديث البيانات
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || "حدث خطأ";
+      setMapError(errorMessage);
+      // إخفاء الرسالة بعد 5 ثواني
+      setTimeout(() => setMapError(null), 5000);
+    }
+  };
+
+  // قبول طلب المنتجات من الخريطة مع عرض الخطأ داخلها
+  const handleAcceptOrderFromMap = async (order) => {
+    try {
+      // نستدعي الـ callback الأصلي مباشرة
+      onTakeOrder?.(order);
+      setMapError(null);
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || "حدث خطأ";
+      setMapError(errorMessage);
+      setTimeout(() => setMapError(null), 5000);
+    }
+  };
 
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
@@ -810,6 +843,32 @@ const OrdersMap = ({
                 ))}
               </div>
 
+              {/* رسالة الخطأ داخل الخريطة */}
+              <AnimatePresence>
+                {mapError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="bg-red-500 text-white px-4 py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">⚠️</span>
+                      <div>
+                        <p className="font-bold text-sm">خطأ</p>
+                        <p className="text-xs opacity-90">{mapError}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setMapError(null)}
+                      className="text-white/80 hover:text-white"
+                    >
+                      <X size={18} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* زر عرض جميع مساراتي */}
               {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
                 <div className="bg-white px-2 py-1.5 border-t border-gray-100 space-y-1.5">
@@ -886,9 +945,9 @@ const OrdersMap = ({
                                 <button
                                   onClick={() => {
                                     if (marker.type === 'food-store') {
-                                      onTakeFoodOrder?.(marker.order);
+                                      handleAcceptFoodOrderFromMap(marker.order);
                                     } else {
-                                      onTakeOrder?.(marker.order);
+                                      handleAcceptOrderFromMap(marker.order);
                                     }
                                     // لا نغلق الخريطة - السائق يبقى لقبول طلبات أخرى
                                   }}
