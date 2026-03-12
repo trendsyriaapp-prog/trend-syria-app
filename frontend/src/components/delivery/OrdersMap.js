@@ -478,10 +478,11 @@ const OrdersMap = ({
                   )}
 
                   {/* علامات نقاط المسار عند تفعيله */}
-                  {selectedOrderForRoute && (
+                  {selectedOrderForRoute && routeCoordinates.length > 0 && (
                     <>
                       {/* علامة البداية (موقع السائق) */}
-                      {(currentDriverLocation || driverLocation) && (
+                      {(currentDriverLocation || driverLocation) && 
+                       (currentDriverLocation?.latitude || driverLocation?.latitude) && (
                         <Marker
                           position={[
                             (currentDriverLocation || driverLocation).latitude,
@@ -512,7 +513,7 @@ const OrdersMap = ({
                       )}
                       
                       {/* علامة المتجر */}
-                      {selectedOrderForRoute.store_latitude && (
+                      {selectedOrderForRoute.store_latitude && selectedOrderForRoute.store_longitude && (
                         <Marker
                           position={[
                             selectedOrderForRoute.store_latitude,
@@ -543,7 +544,7 @@ const OrdersMap = ({
                       )}
                       
                       {/* علامة العميل */}
-                      {selectedOrderForRoute.latitude && (
+                      {selectedOrderForRoute.latitude && selectedOrderForRoute.longitude && (
                         <Marker
                           position={[
                             selectedOrderForRoute.latitude,
