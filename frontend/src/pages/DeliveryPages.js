@@ -550,8 +550,7 @@ const DeliveryDashboard = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
         {/* Header مع زر تصفح كعميل والإشعارات */}
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-sm font-bold text-gray-900">{user?.full_name || 'موظف التوصيل'}</h1>
+        <div className="flex items-center justify-end mb-2">
           <div className="flex items-center gap-2">
             {/* زر إشعارات Push */}
             <PushNotificationButton userType="delivery" size="small" />
