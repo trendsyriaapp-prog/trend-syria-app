@@ -76,6 +76,12 @@ const OrdersMap = ({
   const [multiRouteSegments, setMultiRouteSegments] = useState([]); // مسارات متعددة
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
   const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
+  
+  // التنقل خطوة بخطوة
+  const [stepByStepMode, setStepByStepMode] = useState(false); // وضع خطوة بخطوة
+  const [currentStepIndex, setCurrentStepIndex] = useState(0); // المحطة الحالية
+  const [allStepsData, setAllStepsData] = useState([]); // جميع المحطات
+  const [currentStepRoute, setCurrentStepRoute] = useState([]); // مسار المحطة الحالية
 
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
@@ -356,6 +362,151 @@ const OrdersMap = ({
     setOptimizedStops([]);
     setSelectedOrderForRoute(null);
     setRouteCoordinates([]);
+    setRouteInfo(null);
+    // إخفاء وضع خطوة بخطوة أيضاً
+    setStepByStepMode(false);
+    setCurrentStepIndex(0);
+    setAllStepsData([]);
+    setCurrentStepRoute([]);
+  };
+
+  // بدء وضع التنقل خطوة بخطوة
+  const startStepByStepNavigation = async () => {
+    const driverPos = currentDriverLocation || driverLocation;
+    if (!driverPos) {
+      alert('يرجى تفعيل موقعك أولاً');
+      return;
+    }
+
+    const allMyOrders = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
+      o.status !== 'delivered' && o.delivery_status !== 'delivered'
+    );
+
+    if (allMyOrders.length === 0) {
+      alert('لا توجد طلبات للتنقل إليها');
+      return;
+    }
+
+    setLoadingRoute(true);
+
+    // جمع جميع نقاط التوقف
+    const allPoints = [{
+      position: [driverPos.latitude, driverPos.longitude],
+      type: 'driver',
+      label: 'موقعك',
+      order: null
+    }];
+
+    // إضافة المتاجر
+    allMyOrders.forEach((order) => {
+      if (order.store_latitude && order.store_longitude) {
+        allPoints.push({
+          position: [order.store_latitude, order.store_longitude],
+          type: 'store',
+          label: order.store_name || order.seller_name || 'متجر',
+          order: order,
+          isFood: !!order.store_name
+        });
+      }
+    });
+
+    // إضافة العملاء
+    allMyOrders.forEach((order) => {
+      if (order.latitude && order.longitude) {
+        allPoints.push({
+          position: [order.latitude, order.longitude],
+          type: 'customer',
+          label: order.customer_name || 'عميل',
+          order: order,
+          isFood: !!order.store_name
+        });
+      }
+    });
+
+    if (allPoints.length < 2) {
+      alert('لا توجد نقاط كافية');
+      setLoadingRoute(false);
+      return;
+    }
+
+    // جلب المسار المُحسَّن
+    const optimizedData = await fetchOptimizedRoute(allPoints);
+    
+    let orderedPoints;
+    if (optimizedData) {
+      orderedPoints = optimizedData.optimizedOrder.map(idx => ({
+        ...allPoints[idx],
+        originalIndex: idx
+      }));
+    } else {
+      // Fallback: ترتيب بسيط
+      const stores = allPoints.filter(p => p.type === 'store');
+      const customers = allPoints.filter(p => p.type === 'customer');
+      const driverPoint = allPoints.find(p => p.type === 'driver');
+      orderedPoints = [driverPoint, ...stores, ...customers];
+    }
+
+    // إنشاء بيانات الخطوات
+    const steps = [];
+    for (let i = 0; i < orderedPoints.length - 1; i++) {
+      const fromPoint = orderedPoints[i];
+      const toPoint = orderedPoints[i + 1];
+      const routeData = await fetchSingleRoute([fromPoint.position, toPoint.position]);
+      
+      steps.push({
+        stepNumber: i + 1,
+        from: fromPoint,
+        to: toPoint,
+        route: routeData.coordinates,
+        distance: routeData.distance,
+        duration: routeData.duration
+      });
+    }
+
+    setAllStepsData(steps);
+    setCurrentStepIndex(0);
+    setStepByStepMode(true);
+    setShowAllMyRoutes(false);
+    
+    // عرض المسار الأول
+    if (steps.length > 0) {
+      setCurrentStepRoute(steps[0].route);
+      setRouteInfo({
+        distance: (steps[0].distance / 1000).toFixed(1),
+        duration: Math.round(steps[0].duration / 60)
+      });
+      // توسيط الخريطة على الوجهة
+      setMapCenter(steps[0].to.position);
+    }
+
+    setLoadingRoute(false);
+  };
+
+  // الانتقال للمحطة التالية
+  const goToNextStep = () => {
+    if (currentStepIndex < allStepsData.length - 1) {
+      const nextIndex = currentStepIndex + 1;
+      setCurrentStepIndex(nextIndex);
+      const nextStep = allStepsData[nextIndex];
+      setCurrentStepRoute(nextStep.route);
+      setRouteInfo({
+        distance: (nextStep.distance / 1000).toFixed(1),
+        duration: Math.round(nextStep.duration / 60)
+      });
+      setMapCenter(nextStep.to.position);
+    } else {
+      // انتهت جميع المحطات
+      alert('🎉 مبروك! أكملت جميع التوصيلات');
+      hideAllRoutes();
+    }
+  };
+
+  // إيقاف وضع خطوة بخطوة
+  const stopStepByStep = () => {
+    setStepByStepMode(false);
+    setCurrentStepIndex(0);
+    setAllStepsData([]);
+    setCurrentStepRoute([]);
     setRouteInfo(null);
   };
 
@@ -660,16 +811,25 @@ const OrdersMap = ({
               </div>
 
               {/* زر عرض جميع مساراتي */}
-              {(myOrders?.length > 0 || myFoodOrders?.length > 0) && (
-                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+              {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
+                <div className="bg-white px-2 py-1.5 border-t border-gray-100 space-y-1.5">
                   {!showAllMyRoutes ? (
-                    <button
-                      onClick={showAllMyOrdersRoutes}
-                      disabled={loadingRoute}
-                      className="w-full py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
-                    >
-                      {loadingRoute ? '⏳ جاري التحميل...' : '🛣️ عرض مسار جميع طلباتي'}
-                    </button>
+                    <>
+                      <button
+                        onClick={showAllMyOrdersRoutes}
+                        disabled={loadingRoute}
+                        className="w-full py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                      >
+                        {loadingRoute ? '⏳ جاري التحميل...' : '🗺️ عرض كل المسارات'}
+                      </button>
+                      <button
+                        onClick={startStepByStepNavigation}
+                        disabled={loadingRoute}
+                        className="w-full py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                      >
+                        {loadingRoute ? '⏳ جاري التحميل...' : '🚗 ابدأ التنقل خطوة بخطوة'}
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={hideAllRoutes}
@@ -1011,7 +1171,162 @@ const OrdersMap = ({
                       )}
                     </>
                   )}
+
+                  {/* رسم المسار في وضع خطوة بخطوة */}
+                  {stepByStepMode && currentStepRoute.length > 0 && (
+                    <>
+                      {/* خط المسار */}
+                      <Polyline
+                        positions={currentStepRoute}
+                        color={allStepsData[currentStepIndex]?.to?.type === 'store' 
+                          ? (allStepsData[currentStepIndex]?.to?.isFood ? '#22c55e' : '#3b82f6')
+                          : '#ef4444'}
+                        weight={7}
+                        opacity={0.9}
+                      />
+                      {/* خط متقطع أبيض */}
+                      <Polyline
+                        positions={currentStepRoute}
+                        color="#ffffff"
+                        weight={2}
+                        opacity={0.5}
+                        dashArray="10, 15"
+                      />
+                      
+                      {/* علامة الوجهة الحالية */}
+                      {allStepsData[currentStepIndex] && (
+                        <Marker
+                          position={allStepsData[currentStepIndex].to.position}
+                          icon={L.divIcon({
+                            className: 'step-destination-marker',
+                            html: `<div style="
+                              background: ${allStepsData[currentStepIndex].to.type === 'store' 
+                                ? (allStepsData[currentStepIndex].to.isFood ? '#22c55e' : '#3b82f6')
+                                : '#ef4444'};
+                              width: 50px;
+                              height: 50px;
+                              border-radius: 50%;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              font-size: 24px;
+                              border: 4px solid white;
+                              box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+                              animation: pulse 1.5s infinite;
+                            ">${allStepsData[currentStepIndex].to.type === 'store' 
+                              ? (allStepsData[currentStepIndex].to.isFood ? '🍔' : '📦')
+                              : '🏠'}</div>
+                            <style>
+                              @keyframes pulse {
+                                0%, 100% { transform: scale(1); }
+                                50% { transform: scale(1.1); }
+                              }
+                            </style>`,
+                            iconSize: [50, 50],
+                            iconAnchor: [25, 50],
+                            popupAnchor: [0, -50]
+                          })}
+                        >
+                          <Popup>
+                            <div className="text-center min-w-[150px]">
+                              <p className="font-bold text-sm mb-1">
+                                {allStepsData[currentStepIndex].to.type === 'store' ? '📦 استلام الطلب' : '🚚 تسليم الطلب'}
+                              </p>
+                              <p className="text-xs text-gray-600">{allStepsData[currentStepIndex].to.label}</p>
+                              {allStepsData[currentStepIndex].to.order && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  📞 {allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}
+                                </p>
+                              )}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
+                    </>
+                  )}
                 </MapContainer>
+
+                {/* بطاقة التنقل خطوة بخطوة */}
+                {stepByStepMode && allStepsData.length > 0 && (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-4 z-[1000]">
+                    {/* شريط التقدم */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${((currentStepIndex + 1) / allStepsData.length) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-bold text-gray-600">
+                        {currentStepIndex + 1}/{allStepsData.length}
+                      </span>
+                    </div>
+
+                    {/* معلومات المحطة الحالية */}
+                    {allStepsData[currentStepIndex] && (
+                      <div className="text-center mb-3">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white text-sm font-bold mb-2 ${
+                          allStepsData[currentStepIndex].to.type === 'store'
+                            ? (allStepsData[currentStepIndex].to.isFood ? 'bg-green-500' : 'bg-blue-500')
+                            : 'bg-red-500'
+                        }`}>
+                          {allStepsData[currentStepIndex].to.type === 'store' ? (
+                            <>
+                              {allStepsData[currentStepIndex].to.isFood ? '🍔' : '📦'}
+                              اذهب إلى: {allStepsData[currentStepIndex].to.label}
+                            </>
+                          ) : (
+                            <>
+                              🏠 سلّم الطلب إلى: {allStepsData[currentStepIndex].to.label}
+                            </>
+                          )}
+                        </div>
+                        
+                        {/* المسافة والوقت */}
+                        <div className="flex justify-center gap-4 text-sm">
+                          <span className="text-orange-600 font-bold">
+                            📍 {routeInfo?.distance || '0'} كم
+                          </span>
+                          <span className="text-blue-600 font-bold">
+                            ⏱️ {routeInfo?.duration || '0'} دقيقة
+                          </span>
+                        </div>
+
+                        {/* رقم الهاتف */}
+                        {allStepsData[currentStepIndex].to.order && (
+                          <a 
+                            href={`tel:${allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}`}
+                            className="inline-flex items-center gap-1 text-blue-600 text-sm mt-2"
+                          >
+                            📞 {allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* الأزرار */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={stopStepByStep}
+                        className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold"
+                      >
+                        ✕ إلغاء
+                      </button>
+                      <button
+                        onClick={goToNextStep}
+                        className={`flex-2 py-2.5 px-6 rounded-lg text-sm font-bold text-white ${
+                          allStepsData[currentStepIndex]?.to?.type === 'store'
+                            ? 'bg-gradient-to-r from-green-500 to-green-600'
+                            : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                        }`}
+                      >
+                        {allStepsData[currentStepIndex]?.to?.type === 'store' 
+                          ? '✓ استلمت الطلب' 
+                          : (currentStepIndex === allStepsData.length - 1 ? '🎉 أنهيت التوصيل' : '✓ سلّمت الطلب')}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* معلومات المسار */}
                 {routeInfo && selectedOrderForRoute && (
