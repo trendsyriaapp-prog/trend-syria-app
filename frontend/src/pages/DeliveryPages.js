@@ -303,7 +303,7 @@ const DeliveryDashboard = () => {
   // Food orders states
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
-  const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food'
+  const [orderTypeFilter, setOrderTypeFilter] = useState('food'); // 'all', 'products', 'food' - الافتراضي طعام
   
   // Working hours settings
   const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
