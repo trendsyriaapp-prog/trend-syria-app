@@ -354,8 +354,24 @@ const OrdersMap = ({
                 </button>
               </div>
 
+              {/* دليل الألوان - سطر صغير */}
+              <div className="bg-gray-50 px-2 py-1 flex justify-center gap-3 text-[9px]">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span> مطعم
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> متجر
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-red-500"></span> عميل
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-orange-500"></span> موقعك
+                </span>
+              </div>
+
               {/* الخريطة - ملء الشاشة */}
-              <div className="h-[calc(100vh-44px)]">
+              <div className="h-[calc(100vh-62px)]">
                 <MapContainer
                   center={mapCenter}
                   zoom={13}
