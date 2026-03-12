@@ -204,7 +204,15 @@ const SettingsPage = () => {
       <div className="max-w-xl mx-auto px-3 py-3">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <h1 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>إعدادات الحساب</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(-1)}
+              className={`p-1.5 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-200'}`}
+            >
+              <ChevronLeft size={20} className={isDarkMode ? 'text-white' : 'text-gray-700'} />
+            </button>
+            <h1 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>إعدادات الحساب</h1>
+          </div>
           {user?.user_type === 'delivery' && (
             <a
               href="/?view=customer"
