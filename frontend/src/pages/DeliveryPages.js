@@ -645,7 +645,7 @@ const DeliveryDashboard = () => {
           <AvailableOrdersList
             orders={orderTypeFilter === 'food' ? [] : availableOrders}
             foodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
-            isWorkingHours={true}
+            isWorkingHours={() => true}
             onTakeOrder={(order) => setShowPickupChecklist(order)}
             onTakeFoodOrder={handleTakeFoodOrder}
             orderTypeFilter={orderTypeFilter}
