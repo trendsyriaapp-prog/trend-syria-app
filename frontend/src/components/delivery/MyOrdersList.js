@@ -74,8 +74,35 @@ const MyOrdersList = ({
     window.location.href = `tel:${supportPhone}`;
   };
 
+  // حساب عدد طلبات المنتجات غير المسلمة
+  const undeliveredProductOrders = orders.filter(o => 
+    (!o.order_type || o.order_type !== 'food') && 
+    o.delivery_status !== 'delivered' && 
+    o.status !== 'delivered'
+  );
+
   return (
     <div className="space-y-2">
+      {/* تنبيه طلبات المنتجات - يجب التسليم اليوم */}
+      {undeliveredProductOrders.length > 0 && (
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-3 text-white">
+          <div className="flex items-start gap-2">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Clock size={18} />
+            </div>
+            <div>
+              <p className="font-bold text-sm">⚠️ تنبيه هام!</p>
+              <p className="text-xs text-white/90 mt-0.5">
+                لديك {undeliveredProductOrders.length} طلب منتجات يجب تسليمها قبل نهاية ساعات العمل اليوم.
+              </p>
+              <p className="text-[10px] text-white/80 mt-1 bg-white/10 rounded px-2 py-1">
+                ❌ سيتم خصم قيمة المنتجات غير المُسلّمة من رصيدك
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* زر الاتصال بالدعم */}
       <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
@@ -106,6 +133,14 @@ const MyOrdersList = ({
             className="bg-white rounded-xl border border-gray-200 overflow-hidden"
           >
             <div className="p-3">
+              {/* شارة يجب التسليم اليوم - للمنتجات فقط */}
+              {isProductOrder && !isDelivered && (
+                <div className="bg-red-100 border border-red-300 rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5">
+                  <Clock size={12} className="text-red-600" />
+                  <span className="text-[10px] font-bold text-red-700">🕐 يجب التسليم اليوم</span>
+                </div>
+              )}
+
               {/* رقم الطلب الكبير */}
               <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white p-3 rounded-xl mb-3">
                 <div className="flex items-center justify-between">
