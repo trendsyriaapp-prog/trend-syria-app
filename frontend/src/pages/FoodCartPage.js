@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -52,7 +53,9 @@ const FoodCartPage = () => {
     building_number: '',
     apartment_number: '',
     phone: '',
-    is_default: false
+    is_default: false,
+    latitude: null,
+    longitude: null
   });
   
   // طريقة دفع جديدة
@@ -320,6 +323,11 @@ const FoodCartPage = () => {
         toast({ title: "تنبيه", description: "يرجى ملء جميع بيانات العنوان", variant: "destructive" });
         return;
       }
+      // التحقق من تحديد الموقع - إجباري
+      if (!newAddress.latitude || !newAddress.longitude) {
+        toast({ title: "تنبيه", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
+        return;
+      }
     } else if (!selectedAddressId) {
       toast({ title: "تنبيه", description: "يرجى اختيار عنوان التوصيل", variant: "destructive" });
       return;
@@ -355,7 +363,9 @@ const FoodCartPage = () => {
         addressData = { 
           address: fullAddress, 
           city: newAddress.city, 
-          phone: newAddress.phone 
+          phone: newAddress.phone,
+          latitude: newAddress.latitude,
+          longitude: newAddress.longitude
         };
       } else {
         const addr = savedAddresses.find(a => a.id === selectedAddressId);
@@ -363,7 +373,9 @@ const FoodCartPage = () => {
         addressData = { 
           address: fullAddress, 
           city: addr.city, 
-          phone: addr.phone 
+          phone: addr.phone,
+          latitude: addr.latitude || null,
+          longitude: addr.longitude || null
         };
       }
 
@@ -722,6 +734,20 @@ const FoodCartPage = () => {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
                 />
               </div>
+              
+              {/* تحديد الموقع من Google Maps - إجباري */}
+              <GoogleMapsLocationPicker
+                label="📍 موقع التوصيل على الخريطة"
+                required={true}
+                currentLocation={newAddress.latitude ? { latitude: newAddress.latitude, longitude: newAddress.longitude } : null}
+                onLocationSelect={(location) => {
+                  if (location) {
+                    setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                  } else {
+                    setNewAddress({ ...newAddress, latitude: null, longitude: null });
+                  }
+                }}
+              />
               
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input

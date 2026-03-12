@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -45,6 +46,8 @@ const JoinAsFoodSellerPage = () => {
     minimum_order: 0,
     delivery_fee: 5000,
     free_delivery_minimum: 0,
+    latitude: null,
+    longitude: null,
   });
 
   const handleTypeSelect = (typeId) => {
@@ -75,6 +78,12 @@ const JoinAsFoodSellerPage = () => {
     if (!token) {
       toast({ title: "تنبيه", description: "يجب تسجيل الدخول أولاً", variant: "destructive" });
       navigate('/login');
+      return;
+    }
+
+    // التحقق من تحديد موقع المتجر - إجباري
+    if (!formData.latitude || !formData.longitude) {
+      toast({ title: "تنبيه", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
       return;
     }
 
@@ -260,11 +269,27 @@ const JoinAsFoodSellerPage = () => {
                 />
               </div>
 
+              {/* تحديد موقع المتجر - إجباري */}
+              <GoogleMapsLocationPicker
+                label="📍 موقع المتجر على الخريطة"
+                required={true}
+                currentLocation={formData.latitude ? { latitude: formData.latitude, longitude: formData.longitude } : null}
+                onLocationSelect={(location) => {
+                  if (location) {
+                    setFormData({ ...formData, latitude: location.latitude, longitude: location.longitude });
+                  } else {
+                    setFormData({ ...formData, latitude: null, longitude: null });
+                  }
+                }}
+              />
+
               <button
                 type="button"
                 onClick={() => {
-                  if (formData.name && formData.phone && formData.city && formData.address) {
+                  if (formData.name && formData.phone && formData.city && formData.address && formData.latitude && formData.longitude) {
                     setStep(3);
+                  } else if (!formData.latitude || !formData.longitude) {
+                    toast({ title: "تنبيه", description: "يرجى تحديد موقع المتجر على الخريطة", variant: "destructive" });
                   } else {
                     toast({ title: "تنبيه", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
                   }

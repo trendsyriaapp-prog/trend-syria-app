@@ -98,6 +98,8 @@ class OrderCreate(BaseModel):
     phone: str
     payment_method: str = "shamcash"
     payment_phone: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 # ============== Review Models ==============
 

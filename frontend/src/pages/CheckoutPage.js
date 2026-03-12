@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -42,7 +43,8 @@ const CheckoutPage = () => {
   const [useNewPayment, setUseNewPayment] = useState(false);
 
   const [newAddress, setNewAddress] = useState({
-    title: 'المنزل', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false
+    title: 'المنزل', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false,
+    latitude: null, longitude: null
   });
 
   const [newPayment, setNewPayment] = useState({
@@ -146,6 +148,11 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال جميع بيانات العنوان", variant: "destructive" });
       return;
     }
+    // التحقق من تحديد الموقع على الخريطة - إجباري
+    if (useNewAddress && (!newAddress.latitude || !newAddress.longitude)) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
     if (useNewPayment && newPayment.type !== 'card' && (!newPayment.phone || !newPayment.holder_name)) {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
@@ -157,11 +164,23 @@ const CheckoutPage = () => {
       if (useNewAddress) {
         await axios.post(`${API}/user/addresses`, newAddress);
         const fullAddress = `${newAddress.area} - شارع ${newAddress.street_number} - بناء ${newAddress.building_number} - منزل ${newAddress.apartment_number}`;
-        addressData = { address: fullAddress, city: newAddress.city, phone: newAddress.phone };
+        addressData = { 
+          address: fullAddress, 
+          city: newAddress.city, 
+          phone: newAddress.phone,
+          latitude: newAddress.latitude,
+          longitude: newAddress.longitude
+        };
       } else {
         const addr = savedAddresses.find(a => a.id === selectedAddressId);
         const fullAddress = `${addr.area}${addr.street_number ? ' - شارع ' + addr.street_number : ''}${addr.building_number ? ' - بناء ' + addr.building_number : ''}${addr.apartment_number ? ' - منزل ' + addr.apartment_number : ''}`;
-        addressData = { address: fullAddress, city: addr.city, phone: addr.phone };
+        addressData = { 
+          address: fullAddress, 
+          city: addr.city, 
+          phone: addr.phone,
+          latitude: addr.latitude || null,
+          longitude: addr.longitude || null
+        };
       }
 
       let paymentData;
@@ -391,6 +410,20 @@ const CheckoutPage = () => {
                   placeholder="رقم الهاتف *"
                   className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
                   data-testid="new-address-phone"
+                />
+                
+                {/* تحديد الموقع من Google Maps - إجباري */}
+                <GoogleMapsLocationPicker
+                  label="📍 موقع التوصيل على الخريطة"
+                  required={true}
+                  currentLocation={newAddress.latitude ? { latitude: newAddress.latitude, longitude: newAddress.longitude } : null}
+                  onLocationSelect={(location) => {
+                    if (location) {
+                      setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                    } else {
+                      setNewAddress({ ...newAddress, latitude: null, longitude: null });
+                    }
+                  }}
                 />
               </div>
             )}

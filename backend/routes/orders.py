@@ -147,7 +147,9 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "delivery_status": "pending",
         "created_at": now.isoformat(),
         "can_process_after": can_process_after.isoformat(),
-        "cancel_window_minutes": CANCEL_WINDOW_MINUTES
+        "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
+        "latitude": order.latitude,
+        "longitude": order.longitude
     }
     await db.orders.insert_one(order_doc)
     
