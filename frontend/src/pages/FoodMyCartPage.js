@@ -1,9 +1,11 @@
 // صفحة سلة الطعام المجمعة - تعرض جميع الطلبات من مختلف المتاجر
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check } from 'lucide-react';
+import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check, ShoppingCart, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFoodCart } from '../context/FoodCartContext';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -16,9 +18,12 @@ const formatPrice = (price) => {
 const FoodMyCartPage = () => {
   const navigate = useNavigate();
   const { stores, totalItems, totalAmount, clearStoreCart, clearAllFoodCarts, refresh } = useFoodCart();
+  const { user, token } = useAuth();
+  const { toast } = useToast();
   const [storeDetails, setStoreDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [fetchedStoreIds, setFetchedStoreIds] = useState([]);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     // فقط اجلب البيانات إذا تغيرت المتاجر
@@ -93,6 +98,37 @@ const FoodMyCartPage = () => {
 
   const removeItem = (storeId, itemId) => {
     updateItemQuantity(storeId, itemId, 0);
+  };
+
+  // إكمال جميع الطلبات دفعة واحدة
+  const handleCheckoutAll = () => {
+    if (!user || !token) {
+      toast({
+        title: "تنبيه",
+        description: "يجب تسجيل الدخول أولاً",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+    
+    if (stores.length === 0) {
+      toast({
+        title: "تنبيه",
+        description: "السلة فارغة",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // الانتقال لصفحة الدفع الموحد
+    navigate('/food/batch-checkout', {
+      state: {
+        stores: stores,
+        storeDetails: storeDetails,
+        totalAmount: totalAmount
+      }
+    });
   };
 
   if (loading && stores.length > 0) {
@@ -310,13 +346,36 @@ const FoodMyCartPage = () => {
       </div>
 
       {/* Total Summary */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
-        <div className="flex items-center justify-between mb-2">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40 shadow-lg">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-gray-600">الإجمالي ({totalItems} منتج)</span>
           <span className="text-xl font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
         </div>
+        
+        {/* زر إكمال جميع الطلبات */}
+        {stores.length > 1 && (
+          <button
+            onClick={handleCheckoutAll}
+            disabled={checkoutLoading}
+            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-2 shadow-md"
+            data-testid="checkout-all-btn"
+          >
+            {checkoutLoading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <>
+                <ShoppingCart size={20} />
+                إكمال جميع الطلبات ({stores.length} متجر)
+              </>
+            )}
+          </button>
+        )}
+        
         <p className="text-xs text-gray-500 text-center">
-          اختر متجراً لإكمال الطلب • رسوم التوصيل تُحسب لكل متجر على حدة
+          {stores.length > 1 
+            ? '🚗 سائق واحد سيجمع جميع طلباتك ويوصلها دفعة واحدة'
+            : 'اضغط على "إكمال الطلب" لإتمام طلبك'
+          }
         </p>
       </div>
     </div>

@@ -38,6 +38,21 @@ class FoodOrderCreate(BaseModel):
     delivery_phone: str
     notes: Optional[str] = None
     payment_method: str = "wallet"  # wallet, cash
+    batch_id: Optional[str] = None  # معرف الدفعة للطلبات المجمعة
+
+
+class BatchOrderItem(BaseModel):
+    store_id: str
+    items: List[FoodOrderItem]
+    notes: Optional[str] = None
+
+
+class BatchOrderCreate(BaseModel):
+    orders: List[BatchOrderItem]
+    delivery_address: str
+    delivery_city: str
+    delivery_phone: str
+    payment_method: str = "wallet"
 
 # ===============================
 # طلبات العميل
@@ -292,6 +307,269 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال 3 دقائق."
     }
 
+
+@router.post("/batch")
+async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends(get_current_user)):
+    """إنشاء طلبات طعام مجمعة من متاجر متعددة - دفعة واحدة لسائق واحد"""
+    
+    if len(batch.orders) == 0:
+        raise HTTPException(status_code=400, detail="لا توجد طلبات")
+    
+    # إنشاء معرف دفعة فريد
+    batch_id = f"BATCH{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:6].upper()}"
+    
+    created_orders = []
+    total_amount = 0
+    total_delivery_fee = 0
+    stores_info = []
+    
+    # التحقق من جميع المتاجر والمنتجات أولاً
+    for order_item in batch.orders:
+        store = await db.food_stores.find_one({"id": order_item.store_id, "is_approved": True, "is_active": True})
+        if not store:
+            raise HTTPException(status_code=404, detail="المتجر غير متاح")
+        
+        # حساب مجموع كل متجر
+        store_subtotal = 0
+        for item in order_item.items:
+            product = await db.food_products.find_one({"id": item.product_id, "is_available": True})
+            if not product:
+                raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير متاح")
+            store_subtotal += product["price"] * item.quantity
+        
+        # التحقق من الحد الأدنى
+        if store.get("minimum_order", 0) > store_subtotal:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"الحد الأدنى للطلب من {store['name']} هو {store['minimum_order']:,.0f} ل.س"
+            )
+        
+        stores_info.append({
+            "store": store,
+            "subtotal": store_subtotal,
+            "items": order_item.items,
+            "notes": order_item.notes
+        })
+    
+    # حساب الإجمالي للتحقق من المحفظة
+    for info in stores_info:
+        store = info["store"]
+        subtotal = info["subtotal"]
+        
+        # رسوم التوصيل
+        free_delivery_min = store.get("free_delivery_minimum", 0)
+        if free_delivery_min > 0 and subtotal >= free_delivery_min:
+            delivery_fee = 0
+        else:
+            delivery_fee = store.get("delivery_fee", 5000)
+        
+        total_amount += subtotal + delivery_fee
+        total_delivery_fee += delivery_fee
+    
+    # التحقق من رصيد المحفظة
+    if batch.payment_method == "wallet":
+        wallet = await db.wallets.find_one({"user_id": user["id"]})
+        balance = wallet.get("balance", 0) if wallet else 0
+        if balance < total_amount:
+            raise HTTPException(status_code=400, detail=f"رصيد المحفظة غير كافي. المطلوب: {total_amount:,.0f} ل.س، المتاح: {balance:,.0f} ل.س")
+        
+        # خصم الإجمالي من المحفظة
+        await db.wallets.update_one(
+            {"user_id": user["id"]},
+            {"$inc": {"balance": -total_amount}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "type": "payment",
+            "amount": -total_amount,
+            "description": f"طلب مجمع من {len(batch.orders)} متجر - {batch_id}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # إنشاء الطلبات
+    now = datetime.now(timezone.utc)
+    CANCEL_WINDOW_MINUTES = 3
+    can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
+    
+    for idx, info in enumerate(stores_info):
+        store = info["store"]
+        subtotal = info["subtotal"]
+        items_list = info["items"]
+        notes = info["notes"]
+        
+        # حساب رسوم التوصيل
+        free_delivery_min = store.get("free_delivery_minimum", 0)
+        if free_delivery_min > 0 and subtotal >= free_delivery_min:
+            delivery_fee = 0
+        else:
+            delivery_fee = store.get("delivery_fee", 5000)
+        
+        order_total = subtotal + delivery_fee
+        
+        # تحضير العناصر
+        order_items = []
+        for item in items_list:
+            product = await db.food_products.find_one({"id": item.product_id})
+            item_total = product["price"] * item.quantity
+            order_items.append({
+                "product_id": item.product_id,
+                "name": product["name"],
+                "price": product["price"],
+                "quantity": item.quantity,
+                "total": item_total,
+                "notes": item.notes
+            })
+        
+        order_id = str(uuid.uuid4())
+        order_number = f"FO{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:4].upper()}"
+        
+        order_doc = {
+            "id": order_id,
+            "order_number": order_number,
+            "order_type": "food",
+            "batch_id": batch_id,
+            "batch_index": idx + 1,
+            "batch_total": len(batch.orders),
+            "customer_id": user["id"],
+            "customer_name": user["name"],
+            "customer_phone": user.get("phone", batch.delivery_phone),
+            "store_id": store["id"],
+            "store_name": store["name"],
+            "store_type": store.get("store_type", "restaurant"),
+            "items": order_items,
+            "subtotal": subtotal,
+            "delivery_fee": delivery_fee,
+            "total": order_total,
+            "delivery_address": batch.delivery_address,
+            "delivery_city": batch.delivery_city,
+            "delivery_phone": batch.delivery_phone,
+            "notes": notes,
+            "payment_method": batch.payment_method,
+            "payment_status": "paid" if batch.payment_method == "wallet" else "pending",
+            "status": "pending",
+            "status_history": [{
+                "status": "pending",
+                "timestamp": now.isoformat(),
+                "note": f"طلب مجمع ({idx + 1}/{len(batch.orders)}) - ينتظر انتهاء مهلة الإلغاء"
+            }],
+            "estimated_delivery_time": store.get("delivery_time", 30),
+            "driver_id": None,
+            "created_at": now.isoformat(),
+            "can_process_after": can_process_after.isoformat(),
+            "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
+            "seller_notified": False,
+            "driver_notified": False
+        }
+        
+        await db.food_orders.insert_one(order_doc)
+        
+        # تحديث عدد طلبات المتجر
+        await db.food_stores.update_one(
+            {"id": store["id"]},
+            {"$inc": {"orders_count": 1}}
+        )
+        
+        created_orders.append({
+            "order_id": order_id,
+            "order_number": order_number,
+            "store_name": store["name"],
+            "total": order_total
+        })
+        
+        # إرسال إشعار للمتجر
+        try:
+            from routes.push_notifications import send_new_order_notification_to_food_seller
+            await send_new_order_notification_to_food_seller(
+                store_id=store["id"],
+                order_number=order_number,
+                total=order_total
+            )
+        except Exception as e:
+            print(f"Push notification error: {e}")
+    
+    # إرسال إشعار للسائقين
+    try:
+        from routes.push_notifications import send_new_order_notification_to_delivery
+        await send_new_order_notification_to_delivery(
+            order_type="طعام مجمع",
+            city=batch.delivery_city
+        )
+    except Exception as e:
+        print(f"Push notification error: {e}")
+    
+    return {
+        "batch_id": batch_id,
+        "orders": created_orders,
+        "total_amount": total_amount,
+        "total_delivery_fee": total_delivery_fee,
+        "stores_count": len(batch.orders),
+        "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
+        "message": f"تم إنشاء {len(batch.orders)} طلب بنجاح. يمكنك إلغاءها خلال 3 دقائق."
+    }
+
+
+@router.post("/batch/{batch_id}/cancel")
+async def cancel_batch_orders(batch_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء جميع طلبات الدفعة"""
+    orders = await db.food_orders.find({"batch_id": batch_id, "customer_id": user["id"]}).to_list(None)
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="لا توجد طلبات بهذه الدفعة")
+    
+    # التحقق من أن جميع الطلبات قابلة للإلغاء
+    now = datetime.now(timezone.utc)
+    for order in orders:
+        if order["status"] in ["out_for_delivery", "delivered", "cancelled"]:
+            raise HTTPException(status_code=400, detail=f"طلب #{order['order_number']} لا يمكن إلغاؤه")
+        
+        created_at = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+        elapsed_seconds = (now - created_at).total_seconds()
+        if elapsed_seconds > 3 * 60:
+            raise HTTPException(status_code=400, detail="انتهت مهلة الإلغاء (3 دقائق)")
+    
+    # حساب إجمالي المبلغ للاسترجاع
+    total_refund = sum(o["total"] for o in orders if o["payment_method"] == "wallet" and o["payment_status"] == "paid")
+    
+    # استرجاع المبلغ
+    if total_refund > 0:
+        await db.wallets.update_one(
+            {"user_id": user["id"]},
+            {"$inc": {"balance": total_refund}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "type": "refund",
+            "amount": total_refund,
+            "description": f"استرجاع طلب مجمع {batch_id}",
+            "created_at": now.isoformat()
+        })
+    
+    # إلغاء جميع الطلبات
+    await db.food_orders.update_many(
+        {"batch_id": batch_id, "customer_id": user["id"]},
+        {
+            "$set": {"status": "cancelled", "cancelled_at": now.isoformat()},
+            "$push": {
+                "status_history": {
+                    "status": "cancelled",
+                    "timestamp": now.isoformat(),
+                    "note": "تم إلغاء الطلب المجمع من قبل العميل"
+                }
+            }
+        }
+    )
+    
+    return {
+        "message": f"تم إلغاء {len(orders)} طلب",
+        "refunded_amount": total_refund
+    }
+
+
+
 @router.get("/my-orders")
 async def get_my_food_orders(
     status: Optional[str] = None,
@@ -543,7 +821,10 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", 1).to_list(None)
     
-    # إرسال إشعارات للطلبات الجديدة
+    # تجميع الطلبات حسب batch_id
+    batched_orders = {}
+    single_orders = []
+    
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
         
@@ -563,8 +844,173 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
                 {"id": order["id"]},
                 {"$set": {"driver_notified": True}}
             )
+        
+        # تجميع حسب batch_id
+        batch_id = order.get("batch_id")
+        if batch_id:
+            if batch_id not in batched_orders:
+                batched_orders[batch_id] = {
+                    "batch_id": batch_id,
+                    "is_batch": True,
+                    "orders": [],
+                    "stores": [],
+                    "total_amount": 0,
+                    "customer_name": order["customer_name"],
+                    "customer_phone": order.get("customer_phone"),
+                    "delivery_address": order["delivery_address"],
+                    "delivery_city": order["delivery_city"],
+                    "created_at": order["created_at"]
+                }
+            batched_orders[batch_id]["orders"].append(order)
+            batched_orders[batch_id]["stores"].append({
+                "store_id": order["store_id"],
+                "store_name": order["store_name"],
+                "order_id": order["id"],
+                "order_number": order["order_number"],
+                "total": order["total"],
+                "items_count": len(order["items"])
+            })
+            batched_orders[batch_id]["total_amount"] += order["total"]
+        else:
+            single_orders.append(order)
     
-    return orders
+    # تحويل الدفعات إلى قائمة
+    batch_list = list(batched_orders.values())
+    
+    # إرجاع الطلبات الفردية + الدفعات المجمعة
+    return {
+        "single_orders": single_orders,
+        "batch_orders": batch_list,
+        "total_count": len(single_orders) + len(batch_list)
+    }
+
+
+@router.post("/delivery/batch/{batch_id}/accept")
+async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_user)):
+    """قبول جميع طلبات الدفعة - السائق يجب أن يقبل الكل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب جميع طلبات الدفعة الجاهزة
+    orders = await db.food_orders.find({
+        "batch_id": batch_id,
+        "status": "ready",
+        "driver_id": None
+    }).to_list(None)
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="لا توجد طلبات متاحة في هذه الدفعة")
+    
+    now = datetime.now(timezone.utc)
+    
+    # قبول جميع الطلبات
+    await db.food_orders.update_many(
+        {"batch_id": batch_id, "status": "ready", "driver_id": None},
+        {
+            "$set": {
+                "driver_id": user["id"],
+                "driver_name": user["name"],
+                "driver_phone": user.get("phone"),
+                "status": "out_for_delivery",
+                "picked_up_at": now.isoformat()
+            },
+            "$push": {
+                "status_history": {
+                    "status": "out_for_delivery",
+                    "timestamp": now.isoformat(),
+                    "note": f"جاري التوصيل بواسطة {user['name']} (طلب مجمع)"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    customer_id = orders[0]["customer_id"]
+    stores_names = ", ".join([o["store_name"] for o in orders])
+    
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": customer_id,
+        "title": "🚗 طلباتك في الطريق!",
+        "message": f"موظف التوصيل {user['name']} يجمع طلباتك من {len(orders)} متجر: {stores_names}",
+        "type": "order_out_for_delivery",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    return {
+        "message": f"تم قبول {len(orders)} طلب",
+        "batch_id": batch_id,
+        "orders_count": len(orders)
+    }
+
+
+@router.post("/delivery/batch/{batch_id}/complete")
+async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_current_user)):
+    """إتمام توصيل جميع طلبات الدفعة"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    orders = await db.food_orders.find({
+        "batch_id": batch_id,
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(None)
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="لا توجد طلبات للتوصيل في هذه الدفعة")
+    
+    now = datetime.now(timezone.utc)
+    
+    # إتمام جميع الطلبات
+    await db.food_orders.update_many(
+        {"batch_id": batch_id, "driver_id": user["id"], "status": "out_for_delivery"},
+        {
+            "$set": {
+                "status": "delivered",
+                "delivered_at": now.isoformat(),
+                "payment_status": "paid"
+            },
+            "$push": {
+                "status_history": {
+                    "status": "delivered",
+                    "timestamp": now.isoformat(),
+                    "note": "تم التوصيل بنجاح (طلب مجمع)"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    customer_id = orders[0]["customer_id"]
+    batch_total = sum(o["total"] for o in orders)
+    
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": customer_id,
+        "title": "✅ تم توصيل طلباتك!",
+        "message": f"تم توصيل {len(orders)} طلب بقيمة {batch_total:,.0f} ل.س. شكراً لك!",
+        "type": "order_delivered",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    # إضافة أرباح السائق (مكافأة إضافية للطلبات المجمعة)
+    delivery_earning = 5000 * len(orders)  # 5000 لكل طلب
+    batch_bonus = 2000 if len(orders) > 1 else 0  # مكافأة إضافية للدفعات
+    total_earning = delivery_earning + batch_bonus
+    
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"balance": total_earning}},
+        upsert=True
+    )
+    
+    return {
+        "message": f"تم إتمام توصيل {len(orders)} طلب بنجاح",
+        "earnings": total_earning,
+        "batch_bonus": batch_bonus
+    }
 
 @router.post("/delivery/{order_id}/accept")
 async def accept_food_order(order_id: str, user: dict = Depends(get_current_user)):

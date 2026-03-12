@@ -44,6 +44,8 @@ import FoodStoreDashboard from "./pages/FoodStoreDashboard";
 import FoodStorePage from "./pages/FoodStorePage";
 import FoodCartPage from "./pages/FoodCartPage";
 import FoodMyCartPage from "./pages/FoodMyCartPage";
+import FoodBatchCheckoutPage from "./pages/FoodBatchCheckoutPage";
+import FoodBatchSuccessPage from "./pages/FoodBatchSuccessPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
 import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
@@ -134,6 +136,8 @@ function App() {
                 <Route path="/food/store/:storeId" element={<FoodRoute><FoodStorePage /></FoodRoute>} />
                 <Route path="/food/cart/:storeId" element={<FoodRoute><FoodCartPage /></FoodRoute>} />
                 <Route path="/food/my-cart" element={<FoodRoute><FoodMyCartPage /></FoodRoute>} />
+                <Route path="/food/batch-checkout" element={<FoodRoute><FoodBatchCheckoutPage /></FoodRoute>} />
+                <Route path="/food/batch-success" element={<FoodRoute><FoodBatchSuccessPage /></FoodRoute>} />
                 <Route path="/food/order/:orderId" element={<FoodRoute><FoodOrderTracking /></FoodRoute>} />
                 
                 {/* Referrals */}
