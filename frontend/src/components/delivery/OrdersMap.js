@@ -308,68 +308,50 @@ const OrdersMap = ({
               className="absolute inset-0 bg-white"
               onClick={e => e.stopPropagation()}
             >
-              {/* Header شريط علوي */}
-              <div className="bg-white shadow-sm flex items-center justify-between px-3 py-2">
-                <div className="flex items-center gap-2">
+              {/* Header شريط علوي موحد */}
+              <div className="bg-white shadow-sm flex items-center justify-between px-2 py-1.5 gap-2 overflow-x-auto">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => setIsOpen(false)}
                     className="p-1"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 19 7-7-7-7"/>
                       <path d="M19 12H5"/>
                     </svg>
                   </button>
-                  <span className="text-sm font-bold text-gray-800">خريطة الطلبات</span>
+                  <span className="text-xs font-bold text-gray-800 whitespace-nowrap">خريطة الطلبات</span>
                 </div>
+                
+                {/* فلاتر الطبقات */}
+                <div className="flex gap-1 flex-1 justify-center">
+                  {[
+                    { key: 'all', label: 'الكل', icon: '🗺️' },
+                    { key: 'food', label: 'طعام', icon: '🍔' },
+                    { key: 'products', label: 'منتجات', icon: '📦' },
+                    { key: 'customers', label: 'عملاء', icon: '🏠' },
+                  ].map(layer => (
+                    <button
+                      key={layer.key}
+                      onClick={() => setShowLayer(layer.key)}
+                      className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                        showLayer === layer.key
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {layer.icon} {layer.label}
+                    </button>
+                  ))}
+                </div>
+                
                 <button
                   onClick={getDriverLocation}
-                  className="p-1.5 bg-orange-500 text-white rounded-full"
+                  className="p-1.5 bg-orange-500 text-white rounded-full flex-shrink-0"
                   title="تحديث موقعي"
                 >
-                  <Locate size={16} />
+                  <Locate size={14} />
                 </button>
-              </div>
-
-              {/* فلاتر الطبقات */}
-              <div className="p-2 bg-gray-50 flex gap-2 overflow-x-auto">
-                {[
-                  { key: 'all', label: 'الكل', icon: '🗺️' },
-                  { key: 'food', label: 'طعام', icon: '🍔' },
-                  { key: 'products', label: 'منتجات', icon: '📦' },
-                  { key: 'customers', label: 'عملاء', icon: '🏠' },
-                ].map(layer => (
-                  <button
-                    key={layer.key}
-                    onClick={() => setShowLayer(layer.key)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                      showLayer === layer.key
-                        ? 'bg-green-500 text-white'
-                        : 'bg-white text-gray-600 border border-gray-200'
-                    }`}
-                  >
-                    {layer.icon} {layer.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* دليل الألوان */}
-              <div className="px-4 py-2 bg-white border-b border-gray-100 flex gap-3 text-[10px] overflow-x-auto">
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-orange-500"></span> مطعم
-                </span>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-green-500"></span> متجر
-                </span>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-red-500"></span> عميل
-                </span>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-orange-500"></span> موقعك
-                </span>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-purple-500"></span> مجمع
-                </span>
               </div>
 
               {/* الخريطة - ملء الشاشة */}
