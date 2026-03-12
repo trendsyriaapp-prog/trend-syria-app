@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Info, X, Wallet, Star
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
@@ -304,7 +304,6 @@ const DeliveryDashboard = () => {
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
   const [orderTypeFilter, setOrderTypeFilter] = useState('food'); // 'all', 'products', 'food' - الافتراضي طعام
-  const [showInfoModal, setShowInfoModal] = useState(false); // نافذة المعلومات
   
   // Working hours settings
   const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
@@ -556,15 +555,6 @@ const DeliveryDashboard = () => {
           <div className="flex items-center gap-2">
             {/* زر إشعارات Push */}
             <PushNotificationButton userType="delivery" size="small" />
-            {/* أيقونة المعلومات */}
-            <button
-              onClick={() => setShowInfoModal(true)}
-              className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-              title="معلوماتي"
-              data-testid="delivery-info-btn"
-            >
-              <Info size={16} />
-            </button>
             {/* زر تفعيل/إيقاف صوت التنبيه */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
@@ -671,6 +661,16 @@ const DeliveryDashboard = () => {
             طلباتي ({myOrders.length + myFoodOrders.length})
           </button>
           <button
+            onClick={() => setActiveTab('info')}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              activeTab === 'info' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+          >
+            معلوماتي
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'settings' 
@@ -715,6 +715,71 @@ const DeliveryDashboard = () => {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <DeliverySettingsTab />
+        )}
+
+        {/* Info Tab - معلوماتي */}
+        {activeTab === 'info' && (
+          <div className="space-y-2">
+            {/* رصيد المحفظة */}
+            <div 
+              onClick={() => navigate('/wallet')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wallet size={20} className="text-white" />
+                  <div>
+                    <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
+                    <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
+                  </div>
+                </div>
+                <span className="text-white/80 text-xs">اضغط للتفاصيل ←</span>
+              </div>
+            </div>
+
+            {/* تقييمي */}
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star size={20} className="text-white fill-white" />
+                  <div>
+                    <p className="text-white/80 text-[10px]">تقييمي</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={12}
+                            className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
+                  <p className="text-white/80 text-[10px]">تقييم</p>
+                </div>
+              </div>
+            </div>
+
+            {/* لوحة الصدارة */}
+            <DriverLeaderboard />
+
+            {/* نقاط السلوك */}
+            <DriverPenaltyPoints />
+
+            {/* الإنجازات */}
+            <DriverAchievements />
+
+            {/* مستوى الأداء */}
+            <DriverPerformance />
+
+            {/* صندوق التوصيل */}
+            <MyBoxCard />
+          </div>
         )}
 
         {/* Available Orders */}
@@ -852,104 +917,6 @@ const DeliveryDashboard = () => {
         userName={user?.full_name || 'سائق التوصيل'} 
       />
 
-      {/* نافذة المعلومات */}
-      <AnimatePresence>
-        {showInfoModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center"
-            onClick={() => setShowInfoModal(false)}
-          >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="bg-white w-full max-w-lg rounded-t-3xl max-h-[85vh] overflow-hidden"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 flex items-center justify-between sticky top-0">
-                <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                  <Info size={18} />
-                  معلوماتي
-                </h2>
-                <button
-                  onClick={() => setShowInfoModal(false)}
-                  className="text-white/80 hover:text-white p-1"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-3 overflow-y-auto max-h-[calc(85vh-60px)] space-y-2">
-                {/* رصيد المحفظة */}
-                <div 
-                  onClick={() => { setShowInfoModal(false); navigate('/wallet'); }}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wallet size={20} className="text-white" />
-                      <div>
-                        <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
-                        <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
-                      </div>
-                    </div>
-                    <span className="text-white/80 text-xs">اضغط للتفاصيل ←</span>
-                  </div>
-                </div>
-
-                {/* تقييمي */}
-                <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Star size={20} className="text-white fill-white" />
-                      <div>
-                        <p className="text-white/80 text-[10px]">تقييمي</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                size={12}
-                                className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
-                      <p className="text-white/80 text-[10px]">تقييم</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* لوحة الصدارة */}
-                <DriverLeaderboard />
-
-                {/* نقاط السلوك */}
-                <DriverPenaltyPoints />
-
-                {/* الإنجازات */}
-                <DriverAchievements />
-
-                {/* مستوى الأداء */}
-                <DriverPerformance />
-
-                {/* صندوق التوصيل */}
-                <MyBoxCard />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
