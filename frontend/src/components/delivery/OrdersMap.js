@@ -323,6 +323,13 @@ const OrdersMap = ({
                     </svg>
                   </button>
                   <span className="text-xs font-bold text-gray-800 whitespace-nowrap">خريطة الطلبات</span>
+                  <button
+                    onClick={getDriverLocation}
+                    className="p-1.5 bg-orange-500 text-white rounded-full"
+                    title="تحديث موقعي"
+                  >
+                    <Locate size={14} />
+                  </button>
                 </div>
                 
                 {/* دليل الألوان */}
@@ -340,14 +347,6 @@ const OrdersMap = ({
                     <span className="w-2 h-2 rounded-full bg-orange-500"></span> موقعك
                   </span>
                 </div>
-                
-                <button
-                  onClick={getDriverLocation}
-                  className="p-1.5 bg-orange-500 text-white rounded-full flex-shrink-0 mr-4"
-                  title="تحديث موقعي"
-                >
-                  <Locate size={14} />
-                </button>
               </div>
 
               {/* فلاتر الطبقات */}
