@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import DriverTrackingMap from '../components/DriverTrackingMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -246,6 +247,11 @@ const FoodOrderTracking = () => {
               <p className="text-sm text-green-600">{order.estimated_delivery_time} دقيقة</p>
             </div>
           </div>
+        )}
+
+        {/* خريطة تتبع السائق - تظهر عندما يكون الطلب قيد التوصيل */}
+        {(order.status === 'out_for_delivery' || order.status === 'ready') && !isCancelled && (
+          <DriverTrackingMap orderId={orderId} orderStatus={order.status} />
         )}
 
         {/* Store Info */}

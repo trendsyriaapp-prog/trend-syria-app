@@ -12,6 +12,7 @@ import { useToast } from '../hooks/use-toast';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 import ReportDriverModal from '../components/delivery/ReportDriverModal';
 import OrderTrackingMap from '../components/OrderTrackingMap';
+import DriverTrackingMap from '../components/DriverTrackingMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

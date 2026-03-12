@@ -8,7 +8,6 @@ import {
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
-import DeliveryHeader from '../components/delivery/DeliveryHeader';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
 import MyOrdersList from '../components/delivery/MyOrdersList';
 import MyBoxCard from '../components/delivery/MyBoxCard';
@@ -20,6 +19,7 @@ import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
+import useDriverLocationTracker from '../hooks/useDriverLocationTracker';
 import PushNotificationButton from '../components/PushNotificationButton';
 import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
@@ -308,6 +308,13 @@ const DeliveryDashboard = () => {
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
   const [orderTypeFilter, setOrderTypeFilter] = useState('food'); // 'all', 'products', 'food' - الافتراضي طعام
+
+  // تتبع موقع السائق تلقائياً عندما يكون لديه طلبات قيد التوصيل
+  const currentOrderId = myFoodOrders.find(o => o.status === 'out_for_delivery')?.id || 
+                         myOrders.find(o => o.delivery_status === 'out_for_delivery')?.id;
+  const hasActiveDelivery = !!currentOrderId;
+  
+  const { isTracking } = useDriverLocationTracker(hasActiveDelivery, currentOrderId);
 
   // جلب حالة التوفر
   const fetchAvailability = async () => {

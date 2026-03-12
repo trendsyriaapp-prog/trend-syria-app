@@ -4,11 +4,144 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from datetime import datetime, timezone
+from typing import Optional
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
+
+# ===== تتبع موقع السائق =====
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+    order_id: Optional[str] = None  # معرف الطلب الحالي
+
+@router.put("/location")
+async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_current_user)):
+    """تحديث موقع السائق - يُستدعى تلقائياً كل 30 ثانية"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث موقع السائق في جدول المواقع
+    await db.driver_locations.update_one(
+        {"driver_id": user["id"]},
+        {
+            "$set": {
+                "driver_id": user["id"],
+                "driver_name": user.get("full_name", user.get("name", "")),
+                "latitude": data.latitude,
+                "longitude": data.longitude,
+                "current_order_id": data.order_id,
+                "updated_at": now
+            }
+        },
+        upsert=True
+    )
+    
+    # إذا كان هناك طلب، تحديث موقع السائق في الطلب أيضاً
+    if data.order_id:
+        # تحديث طلب الطعام
+        await db.food_orders.update_one(
+            {"id": data.order_id, "driver_id": user["id"]},
+            {
+                "$set": {
+                    "driver_latitude": data.latitude,
+                    "driver_longitude": data.longitude,
+                    "driver_location_updated_at": now
+                }
+            }
+        )
+        # تحديث طلب المنتجات
+        await db.orders.update_one(
+            {"id": data.order_id, "driver_id": user["id"]},
+            {
+                "$set": {
+                    "driver_latitude": data.latitude,
+                    "driver_longitude": data.longitude,
+                    "driver_location_updated_at": now
+                }
+            }
+        )
+    
+    return {"success": True, "message": "تم تحديث الموقع"}
+
+@router.get("/location/{order_id}")
+async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_current_user)):
+    """الحصول على موقع السائق لطلب معين - للعميل"""
+    
+    # البحث في طلبات الطعام
+    order = await db.food_orders.find_one(
+        {"id": order_id},
+        {"_id": 0, "customer_id": 1, "driver_id": 1, "driver_latitude": 1, "driver_longitude": 1, 
+         "driver_location_updated_at": 1, "status": 1, "latitude": 1, "longitude": 1,
+         "delivery_address": 1}
+    )
+    
+    # البحث في طلبات المنتجات
+    if not order:
+        order = await db.orders.find_one(
+            {"id": order_id},
+            {"_id": 0, "user_id": 1, "driver_id": 1, "driver_latitude": 1, "driver_longitude": 1,
+             "driver_location_updated_at": 1, "status": 1, "delivery_status": 1, 
+             "latitude": 1, "longitude": 1, "address": 1}
+        )
+        if order:
+            order["customer_id"] = order.get("user_id")
+            order["delivery_address"] = order.get("address")
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن المستخدم هو صاحب الطلب أو السائق أو الأدمن
+    if (user["id"] != order.get("customer_id") and 
+        user["id"] != order.get("driver_id") and 
+        user["user_type"] != "admin"):
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # إذا لم يكن هناك سائق معين
+    if not order.get("driver_id"):
+        return {
+            "has_driver": False,
+            "message": "لم يتم تعيين سائق بعد"
+        }
+    
+    # إذا لم يكن هناك موقع للسائق
+    if not order.get("driver_latitude"):
+        # جلب آخر موقع معروف للسائق
+        driver_loc = await db.driver_locations.find_one(
+            {"driver_id": order["driver_id"]},
+            {"_id": 0}
+        )
+        if driver_loc:
+            return {
+                "has_driver": True,
+                "driver_latitude": driver_loc.get("latitude"),
+                "driver_longitude": driver_loc.get("longitude"),
+                "updated_at": driver_loc.get("updated_at"),
+                "customer_latitude": order.get("latitude"),
+                "customer_longitude": order.get("longitude"),
+                "delivery_address": order.get("delivery_address")
+            }
+        return {
+            "has_driver": True,
+            "message": "موقع السائق غير متاح حالياً"
+        }
+    
+    return {
+        "has_driver": True,
+        "driver_latitude": order.get("driver_latitude"),
+        "driver_longitude": order.get("driver_longitude"),
+        "updated_at": order.get("driver_location_updated_at"),
+        "customer_latitude": order.get("latitude"),
+        "customer_longitude": order.get("longitude"),
+        "delivery_address": order.get("delivery_address")
+    }
+
+# ===== نهاية تتبع الموقع =====
 
 # ===== حالة توفر السائق =====
 

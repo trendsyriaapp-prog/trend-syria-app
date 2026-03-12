@@ -125,42 +125,6 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
         />
       )}
 
-      {/* زر تحديد الموقع إذا لم يتم تحديده */}
-      {!driverLocation && allOrders.length > 0 && (
-        <button
-          onClick={handleGetLocation}
-          disabled={loadingLocation}
-          className="w-full py-3 bg-blue-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50"
-        >
-          {loadingLocation ? (
-            <>
-              <span className="animate-spin">⏳</span>
-              جاري تحديد موقعك...
-            </>
-          ) : (
-            <>
-              <Locate size={18} />
-              📍 تحديد موقعي لرؤية المسافات
-            </>
-          )}
-        </button>
-      )}
-
-      {/* إظهار حالة الموقع */}
-      {driverLocation && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-2 flex items-center justify-between">
-          <span className="text-xs text-green-700 flex items-center gap-1">
-            <Locate size={12} /> تم تحديد موقعك ✓
-          </span>
-          <button
-            onClick={handleGetLocation}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            تحديث الموقع
-          </button>
-        </div>
-      )}
-
       {/* طلبات الطعام */}
       {displayFoodOrders.length > 0 && (
         <div>

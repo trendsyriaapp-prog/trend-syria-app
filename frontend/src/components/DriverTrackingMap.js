@@ -1,0 +1,225 @@
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { Icon } from 'leaflet';
+import axios from 'axios';
+import { Loader2, Navigation, MapPin, Clock, RefreshCw } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// أيقونات مخصصة
+const createIcon = (emoji, color) => {
+  return new Icon({
+    iconUrl: `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 50">
+        <path d="M20 0 C8.954 0 0 8.954 0 20 C0 35 20 50 20 50 S40 35 40 20 C40 8.954 31.046 0 20 0Z" fill="${color}"/>
+        <circle cx="20" cy="18" r="12" fill="white"/>
+        <text x="20" y="23" font-size="14" text-anchor="middle">${emoji}</text>
+      </svg>
+    `)}`,
+    iconSize: [35, 45],
+    iconAnchor: [17, 45],
+    popupAnchor: [0, -45]
+  });
+};
+
+const driverIcon = createIcon('🚗', '#f97316');
+const customerIcon = createIcon('🏠', '#22c55e');
+
+/**
+ * مكون خريطة تتبع السائق للعميل
+ */
+const DriverTrackingMap = ({ orderId, orderStatus }) => {
+  const [loading, setLoading] = useState(true);
+  const [locationData, setLocationData] = useState(null);
+  const [error, setError] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  // جلب موقع السائق
+  const fetchDriverLocation = async () => {
+    try {
+      const res = await axios.get(`${API}/delivery/location/${orderId}`);
+      setLocationData(res.data);
+      setLastUpdate(new Date());
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching driver location:', err);
+      setError('فشل في جلب موقع السائق');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // جلب الموقع عند التحميل وكل 15 ثانية
+  useEffect(() => {
+    fetchDriverLocation();
+    
+    const interval = setInterval(fetchDriverLocation, 15000);
+    
+    return () => clearInterval(interval);
+  }, [orderId]);
+
+  // حساب المسافة بين نقطتين
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // حساب الوقت المتوقع للوصول
+  const estimateArrivalTime = (distance) => {
+    // افتراض سرعة 30 كم/ساعة في المدينة
+    const timeInHours = distance / 30;
+    const timeInMinutes = Math.ceil(timeInHours * 60);
+    return timeInMinutes;
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-gray-100 rounded-xl p-6 flex items-center justify-center">
+        <Loader2 className="animate-spin text-orange-500" size={24} />
+        <span className="mr-2 text-gray-600">جاري تحميل موقع السائق...</span>
+      </div>
+    );
+  }
+
+  // إذا لم يتم تعيين سائق بعد
+  if (!locationData?.has_driver) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+        <Clock size={32} className="text-yellow-500 mx-auto mb-2" />
+        <p className="text-yellow-700 font-bold">في انتظار تعيين سائق</p>
+        <p className="text-yellow-600 text-sm">سيتم إشعارك عند قبول السائق للطلب</p>
+      </div>
+    );
+  }
+
+  // إذا لم يكن هناك موقع للسائق
+  if (!locationData?.driver_latitude) {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+        <Navigation size={32} className="text-blue-500 mx-auto mb-2" />
+        <p className="text-blue-700 font-bold">السائق في الطريق</p>
+        <p className="text-blue-600 text-sm">جاري تحديث الموقع...</p>
+      </div>
+    );
+  }
+
+  const driverPos = [locationData.driver_latitude, locationData.driver_longitude];
+  const customerPos = locationData.customer_latitude && locationData.customer_longitude 
+    ? [locationData.customer_latitude, locationData.customer_longitude]
+    : null;
+
+  // حساب المسافة والوقت
+  let distance = null;
+  let estimatedTime = null;
+  if (customerPos) {
+    distance = calculateDistance(
+      locationData.driver_latitude, locationData.driver_longitude,
+      locationData.customer_latitude, locationData.customer_longitude
+    );
+    estimatedTime = estimateArrivalTime(distance);
+  }
+
+  // مركز الخريطة
+  const center = customerPos 
+    ? [(driverPos[0] + customerPos[0]) / 2, (driverPos[1] + customerPos[1]) / 2]
+    : driverPos;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* معلومات التتبع */}
+      <div className="p-3 bg-gradient-to-l from-orange-500 to-orange-600 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Navigation size={18} />
+            <span className="font-bold text-sm">تتبع السائق</span>
+          </div>
+          <button
+            onClick={fetchDriverLocation}
+            className="p-1.5 bg-white/20 rounded-full hover:bg-white/30"
+            title="تحديث الموقع"
+          >
+            <RefreshCw size={14} />
+          </button>
+        </div>
+        
+        {distance !== null && (
+          <div className="flex items-center gap-4 mt-2 text-sm">
+            <div className="flex items-center gap-1">
+              <MapPin size={14} />
+              <span>{distance.toFixed(1)} كم</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock size={14} />
+              <span>~{estimatedTime} دقيقة</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* الخريطة */}
+      <div className="h-48">
+        <MapContainer
+          center={center}
+          zoom={14}
+          className="h-full w-full"
+          zoomControl={false}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; OpenStreetMap'
+          />
+          
+          {/* موقع السائق */}
+          <Marker position={driverPos} icon={driverIcon}>
+            <Popup>
+              <div className="text-center">
+                <span className="font-bold">🚗 موظف التوصيل</span>
+                <p className="text-xs text-gray-500">في الطريق إليك</p>
+              </div>
+            </Popup>
+          </Marker>
+          
+          {/* موقع العميل */}
+          {customerPos && (
+            <Marker position={customerPos} icon={customerIcon}>
+              <Popup>
+                <div className="text-center">
+                  <span className="font-bold">🏠 موقع التسليم</span>
+                  <p className="text-xs text-gray-500">{locationData.delivery_address}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+          
+          {/* خط بين السائق والعميل */}
+          {customerPos && (
+            <Polyline
+              positions={[driverPos, customerPos]}
+              color="#f97316"
+              weight={3}
+              dashArray="10, 10"
+            />
+          )}
+        </MapContainer>
+      </div>
+
+      {/* آخر تحديث */}
+      {lastUpdate && (
+        <div className="p-2 bg-gray-50 text-center">
+          <p className="text-xs text-gray-500">
+            آخر تحديث: {lastUpdate.toLocaleTimeString('ar-SA')}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DriverTrackingMap;
