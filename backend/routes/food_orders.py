@@ -1028,7 +1028,12 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({"id": order_id, "status": "ready", "driver_id": None})
+    # البحث عن الطلب بحالة ready أو ready_for_pickup
+    order = await db.food_orders.find_one({
+        "id": order_id, 
+        "status": {"$in": ["ready", "ready_for_pickup"]}, 
+        "driver_id": None
+    })
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير متاح")
     
