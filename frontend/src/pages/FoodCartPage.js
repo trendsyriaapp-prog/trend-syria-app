@@ -394,6 +394,8 @@ const FoodCartPage = () => {
         payment_method: paymentMethod
       };
 
+      console.log('Order data:', JSON.stringify(orderData, null, 2));
+      
       const res = await axios.post(`${API}/food/orders`, orderData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -404,6 +406,7 @@ const FoodCartPage = () => {
       toast({ title: "تم الطلب بنجاح! 🎉", description: `رقم الطلب: ${res.data.order_number}` });
       navigate(`/food/order/${res.data.order_id}`);
     } catch (error) {
+      console.error('Order error:', error.response?.data);
       const errorDetail = error.response?.data?.detail;
       const errorMessage = typeof errorDetail === 'string' 
         ? errorDetail 
