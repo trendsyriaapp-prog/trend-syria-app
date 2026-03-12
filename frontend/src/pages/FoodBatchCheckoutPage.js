@@ -24,7 +24,7 @@ const FoodBatchCheckoutPage = () => {
   const { clearAllFoodCarts } = useFoodCart();
   const { toast } = useToast();
   
-  const { stores = [], storeDetails = {}, totalAmount = 0 } = location.state || {};
+  const { stores = [], storeDetails = {}, totalAmount = 0, selectedAddress = null } = location.state || {};
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +32,7 @@ const FoodBatchCheckoutPage = () => {
   
   // العناوين المحفوظة
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(selectedAddress?.id || null);
   const [useNewAddress, setUseNewAddress] = useState(false);
   
   // عنوان جديد
@@ -112,14 +112,28 @@ const FoodBatchCheckoutPage = () => {
       setSavedAddresses(addressesRes.data || []);
       setSavedPayments(paymentsRes.data || []);
       
-      // تعيين العنوان الافتراضي
-      const defaultAddr = addressesRes.data.find(a => a.is_default);
-      if (defaultAddr) {
-        setSelectedAddressId(defaultAddr.id);
-      } else if (addressesRes.data.length > 0) {
-        setSelectedAddressId(addressesRes.data[0].id);
+      // تعيين العنوان - إذا تم تمرير عنوان من الصفحة السابقة استخدمه
+      if (selectedAddress?.id) {
+        // التأكد من أن العنوان موجود في القائمة
+        const addressExists = addressesRes.data.find(a => a.id === selectedAddress.id);
+        if (addressExists) {
+          setSelectedAddressId(selectedAddress.id);
+        } else {
+          // العنوان غير موجود، استخدم الافتراضي
+          const defaultAddr = addressesRes.data.find(a => a.is_default) || addressesRes.data[0];
+          if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+          else setUseNewAddress(true);
+        }
       } else {
-        setUseNewAddress(true);
+        // لا يوجد عنوان محدد، استخدم الافتراضي
+        const defaultAddr = addressesRes.data.find(a => a.is_default);
+        if (defaultAddr) {
+          setSelectedAddressId(defaultAddr.id);
+        } else if (addressesRes.data.length > 0) {
+          setSelectedAddressId(addressesRes.data[0].id);
+        } else {
+          setUseNewAddress(true);
+        }
       }
       
       // تعيين طريقة الدفع الافتراضية

@@ -1,7 +1,7 @@
 // صفحة سلة الطعام المجمعة - تعرض جميع الطلبات من مختلف المتاجر
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check, ShoppingCart, Loader2 } from 'lucide-react';
+import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check, ShoppingCart, Loader2, MapPin, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFoodCart } from '../context/FoodCartContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +24,11 @@ const FoodMyCartPage = () => {
   const [loading, setLoading] = useState(true);
   const [fetchedStoreIds, setFetchedStoreIds] = useState([]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  
+  // العنوان الافتراضي
+  const [defaultAddress, setDefaultAddress] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
 
   useEffect(() => {
     // فقط اجلب البيانات إذا تغيرت المتاجر
@@ -37,6 +42,29 @@ const FoodMyCartPage = () => {
       setLoading(false);
     }
   }, [stores.length]);
+
+  // جلب العنوان الافتراضي
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!user || !token) return;
+      
+      try {
+        const res = await axios.get(`${API}/user/addresses`);
+        const addresses = res.data || [];
+        setSavedAddresses(addresses);
+        
+        // اختيار العنوان الافتراضي أو الأول
+        const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+        if (defaultAddr) {
+          setDefaultAddress(defaultAddr);
+        }
+      } catch (error) {
+        console.error('Error fetching addresses:', error);
+      }
+    };
+    
+    fetchAddresses();
+  }, [user, token]);
 
   const fetchStoreDetails = async () => {
     if (stores.length === 0) {
@@ -126,7 +154,8 @@ const FoodMyCartPage = () => {
       state: {
         stores: stores,
         storeDetails: storeDetails,
-        totalAmount: totalAmount
+        totalAmount: totalAmount,
+        selectedAddress: defaultAddress
       }
     });
   };
@@ -197,6 +226,66 @@ const FoodMyCartPage = () => {
           </button>
         </div>
       </div>
+
+      {/* عنوان التوصيل */}
+      {user && (
+        <div className="px-4 mb-4">
+          <div 
+            onClick={() => setShowAddressSelector(!showAddressSelector)}
+            className="bg-white rounded-xl border border-gray-200 p-3 cursor-pointer hover:border-[#FF6B00] transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <MapPin size={18} className="text-[#FF6B00]" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">التوصيل إلى</p>
+                  {defaultAddress ? (
+                    <p className="font-bold text-gray-900 text-sm">
+                      {defaultAddress.title || 'المنزل'} - {defaultAddress.city}
+                    </p>
+                  ) : (
+                    <p className="font-medium text-[#FF6B00] text-sm">اختر عنوان التوصيل</p>
+                  )}
+                </div>
+              </div>
+              <ChevronDown size={20} className={`text-gray-400 transition-transform ${showAddressSelector ? 'rotate-180' : ''}`} />
+            </div>
+            
+            {/* قائمة العناوين */}
+            {showAddressSelector && savedAddresses.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                {savedAddresses.map((addr) => (
+                  <div
+                    key={addr.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDefaultAddress(addr);
+                      setShowAddressSelector(false);
+                    }}
+                    className={`p-2 rounded-lg cursor-pointer transition-all ${
+                      defaultAddress?.id === addr.id 
+                        ? 'bg-orange-50 border border-[#FF6B00]' 
+                        : 'bg-gray-50 hover:bg-orange-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{addr.title || 'عنوان'}</p>
+                        <p className="text-xs text-gray-500">{addr.city} - {addr.area}</p>
+                      </div>
+                      {defaultAddress?.id === addr.id && (
+                        <Check size={16} className="text-[#FF6B00]" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Store Carts */}
       <div className="p-4 space-y-4">
