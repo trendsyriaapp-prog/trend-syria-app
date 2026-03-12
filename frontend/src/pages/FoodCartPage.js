@@ -404,9 +404,13 @@ const FoodCartPage = () => {
       toast({ title: "تم الطلب بنجاح! 🎉", description: `رقم الطلب: ${res.data.order_number}` });
       navigate(`/food/order/${res.data.order_id}`);
     } catch (error) {
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' 
+        ? errorDetail 
+        : (Array.isArray(errorDetail) ? errorDetail.map(e => e.msg || e).join(', ') : "فشل إنشاء الطلب");
       toast({ 
         title: "خطأ", 
-        description: error.response?.data?.detail || "فشل إنشاء الطلب", 
+        description: errorMessage, 
         variant: "destructive" 
       });
     } finally {

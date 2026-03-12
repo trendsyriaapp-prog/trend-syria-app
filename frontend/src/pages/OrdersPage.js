@@ -206,12 +206,13 @@ const OrdersPage = () => {
 
     // إضافة المنتجات للسلة
     for (const item of order.items) {
-      const existingIndex = currentCart.findIndex(c => c.id === item.item_id);
+      const productId = item.product_id || item.item_id;
+      const existingIndex = currentCart.findIndex(c => c.product_id === productId);
       if (existingIndex >= 0) {
         currentCart[existingIndex].quantity += item.quantity;
       } else {
         currentCart.push({
-          id: item.item_id,
+          product_id: productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
