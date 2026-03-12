@@ -213,13 +213,13 @@ const MyOrdersList = ({
 
               {/* معلومات البائع */}
               {order.seller_phone && (
-                <div className="bg-blue-50 rounded-lg p-2 mb-3">
-                  <p className="text-xs font-bold text-blue-700 mb-1">معلومات البائع:</p>
+                <div className="bg-green-50 rounded-lg p-2 mb-3">
+                  <p className="text-xs font-bold text-green-700 mb-1">معلومات البائع:</p>
                   <p className="text-xs text-gray-600">
                     <User size={12} className="inline ml-1" />
                     {order.seller_name || 'البائع'}
                   </p>
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1 font-bold">
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1 mt-1 font-bold">
                     <Phone size={12} />
                     اتصال: {order.seller_phone}
                   </a>
@@ -309,10 +309,10 @@ const MyOrdersList = ({
 
             <div className="p-3">
               {/* معلومات المتجر */}
-              <div className="bg-orange-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-orange-700 mb-1">📍 من: {order.store_name}</p>
+              <div className="bg-green-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-green-700 mb-1">📍 من: {order.store_name}</p>
                 {order.seller_phone && (
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-orange-600 flex items-center gap-1">
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1">
                     <Phone size={12} />
                     {order.seller_phone}
                   </a>

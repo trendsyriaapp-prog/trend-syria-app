@@ -162,18 +162,18 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* من أين - المتجر */}
-                  <div className="bg-orange-50 rounded-lg p-2 mb-2">
+                  <div className="bg-green-50 rounded-lg p-2 mb-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                         <Navigation size={12} className="text-white" />
                       </div>
-                      <span className="text-xs font-bold text-orange-700">من ({order.store_name})</span>
+                      <span className="text-xs font-bold text-green-700">من ({order.store_name})</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className="mr-8 text-xs text-gray-600">
                         <p>{seller.city}</p>
                         {seller.phone && (
-                          <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-orange-600">
+                          <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-600">
                             <Phone size={10} /> {seller.phone}
                           </a>
                         )}
@@ -271,18 +271,18 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* من أين - البائع */}
-                  <div className="bg-orange-50 rounded-lg p-2 mb-2">
+                  <div className="bg-green-50 rounded-lg p-2 mb-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                         <Navigation size={12} className="text-white" />
                       </div>
-                      <span className="text-xs font-bold text-orange-700">من (البائع)</span>
+                      <span className="text-xs font-bold text-green-700">من (البائع)</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className="mr-8 text-xs text-gray-600">
                         <p className="font-medium">{seller.business_name || seller.name}</p>
                         <p>{seller.city}</p>
-                        <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-orange-600">
+                        <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-600">
                           <Phone size={10} /> {seller.phone}
                         </a>
                       </div>
