@@ -48,6 +48,7 @@ const CartPage = () => {
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
   // Fetch customer address and calculate shipping
+  // نستخدم cart.total كـ dependency لأنه يتغير عند تغيير الكمية
   useEffect(() => {
     let isMounted = true;
     
@@ -86,7 +87,7 @@ const CartPage = () => {
     fetchData();
     
     return () => { isMounted = false; };
-  }, [user, cart.items.length > 0]); // تبسيط الـ dependency
+  }, [user, cart.items.length, cart.total]); // يتم التحديث عند تغيير عدد العناصر أو المجموع (الكمية)
   
   // تحليل السلة لمعرفة حالة الشحن
   const cartAnalysis = (() => {

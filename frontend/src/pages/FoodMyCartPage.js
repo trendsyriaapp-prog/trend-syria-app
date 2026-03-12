@@ -1,12 +1,17 @@
 // صفحة سلة الطعام المجمعة - تعرض جميع الطلبات من مختلف المتاجر
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed } from 'lucide-react';
+import { ArrowRight, Store, Trash2, ShoppingBag, Plus, Minus, UtensilsCrossed, Truck, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFoodCart } from '../context/FoodCartContext';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// دالة تنسيق السعر
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
 
 const FoodMyCartPage = () => {
   const navigate = useNavigate();
@@ -162,6 +167,16 @@ const FoodMyCartPage = () => {
         <AnimatePresence>
           {stores.map((store) => {
             const details = storeDetails[store.storeId];
+            // حساب نسبة التقدم للشحن المجاني
+            const freeDeliveryMin = details?.free_delivery_minimum || 0;
+            const storeTotal = store.totalAmount;
+            const qualifiesForFree = freeDeliveryMin > 0 && storeTotal >= freeDeliveryMin;
+            const progressPercent = freeDeliveryMin > 0 
+              ? Math.min((storeTotal / freeDeliveryMin) * 100, 100) 
+              : 0;
+            const remainingForFree = freeDeliveryMin > 0 && !qualifiesForFree 
+              ? freeDeliveryMin - storeTotal 
+              : 0;
             
             return (
               <motion.div
@@ -216,7 +231,7 @@ const FoodMyCartPage = () => {
                       {/* Details */}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                        <p className="text-[#FF6B00] font-bold text-sm">{item.price.toLocaleString()} ل.س</p>
+                        <p className="text-[#FF6B00] font-bold text-sm">{formatPrice(item.price)}</p>
                       </div>
 
                       {/* Quantity Controls */}
@@ -239,10 +254,54 @@ const FoodMyCartPage = () => {
                   ))}
                 </div>
 
+                {/* شريط تقدم الشحن المجاني */}
+                {freeDeliveryMin > 0 && (
+                  <div className={`p-3 mx-3 mb-3 rounded-xl border ${
+                    qualifiesForFree 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-orange-50 border-orange-200'
+                  }`}>
+                    {qualifiesForFree ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check size={16} className="text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-sm font-bold text-green-700">🎉 توصيل مجاني!</span>
+                          <div className="h-2 mt-1 bg-green-200 rounded-full overflow-hidden">
+                            <div className="h-full w-full bg-green-500 rounded-full" />
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-green-600">100%</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <Truck size={16} className="text-orange-600" />
+                            <span className="text-xs font-medium text-orange-700">
+                              أضف {formatPrice(remainingForFree)} للتوصيل المجاني
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-orange-600">
+                            {Math.round(progressPercent)}%
+                          </span>
+                        </div>
+                        <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Store Total */}
                 <div className="bg-gray-50 p-3 flex items-center justify-between">
                   <span className="text-sm text-gray-600">المجموع:</span>
-                  <span className="font-bold text-[#FF6B00]">{store.totalAmount.toLocaleString()} ل.س</span>
+                  <span className="font-bold text-[#FF6B00]">{formatPrice(store.totalAmount)}</span>
                 </div>
               </motion.div>
             );
@@ -254,7 +313,7 @@ const FoodMyCartPage = () => {
       <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
         <div className="flex items-center justify-between mb-2">
           <span className="text-gray-600">الإجمالي ({totalItems} منتج)</span>
-          <span className="text-xl font-bold text-[#FF6B00]">{totalAmount.toLocaleString()} ل.س</span>
+          <span className="text-xl font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
         </div>
         <p className="text-xs text-gray-500 text-center">
           اختر متجراً لإكمال الطلب • رسوم التوصيل تُحسب لكل متجر على حدة
