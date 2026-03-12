@@ -1,7 +1,13 @@
 // صفحة نجاح الطلب المجمع
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Package, Truck, Clock, Home, Store } from 'lucide-react';
+import { Check, Package, Truck, Clock, Home, Store, X, Loader2 } from 'lucide-react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../hooks/use-toast';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
@@ -10,7 +16,64 @@ const formatPrice = (price) => {
 const FoodBatchSuccessPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { token } = useAuth();
+  const { toast } = useToast();
   const { batchId, orders = [], totalAmount = 0, storesCount = 0 } = location.state || {};
+  
+  // العد التنازلي - 3 دقائق = 180 ثانية
+  const [timeLeft, setTimeLeft] = useState(180);
+  const [cancelling, setCancelling] = useState(false);
+  
+  // بدء العد التنازلي
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  // تنسيق الوقت المتبقي
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // إلغاء جميع الطلبات
+  const handleCancelAll = async () => {
+    if (!window.confirm('هل أنت متأكد من إلغاء جميع الطلبات؟')) return;
+    
+    setCancelling(true);
+    try {
+      const res = await axios.post(`${API}/food/orders/batch/${batchId}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: "تم إلغاء الطلبات",
+        description: `تم إلغاء ${orders.length} طلب واسترجاع ${formatPrice(res.data.refunded_amount)}`
+      });
+      
+      navigate('/food');
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل إلغاء الطلبات",
+        variant: "destructive"
+      });
+    } finally {
+      setCancelling(false);
+    }
+  };
   
   if (!batchId) {
     return (
@@ -136,18 +199,60 @@ const FoodBatchSuccessPage = () => {
           </div>
         </motion.div>
         
-        {/* تنبيه الإلغاء */}
+        {/* تنبيه الإلغاء مع العد التنازلي */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3"
+          className={`rounded-2xl p-4 ${
+            timeLeft > 0 
+              ? 'bg-amber-50 border border-amber-200' 
+              : 'bg-gray-100 border border-gray-200'
+          }`}
         >
-          <Clock size={24} className="text-amber-600 flex-shrink-0" />
-          <div>
-            <p className="font-bold text-amber-900 text-sm">مهلة الإلغاء: 3 دقائق</p>
-            <p className="text-xs text-amber-700">يمكنك إلغاء جميع الطلبات خلال 3 دقائق من الآن</p>
-          </div>
+          {timeLeft > 0 ? (
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Clock size={20} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-amber-900 text-sm">مهلة الإلغاء</p>
+                  <p className="text-xs text-amber-700">يمكنك إلغاء جميع الطلبات قبل انتهاء الوقت</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-600">{formatTime(timeLeft)}</p>
+                  <p className="text-[10px] text-amber-500">دقيقة</p>
+                </div>
+              </div>
+              
+              {/* زر إلغاء الطلبات */}
+              <button
+                onClick={handleCancelAll}
+                disabled={cancelling}
+                className="w-full bg-red-500 text-white py-2.5 rounded-xl font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                {cancelling ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <>
+                    <X size={18} />
+                    إلغاء جميع الطلبات
+                  </>
+                )}
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0">
+                <Clock size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-600 text-sm">انتهت مهلة الإلغاء</p>
+                <p className="text-xs text-gray-500">طلباتك قيد التحضير الآن</p>
+              </div>
+            </div>
+          )}
         </motion.div>
         
         {/* الأزرار */}
