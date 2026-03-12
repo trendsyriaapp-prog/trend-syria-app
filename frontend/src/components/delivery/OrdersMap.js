@@ -39,7 +39,6 @@ const foodStoreIcon = createIcon('#22c55e', '🍔');
 const productStoreIcon = createIcon('#3b82f6', '📦');
 const customerIcon = createIcon('#ef4444', '🏠');
 const driverIcon = createIcon('#f97316', '🚗');
-const batchIcon = createIcon('#8b5cf6', '⭐');
 
 // مكون لتحديث مركز الخريطة
 const MapUpdater = ({ center, zoom }) => {
@@ -134,7 +133,6 @@ const OrdersMap = ({
   foodOrders.forEach(order => {
     const customerCoords = getOrderCoordinates(order);
     const storeCoords = getStoreCoordinates(order);
-    const isBatch = order.batch_id;
     
     // موقع المتجر (إذا متوفر)
     if (storeCoords) {
@@ -144,8 +142,7 @@ const OrdersMap = ({
         position: storeCoords,
         title: order.store_name || 'متجر طعام',
         order: order,
-        icon: isBatch ? batchIcon : foodStoreIcon,
-        isBatch
+        icon: foodStoreIcon
       });
     }
     
@@ -208,10 +205,6 @@ const OrdersMap = ({
     return true;
   });
 
-  // عدد الطلبات المجمعة
-  const batchOrders = foodOrders.filter(o => o.batch_id);
-  const batchGroups = [...new Set(batchOrders.map(o => o.batch_id))];
-  
   // عدد الطلبات التي لديها GPS
   const ordersWithGPS = markers.filter(m => m.type === 'customer' && m.hasRealGPS).length;
   const totalOrders = foodOrders.length + orders.length;
@@ -230,11 +223,6 @@ const OrdersMap = ({
       >
         <Map size={18} />
         🗺️ عرض الخريطة ({ordersWithGPS}/{totalOrders} طلب بموقع GPS)
-        {batchGroups.length > 0 && (
-          <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
-            ⭐ {batchGroups.length} مجمع
-          </span>
-        )}
       </button>
       
       {/* تنبيه الطلبات بدون GPS */}
