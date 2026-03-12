@@ -6,7 +6,7 @@ import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User,
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
-import { useToast } from '../components/ui/use-toast';
+import { useToast } from '../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
