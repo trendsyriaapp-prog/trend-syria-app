@@ -558,9 +558,13 @@ const DeliveryDashboard = () => {
       <div className="max-w-2xl mx-auto px-4 py-4">
         {/* Header - الاسم والأيقونات في سطر واحد */}
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <h1 className="text-base font-bold text-gray-900">مرحباً، {user?.full_name || user?.name}</h1>
-            <p className="text-[10px] text-gray-500">موظف توصيل</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <h1 className="text-base font-bold text-gray-900">مرحباً، {user?.full_name || user?.name}</h1>
+              <p className="text-[10px] text-gray-500">موظف توصيل</p>
+            </div>
+            {/* الإشعارات بجانب الاسم */}
+            <NotificationsDropdown />
           </div>
           <div className="flex items-center gap-2">
             {/* زر إشعارات Push */}
@@ -576,8 +580,6 @@ const DeliveryDashboard = () => {
             >
               {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
             </button>
-            {/* الإشعارات */}
-            <NotificationsDropdown />
             {/* زر متاح/مغلق */}
             <button
               onClick={toggleAvailability}
