@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Truck, X, PartyPopper, Store } from 'lucide-react';
+import { Truck, X, Store } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
 import axios from 'axios';
@@ -21,7 +21,6 @@ const FreeShippingFloatingBanner = () => {
   
   // حالة الشريط
   const [visible, setVisible] = useState(false);
-  const [celebrating, setCelebrating] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
   const [storesProgress, setStoresProgress] = useState([]);
   const [dismissedStores, setDismissedStores] = useState([]);
@@ -171,24 +170,14 @@ const FreeShippingFloatingBanner = () => {
         curr.progress > prev.progress ? curr : prev
       );
       setCurrentStore(closest);
-      setCelebrating(false);
       // إظهار الشريط إذا لم نكن في صفحة محظورة
       if (!shouldHide) {
         setVisible(true);
       }
-    } else if (storesProgress.length > 0) {
-      // جميع المتاجر وصلت للشحن المجاني
-      const justCompleted = storesProgress.find(s => s.isFree && !dismissedStores.includes(s.seller_id + '_celebrated'));
-      if (justCompleted) {
-        setCurrentStore(justCompleted);
-        setCelebrating(true);
-        if (!shouldHide) {
-          setVisible(true);
-        }
-      } else {
-        setCurrentStore(null);
-        setVisible(false);
-      }
+    } else {
+      // جميع المتاجر وصلت للشحن المجاني - إخفاء الشريط
+      setCurrentStore(null);
+      setVisible(false);
     }
   }, [storesProgress, dismissedStores, shouldHide]);
   
@@ -207,28 +196,6 @@ const FreeShippingFloatingBanner = () => {
       setVisible(true);
     }
   }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide]);
-  
-  // إخفاء بعد الاحتفال
-  useEffect(() => {
-    if (celebrating && currentStore) {
-      const timer = setTimeout(() => {
-        // إضافة للقائمة المحتفى بها
-        setDismissedStores(prev => [...prev, currentStore.seller_id + '_celebrated']);
-        setCelebrating(false);
-        
-        // التحقق من وجود متاجر أخرى
-        const remaining = storesProgress.filter(
-          s => !s.isFree && s.seller_id !== currentStore.seller_id
-        );
-        
-        if (remaining.length === 0) {
-          setVisible(false);
-        }
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [celebrating, currentStore, storesProgress]);
   
   // إعادة تعيين عند تغيير القسم
   useEffect(() => {
@@ -249,25 +216,9 @@ const FreeShippingFloatingBanner = () => {
         className="fixed top-16 left-2 right-2 z-40"
         data-testid="free-shipping-banner"
       >
-        <div className={`rounded-xl shadow-md overflow-hidden ${
-          celebrating 
-            ? 'bg-gradient-to-r from-orange-500 to-amber-500' 
-            : 'bg-white/95 backdrop-blur-sm border border-gray-100'
-        }`}>
-          {celebrating ? (
-            // حالة الاحتفال - مصغرة
-            <motion.div 
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="px-3 py-2 flex items-center gap-2"
-            >
-              <PartyPopper size={16} className="text-white" />
-              <p className="text-white font-bold text-xs flex-1">🎉 شحن مجاني! - {currentStore.seller_name}</p>
-              <span className="text-lg">🎊</span>
-            </motion.div>
-          ) : (
-            // حالة التقدم - مصغرة
-            <div className="px-3 py-2" data-testid="banner-progress-state">
+        <div className="rounded-xl shadow-md overflow-hidden bg-white/95 backdrop-blur-sm border border-gray-100">
+          {/* حالة التقدم */}
+          <div className="px-3 py-2" data-testid="banner-progress-state">
               <div className="flex items-center gap-2">
                 {/* أيقونة */}
                 <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -318,7 +269,6 @@ const FreeShippingFloatingBanner = () => {
                 </p>
               )}
             </div>
-          )}
         </div>
       </motion.div>
     </AnimatePresence>
