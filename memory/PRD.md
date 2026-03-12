@@ -63,6 +63,11 @@
 - سلة المشتريات
 - تتبع الطلبات
 - **شريط الشحن المجاني** يظهر عند إضافة عناصر للسلة ✅ FIXED
+- **شريط الشحن المجاني العائم** ✅ NEW (12 مارس 2026):
+  - يظهر على جميع الصفحات (ما عدا صفحات السلة)
+  - يعرض البائع الأقرب للشحن المجاني
+  - يحتفل عند الوصول لـ 100%
+  - يعرض عدد المتاجر في السلة
 
 ### 7. لوحة تحكم المدير ✅
 - إدارة المستخدمين
@@ -119,14 +124,18 @@
     └── src/
         ├── pages/
         │   ├── SellerPages.js
-        │   └── DeliveryPages.js
+        │   ├── DeliveryPages.js
+        │   ├── FoodBatchCheckoutPage.js
+        │   └── FoodBatchSuccessPage.js
         ├── components/
         │   ├── FreeShippingBanner.js  ✅ FIXED
+        │   ├── FreeShippingFloatingBanner.js  ✅ NEW
         │   ├── PushNotificationButton.js
         │   └── delivery/
         │       ├── AvailableOrdersList.js
         │       └── MyOrdersList.js
         ├── context/
+        │   ├── CartContext.js
         │   └── FoodCartContext.js  (سلة الطعام)
         ├── hooks/
         │   ├── useNotificationSound.js
@@ -151,7 +160,18 @@
 
 ## آخر التحديثات
 
-### 12 مارس 2026
+### 12 مارس 2026 (الجلسة الثانية)
+- ✅ **شريط الشحن المجاني العائم (FreeShippingFloatingBanner.js)** ✅ NEW:
+  - مكون جديد يظهر أسفل الشاشة على جميع الصفحات (ما عدا صفحات السلة)
+  - يقرأ من CartContext للمنتجات و FoodCartContext للطعام
+  - يعرض تقدم البائع الأقرب للشحن المجاني
+  - يحتفل (animation) عند تحقيق الشحن المجاني
+  - يعرض عدد المتاجر في السلة
+  - تم إصلاح مشكلة "NaN%" بتصحيح الوصول لخصائص السلة
+  - الصفحات المخفية: `/cart`, `/food/my-cart`, `/checkout`, `/food/batch-checkout`
+  - اختبار: نجح 100% (جميع السيناريوهات)
+
+### 12 مارس 2026 (الجلسة الأولى)
 - ✅ **إصلاح تحديث شريط تقدم الشحن المجاني في سلة المنتجات (CartPage.js)**:
   - المشكلة: عند تغيير كمية منتج موجود، الشريط لم يكن يتحدث
   - الحل: إضافة `cart.total` إلى dependencies في useEffect (السطر 90)
