@@ -158,7 +158,7 @@ const FoodBatchSuccessPage = () => {
           className="space-y-3 pt-4"
         >
           <button
-            onClick={() => navigate('/food/my-orders')}
+            onClick={() => navigate('/orders')}
             className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold hover:bg-[#E65000] transition-colors flex items-center justify-center gap-2"
           >
             <Package size={20} />
