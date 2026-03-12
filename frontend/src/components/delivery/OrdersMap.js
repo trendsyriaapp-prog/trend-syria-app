@@ -395,30 +395,22 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-center min-w-[180px]">
-                          <p className="font-bold text-sm mb-1">{marker.title}</p>
+                        <div className="text-center min-w-[140px]">
+                          <p className="font-bold text-xs mb-1">{marker.title}</p>
                           {marker.order && (
                             <>
-                              <div className="text-xs text-gray-600 mb-2 text-right">
-                                <p className="font-medium">{marker.order.delivery_address || marker.order.address}</p>
-                                {marker.order.delivery_city && (
-                                  <p className="text-gray-500">{marker.order.delivery_city}</p>
-                                )}
+                              <div className="text-[10px] text-gray-600 mb-1 text-right">
+                                <p className="font-medium truncate">{marker.order.delivery_address || marker.order.address}</p>
                                 {(marker.order.customer_phone || marker.order.delivery_phone) && (
-                                  <p className="text-blue-600 mt-1">
+                                  <p className="text-blue-600">
                                     📞 {marker.order.customer_phone || marker.order.delivery_phone}
                                   </p>
                                 )}
                               </div>
                               {marker.order.total && (
-                                <p className="text-orange-600 font-bold text-sm mb-2">
+                                <p className="text-orange-600 font-bold text-xs mb-1">
                                   {(marker.order.total).toLocaleString()} ل.س
                                 </p>
-                              )}
-                              {marker.isBatch && (
-                                <span className="inline-block bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full mb-2">
-                                  ⭐ طلب مجمع
-                                </span>
                               )}
                               {marker.type !== 'customer' && (
                                 <button
@@ -430,7 +422,7 @@ const OrdersMap = ({
                                     }
                                     setIsOpen(false);
                                   }}
-                                  className="w-full py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold mb-1"
+                                  className="w-full py-1 bg-orange-500 text-white rounded text-[10px] font-bold mb-1"
                                 >
                                   قبول الطلب
                                 </button>
@@ -440,10 +432,10 @@ const OrdersMap = ({
                                 <button
                                   onClick={() => showRouteForOrder(marker.order)}
                                   disabled={loadingRoute}
-                                  className="w-full py-1.5 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                                  className="w-full py-1 bg-blue-500 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1"
                                 >
-                                  {loadingRoute ? '⏳' : <Route size={12} />}
-                                  {loadingRoute ? 'جاري التحميل...' : 'عرض المسار'}
+                                  {loadingRoute ? '⏳' : <Route size={10} />}
+                                  {loadingRoute ? '...' : 'المسار'}
                                 </button>
                               )}
                             </>
