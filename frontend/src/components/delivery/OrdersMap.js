@@ -297,7 +297,8 @@ const OrdersMap = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed top-0 left-0 right-0 bottom-0 z-[9999]"
+            className="fixed z-[9999]"
+            style={{ top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}
             onClick={() => setIsOpen(false)}
           >
             <motion.div
@@ -306,7 +307,7 @@ const OrdersMap = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="w-full h-full bg-white"
-              style={{ paddingTop: 'env(safe-area-inset-top)' }}
+              style={{ paddingTop: 'env(safe-area-inset-top)', margin: 0 }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header شريط علوي موحد */}
