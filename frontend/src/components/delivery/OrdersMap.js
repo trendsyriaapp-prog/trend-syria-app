@@ -308,23 +308,23 @@ const OrdersMap = ({
               className="absolute inset-0 bg-white"
               onClick={e => e.stopPropagation()}
             >
-              {/* Header مصغر جداً */}
-              <div className="absolute top-2 right-2 z-[1000] flex items-center gap-2">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 bg-white shadow-lg rounded-full"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m12 19 7-7-7-7"/>
-                    <path d="M19 12H5"/>
-                  </svg>
-                </button>
-                <span className="bg-white shadow-lg rounded-full px-3 py-1.5 text-sm font-bold text-gray-800">
-                  خريطة الطلبات
-                </span>
+              {/* Header شريط علوي */}
+              <div className="bg-white shadow-sm flex items-center justify-between px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m12 19 7-7-7-7"/>
+                      <path d="M19 12H5"/>
+                    </svg>
+                  </button>
+                  <span className="text-sm font-bold text-gray-800">خريطة الطلبات</span>
+                </div>
                 <button
                   onClick={getDriverLocation}
-                  className="p-2 bg-orange-500 text-white shadow-lg rounded-full"
+                  className="p-1.5 bg-orange-500 text-white rounded-full"
                   title="تحديث موقعي"
                 >
                   <Locate size={16} />
@@ -373,7 +373,7 @@ const OrdersMap = ({
               </div>
 
               {/* الخريطة - ملء الشاشة */}
-              <div className="h-screen">
+              <div className="h-[calc(100vh-44px)]">
                 <MapContainer
                   center={mapCenter}
                   zoom={13}
