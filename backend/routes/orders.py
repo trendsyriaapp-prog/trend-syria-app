@@ -117,7 +117,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             "commission_rate": commission_info["commission_rate"],
             "commission_amount": item_commission,
             "seller_amount": seller_amount,
-            "image": product["images"][0] if product["images"] else None
+            "image": product.get("images", [None])[0] if product.get("images") else product.get("image")
         })
         total += item_total
         total_commission += item_commission
