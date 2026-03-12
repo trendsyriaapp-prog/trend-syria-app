@@ -365,24 +365,6 @@ const OrdersMap = ({
                   ))}
                 </MapContainer>
               </div>
-
-              {/* ملخص الطلبات المجمعة */}
-              {batchGroups.length > 0 && (
-                <div className="absolute bottom-4 left-4 right-4 bg-purple-500 text-white p-3 rounded-xl shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm">⭐ طلبات مجمعة</p>
-                      <p className="text-xs text-purple-200">
-                        {batchGroups.length} دفعة • {batchOrders.length} طلب
-                      </p>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs text-purple-200">مكافأة إضافية</p>
-                      <p className="font-bold">+2,000 ل.س/دفعة</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </motion.div>
           </motion.div>
         )}
