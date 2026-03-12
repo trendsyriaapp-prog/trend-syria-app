@@ -1301,7 +1301,7 @@ class LocationUpdate(BaseModel):
     speed: Optional[float] = None    # السرعة بالكم/ساعة
 
 @router.post("/location/update")
-async def update_driver_location(location: LocationUpdate, user: dict = Depends(get_current_user)):
+async def update_driver_location_v2(location: LocationUpdate, user: dict = Depends(get_current_user)):
     """تحديث موقع السائق الحالي"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1496,3 +1496,243 @@ async def get_driver_penalty_info(driver_id: str, user: dict = Depends(get_curre
         "history": driver.get("penalty_history", [])[-20:]
     }
 
+
+
+# ============== نظام مخالفات طلبات المنتجات ==============
+
+class ViolationCreate(BaseModel):
+    driver_id: str
+    order_id: str
+    violation_type: str  # "late_delivery", "undelivered"
+    amount: float
+    reason: str
+
+@router.get("/violations")
+async def get_driver_violations(user: dict = Depends(get_current_user)):
+    """الحصول على مخالفات السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    violations = await db.driver_violations.find(
+        {"driver_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(length=50)
+    
+    total_deductions = sum(v.get("amount", 0) for v in violations if v.get("status") == "applied")
+    
+    return {
+        "violations": violations,
+        "total_deductions": total_deductions,
+        "total_count": len(violations)
+    }
+
+@router.post("/check-undelivered-orders")
+async def check_undelivered_product_orders(user: dict = Depends(get_current_user)):
+    """
+    التحقق من الطلبات غير المُسلّمة في نهاية اليوم
+    يُستدعى تلقائياً أو يدوياً من المدير
+    """
+    if user["user_type"] not in ["admin", "delivery"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # جلب إعدادات ساعات العمل
+    settings = await db.platform_settings.find_one({"id": "main"})
+    working_hours = settings.get("working_hours", {}) if settings else {}
+    end_hour = working_hours.get("end_hour", 22)
+    
+    now = datetime.now(timezone.utc)
+    current_hour = now.hour
+    
+    # فقط التحقق بعد انتهاء ساعات العمل
+    if current_hour < end_hour:
+        return {"message": "لم تنتهِ ساعات العمل بعد", "end_hour": end_hour, "current_hour": current_hour}
+    
+    # البحث عن طلبات المنتجات غير المُسلّمة للسائق
+    driver_id = user["id"] if user["user_type"] == "delivery" else None
+    
+    query = {
+        "status": {"$in": ["shipped", "out_for_delivery"]},
+        "delivery_status": {"$in": ["picked_up", "in_transit", "pending"]},
+        "driver_id": {"$ne": None}
+    }
+    
+    if driver_id:
+        query["driver_id"] = driver_id
+    
+    undelivered_orders = await db.orders.find(query, {"_id": 0}).to_list(length=100)
+    
+    violations_created = []
+    
+    for order in undelivered_orders:
+        order_driver_id = order.get("driver_id")
+        order_id = order.get("id")
+        order_total = order.get("total", 0)
+        
+        # التحقق من عدم وجود مخالفة سابقة لنفس الطلب اليوم
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        existing_violation = await db.driver_violations.find_one({
+            "order_id": order_id,
+            "created_at": {"$gte": today_start}
+        })
+        
+        if existing_violation:
+            continue
+        
+        # إنشاء مخالفة جديدة
+        violation = {
+            "id": str(uuid.uuid4()),
+            "driver_id": order_driver_id,
+            "order_id": order_id,
+            "order_number": order.get("order_number", order_id[:8]),
+            "violation_type": "undelivered",
+            "amount": order_total,
+            "reason": "لم يتم تسليم الطلب قبل نهاية ساعات العمل",
+            "status": "pending",  # pending, applied, disputed, cancelled
+            "created_at": now.isoformat(),
+            "applied_at": None
+        }
+        
+        await db.driver_violations.insert_one(violation)
+        violations_created.append(violation)
+        
+        # إشعار السائق
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": order_driver_id,
+            "title": "⚠️ مخالفة: طلب غير مُسلّم",
+            "message": f"لم تقم بتسليم الطلب #{order.get('order_number', order_id[:8])} قبل نهاية ساعات العمل. سيتم خصم {order_total:,.0f} ل.س",
+            "type": "violation",
+            "is_read": False,
+            "created_at": now.isoformat()
+        })
+    
+    return {
+        "message": f"تم إنشاء {len(violations_created)} مخالفة",
+        "violations": violations_created
+    }
+
+@router.post("/violations/{violation_id}/apply")
+async def apply_violation(violation_id: str, user: dict = Depends(get_current_user)):
+    """تطبيق المخالفة (خصم من رصيد السائق)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    violation = await db.driver_violations.find_one({"id": violation_id})
+    if not violation:
+        raise HTTPException(status_code=404, detail="المخالفة غير موجودة")
+    
+    if violation.get("status") == "applied":
+        raise HTTPException(status_code=400, detail="تم تطبيق هذه المخالفة مسبقاً")
+    
+    driver_id = violation.get("driver_id")
+    amount = violation.get("amount", 0)
+    
+    # خصم من رصيد السائق
+    driver = await db.users.find_one({"id": driver_id})
+    if driver:
+        current_balance = driver.get("wallet_balance", 0)
+        new_balance = current_balance - amount
+        
+        await db.users.update_one(
+            {"id": driver_id},
+            {
+                "$set": {"wallet_balance": new_balance},
+                "$push": {
+                    "wallet_history": {
+                        "type": "violation_deduction",
+                        "amount": -amount,
+                        "balance_after": new_balance,
+                        "description": f"خصم مخالفة: {violation.get('reason')}",
+                        "violation_id": violation_id,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            }
+        )
+    
+    # تحديث حالة المخالفة
+    await db.driver_violations.update_one(
+        {"id": violation_id},
+        {
+            "$set": {
+                "status": "applied",
+                "applied_at": datetime.now(timezone.utc).isoformat(),
+                "applied_by": user["id"]
+            }
+        }
+    )
+    
+    return {"message": "تم تطبيق المخالفة وخصم المبلغ من رصيد السائق"}
+
+@router.post("/violations/{violation_id}/cancel")
+async def cancel_violation(violation_id: str, reason: str = "", user: dict = Depends(get_current_user)):
+    """إلغاء المخالفة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    violation = await db.driver_violations.find_one({"id": violation_id})
+    if not violation:
+        raise HTTPException(status_code=404, detail="المخالفة غير موجودة")
+    
+    if violation.get("status") == "applied":
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء مخالفة تم تطبيقها")
+    
+    await db.driver_violations.update_one(
+        {"id": violation_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancelled_at": datetime.now(timezone.utc).isoformat(),
+                "cancelled_by": user["id"],
+                "cancellation_reason": reason
+            }
+        }
+    )
+    
+    # إشعار السائق
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": violation.get("driver_id"),
+        "title": "✅ تم إلغاء المخالفة",
+        "message": f"تم إلغاء المخالفة للطلب #{violation.get('order_number')}",
+        "type": "violation_cancelled",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "تم إلغاء المخالفة"}
+
+# Admin endpoint للحصول على جميع المخالفات
+@router.get("/admin/violations")
+async def get_all_violations(
+    status: str = None,
+    user: dict = Depends(get_current_user)
+):
+    """الحصول على جميع المخالفات (للمدير)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    violations = await db.driver_violations.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=200)
+    
+    # إضافة معلومات السائق لكل مخالفة
+    for v in violations:
+        driver = await db.users.find_one({"id": v.get("driver_id")}, {"_id": 0, "name": 1, "phone": 1})
+        v["driver_name"] = driver.get("name") if driver else "غير معروف"
+        v["driver_phone"] = driver.get("phone") if driver else ""
+    
+    stats = {
+        "total": len(violations),
+        "pending": len([v for v in violations if v.get("status") == "pending"]),
+        "applied": len([v for v in violations if v.get("status") == "applied"]),
+        "cancelled": len([v for v in violations if v.get("status") == "cancelled"]),
+        "total_amount": sum(v.get("amount", 0) for v in violations if v.get("status") == "applied")
+    }
+    
+    return {
+        "violations": violations,
+        "stats": stats
+    }

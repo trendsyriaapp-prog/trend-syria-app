@@ -40,6 +40,7 @@ import CouponsTab from '../components/admin/CouponsTab';
 import DailyDealsTab from '../components/admin/DailyDealsTab';
 import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
 import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
+import ViolationsTab from '../components/admin/ViolationsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -304,6 +305,7 @@ const AdminDashboardPage = () => {
     'delivery-boxes': 'صناديق التوصيل',
     'challenges': 'التحديات والمكافآت',
     'delivery-settings': 'إعدادات التوصيل',
+    'violations': 'مخالفات السائقين',
     'support-tickets': 'تذاكر الدعم الفني',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
@@ -408,6 +410,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'delivery-settings' && user.user_type === 'admin' && (
               <DeliverySettingsTab />
+            )}
+            {activeTab === 'violations' && user.user_type === 'admin' && (
+              <ViolationsTab />
             )}
             {activeTab === 'support-tickets' && (
               <SupportTicketsTab />
@@ -576,6 +581,17 @@ const AdminDashboardPage = () => {
                       <Clock size={16} className="text-cyan-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">إعدادات التوصيل</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('violations')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-red-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="violations-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                      <AlertTriangle size={16} className="text-red-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">مخالفات السائقين</span>
                   </button>
                   
                   <button
