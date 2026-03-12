@@ -390,12 +390,20 @@ const DeliveryDashboard = () => {
       const [availableRes, myRes, availableFoodRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/delivery/available-orders`),
         axios.get(`${API}/delivery/my-orders`),
-        axios.get(`${API}/delivery/available-food-orders`).catch(() => ({ data: [] })),
+        axios.get(`${API}/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
         axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
       setAvailableOrders(availableRes.data);
       setMyOrders(myRes.data);
-      setAvailableFoodOrders(availableFoodRes.data || []);
+      
+      // معالجة طلبات الطعام - دمج الطلبات الفردية والمجمعة
+      const foodData = availableFoodRes.data || {};
+      const singleOrders = foodData.single_orders || [];
+      const batchOrders = (foodData.batch_orders || []).flatMap(batch => 
+        batch.orders.map(order => ({ ...order, is_batch: true, batch_info: batch }))
+      );
+      setAvailableFoodOrders([...singleOrders, ...batchOrders]);
+      
       setMyFoodOrders(myFoodRes.data || []);
     } catch (error) {
       console.error(error);
