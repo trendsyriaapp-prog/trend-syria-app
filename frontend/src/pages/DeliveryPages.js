@@ -573,17 +573,6 @@ const DeliveryDashboard = () => {
               <Home size={14} />
               <span>تصفح كعميل</span>
             </Link>
-            <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              className="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs hover:bg-red-200"
-              data-testid="delivery-logout-btn"
-            >
-              <LogOut size={14} />
-              <span>خروج</span>
-            </button>
           </div>
         </div>
 
