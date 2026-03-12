@@ -330,13 +330,26 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-center min-w-[150px]">
+                        <div className="text-center min-w-[180px]">
                           <p className="font-bold text-sm mb-1">{marker.title}</p>
                           {marker.order && (
                             <>
-                              <p className="text-xs text-gray-500 mb-2">
-                                {marker.order.delivery_address || marker.order.address}
-                              </p>
+                              <div className="text-xs text-gray-600 mb-2 text-right">
+                                <p className="font-medium">{marker.order.delivery_address || marker.order.address}</p>
+                                {marker.order.delivery_city && (
+                                  <p className="text-gray-500">{marker.order.delivery_city}</p>
+                                )}
+                                {(marker.order.customer_phone || marker.order.delivery_phone) && (
+                                  <p className="text-blue-600 mt-1">
+                                    📞 {marker.order.customer_phone || marker.order.delivery_phone}
+                                  </p>
+                                )}
+                              </div>
+                              {marker.order.total && (
+                                <p className="text-orange-600 font-bold text-sm mb-2">
+                                  {(marker.order.total).toLocaleString()} ل.س
+                                </p>
+                              )}
                               {marker.isBatch && (
                                 <span className="inline-block bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full mb-2">
                                   ⭐ طلب مجمع
