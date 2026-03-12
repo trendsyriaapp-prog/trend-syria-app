@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock } from 'lucide-react';
+import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock, Star } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import { 
   getCurrentLocation, 
   calculateOrderDistances, 
   formatDistance 
 } from '../../utils/distanceCalculator';
+import OrdersMap from './OrdersMap';
 
 // فتح العنوان في خرائط Google
 const openInGoogleMaps = (address, city) => {
@@ -113,6 +114,17 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
 
   return (
     <div className="space-y-4">
+      {/* زر الخريطة التفاعلية */}
+      {allOrders.length > 0 && (
+        <OrdersMap
+          orders={shopOrders}
+          foodOrders={displayFoodOrders}
+          driverLocation={driverLocation}
+          onTakeOrder={onTakeOrder}
+          onTakeFoodOrder={onTakeFoodOrder}
+        />
+      )}
+
       {/* زر تحديد الموقع إذا لم يتم تحديده */}
       {!driverLocation && allOrders.length > 0 && (
         <button
@@ -149,6 +161,31 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
         </div>
       )}
 
+      {/* الطلبات المجمعة */}
+      {displayFoodOrders.filter(o => o.batch_id).length > 0 && (
+        <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-4 text-white">
+          <div className="flex items-center gap-2 mb-2">
+            <Star size={20} className="text-yellow-300" />
+            <h3 className="font-bold">طلبات مجمعة متاحة!</h3>
+          </div>
+          <p className="text-sm text-purple-100 mb-2">
+            اقبل الطلبات المجمعة واحصل على مكافأة إضافية 2,000 ل.س لكل دفعة
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[...new Set(displayFoodOrders.filter(o => o.batch_id).map(o => o.batch_id))].map(batchId => {
+              const batchOrders = displayFoodOrders.filter(o => o.batch_id === batchId);
+              return (
+                <div key={batchId} className="bg-white/20 rounded-lg px-3 py-1.5 text-xs">
+                  <span className="font-bold">{batchId.slice(0, 12)}</span>
+                  <span className="mx-1">•</span>
+                  <span>{batchOrders.length} متجر</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* طلبات الطعام */}
       {displayFoodOrders.length > 0 && (
         <div>
@@ -162,17 +199,37 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border-2 border-green-200 overflow-hidden"
+                className={`bg-white rounded-xl border-2 overflow-hidden ${
+                  order.batch_id ? 'border-purple-300 ring-2 ring-purple-100' : 'border-green-200'
+                }`}
               >
-                <div className="bg-green-500 text-white px-3 py-1.5 flex items-center justify-between">
+                <div className={`text-white px-3 py-1.5 flex items-center justify-between ${
+                  order.batch_id ? 'bg-purple-500' : 'bg-green-500'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <UtensilsCrossed size={14} />
-                    <span className="text-xs font-bold">طلب طعام</span>
+                    {order.batch_id ? (
+                      <>
+                        <Star size={14} className="text-yellow-300" />
+                        <span className="text-xs font-bold">طلب مجمع ({order.batch_index || 1}/{order.batch_total || 1})</span>
+                      </>
+                    ) : (
+                      <>
+                        <UtensilsCrossed size={14} />
+                        <span className="text-xs font-bold">طلب طعام</span>
+                      </>
+                    )}
                   </div>
-                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                    {order.store_type === 'restaurant' ? 'مطعم' : 
-                     order.store_type === 'grocery' ? 'مواد غذائية' : 'خضروات'}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    {order.batch_id && (
+                      <span className="text-[10px] bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full font-bold">
+                        +2000 ل.س
+                      </span>
+                    )}
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                      {order.store_type === 'restaurant' ? 'مطعم' : 
+                       order.store_type === 'grocery' ? 'مواد غذائية' : 'خضروات'}
+                    </span>
+                  </div>
                 </div>
                 <div className="p-3">
                   {/* رقم الطلب والسعر */}
