@@ -75,6 +75,7 @@ const OrdersMap = ({
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [multiRouteSegments, setMultiRouteSegments] = useState([]); // مسارات متعددة
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
+  const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
 
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
@@ -142,7 +143,38 @@ const OrdersMap = ({
     return { coordinates: points, distance: 0, duration: 0 };
   };
 
-  // عرض جميع مسارات طلباتي بألوان مختلفة
+  // جلب المسار المُحسَّن باستخدام OSRM Trip API
+  const fetchOptimizedRoute = async (points) => {
+    try {
+      // OSRM Trip API يحسب أفضل ترتيب للنقاط
+      const coordsStr = points.map(p => `${p.position[1]},${p.position[0]}`).join(';');
+      const response = await fetch(
+        `https://router.project-osrm.org/trip/v1/driving/${coordsStr}?overview=full&geometries=geojson&source=first&roundtrip=false`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.trips && data.trips[0] && data.waypoints) {
+          // الحصول على الترتيب المُحسَّن
+          const optimizedOrder = data.waypoints.map(wp => wp.waypoint_index);
+          const trip = data.trips[0];
+          
+          return {
+            optimizedOrder,
+            geometry: trip.geometry.coordinates.map(c => [c[1], c[0]]),
+            distance: trip.distance,
+            duration: trip.duration,
+            legs: trip.legs
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching optimized route:', error);
+    }
+    return null;
+  };
+
+  // عرض جميع مسارات طلباتي بألوان مختلفة - مُحسَّن
   const showAllMyOrdersRoutes = async () => {
     const driverPos = currentDriverLocation || driverLocation;
     if (!driverPos) {
@@ -164,62 +196,156 @@ const OrdersMap = ({
     setSelectedOrderForRoute(null);
     setRouteCoordinates([]);
 
-    const segments = [];
-    let totalDistance = 0;
-    let totalDuration = 0;
-    let currentPosition = [driverPos.latitude, driverPos.longitude];
-    let stopNumber = 1;
+    // جمع جميع نقاط التوقف
+    const allPoints = [{
+      position: [driverPos.latitude, driverPos.longitude],
+      type: 'driver',
+      label: 'موقعك',
+      order: null
+    }];
 
-    // جمع جميع نقاط التوقف (المتاجر أولاً، ثم العملاء)
-    const stores = [];
-    const customers = [];
-
-    allMyOrders.forEach((order, index) => {
+    // إضافة المتاجر
+    allMyOrders.forEach((order) => {
       if (order.store_latitude && order.store_longitude) {
-        stores.push({
+        allPoints.push({
           position: [order.store_latitude, order.store_longitude],
           type: 'store',
+          label: order.store_name || order.seller_name || 'متجر',
           order: order,
-          orderIndex: index
+          isFood: !!order.store_name
         });
       }
+    });
+
+    // إضافة العملاء
+    allMyOrders.forEach((order) => {
       if (order.latitude && order.longitude) {
-        customers.push({
+        allPoints.push({
           position: [order.latitude, order.longitude],
           type: 'customer',
+          label: order.customer_name || 'عميل',
           order: order,
-          orderIndex: index
+          isFood: !!order.store_name
         });
       }
     });
 
-    // ترتيب: السائق → المتاجر → العملاء
-    const allStops = [...stores, ...customers];
-
-    for (let i = 0; i < allStops.length; i++) {
-      const stop = allStops[i];
-      const routeData = await fetchSingleRoute([currentPosition, stop.position]);
-      
-      segments.push({
-        coordinates: routeData.coordinates,
-        color: routeColors[i % routeColors.length],
-        stopNumber: stopNumber,
-        stopType: stop.type,
-        order: stop.order,
-        position: stop.position
-      });
-
-      totalDistance += routeData.distance;
-      totalDuration += routeData.duration;
-      currentPosition = stop.position;
-      stopNumber++;
+    if (allPoints.length < 2) {
+      alert('لا توجد نقاط كافية لرسم المسار');
+      setLoadingRoute(false);
+      setShowAllMyRoutes(false);
+      return;
     }
 
-    setMultiRouteSegments(segments);
-    setRouteInfo({
-      distance: (totalDistance / 1000).toFixed(1),
-      duration: Math.round(totalDuration / 60)
-    });
+    // جلب المسار المُحسَّن
+    const optimizedData = await fetchOptimizedRoute(allPoints);
+    
+    if (optimizedData) {
+      // ترتيب النقاط حسب الترتيب المُحسَّن
+      const orderedPoints = optimizedData.optimizedOrder.map(idx => ({
+        ...allPoints[idx],
+        originalIndex: idx
+      }));
+
+      // إنشاء الـ segments الملونة
+      const segments = [];
+      let totalDistance = optimizedData.distance;
+      let totalDuration = optimizedData.duration;
+
+      // تقسيم المسار إلى segments
+      const legs = optimizedData.legs || [];
+      let currentGeometryIndex = 0;
+
+      for (let i = 0; i < orderedPoints.length - 1; i++) {
+        const fromPoint = orderedPoints[i];
+        const toPoint = orderedPoints[i + 1];
+        
+        // جلب مسار كل قطعة على حدة للتلوين
+        const segmentRoute = await fetchSingleRoute([fromPoint.position, toPoint.position]);
+        
+        // تحديد اللون بناءً على نوع النقطة الوجهة
+        let segmentColor;
+        if (toPoint.type === 'store') {
+          segmentColor = toPoint.isFood ? '#22c55e' : '#3b82f6'; // أخضر للمطعم، أزرق للمتجر
+        } else {
+          segmentColor = '#ef4444'; // أحمر للعميل
+        }
+
+        segments.push({
+          coordinates: segmentRoute.coordinates,
+          color: segmentColor,
+          fromPoint,
+          toPoint,
+          stopNumber: i + 1,
+          distance: segmentRoute.distance,
+          duration: segmentRoute.duration
+        });
+      }
+
+      // إضافة علامات النقاط المُرقمة
+      const numberedStops = orderedPoints.map((point, idx) => ({
+        ...point,
+        stopNumber: idx + 1
+      }));
+
+      setMultiRouteSegments(segments);
+      setOptimizedStops(numberedStops);
+      setRouteInfo({
+        distance: (totalDistance / 1000).toFixed(1),
+        duration: Math.round(totalDuration / 60),
+        stopsCount: orderedPoints.length
+      });
+    } else {
+      // Fallback: ترتيب بسيط (المتاجر أولاً ثم العملاء)
+      const stores = allPoints.filter(p => p.type === 'store');
+      const customers = allPoints.filter(p => p.type === 'customer');
+      const driverPoint = allPoints.find(p => p.type === 'driver');
+      
+      const orderedPoints = [driverPoint, ...stores, ...customers];
+      const segments = [];
+      let totalDistance = 0;
+      let totalDuration = 0;
+
+      for (let i = 0; i < orderedPoints.length - 1; i++) {
+        const fromPoint = orderedPoints[i];
+        const toPoint = orderedPoints[i + 1];
+        const segmentRoute = await fetchSingleRoute([fromPoint.position, toPoint.position]);
+        
+        let segmentColor;
+        if (toPoint.type === 'store') {
+          segmentColor = toPoint.isFood ? '#22c55e' : '#3b82f6';
+        } else {
+          segmentColor = '#ef4444';
+        }
+
+        segments.push({
+          coordinates: segmentRoute.coordinates,
+          color: segmentColor,
+          fromPoint,
+          toPoint,
+          stopNumber: i + 1,
+          distance: segmentRoute.distance,
+          duration: segmentRoute.duration
+        });
+
+        totalDistance += segmentRoute.distance || 0;
+        totalDuration += segmentRoute.duration || 0;
+      }
+
+      const numberedStops = orderedPoints.map((point, idx) => ({
+        ...point,
+        stopNumber: idx + 1
+      }));
+
+      setMultiRouteSegments(segments);
+      setOptimizedStops(numberedStops);
+      setRouteInfo({
+        distance: (totalDistance / 1000).toFixed(1),
+        duration: Math.round(totalDuration / 60),
+        stopsCount: orderedPoints.length
+      });
+    }
+
     setLoadingRoute(false);
   };
 
@@ -227,6 +353,7 @@ const OrdersMap = ({
   const hideAllRoutes = () => {
     setShowAllMyRoutes(false);
     setMultiRouteSegments([]);
+    setOptimizedStops([]);
     setSelectedOrderForRoute(null);
     setRouteCoordinates([]);
     setRouteInfo(null);
@@ -649,6 +776,143 @@ const OrdersMap = ({
                     </>
                   )}
 
+                  {/* رسم المسارات المتعددة (جميع طلباتي) */}
+                  {showAllMyRoutes && multiRouteSegments.length > 0 && (
+                    <>
+                      {/* رسم كل segment بلون مختلف */}
+                      {multiRouteSegments.map((segment, idx) => (
+                        <Polyline
+                          key={`segment-${idx}`}
+                          positions={segment.coordinates}
+                          color={segment.color}
+                          weight={6}
+                          opacity={0.9}
+                        />
+                      ))}
+                      
+                      {/* خط أبيض متقطع فوق المسار */}
+                      {multiRouteSegments.map((segment, idx) => (
+                        <Polyline
+                          key={`segment-dash-${idx}`}
+                          positions={segment.coordinates}
+                          color="#ffffff"
+                          weight={2}
+                          opacity={0.4}
+                          dashArray="8, 12"
+                        />
+                      ))}
+                    </>
+                  )}
+
+                  {/* علامات النقاط المُرقمة (جميع طلباتي) */}
+                  {showAllMyRoutes && optimizedStops.length > 0 && (
+                    <>
+                      {optimizedStops.map((stop, idx) => {
+                        // تحديد لون العلامة
+                        let bgColor = '#f97316'; // برتقالي للسائق
+                        let emoji = '🚗';
+                        
+                        if (stop.type === 'store') {
+                          bgColor = stop.isFood ? '#22c55e' : '#3b82f6';
+                          emoji = stop.isFood ? '🍔' : '📦';
+                        } else if (stop.type === 'customer') {
+                          bgColor = '#ef4444';
+                          emoji = '🏠';
+                        }
+
+                        return (
+                          <Marker
+                            key={`stop-${idx}`}
+                            position={stop.position}
+                            icon={L.divIcon({
+                              className: 'numbered-stop-marker',
+                              html: `<div style="
+                                position: relative;
+                                width: 44px;
+                                height: 44px;
+                              ">
+                                <div style="
+                                  background: ${bgColor};
+                                  width: 40px;
+                                  height: 40px;
+                                  border-radius: 50%;
+                                  display: flex;
+                                  align-items: center;
+                                  justify-content: center;
+                                  font-size: 18px;
+                                  border: 3px solid white;
+                                  box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+                                ">${emoji}</div>
+                                <div style="
+                                  position: absolute;
+                                  top: -8px;
+                                  right: -8px;
+                                  background: #1f2937;
+                                  color: white;
+                                  width: 22px;
+                                  height: 22px;
+                                  border-radius: 50%;
+                                  display: flex;
+                                  align-items: center;
+                                  justify-content: center;
+                                  font-size: 11px;
+                                  font-weight: bold;
+                                  border: 2px solid white;
+                                  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                                ">${stop.stopNumber}</div>
+                              </div>`,
+                              iconSize: [44, 44],
+                              iconAnchor: [22, 44],
+                              popupAnchor: [0, -44]
+                            })}
+                          >
+                            <Popup>
+                              <div className="text-center min-w-[160px]">
+                                <div className="flex items-center justify-center gap-1 mb-1">
+                                  <span className="bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full">
+                                    نقطة {stop.stopNumber}
+                                  </span>
+                                </div>
+                                <p className="font-bold text-sm mb-1">
+                                  {stop.type === 'driver' ? '📍 موقعك (البداية)' : 
+                                   stop.type === 'store' ? `🏪 ${stop.label}` : 
+                                   `🏠 ${stop.label}`}
+                                </p>
+                                {stop.order && (
+                                  <div className="text-[11px] text-gray-600 text-right space-y-1">
+                                    {stop.type === 'store' ? (
+                                      <p className="text-green-600 font-medium">📦 استلام الطلب</p>
+                                    ) : (
+                                      <p className="text-red-600 font-medium">🚚 تسليم الطلب</p>
+                                    )}
+                                    <p className="truncate">
+                                      {stop.order.delivery_address || stop.order.address}
+                                    </p>
+                                    {stop.order.total && (
+                                      <p className="text-orange-600 font-bold">
+                                        {stop.order.total.toLocaleString()} ل.س
+                                      </p>
+                                    )}
+                                    {(stop.order.customer_phone || stop.order.delivery_phone) && (
+                                      <p className="text-blue-600">
+                                        📞 {stop.order.customer_phone || stop.order.delivery_phone}
+                                      </p>
+                                    )}
+                                    {stop.order.order_code && (
+                                      <p className="text-gray-500">
+                                        كود: {stop.order.order_code}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </Popup>
+                          </Marker>
+                        );
+                      })}
+                    </>
+                  )}
+
                   {/* علامات نقاط المسار عند تفعيله */}
                   {selectedOrderForRoute && routeCoordinates.length > 0 && (
                     <>
@@ -790,6 +1054,62 @@ const OrdersMap = ({
                         <p className="font-bold text-blue-600 text-lg">{routeInfo.duration} د</p>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* معلومات المسار المُحسَّن (جميع الطلبات) */}
+                {routeInfo && showAllMyRoutes && (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-sm text-gray-800">🛣️ المسار المُحسَّن لجميع طلباتك</h4>
+                      <button 
+                        onClick={hideAllRoutes}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    
+                    {/* دليل الألوان */}
+                    <div className="flex items-center justify-center gap-3 mb-3 text-[10px]">
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                        <span>موقعك</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                        <span>مطعم</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span>متجر</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span>عميل</span>
+                      </span>
+                    </div>
+                    
+                    {/* إحصائيات المسار */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-purple-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-gray-500">نقاط التوقف</p>
+                        <p className="font-bold text-purple-600 text-lg">{routeInfo.stopsCount || optimizedStops.length}</p>
+                      </div>
+                      <div className="bg-orange-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-gray-500">المسافة</p>
+                        <p className="font-bold text-orange-600 text-lg">{routeInfo.distance} كم</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-gray-500">الوقت</p>
+                        <p className="font-bold text-blue-600 text-lg">{routeInfo.duration} د</p>
+                      </div>
+                    </div>
+
+                    {/* ملاحظة */}
+                    <p className="text-[10px] text-gray-400 text-center mt-2">
+                      اضغط على أي علامة لرؤية تفاصيل الطلب
+                    </p>
                   </div>
                 )}
               </div>

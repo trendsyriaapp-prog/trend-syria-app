@@ -17,7 +17,7 @@ const openInGoogleMaps = (address, city) => {
   window.open(mapsUrl, '_blank');
 };
 
-const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all' }) => {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', myOrders = [], myFoodOrders = [] }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [orderDistances, setOrderDistances] = useState({});
@@ -122,6 +122,8 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
           driverLocation={driverLocation}
           onTakeOrder={onTakeOrder}
           onTakeFoodOrder={onTakeFoodOrder}
+          myOrders={myOrders}
+          myFoodOrders={myFoodOrders}
         />
       )}
 

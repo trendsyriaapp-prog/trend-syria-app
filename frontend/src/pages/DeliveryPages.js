@@ -668,6 +668,8 @@ const DeliveryDashboard = () => {
             onTakeOrder={(order) => setShowPickupChecklist(order)}
             onTakeFoodOrder={handleTakeFoodOrder}
             orderTypeFilter={orderTypeFilter}
+            myOrders={myOrders}
+            myFoodOrders={myFoodOrders}
           />
         )}
 
