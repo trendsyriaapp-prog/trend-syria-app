@@ -309,7 +309,7 @@ const OrdersMap = ({
               onClick={e => e.stopPropagation()}
             >
               {/* Header شريط علوي موحد */}
-              <div className="bg-white flex items-center justify-between px-2 py-1.5 gap-2 overflow-x-auto border-b border-gray-200">
+              <div className="bg-white flex items-center justify-between px-2 py-1.5 gap-2 overflow-x-auto">
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => setIsOpen(false)}
@@ -355,7 +355,7 @@ const OrdersMap = ({
               </div>
 
               {/* دليل الألوان - سطر صغير */}
-              <div className="bg-white px-2 py-1 flex justify-center gap-3 text-[9px] border-b border-gray-100">
+              <div className="bg-white px-2 py-1 flex justify-center gap-3 text-[9px]">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-500"></span> مطعم
                 </span>
