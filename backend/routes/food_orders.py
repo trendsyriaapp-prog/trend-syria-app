@@ -811,7 +811,7 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
     # الطلبات الجاهزة للاستلام وانتهت مهلة إلغائها
     orders = await db.food_orders.find(
         {
-            "status": "ready",
+            "status": {"$in": ["ready", "ready_for_pickup"]},
             "driver_id": None,
             "$or": [
                 {"can_process_after": {"$lte": now}},
@@ -830,11 +830,13 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
         
         # إرسال إشعار للسائق إذا لم يُرسل بعد
         if not order.get("driver_notified", False):
+            order_num = order.get('order_number', order.get('id', '')[:8])
+            store_name = order.get('store_name', 'متجر')
             await db.notifications.insert_one({
                 "id": str(uuid.uuid4()),
                 "user_id": user["id"],
                 "title": "🛵 طلب جاهز للتوصيل!",
-                "message": f"طلب #{order['order_number']} من {order['store_name']} جاهز للاستلام",
+                "message": f"طلب #{order_num} من {store_name} جاهز للاستلام",
                 "type": "food_order_ready",
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
