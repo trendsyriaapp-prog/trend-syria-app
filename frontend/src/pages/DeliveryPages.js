@@ -588,6 +588,47 @@ const DeliveryDashboard = () => {
           workingHoursText={getWorkingHoursText()}
         />
 
+        {/* طلبات الطعام المتاحة - تظهر مباشرة */}
+        {availableFoodOrders.length > 0 && (
+          <div className="mb-2 bg-green-50 border border-green-200 rounded-xl p-2.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">🍔</span>
+                </div>
+                <span className="font-bold text-green-800 text-xs">طلبات طعام جديدة!</span>
+              </div>
+              <span className="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                {availableFoodOrders.length} طلب
+              </span>
+            </div>
+            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+              {availableFoodOrders.slice(0, 3).map((order) => (
+                <div 
+                  key={order.id}
+                  className="bg-white rounded-lg p-2 flex items-center justify-between border border-green-100"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-gray-800 truncate">{order.store_name}</p>
+                    <p className="text-[10px] text-gray-500">{order.delivery_city} • {new Intl.NumberFormat('ar-SY').format(order.total)} ل.س</p>
+                  </div>
+                  <button
+                    onClick={() => handleTakeFoodOrder(order)}
+                    className="bg-green-500 text-white text-[10px] px-2 py-1 rounded-lg font-bold mr-2"
+                  >
+                    قبول
+                  </button>
+                </div>
+              ))}
+            </div>
+            {availableFoodOrders.length > 3 && (
+              <p className="text-[10px] text-green-600 text-center mt-1">
+                +{availableFoodOrders.length - 3} طلبات أخرى
+              </p>
+            )}
+          </div>
+        )}
+
         {/* التحديات والمكافآت */}
         <DriverChallenges />
 
