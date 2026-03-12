@@ -52,16 +52,8 @@ const MapUpdater = ({ center, zoom }) => {
   return null;
 };
 
-// إحداثيات المدن السورية
-const cityCoordinates = {
-  'دمشق': [33.5138, 36.2765],
-  'حلب': [36.2021, 37.1343],
-  'حمص': [34.7324, 36.7137],
-  'اللاذقية': [35.5317, 35.7962],
-  'حماة': [35.1318, 36.7589],
-  'طرطوس': [34.8959, 35.8867],
-  'default': [33.5138, 36.2765] // دمشق كافتراضي
-};
+// إحداثيات دمشق كافتراضي فقط
+const DEFAULT_CENTER = [33.5138, 36.2765];
 
 const OrdersMap = ({ 
   orders = [], 
@@ -74,90 +66,138 @@ const OrdersMap = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [showLayer, setShowLayer] = useState('all'); // all, food, products, customers
-  const [mapCenter, setMapCenter] = useState(cityCoordinates['دمشق']);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [currentDriverLocation, setCurrentDriverLocation] = useState(null);
 
-  // تحويل العناوين إلى إحداثيات تقريبية
-  const getCoordinates = (order) => {
-    const city = order.city || order.delivery_city || 'دمشق';
-    const baseCoords = cityCoordinates[city] || cityCoordinates['default'];
-    
-    // إضافة تباين عشوائي صغير لتفريق العلامات
-    const hash = order.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    const latOffset = ((hash % 100) - 50) * 0.001;
-    const lngOffset = ((hash % 77) - 38) * 0.001;
-    
-    return [baseCoords[0] + latOffset, baseCoords[1] + lngOffset];
+  // الحصول على موقع السائق الحالي
+  const getDriverLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCurrentDriverLocation({ latitude, longitude });
+          setMapCenter([latitude, longitude]);
+        },
+        (error) => {
+          console.log('Error getting location:', error);
+        }
+      );
+    }
+  };
+
+  // تحديث مركز الخريطة عند فتحها
+  useEffect(() => {
+    if (isOpen) {
+      getDriverLocation();
+    }
+  }, [isOpen]);
+
+  // الحصول على إحداثيات الطلب - GPS حقيقي فقط
+  const getOrderCoordinates = (order) => {
+    // إذا كان الطلب يحتوي على إحداثيات GPS حقيقية
+    if (order.latitude && order.longitude) {
+      return [order.latitude, order.longitude];
+    }
+    // إذا لا يوجد GPS، نرجع null
+    return null;
+  };
+
+  // الحصول على إحداثيات المتجر - GPS حقيقي فقط
+  const getStoreCoordinates = (order) => {
+    // إذا كان المتجر يحتوي على إحداثيات GPS
+    if (order.store_latitude && order.store_longitude) {
+      return [order.store_latitude, order.store_longitude];
+    }
+    // إذا لا يوجد GPS للمتجر، نستخدم إحداثيات الطلب مع إزاحة صغيرة
+    if (order.latitude && order.longitude) {
+      return [order.latitude + 0.002, order.longitude + 0.002];
+    }
+    return null;
   };
 
   // تجميع جميع العلامات
   const markers = [];
 
-  // إضافة موقع السائق
-  if (driverLocation) {
+  // إضافة موقع السائق (من GPS الهاتف أو من props)
+  const activeDriverLocation = currentDriverLocation || driverLocation;
+  if (activeDriverLocation) {
     markers.push({
       id: 'driver',
       type: 'driver',
-      position: [driverLocation.latitude, driverLocation.longitude],
+      position: [activeDriverLocation.latitude, activeDriverLocation.longitude],
       title: 'موقعك الحالي',
       icon: driverIcon
     });
   }
 
-  // إضافة طلبات الطعام
+  // إضافة طلبات الطعام - فقط التي لديها GPS
   foodOrders.forEach(order => {
-    const coords = getCoordinates(order);
+    const customerCoords = getOrderCoordinates(order);
+    const storeCoords = getStoreCoordinates(order);
     const isBatch = order.batch_id;
     
-    // موقع المتجر
-    markers.push({
-      id: `food-store-${order.id}`,
-      type: 'food-store',
-      position: coords,
-      title: order.store_name || 'متجر طعام',
-      order: order,
-      icon: isBatch ? batchIcon : foodStoreIcon,
-      isBatch
-    });
+    // موقع المتجر (إذا متوفر)
+    if (storeCoords) {
+      markers.push({
+        id: `food-store-${order.id}`,
+        type: 'food-store',
+        position: storeCoords,
+        title: order.store_name || 'متجر طعام',
+        order: order,
+        icon: isBatch ? batchIcon : foodStoreIcon,
+        isBatch
+      });
+    }
     
-    // موقع العميل
-    const customerCoords = getCoordinates({ ...order, id: order.id + '-customer' });
-    markers.push({
-      id: `customer-${order.id}`,
-      type: 'customer',
-      position: customerCoords,
-      title: order.customer_name || 'العميل',
-      order: order,
-      icon: customerIcon
-    });
+    // موقع العميل (إذا متوفر)
+    if (customerCoords) {
+      markers.push({
+        id: `customer-${order.id}`,
+        type: 'customer',
+        position: customerCoords,
+        title: order.customer_name || 'العميل',
+        order: order,
+        icon: customerIcon,
+        hasRealGPS: true
+      });
+    }
   });
 
-  // إضافة طلبات المنتجات
+  // إضافة طلبات المنتجات - فقط التي لديها GPS
   orders.forEach(order => {
-    if (order.order_source === 'food') return; // تجاهل طلبات الطعام المكررة
+    if (order.order_source === 'food') return;
     
-    const coords = getCoordinates(order);
+    const customerCoords = getOrderCoordinates(order);
+    const storeCoords = getStoreCoordinates(order);
     
-    // موقع البائع
-    markers.push({
-      id: `product-store-${order.id}`,
-      type: 'product-store',
-      position: coords,
-      title: order.seller_name || 'متجر',
-      order: order,
-      icon: productStoreIcon
-    });
+    // موقع البائع (إذا متوفر)
+    if (storeCoords) {
+      markers.push({
+        id: `product-store-${order.id}`,
+        type: 'product-store',
+        position: storeCoords,
+        title: order.seller_name || 'متجر',
+        order: order,
+        icon: productStoreIcon
+      });
+    }
     
-    // موقع العميل
-    const customerCoords = getCoordinates({ ...order, id: order.id + '-customer' });
-    markers.push({
-      id: `product-customer-${order.id}`,
-      type: 'customer',
-      position: customerCoords,
-      title: order.customer_name || 'العميل',
-      order: order,
-      icon: customerIcon
-    });
+    // موقع العميل (إذا متوفر)
+    if (customerCoords) {
+      markers.push({
+        id: `product-customer-${order.id}`,
+        type: 'customer',
+        position: customerCoords,
+        title: order.customer_name || 'العميل',
+        order: order,
+        icon: customerIcon,
+        hasRealGPS: true
+      });
+    }
   });
+
+  // حساب عدد الطلبات بدون GPS
+  const ordersWithoutGPS = [...foodOrders, ...orders].filter(o => !o.latitude || !o.longitude).length;
 
   // تصفية العلامات حسب الطبقة المختارة
   const filteredMarkers = markers.filter(m => {
@@ -171,22 +211,38 @@ const OrdersMap = ({
   // عدد الطلبات المجمعة
   const batchOrders = foodOrders.filter(o => o.batch_id);
   const batchGroups = [...new Set(batchOrders.map(o => o.batch_id))];
+  
+  // عدد الطلبات التي لديها GPS
+  const ordersWithGPS = markers.filter(m => m.type === 'customer' && m.hasRealGPS).length;
+  const totalOrders = foodOrders.length + orders.length;
 
   return (
     <>
       {/* زر فتح الخريطة */}
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg"
+        disabled={ordersWithGPS === 0}
+        className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
+          ordersWithGPS > 0 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600' 
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+        }`}
       >
         <Map size={18} />
-        🗺️ عرض الخريطة ({foodOrders.length + orders.length} طلب)
+        🗺️ عرض الخريطة ({ordersWithGPS}/{totalOrders} طلب بموقع GPS)
         {batchGroups.length > 0 && (
           <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
             ⭐ {batchGroups.length} مجمع
           </span>
         )}
       </button>
+      
+      {/* تنبيه الطلبات بدون GPS */}
+      {ordersWithoutGPS > 0 && (
+        <p className="text-xs text-amber-600 text-center mt-1">
+          ⚠️ {ordersWithoutGPS} طلب بدون موقع GPS (طلبات قديمة)
+        </p>
+      )}
 
       {/* نافذة الخريطة */}
       <AnimatePresence>
@@ -211,15 +267,24 @@ const OrdersMap = ({
                 <div>
                   <h2 className="font-bold text-gray-900">خريطة الطلبات</h2>
                   <p className="text-xs text-gray-500">
-                    {filteredMarkers.length} علامة • {foodOrders.length} طعام • {orders.length} منتجات
+                    {filteredMarkers.filter(m => m.type === 'customer').length} عميل بموقع GPS
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <X size={20} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={getDriverLocation}
+                    className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200 rounded-full"
+                    title="تحديث موقعي"
+                  >
+                    <Locate size={18} />
+                  </button>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* فلاتر الطبقات */}
