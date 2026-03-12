@@ -18,10 +18,29 @@ const FoodBatchSuccessPage = () => {
   const location = useLocation();
   const { token } = useAuth();
   const { toast } = useToast();
-  const { batchId, orders = [], totalAmount = 0, storesCount = 0 } = location.state || {};
+  const { batchId, orders = [], totalAmount = 0, storesCount = 0, createdAt } = location.state || {};
   
-  // العد التنازلي - 3 دقائق = 180 ثانية
-  const [timeLeft, setTimeLeft] = useState(180);
+  // حساب الوقت المتبقي بناءً على وقت الإنشاء الفعلي
+  const calculateTimeLeft = () => {
+    // جلب وقت الإنشاء من localStorage أو من الـ state
+    const savedCreatedAt = localStorage.getItem(`batch_${batchId}_created`);
+    const orderCreatedAt = savedCreatedAt || createdAt || new Date().toISOString();
+    
+    // حفظ وقت الإنشاء في localStorage إذا لم يكن موجوداً
+    if (!savedCreatedAt && batchId) {
+      localStorage.setItem(`batch_${batchId}_created`, orderCreatedAt);
+    }
+    
+    const createdTime = new Date(orderCreatedAt).getTime();
+    const now = Date.now();
+    const elapsedSeconds = Math.floor((now - createdTime) / 1000);
+    const remaining = 180 - elapsedSeconds; // 3 دقائق = 180 ثانية
+    
+    return Math.max(0, remaining);
+  };
+  
+  // العد التنازلي
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
   const [cancelling, setCancelling] = useState(false);
   
   // بدء العد التنازلي
@@ -58,6 +77,9 @@ const FoodBatchSuccessPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      // حذف وقت الإنشاء من localStorage
+      localStorage.removeItem(`batch_${batchId}_created`);
+      
       toast({
         title: "تم إلغاء الطلبات",
         description: `تم إلغاء ${orders.length} طلب واسترجاع ${formatPrice(res.data.refunded_amount)}`
@@ -74,6 +96,13 @@ const FoodBatchSuccessPage = () => {
       setCancelling(false);
     }
   };
+  
+  // تنظيف localStorage عند انتهاء المهلة
+  useEffect(() => {
+    if (timeLeft === 0 && batchId) {
+      localStorage.removeItem(`batch_${batchId}_created`);
+    }
+  }, [timeLeft, batchId]);
   
   if (!batchId) {
     return (

@@ -278,7 +278,8 @@ const FoodBatchCheckoutPage = () => {
           batchId: response.data.batch_id,
           orders: response.data.orders,
           totalAmount: response.data.total_amount,
-          storesCount: response.data.stores_count
+          storesCount: response.data.stores_count,
+          createdAt: new Date().toISOString()
         }
       });
       
