@@ -38,20 +38,48 @@ const FoodPage = () => {
   const [userCity, setUserCity] = useState(null);
   const [showCitySelector, setShowCitySelector] = useState(false);
 
-  // جلب مدينة المستخدم
+  // جلب مدينة المستخدم من العنوان الافتراضي
   useEffect(() => {
-    const savedCity = localStorage.getItem('food_delivery_city');
-    if (savedCity) {
-      setUserCity(savedCity);
-      setShowCitySelector(false);
-    } else if (user?.city) {
-      setUserCity(user.city);
-      localStorage.setItem('food_delivery_city', user.city);
-      setShowCitySelector(false);
-    } else {
+    const fetchUserCity = async () => {
+      const savedCity = localStorage.getItem('food_delivery_city');
+      
+      if (savedCity) {
+        setUserCity(savedCity);
+        setShowCitySelector(false);
+        return;
+      }
+      
+      // محاولة جلب العنوان الافتراضي للمستخدم
+      if (user) {
+        try {
+          const res = await axios.get(`${API}/user/addresses`);
+          const addresses = res.data || [];
+          const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+          
+          if (defaultAddr?.city) {
+            setUserCity(defaultAddr.city);
+            localStorage.setItem('food_delivery_city', defaultAddr.city);
+            setShowCitySelector(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching user addresses:', error);
+        }
+        
+        // إذا لم يوجد عنوان، استخدم مدينة المستخدم
+        if (user.city) {
+          setUserCity(user.city);
+          localStorage.setItem('food_delivery_city', user.city);
+          setShowCitySelector(false);
+          return;
+        }
+      }
+      
       // إظهار نافذة اختيار المدينة
       setShowCitySelector(true);
-    }
+    };
+    
+    fetchUserCity();
   }, [user]);
 
   useEffect(() => {
