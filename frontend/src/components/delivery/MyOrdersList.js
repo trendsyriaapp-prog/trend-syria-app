@@ -75,23 +75,20 @@ const MyOrdersList = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* زر الاتصال بالدعم */}
-      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={18} className="text-red-500" />
-            <span className="text-sm text-red-700 font-medium">إذا حدث مشكلة؟</span>
-          </div>
-          <button
-            onClick={callSupport}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
-          >
-            <PhoneCall size={16} />
-            اتصل بالدعم
-          </button>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle size={14} className="text-red-500" />
+          <span className="text-xs text-red-700 font-medium">إذا حدث مشكلة؟</span>
         </div>
-        <p className="text-xs text-red-600 mt-1">رقم الدعم: {supportPhone}</p>
+        <button
+          onClick={callSupport}
+          className="bg-red-500 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1"
+        >
+          <PhoneCall size={12} />
+          اتصل بالدعم
+        </button>
       </div>
 
       {orders.map((order) => {
