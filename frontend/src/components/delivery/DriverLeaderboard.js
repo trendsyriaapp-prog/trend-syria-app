@@ -220,7 +220,7 @@ const LeaderboardRow = ({ driver, isMe, index }) => {
         <div className="text-left">
           <p className="text-sm font-bold text-gray-900">{formatPrice(driver.earnings)}</p>
           {driver.reward > 0 && (
-            <p className="text-xs text-green-600 font-bold">
+            <p className="text-xs text-orange-600 font-bold">
               +{formatPrice(driver.reward)}
             </p>
           )}

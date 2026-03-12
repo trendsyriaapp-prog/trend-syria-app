@@ -17,7 +17,7 @@ const formatPrice = (price) => {
 
 const RARITY_COLORS = {
   common: { bg: 'from-gray-400 to-gray-500', text: 'text-gray-600', label: 'عادي' },
-  uncommon: { bg: 'from-green-400 to-green-500', text: 'text-green-600', label: 'غير شائع' },
+  uncommon: { bg: 'from-orange-400 to-orange-500', text: 'text-orange-600', label: 'غير شائع' },
   rare: { bg: 'from-blue-400 to-blue-500', text: 'text-blue-600', label: 'نادر' },
   legendary: { bg: 'from-purple-400 to-yellow-400', text: 'text-purple-600', label: 'أسطوري' }
 };
@@ -217,7 +217,7 @@ const AchievementCard = ({ achievement }) => {
             {achievement.icon}
           </div>
           {is_unlocked ? (
-            <CheckCircle size={16} className="text-green-500" />
+            <CheckCircle size={16} className="text-orange-500" />
           ) : (
             <Lock size={16} className="text-gray-400" />
           )}
@@ -247,7 +247,7 @@ const AchievementCard = ({ achievement }) => {
         )}
         
         {/* Reward */}
-        <div className={`mt-2 flex items-center gap-1 text-xs ${is_unlocked ? 'text-green-600' : 'text-gray-400'}`}>
+        <div className={`mt-2 flex items-center gap-1 text-xs ${is_unlocked ? 'text-orange-600' : 'text-gray-400'}`}>
           <Gift size={12} />
           <span>{formatPrice(achievement.reward)}</span>
         </div>

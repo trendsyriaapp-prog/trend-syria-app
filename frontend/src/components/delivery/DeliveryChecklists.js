@@ -55,16 +55,16 @@ export const PickupChecklist = ({ order, onComplete, onClose }) => {
               onClick={() => toggleCheck(item.key)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                 checks[item.key]
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-orange-500 bg-orange-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
               <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                checks[item.key] ? 'bg-green-500 text-white' : 'bg-gray-200'
+                checks[item.key] ? 'bg-orange-500 text-white' : 'bg-gray-200'
               }`}>
                 {checks[item.key] ? <CheckCircle size={16} /> : <span className="w-3 h-3 rounded-full bg-gray-400" />}
               </div>
-              <span className={`text-sm ${checks[item.key] ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
+              <span className={`text-sm ${checks[item.key] ? 'text-orange-700 font-medium' : 'text-gray-700'}`}>
                 {item.label}
               </span>
             </button>
@@ -88,7 +88,7 @@ export const PickupChecklist = ({ order, onComplete, onClose }) => {
             disabled={!allChecked}
             className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${
               allChecked
-                ? 'bg-green-500 text-white hover:bg-green-600'
+                ? 'bg-orange-500 text-white hover:bg-orange-600'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -142,7 +142,7 @@ export const DeliveryChecklist = ({ order, onComplete, onClose }) => {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-500 text-white p-4 rounded-t-2xl">
+        <div className="sticky top-0 bg-gradient-to-r from-orange-600 to-orange-500 text-white p-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-lg">قائمة فحص التسليم</h2>
             <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full">
@@ -187,16 +187,16 @@ export const DeliveryChecklist = ({ order, onComplete, onClose }) => {
               disabled={item.key === 'paymentReceived' && order?.payment_method !== 'cash_on_delivery'}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                 checks[item.key]
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-orange-500 bg-orange-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               } ${item.key === 'paymentReceived' && order?.payment_method !== 'cash_on_delivery' ? 'opacity-60' : ''}`}
             >
               <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                checks[item.key] ? 'bg-green-500 text-white' : 'bg-gray-200'
+                checks[item.key] ? 'bg-orange-500 text-white' : 'bg-gray-200'
               }`}>
                 {checks[item.key] ? <CheckCircle size={16} /> : <span className="w-3 h-3 rounded-full bg-gray-400" />}
               </div>
-              <span className={`text-sm ${checks[item.key] ? 'text-green-700 font-medium' : 'text-gray-700'}`}>
+              <span className={`text-sm ${checks[item.key] ? 'text-orange-700 font-medium' : 'text-gray-700'}`}>
                 {item.label}
               </span>
             </button>
@@ -233,7 +233,7 @@ export const DeliveryChecklist = ({ order, onComplete, onClose }) => {
             disabled={!allChecked}
             className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${
               allChecked
-                ? 'bg-green-500 text-white hover:bg-green-600'
+                ? 'bg-orange-500 text-white hover:bg-orange-600'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >

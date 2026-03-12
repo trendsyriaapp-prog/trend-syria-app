@@ -103,9 +103,9 @@ const ReportDriverModal = ({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4"
               >
-                <CheckCircle size={40} className="text-green-500" />
+                <CheckCircle size={40} className="text-orange-500" />
               </motion.div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">تم إرسال البلاغ</h3>
               <p className="text-gray-500 text-sm">سيتم مراجعة البلاغ من قبل الإدارة واتخاذ الإجراء المناسب.</p>

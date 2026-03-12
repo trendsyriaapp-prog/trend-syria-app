@@ -61,7 +61,7 @@ const MyOrdersList = ({
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'delivered': return 'bg-green-100 text-green-600';
+      case 'delivered': return 'bg-orange-100 text-orange-600';
       case 'on_the_way': return 'bg-orange-100 text-orange-600';
       case 'picked_up': return 'bg-blue-100 text-blue-600';
       case 'out_for_delivery': return 'bg-purple-100 text-purple-600';
@@ -167,8 +167,8 @@ const MyOrdersList = ({
                       )}
                       className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${
                         !canStartDelivery 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-green-100 text-green-700 border border-green-300'
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-orange-100 text-orange-700 border border-orange-300'
                       }`}
                       data-testid={`open-seller-maps-${order.id}`}
                     >
@@ -242,7 +242,7 @@ const MyOrdersList = ({
                 {canComplete && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
-                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={14} />
                     تأكيد التسليم
@@ -293,15 +293,15 @@ const MyOrdersList = ({
             key={order.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl border-2 border-green-200 overflow-hidden"
+            className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-green-500 text-white px-3 py-2 flex items-center justify-between">
+            <div className="bg-orange-500 text-white px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">🍔 طلب طعام #{orderNumber}</span>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full ${
-                isDelivered ? 'bg-green-700' : 'bg-white/20'
+                isDelivered ? 'bg-orange-700' : 'bg-white/20'
               }`}>
                 {getStatusLabel(order.status)}
               </span>
@@ -309,10 +309,10 @@ const MyOrdersList = ({
 
             <div className="p-3">
               {/* معلومات المتجر */}
-              <div className="bg-green-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-green-700 mb-1">📍 من: {order.store_name}</p>
+              <div className="bg-orange-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-orange-700 mb-1">📍 من: {order.store_name}</p>
                 {order.seller_phone && (
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1">
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-orange-600 flex items-center gap-1">
                     <Phone size={12} />
                     {order.seller_phone}
                   </a>
@@ -340,13 +340,13 @@ const MyOrdersList = ({
               </div>
 
               {/* السعر */}
-              <p className="font-bold text-green-600 text-sm mb-3">{formatPrice(order.total)}</p>
+              <p className="font-bold text-orange-600 text-sm mb-3">{formatPrice(order.total)}</p>
 
               {/* أزرار الخرائط */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
                   onClick={() => openInGoogleMaps(order.store_name, 'دمشق')}
-                  className="bg-green-100 text-green-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-green-300"
+                  className="bg-orange-100 text-orange-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-orange-300"
                 >
                   <Map size={12} />
                   🏪 المتجر
@@ -365,7 +365,7 @@ const MyOrdersList = ({
                 {canComplete && !isDelivered && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
-                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={14} />
                     تأكيد التسليم
@@ -390,7 +390,7 @@ const MyOrdersList = ({
                   </div>
                 )}
                 {isDelivered && (
-                  <div className="bg-green-100 text-green-700 py-2 rounded-lg text-center text-sm font-bold">
+                  <div className="bg-orange-100 text-orange-700 py-2 rounded-lg text-center text-sm font-bold">
                     ✅ تم التسليم بنجاح
                   </div>
                 )}

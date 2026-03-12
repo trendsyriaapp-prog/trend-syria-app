@@ -234,8 +234,8 @@ const DeliverySettingsTab = () => {
       <div className="bg-white rounded-xl p-4 border border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-              <CreditCard size={16} className="text-green-600" />
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+              <CreditCard size={16} className="text-orange-600" />
             </div>
             <div>
               <h2 className="font-bold text-sm text-gray-900">حسابات الاستلام</h2>
@@ -248,7 +248,7 @@ const DeliverySettingsTab = () => {
               setNewAccount({ type: 'shamcash', account_number: '', holder_name: '', bank_name: '', is_default: false });
               setShowAddAccount(true);
             }}
-            className="bg-green-500 text-white p-1.5 rounded-lg hover:bg-green-600"
+            className="bg-orange-500 text-white p-1.5 rounded-lg hover:bg-orange-600"
           >
             <Plus size={14} />
           </button>
@@ -268,14 +268,14 @@ const DeliverySettingsTab = () => {
               return (
                 <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${account.is_default ? 'bg-green-100' : 'bg-gray-100'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${account.is_default ? 'bg-orange-100' : 'bg-gray-100'}`}>
                       {paymentType?.icon || '💳'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-xs text-gray-900">{paymentType?.name}</h3>
                         {account.is_default && (
-                          <span className="text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded-full">افتراضي</span>
+                          <span className="text-[8px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full">افتراضي</span>
                         )}
                       </div>
                       {account.bank_name && (

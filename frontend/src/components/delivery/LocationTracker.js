@@ -141,7 +141,7 @@ const LocationTracker = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            tracking ? 'bg-green-500' : 'bg-gray-200'
+            tracking ? 'bg-orange-500' : 'bg-gray-200'
           }`}>
             {tracking ? (
               <Navigation size={20} className="text-white animate-pulse" />
@@ -163,7 +163,7 @@ const LocationTracker = () => {
           className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition-colors ${
             tracking 
               ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-              : 'bg-green-100 text-green-600 hover:bg-green-200'
+              : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
           }`}
         >
           {tracking ? (
@@ -204,8 +204,8 @@ const LocationTracker = () => {
               {lastUpdate && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">آخر تحديث:</span>
-                  <span className="text-green-600 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-orange-600 flex items-center gap-1">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
                     {formatTime(lastUpdate)}
                   </span>
                 </div>

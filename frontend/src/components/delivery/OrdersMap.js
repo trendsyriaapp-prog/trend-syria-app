@@ -290,7 +290,7 @@ const OrdersMap = ({
               {/* دليل الألوان */}
               <div className="px-4 py-2 bg-white border-b border-gray-100 flex gap-3 text-[10px] overflow-x-auto">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-green-500"></span> مطعم
+                  <span className="w-3 h-3 rounded-full bg-orange-500"></span> مطعم
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
                   <span className="w-3 h-3 rounded-full bg-blue-500"></span> متجر
@@ -352,7 +352,7 @@ const OrdersMap = ({
                                     }
                                     setIsOpen(false);
                                   }}
-                                  className="w-full py-1.5 bg-green-500 text-white rounded-lg text-xs font-bold"
+                                  className="w-full py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold"
                                 >
                                   قبول الطلب
                                 </button>

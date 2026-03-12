@@ -14,7 +14,7 @@ const DeliveryHeader = ({ user, isAvailable, isLoadingAvailability, onToggleAvai
         disabled={isLoadingAvailability}
         className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
           isAvailable 
-            ? 'bg-green-500 text-white shadow-md' 
+            ? 'bg-orange-500 text-white shadow-md' 
             : 'bg-gray-300 text-gray-600'
         } ${isLoadingAvailability ? 'opacity-50' : 'cursor-pointer'}`}
       >

@@ -318,14 +318,14 @@ const DriverPerformance = () => {
                         key={i}
                         className={`p-3 rounded-lg text-sm ${
                           tip.type === 'excellent' 
-                            ? 'bg-green-50 border border-green-200' 
+                            ? 'bg-orange-50 border border-orange-200' 
                             : 'bg-amber-50 border border-amber-200'
                         }`}
                       >
-                        <p className={`font-bold ${tip.type === 'excellent' ? 'text-green-700' : 'text-amber-700'}`}>
+                        <p className={`font-bold ${tip.type === 'excellent' ? 'text-orange-700' : 'text-amber-700'}`}>
                           {tip.title}
                         </p>
-                        <p className={`text-xs mt-1 ${tip.type === 'excellent' ? 'text-green-600' : 'text-amber-600'}`}>
+                        <p className={`text-xs mt-1 ${tip.type === 'excellent' ? 'text-orange-600' : 'text-amber-600'}`}>
                           {tip.description}
                         </p>
                       </div>

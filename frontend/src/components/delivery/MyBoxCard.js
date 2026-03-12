@@ -76,14 +76,14 @@ const MyBoxCard = () => {
   }
 
   const isOwned = boxData.is_owned;
-  const progressColor = isOwned ? 'from-green-500 to-emerald-500' : 'from-orange-500 to-amber-500';
+  const progressColor = isOwned ? 'from-orange-500 to-orange-600' : 'from-orange-500 to-amber-500';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`rounded-xl border overflow-hidden ${
-        isOwned ? 'bg-gradient-to-l from-green-50 to-emerald-50 border-green-200' : 'bg-white border-gray-200'
+        isOwned ? 'bg-gradient-to-l from-orange-50 to-orange-100 border-orange-200' : 'bg-white border-gray-200'
       }`}
     >
       {/* Header */}
@@ -177,7 +177,7 @@ const MyBoxCard = () => {
                 <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   <div>
                     <span className={`px-1.5 py-0.5 rounded ${
-                      payment.type === 'deposit' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                      payment.type === 'deposit' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
                     }`}>
                       {payment.type === 'deposit' ? 'إيداع' : 'قسط'}
                     </span>
@@ -193,8 +193,8 @@ const MyBoxCard = () => {
 
       {/* Owned Celebration */}
       {isOwned && (
-        <div className="p-4 bg-green-50 border-t border-green-200">
-          <div className="flex items-center gap-2 text-green-700">
+        <div className="p-4 bg-orange-50 border-t border-orange-200">
+          <div className="flex items-center gap-2 text-orange-700">
             <CheckCircle size={20} />
             <div>
               <p className="font-bold">تهانينا! 🎉</p>

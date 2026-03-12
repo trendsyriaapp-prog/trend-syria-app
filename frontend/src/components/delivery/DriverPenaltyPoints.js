@@ -67,7 +67,7 @@ const DriverPenaltyPoints = () => {
       className={`rounded-xl p-2.5 border ${
         isCritical ? 'bg-red-50 border-red-200' : 
         isLow ? 'bg-yellow-50 border-yellow-200' : 
-        isFull ? 'bg-green-50 border-green-200' :
+        isFull ? 'bg-orange-50 border-orange-200' :
         'bg-white border-gray-200'
       }`}
     >
@@ -75,16 +75,16 @@ const DriverPenaltyPoints = () => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-            isCritical ? 'bg-red-100' : isLow ? 'bg-yellow-100' : 'bg-green-100'
+            isCritical ? 'bg-red-100' : isLow ? 'bg-yellow-100' : 'bg-orange-100'
           }`}>
             <Shield size={14} className={
-              isCritical ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-green-600'
+              isCritical ? 'text-red-500' : isLow ? 'text-yellow-600' : 'text-orange-600'
             } />
           </div>
           <span className="font-bold text-gray-900 text-xs">نقاط السلوك</span>
         </div>
         <span className={`text-sm font-bold ${
-          isCritical ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'
+          isCritical ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-orange-600'
         }`}>
           {current_points}/{max_points}
         </span>
@@ -97,16 +97,16 @@ const DriverPenaltyPoints = () => {
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 0.5 }}
           className={`h-full rounded-full ${
-            isCritical ? 'bg-red-500' : isLow ? 'bg-yellow-500' : 'bg-green-500'
+            isCritical ? 'bg-red-500' : isLow ? 'bg-yellow-500' : 'bg-orange-500'
           }`}
         />
       </div>
 
       {/* Status Message - Compact */}
       {isFull && (
-        <div className="flex items-center gap-1 p-1.5 rounded-lg bg-green-100">
-          <Gift size={10} className="text-green-600" />
-          <span className="text-[10px] font-medium text-green-700">ممتاز! نقاطك في الحد الأقصى</span>
+        <div className="flex items-center gap-1 p-1.5 rounded-lg bg-orange-100">
+          <Gift size={10} className="text-orange-600" />
+          <span className="text-[10px] font-medium text-orange-700">ممتاز! نقاطك في الحد الأقصى</span>
         </div>
       )}
 

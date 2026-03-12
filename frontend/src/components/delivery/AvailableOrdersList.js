@@ -98,7 +98,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
           </div>
           <div>
             <p className="text-[9px] text-gray-500">🏠 للعميل</p>
-            <p className="text-xs font-bold text-green-600">{formatDistance(distance.toCustomer)}</p>
+            <p className="text-xs font-bold text-orange-600">{formatDistance(distance.toCustomer)}</p>
           </div>
           <div>
             <p className="text-[9px] text-gray-500">⏱️ الوقت</p>
@@ -129,7 +129,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       {displayFoodOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <UtensilsCrossed size={18} className="text-green-600" />
+            <UtensilsCrossed size={18} className="text-orange-600" />
             <h3 className="font-bold text-gray-900">طلبات الطعام ({displayFoodOrders.length})</h3>
           </div>
           <div className="space-y-3">
@@ -138,9 +138,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border-2 overflow-hidden border-green-200"
+                className="bg-white rounded-xl border-2 overflow-hidden border-orange-200"
               >
-                <div className="text-white px-3 py-1.5 flex items-center justify-between bg-green-500">
+                <div className="text-white px-3 py-1.5 flex items-center justify-between bg-orange-500">
                   <div className="flex items-center gap-2">
                     <UtensilsCrossed size={14} />
                     <span className="text-xs font-bold">طلب طعام</span>
@@ -158,22 +158,22 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     <span className="font-bold text-sm text-gray-900">
                       #{order.order_number || order.id?.slice(0, 8)}
                     </span>
-                    <span className="font-bold text-green-600">{formatPrice(order.total)}</span>
+                    <span className="font-bold text-orange-600">{formatPrice(order.total)}</span>
                   </div>
 
                   {/* من أين - المتجر */}
-                  <div className="bg-green-50 rounded-lg p-2 mb-2">
+                  <div className="bg-orange-50 rounded-lg p-2 mb-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                         <Navigation size={12} className="text-white" />
                       </div>
-                      <span className="text-xs font-bold text-green-700">من ({order.store_name})</span>
+                      <span className="text-xs font-bold text-orange-700">من ({order.store_name})</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className="mr-8 text-xs text-gray-600">
                         <p>{seller.city}</p>
                         {seller.phone && (
-                          <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-600">
+                          <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-orange-600">
                             <Phone size={10} /> {seller.phone}
                           </a>
                         )}
@@ -211,7 +211,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const storeAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(storeAddr?.address || order.store_name, storeAddr?.city || 'دمشق');
                       }}
-                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                      className="bg-orange-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
                     >
                       <Map size={12} />
                       🏪 المطعم
@@ -237,7 +237,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
+                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors"
                   >
                     {isWorkingHours() ? 'قبول طلب التوصيل' : 'خارج أوقات العمل'}
                   </button>
@@ -271,18 +271,18 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* من أين - البائع */}
-                  <div className="bg-green-50 rounded-lg p-2 mb-2">
+                  <div className="bg-orange-50 rounded-lg p-2 mb-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                         <Navigation size={12} className="text-white" />
                       </div>
-                      <span className="text-xs font-bold text-green-700">من (البائع)</span>
+                      <span className="text-xs font-bold text-orange-700">من (البائع)</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className="mr-8 text-xs text-gray-600">
                         <p className="font-medium">{seller.business_name || seller.name}</p>
                         <p>{seller.city}</p>
-                        <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-600">
+                        <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-orange-600">
                           <Phone size={10} /> {seller.phone}
                         </a>
                       </div>
@@ -318,7 +318,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const sellerAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(sellerAddr?.address || sellerAddr?.business_name, sellerAddr?.city);
                       }}
-                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                      className="bg-orange-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
                     >
                       <Map size={12} />
                       🏪 البائع

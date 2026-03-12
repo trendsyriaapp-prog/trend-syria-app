@@ -85,7 +85,7 @@ const DriverChallenges = () => {
             <p className="text-xs text-gray-500">
               {activeChallenges.length} تحدي نشط
               {completedCount > 0 && (
-                <span className="text-green-600 font-bold mr-2">
+                <span className="text-orange-600 font-bold mr-2">
                   • {completedCount} جاهز للمطالبة!
                 </span>
               )}
@@ -94,7 +94,7 @@ const DriverChallenges = () => {
         </div>
         <div className="flex items-center gap-2">
           {completedCount > 0 && (
-            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+            <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
               {completedCount}
             </span>
           )}
@@ -154,7 +154,7 @@ const ChallengeCard = ({ challenge, onClaim, claiming }) => {
       layout
       className={`bg-white rounded-xl border overflow-hidden ${
         isCompleted && !isClaimed 
-          ? 'border-green-300 ring-2 ring-green-200' 
+          ? 'border-orange-300 ring-2 ring-orange-200' 
           : isClaimed 
             ? 'border-gray-200 opacity-60' 
             : 'border-gray-200'
@@ -199,7 +199,7 @@ const ChallengeCard = ({ challenge, onClaim, claiming }) => {
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 0.5 }}
             className={`h-full rounded-full ${
-              isCompleted ? 'bg-green-500' : 'bg-purple-500'
+              isCompleted ? 'bg-orange-500' : 'bg-purple-500'
             }`}
           />
         </div>
@@ -217,7 +217,7 @@ const ChallengeCard = ({ challenge, onClaim, claiming }) => {
         {/* Action Button */}
         <div className="mt-3">
           {isClaimed ? (
-            <div className="flex items-center justify-center gap-2 text-green-600 py-2">
+            <div className="flex items-center justify-center gap-2 text-orange-600 py-2">
               <CheckCircle size={16} />
               <span className="text-sm font-bold">تم الحصول على المكافأة</span>
             </div>
@@ -225,7 +225,7 @@ const ChallengeCard = ({ challenge, onClaim, claiming }) => {
             <button
               onClick={() => onClaim(challenge.id)}
               disabled={claiming}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               data-testid={`claim-btn-${challenge.id}`}
             >
               {claiming ? (
