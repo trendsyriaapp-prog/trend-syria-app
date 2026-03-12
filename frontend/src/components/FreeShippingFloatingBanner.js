@@ -243,87 +243,76 @@ const FreeShippingFloatingBanner = () => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
+        initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 left-3 right-3 z-50"
+        exit={{ y: -50, opacity: 0 }}
+        className="fixed top-16 left-2 right-2 z-40"
         data-testid="free-shipping-banner"
       >
-        <div className={`rounded-2xl shadow-lg overflow-hidden ${
+        <div className={`rounded-xl shadow-md overflow-hidden ${
           celebrating 
             ? 'bg-gradient-to-r from-orange-500 to-amber-500' 
-            : 'bg-white border border-gray-200'
+            : 'bg-white/95 backdrop-blur-sm border border-gray-100'
         }`}>
           {celebrating ? (
-            // حالة الاحتفال
+            // حالة الاحتفال - مصغرة
             <motion.div 
-              initial={{ scale: 0.8 }}
+              initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="p-3 flex items-center gap-3"
+              className="px-3 py-2 flex items-center gap-2"
             >
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <PartyPopper size={20} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-bold text-sm">🎉 شحن مجاني!</p>
-                <p className="text-white/80 text-xs">{currentStore.seller_name}</p>
-              </div>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 0.5 }}
-                className="text-2xl"
-              >
-                🎊
-              </motion.div>
+              <PartyPopper size={16} className="text-white" />
+              <p className="text-white font-bold text-xs flex-1">🎉 شحن مجاني! - {currentStore.seller_name}</p>
+              <span className="text-lg">🎊</span>
             </motion.div>
           ) : (
-            // حالة التقدم
-            <div className="p-3" data-testid="banner-progress-state">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    {isFood ? (
-                      <Store size={14} className="text-orange-600" />
-                    ) : (
-                      <Truck size={14} className="text-orange-600" />
-                    )}
+            // حالة التقدم - مصغرة
+            <div className="px-3 py-2" data-testid="banner-progress-state">
+              <div className="flex items-center gap-2">
+                {/* أيقونة */}
+                <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  {isFood ? (
+                    <Store size={12} className="text-orange-600" />
+                  ) : (
+                    <Truck size={12} className="text-orange-600" />
+                  )}
+                </div>
+                
+                {/* شريط التقدم مع النص */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] text-gray-600 truncate" data-testid="banner-seller-name">
+                      <span className="font-semibold text-gray-800">{currentStore.seller_name}</span>
+                      {' - أضف '}
+                      <span className="text-orange-600 font-bold">{formatPrice(currentStore.remaining)}</span>
+                    </p>
+                    <span className="text-[10px] font-bold text-orange-600 mr-1" data-testid="banner-progress-percent">
+                      {Math.round(currentStore.progress)}%
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900 truncate max-w-[150px]" data-testid="banner-seller-name">
-                      {currentStore.seller_name}
-                    </p>
-                    <p className="text-[10px] text-gray-500" data-testid="banner-remaining-amount">
-                      أضف {formatPrice(currentStore.remaining)} للشحن المجاني
-                    </p>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${currentStore.progress}%` }}
+                      transition={{ duration: 0.5 }}
+                      className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-orange-600" data-testid="banner-progress-percent">
-                    {Math.round(currentStore.progress)}%
-                  </span>
-                  <button 
-                    onClick={() => setVisible(false)}
-                    className="p-1 hover:bg-gray-100 rounded-full"
-                    data-testid="banner-close-btn"
-                  >
-                    <X size={14} className="text-gray-400" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* شريط التقدم */}
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${currentStore.progress}%` }}
-                  transition={{ duration: 0.5 }}
-                  className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full"
-                />
+                
+                {/* زر الإغلاق */}
+                <button 
+                  onClick={() => setVisible(false)}
+                  className="p-0.5 hover:bg-gray-100 rounded-full flex-shrink-0"
+                  data-testid="banner-close-btn"
+                >
+                  <X size={12} className="text-gray-400" />
+                </button>
               </div>
               
               {/* عدد المتاجر */}
               {storesProgress.filter(s => !s.isFree).length > 1 && (
-                <p className="text-[10px] text-gray-400 mt-1 text-center">
+                <p className="text-[9px] text-gray-400 text-center mt-1">
                   {storesProgress.filter(s => !s.isFree).length} متاجر في السلة
                 </p>
               )}
