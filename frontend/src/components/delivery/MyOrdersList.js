@@ -81,7 +81,7 @@ const MyOrdersList = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-500" />
-            <span className="text-sm text-red-700 font-medium">حدث مشكلة؟</span>
+            <span className="text-sm text-red-700 font-medium">إذا حدث مشكلة؟</span>
           </div>
           <button
             onClick={callSupport}

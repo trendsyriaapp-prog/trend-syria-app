@@ -595,7 +595,7 @@ const DeliveryDashboard = () => {
         <DriverLeaderboard />
 
         {/* نقاط السلوك */}
-        <div className="mb-4">
+        <div className="mb-3">
           <DriverPenaltyPoints />
         </div>
 
@@ -603,20 +603,20 @@ const DeliveryDashboard = () => {
         <DriverAchievements />
 
         {/* تقارير الأداء */}
-        <div className="mb-4">
+        <div className="mb-3">
           <DriverPerformance />
         </div>
 
         {/* بطاقة الصندوق */}
-        <div className="mb-4">
+        <div className="mb-3">
           <MyBoxCard />
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-1 mb-2">
           <button
             onClick={() => setActiveTab('available')}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'available' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'bg-white border border-gray-200 text-gray-700'
@@ -626,7 +626,7 @@ const DeliveryDashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('my')}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'my' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'bg-white border border-gray-200 text-gray-700'
@@ -636,7 +636,7 @@ const DeliveryDashboard = () => {
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               activeTab === 'settings' 
                 ? 'bg-[#FF6B00] text-white' 
                 : 'bg-white border border-gray-200 text-gray-700'
@@ -648,7 +648,7 @@ const DeliveryDashboard = () => {
 
         {/* فلتر نوع الطلبات */}
         {(activeTab === 'available' || activeTab === 'my') && (
-          <div className="flex gap-1 mb-3 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-1 mb-2 bg-gray-100 p-1 rounded-lg">
             <button
               onClick={() => setOrderTypeFilter('all')}
               className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
