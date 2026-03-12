@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import DeliveryHeader from '../components/delivery/DeliveryHeader';
@@ -254,7 +254,7 @@ const DeliveryDocuments = () => {
 
 // لوحة تحكم موظف التوصيل
 const DeliveryDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -566,6 +566,17 @@ const DeliveryDashboard = () => {
               <Home size={14} />
               <span>تصفح كعميل</span>
             </Link>
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs hover:bg-red-200"
+              data-testid="delivery-logout-btn"
+            >
+              <LogOut size={14} />
+              <span>خروج</span>
+            </button>
           </div>
         </div>
 
