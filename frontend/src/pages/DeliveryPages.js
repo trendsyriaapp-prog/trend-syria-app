@@ -549,7 +549,7 @@ const DeliveryDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
-        {/* Header مع زر تصفح كعميل والإشعارات */}
+        {/* Header مع الإشعارات */}
         <div className="flex items-center justify-end mb-2">
           <div className="flex items-center gap-2">
             {/* زر إشعارات Push */}
@@ -566,13 +566,6 @@ const DeliveryDashboard = () => {
               {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
             </button>
             <NotificationsDropdown />
-            <Link
-              to="/?view=customer"
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200"
-            >
-              <Home size={14} />
-              <span>تصفح كعميل</span>
-            </Link>
           </div>
         </div>
 
