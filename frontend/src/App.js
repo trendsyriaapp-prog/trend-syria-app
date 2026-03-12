@@ -13,7 +13,6 @@ import MobileNav from "./components/MobileNav";
 import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
 import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
-import FreeShippingBanner from "./components/FreeShippingBanner";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -80,7 +79,6 @@ function App() {
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
-                  <FreeShippingBanner />
                   <FoodDeliveryBanner />
               <main className="pb-16 md:pb-0">
               <Routes>
