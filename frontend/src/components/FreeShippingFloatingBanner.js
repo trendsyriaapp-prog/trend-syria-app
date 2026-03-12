@@ -35,14 +35,18 @@ const FreeShippingFloatingBanner = () => {
   // تحديد إذا كنا في قسم الطعام
   const isFood = location.pathname.startsWith('/food');
   
+  // التحقق من وجود بيانات السلة
+  const cartItems = cart?.items || [];
+  const cartTotal = cart?.total || 0;
+  
   // جلب بيانات الشحن للمنتجات
   const fetchProductShipping = useCallback(async () => {
-    if (cart.items.length === 0) return [];
+    if (cartItems.length === 0) return [];
     
     try {
       // تجميع المنتجات حسب البائع
       const sellerGroups = {};
-      cart.items.forEach(item => {
+      cartItems.forEach(item => {
         const sellerId = item.seller_id;
         if (!sellerGroups[sellerId]) {
           sellerGroups[sellerId] = {
@@ -79,7 +83,7 @@ const FreeShippingFloatingBanner = () => {
     } catch (error) {
       return [];
     }
-  }, [cart.items]);
+  }, [cartItems]);
   
   // جلب بيانات الشحن للطعام
   const fetchFoodShipping = useCallback(async () => {
@@ -142,9 +146,9 @@ const FreeShippingFloatingBanner = () => {
     };
     
     updateStores();
-  }, [isFood, fetchFoodShipping, fetchProductShipping, dismissedStores, cart.total, foodTotalAmount]);
+  }, [isFood, fetchFoodShipping, fetchProductShipping, dismissedStores, cartTotal, foodTotalAmount]);
   
-  // اختيار المتجر الأقرب للشحن المجاني
+  // اختيار المتجر الأقرب للشحن المجاني وإظهار الشريط
   useEffect(() => {
     if (storesProgress.length === 0) {
       setCurrentStore(null);
@@ -162,33 +166,41 @@ const FreeShippingFloatingBanner = () => {
       );
       setCurrentStore(closest);
       setCelebrating(false);
+      // إظهار الشريط إذا لم نكن في صفحة محظورة
+      if (!shouldHide) {
+        setVisible(true);
+      }
     } else if (storesProgress.length > 0) {
       // جميع المتاجر وصلت للشحن المجاني
       const justCompleted = storesProgress.find(s => s.isFree && !dismissedStores.includes(s.seller_id + '_celebrated'));
       if (justCompleted) {
         setCurrentStore(justCompleted);
         setCelebrating(true);
+        if (!shouldHide) {
+          setVisible(true);
+        }
       } else {
         setCurrentStore(null);
+        setVisible(false);
       }
     }
-  }, [storesProgress, dismissedStores]);
+  }, [storesProgress, dismissedStores, shouldHide]);
   
-  // إظهار الشريط عند إضافة منتج
+  // تحديث الإظهار عند تغيير الإجمالي
   useEffect(() => {
-    const currentTotal = isFood ? foodTotalAmount : cart.total;
-    const prevTotal = isFood ? lastFoodTotal : lastCartTotal;
-    
-    if (currentTotal > prevTotal && currentStore && !shouldHide) {
-      setVisible(true);
-    }
+    const currentTotal = isFood ? foodTotalAmount : cartTotal;
     
     if (isFood) {
       setLastFoodTotal(foodTotalAmount);
     } else {
-      setLastCartTotal(cart.total);
+      setLastCartTotal(cartTotal);
     }
-  }, [cart.total, foodTotalAmount, isFood, currentStore, shouldHide]);
+    
+    // إظهار الشريط إذا كان هناك منتجات
+    if (currentTotal > 0 && currentStore && !shouldHide) {
+      setVisible(true);
+    }
+  }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide]);
   
   // إخفاء بعد الاحتفال
   useEffect(() => {
