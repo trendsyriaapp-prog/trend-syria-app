@@ -2,12 +2,63 @@
 # مسارات التوصيل
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel
 from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
+
+# ===== حالة توفر السائق =====
+
+class AvailabilityUpdate(BaseModel):
+    is_available: bool
+
+@router.get("/availability")
+async def get_availability(user: dict = Depends(get_current_user)):
+    """الحصول على حالة توفر السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    driver_doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0, "is_available": 1}
+    )
+    
+    # افتراضياً السائق غير متاح
+    is_available = driver_doc.get("is_available", False) if driver_doc else False
+    
+    return {"is_available": is_available}
+
+@router.put("/availability")
+async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get_current_user)):
+    """تحديث حالة توفر السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # تحديث حالة التوفر في وثائق السائق
+    result = await db.delivery_documents.update_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {
+            "$set": {
+                "is_available": data.is_available,
+                "availability_updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="لم يتم العثور على بيانات السائق")
+    
+    status_text = "متاح" if data.is_available else "غير متاح"
+    return {
+        "success": True, 
+        "is_available": data.is_available,
+        "message": f"تم تحديث حالتك إلى: {status_text}"
+    }
+
+# ===== نهاية حالة التوفر =====
 
 @router.get("/orders")
 async def get_delivery_orders(user: dict = Depends(get_current_user)):

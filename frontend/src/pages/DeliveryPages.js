@@ -265,6 +265,10 @@ const DeliveryDashboard = () => {
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
 
+  // حالة توفر السائق
+  const [isAvailable, setIsAvailable] = useState(false);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+
   // صوت التنبيه للطلبات الجديدة
   const { playSound } = useNotificationSound();
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -304,13 +308,45 @@ const DeliveryDashboard = () => {
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
   const [orderTypeFilter, setOrderTypeFilter] = useState('food'); // 'all', 'products', 'food' - الافتراضي طعام
-  
-  // Working hours settings
-  const [workingHoursSettings, setWorkingHoursSettings] = useState({ start_hour: 8, end_hour: 18, is_enabled: true });
 
-  // التحقق من الطلبات الجديدة وتشغيل الصوت
+  // جلب حالة التوفر
+  const fetchAvailability = async () => {
+    try {
+      const res = await axios.get(`${API}/delivery/availability`);
+      setIsAvailable(res.data.is_available);
+    } catch (error) {
+      console.error('Error fetching availability:', error);
+    }
+  };
+
+  // تبديل حالة التوفر
+  const toggleAvailability = async () => {
+    setIsLoadingAvailability(true);
+    try {
+      const res = await axios.put(`${API}/delivery/availability`, {
+        is_available: !isAvailable
+      });
+      setIsAvailable(res.data.is_available);
+      toast({
+        title: res.data.is_available ? "🟢 أنت متاح الآن" : "⚫ أنت غير متاح",
+        description: res.data.is_available 
+          ? "ستتلقى إشعارات بالطلبات الجديدة" 
+          : "لن تتلقى إشعارات حتى تصبح متاحاً"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة التوفر",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingAvailability(false);
+    }
+  };
+
+  // التحقق من الطلبات الجديدة وتشغيل الصوت - فقط إذا كان متاحاً
   useEffect(() => {
-    if (soundEnabled) {
+    if (soundEnabled && isAvailable) {
       const totalAvailable = availableOrders.length + availableFoodOrders.length;
       if (totalAvailable > previousAvailableCountRef.current && previousAvailableCountRef.current !== 0) {
         // هناك طلب جديد متاح!
@@ -322,7 +358,7 @@ const DeliveryDashboard = () => {
       }
       previousAvailableCountRef.current = totalAvailable;
     }
-  }, [availableOrders, availableFoodOrders, soundEnabled, playSound, toast]);
+  }, [availableOrders, availableFoodOrders, soundEnabled, isAvailable, playSound, toast]);
 
   // تحديث الطلبات كل 45 ثانية
   useEffect(() => {
@@ -338,19 +374,8 @@ const DeliveryDashboard = () => {
     checkStatusAndFetch();
     fetchWallet();
     fetchMyRatings();
-    fetchWorkingHours();
+    fetchAvailability();
   }, []);
-
-  const fetchWorkingHours = async () => {
-    try {
-      const res = await axios.get(`${API}/settings/delivery-settings`);
-      if (res.data.working_hours) {
-        setWorkingHoursSettings(res.data.working_hours);
-      }
-    } catch (error) {
-      console.error('Error fetching working hours:', error);
-    }
-  };
 
   const fetchMyRatings = async () => {
     try {
@@ -491,24 +516,6 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // التحقق من أوقات العمل
-  const isWorkingHours = () => {
-    if (!workingHoursSettings.is_enabled) {
-      return true; // إذا كان القيد معطلاً، السماح بالعمل في أي وقت
-    }
-    const now = new Date();
-    const hour = now.getHours();
-    return hour >= workingHoursSettings.start_hour && hour < workingHoursSettings.end_hour;
-  };
-  
-  // للحصول على نص ساعات العمل
-  const getWorkingHoursText = () => {
-    if (!workingHoursSettings.is_enabled) {
-      return 'متاح على مدار الساعة';
-    }
-    return `${workingHoursSettings.start_hour} صباحاً - ${workingHoursSettings.end_hour > 12 ? workingHoursSettings.end_hour - 12 : workingHoursSettings.end_hour} ${workingHoursSettings.end_hour >= 12 ? 'مساءً' : 'صباحاً'}`;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -571,8 +578,9 @@ const DeliveryDashboard = () => {
 
         <DeliveryHeader 
           user={user}
-          isWorkingHours={isWorkingHours()}
-          workingHoursText={getWorkingHoursText()}
+          isAvailable={isAvailable}
+          isLoadingAvailability={isLoadingAvailability}
+          onToggleAvailability={toggleAvailability}
         />
 
         {/* التحديات والمكافآت */}

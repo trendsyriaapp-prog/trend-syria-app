@@ -133,6 +133,27 @@ async def notify_user_type(user_type: str, notification: NotificationPayload):
     cursor = db.push_subscriptions.find({"user_type": user_type, "active": True})
     subscriptions = await cursor.to_list(length=1000)
     
+    # إذا كان النوع delivery، نستثني السائقين غير المتاحين
+    if user_type == "delivery":
+        # جلب قائمة السائقين المتاحين
+        available_drivers = await db.delivery_documents.find(
+            {"is_available": True},
+            {"driver_id": 1, "delivery_id": 1}
+        ).to_list(1000)
+        
+        available_driver_ids = set()
+        for doc in available_drivers:
+            if doc.get("driver_id"):
+                available_driver_ids.add(doc["driver_id"])
+            if doc.get("delivery_id"):
+                available_driver_ids.add(doc["delivery_id"])
+        
+        # تصفية الاشتراكات للسائقين المتاحين فقط
+        subscriptions = [
+            sub for sub in subscriptions 
+            if sub.get("user_id") in available_driver_ids
+        ]
+    
     payload = {
         "title": notification.title,
         "body": notification.body,
