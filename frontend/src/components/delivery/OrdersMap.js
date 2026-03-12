@@ -308,29 +308,29 @@ const OrdersMap = ({
               className="absolute inset-0 bg-white"
               onClick={e => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className="p-3 bg-white border-b border-gray-200 flex items-center justify-between shadow-sm">
-                <div>
-                  <h2 className="font-bold text-gray-900">خريطة الطلبات</h2>
-                  <p className="text-xs text-gray-500">
-                    {filteredMarkers.filter(m => m.type === 'customer').length} عميل بموقع GPS
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={getDriverLocation}
-                    className="p-2 bg-orange-100 text-orange-600 hover:bg-orange-200 rounded-full"
-                    title="تحديث موقعي"
-                  >
-                    <Locate size={18} />
-                  </button>
+              {/* Header مصغر */}
+              <div className="px-3 py-2 bg-white border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full"
+                    className="p-1.5 hover:bg-gray-100 rounded-full"
                   >
-                    <X size={20} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m12 19 7-7-7-7"/>
+                      <path d="M19 12H5"/>
+                    </svg>
                   </button>
+                  <div>
+                    <h2 className="font-bold text-sm text-gray-900">خريطة الطلبات</h2>
+                  </div>
                 </div>
+                <button
+                  onClick={getDriverLocation}
+                  className="p-1.5 bg-orange-100 text-orange-600 hover:bg-orange-200 rounded-full"
+                  title="تحديث موقعي"
+                >
+                  <Locate size={16} />
+                </button>
               </div>
 
               {/* فلاتر الطبقات */}
@@ -375,7 +375,7 @@ const OrdersMap = ({
               </div>
 
               {/* الخريطة - ملء الشاشة */}
-              <div className="h-[calc(100vh-140px)]">
+              <div className="h-[calc(100vh-90px)]">
                 <MapContainer
                   center={mapCenter}
                   zoom={13}
