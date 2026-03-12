@@ -285,6 +285,7 @@ const FreeShippingFloatingBanner = () => {
                       <span className="font-semibold text-gray-800">{currentStore.seller_name}</span>
                       {' - أضف '}
                       <span className="text-orange-600 font-bold">{formatPrice(currentStore.remaining)}</span>
+                      {' للشحن المجاني'}
                     </p>
                     <span className="text-[10px] font-bold text-orange-600 mr-1" data-testid="banner-progress-percent">
                       {Math.round(currentStore.progress)}%
