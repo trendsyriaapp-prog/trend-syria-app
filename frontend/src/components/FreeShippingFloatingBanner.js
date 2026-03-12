@@ -1,0 +1,318 @@
+// شريط الشحن المجاني العائم
+// يظهر على جميع الصفحات ما عدا صفحات السلة
+import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Truck, X, PartyPopper, Store } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useFoodCart } from '../context/FoodCartContext';
+import axios from 'axios';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
+
+const FreeShippingFloatingBanner = () => {
+  const location = useLocation();
+  const { cart } = useCart();
+  const { stores: foodStores, totalAmount: foodTotalAmount } = useFoodCart();
+  
+  // حالة الشريط
+  const [visible, setVisible] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const [currentStore, setCurrentStore] = useState(null);
+  const [storesProgress, setStoresProgress] = useState([]);
+  const [dismissedStores, setDismissedStores] = useState([]);
+  const [lastCartTotal, setLastCartTotal] = useState(0);
+  const [lastFoodTotal, setLastFoodTotal] = useState(0);
+  
+  // الصفحات التي لا يظهر فيها الشريط
+  const hiddenPaths = ['/cart', '/food/my-cart', '/food/cart/', '/checkout', '/food/batch-checkout'];
+  const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+  
+  // تحديد إذا كنا في قسم الطعام
+  const isFood = location.pathname.startsWith('/food');
+  
+  // جلب بيانات الشحن للمنتجات
+  const fetchProductShipping = useCallback(async () => {
+    if (cart.items.length === 0) return [];
+    
+    try {
+      // تجميع المنتجات حسب البائع
+      const sellerGroups = {};
+      cart.items.forEach(item => {
+        const sellerId = item.seller_id;
+        if (!sellerGroups[sellerId]) {
+          sellerGroups[sellerId] = {
+            seller_id: sellerId,
+            seller_name: item.seller_name || 'متجر',
+            subtotal: 0,
+            free_shipping_threshold: 150000 // قيمة افتراضية
+          };
+        }
+        sellerGroups[sellerId].subtotal += item.price * item.quantity;
+      });
+      
+      // محاولة جلب بيانات الشحن الفعلية
+      try {
+        const res = await axios.get(`${API}/shipping/cart/detailed?customer_city=دمشق`);
+        if (res.data.sellers) {
+          res.data.sellers.forEach(seller => {
+            if (sellerGroups[seller.seller_id]) {
+              sellerGroups[seller.seller_id].free_shipping_threshold = seller.free_shipping_threshold || 150000;
+            }
+          });
+        }
+      } catch (e) {
+        // استخدام القيم الافتراضية
+      }
+      
+      return Object.values(sellerGroups).map(seller => ({
+        ...seller,
+        type: 'product',
+        progress: Math.min((seller.subtotal / seller.free_shipping_threshold) * 100, 100),
+        remaining: Math.max(seller.free_shipping_threshold - seller.subtotal, 0),
+        isFree: seller.subtotal >= seller.free_shipping_threshold
+      }));
+    } catch (error) {
+      return [];
+    }
+  }, [cart.items]);
+  
+  // جلب بيانات الشحن للطعام
+  const fetchFoodShipping = useCallback(async () => {
+    if (foodStores.length === 0) return [];
+    
+    try {
+      const storesData = await Promise.all(
+        foodStores.map(async (store) => {
+          try {
+            const res = await axios.get(`${API}/food/stores/${store.storeId}`);
+            const storeData = res.data;
+            const freeMin = storeData.free_delivery_minimum || 50000;
+            
+            return {
+              seller_id: store.storeId,
+              seller_name: storeData.name || 'متجر طعام',
+              subtotal: store.totalAmount,
+              free_shipping_threshold: freeMin,
+              type: 'food',
+              progress: Math.min((store.totalAmount / freeMin) * 100, 100),
+              remaining: Math.max(freeMin - store.totalAmount, 0),
+              isFree: store.totalAmount >= freeMin
+            };
+          } catch (e) {
+            return {
+              seller_id: store.storeId,
+              seller_name: 'متجر طعام',
+              subtotal: store.totalAmount,
+              free_shipping_threshold: 50000,
+              type: 'food',
+              progress: Math.min((store.totalAmount / 50000) * 100, 100),
+              remaining: Math.max(50000 - store.totalAmount, 0),
+              isFree: store.totalAmount >= 50000
+            };
+          }
+        })
+      );
+      
+      return storesData;
+    } catch (error) {
+      return [];
+    }
+  }, [foodStores]);
+  
+  // تحديث بيانات المتاجر
+  useEffect(() => {
+    const updateStores = async () => {
+      let stores = [];
+      
+      if (isFood) {
+        stores = await fetchFoodShipping();
+      } else {
+        stores = await fetchProductShipping();
+      }
+      
+      // تصفية المتاجر التي تم تجاهلها
+      stores = stores.filter(s => !dismissedStores.includes(s.seller_id));
+      
+      setStoresProgress(stores);
+    };
+    
+    updateStores();
+  }, [isFood, fetchFoodShipping, fetchProductShipping, dismissedStores, cart.total, foodTotalAmount]);
+  
+  // اختيار المتجر الأقرب للشحن المجاني
+  useEffect(() => {
+    if (storesProgress.length === 0) {
+      setCurrentStore(null);
+      setVisible(false);
+      return;
+    }
+    
+    // المتاجر التي لم تصل للشحن المجاني بعد
+    const pendingStores = storesProgress.filter(s => !s.isFree);
+    
+    if (pendingStores.length > 0) {
+      // اختيار الأقرب (أعلى نسبة تقدم)
+      const closest = pendingStores.reduce((prev, curr) => 
+        curr.progress > prev.progress ? curr : prev
+      );
+      setCurrentStore(closest);
+      setCelebrating(false);
+    } else if (storesProgress.length > 0) {
+      // جميع المتاجر وصلت للشحن المجاني
+      const justCompleted = storesProgress.find(s => s.isFree && !dismissedStores.includes(s.seller_id + '_celebrated'));
+      if (justCompleted) {
+        setCurrentStore(justCompleted);
+        setCelebrating(true);
+      } else {
+        setCurrentStore(null);
+      }
+    }
+  }, [storesProgress, dismissedStores]);
+  
+  // إظهار الشريط عند إضافة منتج
+  useEffect(() => {
+    const currentTotal = isFood ? foodTotalAmount : cart.total;
+    const prevTotal = isFood ? lastFoodTotal : lastCartTotal;
+    
+    if (currentTotal > prevTotal && currentStore && !shouldHide) {
+      setVisible(true);
+    }
+    
+    if (isFood) {
+      setLastFoodTotal(foodTotalAmount);
+    } else {
+      setLastCartTotal(cart.total);
+    }
+  }, [cart.total, foodTotalAmount, isFood, currentStore, shouldHide]);
+  
+  // إخفاء بعد الاحتفال
+  useEffect(() => {
+    if (celebrating && currentStore) {
+      const timer = setTimeout(() => {
+        // إضافة للقائمة المحتفى بها
+        setDismissedStores(prev => [...prev, currentStore.seller_id + '_celebrated']);
+        setCelebrating(false);
+        
+        // التحقق من وجود متاجر أخرى
+        const remaining = storesProgress.filter(
+          s => !s.isFree && s.seller_id !== currentStore.seller_id
+        );
+        
+        if (remaining.length === 0) {
+          setVisible(false);
+        }
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [celebrating, currentStore, storesProgress]);
+  
+  // إعادة تعيين عند تغيير القسم
+  useEffect(() => {
+    setDismissedStores([]);
+  }, [isFood]);
+  
+  // إخفاء في صفحات السلة
+  if (shouldHide || !visible || !currentStore) {
+    return null;
+  }
+  
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        className="fixed bottom-20 left-3 right-3 z-50"
+      >
+        <div className={`rounded-2xl shadow-lg overflow-hidden ${
+          celebrating 
+            ? 'bg-gradient-to-r from-orange-500 to-amber-500' 
+            : 'bg-white border border-gray-200'
+        }`}>
+          {celebrating ? (
+            // حالة الاحتفال
+            <motion.div 
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="p-3 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <PartyPopper size={20} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-bold text-sm">🎉 شحن مجاني!</p>
+                <p className="text-white/80 text-xs">{currentStore.seller_name}</p>
+              </div>
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 0.5 }}
+                className="text-2xl"
+              >
+                🎊
+              </motion.div>
+            </motion.div>
+          ) : (
+            // حالة التقدم
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    {isFood ? (
+                      <Store size={14} className="text-orange-600" />
+                    ) : (
+                      <Truck size={14} className="text-orange-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-900 truncate max-w-[150px]">
+                      {currentStore.seller_name}
+                    </p>
+                    <p className="text-[10px] text-gray-500">
+                      أضف {formatPrice(currentStore.remaining)} للشحن المجاني
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-orange-600">
+                    {Math.round(currentStore.progress)}%
+                  </span>
+                  <button 
+                    onClick={() => setVisible(false)}
+                    className="p-1 hover:bg-gray-100 rounded-full"
+                  >
+                    <X size={14} className="text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* شريط التقدم */}
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${currentStore.progress}%` }}
+                  transition={{ duration: 0.5 }}
+                  className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full"
+                />
+              </div>
+              
+              {/* عدد المتاجر */}
+              {storesProgress.filter(s => !s.isFree).length > 1 && (
+                <p className="text-[10px] text-gray-400 mt-1 text-center">
+                  {storesProgress.filter(s => !s.isFree).length} متاجر في السلة
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export default FreeShippingFloatingBanner;
