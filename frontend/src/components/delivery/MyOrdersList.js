@@ -63,7 +63,7 @@ const MyOrdersList = ({
     switch (status) {
       case 'delivered': return 'bg-orange-100 text-orange-600';
       case 'on_the_way': return 'bg-orange-100 text-orange-600';
-      case 'picked_up': return 'bg-blue-100 text-blue-600';
+      case 'picked_up': return 'bg-green-100 text-green-600';
       case 'out_for_delivery': return 'bg-purple-100 text-purple-600';
       default: return 'bg-yellow-100 text-yellow-600';
     }
@@ -165,11 +165,7 @@ const MyOrdersList = ({
                         order.seller_addresses[0]?.address || order.seller_addresses[0]?.business_name, 
                         order.seller_addresses[0]?.city
                       )}
-                      className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${
-                        !canStartDelivery 
-                          ? 'bg-orange-500 text-white' 
-                          : 'bg-orange-100 text-orange-700 border border-orange-300'
-                      }`}
+                      className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-green-500 text-white"
                       data-testid={`open-seller-maps-${order.id}`}
                     >
                       <Map size={12} />
@@ -179,11 +175,7 @@ const MyOrdersList = ({
                   {/* زر العميل - يظهر كأساسي بعد استلام الطلب */}
                   <button
                     onClick={() => openInGoogleMaps(order.address || order.delivery_address, order.city || order.delivery_city)}
-                    className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 ${
-                      canStartDelivery || canComplete
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-blue-100 text-blue-700 border border-blue-300'
-                    }`}
+                    className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-blue-500 text-white"
                     data-testid={`open-customer-maps-${order.id}`}
                   >
                     <Map size={12} />
@@ -260,7 +252,7 @@ const MyOrdersList = ({
                     {order.seller_phone && (
                       <a
                         href={`tel:${order.seller_phone}`}
-                        className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        className="bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                       >
                         <Phone size={14} />
                         البائع
@@ -346,7 +338,7 @@ const MyOrdersList = ({
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
                   onClick={() => openInGoogleMaps(order.store_name, 'دمشق')}
-                  className="bg-orange-100 text-orange-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-orange-300"
+                  className="bg-green-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                 >
                   <Map size={12} />
                   🏪 المتجر

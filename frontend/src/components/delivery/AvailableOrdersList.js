@@ -90,11 +90,11 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
     if (!distance) return null;
 
     return (
-      <div className="bg-blue-50 rounded-lg p-2 mb-3 border border-blue-100">
+      <div className="bg-green-50 rounded-lg p-2 mb-3 border border-blue-100">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
             <p className="text-[9px] text-gray-500">🚗 للمطعم</p>
-            <p className="text-xs font-bold text-blue-600">{formatDistance(distance.toSeller)}</p>
+            <p className="text-xs font-bold text-green-600">{formatDistance(distance.toSeller)}</p>
           </div>
           <div>
             <p className="text-[9px] text-gray-500">🏠 للعميل</p>
@@ -211,7 +211,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const storeAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(storeAddr?.address || order.store_name, storeAddr?.city || 'دمشق');
                       }}
-                      className="bg-orange-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
                     >
                       <Map size={12} />
                       🏪 المطعم
@@ -318,7 +318,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const sellerAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(sellerAddr?.address || sellerAddr?.business_name, sellerAddr?.city);
                       }}
-                      className="bg-orange-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                      className="bg-green-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
                     >
                       <Map size={12} />
                       🏪 البائع

@@ -150,8 +150,8 @@ const DeliverySettingsTab = () => {
       {/* إعدادات التوصيل */}
       <div className="bg-white rounded-xl p-4 border border-gray-200">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Truck size={16} className="text-blue-600" />
+          <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+            <Truck size={16} className="text-green-600" />
           </div>
           <h2 className="font-bold text-sm text-gray-900">إعدادات التوصيل</h2>
         </div>
@@ -279,7 +279,7 @@ const DeliverySettingsTab = () => {
                         )}
                       </div>
                       {account.bank_name && (
-                        <p className="text-[10px] text-blue-600">{account.bank_name}</p>
+                        <p className="text-[10px] text-green-600">{account.bank_name}</p>
                       )}
                       <p className="text-[10px] text-gray-600 font-mono" dir="ltr">{account.account_number}</p>
                       <p className="text-[10px] text-gray-500">{account.holder_name}</p>
@@ -297,7 +297,7 @@ const DeliverySettingsTab = () => {
                     )}
                     <button
                       onClick={() => handleEditAccount(account)}
-                      className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"
+                      className="p-1.5 text-blue-500 hover:bg-green-50 rounded"
                     >
                       <Edit2 size={12} />
                     </button>

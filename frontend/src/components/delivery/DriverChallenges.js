@@ -143,7 +143,7 @@ const ChallengeCard = ({ challenge, onClaim, claiming }) => {
 
   const getChallengeTypeColor = (type) => {
     switch (type) {
-      case 'weekly': return 'bg-blue-100 text-blue-700';
+      case 'weekly': return 'bg-green-100 text-green-700';
       case 'monthly': return 'bg-purple-100 text-purple-700';
       default: return 'bg-amber-100 text-amber-700';
     }

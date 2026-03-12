@@ -18,7 +18,7 @@ const formatPrice = (price) => {
 const RARITY_COLORS = {
   common: { bg: 'from-gray-400 to-gray-500', text: 'text-gray-600', label: 'عادي' },
   uncommon: { bg: 'from-orange-400 to-orange-500', text: 'text-orange-600', label: 'غير شائع' },
-  rare: { bg: 'from-blue-400 to-blue-500', text: 'text-blue-600', label: 'نادر' },
+  rare: { bg: 'from-blue-400 to-blue-500', text: 'text-green-600', label: 'نادر' },
   legendary: { bg: 'from-purple-400 to-yellow-400', text: 'text-purple-600', label: 'أسطوري' }
 };
 

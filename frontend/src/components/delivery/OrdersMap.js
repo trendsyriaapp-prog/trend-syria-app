@@ -278,7 +278,7 @@ const OrdersMap = ({
                     onClick={() => setShowLayer(layer.key)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                       showLayer === layer.key
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-green-500 text-white'
                         : 'bg-white text-gray-600 border border-gray-200'
                     }`}
                   >
@@ -293,7 +293,7 @@ const OrdersMap = ({
                   <span className="w-3 h-3 rounded-full bg-orange-500"></span> مطعم
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-3 h-3 rounded-full bg-blue-500"></span> متجر
+                  <span className="w-3 h-3 rounded-full bg-green-500"></span> متجر
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
                   <span className="w-3 h-3 rounded-full bg-red-500"></span> عميل

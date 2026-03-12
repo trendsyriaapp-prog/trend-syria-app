@@ -120,10 +120,10 @@ const DriverLeaderboard = () => {
 
             {/* My Position Card (if not in top 10) */}
             {!my_position.is_in_top_10 && (
-              <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-200">
+              <div className="bg-green-50 rounded-xl p-3 mb-4 border border-green-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
                       #{my_position.rank}
                     </div>
                     <div>
@@ -201,7 +201,7 @@ const LeaderboardRow = ({ driver, isMe, index }) => {
         {/* Driver Info */}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <p className={`font-bold ${isMe ? 'text-blue-600' : 'text-gray-900'}`}>
+            <p className={`font-bold ${isMe ? 'text-green-600' : 'text-gray-900'}`}>
               {driver.name}
               {isMe && <span className="text-xs text-blue-500 mr-1">(أنت)</span>}
             </p>

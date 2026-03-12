@@ -153,7 +153,7 @@ const MyBoxCard = () => {
       {/* Info */}
       {!isOwned && (
         <div className="px-4 pb-4">
-          <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+          <div className="bg-green-50 rounded-lg p-3 text-xs text-green-700">
             <p className="font-bold mb-1">💡 كيف تمتلك الصندوق؟</p>
             <p>ادفع {boxData.remaining_installments} قسط إضافي ({formatPrice(boxData.settings?.monthly_installment || 3000)}/شهر) ويصبح الصندوق ملكك!</p>
           </div>
@@ -177,7 +177,7 @@ const MyBoxCard = () => {
                 <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   <div>
                     <span className={`px-1.5 py-0.5 rounded ${
-                      payment.type === 'deposit' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                      payment.type === 'deposit' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                     }`}>
                       {payment.type === 'deposit' ? 'إيداع' : 'قسط'}
                     </span>
