@@ -111,11 +111,17 @@ const CartPage = () => {
     };
   })();
   
-  // Check if shipping is free - نتحقق من عدة مصادر
+  // Check if shipping is free - نتحقق من بيانات كل بائع
   const allSellersFreeShipping = sellerShippingDetails.length > 0 && 
     sellerShippingDetails.every(s => s.shipping_status === 'free');
-  const isFreeShipping = shippingInfo?.qualifies_for_free === true || allSellersFreeShipping;
-  const shippingCost = shippingInfo?.shipping_cost || 0;
+  
+  // حساب تكلفة الشحن الفعلية من بيانات البائعين
+  const actualShippingCost = sellerShippingDetails.length > 0
+    ? sellerShippingDetails.reduce((sum, s) => sum + (s.shipping_cost || 0), 0)
+    : (shippingInfo?.shipping_cost || 0);
+  
+  const isFreeShipping = allSellersFreeShipping || (shippingInfo?.qualifies_for_free === true);
+  const shippingCost = isFreeShipping ? 0 : actualShippingCost;
   
   // Apply coupon
   const handleApplyCoupon = async () => {
