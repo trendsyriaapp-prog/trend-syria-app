@@ -193,9 +193,6 @@ const OrdersMap = ({
     }
   });
 
-  // حساب عدد الطلبات بدون GPS
-  const ordersWithoutGPS = [...foodOrders, ...orders].filter(o => !o.latitude || !o.longitude).length;
-
   // تصفية العلامات حسب الطبقة المختارة
   const filteredMarkers = markers.filter(m => {
     if (showLayer === 'all') return true;
@@ -214,23 +211,16 @@ const OrdersMap = ({
       {/* زر فتح الخريطة */}
       <button
         onClick={() => setIsOpen(true)}
-        disabled={ordersWithGPS === 0}
+        disabled={totalOrders === 0}
         className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
-          ordersWithGPS > 0 
+          totalOrders > 0 
             ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600' 
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
         <Map size={18} />
-        🗺️ عرض الخريطة ({ordersWithGPS}/{totalOrders} طلب بموقع GPS)
+        🗺️ عرض الخريطة ({totalOrders} طلب)
       </button>
-      
-      {/* تنبيه الطلبات بدون GPS */}
-      {ordersWithoutGPS > 0 && (
-        <p className="text-xs text-amber-600 text-center mt-1">
-          ⚠️ {ordersWithoutGPS} طلب بدون موقع GPS (طلبات قديمة)
-        </p>
-      )}
 
       {/* نافذة الخريطة */}
       <AnimatePresence>
