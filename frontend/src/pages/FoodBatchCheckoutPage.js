@@ -63,20 +63,22 @@ const FoodBatchCheckoutPage = () => {
   
   useEffect(() => {
     if (!user || !token) {
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
     
-    if (stores.length === 0) {
-      navigate('/food/my-cart');
+    if (!stores || stores.length === 0) {
+      navigate('/food/my-cart', { replace: true });
       return;
     }
     
     fetchInitialData();
-  }, []);
+  }, [user, token]);
   
   // حساب رسوم التوصيل
   useEffect(() => {
+    if (!stores || stores.length === 0) return;
+    
     const fees = {};
     stores.forEach(store => {
       const details = storeDetails[store.storeId];
@@ -90,7 +92,7 @@ const FoodBatchCheckoutPage = () => {
       }
     });
     setDeliveryFees(fees);
-  }, [stores, storeDetails]);
+  }, [stores.length]);
   
   const totalDeliveryFee = Object.values(deliveryFees).reduce((sum, fee) => sum + fee, 0);
   const grandTotal = totalAmount + totalDeliveryFee;
