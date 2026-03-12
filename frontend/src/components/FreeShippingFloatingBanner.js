@@ -47,16 +47,22 @@ const FreeShippingFloatingBanner = () => {
       // تجميع المنتجات حسب البائع
       const sellerGroups = {};
       cartItems.forEach(item => {
-        const sellerId = item.seller_id;
+        // استخدام بيانات المنتج المدمجة في السلة
+        const sellerId = item.product?.seller_id || item.seller_id;
+        const sellerName = item.product?.seller_name || item.seller_name || 'متجر';
+        const itemPrice = item.item_price || item.product?.price || 0;
+        
+        if (!sellerId) return; // تخطي العناصر بدون seller_id
+        
         if (!sellerGroups[sellerId]) {
           sellerGroups[sellerId] = {
             seller_id: sellerId,
-            seller_name: item.seller_name || 'متجر',
+            seller_name: sellerName,
             subtotal: 0,
             free_shipping_threshold: 150000 // قيمة افتراضية
           };
         }
-        sellerGroups[sellerId].subtotal += item.price * item.quantity;
+        sellerGroups[sellerId].subtotal += itemPrice * item.quantity;
       });
       
       // محاولة جلب بيانات الشحن الفعلية
@@ -241,6 +247,7 @@ const FreeShippingFloatingBanner = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         className="fixed bottom-20 left-3 right-3 z-50"
+        data-testid="free-shipping-banner"
       >
         <div className={`rounded-2xl shadow-lg overflow-hidden ${
           celebrating 
@@ -271,7 +278,7 @@ const FreeShippingFloatingBanner = () => {
             </motion.div>
           ) : (
             // حالة التقدم
-            <div className="p-3">
+            <div className="p-3" data-testid="banner-progress-state">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -282,21 +289,22 @@ const FreeShippingFloatingBanner = () => {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-900 truncate max-w-[150px]">
+                    <p className="text-xs font-bold text-gray-900 truncate max-w-[150px]" data-testid="banner-seller-name">
                       {currentStore.seller_name}
                     </p>
-                    <p className="text-[10px] text-gray-500">
+                    <p className="text-[10px] text-gray-500" data-testid="banner-remaining-amount">
                       أضف {formatPrice(currentStore.remaining)} للشحن المجاني
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-orange-600">
+                  <span className="text-xs font-bold text-orange-600" data-testid="banner-progress-percent">
                     {Math.round(currentStore.progress)}%
                   </span>
                   <button 
                     onClick={() => setVisible(false)}
                     className="p-1 hover:bg-gray-100 rounded-full"
+                    data-testid="banner-close-btn"
                   >
                     <X size={14} className="text-gray-400" />
                   </button>
