@@ -97,6 +97,19 @@ const FoodBatchCheckoutPage = () => {
   const totalDeliveryFee = Object.values(deliveryFees).reduce((sum, fee) => sum + fee, 0);
   const grandTotal = totalAmount + totalDeliveryFee;
   
+  // حساب طريقة الدفع الحالية
+  const getCurrentPaymentMethod = () => {
+    if (useNewPayment || savedPayments.length === 0) {
+      return newPayment.type;
+    } else if (selectedPaymentId) {
+      const pay = savedPayments.find(p => p.id === selectedPaymentId);
+      return pay?.type || 'wallet';
+    }
+    return 'wallet';
+  };
+  
+  const currentPaymentMethod = getCurrentPaymentMethod();
+  
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -741,7 +754,7 @@ const FoodBatchCheckoutPage = () => {
         
         <button
           onClick={handleSubmit}
-          disabled={submitting || (paymentMethod === 'wallet' && walletBalance < grandTotal)}
+          disabled={submitting || (currentPaymentMethod === 'wallet' && walletBalance < grandTotal)}
           className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-4 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md"
         >
           {submitting ? (
