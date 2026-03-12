@@ -141,8 +141,8 @@ const MyOrdersList = ({
               </div>
 
               {/* معلومات العميل */}
-              <div className="bg-blue-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-blue-700 mb-1">معلومات العميل:</p>
+              <div className="bg-slate-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-slate-600 mb-1">معلومات العميل:</p>
                 <p className="text-xs text-gray-600">
                   <User size={12} className="inline ml-1" />
                   {order.user_name || order.customer_name}
@@ -151,7 +151,7 @@ const MyOrdersList = ({
                   <MapPin size={12} className="inline ml-1" />
                   {order.address || order.delivery_address}, {order.city || order.delivery_city}
                 </p>
-                <a href={`tel:${order.phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1 font-bold">
+                <a href={`tel:${order.phone}`} className="text-xs text-slate-600 flex items-center gap-1 mt-1 font-bold">
                   <Phone size={12} />
                   اتصال: {order.phone}
                 </a>
@@ -165,7 +165,7 @@ const MyOrdersList = ({
                         order.seller_addresses[0]?.address || order.seller_addresses[0]?.business_name, 
                         order.seller_addresses[0]?.city
                       )}
-                      className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-green-500 text-white"
+                      className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-gray-700 text-white"
                       data-testid={`open-seller-maps-${order.id}`}
                     >
                       <Map size={12} />
@@ -175,7 +175,7 @@ const MyOrdersList = ({
                   {/* زر العميل - يظهر كأساسي بعد استلام الطلب */}
                   <button
                     onClick={() => openInGoogleMaps(order.address || order.delivery_address, order.city || order.delivery_city)}
-                    className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-blue-500 text-white"
+                    className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-slate-500 text-white"
                     data-testid={`open-customer-maps-${order.id}`}
                   >
                     <Map size={12} />
@@ -205,13 +205,13 @@ const MyOrdersList = ({
 
               {/* معلومات البائع */}
               {order.seller_phone && (
-                <div className="bg-green-50 rounded-lg p-2 mb-3">
-                  <p className="text-xs font-bold text-green-700 mb-1">معلومات البائع:</p>
+                <div className="bg-gray-100 rounded-lg p-2 mb-3">
+                  <p className="text-xs font-bold text-gray-700 mb-1">معلومات البائع:</p>
                   <p className="text-xs text-gray-600">
                     <User size={12} className="inline ml-1" />
                     {order.seller_name || 'البائع'}
                   </p>
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1 mt-1 font-bold">
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-gray-700 flex items-center gap-1 mt-1 font-bold">
                     <Phone size={12} />
                     اتصال: {order.seller_phone}
                   </a>
@@ -244,7 +244,7 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.phone}`}
-                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-slate-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
@@ -252,7 +252,7 @@ const MyOrdersList = ({
                     {order.seller_phone && (
                       <a
                         href={`tel:${order.seller_phone}`}
-                        className="bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        className="bg-gray-700 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                       >
                         <Phone size={14} />
                         البائع
@@ -301,10 +301,10 @@ const MyOrdersList = ({
 
             <div className="p-3">
               {/* معلومات المتجر */}
-              <div className="bg-green-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-green-700 mb-1">📍 من: {order.store_name}</p>
+              <div className="bg-gray-100 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-gray-700 mb-1">📍 من: {order.store_name}</p>
                 {order.seller_phone && (
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1">
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-gray-700 flex items-center gap-1">
                     <Phone size={12} />
                     {order.seller_phone}
                   </a>
@@ -312,10 +312,10 @@ const MyOrdersList = ({
               </div>
 
               {/* معلومات العميل */}
-              <div className="bg-blue-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-blue-700 mb-1">🏠 إلى: {order.customer_name}</p>
+              <div className="bg-slate-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-slate-600 mb-1">🏠 إلى: {order.customer_name}</p>
                 <p className="text-xs text-gray-600">{order.delivery_address}</p>
-                <a href={`tel:${order.customer_phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+                <a href={`tel:${order.customer_phone}`} className="text-xs text-slate-600 flex items-center gap-1 mt-1">
                   <Phone size={12} />
                   {order.customer_phone}
                 </a>
@@ -338,14 +338,14 @@ const MyOrdersList = ({
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
                   onClick={() => openInGoogleMaps(order.store_name, 'دمشق')}
-                  className="bg-green-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                  className="bg-gray-700 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                 >
                   <Map size={12} />
                   🏪 المتجر
                 </button>
                 <button
                   onClick={() => openInGoogleMaps(order.delivery_address, order.delivery_city || 'دمشق')}
-                  className="bg-blue-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                  className="bg-slate-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                 >
                   <Map size={12} />
                   🏠 العميل
@@ -367,14 +367,14 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.customer_phone}`}
-                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-slate-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
                     </a>
                     <a
                       href={`tel:${order.seller_phone}`}
-                      className="bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-gray-700 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       المتجر
