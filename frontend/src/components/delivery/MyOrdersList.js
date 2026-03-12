@@ -100,7 +100,7 @@ const MyOrdersList = ({
         const canStartDelivery = order.delivery_status === 'picked_up' || order.status === 'out_for_delivery';
         const canComplete = order.delivery_status === 'on_the_way' || order.status === 'out_for_delivery';
         const isDelivered = order.delivery_status === 'delivered' || order.status === 'delivered';
-        
+
         return (
           <motion.div
             key={order.id}
@@ -279,6 +279,124 @@ const MyOrdersList = ({
                   تفاصيل الطلب
                   <ChevronRight size={14} className="rotate-180" />
                 </button>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+      
+      {/* طلبات الطعام */}
+      {foodOrders.map((order) => {
+        const orderNumber = order.order_number || order.id?.slice(0, 8).toUpperCase();
+        const canComplete = order.status === 'out_for_delivery';
+        const isDelivered = order.status === 'delivered';
+
+        return (
+          <motion.div
+            key={order.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl border-2 border-green-200 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="bg-green-500 text-white px-3 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold">🍔 طلب طعام #{orderNumber}</span>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                isDelivered ? 'bg-green-700' : 'bg-white/20'
+              }`}>
+                {getStatusLabel(order.status)}
+              </span>
+            </div>
+
+            <div className="p-3">
+              {/* معلومات المتجر */}
+              <div className="bg-green-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-green-700 mb-1">📍 من: {order.store_name}</p>
+                {order.seller_phone && (
+                  <a href={`tel:${order.seller_phone}`} className="text-xs text-green-600 flex items-center gap-1">
+                    <Phone size={12} />
+                    {order.seller_phone}
+                  </a>
+                )}
+              </div>
+
+              {/* معلومات العميل */}
+              <div className="bg-blue-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-blue-700 mb-1">🏠 إلى: {order.customer_name}</p>
+                <p className="text-xs text-gray-600">{order.delivery_address}</p>
+                <a href={`tel:${order.customer_phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+                  <Phone size={12} />
+                  {order.customer_phone}
+                </a>
+              </div>
+
+              {/* المنتجات */}
+              <div className="mb-3">
+                <p className="text-xs font-bold text-gray-700 mb-1">المنتجات:</p>
+                {order.items?.map((item, idx) => (
+                  <p key={idx} className="text-xs text-gray-600">
+                    • {item.name} × {item.quantity}
+                  </p>
+                ))}
+              </div>
+
+              {/* السعر */}
+              <p className="font-bold text-green-600 text-sm mb-3">{formatPrice(order.total)}</p>
+
+              {/* أزرار الخرائط */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => openInGoogleMaps(order.store_name, 'دمشق')}
+                  className="bg-green-100 text-green-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 border border-green-300"
+                >
+                  <Map size={12} />
+                  🏪 المتجر
+                </button>
+                <button
+                  onClick={() => openInGoogleMaps(order.delivery_address, order.delivery_city || 'دمشق')}
+                  className="bg-blue-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                >
+                  <Map size={12} />
+                  🏠 العميل
+                </button>
+              </div>
+
+              {/* أزرار الإجراءات */}
+              <div className="space-y-2">
+                {canComplete && !isDelivered && (
+                  <button
+                    onClick={() => onShowDeliveryChecklist(order)}
+                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={14} />
+                    تأكيد التسليم
+                  </button>
+                )}
+                {!isDelivered && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`tel:${order.customer_phone}`}
+                      className="bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                    >
+                      <Phone size={14} />
+                      العميل
+                    </a>
+                    <a
+                      href={`tel:${order.seller_phone}`}
+                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                    >
+                      <Phone size={14} />
+                      المتجر
+                    </a>
+                  </div>
+                )}
+                {isDelivered && (
+                  <div className="bg-green-100 text-green-700 py-2 rounded-lg text-center text-sm font-bold">
+                    ✅ تم التسليم بنجاح
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
