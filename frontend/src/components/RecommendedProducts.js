@@ -74,10 +74,6 @@ const RecommendedProducts = () => {
     );
   }
 
-  if (products.length === 0) {
-    return null;
-  }
-
   return (
     <div className="py-4">
       {/* Header */}
@@ -120,72 +116,84 @@ const RecommendedProducts = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="px-3 grid grid-cols-2 gap-3">
-        {products.slice(0, 4).map((product, index) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Link
-              to={`/products/${product.id}`}
-              className="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+      {loading ? (
+        <div className="px-3 grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-gray-100 rounded-xl h-48 animate-pulse" />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="px-3 text-center py-8 text-gray-500">
+          <p className="text-sm">لا توجد منتجات في هذا القسم</p>
+        </div>
+      ) : (
+        <div className="px-3 grid grid-cols-2 gap-3">
+          {products.slice(0, 4).map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
             >
-              {/* Image */}
-              <div className="relative aspect-square">
-                <img
-                  src={product.images?.[0] || 'https://via.placeholder.com/200'}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Discount Badge */}
-                {product.discount_percent > 0 && (
-                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                    -{product.discount_percent}%
-                  </span>
-                )}
-                
-                {/* Reason Badge */}
-                {product.recommendation_reason && (
-                  <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-full">
-                    {product.recommendation_reason}
-                  </span>
-                )}
-                
-                {/* Favorite Button */}
-                <button className="absolute top-2 left-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center">
-                  <Heart size={16} className="text-gray-400" />
-                </button>
-              </div>
-              
-              {/* Info */}
-              <div className="p-3">
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-0.5">
-                  {product.name}
-                </h3>
-                {product.city && (
-                  <div className="flex items-center gap-1 text-gray-500 mb-1">
-                    <MapPin size={10} className="text-[#FF6B00]" />
-                    <span className="text-[10px]">{product.city}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <p className="text-orange-500 font-bold text-sm">
-                    {formatPrice(product.price)} ل.س
-                  </p>
-                  {product.original_price && product.original_price > product.price && (
-                    <p className="text-gray-400 text-xs line-through">
-                      {formatPrice(product.original_price)}
-                    </p>
+              <Link
+                to={`/products/${product.id}`}
+                className="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                {/* Image */}
+                <div className="relative aspect-square">
+                  <img
+                    src={product.images?.[0] || product.image || 'https://via.placeholder.com/200'}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Discount Badge */}
+                  {product.discount_percent > 0 && (
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      -{product.discount_percent}%
+                    </span>
                   )}
+                  
+                  {/* Reason Badge */}
+                  {product.recommendation_reason && (
+                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-full">
+                      {product.recommendation_reason}
+                    </span>
+                  )}
+                  
+                  {/* Favorite Button */}
+                  <button className="absolute top-2 left-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center">
+                    <Heart size={16} className="text-gray-400" />
+                  </button>
                 </div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
+                
+                {/* Info */}
+                <div className="p-3">
+                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-0.5">
+                    {product.name}
+                  </h3>
+                  {product.city && (
+                    <div className="flex items-center gap-1 text-gray-500 mb-1">
+                      <MapPin size={10} className="text-[#FF6B00]" />
+                      <span className="text-[10px]">{product.city}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <p className="text-orange-500 font-bold text-sm">
+                      {formatPrice(product.price)} ل.س
+                    </p>
+                    {product.original_price && product.original_price > product.price && (
+                      <p className="text-gray-400 text-xs line-through">
+                        {formatPrice(product.original_price)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
