@@ -203,15 +203,15 @@ const FoodMyCartPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-4">
+      <div className="bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-3 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="p-1">
-              <ArrowRight size={24} />
+              <ArrowRight size={20} />
             </button>
             <div>
-              <h1 className="text-lg font-bold">سلة الطعام</h1>
-              <p className="text-orange-100 text-xs">{totalItems} منتج من {stores.length} متجر</p>
+              <h1 className="text-sm font-bold">سلة الطعام</h1>
+              <p className="text-orange-100 text-[10px]">{totalItems} منتج من {stores.length} متجر</p>
             </div>
           </div>
           <button
@@ -220,7 +220,7 @@ const FoodMyCartPage = () => {
                 clearAllFoodCarts();
               }
             }}
-            className="text-white/80 hover:text-white text-sm"
+            className="text-white/80 hover:text-white text-xs"
           >
             مسح الكل
           </button>
