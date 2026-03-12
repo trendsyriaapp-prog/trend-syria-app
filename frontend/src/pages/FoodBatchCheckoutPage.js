@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   ArrowRight, Store, MapPin, Phone, CreditCard, Wallet, 
-  Clock, Loader2, Check, Package, Truck, Plus, Home, AlertCircle
+  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -47,8 +47,8 @@ const FoodBatchCheckoutPage = () => {
     is_default: false
   });
   
-  // طريقة الدفع
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  // طريقة الدفع - المحفظة فقط
+  const paymentMethod = 'wallet';
   
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
@@ -309,18 +309,12 @@ const FoodBatchCheckoutPage = () => {
           </div>
         </div>
         
-        {/* تنبيه الطلب المجمع */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <Truck size={20} className="text-white" />
-          </div>
-          <div>
-            <p className="font-bold text-blue-900 text-sm">طلب مجمع - سائق واحد</p>
-            <p className="text-xs text-blue-700 mt-1">
-              سيقوم سائق واحد بجمع جميع طلباتك من {stores.length} متجر وتوصيلها إليك دفعة واحدة.
-              هذا يوفر عليك وقت الانتظار!
-            </p>
-          </div>
+        {/* رسالة توضيحية */}
+        <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
+          <Bike size={24} className="text-[#FF6B00] flex-shrink-0" />
+          <p className="text-sm text-gray-700">
+            طلباتك مجموعة، سائق واحد سوف يقوم بجمع طلباتك من المتاجر وتوصيلها إليك دفعة واحدة
+          </p>
         </div>
         
         {/* عنوان التوصيل */}
@@ -487,48 +481,18 @@ const FoodBatchCheckoutPage = () => {
           </h2>
           
           {/* المحفظة */}
-          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-            paymentMethod === 'wallet' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:bg-gray-50'
-          }`}>
-            <input
-              type="radio"
-              name="payment"
-              value="wallet"
-              checked={paymentMethod === 'wallet'}
-              onChange={() => setPaymentMethod('wallet')}
-              className="w-4 h-4 text-[#FF6B00]"
-            />
+          <label className="flex items-center gap-3 p-3 border border-[#FF6B00] bg-orange-50 rounded-xl">
+            <div className="w-4 h-4 bg-[#FF6B00] rounded-full flex items-center justify-center">
+              <Check size={12} className="text-white" />
+            </div>
             <Wallet size={20} className="text-[#FF6B00]" />
             <div className="flex-1">
               <p className="font-medium text-gray-900">المحفظة</p>
               <p className="text-sm text-gray-500">الرصيد: {formatPrice(walletBalance)}</p>
             </div>
-            {paymentMethod === 'wallet' && walletBalance < grandTotal && (
+            {walletBalance < grandTotal && (
               <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
             )}
-          </label>
-          
-          {/* الدفع عند الاستلام */}
-          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-            paymentMethod === 'cash' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:bg-gray-50'
-          }`}>
-            <input
-              type="radio"
-              name="payment"
-              value="cash"
-              checked={paymentMethod === 'cash'}
-              onChange={() => setPaymentMethod('cash')}
-              className="w-4 h-4 text-[#FF6B00]"
-            />
-            <span className="text-xl">💵</span>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">الدفع عند الاستلام</p>
-              <p className="text-sm text-gray-500">ادفع للسائق نقداً</p>
-            </div>
           </label>
         </div>
       </div>
