@@ -629,16 +629,6 @@ const DeliveryDashboard = () => {
           >
             معلوماتي
           </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              activeTab === 'settings' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'bg-white border border-gray-200 text-gray-700'
-            }`}
-          >
-            الإعدادات
-          </button>
         </div>
 
         {/* فلتر نوع الطلبات */}
@@ -669,11 +659,6 @@ const DeliveryDashboard = () => {
               🍔 طعام
             </button>
           </div>
-        )}
-
-        {/* Settings Tab */}
-        {activeTab === 'settings' && (
-          <DeliverySettingsTab />
         )}
 
         {/* Info Tab - معلوماتي */}
