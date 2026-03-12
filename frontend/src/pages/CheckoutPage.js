@@ -55,6 +55,7 @@ const CheckoutPage = () => {
   
   // حالة الشحن
   const [shippingInfo, setShippingInfo] = useState(null);
+  const [sellerShippingDetails, setSellerShippingDetails] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(false);
 
   useEffect(() => {
@@ -76,11 +77,17 @@ const CheckoutPage = () => {
       if (selectedCity && cart.items.length > 0) {
         setShippingLoading(true);
         try {
-          const res = await axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(selectedCity)}`);
-          setShippingInfo(res.data);
+          // جلب بيانات الشحن العامة والتفصيلية لكل بائع
+          const [shippingRes, detailedRes] = await Promise.all([
+            axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(selectedCity)}`),
+            axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(selectedCity)}`)
+          ]);
+          setShippingInfo(shippingRes.data);
+          setSellerShippingDetails(detailedRes.data.sellers || []);
         } catch (error) {
           console.error('Error calculating shipping:', error);
           setShippingInfo(null);
+          setSellerShippingDetails([]);
         } finally {
           setShippingLoading(false);
         }
@@ -88,7 +95,16 @@ const CheckoutPage = () => {
     };
     
     calculateShipping();
-  }, [selectedAddressId, useNewAddress, newAddress.city, savedAddresses, cart.items]);
+  }, [selectedAddressId, useNewAddress, newAddress.city, savedAddresses, cart.items.length, cart.total]);
+  
+  // حساب الشحن الفعلي من بيانات البائعين
+  const allSellersFreeShipping = sellerShippingDetails.length > 0 && 
+    sellerShippingDetails.every(s => s.shipping_status === 'free');
+  const actualShippingCost = sellerShippingDetails.length > 0
+    ? sellerShippingDetails.reduce((sum, s) => sum + (s.shipping_cost || 0), 0)
+    : (shippingInfo?.shipping_cost || 0);
+  const isFreeShipping = allSellersFreeShipping || (shippingInfo?.qualifies_for_free === true);
+  const finalShippingCost = isFreeShipping ? 0 : actualShippingCost;
 
   const fetchSavedData = async () => {
     try {
@@ -504,17 +520,17 @@ const CheckoutPage = () => {
                 <span>التوصيل</span>
                 {shippingLoading ? (
                   <span className="text-gray-400">جاري الحساب...</span>
-                ) : shippingInfo?.qualifies_for_free ? (
+                ) : isFreeShipping ? (
                   <span className="font-bold text-green-600">مجاني</span>
-                ) : shippingInfo?.shipping_cost > 0 ? (
-                  <span className="font-bold text-gray-900">{formatPrice(shippingInfo.shipping_cost)}</span>
+                ) : finalShippingCost > 0 ? (
+                  <span className="font-bold text-gray-900">{formatPrice(finalShippingCost)}</span>
                 ) : (
                   <span className="text-gray-400">اختر العنوان</span>
                 )}
               </div>
               
               {/* رسالة الشحن */}
-              {shippingInfo && !shippingInfo.qualifies_for_free && (
+              {shippingInfo && !isFreeShipping && (
                 <div className="text-[10px] py-1 mb-1">
                   {shippingInfo.remaining_for_free ? (
                     <p className="text-amber-600 bg-amber-50 rounded px-2 py-1">
@@ -534,7 +550,7 @@ const CheckoutPage = () => {
               <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200 text-xs">
                 <span>الإجمالي</span>
                 <span className="text-[#FF6B00]">
-                  {formatPrice(cart.total + (shippingInfo?.shipping_cost || 0))}
+                  {formatPrice(cart.total + finalShippingCost)}
                 </span>
               </div>
             </div>
@@ -573,7 +589,7 @@ const CheckoutPage = () => {
                 {submitting ? (
                   <><Loader2 className="animate-spin" size={14} /> جاري إنشاء الطلب...</>
                 ) : (
-                  <><Truck size={14} /> تأكيد الطلب • {formatPrice(cart.total + (shippingInfo?.shipping_cost || 0))}</>
+                  <><Truck size={14} /> تأكيد الطلب • {formatPrice(cart.total + finalShippingCost)}</>
                 )}
               </button>
             )}
