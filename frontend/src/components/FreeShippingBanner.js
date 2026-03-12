@@ -9,7 +9,6 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// الصفحات المسموحة لعرض الشريط
 const ALLOWED_PATHS = ['/', '/products', '/cart', '/checkout', '/food', '/food/cart', '/food/checkout'];
 const isAllowedPath = (pathname) => {
   if (pathname === '/') return true;
@@ -29,20 +28,7 @@ const FreeShippingBanner = () => {
   const location = useLocation();
   const foodCart = useFoodCart();
   
-  // تحديد نوع الصفحة
   const isFoodPage = location.pathname.startsWith('/food');
-  const isFoodStorePage = location.pathname.startsWith('/food-store/');
-  const isFoodCartPage = location.pathname.startsWith('/food/cart/');
-  const isFoodMainPage = location.pathname === '/food';
-  
-  // استخراج store ID من URL إذا كنا في صفحة متجر
-  const currentStoreId = isFoodStorePage 
-    ? location.pathname.split('/food-store/')[1]?.split('/')[0]
-    : isFoodCartPage 
-      ? location.pathname.split('/food/cart/')[1]?.split('/')[0]
-      : null;
-  
-  // حد الشحن المجاني
   const FREE_SHIPPING_THRESHOLD = isFoodPage ? 50000 : (settings?.free_shipping_threshold || 150000);
   
   const [dismissed, setDismissed] = useState(false);
@@ -64,16 +50,13 @@ const FreeShippingBanner = () => {
       setProductCartItems(0);
       return;
     }
-    
     try {
       const productRes = await axios.get(`${API}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProductCartTotal(productRes.data?.total || 0);
       setProductCartItems(productRes.data?.items?.length || 0);
-    } catch (e) {
-      // تجاهل الأخطاء
-    }
+    } catch (e) {}
   }, [token]);
 
   // جلب معلومات المتاجر في سلة الطعام
@@ -89,7 +72,6 @@ const FreeShippingBanner = () => {
                 return {
                   storeId: store.storeId,
                   storeName: data?.name || 'متجر',
-                  storeCity: data?.city || '',
                   totalAmount: store.totalAmount || 0,
                   progress: Math.min(100, ((store.totalAmount || 0) / FREE_SHIPPING_THRESHOLD) * 100),
                   isFree: (store.totalAmount || 0) >= FREE_SHIPPING_THRESHOLD,
@@ -99,7 +81,6 @@ const FreeShippingBanner = () => {
                 return {
                   storeId: store.storeId,
                   storeName: 'متجر',
-                  storeCity: '',
                   totalAmount: store.totalAmount || 0,
                   progress: Math.min(100, ((store.totalAmount || 0) / FREE_SHIPPING_THRESHOLD) * 100),
                   isFree: (store.totalAmount || 0) >= FREE_SHIPPING_THRESHOLD,
@@ -109,9 +90,7 @@ const FreeShippingBanner = () => {
             })
           );
           setStoresInfo(storesData);
-        } catch (e) {
-          console.error('Error fetching stores info:', e);
-        }
+        } catch (e) {}
       };
       fetchStoresInfo();
     } else {
@@ -119,7 +98,6 @@ const FreeShippingBanner = () => {
     }
   }, [isFoodPage, foodCart?.stores, FREE_SHIPPING_THRESHOLD]);
 
-  // جلب بيانات سلة المنتجات
   useEffect(() => {
     fetchProductCart();
     fetchIntervalRef.current = setInterval(fetchProductCart, 3000);
@@ -128,7 +106,6 @@ const FreeShippingBanner = () => {
     };
   }, [fetchProductCart]);
 
-  // الاستماع لتغييرات السلة
   useEffect(() => {
     const handleCartUpdate = () => fetchProductCart();
     window.addEventListener('cart-updated', handleCartUpdate);
@@ -139,14 +116,12 @@ const FreeShippingBanner = () => {
     };
   }, [fetchProductCart]);
 
-  // حساب المجموع الكلي
   const foodTotal = foodCart?.totalAmount || 0;
   const foodItems = foodCart?.totalItems || 0;
   const cartTotal = isFoodPage ? foodTotal : (foodTotal + productCartTotal);
   const cartItemsCount = foodItems + productCartItems;
   const hasItems = cartItemsCount > 0;
 
-  // منطق الاحتفال
   useEffect(() => {
     const currentTotal = cartTotal;
     const previousTotal = prevCartTotalRef.current;
@@ -154,21 +129,15 @@ const FreeShippingBanner = () => {
     if (currentTotal >= FREE_SHIPPING_THRESHOLD && previousTotal < FREE_SHIPPING_THRESHOLD && previousTotal > 0) {
       setShowCelebration(true);
       setDismissed(false);
-      
       if (celebrationTimeoutRef.current) clearTimeout(celebrationTimeoutRef.current);
-      celebrationTimeoutRef.current = setTimeout(() => {
-        setShowCelebration(false);
-      }, 5000);
+      celebrationTimeoutRef.current = setTimeout(() => setShowCelebration(false), 5000);
     }
-    
     prevCartTotalRef.current = currentTotal;
-    
     return () => {
       if (celebrationTimeoutRef.current) clearTimeout(celebrationTimeoutRef.current);
     };
   }, [cartTotal, FREE_SHIPPING_THRESHOLD]);
 
-  // إعادة تعيين عند تغيير الصفحة
   useEffect(() => {
     setDismissed(false);
   }, [location.pathname]);
@@ -178,23 +147,12 @@ const FreeShippingBanner = () => {
     setShowCelebration(false);
   };
 
-  // شروط الإخفاء
   const isCustomer = !user || user?.user_type === 'buyer' || user?.user_type === 'customer';
   
-  if (!isCustomer || !shouldShowOnCurrentPage || dismissed) {
-    return null;
-  }
+  if (!isCustomer || !shouldShowOnCurrentPage || dismissed) return null;
+  if (!isFoodPage && !hasItems) return null;
 
-  // في صفحات المنتجات: إخفاء إذا لم يكن هناك عناصر
-  if (!isFoodPage && !hasItems) {
-    return null;
-  }
-
-  // ============================================
-  // منطق العرض حسب السياق (الخيار 4)
-  // ============================================
-
-  // شريط الاحتفال العام
+  // شريط الاحتفال
   if (showCelebration) {
     return (
       <AnimatePresence>
@@ -209,7 +167,7 @@ const FreeShippingBanner = () => {
             <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
             <PartyPopper className="w-5 h-5 animate-bounce" />
           </div>
-          <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+          <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full">
             <X className="w-4 h-4" />
           </button>
         </motion.div>
@@ -218,157 +176,85 @@ const FreeShippingBanner = () => {
   }
 
   // ============================================
-  // صفحات الطعام
+  // صفحات الطعام - عرض كل المتاجر منفصلة
   // ============================================
   if (isFoodPage) {
     
-    // 1. صفحة متجر معين أو سلة متجر معين
-    if (currentStoreId && storesInfo.length > 0) {
-      const currentStore = storesInfo.find(s => s.storeId === currentStoreId);
-      
-      if (currentStore) {
-        if (currentStore.isFree) {
-          // توصيل مجاني لهذا المتجر
-          return (
-            <motion.div
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-1">
-                  <Truck className="w-5 h-5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium">✓ {currentStore.storeName}: توصيل مجاني!</span>
-                      <span className="text-white/80">100%</span>
-                    </div>
-                    <div className="w-full bg-white/30 rounded-full h-2 mt-1">
-                      <div className="h-full bg-white rounded-full w-full" />
-                    </div>
-                  </div>
-                </div>
-                <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          );
-        } else {
-          // يحتاج المزيد
-          return (
-            <motion.div
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-1">
-                  <Truck className="w-5 h-5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-medium">أضف {formatPrice(currentStore.remaining)} ل.س للتوصيل المجاني</span>
-                      <span className="text-white/80">{Math.round(currentStore.progress)}%</span>
-                    </div>
-                    <div className="w-full bg-white/30 rounded-full h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${currentStore.progress}%` }}
-                        className="h-full bg-white rounded-full"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          );
-        }
-      }
-    }
-    
-    // 2. صفحة الطعام الرئيسية - عرض المتجر الأقرب للشحن المجاني
-    if (isFoodMainPage || (!currentStoreId && storesInfo.length > 0)) {
-      // ترتيب المتاجر حسب الأقرب للشحن المجاني (الذي لم يصل بعد)
-      const storesNeedingMore = storesInfo.filter(s => !s.isFree).sort((a, b) => b.progress - a.progress);
-      const allStoresFree = storesInfo.length > 0 && storesInfo.every(s => s.isFree);
-      
-      if (allStoresFree) {
-        // كل المتاجر لديها شحن مجاني
-        return (
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <Truck className="w-5 h-5" />
-                <span className="font-medium text-sm">✓ توصيل مجاني لكل طلباتك! (أضف من متجر آخر لشحن مجاني إضافي)</span>
-              </div>
-              <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
-        );
-      }
-      
-      if (storesNeedingMore.length > 0) {
-        // عرض المتجر الأقرب للشحن المجاني
-        const closestStore = storesNeedingMore[0];
-        return (
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <Truck className="w-5 h-5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-medium">
-                      {closestStore.storeName}: أضف {formatPrice(closestStore.remaining)} ل.س للتوصيل المجاني
-                    </span>
-                    <span className="text-white/80">{Math.round(closestStore.progress)}%</span>
-                  </div>
-                  <div className="w-full bg-white/30 rounded-full h-2">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${closestStore.progress}%` }}
-                      className="h-full bg-white rounded-full"
-                    />
-                  </div>
-                </div>
-              </div>
-              <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded-full">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
-        );
-      }
-      
-      // لا يوجد منتجات في السلة - عرض شريط تشجيعي
+    // عدة متاجر - عرض كل واحد بشريط منفصل
+    if (storesInfo.length > 1) {
       return (
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
+          className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-3 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0"
+        >
+          <div className="space-y-1.5 pr-6">
+            {storesInfo.map((store) => (
+              <div key={store.storeId} className="flex items-center gap-2">
+                <Truck className="w-3 h-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between text-[10px] mb-0.5">
+                    <span className="font-medium truncate">
+                      {store.isFree 
+                        ? `✓ ${store.storeName}: مجاني!`
+                        : `${store.storeName}: +${formatPrice(store.remaining)}`
+                      }
+                    </span>
+                    <span className={`mr-1 ${store.isFree ? "text-green-200" : "text-white/70"}`}>
+                      {Math.round(store.progress)}%
+                    </span>
+                  </div>
+                  <div className={`w-full rounded-full h-1 ${store.isFree ? 'bg-green-400/50' : 'bg-white/30'}`}>
+                    <div 
+                      className={`h-full rounded-full ${store.isFree ? 'bg-green-300' : 'bg-white'}`}
+                      style={{ width: `${store.progress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button 
+            onClick={handleDismiss} 
+            className="absolute top-2 left-2 p-1 hover:bg-white/20 rounded-full"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </motion.div>
+      );
+    }
+    
+    // متجر واحد
+    if (storesInfo.length === 1) {
+      const store = storesInfo[0];
+      const bgClass = store.isFree 
+        ? "bg-gradient-to-r from-green-500 to-emerald-500" 
+        : "bg-gradient-to-r from-[#FF6B00] to-[#FF8C00]";
+      
+      return (
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className={`${bgClass} text-white px-4 py-2 shadow-md z-50 fixed top-[56px] left-0 right-0`}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-1">
               <Truck className="w-5 h-5" />
               <div className="flex-1">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-medium">أضف {formatPrice(FREE_SHIPPING_THRESHOLD)} ل.س للتوصيل المجاني (من نفس المتجر)</span>
-                  <span className="text-white/80">0%</span>
+                  <span className="font-medium">
+                    {store.isFree 
+                      ? `✓ ${store.storeName}: توصيل مجاني!`
+                      : `${store.storeName}: أضف ${formatPrice(store.remaining)} ل.س للتوصيل المجاني`
+                    }
+                  </span>
+                  <span className="text-white/80">{Math.round(store.progress)}%</span>
                 </div>
                 <div className="w-full bg-white/30 rounded-full h-2">
-                  <div className="h-full bg-white rounded-full w-0" />
+                  <div 
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${store.progress}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -380,7 +266,7 @@ const FreeShippingBanner = () => {
       );
     }
     
-    // صفحات طعام أخرى - عرض شريط افتراضي
+    // لا يوجد منتجات - شريط تشجيعي
     return (
       <motion.div
         initial={{ y: -50, opacity: 0 }}
@@ -409,7 +295,7 @@ const FreeShippingBanner = () => {
   }
 
   // ============================================
-  // صفحات المنتجات (غير الطعام)
+  // صفحات المنتجات
   // ============================================
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
   const progress = Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100);
