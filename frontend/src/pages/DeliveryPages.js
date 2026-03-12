@@ -619,16 +619,6 @@ const DeliveryDashboard = () => {
           >
             طلباتي ({myOrders.length + myFoodOrders.length})
           </button>
-          <button
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              activeTab === 'info' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-white border border-gray-200 text-gray-700'
-            }`}
-          >
-            معلوماتي
-          </button>
         </div>
 
         {/* فلتر نوع الطلبات */}
@@ -658,71 +648,6 @@ const DeliveryDashboard = () => {
             >
               🍔 طعام
             </button>
-          </div>
-        )}
-
-        {/* Info Tab - معلوماتي */}
-        {activeTab === 'info' && (
-          <div className="space-y-2">
-            {/* رصيد المحفظة */}
-            <div 
-              onClick={() => navigate('/wallet')}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Wallet size={20} className="text-white" />
-                  <div>
-                    <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
-                    <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
-                  </div>
-                </div>
-                <span className="text-white/80 text-xs">اضغط للتفاصيل ←</span>
-              </div>
-            </div>
-
-            {/* تقييمي */}
-            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Star size={20} className="text-white fill-white" />
-                  <div>
-                    <p className="text-white/80 text-[10px]">تقييمي</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            size={12}
-                            className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-left">
-                  <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
-                  <p className="text-white/80 text-[10px]">تقييم</p>
-                </div>
-              </div>
-            </div>
-
-            {/* لوحة الصدارة */}
-            <DriverLeaderboard />
-
-            {/* نقاط السلوك */}
-            <DriverPenaltyPoints />
-
-            {/* الإنجازات */}
-            <DriverAchievements />
-
-            {/* مستوى الأداء */}
-            <DriverPerformance />
-
-            {/* صندوق التوصيل */}
-            <MyBoxCard />
           </div>
         )}
 

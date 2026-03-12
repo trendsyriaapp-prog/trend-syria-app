@@ -5,13 +5,20 @@ import axios from 'axios';
 import { 
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
-  Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe
+  Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
+  LogOut, Wallet, Star, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoyaltyCard from '../components/LoyaltyCard';
+// مكونات السائق
+import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
+import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
+import DriverAchievements from '../components/delivery/DriverAchievements';
+import DriverPerformance from '../components/delivery/DriverPerformance';
+import MyBoxCard from '../components/delivery/MyBoxCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -29,15 +36,19 @@ const PAYMENT_TYPES = [
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState('loyalty');
+  const [activeTab, setActiveTab] = useState(user?.user_type === 'delivery' ? 'driver' : 'loyalty');
   const [addresses, setAddresses] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // بيانات السائق
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [myRatings, setMyRatings] = useState({ average_rating: 0, total_ratings: 0 });
   
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
@@ -64,6 +75,20 @@ const SettingsPage = () => {
       ]);
       setAddresses(addressesRes.data);
       setPaymentMethods(paymentsRes.data);
+      
+      // جلب بيانات السائق إذا كان المستخدم سائق
+      if (user?.user_type === 'delivery') {
+        try {
+          const [walletRes, ratingsRes] = await Promise.all([
+            axios.get(`${API}/wallet/balance`),
+            axios.get(`${API}/delivery/my-ratings`)
+          ]);
+          setWalletBalance(walletRes.data?.balance || 0);
+          setMyRatings(ratingsRes.data || { average_rating: 0, total_ratings: 0 });
+        } catch (err) {
+          console.error('Error fetching driver data:', err);
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -182,6 +207,18 @@ const SettingsPage = () => {
 
         {/* Tabs - في الأعلى */}
         <div className="flex gap-1 mb-3 overflow-x-auto">
+          {/* تبويب السائق - يظهر فقط للسائق */}
+          {user?.user_type === 'delivery' && (
+            <button
+              onClick={() => setActiveTab('driver')}
+              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+                activeTab === 'driver' ? 'bg-blue-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              }`}
+            >
+              <Truck size={12} />
+              معلوماتي
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('loyalty')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
@@ -210,6 +247,71 @@ const SettingsPage = () => {
             طرق الدفع
           </button>
         </div>
+
+        {/* Driver Tab - تبويب السائق */}
+        {activeTab === 'driver' && user?.user_type === 'delivery' && (
+          <div className="space-y-2">
+            {/* رصيد المحفظة */}
+            <div 
+              onClick={() => navigate('/wallet')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wallet size={20} className="text-white" />
+                  <div>
+                    <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
+                    <p className="text-white font-bold text-lg">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
+                  </div>
+                </div>
+                <span className="text-white/80 text-xs">اضغط للتفاصيل ←</span>
+              </div>
+            </div>
+
+            {/* تقييمي */}
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star size={20} className="text-white fill-white" />
+                  <div>
+                    <p className="text-white/80 text-[10px]">تقييمي</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-bold text-lg">{myRatings.average_rating || 0}</p>
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={12}
+                            className={star <= Math.round(myRatings.average_rating || 0) ? 'text-white fill-white' : 'text-white/40'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-bold text-lg">{myRatings.total_ratings || 0}</p>
+                  <p className="text-white/80 text-[10px]">تقييم</p>
+                </div>
+              </div>
+            </div>
+
+            {/* لوحة الصدارة */}
+            <DriverLeaderboard />
+
+            {/* نقاط السلوك */}
+            <DriverPenaltyPoints />
+
+            {/* الإنجازات */}
+            <DriverAchievements />
+
+            {/* مستوى الأداء */}
+            <DriverPerformance />
+
+            {/* صندوق التوصيل */}
+            <MyBoxCard />
+          </div>
+        )}
 
         {/* Loyalty Tab */}
         {activeTab === 'loyalty' && (
@@ -496,6 +598,21 @@ const SettingsPage = () => {
               <ChevronLeft size={16} className="text-gray-400" />
             </button>
           </div>
+        </section>
+
+        {/* زر تسجيل الخروج */}
+        <section className="mt-4">
+          <button
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="w-full p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-center gap-2 text-red-600 font-bold hover:bg-red-100 transition-colors"
+            data-testid="logout-btn"
+          >
+            <LogOut size={18} />
+            تسجيل الخروج
+          </button>
         </section>
       </div>
     </div>
