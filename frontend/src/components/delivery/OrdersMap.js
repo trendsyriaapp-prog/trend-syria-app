@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers } from 'lucide-react';
+import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -67,6 +67,74 @@ const OrdersMap = ({
   const [showLayer, setShowLayer] = useState('all'); // all, food, products, customers
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [currentDriverLocation, setCurrentDriverLocation] = useState(null);
+  const [selectedOrderForRoute, setSelectedOrderForRoute] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [loadingRoute, setLoadingRoute] = useState(false);
+
+  // جلب المسار من OSRM (مجاني بدون API Key)
+  const fetchRoute = async (start, waypoint, end) => {
+    setLoadingRoute(true);
+    try {
+      // OSRM يستخدم [lon, lat]
+      const coords = `${start[1]},${start[0]};${waypoint[1]},${waypoint[0]};${end[1]},${end[0]}`;
+      
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          // تحويل الإحداثيات من [lon, lat] إلى [lat, lon] لـ Leaflet
+          const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+          setRouteCoordinates(coords);
+          
+          // معلومات المسار
+          setRouteInfo({
+            distance: (route.distance / 1000).toFixed(1), // كم
+            duration: Math.round(route.duration / 60) // دقيقة
+          });
+        }
+      } else {
+        // في حالة فشل API، نرسم خط مستقيم
+        setRouteCoordinates([start, waypoint, end]);
+        setRouteInfo(null);
+      }
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      // خط مستقيم كبديل
+      setRouteCoordinates([start, waypoint, end]);
+      setRouteInfo(null);
+    }
+    setLoadingRoute(false);
+  };
+
+  // عرض المسار لطلب معين
+  const showRouteForOrder = (order) => {
+    const driverPos = currentDriverLocation || driverLocation;
+    if (!driverPos) {
+      alert('يرجى تفعيل موقعك أولاً');
+      return;
+    }
+
+    const storeCoords = [order.store_latitude, order.store_longitude];
+    const customerCoords = [order.latitude, order.longitude];
+    const driverCoords = [driverPos.latitude, driverPos.longitude];
+
+    if (storeCoords[0] && customerCoords[0]) {
+      setSelectedOrderForRoute(order);
+      fetchRoute(driverCoords, storeCoords, customerCoords);
+    }
+  };
+
+  // إخفاء المسار
+  const hideRoute = () => {
+    setSelectedOrderForRoute(null);
+    setRouteCoordinates([]);
+    setRouteInfo(null);
+  };
 
   // الحصول على موقع السائق الحالي
   const getDriverLocation = () => {
@@ -365,9 +433,20 @@ const OrdersMap = ({
                                     }
                                     setIsOpen(false);
                                   }}
-                                  className="w-full py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold"
+                                  className="w-full py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold mb-1"
                                 >
                                   قبول الطلب
+                                </button>
+                              )}
+                              {/* زر عرض المسار */}
+                              {marker.order && marker.order.latitude && marker.order.store_latitude && (
+                                <button
+                                  onClick={() => showRouteForOrder(marker.order)}
+                                  disabled={loadingRoute}
+                                  className="w-full py-1.5 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                                >
+                                  {loadingRoute ? '⏳' : <Route size={12} />}
+                                  {loadingRoute ? 'جاري التحميل...' : 'عرض المسار'}
                                 </button>
                               )}
                             </>
@@ -376,7 +455,46 @@ const OrdersMap = ({
                       </Popup>
                     </Marker>
                   ))}
+
+                  {/* رسم المسار */}
+                  {routeCoordinates.length > 0 && (
+                    <Polyline
+                      positions={routeCoordinates}
+                      color="#f97316"
+                      weight={5}
+                      opacity={0.8}
+                      dashArray="10, 10"
+                    />
+                  )}
                 </MapContainer>
+
+                {/* معلومات المسار */}
+                {routeInfo && selectedOrderForRoute && (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-sm text-gray-800">🛣️ معلومات المسار</h4>
+                      <button 
+                        onClick={hideRoute}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-orange-50 rounded-lg p-2 text-center">
+                        <p className="text-xs text-gray-500">المسافة</p>
+                        <p className="font-bold text-orange-600">{routeInfo.distance} كم</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-2 text-center">
+                        <p className="text-xs text-gray-500">الوقت المتوقع</p>
+                        <p className="font-bold text-blue-600">{routeInfo.duration} دقيقة</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-[10px] text-gray-400 text-center">
+                      🚗 موقعك ➜ 🏪 المتجر ➜ 🏠 العميل
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
