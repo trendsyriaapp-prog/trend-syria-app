@@ -325,26 +325,20 @@ const OrdersMap = ({
                   <span className="text-xs font-bold text-gray-800 whitespace-nowrap">خريطة الطلبات</span>
                 </div>
                 
-                {/* فلاتر الطبقات */}
-                <div className="flex gap-1 flex-1 justify-center">
-                  {[
-                    { key: 'all', label: 'الكل', icon: '🗺️' },
-                    { key: 'food', label: 'طعام', icon: '🍔' },
-                    { key: 'products', label: 'منتجات', icon: '📦' },
-                    { key: 'customers', label: 'عملاء', icon: '🏠' },
-                  ].map(layer => (
-                    <button
-                      key={layer.key}
-                      onClick={() => setShowLayer(layer.key)}
-                      className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
-                        showLayer === layer.key
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {layer.icon} {layer.label}
-                    </button>
-                  ))}
+                {/* دليل الألوان */}
+                <div className="flex gap-2 flex-1 justify-center text-[9px]">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span> مطعم
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> متجر
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span> عميل
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span> موقعك
+                  </span>
                 </div>
                 
                 <button
@@ -356,20 +350,26 @@ const OrdersMap = ({
                 </button>
               </div>
 
-              {/* دليل الألوان - سطر صغير */}
-              <div className="bg-white px-2 py-1 flex justify-center gap-3 text-[9px]">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span> مطعم
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> متجر
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span> عميل
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-orange-500"></span> موقعك
-                </span>
+              {/* فلاتر الطبقات */}
+              <div className="bg-white px-2 py-1 flex justify-center gap-1">
+                {[
+                  { key: 'all', label: 'الكل', icon: '🗺️' },
+                  { key: 'food', label: 'طعام', icon: '🍔' },
+                  { key: 'products', label: 'منتجات', icon: '📦' },
+                  { key: 'customers', label: 'عملاء', icon: '🏠' },
+                ].map(layer => (
+                  <button
+                    key={layer.key}
+                    onClick={() => setShowLayer(layer.key)}
+                    className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                      showLayer === layer.key
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {layer.icon} {layer.label}
+                  </button>
+                ))}
               </div>
 
               {/* الخريطة - ملء الشاشة */}
