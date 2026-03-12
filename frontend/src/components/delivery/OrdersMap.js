@@ -890,7 +890,7 @@ const OrdersMap = ({
                                     } else {
                                       onTakeOrder?.(marker.order);
                                     }
-                                    setIsOpen(false);
+                                    // لا نغلق الخريطة - السائق يبقى لقبول طلبات أخرى
                                   }}
                                   className="w-full py-1 bg-orange-500 text-white rounded text-[10px] font-bold mb-1"
                                 >
