@@ -47,8 +47,16 @@ const FoodBatchCheckoutPage = () => {
     is_default: false
   });
   
-  // طريقة الدفع
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  // طرق الدفع
+  const [savedPayments, setSavedPayments] = useState([]);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const [useNewPayment, setUseNewPayment] = useState(false);
+  const [newPayment, setNewPayment] = useState({
+    type: 'wallet',
+    phone: '',
+    holder_name: '',
+    is_default: false
+  });
   
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
@@ -90,16 +98,19 @@ const FoodBatchCheckoutPage = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [walletRes, addressesRes] = await Promise.all([
+      const [walletRes, addressesRes, paymentsRes] = await Promise.all([
         axios.get(`${API}/wallet/balance`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { balance: 0 } })),
-        axios.get(`${API}/user/addresses`).catch(() => ({ data: [] }))
+        axios.get(`${API}/user/addresses`).catch(() => ({ data: [] })),
+        axios.get(`${API}/user/payment-methods`).catch(() => ({ data: [] }))
       ]);
       
       setWalletBalance(walletRes.data.balance || 0);
       setSavedAddresses(addressesRes.data || []);
+      setSavedPayments(paymentsRes.data || []);
       
+      // تعيين العنوان الافتراضي
       const defaultAddr = addressesRes.data.find(a => a.is_default);
       if (defaultAddr) {
         setSelectedAddressId(defaultAddr.id);
@@ -107,6 +118,12 @@ const FoodBatchCheckoutPage = () => {
         setSelectedAddressId(addressesRes.data[0].id);
       } else {
         setUseNewAddress(true);
+      }
+      
+      // تعيين طريقة الدفع الافتراضية
+      const defaultPayment = paymentsRes.data.find(p => p.is_default);
+      if (defaultPayment) {
+        setSelectedPaymentId(defaultPayment.id);
       }
       
       // تعبئة بيانات المستخدم
@@ -167,7 +184,16 @@ const FoodBatchCheckoutPage = () => {
       };
     }
     
-    // التحقق من الرصيد
+    // تحديد طريقة الدفع
+    let paymentMethod = 'wallet';
+    if (useNewPayment || savedPayments.length === 0) {
+      paymentMethod = newPayment.type;
+    } else if (selectedPaymentId) {
+      const pay = savedPayments.find(p => p.id === selectedPaymentId);
+      paymentMethod = pay?.type || 'wallet';
+    }
+    
+    // التحقق من الرصيد إذا كان الدفع من المحفظة
     if (paymentMethod === 'wallet' && walletBalance < grandTotal) {
       toast({
         title: "رصيد غير كافي",
@@ -180,6 +206,13 @@ const FoodBatchCheckoutPage = () => {
     setSubmitting(true);
     
     try {
+      // حفظ طريقة الدفع الجديدة إذا كانت محفظة إلكترونية
+      if (useNewPayment && newPayment.type !== 'wallet' && newPayment.type !== 'card') {
+        try {
+          await axios.post(`${API}/user/payment-methods`, newPayment);
+        } catch (e) {}
+      }
+      
       // تجهيز البيانات للإرسال
       const batchOrders = stores.map(store => ({
         store_id: store.storeId,
@@ -480,50 +513,192 @@ const FoodBatchCheckoutPage = () => {
             طريقة الدفع
           </h2>
           
-          {/* المحفظة */}
-          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-            paymentMethod === 'wallet' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:bg-gray-50'
-          }`}>
-            <input
-              type="radio"
-              name="payment"
-              value="wallet"
-              checked={paymentMethod === 'wallet'}
-              onChange={() => setPaymentMethod('wallet')}
-              className="w-4 h-4 text-[#FF6B00]"
-            />
-            <Wallet size={20} className="text-[#FF6B00]" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">المحفظة</p>
-              <p className="text-sm text-gray-500">الرصيد: {formatPrice(walletBalance)}</p>
+          {/* طرق الدفع المحفوظة */}
+          {savedPayments.length > 0 && !useNewPayment && (
+            <div className="space-y-2">
+              {savedPayments.map((pay) => (
+                <label
+                  key={pay.id}
+                  className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                    selectedPaymentId === pay.id 
+                      ? 'border-[#FF6B00] bg-orange-50' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={selectedPaymentId === pay.id}
+                    onChange={() => setSelectedPaymentId(pay.id)}
+                    className="w-4 h-4 text-[#FF6B00]"
+                  />
+                  <CreditCard size={18} className="text-blue-600" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">
+                        {pay.type === 'card' ? 'بطاقة بنكية' : 
+                         pay.type === 'shamcash' ? 'شام كاش' :
+                         pay.type === 'syriatel_cash' ? 'سيرياتيل' : 
+                         pay.type === 'mtn_cash' ? 'MTN' : pay.type}
+                      </p>
+                      {pay.is_default && (
+                        <span className="text-xs bg-orange-100 text-[#FF6B00] px-2 py-0.5 rounded-full">افتراضي</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">{pay.holder_name} - {pay.phone}</p>
+                  </div>
+                </label>
+              ))}
+              
+              {/* المحفظة */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                !selectedPaymentId && !useNewPayment
+                  ? 'border-[#FF6B00] bg-orange-50' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={!selectedPaymentId && !useNewPayment}
+                  onChange={() => { setSelectedPaymentId(null); setUseNewPayment(false); }}
+                  className="w-4 h-4 text-[#FF6B00]"
+                />
+                <Wallet size={18} className="text-[#FF6B00]" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">المحفظة</p>
+                  <p className="text-sm text-gray-500">الرصيد: {formatPrice(walletBalance)}</p>
+                </div>
+                {walletBalance < grandTotal && !selectedPaymentId && !useNewPayment && (
+                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
+                )}
+              </label>
+              
+              <button
+                onClick={() => setUseNewPayment(true)}
+                className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-[#FF6B00] hover:text-[#FF6B00] transition-all flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                إضافة طريقة دفع جديدة
+              </button>
             </div>
-            {paymentMethod === 'wallet' && walletBalance < grandTotal && (
-              <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
-            )}
-          </label>
+          )}
           
-          {/* الدفع عند الاستلام */}
-          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
-            paymentMethod === 'cash' 
-              ? 'border-[#FF6B00] bg-orange-50' 
-              : 'border-gray-200 hover:bg-gray-50'
-          }`}>
-            <input
-              type="radio"
-              name="payment"
-              value="cash"
-              checked={paymentMethod === 'cash'}
-              onChange={() => setPaymentMethod('cash')}
-              className="w-4 h-4 text-[#FF6B00]"
-            />
-            <span className="text-xl">💵</span>
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">الدفع عند الاستلام</p>
-              <p className="text-sm text-gray-500">ادفع للسائق نقداً</p>
+          {/* إضافة طريقة دفع جديدة */}
+          {(useNewPayment || savedPayments.length === 0) && (
+            <div className="space-y-3">
+              {savedPayments.length > 0 && (
+                <button
+                  onClick={() => setUseNewPayment(false)}
+                  className="text-sm text-[#FF6B00] hover:underline flex items-center gap-1"
+                >
+                  <ArrowRight size={14} />
+                  العودة لطرق الدفع المحفوظة
+                </button>
+              )}
+              
+              {/* المحفظة */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                newPayment.type === 'wallet'
+                  ? 'border-[#FF6B00] bg-orange-50' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="wallet"
+                  checked={newPayment.type === 'wallet'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'wallet' })}
+                  className="w-4 h-4 text-[#FF6B00]"
+                />
+                <Wallet size={20} className="text-[#FF6B00]" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">المحفظة</p>
+                  <p className="text-sm text-gray-500">الرصيد: {formatPrice(walletBalance)}</p>
+                </div>
+                {walletBalance < grandTotal && newPayment.type === 'wallet' && (
+                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
+                )}
+              </label>
+              
+              {/* بطاقة بنكية */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                newPayment.type === 'card'
+                  ? 'border-[#FF6B00] bg-orange-50' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="card"
+                  checked={newPayment.type === 'card'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'card' })}
+                  className="w-4 h-4 text-[#FF6B00]"
+                />
+                <CreditCard size={20} className="text-blue-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">بطاقة بنكية</p>
+                  <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
+                </div>
+              </label>
+              
+              {/* شام كاش */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                newPayment.type === 'shamcash'
+                  ? 'border-[#FF6B00] bg-orange-50' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <input
+                  type="radio"
+                  name="newPayment"
+                  value="shamcash"
+                  checked={newPayment.type === 'shamcash'}
+                  onChange={() => setNewPayment({ ...newPayment, type: 'shamcash' })}
+                  className="w-4 h-4 text-[#FF6B00]"
+                />
+                <span className="text-xl">🏦</span>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">شام كاش</p>
+                  <p className="text-sm text-gray-500">محفظة إلكترونية</p>
+                </div>
+              </label>
+              
+              {/* حقول إضافية للمحافظ الإلكترونية */}
+              {newPayment.type !== 'wallet' && newPayment.type !== 'card' && (
+                <div className="space-y-2 pt-2 border-t border-gray-100">
+                  <input
+                    type="tel"
+                    value={newPayment.phone}
+                    onChange={(e) => setNewPayment({ ...newPayment, phone: e.target.value })}
+                    placeholder="رقم المحفظة *"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={newPayment.holder_name}
+                    onChange={(e) => setNewPayment({ ...newPayment, holder_name: e.target.value })}
+                    placeholder="اسم صاحب الحساب *"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={newPayment.is_default}
+                      onChange={(e) => setNewPayment({ ...newPayment, is_default: e.target.checked })}
+                      className="w-4 h-4 text-[#FF6B00] rounded"
+                    />
+                    حفظ كطريقة دفع افتراضية
+                  </label>
+                </div>
+              )}
+              
+              {/* رسالة للبطاقة */}
+              {newPayment.type === 'card' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                  <p className="text-sm text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
+                </div>
+              )}
             </div>
-          </label>
+          )}
         </div>
       </div>
       
