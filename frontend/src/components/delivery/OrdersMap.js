@@ -458,13 +458,121 @@ const OrdersMap = ({
 
                   {/* رسم المسار */}
                   {routeCoordinates.length > 0 && (
-                    <Polyline
-                      positions={routeCoordinates}
-                      color="#f97316"
-                      weight={5}
-                      opacity={0.8}
-                      dashArray="10, 10"
-                    />
+                    <>
+                      {/* خط المسار */}
+                      <Polyline
+                        positions={routeCoordinates}
+                        color="#f97316"
+                        weight={6}
+                        opacity={0.9}
+                      />
+                      {/* خط متقطع فوق المسار للتوضيح */}
+                      <Polyline
+                        positions={routeCoordinates}
+                        color="#ffffff"
+                        weight={2}
+                        opacity={0.5}
+                        dashArray="10, 15"
+                      />
+                    </>
+                  )}
+
+                  {/* علامات نقاط المسار عند تفعيله */}
+                  {selectedOrderForRoute && (
+                    <>
+                      {/* علامة البداية (موقع السائق) */}
+                      {(currentDriverLocation || driverLocation) && (
+                        <Marker
+                          position={[
+                            (currentDriverLocation || driverLocation).latitude,
+                            (currentDriverLocation || driverLocation).longitude
+                          ]}
+                          icon={L.divIcon({
+                            className: 'route-marker',
+                            html: `<div style="
+                              background: #f97316;
+                              width: 30px;
+                              height: 30px;
+                              border-radius: 50%;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              font-size: 14px;
+                              border: 3px solid white;
+                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+                              font-weight: bold;
+                              color: white;
+                            ">1</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                          })}
+                        >
+                          <Popup>📍 موقعك (نقطة البداية)</Popup>
+                        </Marker>
+                      )}
+                      
+                      {/* علامة المتجر */}
+                      {selectedOrderForRoute.store_latitude && (
+                        <Marker
+                          position={[
+                            selectedOrderForRoute.store_latitude,
+                            selectedOrderForRoute.store_longitude
+                          ]}
+                          icon={L.divIcon({
+                            className: 'route-marker',
+                            html: `<div style="
+                              background: #22c55e;
+                              width: 30px;
+                              height: 30px;
+                              border-radius: 50%;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              font-size: 14px;
+                              border: 3px solid white;
+                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+                              font-weight: bold;
+                              color: white;
+                            ">2</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                          })}
+                        >
+                          <Popup>🏪 المتجر (استلام الطلب)</Popup>
+                        </Marker>
+                      )}
+                      
+                      {/* علامة العميل */}
+                      {selectedOrderForRoute.latitude && (
+                        <Marker
+                          position={[
+                            selectedOrderForRoute.latitude,
+                            selectedOrderForRoute.longitude
+                          ]}
+                          icon={L.divIcon({
+                            className: 'route-marker',
+                            html: `<div style="
+                              background: #ef4444;
+                              width: 30px;
+                              height: 30px;
+                              border-radius: 50%;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              font-size: 14px;
+                              border: 3px solid white;
+                              box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+                              font-weight: bold;
+                              color: white;
+                            ">3</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                          })}
+                        >
+                          <Popup>🏠 العميل (تسليم الطلب)</Popup>
+                        </Marker>
+                      )}
+                    </>
                   )}
                 </MapContainer>
 
@@ -472,7 +580,7 @@ const OrdersMap = ({
                 {routeInfo && selectedOrderForRoute && (
                   <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-sm text-gray-800">🛣️ معلومات المسار</h4>
+                      <h4 className="font-bold text-sm text-gray-800">🛣️ مسار التوصيل</h4>
                       <button 
                         onClick={hideRoute}
                         className="text-gray-400 hover:text-gray-600"
@@ -480,18 +588,34 @@ const OrdersMap = ({
                         <X size={18} />
                       </button>
                     </div>
+                    
+                    {/* خطوات المسار */}
+                    <div className="flex items-center justify-center gap-1 mb-3 text-xs">
+                      <span className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                        <span className="w-4 h-4 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center">1</span>
+                        موقعك
+                      </span>
+                      <span className="text-gray-400">➜</span>
+                      <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                        <span className="w-4 h-4 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">2</span>
+                        المتجر
+                      </span>
+                      <span className="text-gray-400">➜</span>
+                      <span className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                        <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">3</span>
+                        العميل
+                      </span>
+                    </div>
+                    
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-orange-50 rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-500">المسافة</p>
-                        <p className="font-bold text-orange-600">{routeInfo.distance} كم</p>
+                        <p className="text-xs text-gray-500">المسافة الإجمالية</p>
+                        <p className="font-bold text-orange-600 text-lg">{routeInfo.distance} كم</p>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-gray-500">الوقت المتوقع</p>
-                        <p className="font-bold text-blue-600">{routeInfo.duration} دقيقة</p>
+                        <p className="font-bold text-blue-600 text-lg">{routeInfo.duration} د</p>
                       </div>
-                    </div>
-                    <div className="mt-2 text-[10px] text-gray-400 text-center">
-                      🚗 موقعك ➜ 🏪 المتجر ➜ 🏠 العميل
                     </div>
                   </div>
                 )}
