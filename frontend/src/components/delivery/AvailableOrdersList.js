@@ -252,7 +252,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       {shopOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <ShoppingBag size={18} className="text-[#FF6B00]" />
+            <ShoppingBag size={18} className="text-orange-600" />
             <h3 className="font-bold text-gray-900">طلبات المتجر ({shopOrders.length})</h3>
           </div>
           <div className="space-y-3">
@@ -261,13 +261,21 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden"
               >
+                {/* Header برتقالي */}
+                <div className="bg-orange-500 text-white px-3 py-1.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag size={14} />
+                    <span className="text-xs font-bold">طلب منتجات</span>
+                  </div>
+                  <span className="font-bold">{formatPrice(order.total)}</span>
+                </div>
+                
                 <div className="p-3">
-                  {/* رقم الطلب والسعر */}
+                  {/* رقم الطلب */}
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-sm text-gray-900">#{order.id?.slice(0, 8)}</span>
-                    <span className="font-bold text-[#FF6B00]">{formatPrice(order.total)}</span>
                   </div>
 
                   {/* من أين - البائع */}
@@ -344,9 +352,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="w-full bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors"
                   >
-                    {isWorkingHours() ? 'أخذ الطلب' : 'خارج أوقات العمل'}
+                    {isWorkingHours() ? 'قبول الطلب' : 'خارج أوقات العمل'}
                   </button>
                 </div>
               </motion.div>
