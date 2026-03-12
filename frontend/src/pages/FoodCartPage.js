@@ -394,7 +394,20 @@ const FoodCartPage = () => {
         payment_method: paymentMethod
       };
 
-      console.log('Order data:', JSON.stringify(orderData, null, 2));
+      // التحقق من صحة البيانات قبل الإرسال
+      const invalidItems = orderData.items.filter(item => 
+        !item.product_id || !item.name || !item.price || !item.quantity
+      );
+      
+      if (invalidItems.length > 0) {
+        toast({ 
+          title: "خطأ في بيانات السلة", 
+          description: "بعض المنتجات تحتوي على بيانات ناقصة. يرجى إفراغ السلة وإضافة المنتجات مرة أخرى.", 
+          variant: "destructive" 
+        });
+        setSubmitting(false);
+        return;
+      }
       
       const res = await axios.post(`${API}/food/orders`, orderData, {
         headers: { Authorization: `Bearer ${token}` }
