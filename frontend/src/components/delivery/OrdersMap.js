@@ -754,7 +754,7 @@ const OrdersMap = ({
         disabled={totalOrders === 0}
         className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
           totalOrders > 0 
-            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600' 
+            ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700' 
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
