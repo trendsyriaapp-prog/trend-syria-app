@@ -351,7 +351,7 @@ const OrdersMap = ({
               </div>
 
               {/* فلاتر الطبقات */}
-              <div className="bg-white px-2 py-1 flex justify-around">
+              <div className="bg-white px-2 py-1 flex gap-1">
                 {[
                   { key: 'all', label: 'الكل', icon: '🗺️' },
                   { key: 'food', label: 'طعام', icon: '🍔' },
@@ -361,7 +361,7 @@ const OrdersMap = ({
                   <button
                     key={layer.key}
                     onClick={() => setShowLayer(layer.key)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                    className={`flex-1 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
                       showLayer === layer.key
                         ? 'bg-orange-500 text-white'
                         : 'bg-gray-100 text-gray-600'
