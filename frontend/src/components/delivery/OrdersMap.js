@@ -343,7 +343,7 @@ const OrdersMap = ({
                 
                 <button
                   onClick={getDriverLocation}
-                  className="p-1.5 bg-orange-500 text-white rounded-full flex-shrink-0"
+                  className="p-1.5 bg-orange-500 text-white rounded-full flex-shrink-0 mr-2"
                   title="تحديث موقعي"
                 >
                   <Locate size={14} />
