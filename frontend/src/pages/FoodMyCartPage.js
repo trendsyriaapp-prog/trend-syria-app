@@ -229,33 +229,33 @@ const FoodMyCartPage = () => {
 
       {/* عنوان التوصيل */}
       {user && (
-        <div className="px-4 mb-4">
+        <div className="px-3 mb-2 mt-2">
           <div 
             onClick={() => setShowAddressSelector(!showAddressSelector)}
-            className="bg-white rounded-xl border border-gray-200 p-3 cursor-pointer hover:border-[#FF6B00] transition-all"
+            className="bg-white rounded-lg border border-gray-200 p-2 cursor-pointer hover:border-[#FF6B00] transition-all"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <MapPin size={18} className="text-[#FF6B00]" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <MapPin size={14} className="text-[#FF6B00]" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">التوصيل إلى</p>
+                  <p className="text-[10px] text-gray-500">التوصيل إلى</p>
                   {defaultAddress ? (
-                    <p className="font-bold text-gray-900 text-sm">
+                    <p className="font-bold text-gray-900 text-xs">
                       {defaultAddress.title || 'المنزل'} - {defaultAddress.city}
                     </p>
                   ) : (
-                    <p className="font-medium text-[#FF6B00] text-sm">اختر عنوان التوصيل</p>
+                    <p className="font-medium text-[#FF6B00] text-xs">اختر عنوان التوصيل</p>
                   )}
                 </div>
               </div>
-              <ChevronDown size={20} className={`text-gray-400 transition-transform ${showAddressSelector ? 'rotate-180' : ''}`} />
+              <ChevronDown size={16} className={`text-gray-400 transition-transform ${showAddressSelector ? 'rotate-180' : ''}`} />
             </div>
             
             {/* قائمة العناوين */}
             {showAddressSelector && savedAddresses.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+              <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
                 {savedAddresses.map((addr) => (
                   <div
                     key={addr.id}
@@ -264,7 +264,7 @@ const FoodMyCartPage = () => {
                       setDefaultAddress(addr);
                       setShowAddressSelector(false);
                     }}
-                    className={`p-2 rounded-lg cursor-pointer transition-all ${
+                    className={`p-1.5 rounded-lg cursor-pointer transition-all ${
                       defaultAddress?.id === addr.id 
                         ? 'bg-orange-50 border border-[#FF6B00]' 
                         : 'bg-gray-50 hover:bg-orange-50'
@@ -272,11 +272,11 @@ const FoodMyCartPage = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{addr.title || 'عنوان'}</p>
-                        <p className="text-xs text-gray-500">{addr.city} - {addr.area}</p>
+                        <p className="font-medium text-gray-900 text-xs">{addr.title || 'عنوان'}</p>
+                        <p className="text-[10px] text-gray-500">{addr.city} - {addr.area}</p>
                       </div>
                       {defaultAddress?.id === addr.id && (
-                        <Check size={16} className="text-[#FF6B00]" />
+                        <Check size={12} className="text-[#FF6B00]" />
                       )}
                     </div>
                   </div>
@@ -288,7 +288,7 @@ const FoodMyCartPage = () => {
       )}
 
       {/* Store Carts */}
-      <div className="p-4 space-y-4">
+      <div className="px-3 space-y-2">
         <AnimatePresence>
           {stores.map((store) => {
             const details = storeDetails[store.storeId];
@@ -309,31 +309,31 @@ const FoodMyCartPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden"
               >
                 {/* Store Header */}
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#FF6B00] rounded-full flex items-center justify-center">
-                      <Store size={18} className="text-white" />
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center">
+                      <Store size={14} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900">{details?.name || 'متجر'}</h3>
-                      <p className="text-xs text-gray-500">{store.itemCount} منتج</p>
+                      <h3 className="font-bold text-gray-900 text-sm">{details?.name || 'متجر'}</h3>
+                      <p className="text-[10px] text-gray-500">{store.itemCount} منتج</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Link
                       to={`/food/cart/${store.storeId}`}
-                      className="bg-[#FF6B00] text-white text-xs px-3 py-1.5 rounded-full font-medium"
+                      className="bg-[#FF6B00] text-white text-[10px] px-2 py-1 rounded-full font-medium"
                     >
                       إكمال الطلب
                     </Link>
                     <button
                       onClick={() => clearStoreCart(store.storeId)}
-                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-full"
+                      className="p-1 text-red-500 hover:bg-red-50 rounded-full"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -341,38 +341,38 @@ const FoodMyCartPage = () => {
                 {/* Items */}
                 <div className="divide-y divide-gray-100">
                   {store.items.map((item) => (
-                    <div key={item.id} className="p-3 flex items-center gap-3">
+                    <div key={item.id} className="p-2 flex items-center gap-2">
                       {/* Image */}
-                      <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <UtensilsCrossed size={20} className="text-gray-400" />
+                            <UtensilsCrossed size={14} className="text-gray-400" />
                           </div>
                         )}
                       </div>
 
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                        <p className="text-[#FF6B00] font-bold text-sm">{formatPrice(item.price)}</p>
+                        <h4 className="font-medium text-gray-900 text-xs truncate">{item.name}</h4>
+                        <p className="text-[#FF6B00] font-bold text-xs">{formatPrice(item.price)}</p>
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => updateItemQuantity(store.storeId, item.id, item.quantity - 1)}
-                          className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
+                          className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
                         >
-                          <Minus size={14} />
+                          <Minus size={12} />
                         </button>
-                        <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
+                        <span className="w-5 text-center font-bold text-xs">{item.quantity}</span>
                         <button
                           onClick={() => updateItemQuantity(store.storeId, item.id, item.quantity + 1)}
-                          className="w-7 h-7 bg-[#FF6B00] text-white rounded-full flex items-center justify-center hover:bg-[#E65000]"
+                          className="w-6 h-6 bg-[#FF6B00] text-white rounded-full flex items-center justify-center hover:bg-[#E65000]"
                         >
-                          <Plus size={14} />
+                          <Plus size={12} />
                         </button>
                       </div>
                     </div>
@@ -381,38 +381,38 @@ const FoodMyCartPage = () => {
 
                 {/* شريط تقدم الشحن المجاني */}
                 {freeDeliveryMin > 0 && (
-                  <div className={`p-3 mx-3 mb-3 rounded-xl border ${
+                  <div className={`p-2 mx-2 mb-2 rounded-lg border ${
                     qualifiesForFree 
                       ? 'bg-green-50 border-green-200' 
                       : 'bg-orange-50 border-orange-200'
                   }`}>
                     {qualifiesForFree ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Check size={16} className="text-white" />
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check size={12} className="text-white" />
                         </div>
                         <div className="flex-1">
-                          <span className="text-sm font-bold text-green-700">🎉 توصيل مجاني!</span>
-                          <div className="h-2 mt-1 bg-green-200 rounded-full overflow-hidden">
+                          <span className="text-xs font-bold text-green-700">🎉 توصيل مجاني!</span>
+                          <div className="h-1.5 mt-0.5 bg-green-200 rounded-full overflow-hidden">
                             <div className="h-full w-full bg-green-500 rounded-full" />
                           </div>
                         </div>
-                        <span className="text-sm font-bold text-green-600">100%</span>
+                        <span className="text-xs font-bold text-green-600">100%</span>
                       </div>
                     ) : (
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <Truck size={16} className="text-orange-600" />
-                            <span className="text-xs font-medium text-orange-700">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1">
+                            <Truck size={12} className="text-orange-600" />
+                            <span className="text-[10px] font-medium text-orange-700">
                               أضف {formatPrice(remainingForFree)} للتوصيل المجاني
                             </span>
                           </div>
-                          <span className="text-xs font-bold text-orange-600">
+                          <span className="text-[10px] font-bold text-orange-600">
                             {Math.round(progressPercent)}%
                           </span>
                         </div>
-                        <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-orange-200 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
@@ -424,9 +424,9 @@ const FoodMyCartPage = () => {
                 )}
 
                 {/* Store Total */}
-                <div className="bg-gray-50 p-3 flex items-center justify-between">
-                  <span className="text-sm text-gray-600">المجموع:</span>
-                  <span className="font-bold text-[#FF6B00]">{formatPrice(store.totalAmount)}</span>
+                <div className="bg-gray-50 p-2 flex items-center justify-between">
+                  <span className="text-xs text-gray-600">المجموع:</span>
+                  <span className="font-bold text-sm text-[#FF6B00]">{formatPrice(store.totalAmount)}</span>
                 </div>
               </motion.div>
             );
@@ -435,10 +435,10 @@ const FoodMyCartPage = () => {
       </div>
 
       {/* Total Summary */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40 shadow-lg">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-gray-600">الإجمالي ({totalItems} منتج)</span>
-          <span className="text-xl font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-2 z-40 shadow-lg">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-600">الإجمالي ({totalItems} منتج)</span>
+          <span className="text-lg font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
         </div>
         
         {/* زر إكمال جميع الطلبات */}
@@ -446,23 +446,23 @@ const FoodMyCartPage = () => {
           <button
             onClick={handleCheckoutAll}
             disabled={checkoutLoading}
-            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-2 shadow-md"
+            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-2.5 rounded-lg font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-1 shadow-md text-sm"
             data-testid="checkout-all-btn"
           >
             {checkoutLoading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <>
-                <ShoppingCart size={20} />
+                <ShoppingCart size={16} />
                 إكمال جميع الطلبات ({stores.length} متجر)
               </>
             )}
           </button>
         )}
         
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-[10px] text-gray-500 text-center">
           {stores.length > 1 
-            ? '🚗 سائق واحد سيجمع جميع طلباتك ويوصلها دفعة واحدة'
+            ? '🛵 سائق واحد سيجمع جميع طلباتك ويوصلها دفعة واحدة'
             : 'اضغط على "إكمال الطلب" لإتمام طلبك'
           }
         </p>
