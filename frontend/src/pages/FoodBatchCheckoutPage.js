@@ -47,8 +47,8 @@ const FoodBatchCheckoutPage = () => {
     is_default: false
   });
   
-  // طريقة الدفع - المحفظة فقط
-  const paymentMethod = 'wallet';
+  // طريقة الدفع
+  const [paymentMethod, setPaymentMethod] = useState('wallet');
   
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
@@ -474,25 +474,55 @@ const FoodBatchCheckoutPage = () => {
         </div>
         
         {/* طريقة الدفع */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 mb-48">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
             <CreditCard size={18} className="text-[#FF6B00]" />
             طريقة الدفع
           </h2>
           
           {/* المحفظة */}
-          <label className="flex items-center gap-3 p-3 border border-[#FF6B00] bg-orange-50 rounded-xl">
-            <div className="w-4 h-4 bg-[#FF6B00] rounded-full flex items-center justify-center">
-              <Check size={12} className="text-white" />
-            </div>
+          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+            paymentMethod === 'wallet' 
+              ? 'border-[#FF6B00] bg-orange-50' 
+              : 'border-gray-200 hover:bg-gray-50'
+          }`}>
+            <input
+              type="radio"
+              name="payment"
+              value="wallet"
+              checked={paymentMethod === 'wallet'}
+              onChange={() => setPaymentMethod('wallet')}
+              className="w-4 h-4 text-[#FF6B00]"
+            />
             <Wallet size={20} className="text-[#FF6B00]" />
             <div className="flex-1">
               <p className="font-medium text-gray-900">المحفظة</p>
               <p className="text-sm text-gray-500">الرصيد: {formatPrice(walletBalance)}</p>
             </div>
-            {walletBalance < grandTotal && (
+            {paymentMethod === 'wallet' && walletBalance < grandTotal && (
               <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">رصيد غير كافي</span>
             )}
+          </label>
+          
+          {/* الدفع عند الاستلام */}
+          <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+            paymentMethod === 'cash' 
+              ? 'border-[#FF6B00] bg-orange-50' 
+              : 'border-gray-200 hover:bg-gray-50'
+          }`}>
+            <input
+              type="radio"
+              name="payment"
+              value="cash"
+              checked={paymentMethod === 'cash'}
+              onChange={() => setPaymentMethod('cash')}
+              className="w-4 h-4 text-[#FF6B00]"
+            />
+            <span className="text-xl">💵</span>
+            <div className="flex-1">
+              <p className="font-medium text-gray-900">الدفع عند الاستلام</p>
+              <p className="text-sm text-gray-500">ادفع للسائق نقداً</p>
+            </div>
           </label>
         </div>
       </div>
