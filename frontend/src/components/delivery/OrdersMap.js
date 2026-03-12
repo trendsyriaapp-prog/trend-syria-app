@@ -306,6 +306,7 @@ const OrdersMap = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="w-full h-full bg-white"
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header شريط علوي موحد */}
