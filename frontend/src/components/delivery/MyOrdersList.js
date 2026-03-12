@@ -141,8 +141,8 @@ const MyOrdersList = ({
               </div>
 
               {/* معلومات العميل */}
-              <div className="bg-gray-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-gray-700 mb-1">معلومات العميل:</p>
+              <div className="bg-blue-50 rounded-lg p-2 mb-3">
+                <p className="text-xs font-bold text-blue-700 mb-1">معلومات العميل:</p>
                 <p className="text-xs text-gray-600">
                   <User size={12} className="inline ml-1" />
                   {order.user_name || order.customer_name}
@@ -151,7 +151,7 @@ const MyOrdersList = ({
                   <MapPin size={12} className="inline ml-1" />
                   {order.address || order.delivery_address}, {order.city || order.delivery_city}
                 </p>
-                <a href={`tel:${order.phone}`} className="text-xs text-[#FF6B00] flex items-center gap-1 mt-1 font-bold">
+                <a href={`tel:${order.phone}`} className="text-xs text-blue-600 flex items-center gap-1 mt-1 font-bold">
                   <Phone size={12} />
                   اتصال: {order.phone}
                 </a>
@@ -244,7 +244,7 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.phone}`}
-                      className="bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
@@ -285,15 +285,15 @@ const MyOrdersList = ({
             key={order.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 10 }}
-            className="bg-white rounded-xl border-2 border-green-200 overflow-hidden"
+            className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-green-500 text-white px-3 py-2 flex items-center justify-between">
+            <div className="bg-orange-500 text-white px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">🍔 طلب طعام #{orderNumber}</span>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full ${
-                isDelivered ? 'bg-green-700' : 'bg-white/20'
+                isDelivered ? 'bg-orange-700' : 'bg-white/20'
               }`}>
                 {getStatusLabel(order.status)}
               </span>
@@ -367,7 +367,7 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.customer_phone}`}
-                      className="bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
