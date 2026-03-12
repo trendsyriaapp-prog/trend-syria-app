@@ -366,6 +366,44 @@ const CartPage = () => {
                     })}
                   </div>
                   
+                  {/* شريط الشحن لهذا المتجر */}
+                  <div className={`p-2 mx-2 mb-2 rounded-lg ${
+                    seller.shipping_status === 'free' 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-orange-50 border border-orange-200'
+                  }`}>
+                    {seller.shipping_status === 'free' ? (
+                      <div className="flex items-center gap-2">
+                        <Truck size={14} className="text-green-600" />
+                        <span className="text-xs font-bold text-green-700">🎉 شحن مجاني!</span>
+                        <div className="flex-1 h-2 bg-green-200 rounded-full overflow-hidden">
+                          <div className="h-full w-full bg-green-500 rounded-full" />
+                        </div>
+                        <span className="text-xs font-bold text-green-600">100%</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1">
+                            <Truck size={12} className="text-orange-600" />
+                            <span className="text-[10px] font-medium text-orange-700">
+                              أضف {formatPrice(seller.remaining_for_free || (FREE_SHIPPING_THRESHOLD - seller.subtotal))} للشحن المجاني
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-orange-600">
+                            {Math.round((seller.subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%
+                          </span>
+                        </div>
+                        <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min((seller.subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* مجموع هذا البائع */}
                   <div className="p-2 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                     <span className="text-[10px] text-gray-500">مجموع المتجر</span>
