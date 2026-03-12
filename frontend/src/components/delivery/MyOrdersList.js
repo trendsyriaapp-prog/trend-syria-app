@@ -292,16 +292,16 @@ const MyOrdersList = ({
           <motion.div
             key={order.id}
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden"
+            animate={{ opacity: 1, y: 10 }}
+            className="bg-white rounded-xl border-2 border-green-200 overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-orange-500 text-white px-3 py-2 flex items-center justify-between">
+            <div className="bg-green-500 text-white px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">🍔 طلب طعام #{orderNumber}</span>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full ${
-                isDelivered ? 'bg-orange-700' : 'bg-white/20'
+                isDelivered ? 'bg-green-700' : 'bg-white/20'
               }`}>
                 {getStatusLabel(order.status)}
               </span>
@@ -382,7 +382,7 @@ const MyOrdersList = ({
                     </a>
                     <a
                       href={`tel:${order.seller_phone}`}
-                      className="bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       المتجر

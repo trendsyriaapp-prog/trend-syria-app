@@ -129,7 +129,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       {displayFoodOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <UtensilsCrossed size={18} className="text-orange-600" />
+            <UtensilsCrossed size={18} className="text-green-600" />
             <h3 className="font-bold text-gray-900">طلبات الطعام ({displayFoodOrders.length})</h3>
           </div>
           <div className="space-y-3">
@@ -138,9 +138,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border-2 overflow-hidden border-orange-200"
+                className="bg-white rounded-xl border-2 overflow-hidden border-green-200"
               >
-                <div className="text-white px-3 py-1.5 flex items-center justify-between bg-orange-500">
+                <div className="text-white px-3 py-1.5 flex items-center justify-between bg-green-500">
                   <div className="flex items-center gap-2">
                     <UtensilsCrossed size={14} />
                     <span className="text-xs font-bold">طلب طعام</span>
@@ -158,7 +158,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     <span className="font-bold text-sm text-gray-900">
                       #{order.order_number || order.id?.slice(0, 8)}
                     </span>
-                    <span className="font-bold text-orange-600">{formatPrice(order.total)}</span>
+                    <span className="font-bold text-green-600">{formatPrice(order.total)}</span>
                   </div>
 
                   {/* من أين - المتجر */}
@@ -237,7 +237,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors"
+                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
                   >
                     {isWorkingHours() ? 'قبول طلب التوصيل' : 'خارج أوقات العمل'}
                   </button>
