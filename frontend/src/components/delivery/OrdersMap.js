@@ -297,19 +297,19 @@ const OrdersMap = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50"
+            className="fixed inset-0 z-50"
             onClick={() => setIsOpen(false)}
           >
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="absolute bottom-0 left-0 right-0 h-[85vh] bg-white rounded-t-3xl overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-white"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="p-3 bg-white border-b border-gray-200 flex items-center justify-between shadow-sm">
                 <div>
                   <h2 className="font-bold text-gray-900">خريطة الطلبات</h2>
                   <p className="text-xs text-gray-500">
@@ -326,7 +326,7 @@ const OrdersMap = ({
                   </button>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full"
                   >
                     <X size={20} />
                   </button>
@@ -374,13 +374,13 @@ const OrdersMap = ({
                 </span>
               </div>
 
-              {/* الخريطة */}
-              <div className="h-[calc(85vh-180px)]">
+              {/* الخريطة - ملء الشاشة */}
+              <div className="h-[calc(100vh-140px)]">
                 <MapContainer
                   center={mapCenter}
-                  zoom={12}
+                  zoom={13}
                   style={{ height: '100%', width: '100%' }}
-                  zoomControl={false}
+                  zoomControl={true}
                 >
                   <TileLayer
                     attribution='&copy; OpenStreetMap'
