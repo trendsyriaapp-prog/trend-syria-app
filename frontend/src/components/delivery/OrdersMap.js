@@ -60,7 +60,9 @@ const OrdersMap = ({
   driverLocation,
   onSelectOrder,
   onTakeOrder,
-  onTakeFoodOrder 
+  onTakeFoodOrder,
+  myOrders = [],        // طلبات السائق الحالية
+  myFoodOrders = []     // طلبات الطعام للسائق
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -71,6 +73,11 @@ const OrdersMap = ({
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
+  const [multiRouteSegments, setMultiRouteSegments] = useState([]); // مسارات متعددة
+  const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
+
+  // ألوان المسارات
+  const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
 
   // جلب المسار من OSRM (مجاني بدون API Key)
   const fetchRoute = async (start, waypoint, end) => {
@@ -109,6 +116,120 @@ const OrdersMap = ({
       setRouteInfo(null);
     }
     setLoadingRoute(false);
+  };
+
+  // جلب مسار واحد وإرجاع الإحداثيات
+  const fetchSingleRoute = async (points) => {
+    try {
+      const coordsStr = points.map(p => `${p[1]},${p[0]}`).join(';');
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.routes && data.routes[0]) {
+          return {
+            coordinates: data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]),
+            distance: data.routes[0].distance,
+            duration: data.routes[0].duration
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching route segment:', error);
+    }
+    // خط مستقيم كبديل
+    return { coordinates: points, distance: 0, duration: 0 };
+  };
+
+  // عرض جميع مسارات طلباتي بألوان مختلفة
+  const showAllMyOrdersRoutes = async () => {
+    const driverPos = currentDriverLocation || driverLocation;
+    if (!driverPos) {
+      alert('يرجى تفعيل موقعك أولاً');
+      return;
+    }
+
+    const allMyOrders = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
+      o.status !== 'delivered' && o.delivery_status !== 'delivered'
+    );
+
+    if (allMyOrders.length === 0) {
+      alert('لا توجد طلبات لعرض مساراتها');
+      return;
+    }
+
+    setLoadingRoute(true);
+    setShowAllMyRoutes(true);
+    setSelectedOrderForRoute(null);
+    setRouteCoordinates([]);
+
+    const segments = [];
+    let totalDistance = 0;
+    let totalDuration = 0;
+    let currentPosition = [driverPos.latitude, driverPos.longitude];
+    let stopNumber = 1;
+
+    // جمع جميع نقاط التوقف (المتاجر أولاً، ثم العملاء)
+    const stores = [];
+    const customers = [];
+
+    allMyOrders.forEach((order, index) => {
+      if (order.store_latitude && order.store_longitude) {
+        stores.push({
+          position: [order.store_latitude, order.store_longitude],
+          type: 'store',
+          order: order,
+          orderIndex: index
+        });
+      }
+      if (order.latitude && order.longitude) {
+        customers.push({
+          position: [order.latitude, order.longitude],
+          type: 'customer',
+          order: order,
+          orderIndex: index
+        });
+      }
+    });
+
+    // ترتيب: السائق → المتاجر → العملاء
+    const allStops = [...stores, ...customers];
+
+    for (let i = 0; i < allStops.length; i++) {
+      const stop = allStops[i];
+      const routeData = await fetchSingleRoute([currentPosition, stop.position]);
+      
+      segments.push({
+        coordinates: routeData.coordinates,
+        color: routeColors[i % routeColors.length],
+        stopNumber: stopNumber,
+        stopType: stop.type,
+        order: stop.order,
+        position: stop.position
+      });
+
+      totalDistance += routeData.distance;
+      totalDuration += routeData.duration;
+      currentPosition = stop.position;
+      stopNumber++;
+    }
+
+    setMultiRouteSegments(segments);
+    setRouteInfo({
+      distance: (totalDistance / 1000).toFixed(1),
+      duration: Math.round(totalDuration / 60)
+    });
+    setLoadingRoute(false);
+  };
+
+  // إخفاء جميع المسارات
+  const hideAllRoutes = () => {
+    setShowAllMyRoutes(false);
+    setMultiRouteSegments([]);
+    setSelectedOrderForRoute(null);
+    setRouteCoordinates([]);
+    setRouteInfo(null);
   };
 
   // عرض المسار لطلب معين
@@ -410,6 +531,28 @@ const OrdersMap = ({
                   </button>
                 ))}
               </div>
+
+              {/* زر عرض جميع مساراتي */}
+              {(myOrders?.length > 0 || myFoodOrders?.length > 0) && (
+                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+                  {!showAllMyRoutes ? (
+                    <button
+                      onClick={showAllMyOrdersRoutes}
+                      disabled={loadingRoute}
+                      className="w-full py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                    >
+                      {loadingRoute ? '⏳ جاري التحميل...' : '🛣️ عرض مسار جميع طلباتي'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={hideAllRoutes}
+                      className="w-full py-2 bg-gray-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                    >
+                      ✕ إخفاء المسارات
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* الخريطة - ملء الشاشة */}
               <div className="h-[calc(100vh-62px)]">
