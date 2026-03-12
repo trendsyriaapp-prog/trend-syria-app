@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift, UtensilsCrossed, ShoppingBag } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift, UtensilsCrossed, ShoppingBag, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
+import { useToast } from '../components/ui/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -86,6 +88,8 @@ const ShipmentTracker = ({ status }) => {
 const OrdersPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [foodOrders, setFoodOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +97,7 @@ const OrdersPage = () => {
   const [rateOrder, setRateOrder] = useState(null);
   const [ratedOrders, setRatedOrders] = useState({});
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'products', 'food'
+  const [reorderLoading, setReorderLoading] = useState(null); // track which order is being reordered
 
   useEffect(() => {
     if (user) {
@@ -127,6 +132,105 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // إعادة الطلب - إضافة جميع منتجات الطلب السابق للسلة
+  const handleReorder = async (order) => {
+    if (!order.items || order.items.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "لا يمكن إعادة هذا الطلب",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setReorderLoading(order.id);
+    let addedCount = 0;
+    let failedCount = 0;
+
+    for (const item of order.items) {
+      try {
+        await addToCart(
+          item.product_id,
+          item.quantity,
+          item.selected_size || null,
+          item.selected_weight || null
+        );
+        addedCount++;
+      } catch (error) {
+        console.error('Error adding item:', error);
+        failedCount++;
+      }
+    }
+
+    setReorderLoading(null);
+
+    if (addedCount > 0) {
+      toast({
+        title: "تمت إضافة المنتجات للسلة",
+        description: `تم إضافة ${addedCount} منتج${failedCount > 0 ? ` (${failedCount} غير متوفر)` : ''}`,
+      });
+      navigate('/cart');
+    } else {
+      toast({
+        title: "خطأ",
+        description: "المنتجات غير متوفرة حالياً",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // إعادة طلب الطعام
+  const handleReorderFood = async (order) => {
+    if (!order.items || order.items.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "لا يمكن إعادة هذا الطلب",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setReorderLoading(order.id);
+    
+    // جلب السلة الحالية للمتجر
+    const storeId = order.store_id;
+    const cartKey = `food_cart_${storeId}`;
+    let currentCart = [];
+    
+    try {
+      const stored = localStorage.getItem(cartKey);
+      if (stored) currentCart = JSON.parse(stored);
+    } catch (e) {}
+
+    // إضافة المنتجات للسلة
+    for (const item of order.items) {
+      const existingIndex = currentCart.findIndex(c => c.id === item.item_id);
+      if (existingIndex >= 0) {
+        currentCart[existingIndex].quantity += item.quantity;
+      } else {
+        currentCart.push({
+          id: item.item_id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        });
+      }
+    }
+
+    localStorage.setItem(cartKey, JSON.stringify(currentCart));
+    window.dispatchEvent(new CustomEvent('foodCartUpdated'));
+    
+    setReorderLoading(null);
+    
+    toast({
+      title: "تمت إضافة الطلب للسلة",
+      description: `تم إضافة ${order.items.length} صنف من ${order.store_name}`,
+    });
+    
+    navigate(`/food/cart/${storeId}`);
   };
 
   // دمج وترتيب جميع الطلبات
@@ -258,13 +362,25 @@ const OrdersPage = () => {
                       
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <span className="font-bold text-[#FF6B00]">{formatPrice(order.total)}</span>
-                        <Link
-                          to={`/food/order/${order.id}`}
-                          className="text-sm text-[#FF6B00] font-medium hover:underline flex items-center gap-1"
-                        >
-                          تتبع الطلب
-                          <ChevronLeft size={16} />
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          {/* زر إعادة الطلب */}
+                          <button
+                            onClick={() => handleReorderFood(order)}
+                            disabled={reorderLoading === order.id}
+                            className="text-sm bg-green-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center gap-1 disabled:opacity-50"
+                            data-testid={`reorder-food-${order.id}`}
+                          >
+                            <RefreshCw size={14} className={reorderLoading === order.id ? 'animate-spin' : ''} />
+                            إعادة الطلب
+                          </button>
+                          <Link
+                            to={`/food/order/${order.id}`}
+                            className="text-sm text-[#FF6B00] font-medium hover:underline flex items-center gap-1"
+                          >
+                            تتبع الطلب
+                            <ChevronLeft size={16} />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -375,14 +491,25 @@ const OrdersPage = () => {
                         data-testid={`track-order-${order.id}`}
                       >
                         <Truck size={16} />
-                        <span>تتبع الطلب</span>
+                        <span>تتبع</span>
+                      </button>
+                      
+                      {/* زر إعادة الطلب */}
+                      <button
+                        onClick={() => handleReorder(order)}
+                        disabled={reorderLoading === order.id}
+                        className="flex items-center justify-center gap-1 px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                        data-testid={`reorder-${order.id}`}
+                      >
+                        <RefreshCw size={14} className={reorderLoading === order.id ? 'animate-spin' : ''} />
+                        <span>إعادة الطلب</span>
                       </button>
                       
                       {/* زر التقييم - يظهر فقط للطلبات المكتملة */}
                       {order.delivery_status === 'delivered' && !ratedOrders[order.id] && (
                         <button
                           onClick={() => setRateOrder(order)}
-                          className="flex items-center justify-center gap-1 px-4 py-2 bg-yellow-500 text-white rounded-xl text-sm font-medium hover:bg-yellow-600 transition-colors"
+                          className="flex items-center justify-center gap-1 px-3 py-2 bg-yellow-500 text-white rounded-xl text-sm font-medium hover:bg-yellow-600 transition-colors"
                           data-testid={`rate-order-${order.id}`}
                         >
                           <Star size={16} />
@@ -400,7 +527,7 @@ const OrdersPage = () => {
                       
                       <button
                         onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                        className="flex items-center justify-center gap-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200 transition-colors"
+                        className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200 transition-colors"
                         data-testid={`view-order-${order.id}`}
                       >
                         <Eye size={16} />
