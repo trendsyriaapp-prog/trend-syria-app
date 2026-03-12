@@ -523,40 +523,46 @@ const CartPage = () => {
                 )}
                 
                 {/* تفاصيل الشحن لكل بائع */}
-                {sellerShippingDetails.length > 0 && (
+                {sellerShippingDetails.length > 0 ? (
                   <div className="border-t border-gray-100 pt-2 mt-2">
-                    <p className="text-[10px] text-gray-500 mb-1.5 font-medium">تكلفة الشحن:</p>
+                    <p className="text-[10px] text-gray-500 mb-1.5 font-medium">تكلفة الشحن حسب المتجر:</p>
                     {sellerShippingDetails.map((seller) => (
-                      <div key={seller.seller_id} className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] text-gray-600 truncate max-w-[120px]">
+                      <div key={seller.seller_id} className="flex justify-between items-center mb-1 bg-gray-50 rounded px-2 py-1">
+                        <span className="text-[10px] text-gray-700 truncate max-w-[130px] font-medium">
                           {seller.seller_name}
                         </span>
                         {seller.shipping_status === 'free' ? (
                           <span className="text-[10px] font-bold text-green-600">مجاني ✓</span>
                         ) : (
-                          <span className="text-[10px] font-bold text-gray-700">{formatPrice(seller.shipping_cost)}</span>
+                          <span className="text-[10px] font-bold text-orange-600">{formatPrice(seller.shipping_cost)}</span>
                         )}
                       </div>
                     ))}
-                    <div className="flex justify-between items-center pt-1 border-t border-dashed border-gray-200">
-                      <span className="text-[10px] text-gray-600 font-medium">إجمالي الشحن</span>
-                      <span className="text-[10px] font-bold text-gray-900">
+                    <div className="flex justify-between items-center pt-1.5 mt-1 border-t border-dashed border-gray-200">
+                      <span className="text-[10px] text-gray-600 font-bold">إجمالي الشحن</span>
+                      <span className="text-xs font-bold">
                         {sellerShippingDetails.every(s => s.shipping_status === 'free') 
-                          ? 'مجاني ✓' 
-                          : formatPrice(sellerShippingDetails.reduce((sum, s) => sum + s.shipping_cost, 0))
+                          ? <span className="text-green-600">مجاني ✓</span>
+                          : <span className="text-gray-900">{formatPrice(sellerShippingDetails.reduce((sum, s) => sum + s.shipping_cost, 0))}</span>
                         }
                       </span>
                     </div>
                   </div>
-                )}
-                
-                {/* Shipping - عرض قديم إذا لم تتوفر التفاصيل */}
-                {sellerShippingDetails.length === 0 && (
-                  <div className="flex justify-between text-gray-600">
+                ) : shippingLoading ? (
+                  <div className="flex justify-between text-gray-600 border-t border-gray-100 pt-2 mt-2">
                     <span>التوصيل</span>
-                    {shippingLoading ? (
-                      <Loader2 size={12} className="animate-spin text-gray-400" />
-                    ) : isFreeShipping ? (
+                    <Loader2 size={12} className="animate-spin text-gray-400" />
+                  </div>
+                ) : !customerAddress ? (
+                  <div className="border-t border-gray-100 pt-2 mt-2">
+                    <p className="text-[10px] text-gray-500 text-center py-1">
+                      أضف عنوان لحساب تكلفة الشحن
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-gray-600 border-t border-gray-100 pt-2 mt-2">
+                    <span>التوصيل</span>
+                    {isFreeShipping ? (
                       <span className="text-green-600 font-bold">مجاني ✓</span>
                     ) : shippingInfo ? (
                       <span className="text-gray-900 font-bold">{formatPrice(shippingCost)}</span>
