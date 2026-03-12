@@ -54,35 +54,32 @@ const DriverLeaderboard = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-l from-amber-50 to-yellow-50 rounded-xl border border-amber-200 overflow-hidden mb-4"
+      className="bg-gradient-to-l from-amber-50 to-yellow-50 rounded-xl border border-amber-200 overflow-hidden mb-2"
     >
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-center justify-between"
+        className="w-full p-2.5 flex items-center justify-between"
         data-testid="leaderboard-toggle"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-            <Trophy size={24} className="text-white" />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center shadow">
+            <Trophy size={16} className="text-white" />
           </div>
           <div className="text-right">
-            <h3 className="font-bold text-gray-900">لوحة الصدارة</h3>
-            <p className="text-xs text-gray-500">
-              {month_info.name} {month_info.year} • {total_participants} مشارك
+            <h3 className="font-bold text-gray-900 text-xs">لوحة الصدارة</h3>
+            <p className="text-[10px] text-gray-500">
+              {month_info.name} • {total_participants} مشارك
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* My Rank Badge */}
-          <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-            isInTop3 
-              ? 'bg-amber-500 text-white' 
-              : 'bg-gray-100 text-gray-700'
+        <div className="flex items-center gap-1.5">
+          <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+            isInTop3 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700'
           }`}>
             #{my_position.rank}
           </div>
-          {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
       </button>
 

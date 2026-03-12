@@ -100,33 +100,30 @@ const DriverAchievements = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-l from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 overflow-hidden mb-4"
+        className="bg-gradient-to-l from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 overflow-hidden mb-2"
       >
         {/* Header */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full p-4 flex items-center justify-between"
+          className="w-full p-2.5 flex items-center justify-between"
           data-testid="achievements-toggle"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-              <Medal size={24} className="text-white" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow">
+              <Medal size={16} className="text-white" />
             </div>
             <div className="text-right">
-              <h3 className="font-bold text-gray-900">الإنجازات والشارات</h3>
-              <p className="text-xs text-gray-500">
-                {unlockedCount} / {stats.total_achievements} إنجاز
-                <span className="text-indigo-600 font-bold mr-2">
-                  ({stats.completion_percent}%)
-                </span>
+              <h3 className="font-bold text-gray-900 text-xs">الإنجازات</h3>
+              <p className="text-[10px] text-gray-500">
+                {unlockedCount}/{stats.total_achievements} • {stats.completion_percent}%
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-500 text-white text-xs px-3 py-1 rounded-full font-bold">
+          <div className="flex items-center gap-1.5">
+            <div className="bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
               {formatPrice(stats.total_rewards_earned)}
             </div>
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </button>
 

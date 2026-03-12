@@ -58,7 +58,7 @@ const DriverPerformance = () => {
   const { overview, period_stats, charts, performance_level, tips } = data;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Performance Level Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -69,35 +69,35 @@ const DriverPerformance = () => {
           border: `1px solid ${performance_level.color}40`
         }}
       >
-        <div className="p-4">
+        <div className="p-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div 
-                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
                 style={{ backgroundColor: `${performance_level.color}30` }}
               >
                 {performance_level.icon}
               </div>
               <div>
-                <p className="text-xs text-gray-500">مستوى الأداء</p>
-                <p className="text-xl font-bold" style={{ color: performance_level.color }}>
+                <p className="text-[10px] text-gray-500">مستوى الأداء</p>
+                <p className="text-sm font-bold" style={{ color: performance_level.color }}>
                   {performance_level.level}
                 </p>
               </div>
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1">
-                <Star className="fill-amber-400 text-amber-400" size={18} />
-                <span className="text-2xl font-bold text-gray-900">{overview.avg_rating}</span>
+                <Star className="fill-amber-400 text-amber-400" size={14} />
+                <span className="text-lg font-bold text-gray-900">{overview.avg_rating}</span>
               </div>
-              <p className="text-xs text-gray-500">{overview.total_ratings} تقييم</p>
+              <p className="text-[10px] text-gray-500">{overview.total_ratings} تقييم</p>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1.5">
         <QuickStatCard 
           icon={Clock}
           label="اليوم"
@@ -128,14 +128,14 @@ const DriverPerformance = () => {
       >
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          className="w-full p-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors"
           data-testid="performance-expand-btn"
         >
           <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-[#FF6B00]" />
-            <span className="font-bold text-gray-900">تقارير الأداء التفصيلية</span>
+            <TrendingUp size={14} className="text-[#FF6B00]" />
+            <span className="font-bold text-gray-900 text-xs">تقارير الأداء التفصيلية</span>
           </div>
-          {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         <AnimatePresence>
@@ -343,11 +343,11 @@ const DriverPerformance = () => {
 
 // مكون بطاقة الإحصاء السريع
 const QuickStatCard = ({ icon: Icon, label, value, subValue, color }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-    <Icon size={18} className="mx-auto mb-1" style={{ color }} />
-    <p className="text-lg font-bold text-gray-900">{value}</p>
-    <p className="text-[10px] text-gray-500">{label}</p>
-    <p className="text-[10px] font-medium" style={{ color }}>{subValue}</p>
+  <div className="bg-white rounded-lg border border-gray-200 p-2 text-center">
+    <Icon size={14} className="mx-auto mb-0.5" style={{ color }} />
+    <p className="text-sm font-bold text-gray-900">{value}</p>
+    <p className="text-[9px] text-gray-500">{label}</p>
+    <p className="text-[9px] font-medium" style={{ color }}>{subValue}</p>
   </div>
 );
 
