@@ -590,8 +590,6 @@ const DeliveryDashboard = () => {
 
         <DeliveryHeader 
           user={user}
-          walletBalance={walletBalance}
-          myRatings={myRatings}
           isWorkingHours={isWorkingHours()}
           workingHoursText={getWorkingHoursText()}
         />
@@ -636,6 +634,26 @@ const DeliveryDashboard = () => {
             )}
           </div>
         )}
+
+        {/* رصيد المحفظة والتقييم */}
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          {/* المحفظة */}
+          <div 
+            onClick={() => navigate('/wallet')}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-2 cursor-pointer"
+          >
+            <p className="text-white/80 text-[9px]">رصيد المحفظة</p>
+            <p className="text-white font-bold text-sm">{new Intl.NumberFormat('ar-SY').format(walletBalance)} ل.س</p>
+          </div>
+          {/* التقييم */}
+          <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl p-2">
+            <p className="text-white/80 text-[9px]">تقييمي</p>
+            <div className="flex items-center gap-1">
+              <p className="text-white font-bold text-sm">{myRatings.average_rating || 0}</p>
+              <span className="text-white/80 text-[9px]">({myRatings.total_ratings || 0})</span>
+            </div>
+          </div>
+        </div>
 
         {/* التحديات والمكافآت */}
         <DriverChallenges />
