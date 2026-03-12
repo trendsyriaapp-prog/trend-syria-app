@@ -309,7 +309,7 @@ const OrdersMap = ({
               onClick={e => e.stopPropagation()}
             >
               {/* Header شريط علوي موحد */}
-              <div className="bg-white flex items-center justify-between px-2 py-1.5 gap-2 overflow-x-auto">
+              <div className="bg-white flex items-center justify-between px-2 py-1.5 gap-2 overflow-x-auto no-scrollbar">
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => setIsOpen(false)}
