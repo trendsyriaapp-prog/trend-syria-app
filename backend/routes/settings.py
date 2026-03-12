@@ -395,3 +395,45 @@ async def update_leaderboard_rewards(
             "third": rewards.third
         }
     }
+
+
+
+# إعدادات قبول الطلبات
+class OrderLimits(BaseModel):
+    max_food_orders_per_driver: int = 3
+    food_orders_max_distance_km: float = 2.0
+
+@router.put("/order-limits")
+async def update_order_limits(
+    limits: OrderLimits,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات قبول طلبات الطعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    if limits.max_food_orders_per_driver < 1 or limits.max_food_orders_per_driver > 10:
+        raise HTTPException(status_code=400, detail="الحد الأقصى للطلبات يجب أن يكون بين 1 و 10")
+    
+    if limits.food_orders_max_distance_km < 0.5 or limits.food_orders_max_distance_km > 20:
+        raise HTTPException(status_code=400, detail="المسافة يجب أن تكون بين 0.5 و 20 كم")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "max_food_orders_per_driver": limits.max_food_orders_per_driver,
+                "food_orders_max_distance_km": limits.food_orders_max_distance_km,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات قبول الطلبات بنجاح",
+        "max_food_orders_per_driver": limits.max_food_orders_per_driver,
+        "food_orders_max_distance_km": limits.food_orders_max_distance_km
+    }

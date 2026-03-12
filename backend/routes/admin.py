@@ -41,6 +41,9 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             # إعدادات الشحن المجاني
             "products_free_shipping_threshold": 150000,  # حد الشحن المجاني للمنتجات
             "food_free_delivery_threshold": 100000,      # حد التوصيل المجاني للطعام
+            # إعدادات التوصيل
+            "max_food_orders_per_driver": 3,             # الحد الأقصى لطلبات الطعام للسائق
+            "food_orders_max_distance_km": 2,            # المسافة القصوى بين طلبات الطعام (كم)
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(settings)

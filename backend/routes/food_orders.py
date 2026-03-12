@@ -1024,11 +1024,28 @@ async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_curren
 
 @router.post("/delivery/{order_id}/accept")
 async def accept_food_order(order_id: str, user: dict = Depends(get_current_user)):
-    """قبول طلب توصيل"""
+    """قبول طلب توصيل مع التحقق من الحد الأقصى والمسافة"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    # البحث عن الطلب بحالة ready أو ready_for_pickup
+    # جلب إعدادات المنصة
+    settings = await db.platform_settings.find_one({"id": "main"})
+    max_orders = settings.get("max_food_orders_per_driver", 3) if settings else 3
+    max_distance_km = settings.get("food_orders_max_distance_km", 2) if settings else 2
+    
+    # التحقق من عدد الطلبات الحالية للسائق
+    current_orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=100)
+    
+    if len(current_orders) >= max_orders:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لقد وصلت للحد الأقصى ({max_orders} طلبات). يرجى إتمام الطلبات الحالية أولاً"
+        )
+    
+    # البحث عن الطلب الجديد
     order = await db.food_orders.find_one({
         "id": order_id, 
         "status": {"$in": ["ready", "ready_for_pickup"]}, 
@@ -1036,6 +1053,36 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     })
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير متاح")
+    
+    # التحقق من المسافة إذا كان لديه طلبات سابقة
+    if len(current_orders) > 0:
+        first_order = current_orders[0]
+        # الحصول على إحداثيات الطلب الأول والطلب الجديد
+        first_lat = first_order.get("latitude")
+        first_lon = first_order.get("longitude")
+        new_lat = order.get("latitude")
+        new_lon = order.get("longitude")
+        
+        if first_lat and first_lon and new_lat and new_lon:
+            # حساب المسافة بين الطلبين (صيغة Haversine مبسطة)
+            import math
+            R = 6371  # نصف قطر الأرض بالكيلومتر
+            
+            lat1, lon1 = math.radians(first_lat), math.radians(first_lon)
+            lat2, lon2 = math.radians(new_lat), math.radians(new_lon)
+            
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+            c = 2 * math.asin(math.sqrt(a))
+            distance = R * c
+            
+            if distance > max_distance_km:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"هذا الطلب بعيد عن مسارك الحالي ({distance:.1f} كم). الحد الأقصى المسموح: {max_distance_km} كم"
+                )
     
     await db.food_orders.update_one(
         {"id": order_id},

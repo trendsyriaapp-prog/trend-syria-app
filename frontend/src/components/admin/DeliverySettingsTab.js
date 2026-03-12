@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Award, Clock, Save, RefreshCw, CheckCircle, AlertCircle,
-  Star, Zap, Crown, Diamond, Trophy, Gift
+  Star, Zap, Crown, Diamond, Trophy, Gift, Truck, MapPin
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -33,7 +33,10 @@ const DeliverySettingsTab = () => {
       first: 50000,
       second: 30000,
       third: 15000
-    }
+    },
+    // إعدادات قبول الطلبات
+    max_food_orders_per_driver: 3,
+    food_orders_max_distance_km: 2
   });
 
   useEffect(() => {
@@ -46,7 +49,9 @@ const DeliverySettingsTab = () => {
       setSettings({
         ...settings,
         ...res.data,
-        leaderboard_rewards: res.data.leaderboard_rewards || settings.leaderboard_rewards
+        leaderboard_rewards: res.data.leaderboard_rewards || settings.leaderboard_rewards,
+        max_food_orders_per_driver: res.data.max_food_orders_per_driver || 3,
+        food_orders_max_distance_km: res.data.food_orders_max_distance_km || 2
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -91,6 +96,21 @@ const DeliverySettingsTab = () => {
     }
   };
 
+  const handleSaveOrderLimits = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/order-limits`, {
+        max_food_orders_per_driver: settings.max_food_orders_per_driver,
+        food_orders_max_distance_km: settings.food_orders_max_distance_km
+      });
+      alert('تم حفظ إعدادات قبول الطلبات بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -99,10 +119,101 @@ const DeliverySettingsTab = () => {
     );
   }
 
-  const { performance_levels, working_hours, leaderboard_rewards } = settings;
+  const { performance_levels, working_hours, leaderboard_rewards, max_food_orders_per_driver, food_orders_max_distance_km } = settings;
 
   return (
     <div className="space-y-6">
+      {/* Order Limits Section - إعدادات قبول الطلبات */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-orange-500 to-red-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Truck size={24} />
+            <div>
+              <h2 className="font-bold text-lg">إعدادات قبول طلبات الطعام</h2>
+              <p className="text-sm text-white/80">تحكم في عدد الطلبات والمسافة المسموحة للسائق</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* الحد الأقصى للطلبات */}
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">📦</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد الأقصى للطلبات</h3>
+                  <p className="text-xs text-gray-500">عدد طلبات الطعام المسموح بها في نفس الوقت</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={max_food_orders_per_driver}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  max_food_orders_per_driver: parseInt(e.target.value) || 1
+                })}
+                className="w-full p-3 border-2 border-orange-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={10}
+              />
+              <p className="text-center text-sm text-orange-600 mt-2">
+                {max_food_orders_per_driver} طلبات كحد أقصى
+              </p>
+            </div>
+
+            {/* المسافة القصوى */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <MapPin size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">المسافة القصوى</h3>
+                  <p className="text-xs text-gray-500">المسافة بين مواقع عملاء الطلبات</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={food_orders_max_distance_km}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  food_orders_max_distance_km: parseFloat(e.target.value) || 1
+                })}
+                className="w-full p-3 border-2 border-blue-300 rounded-lg text-center text-2xl font-bold"
+                min={0.5}
+                max={20}
+                step={0.5}
+              />
+              <p className="text-center text-sm text-blue-600 mt-2">
+                {food_orders_max_distance_km} كم كحد أقصى
+              </p>
+            </div>
+          </div>
+
+          {/* شرح القواعد */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <h4 className="font-bold text-gray-700 mb-2">📋 كيف تعمل هذه القواعد:</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات طعام</strong> في نفس الوقت</li>
+              <li>• الطلب الثاني والثالث يجب أن يكون عميلهم ضمن <strong>{food_orders_max_distance_km} كم</strong> من عميل الطلب الأول</li>
+              <li>• هذا يضمن توصيل الطعام ساخناً وطازجاً</li>
+            </ul>
+          </div>
+
+          <button
+            onClick={handleSaveOrderLimits}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات قبول الطلبات
+          </button>
+        </div>
+      </div>
+
       {/* Leaderboard Rewards Section */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-4 text-white">
