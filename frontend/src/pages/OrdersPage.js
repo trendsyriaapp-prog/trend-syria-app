@@ -207,16 +207,23 @@ const OrdersPage = () => {
     // إضافة المنتجات للسلة
     for (const item of order.items) {
       const productId = item.product_id || item.item_id;
+      
+      // التأكد من وجود جميع الحقول المطلوبة
+      if (!productId || !item.name || !item.price) {
+        console.warn('Skipping item with missing data:', item);
+        continue;
+      }
+      
       const existingIndex = currentCart.findIndex(c => c.product_id === productId);
       if (existingIndex >= 0) {
-        currentCart[existingIndex].quantity += item.quantity;
+        currentCart[existingIndex].quantity += item.quantity || 1;
       } else {
         currentCart.push({
           product_id: productId,
           name: item.name,
           price: item.price,
-          quantity: item.quantity,
-          image: item.image
+          quantity: item.quantity || 1,
+          image: item.image || ''
         });
       }
     }
