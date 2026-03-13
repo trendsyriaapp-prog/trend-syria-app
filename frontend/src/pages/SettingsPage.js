@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck
+  LogOut, Wallet, Star, Truck, Volume2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -19,6 +19,7 @@ import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPerformance from '../components/delivery/DriverPerformance';
 import MyBoxCard from '../components/delivery/MyBoxCard';
+import NotificationToneSettings from '../components/delivery/NotificationToneSettings';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -238,6 +239,19 @@ const SettingsPage = () => {
               معلوماتي
             </button>
           )}
+          {/* تبويب نغمات الإشعارات - للسائق فقط */}
+          {user?.user_type === 'delivery' && (
+            <button
+              onClick={() => setActiveTab('tones')}
+              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+                activeTab === 'tones' ? 'bg-purple-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              }`}
+              data-testid="tones-tab-btn"
+            >
+              <Volume2 size={12} />
+              النغمات
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('loyalty')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
@@ -329,6 +343,25 @@ const SettingsPage = () => {
 
             {/* صندوق التوصيل */}
             <MyBoxCard />
+          </div>
+        )}
+
+        {/* Notification Tones Tab - تبويب نغمات الإشعارات للسائق */}
+        {activeTab === 'tones' && user?.user_type === 'delivery' && (
+          <div className="space-y-3">
+            <NotificationToneSettings theme={isDarkMode ? 'dark' : 'light'} />
+            
+            {/* ملاحظة */}
+            <div className={`p-4 rounded-xl text-center ${
+              isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50 border border-gray-200'
+            }`}>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                🔊 اختر نغمة مميزة لكل نوع من الطلبات
+              </p>
+              <p className={`text-[10px] mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                النغمة المختارة ستُستخدم تلقائياً عند وصول طلبات جديدة
+              </p>
+            </div>
           </div>
         )}
 
