@@ -725,121 +725,91 @@ const OrdersMap = ({
     setSelectedOrderForRoute(null);
     setRouteCoordinates([]);
 
-    // جمع جميع نقاط التوقف
-    const allPoints = [{
-      position: [driverPos.latitude, driverPos.longitude],
-      type: 'driver',
-      label: 'موقعك',
-      order: null
-    }];
+    try {
+      // جمع جميع نقاط التوقف
+      const allPoints = [{
+        position: [driverPos.latitude, driverPos.longitude],
+        type: 'driver',
+        label: 'موقعك',
+        order: null
+      }];
 
-    // إضافة المتاجر
-    allMyOrders.forEach((order) => {
-      if (order.store_latitude && order.store_longitude) {
-        allPoints.push({
-          position: [order.store_latitude, order.store_longitude],
-          type: 'store',
-          label: order.store_name || order.seller_name || 'متجر',
-          order: order,
-          isFood: !!order.store_name
-        });
+      // إضافة المتاجر
+      allMyOrders.forEach((order) => {
+        const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+        const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+        if (storeLat && storeLng) {
+          allPoints.push({
+            position: [storeLat, storeLng],
+            type: 'store',
+            label: order.store_name || order.seller_name || 'متجر',
+            order: order,
+            isFood: !!order.store_name
+          });
+        }
+      });
+
+      // إضافة العملاء
+      allMyOrders.forEach((order) => {
+        const custLat = order.latitude || order.buyer_address?.latitude;
+        const custLng = order.longitude || order.buyer_address?.longitude;
+        if (custLat && custLng) {
+          allPoints.push({
+            position: [custLat, custLng],
+            type: 'customer',
+            label: order.customer_name || 'عميل',
+            order: order,
+            isFood: !!order.store_name
+          });
+        }
+      });
+
+      if (allPoints.length < 2) {
+        alert('لا توجد نقاط كافية لرسم المسار');
+        setLoadingRoute(false);
+        setShowAllMyRoutes(false);
+        return;
       }
-    });
 
-    // إضافة العملاء
-    allMyOrders.forEach((order) => {
-      if (order.latitude && order.longitude) {
-        allPoints.push({
-          position: [order.latitude, order.longitude],
-          type: 'customer',
-          label: order.customer_name || 'عميل',
-          order: order,
-          isFood: !!order.store_name
-        });
-      }
-    });
+      // ترتيب بسيط: السائق -> المتاجر -> العملاء (بدون API إضافية للسرعة)
+      const driverPoint = allPoints.find(p => p.type === 'driver');
+      const stores = allPoints.filter(p => p.type === 'store');
+      const customers = allPoints.filter(p => p.type === 'customer');
+      const orderedPoints = [driverPoint, ...stores, ...customers];
 
-    if (allPoints.length < 2) {
-      alert('لا توجد نقاط كافية لرسم المسار');
-      setLoadingRoute(false);
-      setShowAllMyRoutes(false);
-      return;
-    }
-
-    // جلب المسار المُحسَّن
-    const optimizedData = await fetchOptimizedRoute(allPoints);
-    
-    if (optimizedData) {
-      // ترتيب النقاط حسب الترتيب المُحسَّن
-      const orderedPoints = optimizedData.optimizedOrder.map(idx => ({
-        ...allPoints[idx],
-        originalIndex: idx
-      }));
-
-      // إنشاء الـ segments الملونة
-      const segments = [];
-      let totalDistance = optimizedData.distance;
-      let totalDuration = optimizedData.duration;
-
-      // تقسيم المسار إلى segments
-      const legs = optimizedData.legs || [];
-      let currentGeometryIndex = 0;
-
+      // جلب جميع المسارات بشكل متوازي للسرعة
+      const routePromises = [];
       for (let i = 0; i < orderedPoints.length - 1; i++) {
         const fromPoint = orderedPoints[i];
         const toPoint = orderedPoints[i + 1];
-        
-        // جلب مسار كل قطعة على حدة للتلوين
-        const segmentRoute = await fetchSingleRoute([fromPoint.position, toPoint.position]);
-        
-        // تحديد اللون بناءً على نوع النقطة الوجهة
-        let segmentColor;
-        if (toPoint.type === 'store') {
-          segmentColor = toPoint.isFood ? '#22c55e' : '#3b82f6'; // أخضر للمطعم، أزرق للمتجر
-        } else {
-          segmentColor = '#ef4444'; // أحمر للعميل
-        }
-
-        segments.push({
-          coordinates: segmentRoute.coordinates,
-          color: segmentColor,
-          fromPoint,
-          toPoint,
-          stopNumber: i + 1,
-          distance: segmentRoute.distance,
-          duration: segmentRoute.duration
-        });
+        routePromises.push(
+          fetchSingleRoute([fromPoint.position, toPoint.position])
+            .then(route => ({
+              route,
+              fromPoint,
+              toPoint,
+              index: i
+            }))
+            .catch(() => ({
+              route: { coordinates: [fromPoint.position, toPoint.position], distance: 0, duration: 0 },
+              fromPoint,
+              toPoint,
+              index: i
+            }))
+        );
       }
 
-      // إضافة علامات النقاط المُرقمة
-      const numberedStops = orderedPoints.map((point, idx) => ({
-        ...point,
-        stopNumber: idx + 1
-      }));
-
-      setMultiRouteSegments(segments);
-      setOptimizedStops(numberedStops);
-      setRouteInfo({
-        distance: (totalDistance / 1000).toFixed(1),
-        duration: Math.round(totalDuration / 60),
-        stopsCount: orderedPoints.length
-      });
-    } else {
-      // Fallback: ترتيب بسيط (المتاجر أولاً ثم العملاء)
-      const stores = allPoints.filter(p => p.type === 'store');
-      const customers = allPoints.filter(p => p.type === 'customer');
-      const driverPoint = allPoints.find(p => p.type === 'driver');
+      // انتظار جميع المسارات
+      const routeResults = await Promise.all(routePromises);
       
-      const orderedPoints = [driverPoint, ...stores, ...customers];
+      // ترتيب النتائج حسب index
+      routeResults.sort((a, b) => a.index - b.index);
+
       const segments = [];
       let totalDistance = 0;
       let totalDuration = 0;
 
-      for (let i = 0; i < orderedPoints.length - 1; i++) {
-        const fromPoint = orderedPoints[i];
-        const toPoint = orderedPoints[i + 1];
-        const segmentRoute = await fetchSingleRoute([fromPoint.position, toPoint.position]);
-        
+      routeResults.forEach(({ route, fromPoint, toPoint }, idx) => {
         let segmentColor;
         if (toPoint.type === 'store') {
           segmentColor = toPoint.isFood ? '#22c55e' : '#3b82f6';
@@ -848,18 +818,18 @@ const OrdersMap = ({
         }
 
         segments.push({
-          coordinates: segmentRoute.coordinates,
+          coordinates: route.coordinates || [fromPoint.position, toPoint.position],
           color: segmentColor,
           fromPoint,
           toPoint,
-          stopNumber: i + 1,
-          distance: segmentRoute.distance,
-          duration: segmentRoute.duration
+          stopNumber: idx + 1,
+          distance: route.distance || 0,
+          duration: route.duration || 0
         });
 
-        totalDistance += segmentRoute.distance || 0;
-        totalDuration += segmentRoute.duration || 0;
-      }
+        totalDistance += route.distance || 0;
+        totalDuration += route.duration || 0;
+      });
 
       const numberedStops = orderedPoints.map((point, idx) => ({
         ...point,
@@ -873,9 +843,12 @@ const OrdersMap = ({
         duration: Math.round(totalDuration / 60),
         stopsCount: orderedPoints.length
       });
+    } catch (error) {
+      console.error('خطأ في تحميل المسارات:', error);
+      alert('حدث خطأ أثناء تحميل المسارات');
+    } finally {
+      setLoadingRoute(false);
     }
-
-    setLoadingRoute(false);
   };
 
   // إخفاء جميع المسارات
@@ -912,97 +885,110 @@ const OrdersMap = ({
 
     setLoadingRoute(true);
 
-    // جمع جميع نقاط التوقف
-    const allPoints = [{
-      position: [driverPos.latitude, driverPos.longitude],
-      type: 'driver',
-      label: 'موقعك',
-      order: null
-    }];
+    try {
+      // جمع جميع نقاط التوقف
+      const allPoints = [{
+        position: [driverPos.latitude, driverPos.longitude],
+        type: 'driver',
+        label: 'موقعك',
+        order: null
+      }];
 
-    // إضافة المتاجر
-    allMyOrders.forEach((order) => {
-      if (order.store_latitude && order.store_longitude) {
-        allPoints.push({
-          position: [order.store_latitude, order.store_longitude],
-          type: 'store',
-          label: order.store_name || order.seller_name || 'متجر',
-          order: order,
-          isFood: !!order.store_name
-        });
+      // إضافة المتاجر
+      allMyOrders.forEach((order) => {
+        const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+        const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+        if (storeLat && storeLng) {
+          allPoints.push({
+            position: [storeLat, storeLng],
+            type: 'store',
+            label: order.store_name || order.seller_name || 'متجر',
+            order: order,
+            isFood: !!order.store_name
+          });
+        }
+      });
+
+      // إضافة العملاء
+      allMyOrders.forEach((order) => {
+        const custLat = order.latitude || order.buyer_address?.latitude;
+        const custLng = order.longitude || order.buyer_address?.longitude;
+        if (custLat && custLng) {
+          allPoints.push({
+            position: [custLat, custLng],
+            type: 'customer',
+            label: order.customer_name || 'عميل',
+            order: order,
+            isFood: !!order.store_name
+          });
+        }
+      });
+
+      if (allPoints.length < 2) {
+        alert('لا توجد نقاط كافية');
+        setLoadingRoute(false);
+        return;
       }
-    });
 
-    // إضافة العملاء
-    allMyOrders.forEach((order) => {
-      if (order.latitude && order.longitude) {
-        allPoints.push({
-          position: [order.latitude, order.longitude],
-          type: 'customer',
-          label: order.customer_name || 'عميل',
-          order: order,
-          isFood: !!order.store_name
-        });
-      }
-    });
-
-    if (allPoints.length < 2) {
-      alert('لا توجد نقاط كافية');
-      setLoadingRoute(false);
-      return;
-    }
-
-    // جلب المسار المُحسَّن
-    const optimizedData = await fetchOptimizedRoute(allPoints);
-    
-    let orderedPoints;
-    if (optimizedData) {
-      orderedPoints = optimizedData.optimizedOrder.map(idx => ({
-        ...allPoints[idx],
-        originalIndex: idx
-      }));
-    } else {
-      // Fallback: ترتيب بسيط
+      // ترتيب بسيط: السائق -> المتاجر -> العملاء
+      const driverPoint = allPoints.find(p => p.type === 'driver');
       const stores = allPoints.filter(p => p.type === 'store');
       const customers = allPoints.filter(p => p.type === 'customer');
-      const driverPoint = allPoints.find(p => p.type === 'driver');
-      orderedPoints = [driverPoint, ...stores, ...customers];
-    }
+      const orderedPoints = [driverPoint, ...stores, ...customers];
 
-    // إنشاء بيانات الخطوات
-    const steps = [];
-    for (let i = 0; i < orderedPoints.length - 1; i++) {
-      const fromPoint = orderedPoints[i];
-      const toPoint = orderedPoints[i + 1];
-      const routeData = await fetchSingleRoute([fromPoint.position, toPoint.position]);
+      // جلب جميع المسارات بشكل متوازي
+      const routePromises = [];
+      for (let i = 0; i < orderedPoints.length - 1; i++) {
+        const fromPoint = orderedPoints[i];
+        const toPoint = orderedPoints[i + 1];
+        routePromises.push(
+          fetchSingleRoute([fromPoint.position, toPoint.position])
+            .then(routeData => ({
+              stepNumber: i + 1,
+              from: fromPoint,
+              to: toPoint,
+              route: routeData.coordinates || [fromPoint.position, toPoint.position],
+              distance: routeData.distance || 0,
+              duration: routeData.duration || 0,
+              index: i
+            }))
+            .catch(() => ({
+              stepNumber: i + 1,
+              from: fromPoint,
+              to: toPoint,
+              route: [fromPoint.position, toPoint.position],
+              distance: 0,
+              duration: 0,
+              index: i
+            }))
+        );
+      }
+
+      // انتظار جميع المسارات
+      const steps = await Promise.all(routePromises);
+      steps.sort((a, b) => a.index - b.index);
+
+      setAllStepsData(steps);
+      setCurrentStepIndex(0);
+      setStepByStepMode(true);
+      setShowAllMyRoutes(false);
       
-      steps.push({
-        stepNumber: i + 1,
-        from: fromPoint,
-        to: toPoint,
-        route: routeData.coordinates,
-        distance: routeData.distance,
-        duration: routeData.duration
-      });
+      // عرض المسار الأول
+      if (steps.length > 0) {
+        setCurrentStepRoute(steps[0].route);
+        setRouteInfo({
+          distance: (steps[0].distance / 1000).toFixed(1),
+          duration: Math.round(steps[0].duration / 60)
+        });
+        // توسيط الخريطة على الوجهة
+        setMapCenter(steps[0].to.position);
+      }
+    } catch (error) {
+      console.error('خطأ في بدء التنقل:', error);
+      alert('حدث خطأ أثناء تحميل المسارات');
+    } finally {
+      setLoadingRoute(false);
     }
-
-    setAllStepsData(steps);
-    setCurrentStepIndex(0);
-    setStepByStepMode(true);
-    setShowAllMyRoutes(false);
-    
-    // عرض المسار الأول
-    if (steps.length > 0) {
-      setCurrentStepRoute(steps[0].route);
-      setRouteInfo({
-        distance: (steps[0].distance / 1000).toFixed(1),
-        duration: Math.round(steps[0].duration / 60)
-      });
-      // توسيط الخريطة على الوجهة
-      setMapCenter(steps[0].to.position);
-    }
-
-    setLoadingRoute(false);
   };
 
   // الانتقال للمحطة التالية
@@ -1479,17 +1465,26 @@ const OrdersMap = ({
                       const currentIndex = modes.indexOf(themeMode);
                       const nextMode = modes[(currentIndex + 1) % modes.length];
                       setThemeMode(nextMode);
+                      // حفظ الإعداد في localStorage
+                      localStorage.setItem('driverThemeMode', nextMode);
+                      // تحديث الثيم الفعلي فوراً
+                      if (nextMode === 'auto') {
+                        const hour = new Date().getHours();
+                        setCurrentTheme((hour >= 6 && hour < 18) ? 'light' : 'dark');
+                      } else {
+                        setCurrentTheme(nextMode);
+                      }
                     }}
-                    className={`p-2 rounded-lg font-bold text-xs flex items-center gap-1 ${
+                    className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 z-50 relative transition-all ${
                       currentTheme === 'dark'
                         ? 'bg-[#252525] text-white hover:bg-[#333] border border-[#444]'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                     }`}
                     title={`الوضع: ${themeMode === 'auto' ? 'تلقائي' : themeMode === 'light' ? 'فاتح' : 'داكن'}`}
                   >
-                    {themeMode === 'auto' && '🔄'}
-                    {themeMode === 'light' && '☀️'}
-                    {themeMode === 'dark' && '🌙'}
+                    {themeMode === 'auto' && '🔄 تلقائي'}
+                    {themeMode === 'light' && '☀️ فاتح'}
+                    {themeMode === 'dark' && '🌙 داكن'}
                   </button>
                 </div>
                 
