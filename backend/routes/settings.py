@@ -323,6 +323,65 @@ async def update_delivery_wait_time(
         "delivery_wait_time_minutes": wait_time_minutes
     }
 
+# ============== إعدادات حدود الطلبات الذكية ==============
+
+class SmartOrderLimits(BaseModel):
+    max_orders_different_stores: int = 5  # الحد الأقصى من مطاعم مختلفة
+    max_orders_same_store: int = 7  # الحد الأقصى من نفس المطعم
+    priority_timeout_seconds: int = 15  # مدة الأولوية بالثواني
+    enable_smart_priority: bool = True  # تفعيل الأولوية الذكية
+
+@router.get("/smart-order-limits")
+async def get_smart_order_limits():
+    """جلب إعدادات حدود الطلبات الذكية"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings or "smart_order_limits" not in settings:
+        return {
+            "max_orders_different_stores": 5,
+            "max_orders_same_store": 7,
+            "priority_timeout_seconds": 15,
+            "enable_smart_priority": True
+        }
+    
+    return settings.get("smart_order_limits")
+
+@router.put("/smart-order-limits")
+async def update_smart_order_limits(
+    limits: SmartOrderLimits,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات حدود الطلبات الذكية"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "smart_order_limits": {
+                    "max_orders_different_stores": limits.max_orders_different_stores,
+                    "max_orders_same_store": limits.max_orders_same_store,
+                    "priority_timeout_seconds": limits.priority_timeout_seconds,
+                    "enable_smart_priority": limits.enable_smart_priority
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات حدود الطلبات الذكية",
+        "smart_order_limits": {
+            "max_orders_different_stores": limits.max_orders_different_stores,
+            "max_orders_same_store": limits.max_orders_same_store,
+            "priority_timeout_seconds": limits.priority_timeout_seconds,
+            "enable_smart_priority": limits.enable_smart_priority
+        }
+    }
+
 @router.put("/low-stock-threshold")
 async def update_low_stock_threshold(
     threshold: int,

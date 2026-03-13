@@ -58,11 +58,20 @@ const DeliverySettingsTab = () => {
   // وقت انتظار التوصيل
   const [waitTimeMinutes, setWaitTimeMinutes] = useState(10);
 
+  // إعدادات حدود الطلبات الذكية
+  const [smartOrderLimits, setSmartOrderLimits] = useState({
+    max_orders_different_stores: 5,
+    max_orders_same_store: 7,
+    priority_timeout_seconds: 15,
+    enable_smart_priority: true
+  });
+
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
     fetchDriverEarningsSettings();
     fetchWaitTime();
+    fetchSmartOrderLimits();
   }, []);
 
   const fetchSettings = async () => {
@@ -138,6 +147,27 @@ const DeliverySettingsTab = () => {
     try {
       await axios.put(`${API}/api/settings/delivery-wait-time?wait_time_minutes=${waitTimeMinutes}`);
       alert('تم حفظ وقت الانتظار بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fetchSmartOrderLimits = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/smart-order-limits`);
+      setSmartOrderLimits(res.data);
+    } catch (error) {
+      console.error('Error fetching smart order limits:', error);
+    }
+  };
+
+  const handleSaveSmartOrderLimits = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/smart-order-limits`, smartOrderLimits);
+      alert('تم حفظ إعدادات الحدود الذكية بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
@@ -632,6 +662,147 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات قبول الطلبات
+          </button>
+        </div>
+      </div>
+
+      {/* Smart Order Limits - إعدادات الحدود الذكية */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🧠</span>
+            <div>
+              <h2 className="font-bold text-lg">الحدود الذكية والأولوية</h2>
+              <p className="text-sm text-white/80">إعدادات متقدمة لتوزيع الطلبات بذكاء</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          {/* تفعيل الأولوية الذكية */}
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚡</span>
+              <div>
+                <h3 className="font-bold text-gray-800">الأولوية الذكية</h3>
+                <p className="text-xs text-gray-500">طلب من نفس المطعم يظهر للسائق الذاهب إليه أولاً</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={smartOrderLimits.enable_smart_priority}
+                onChange={(e) => setSmartOrderLimits({
+                  ...smartOrderLimits,
+                  enable_smart_priority: e.target.checked
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* الحد من مطاعم مختلفة */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🏪</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد من مطاعم مختلفة</h3>
+                  <p className="text-xs text-gray-500">عدد الطلبات من مطاعم مختلفة</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={smartOrderLimits.max_orders_different_stores}
+                onChange={(e) => setSmartOrderLimits({
+                  ...smartOrderLimits,
+                  max_orders_different_stores: parseInt(e.target.value) || 1
+                })}
+                className="w-full p-3 border-2 border-blue-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={10}
+              />
+              <p className="text-center text-sm text-blue-600 mt-2">
+                {smartOrderLimits.max_orders_different_stores} طلبات
+              </p>
+            </div>
+
+            {/* الحد من نفس المطعم */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🍔</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد من نفس المطعم</h3>
+                  <p className="text-xs text-gray-500">عدد الطلبات من نفس المطعم</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={smartOrderLimits.max_orders_same_store}
+                onChange={(e) => setSmartOrderLimits({
+                  ...smartOrderLimits,
+                  max_orders_same_store: parseInt(e.target.value) || 1
+                })}
+                className="w-full p-3 border-2 border-green-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={15}
+              />
+              <p className="text-center text-sm text-green-600 mt-2">
+                {smartOrderLimits.max_orders_same_store} طلبات
+              </p>
+            </div>
+          </div>
+
+          {/* مدة الأولوية */}
+          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-lg">⏱️</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">مدة الأولوية</h3>
+                <p className="text-xs text-gray-500">الوقت المتاح للسائق لقبول الطلب ذو الأولوية</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              value={smartOrderLimits.priority_timeout_seconds}
+              onChange={(e) => setSmartOrderLimits({
+                ...smartOrderLimits,
+                priority_timeout_seconds: parseInt(e.target.value) || 10
+              })}
+              className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
+              min={5}
+              max={60}
+            />
+            <p className="text-center text-sm text-amber-600 mt-2">
+              {smartOrderLimits.priority_timeout_seconds} ثانية
+            </p>
+          </div>
+
+          {/* شرح القواعد الذكية */}
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+            <h4 className="font-bold text-purple-700 mb-2">🧠 كيف تعمل الحدود الذكية:</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• السائق يقبل حتى <strong className="text-blue-600">{smartOrderLimits.max_orders_different_stores} طلبات</strong> من مطاعم مختلفة</li>
+              <li>• إذا كان الطلب من <strong className="text-green-600">نفس المطعم</strong> الذي يذهب إليه، يمكنه قبول حتى <strong className="text-green-600">{smartOrderLimits.max_orders_same_store} طلبات</strong></li>
+              <li>• طلب من نفس المطعم يظهر <strong className="text-amber-600">للسائق الذاهب إليه أولاً</strong> لمدة {smartOrderLimits.priority_timeout_seconds} ثانية</li>
+              <li>• إذا رفض، الطلب يظهر لباقي السائقين</li>
+            </ul>
+          </div>
+
+          <button
+            onClick={handleSaveSmartOrderLimits}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات الحدود الذكية
           </button>
         </div>
       </div>

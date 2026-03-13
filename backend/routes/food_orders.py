@@ -1047,28 +1047,20 @@ async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_curren
 
 @router.post("/delivery/{order_id}/accept")
 async def accept_food_order(order_id: str, user: dict = Depends(get_current_user)):
-    """قبول طلب توصيل مع التحقق من الحد الأقصى والمسافة"""
+    """قبول طلب توصيل مع التحقق من الحد الأقصى والمسافة والأولوية الذكية"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     # جلب إعدادات المنصة
     settings = await db.platform_settings.find_one({"id": "main"})
-    max_orders = settings.get("max_food_orders_per_driver", 3) if settings else 3
-    max_distance_km = settings.get("food_orders_max_distance_km", 2) if settings else 2
     
-    # التحقق من عدد الطلبات الحالية للسائق
-    current_orders = await db.food_orders.find({
-        "driver_id": user["id"],
-        "status": "out_for_delivery"
-    }).to_list(length=100)
+    # جلب إعدادات الحدود الذكية
+    smart_limits = settings.get("smart_order_limits", {}) if settings else {}
+    max_orders_different = smart_limits.get("max_orders_different_stores", 5)
+    max_orders_same = smart_limits.get("max_orders_same_store", 7)
+    max_distance_km = settings.get("food_orders_max_distance_km", 10) if settings else 10
     
-    if len(current_orders) >= max_orders:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"لقد وصلت للحد الأقصى ({max_orders} طلبات). يرجى إتمام الطلبات الحالية أولاً"
-        )
-    
-    # البحث عن الطلب الجديد
+    # البحث عن الطلب الجديد أولاً
     order = await db.food_orders.find_one({
         "id": order_id, 
         "status": {"$in": ["ready", "ready_for_pickup"]}, 
@@ -1077,8 +1069,47 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير متاح")
     
-    # التحقق من المسافة إذا كان لديه طلبات سابقة
-    if len(current_orders) > 0:
+    new_restaurant_id = order.get("restaurant_id") or order.get("store_id")
+    
+    # التحقق من عدد الطلبات الحالية للسائق
+    current_orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=100)
+    
+    current_count = len(current_orders)
+    
+    # حساب عدد الطلبات من نفس المطعم
+    same_restaurant_count = sum(
+        1 for o in current_orders 
+        if (o.get("restaurant_id") or o.get("store_id")) == new_restaurant_id
+    )
+    
+    # منطق الحدود الذكي
+    is_same_restaurant = same_restaurant_count > 0
+    
+    if is_same_restaurant:
+        # إذا كان من نفس المطعم، استخدم الحد الأعلى
+        if current_count >= max_orders_same:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لقد وصلت للحد الأقصى ({max_orders_same} طلبات من نفس المطعم). يرجى إتمام الطلبات الحالية أولاً"
+            )
+    else:
+        # إذا كان من مطعم مختلف، استخدم الحد العادي
+        # حساب عدد المطاعم المختلفة
+        unique_restaurants = set(
+            o.get("restaurant_id") or o.get("store_id") 
+            for o in current_orders
+        )
+        if len(unique_restaurants) >= max_orders_different:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لقد وصلت للحد الأقصى ({max_orders_different} طلبات من مطاعم مختلفة). يرجى إتمام الطلبات الحالية أولاً"
+            )
+    
+    # التحقق من المسافة إذا كان لديه طلبات سابقة (فقط للمطاعم المختلفة)
+    if len(current_orders) > 0 and not is_same_restaurant:
         first_order = current_orders[0]
         # الحصول على إحداثيات الطلب الأول والطلب الجديد
         first_lat = first_order.get("latitude")
@@ -1138,7 +1169,59 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "تم قبول الطلب"}
+    return {"message": "تم قبول الطلب", "is_same_restaurant": is_same_restaurant}
+
+# ============== الأولوية الذكية - طلبات من نفس المطعم ==============
+
+@router.get("/delivery/priority-orders")
+async def get_priority_orders(user: dict = Depends(get_current_user)):
+    """جلب الطلبات ذات الأولوية - من نفس المطاعم التي يذهب إليها السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب إعدادات الأولوية
+    settings = await db.platform_settings.find_one({"id": "main"})
+    smart_limits = settings.get("smart_order_limits", {}) if settings else {}
+    enable_priority = smart_limits.get("enable_smart_priority", True)
+    
+    if not enable_priority:
+        return {"priority_orders": [], "message": "الأولوية الذكية غير مفعّلة"}
+    
+    # جلب الطلبات الحالية للسائق
+    current_orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=100)
+    
+    if not current_orders:
+        return {"priority_orders": [], "message": "لا توجد طلبات حالية"}
+    
+    # جلب المطاعم التي يذهب إليها السائق
+    current_restaurants = list(set(
+        o.get("restaurant_id") or o.get("store_id") 
+        for o in current_orders
+    ))
+    
+    # البحث عن طلبات جديدة من نفس المطاعم
+    priority_orders = await db.food_orders.find({
+        "status": {"$in": ["ready", "ready_for_pickup"]},
+        "driver_id": None,
+        "$or": [
+            {"restaurant_id": {"$in": current_restaurants}},
+            {"store_id": {"$in": current_restaurants}}
+        ]
+    }, {"_id": 0}).to_list(length=20)
+    
+    # إضافة معلومات إضافية
+    for order in priority_orders:
+        order["is_priority"] = True
+        order["priority_reason"] = "طلب من نفس المطعم الذي تذهب إليه"
+    
+    return {
+        "priority_orders": priority_orders,
+        "current_restaurants": current_restaurants,
+        "message": f"وجدنا {len(priority_orders)} طلب من نفس مطاعمك"
+    }
 
 # ===============================
 # نظام تأكيد التسليم بالكود

@@ -1336,19 +1336,17 @@ const OrdersMap = ({
                                 </div>
                               )}
                               
-                              {/* زر قبول الطلب - يظهر فقط على علامة العميل */}
-                              {marker.type === 'customer' && (
+                              {/* زر قبول الطلب - يظهر على المطعم/المتجر (وليس العميل) */}
+                              {(marker.type === 'food-store' || marker.type === 'product-store') && (
                                 <button
                                   onClick={() => {
-                                    // تحديد نوع الطلب من خلال وجود restaurant_id أو order_source
-                                    if (marker.order.restaurant_id || marker.order.order_source === 'food') {
+                                    if (marker.type === 'food-store') {
                                       handleAcceptFoodOrderFromMap(marker.order);
                                     } else {
                                       handleAcceptOrderFromMap(marker.order);
                                     }
-                                    // لا نغلق الخريطة - السائق يبقى لقبول طلبات أخرى
                                   }}
-                                  className="w-full py-1.5 bg-orange-500 text-white rounded text-[10px] font-bold mb-1"
+                                  className="w-full py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-bold mb-1 transition-colors"
                                 >
                                   ✅ قبول الطلب
                                 </button>
