@@ -89,6 +89,12 @@ const OrdersMap = ({
   const [allStepsData, setAllStepsData] = useState([]); // جميع المحطات
   const [currentStepRoute, setCurrentStepRoute] = useState([]); // مسار المحطة الحالية
 
+  // ⭐ ملخص المحطات للسائق
+  const [showStationsSummary, setShowStationsSummary] = useState(false);
+  const [orderedStations, setOrderedStations] = useState([]); // المحطات مرتبة
+  const [totalEarnings, setTotalEarnings] = useState(0); // إجمالي الأرباح
+  const [totalDistance, setTotalDistance] = useState(0); // إجمالي المسافة
+
   // ⭐ تحسينات الملاحة الجديدة
   const [isNavigationMode, setIsNavigationMode] = useState(false); // وضع الملاحة الكامل
   const [liveTrackingEnabled, setLiveTrackingEnabled] = useState(false); // تتبع GPS مباشر
@@ -98,6 +104,91 @@ const OrdersMap = ({
   const [distanceFromRoute, setDistanceFromRoute] = useState(0); // المسافة عن المسار
   const [navigationInstructions, setNavigationInstructions] = useState([]); // تعليمات الملاحة
   const [currentInstruction, setCurrentInstruction] = useState(null); // التعليمة الحالية
+
+  // ⭐ إشعار الأولوية الذكية
+  const [priorityOrder, setPriorityOrder] = useState(null); // الطلب ذو الأولوية
+  const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
+  const [showPriorityPopup, setShowPriorityPopup] = useState(false);
+
+  // ⭐ جلب طلبات الأولوية كل 10 ثواني
+  useEffect(() => {
+    let intervalId = null;
+    
+    if (isOpen && (myFoodOrders?.length > 0 || myOrders?.length > 0)) {
+      const checkPriorityOrders = async () => {
+        try {
+          const response = await axios.get(`${API}/api/food/orders/delivery/priority-orders`);
+          const priorityOrders = response.data.priority_orders || [];
+          
+          // إذا وجد طلب جديد ذو أولوية
+          if (priorityOrders.length > 0 && !priorityOrder && !showPriorityPopup) {
+            const newPriorityOrder = priorityOrders[0];
+            setPriorityOrder(newPriorityOrder);
+            setPriorityCountdown(15);
+            setShowPriorityPopup(true);
+            
+            // تشغيل صوت التنبيه
+            speakInstruction('طلب جديد من نفس المطعم');
+          }
+        } catch (error) {
+          console.error('Error checking priority orders:', error);
+        }
+      };
+      
+      checkPriorityOrders();
+      intervalId = setInterval(checkPriorityOrders, 10000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup]);
+
+  // ⭐ العد التنازلي للأولوية
+  useEffect(() => {
+    let countdownInterval = null;
+    
+    if (showPriorityPopup && priorityCountdown > 0) {
+      countdownInterval = setInterval(() => {
+        setPriorityCountdown(prev => {
+          if (prev <= 1) {
+            // انتهى الوقت - إغلاق النافذة
+            setShowPriorityPopup(false);
+            setPriorityOrder(null);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+    };
+  }, [showPriorityPopup, priorityCountdown]);
+
+  // قبول طلب الأولوية
+  const acceptPriorityOrder = async () => {
+    if (!priorityOrder) return;
+    
+    try {
+      await axios.post(`${API}/api/food/orders/delivery/${priorityOrder.id}/accept`);
+      speakInstruction('تم قبول الطلب بنجاح');
+      setShowPriorityPopup(false);
+      setPriorityOrder(null);
+      onTakeFoodOrder?.(priorityOrder);
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ';
+      setMapError(errorMessage);
+      setTimeout(() => setMapError(null), 5000);
+    }
+  };
+
+  // رفض طلب الأولوية
+  const rejectPriorityOrder = () => {
+    setShowPriorityPopup(false);
+    setPriorityOrder(null);
+  };
 
   // ⭐ تتبع GPS مباشر - كل 5 ثواني
   useEffect(() => {
@@ -288,6 +379,85 @@ const OrdersMap = ({
       setTimeout(() => setMapError(null), 5000);
     }
   };
+
+  // ⭐ حساب وترتيب المحطات للسائق (ذكي: المتجر قبل العميل)
+  const calculateOrderedStations = () => {
+    const stations = [];
+    let totalDist = 0;
+    let totalEarn = 0;
+    let stationNumber = 1;
+
+    // جمع كل الطلبات (طعام + منتجات) التي قبلها السائق
+    const allMyOrders = [...(myFoodOrders || []), ...(myOrders || [])];
+
+    if (allMyOrders.length === 0) {
+      setOrderedStations([]);
+      setTotalDistance(0);
+      setTotalEarnings(0);
+      return;
+    }
+
+    // ترتيب ذكي: لكل طلب، أضف المتجر أولاً ثم العميل
+    allMyOrders.forEach((order, idx) => {
+      const isFood = order.restaurant_id || order.order_type === 'food';
+      const storeName = isFood ? (order.restaurant_name || 'المطعم') : (order.seller_name || 'المتجر');
+      const storeLat = order.store_latitude;
+      const storeLon = order.store_longitude;
+      const customerLat = order.latitude;
+      const customerLon = order.longitude;
+
+      // إضافة محطة المتجر
+      if (storeLat && storeLon) {
+        stations.push({
+          number: stationNumber++,
+          type: 'store',
+          isFood: isFood,
+          name: storeName,
+          address: order.store_address || '',
+          phone: order.restaurant_phone || order.seller_phone || '',
+          position: [storeLat, storeLon],
+          action: 'استلام',
+          orderId: order.id,
+          order: order
+        });
+      }
+
+      // إضافة محطة العميل
+      if (customerLat && customerLon) {
+        stations.push({
+          number: stationNumber++,
+          type: 'customer',
+          isFood: isFood,
+          name: order.customer_name || order.buyer_name || 'العميل',
+          address: order.delivery_address || order.address || '',
+          phone: order.customer_phone || order.delivery_phone || '',
+          position: [customerLat, customerLon],
+          action: 'تسليم',
+          orderId: order.id,
+          order: order,
+          total: order.total
+        });
+
+        // إضافة الربح
+        totalEarn += order.driver_earnings || 0;
+      }
+
+      // حساب المسافة
+      if (storeLat && storeLon && customerLat && customerLon) {
+        const dist = calculateDistanceKm(storeLat, storeLon, customerLat, customerLon);
+        totalDist += dist;
+      }
+    });
+
+    setOrderedStations(stations);
+    setTotalDistance(totalDist);
+    setTotalEarnings(totalEarn);
+  };
+
+  // تحديث المحطات عند تغيير الطلبات
+  useEffect(() => {
+    calculateOrderedStations();
+  }, [myFoodOrders, myOrders]);
 
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
@@ -1141,6 +1311,172 @@ const OrdersMap = ({
                   </button>
                 ))}
               </div>
+
+              {/* زر عرض ملخص المحطات */}
+              {orderedStations.length > 0 && (
+                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+                  <button
+                    onClick={() => setShowStationsSummary(!showStationsSummary)}
+                    className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      showStationsSummary 
+                        ? 'bg-purple-500 text-white' 
+                        : 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-300'
+                    }`}
+                  >
+                    📋 جدول المحطات ({orderedStations.length})
+                    {showStationsSummary ? ' ▲' : ' ▼'}
+                  </button>
+                </div>
+              )}
+
+              {/* بطاقة ملخص المحطات */}
+              <AnimatePresence>
+                {showStationsSummary && orderedStations.length > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="bg-gradient-to-b from-purple-50 to-white border-t border-purple-200 overflow-hidden"
+                  >
+                    <div className="p-3 max-h-[200px] overflow-y-auto">
+                      <div className="space-y-2">
+                        {orderedStations.map((station, idx) => (
+                          <div 
+                            key={`station-${idx}`}
+                            className={`flex items-center gap-2 p-2 rounded-lg ${
+                              station.type === 'store' 
+                                ? 'bg-green-50 border border-green-200' 
+                                : 'bg-red-50 border border-red-200'
+                            }`}
+                          >
+                            {/* رقم المحطة */}
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                              station.type === 'store' 
+                                ? (station.isFood ? 'bg-green-500' : 'bg-blue-500')
+                                : 'bg-red-500'
+                            }`}>
+                              {station.number}
+                            </div>
+                            
+                            {/* معلومات المحطة */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs">{station.type === 'store' ? (station.isFood ? '🍔' : '📦') : '🏠'}</span>
+                                <span className="font-bold text-xs text-gray-800 truncate">{station.name}</span>
+                              </div>
+                              <p className="text-[10px] text-gray-500 truncate">{station.address}</p>
+                            </div>
+                            
+                            {/* الإجراء */}
+                            <div className={`px-2 py-1 rounded text-[10px] font-bold ${
+                              station.action === 'استلام' 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-red-100 text-red-700'
+                            }`}>
+                              {station.action}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* ملخص الإجمالي */}
+                      <div className="mt-3 p-2 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg border border-purple-300">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <p className="text-[10px] text-gray-500">المحطات</p>
+                            <p className="font-bold text-purple-700">{orderedStations.length}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-500">المسافة</p>
+                            <p className="font-bold text-blue-700">{totalDistance.toFixed(1)} كم</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-500">💰 الربح</p>
+                            <p className="font-bold text-green-700">{totalEarnings.toLocaleString()} ل.س</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ⭐ إشعار الأولوية الذكية (طلب من نفس المطعم) */}
+              <AnimatePresence>
+                {showPriorityPopup && priorityOrder && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                    className="absolute top-20 left-4 right-4 z-[2000] bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-2xl overflow-hidden border-2 border-amber-300"
+                  >
+                    {/* شريط العد التنازلي */}
+                    <div className="h-1 bg-amber-300/30">
+                      <motion.div
+                        initial={{ width: '100%' }}
+                        animate={{ width: '0%' }}
+                        transition={{ duration: priorityCountdown, ease: 'linear' }}
+                        className="h-full bg-white"
+                      />
+                    </div>
+                    
+                    <div className="p-4 text-white">
+                      {/* العنوان */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl animate-bounce">🔔</span>
+                          <div>
+                            <p className="font-bold text-sm">طلب جديد من نفس المطعم!</p>
+                            <p className="text-[10px] text-amber-100">أنت ذاهب لهذا المطعم الآن</p>
+                          </div>
+                        </div>
+                        <div className="bg-white/20 rounded-full px-3 py-1">
+                          <span className="font-bold">{priorityCountdown}</span>
+                          <span className="text-xs mr-1">ث</span>
+                        </div>
+                      </div>
+
+                      {/* معلومات الطلب */}
+                      <div className="bg-white/10 rounded-xl p-3 mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">🍔</span>
+                          <span className="font-bold">{priorityOrder.restaurant_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span>🏠</span>
+                          <span className="text-sm">{priorityOrder.customer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>📍</span>
+                          <span className="text-xs text-amber-100 truncate">{priorityOrder.delivery_address}</span>
+                        </div>
+                      </div>
+
+                      {/* الربح المتوقع */}
+                      <div className="bg-green-500/30 rounded-xl p-2 mb-3 text-center">
+                        <span className="text-xs">💰 ربح إضافي: </span>
+                        <span className="font-bold text-lg">+{(priorityOrder.total * 0.1 || 1500).toLocaleString()} ل.س</span>
+                      </div>
+
+                      {/* أزرار القبول والرفض */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={rejectPriorityOrder}
+                          className="py-3 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition-colors"
+                        >
+                          ❌ رفض
+                        </button>
+                        <button
+                          onClick={acceptPriorityOrder}
+                          className="py-3 bg-green-500 hover:bg-green-600 rounded-xl font-bold text-sm transition-colors shadow-lg"
+                        >
+                          ✅ قبول
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* رسالة الخطأ داخل الخريطة */}
               <AnimatePresence>
