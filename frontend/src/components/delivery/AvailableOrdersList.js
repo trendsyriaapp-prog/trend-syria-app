@@ -17,10 +17,13 @@ const openInGoogleMaps = (address, city) => {
   window.open(mapsUrl, '_blank');
 };
 
-const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', myOrders = [], myFoodOrders = [] }) => {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', myOrders = [], myFoodOrders = [], theme = 'dark' }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [orderDistances, setOrderDistances] = useState({});
+  
+  // تحديد الثيم
+  const isDark = theme === 'dark';
 
   // حساب المسافات عند تغيير موقع السائق أو الطلبات
   useEffect(() => {
@@ -131,8 +134,8 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       {displayFoodOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <UtensilsCrossed size={18} className="text-green-400" />
-            <h3 className="font-bold text-white">طلبات الطعام ({displayFoodOrders.length})</h3>
+            <UtensilsCrossed size={18} className={isDark ? 'text-green-400' : 'text-green-600'} />
+            <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلبات الطعام ({displayFoodOrders.length})</h3>
           </div>
           <div className="space-y-3">
             {displayFoodOrders.map((order) => (
@@ -140,42 +143,52 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="driver-order-card"
+                className={`rounded-2xl border overflow-hidden ${
+                  isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
-                <div className="driver-order-header flex items-center justify-between">
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                  isDark ? 'bg-[#252525] border-[#333]' : 'bg-gray-50 border-gray-200'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <UtensilsCrossed size={14} className="text-green-400" />
-                    <span className="text-sm font-bold text-white">طلب طعام</span>
+                    <UtensilsCrossed size={14} className={isDark ? 'text-green-400' : 'text-green-600'} />
+                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلب طعام</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                    }`}>
                       {order.store_type === 'restaurant' ? 'مطعم' : 
                        order.store_type === 'grocery' ? 'مواد غذائية' : 'خضروات'}
                     </span>
                   </div>
                 </div>
-                <div className="driver-order-body">
+                <div className="p-4">
                   {/* رقم الطلب والسعر */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-bold text-sm text-white">
+                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       #{order.order_number || order.id?.slice(0, 8)}
                     </span>
-                    <span className="driver-earnings-badge">{formatPrice(order.total)}</span>
+                    <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+                      isDark ? 'bg-green-500/20 text-green-400 border border-green-500' : 'bg-green-100 text-green-700 border border-green-300'
+                    }`}>{formatPrice(order.total)}</span>
                   </div>
 
                   {/* من أين - المتجر */}
-                  <div className="bg-[#1a2e1a] border border-green-900 rounded-xl p-3 mb-2">
+                  <div className={`rounded-xl p-3 mb-2 border ${
+                    isDark ? 'bg-[#1a2e1a] border-green-900' : 'bg-green-50 border-green-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                        <Navigation size={14} className="text-black" />
+                        <Navigation size={14} className="text-white" />
                       </div>
-                      <span className="text-sm font-bold text-green-400">من ({order.store_name})</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>من ({order.store_name})</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
-                      <div key={i} className="mr-10 text-sm text-gray-400">
+                      <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         <p>{seller.city}</p>
                         {seller.phone && (
-                          <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-400">
+                          <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                             <Phone size={12} /> {seller.phone}
                           </a>
                         )}
@@ -184,18 +197,20 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* إلى أين - العميل */}
-                  <div className="bg-[#2e2a1a] border border-yellow-900 rounded-xl p-3 mb-3">
+                  <div className={`rounded-xl p-3 mb-3 border ${
+                    isDark ? 'bg-[#2e2a1a] border-yellow-900' : 'bg-amber-50 border-amber-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                        <MapPin size={14} className="text-black" />
+                        <MapPin size={14} className="text-white" />
                       </div>
-                      <span className="text-sm font-bold text-yellow-400">إلى (العميل)</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى (العميل)</span>
                     </div>
-                    <div className="mr-10 text-sm text-gray-400">
-                      <p className="font-medium text-white">{order.buyer_address?.name}</p>
+                    <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.name}</p>
                       <p>{order.buyer_address?.address}</p>
                       <p>{order.buyer_address?.city}</p>
-                      <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-yellow-400">
+                      <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}
                       </a>
                     </div>
@@ -213,7 +228,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const storeAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(storeAddr?.address || order.store_name, storeAddr?.city || 'دمشق');
                       }}
-                      className="bg-green-600 text-black py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
+                      className="bg-green-600 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >
                       <Map size={14} />
                       المطعم
@@ -223,7 +238,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         e.stopPropagation();
                         openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
                       }}
-                      className="bg-yellow-500 text-black py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
+                      className="bg-amber-500 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >
                       <Map size={14} />
                       العميل
@@ -250,7 +265,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* عدد المنتجات */}
-                  <p className="text-sm text-gray-400 mb-3">
+                  <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     عدد الأصناف: {order.items?.length || 0}
                   </p>
 
@@ -258,7 +273,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="driver-accept-btn disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isWorkingHours() ? 'قبول طلب التوصيل' : 'خارج أوقات العمل'}
                   </button>
@@ -273,8 +288,8 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       {shopOrders.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <ShoppingBag size={18} className="text-blue-400" />
-            <h3 className="font-bold text-white">طلبات المتجر ({shopOrders.length})</h3>
+            <ShoppingBag size={18} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
+            <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلبات المتجر ({shopOrders.length})</h3>
           </div>
           <div className="space-y-3">
             {shopOrders.map((order) => (
@@ -282,36 +297,44 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 key={order.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="driver-order-card"
+                className={`rounded-2xl border overflow-hidden ${
+                  isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
                 {/* Header */}
-                <div className="driver-order-header flex items-center justify-between">
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                  isDark ? 'bg-[#252525] border-[#333]' : 'bg-gray-50 border-gray-200'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <ShoppingBag size={14} className="text-blue-400" />
-                    <span className="text-sm font-bold text-white">طلب منتجات</span>
+                    <ShoppingBag size={14} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
+                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلب منتجات</span>
                   </div>
-                  <span className="driver-earnings-badge">{formatPrice(order.total)}</span>
+                  <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+                    isDark ? 'bg-green-500/20 text-green-400 border border-green-500' : 'bg-green-100 text-green-700 border border-green-300'
+                  }`}>{formatPrice(order.total)}</span>
                 </div>
                 
-                <div className="driver-order-body">
+                <div className="p-4">
                   {/* رقم الطلب */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-bold text-sm text-white">#{order.id?.slice(0, 8)}</span>
+                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>#{order.id?.slice(0, 8)}</span>
                   </div>
 
                   {/* من أين - البائع */}
-                  <div className="bg-[#1a2e1a] border border-green-900 rounded-xl p-3 mb-2">
+                  <div className={`rounded-xl p-3 mb-2 border ${
+                    isDark ? 'bg-[#1a2e1a] border-green-900' : 'bg-green-50 border-green-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                        <Navigation size={14} className="text-black" />
+                        <Navigation size={14} className="text-white" />
                       </div>
-                      <span className="text-sm font-bold text-green-400">من (البائع)</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>من (البائع)</span>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
-                      <div key={i} className="mr-10 text-sm text-gray-400">
-                        <p className="font-medium text-white">{seller.business_name || seller.name}</p>
+                      <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{seller.business_name || seller.name}</p>
                         <p>{seller.city}</p>
-                        <a href={`tel:${seller.phone}`} className="flex items-center gap-1 text-green-400">
+                        <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                           <Phone size={12} /> {seller.phone}
                         </a>
                       </div>
@@ -319,18 +342,20 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* إلى أين - المشتري */}
-                  <div className="bg-[#2e2a1a] border border-yellow-900 rounded-xl p-3 mb-3">
+                  <div className={`rounded-xl p-3 mb-3 border ${
+                    isDark ? 'bg-[#2e2a1a] border-yellow-900' : 'bg-amber-50 border-amber-200'
+                  }`}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                        <MapPin size={14} className="text-black" />
+                        <MapPin size={14} className="text-white" />
                       </div>
-                      <span className="text-sm font-bold text-yellow-400">إلى (المشتري)</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى (المشتري)</span>
                     </div>
-                    <div className="mr-10 text-sm text-gray-400">
-                      <p className="font-medium text-white">{order.buyer_address?.name}</p>
+                    <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.name}</p>
                       <p>{order.buyer_address?.address}</p>
                       <p>{order.buyer_address?.city}</p>
-                      <a href={`tel:${order.buyer_address?.phone}`} className="flex items-center gap-1 text-yellow-400">
+                      <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}
                       </a>
                     </div>
@@ -347,7 +372,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         const sellerAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(sellerAddr?.address || sellerAddr?.business_name, sellerAddr?.city);
                       }}
-                      className="bg-green-600 text-black py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
+                      className="bg-green-600 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >
                       <Map size={14} />
                       البائع
@@ -357,7 +382,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         e.stopPropagation();
                         openInGoogleMaps(order.buyer_address?.address, order.buyer_address?.city);
                       }}
-                      className="bg-yellow-500 text-black py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
+                      className="bg-amber-500 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >
                       <Map size={14} />
                       المشتري
@@ -383,7 +408,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
 
                   {/* عدد المنتجات */}
-                  <p className="text-sm text-gray-400 mb-3">
+                  <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     عدد المنتجات: {order.items?.length || 0}
                   </p>
 
@@ -391,7 +416,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="driver-accept-btn disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isWorkingHours() ? 'قبول الطلب' : 'خارج أوقات العمل'}
                   </button>

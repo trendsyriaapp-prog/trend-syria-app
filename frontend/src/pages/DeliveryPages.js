@@ -790,6 +790,7 @@ const DeliveryDashboard = () => {
             orderTypeFilter={orderTypeFilter}
             myOrders={myOrders}
             myFoodOrders={myFoodOrders}
+            theme={currentTheme}
           />
         )}
 
