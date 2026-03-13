@@ -1274,7 +1274,7 @@ const OrdersMap = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full bg-white"
+              className="w-full h-full bg-[#0f0f0f]"
               style={{ paddingTop: 'env(safe-area-inset-top)', margin: 0 }}
               onClick={e => e.stopPropagation()}
             >
@@ -1587,12 +1587,12 @@ const OrdersMap = ({
 
               {/* ⭐ زر تفعيل وضع الملاحة (عند وجود مسار) */}
               {routeCoordinates.length > 0 && !isNavigationMode && (
-                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+                <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333]">
                   <button
                     onClick={toggleNavigationMode}
-                    className="w-full py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                   >
-                    <Navigation size={16} />
+                    <Navigation size={18} />
                     🚀 تفعيل وضع الملاحة
                   </button>
                 </div>
@@ -1600,20 +1600,20 @@ const OrdersMap = ({
 
               {/* زر عرض جميع مساراتي */}
               {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
-                <div className="bg-white px-2 py-1.5 border-t border-gray-100 space-y-1.5">
+                <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333] space-y-2">
                   {!showAllMyRoutes ? (
                     <>
                       <button
                         onClick={showAllMyOrdersRoutes}
                         disabled={loadingRoute}
-                        className="w-full py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                       >
                         {loadingRoute ? '⏳ جاري التحميل...' : '🗺️ عرض كل المسارات'}
                       </button>
                       <button
                         onClick={startStepByStepNavigation}
                         disabled={loadingRoute}
-                        className="w-full py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                       >
                         {loadingRoute ? '⏳ جاري التحميل...' : '🚗 ابدأ التنقل خطوة بخطوة'}
                       </button>
@@ -2072,16 +2072,16 @@ const OrdersMap = ({
 
                 {/* بطاقة التنقل خطوة بخطوة */}
                 {stepByStepMode && allStepsData.length > 0 && (
-                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-4 z-[1000]">
+                  <div className="absolute bottom-4 left-4 right-4 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl p-4 z-[1000]">
                     {/* شريط التقدم */}
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-[#333] rounded-full h-2">
                         <div 
                           className="bg-gradient-to-r from-green-500 to-teal-500 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${((currentStepIndex + 1) / allStepsData.length) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs font-bold text-gray-600">
+                      <span className="text-xs font-bold text-gray-400">
                         {currentStepIndex + 1}/{allStepsData.length}
                       </span>
                     </div>
@@ -2089,10 +2089,10 @@ const OrdersMap = ({
                     {/* معلومات المحطة الحالية */}
                     {allStepsData[currentStepIndex] && (
                       <div className="text-center mb-3">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white text-sm font-bold mb-2 ${
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold mb-2 ${
                           allStepsData[currentStepIndex].to.type === 'store'
                             ? (allStepsData[currentStepIndex].to.isFood ? 'bg-green-500' : 'bg-blue-500')
-                            : 'bg-red-500'
+                            : 'bg-amber-500'
                         }`}>
                           {allStepsData[currentStepIndex].to.type === 'store' ? (
                             <>
@@ -2108,10 +2108,10 @@ const OrdersMap = ({
                         
                         {/* المسافة والوقت */}
                         <div className="flex justify-center gap-4 text-sm">
-                          <span className="text-orange-600 font-bold">
+                          <span className="text-green-400 font-bold">
                             📍 {routeInfo?.distance || '0'} كم
                           </span>
-                          <span className="text-blue-600 font-bold">
+                          <span className="text-blue-400 font-bold">
                             ⏱️ {routeInfo?.duration || '0'} دقيقة
                           </span>
                         </div>
@@ -2154,52 +2154,52 @@ const OrdersMap = ({
 
                 {/* معلومات المسار */}
                 {routeInfo && selectedOrderForRoute && (
-                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-sm text-gray-800">🛣️ تفاصيل التوصيلة</h4>
+                  <div className="absolute bottom-4 left-4 right-4 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl p-4 z-[1000]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-sm text-white">🛣️ تفاصيل التوصيلة</h4>
                       <button 
                         onClick={hideRoute}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-500 hover:text-white p-1 rounded-lg hover:bg-[#333]"
                       >
                         <X size={18} />
                       </button>
                     </div>
                     
                     {/* المسافات المنفصلة */}
-                    <div className="bg-gray-50 rounded-lg p-2 mb-2">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="flex items-center gap-1">
-                          <span className="w-5 h-5 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center">🚗</span>
-                          <span className="text-gray-400">➜</span>
-                          <span className="w-5 h-5 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">🏪</span>
-                          <span className="text-gray-600 mr-1">للمتجر</span>
+                    <div className="bg-[#252525] rounded-xl p-3 mb-3 border border-[#333]">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-white text-black rounded-full text-xs flex items-center justify-center">🚗</span>
+                          <span className="text-gray-500">➜</span>
+                          <span className="w-6 h-6 bg-green-500 text-white rounded-full text-xs flex items-center justify-center">🏪</span>
+                          <span className="text-gray-400 mr-1">للمتجر</span>
                         </span>
-                        <span className="font-bold text-green-600">{routeInfo.distanceToStore || '0'} كم</span>
+                        <span className="font-bold text-green-400">{routeInfo.distanceToStore || '0'} كم</span>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <span className="w-5 h-5 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">🏪</span>
-                          <span className="text-gray-400">➜</span>
-                          <span className="w-5 h-5 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">🏠</span>
-                          <span className="text-gray-600 mr-1">للعميل</span>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-500 text-white rounded-full text-xs flex items-center justify-center">🏪</span>
+                          <span className="text-gray-500">➜</span>
+                          <span className="w-6 h-6 bg-amber-500 text-white rounded-full text-xs flex items-center justify-center">🏠</span>
+                          <span className="text-gray-400 mr-1">للعميل</span>
                         </span>
-                        <span className="font-bold text-red-600">{routeInfo.distanceToCustomer || '0'} كم</span>
+                        <span className="font-bold text-amber-400">{routeInfo.distanceToCustomer || '0'} كم</span>
                       </div>
                     </div>
                     
                     {/* الإجمالي والوقت والربح */}
-                    <div className="grid grid-cols-3 gap-2 mb-2">
-                      <div className="bg-orange-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">المجموع</p>
-                        <p className="font-bold text-orange-600">{routeInfo.distance} كم</p>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">المجموع</p>
+                        <p className="font-bold text-blue-400">{routeInfo.distance} كم</p>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">الوقت</p>
-                        <p className="font-bold text-blue-600">{routeInfo.duration} د</p>
+                      <div className="bg-purple-500/20 border border-purple-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">الوقت</p>
+                        <p className="font-bold text-purple-400">{routeInfo.duration} د</p>
                       </div>
-                      <div className="bg-green-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">💰 ربحك</p>
-                        <p className="font-bold text-green-600">{(routeInfo.driverEarnings || 0).toLocaleString()} ل.س</p>
+                      <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">💰 ربحك</p>
+                        <p className="font-bold text-green-400">{(routeInfo.driverEarnings || 0).toLocaleString()} ل.س</p>
                       </div>
                     </div>
 
@@ -2209,9 +2209,9 @@ const OrdersMap = ({
                       {(selectedOrderForRoute?.customer_phone || selectedOrderForRoute?.delivery_phone) && (
                         <a
                           href={`tel:${selectedOrderForRoute.customer_phone || selectedOrderForRoute.delivery_phone}`}
-                          className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                          className="flex-1 py-3 bg-blue-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                         >
-                          <Phone size={14} />
+                          <Phone size={16} />
                           اتصل
                         </a>
                       )}
@@ -2222,9 +2222,9 @@ const OrdersMap = ({
                           toggleNavigationMode();
                           speakInstruction('جاري بدء الملاحة، اتجه نحو المتجر');
                         }}
-                        className="flex-1 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                       >
-                        <Navigation size={14} />
+                        <Navigation size={16} />
                         ابدأ الملاحة
                       </button>
                     </div>
@@ -2233,55 +2233,55 @@ const OrdersMap = ({
 
                 {/* معلومات المسار المُحسَّن (جميع الطلبات) */}
                 {routeInfo && showAllMyRoutes && (
-                  <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-sm text-gray-800">🛣️ المسار المُحسَّن لجميع طلباتك</h4>
+                  <div className="absolute bottom-4 left-4 right-4 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl p-4 z-[1000]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-sm text-white">🛣️ المسار المُحسَّن لجميع طلباتك</h4>
                       <button 
                         onClick={hideAllRoutes}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-500 hover:text-white p-1 rounded-lg hover:bg-[#333]"
                       >
                         <X size={18} />
                       </button>
                     </div>
                     
                     {/* دليل الألوان */}
-                    <div className="flex items-center justify-center gap-3 mb-3 text-[10px]">
+                    <div className="flex items-center justify-center gap-4 mb-3 text-xs">
                       <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
-                        <span>موقعك</span>
+                        <span className="w-3 h-3 rounded-full bg-white shadow-lg"></span>
+                        <span className="text-gray-400">موقعك</span>
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                        <span>مطعم</span>
+                        <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span>
+                        <span className="text-gray-400">مطعم</span>
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                        <span>متجر</span>
+                        <span className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span>
+                        <span className="text-gray-400">متجر</span>
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                        <span>عميل</span>
+                        <span className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span>
+                        <span className="text-gray-400">عميل</span>
                       </span>
                     </div>
                     
                     {/* إحصائيات المسار */}
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-purple-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">نقاط التوقف</p>
-                        <p className="font-bold text-purple-600 text-lg">{routeInfo.stopsCount || optimizedStops.length}</p>
+                      <div className="bg-purple-500/20 border border-purple-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">نقاط التوقف</p>
+                        <p className="font-bold text-purple-400 text-lg">{routeInfo.stopsCount || optimizedStops.length}</p>
                       </div>
-                      <div className="bg-orange-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">المسافة</p>
-                        <p className="font-bold text-orange-600 text-lg">{routeInfo.distance} كم</p>
+                      <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">المسافة</p>
+                        <p className="font-bold text-blue-400 text-lg">{routeInfo.distance} كم</p>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-gray-500">الوقت</p>
-                        <p className="font-bold text-blue-600 text-lg">{routeInfo.duration} د</p>
+                      <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500">الوقت</p>
+                        <p className="font-bold text-green-400 text-lg">{routeInfo.duration} د</p>
                       </div>
                     </div>
 
                     {/* ملاحظة */}
-                    <p className="text-[10px] text-gray-400 text-center mt-2">
+                    <p className="text-xs text-gray-500 text-center mt-3">
                       اضغط على أي علامة لرؤية تفاصيل الطلب
                     </p>
                   </div>
