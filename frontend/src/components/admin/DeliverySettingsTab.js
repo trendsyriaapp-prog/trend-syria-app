@@ -39,8 +39,18 @@ const DeliverySettingsTab = () => {
     food_orders_max_distance_km: 2
   });
 
+  // إعدادات أجور التوصيل بالمسافة
+  const [distanceSettings, setDistanceSettings] = useState({
+    base_fee: 500,
+    price_per_km: 200,
+    min_fee: 1000,
+    enabled_for_food: true,
+    enabled_for_products: true
+  });
+
   useEffect(() => {
     fetchSettings();
+    fetchDistanceSettings();
   }, []);
 
   const fetchSettings = async () => {
@@ -57,6 +67,27 @@ const DeliverySettingsTab = () => {
       console.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDistanceSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/distance-delivery`);
+      setDistanceSettings(res.data);
+    } catch (error) {
+      console.error('Error fetching distance settings:', error);
+    }
+  };
+
+  const handleSaveDistanceSettings = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/distance-delivery`, distanceSettings);
+      alert('تم حفظ إعدادات أجور التوصيل بالمسافة بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -123,6 +154,155 @@ const DeliverySettingsTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Distance Delivery Settings - إعدادات أجور التوصيل بالمسافة */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-green-500 to-teal-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <MapPin size={24} />
+            <div>
+              <h2 className="font-bold text-lg">أجور التوصيل بالمسافة</h2>
+              <p className="text-sm text-white/80">حساب رسوم التوصيل تلقائياً بناءً على المسافة بين المتجر والعميل</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          {/* صيغة الحساب */}
+          <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl border border-green-200">
+            <h4 className="font-bold text-gray-700 mb-2">📐 صيغة الحساب:</h4>
+            <div className="text-center py-3 bg-white rounded-lg border-2 border-dashed border-green-300">
+              <span className="text-lg font-bold text-gray-800">
+                الأجرة = <span className="text-green-600">{formatPrice(distanceSettings.base_fee)}</span> + (المسافة × <span className="text-blue-600">{formatPrice(distanceSettings.price_per_km)}</span>)
+              </span>
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              مثال: 3 كم = {formatPrice(distanceSettings.base_fee)} + (3 × {formatPrice(distanceSettings.price_per_km)}) = <strong>{formatPrice(distanceSettings.base_fee + (3 * distanceSettings.price_per_km))}</strong>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* الرسوم الأساسية */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">💰</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الرسوم الأساسية</h3>
+                  <p className="text-xs text-gray-500">رسوم ثابتة لكل طلب</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={distanceSettings.base_fee}
+                onChange={(e) => setDistanceSettings({
+                  ...distanceSettings,
+                  base_fee: parseInt(e.target.value) || 0
+                })}
+                className="w-full p-3 border-2 border-green-300 rounded-lg text-center text-xl font-bold"
+                min={0}
+                step={100}
+              />
+              <p className="text-center text-sm text-green-600 mt-2">ل.س</p>
+            </div>
+
+            {/* سعر الكيلومتر */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">📏</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">سعر الكيلومتر</h3>
+                  <p className="text-xs text-gray-500">لكل كيلومتر إضافي</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={distanceSettings.price_per_km}
+                onChange={(e) => setDistanceSettings({
+                  ...distanceSettings,
+                  price_per_km: parseInt(e.target.value) || 0
+                })}
+                className="w-full p-3 border-2 border-blue-300 rounded-lg text-center text-xl font-bold"
+                min={0}
+                step={50}
+              />
+              <p className="text-center text-sm text-blue-600 mt-2">ل.س / كم</p>
+            </div>
+
+            {/* الحد الأدنى */}
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">⬇️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد الأدنى</h3>
+                  <p className="text-xs text-gray-500">أقل أجرة للتوصيل</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={distanceSettings.min_fee}
+                onChange={(e) => setDistanceSettings({
+                  ...distanceSettings,
+                  min_fee: parseInt(e.target.value) || 0
+                })}
+                className="w-full p-3 border-2 border-orange-300 rounded-lg text-center text-xl font-bold"
+                min={0}
+                step={100}
+              />
+              <p className="text-center text-sm text-orange-600 mt-2">ل.س</p>
+            </div>
+          </div>
+
+          {/* تفعيل النظام */}
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+              <input
+                type="checkbox"
+                checked={distanceSettings.enabled_for_food}
+                onChange={(e) => setDistanceSettings({
+                  ...distanceSettings,
+                  enabled_for_food: e.target.checked
+                })}
+                className="w-5 h-5 text-green-500 rounded"
+              />
+              <div>
+                <span className="font-bold text-gray-800">🍔 طلبات الطعام</span>
+                <p className="text-xs text-gray-500">تفعيل حساب المسافة لطلبات الطعام</p>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+              <input
+                type="checkbox"
+                checked={distanceSettings.enabled_for_products}
+                onChange={(e) => setDistanceSettings({
+                  ...distanceSettings,
+                  enabled_for_products: e.target.checked
+                })}
+                className="w-5 h-5 text-green-500 rounded"
+              />
+              <div>
+                <span className="font-bold text-gray-800">📦 طلبات المنتجات</span>
+                <p className="text-xs text-gray-500">تفعيل حساب المسافة لطلبات المنتجات</p>
+              </div>
+            </label>
+          </div>
+
+          <button
+            onClick={handleSaveDistanceSettings}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات أجور التوصيل
+          </button>
+        </div>
+      </div>
+
       {/* Order Limits Section - إعدادات قبول الطلبات */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-orange-500 to-red-500 p-4 text-white">

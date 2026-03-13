@@ -166,6 +166,69 @@ async def update_free_shipping_threshold(
         "free_shipping_threshold": threshold
     }
 
+# ============== إعدادات أجور التوصيل بالمسافة ==============
+
+class DistanceDeliverySettings(BaseModel):
+    base_fee: int = 500  # الرسوم الأساسية
+    price_per_km: int = 200  # سعر الكيلومتر
+    min_fee: int = 1000  # الحد الأدنى للأجرة
+    enabled_for_food: bool = True  # تفعيل للطعام
+    enabled_for_products: bool = True  # تفعيل للمنتجات
+
+@router.get("/distance-delivery")
+async def get_distance_delivery_settings():
+    """جلب إعدادات أجور التوصيل بالمسافة"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings or "distance_delivery" not in settings:
+        return {
+            "base_fee": 500,
+            "price_per_km": 200,
+            "min_fee": 1000,
+            "enabled_for_food": True,
+            "enabled_for_products": True
+        }
+    
+    return settings.get("distance_delivery")
+
+@router.put("/distance-delivery")
+async def update_distance_delivery_settings(
+    settings: DistanceDeliverySettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات أجور التوصيل بالمسافة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "distance_delivery": {
+                    "base_fee": settings.base_fee,
+                    "price_per_km": settings.price_per_km,
+                    "min_fee": settings.min_fee,
+                    "enabled_for_food": settings.enabled_for_food,
+                    "enabled_for_products": settings.enabled_for_products
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات أجور التوصيل بالمسافة",
+        "distance_delivery": {
+            "base_fee": settings.base_fee,
+            "price_per_km": settings.price_per_km,
+            "min_fee": settings.min_fee,
+            "enabled_for_food": settings.enabled_for_food,
+            "enabled_for_products": settings.enabled_for_products
+        }
+    }
+
 @router.put("/low-stock-threshold")
 async def update_low_stock_threshold(
     threshold: int,

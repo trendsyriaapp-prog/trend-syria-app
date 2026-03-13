@@ -3,6 +3,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
+import math
 
 from core.database import db, get_current_user
 
@@ -15,6 +16,15 @@ DEFAULT_SHIPPING_COSTS = {
     "far": 25000,
 }
 DEFAULT_FREE_SHIPPING_THRESHOLD = 150000
+
+# إعدادات التوصيل بالمسافة الافتراضية
+DEFAULT_DISTANCE_DELIVERY = {
+    "base_fee": 500,
+    "price_per_km": 200,
+    "min_fee": 1000,
+    "enabled_for_food": True,
+    "enabled_for_products": True
+}
 
 # المحافظات القريبة
 NEARBY_CITIES = {
@@ -53,6 +63,119 @@ async def get_shipping_settings():
         "far": DEFAULT_SHIPPING_COSTS["far"],
         "free_threshold": DEFAULT_FREE_SHIPPING_THRESHOLD
     }
+
+async def get_distance_delivery_settings():
+    """جلب إعدادات التوصيل بالمسافة"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if settings and "distance_delivery" in settings:
+        return settings["distance_delivery"]
+    
+    return DEFAULT_DISTANCE_DELIVERY
+
+def calculate_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    حساب المسافة بين نقطتين بالكيلومتر باستخدام صيغة Haversine
+    """
+    R = 6371  # نصف قطر الأرض بالكيلومتر
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_lat / 2) ** 2 + \
+        math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    distance = R * c
+    return round(distance, 2)
+
+async def calculate_delivery_fee_by_distance(
+    store_lat: float,
+    store_lon: float,
+    customer_lat: float,
+    customer_lon: float,
+    order_total: float,
+    order_type: str = "food"  # "food" or "products"
+) -> dict:
+    """
+    حساب رسوم التوصيل بناءً على المسافة
+    
+    Returns:
+        dict: {
+            "fee": رسوم التوصيل,
+            "distance_km": المسافة بالكيلومتر,
+            "is_free": هل التوصيل مجاني,
+            "message": رسالة للعرض
+        }
+    """
+    # جلب الإعدادات
+    distance_settings = await get_distance_delivery_settings()
+    shipping_settings = await get_shipping_settings()
+    
+    # التحقق من تفعيل النظام لهذا النوع
+    if order_type == "food" and not distance_settings.get("enabled_for_food", True):
+        return {"fee": 0, "distance_km": 0, "is_free": True, "message": "نظام المسافة غير مفعل للطعام"}
+    
+    if order_type == "products" and not distance_settings.get("enabled_for_products", True):
+        return {"fee": 0, "distance_km": 0, "is_free": True, "message": "نظام المسافة غير مفعل للمنتجات"}
+    
+    # حساب المسافة
+    distance_km = calculate_distance_km(store_lat, store_lon, customer_lat, customer_lon)
+    
+    # التحقق من حد الشحن المجاني
+    free_threshold = shipping_settings.get("free_threshold", DEFAULT_FREE_SHIPPING_THRESHOLD)
+    
+    if order_total >= free_threshold:
+        return {
+            "fee": 0,
+            "distance_km": distance_km,
+            "is_free": True,
+            "message": f"🎉 توصيل مجاني! طلبك تجاوز {free_threshold:,} ل.س"
+        }
+    
+    # حساب الرسوم
+    base_fee = distance_settings.get("base_fee", 500)
+    price_per_km = distance_settings.get("price_per_km", 200)
+    min_fee = distance_settings.get("min_fee", 1000)
+    
+    calculated_fee = base_fee + (distance_km * price_per_km)
+    final_fee = max(calculated_fee, min_fee)
+    final_fee = round(final_fee)
+    
+    # حساب كم يحتاج للشحن المجاني
+    remaining_for_free = free_threshold - order_total
+    
+    return {
+        "fee": final_fee,
+        "distance_km": distance_km,
+        "is_free": False,
+        "base_fee": base_fee,
+        "price_per_km": price_per_km,
+        "message": f"رسوم التوصيل ({distance_km} كم)",
+        "remaining_for_free": remaining_for_free,
+        "free_threshold": free_threshold
+    }
+
+@router.get("/calculate-by-distance")
+async def calculate_shipping_by_distance(
+    store_lat: float,
+    store_lon: float,
+    customer_lat: float,
+    customer_lon: float,
+    order_total: float = 0,
+    order_type: str = "food"
+):
+    """
+    حساب رسوم التوصيل بناءً على المسافة بين المتجر والعميل
+    """
+    result = await calculate_delivery_fee_by_distance(
+        store_lat, store_lon,
+        customer_lat, customer_lon,
+        order_total, order_type
+    )
+    return result
 
 # استخدام متغيرات عالمية يتم تحديثها
 SHIPPING_COSTS = DEFAULT_SHIPPING_COSTS.copy()
