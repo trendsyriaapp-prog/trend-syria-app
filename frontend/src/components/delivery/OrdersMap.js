@@ -89,6 +89,143 @@ const OrdersMap = ({
   const [allStepsData, setAllStepsData] = useState([]); // جميع المحطات
   const [currentStepRoute, setCurrentStepRoute] = useState([]); // مسار المحطة الحالية
 
+  // ⭐ تحسينات الملاحة الجديدة
+  const [isNavigationMode, setIsNavigationMode] = useState(false); // وضع الملاحة الكامل
+  const [liveTrackingEnabled, setLiveTrackingEnabled] = useState(false); // تتبع GPS مباشر
+  const [driverSpeed, setDriverSpeed] = useState(0); // سرعة السائق (كم/س)
+  const [estimatedArrival, setEstimatedArrival] = useState(null); // وقت الوصول المتوقع
+  const [lastPosition, setLastPosition] = useState(null); // آخر موقع للحساب
+  const [distanceFromRoute, setDistanceFromRoute] = useState(0); // المسافة عن المسار
+  const [navigationInstructions, setNavigationInstructions] = useState([]); // تعليمات الملاحة
+  const [currentInstruction, setCurrentInstruction] = useState(null); // التعليمة الحالية
+
+  // ⭐ تتبع GPS مباشر - كل 5 ثواني
+  useEffect(() => {
+    let watchId = null;
+    
+    if (liveTrackingEnabled && isOpen) {
+      // مراقبة الموقع بشكل مستمر
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const newLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              speed: position.coords.speed, // م/ث
+              heading: position.coords.heading
+            };
+            
+            // حساب السرعة بالكم/س
+            if (position.coords.speed) {
+              setDriverSpeed(Math.round(position.coords.speed * 3.6)); // تحويل من م/ث لكم/س
+            } else if (lastPosition) {
+              // حساب السرعة يدوياً
+              const dist = calculateDistanceKm(
+                lastPosition.latitude, lastPosition.longitude,
+                newLocation.latitude, newLocation.longitude
+              );
+              const timeDiff = (Date.now() - lastPosition.timestamp) / 1000 / 3600; // بالساعات
+              if (timeDiff > 0) {
+                setDriverSpeed(Math.round(dist / timeDiff));
+              }
+            }
+            
+            setLastPosition({ ...newLocation, timestamp: Date.now() });
+            setCurrentDriverLocation(newLocation);
+            setMapCenter([newLocation.latitude, newLocation.longitude]);
+            
+            // ⭐ التحقق من الابتعاد عن المسار
+            if (routeCoordinates.length > 0) {
+              const distFromRoute = calculateDistanceFromRoute(newLocation, routeCoordinates);
+              setDistanceFromRoute(distFromRoute);
+              
+              // إعادة حساب المسار إذا ابتعد أكثر من 100 متر
+              if (distFromRoute > 0.1 && selectedOrderForRoute) {
+                console.log('🔄 إعادة حساب المسار - ابتعدت عن المسار');
+                showRouteForOrder(selectedOrderForRoute);
+              }
+            }
+            
+            // ⭐ تحديث وقت الوصول المتوقع
+            if (routeInfo && driverSpeed > 0) {
+              const remainingKm = parseFloat(routeInfo.distance) || 0;
+              const etaMinutes = Math.round((remainingKm / driverSpeed) * 60);
+              setEstimatedArrival(etaMinutes);
+            }
+          },
+          (error) => {
+            console.error('خطأ GPS:', error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      }
+    }
+    
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [liveTrackingEnabled, isOpen, routeCoordinates, selectedOrderForRoute]);
+
+  // ⭐ حساب المسافة من نقطة لأقرب نقطة على المسار
+  const calculateDistanceFromRoute = (location, routePoints) => {
+    if (!routePoints || routePoints.length === 0) return 0;
+    
+    let minDistance = Infinity;
+    for (const point of routePoints) {
+      const dist = calculateDistanceKm(
+        location.latitude, location.longitude,
+        point[0], point[1]
+      );
+      if (dist < minDistance) {
+        minDistance = dist;
+      }
+    }
+    return minDistance;
+  };
+
+  // ⭐ حساب المسافة بين نقطتين بالكيلومتر
+  const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // ⭐ تشغيل التنبيهات الصوتية
+  const speakInstruction = (text) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // ⭐ تبديل وضع الملاحة
+  const toggleNavigationMode = () => {
+    if (!isNavigationMode) {
+      setIsNavigationMode(true);
+      setLiveTrackingEnabled(true);
+      speakInstruction('تم تفعيل وضع الملاحة');
+    } else {
+      setIsNavigationMode(false);
+      setLiveTrackingEnabled(false);
+      speakInstruction('تم إيقاف وضع الملاحة');
+    }
+  };
+
   // قبول طلب الطعام من الخريطة مع عرض الخطأ داخلها
   const handleAcceptFoodOrderFromMap = async (order) => {
     try {
@@ -909,6 +1046,72 @@ const OrdersMap = ({
                 )}
               </AnimatePresence>
 
+              {/* ⭐ شريط وضع الملاحة */}
+              {isNavigationMode && (
+                <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white px-3 py-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-bold">وضع الملاحة مفعّل</span>
+                    </div>
+                    <button
+                      onClick={toggleNavigationMode}
+                      className="text-red-400 hover:text-red-300 text-xs"
+                    >
+                      إيقاف ✕
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {/* السرعة */}
+                    <div className="bg-gray-700/50 rounded-lg p-2">
+                      <p className="text-[10px] text-gray-400">السرعة</p>
+                      <p className="text-lg font-bold text-green-400">{driverSpeed}</p>
+                      <p className="text-[10px] text-gray-400">كم/س</p>
+                    </div>
+                    
+                    {/* المسافة المتبقية */}
+                    <div className="bg-gray-700/50 rounded-lg p-2">
+                      <p className="text-[10px] text-gray-400">المسافة</p>
+                      <p className="text-lg font-bold text-blue-400">{routeInfo?.distance || '0'}</p>
+                      <p className="text-[10px] text-gray-400">كم</p>
+                    </div>
+                    
+                    {/* وقت الوصول */}
+                    <div className="bg-gray-700/50 rounded-lg p-2">
+                      <p className="text-[10px] text-gray-400">الوصول</p>
+                      <p className="text-lg font-bold text-orange-400">
+                        {estimatedArrival || routeInfo?.duration || '0'}
+                      </p>
+                      <p className="text-[10px] text-gray-400">دقيقة</p>
+                    </div>
+                  </div>
+                  
+                  {/* تحذير الابتعاد عن المسار */}
+                  {distanceFromRoute > 0.05 && (
+                    <div className="mt-2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 text-center">
+                      <p className="text-yellow-400 text-xs font-bold">
+                        ⚠️ ابتعدت عن المسار ({(distanceFromRoute * 1000).toFixed(0)} متر)
+                      </p>
+                      <p className="text-yellow-300/70 text-[10px]">جاري إعادة حساب المسار...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ⭐ زر تفعيل وضع الملاحة (عند وجود مسار) */}
+              {routeCoordinates.length > 0 && !isNavigationMode && (
+                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+                  <button
+                    onClick={toggleNavigationMode}
+                    className="w-full py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
+                  >
+                    <Navigation size={16} />
+                    🚀 تفعيل وضع الملاحة
+                  </button>
+                </div>
+              )}
+
               {/* زر عرض جميع مساراتي */}
               {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
                 <div className="bg-white px-2 py-1.5 border-t border-gray-100 space-y-1.5">
@@ -948,9 +1151,10 @@ const OrdersMap = ({
                   style={{ height: '100%', width: '100%' }}
                   zoomControl={true}
                 >
+                  {/* خريطة Positron - فاتحة لرؤية أفضل */}
                   <TileLayer
-                    attribution='&copy; OpenStreetMap'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   
@@ -1500,7 +1704,7 @@ const OrdersMap = ({
                     </div>
                     
                     {/* الإجمالي والوقت والربح */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-2 mb-2">
                       <div className="bg-orange-50 rounded-lg p-2 text-center">
                         <p className="text-[10px] text-gray-500">المجموع</p>
                         <p className="font-bold text-orange-600">{routeInfo.distance} كم</p>
@@ -1513,6 +1717,32 @@ const OrdersMap = ({
                         <p className="text-[10px] text-gray-500">💰 ربحك</p>
                         <p className="font-bold text-green-600">{(routeInfo.driverEarnings || 0).toLocaleString()} ل.س</p>
                       </div>
+                    </div>
+
+                    {/* أزرار الإجراءات */}
+                    <div className="flex gap-2">
+                      {/* زر الاتصال */}
+                      {(selectedOrderForRoute?.customer_phone || selectedOrderForRoute?.delivery_phone) && (
+                        <a
+                          href={`tel:${selectedOrderForRoute.customer_phone || selectedOrderForRoute.delivery_phone}`}
+                          className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                        >
+                          <Phone size={14} />
+                          اتصل
+                        </a>
+                      )}
+                      
+                      {/* زر بدء الملاحة */}
+                      <button
+                        onClick={() => {
+                          toggleNavigationMode();
+                          speakInstruction('جاري بدء الملاحة، اتجه نحو المتجر');
+                        }}
+                        className="flex-1 py-2 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                      >
+                        <Navigation size={14} />
+                        ابدأ الملاحة
+                      </button>
                     </div>
                   </div>
                 )}
