@@ -767,8 +767,14 @@ const OrdersMap = ({
     }
   });
 
-  // تصفية العلامات حسب الطبقة المختارة
+  // تصفية العلامات حسب الطبقة المختارة + التحقق من صحة الإحداثيات
   const filteredMarkers = markers.filter(m => {
+    // التحقق من وجود إحداثيات صحيحة
+    if (!m.position || !m.position[0] || !m.position[1] || 
+        isNaN(m.position[0]) || isNaN(m.position[1])) {
+      return false;
+    }
+    
     if (showLayer === 'all') return true;
     if (showLayer === 'food') return m.type === 'food-store' || m.type === 'driver';
     if (showLayer === 'products') return m.type === 'product-store' || m.type === 'driver';
@@ -1060,7 +1066,10 @@ const OrdersMap = ({
                   {/* علامات النقاط المُرقمة (جميع طلباتي) */}
                   {showAllMyRoutes && optimizedStops.length > 0 && (
                     <>
-                      {optimizedStops.map((stop, idx) => {
+                      {optimizedStops.filter(stop => 
+                        stop.position && stop.position[0] && stop.position[1] && 
+                        !isNaN(stop.position[0]) && !isNaN(stop.position[1])
+                      ).map((stop, idx) => {
                         // تحديد لون العلامة
                         let bgColor = '#f97316'; // برتقالي للسائق
                         let emoji = '🚗';
@@ -1287,7 +1296,10 @@ const OrdersMap = ({
                       />
                       
                       {/* علامة الوجهة الحالية */}
-                      {allStepsData[currentStepIndex] && (
+                      {allStepsData[currentStepIndex] && 
+                       allStepsData[currentStepIndex].to?.position &&
+                       allStepsData[currentStepIndex].to.position[0] &&
+                       allStepsData[currentStepIndex].to.position[1] && (
                         <Marker
                           position={allStepsData[currentStepIndex].to.position}
                           icon={L.divIcon({
