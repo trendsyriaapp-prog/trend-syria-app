@@ -30,6 +30,10 @@ const FoodCartPage = () => {
   const [offers, setOffers] = useState([]);
   const [appliedOffer, setAppliedOffer] = useState(null);
   
+  // رسوم التوصيل بالمسافة
+  const [distanceDeliveryFee, setDistanceDeliveryFee] = useState(null);
+  const [calculatingDeliveryFee, setCalculatingDeliveryFee] = useState(false);
+  
   // العناوين وطرق الدفع المحفوظة
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [savedPayments, setSavedPayments] = useState([]);
@@ -169,6 +173,60 @@ const FoodCartPage = () => {
   // حساب رسوم التوصيل والعروض
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
+  // حساب رسوم التوصيل بالمسافة
+  const calculateDistanceDeliveryFee = async () => {
+    // الحصول على إحداثيات العميل
+    let customerLat, customerLon;
+    
+    if (useNewAddress && newAddress.latitude && newAddress.longitude) {
+      customerLat = newAddress.latitude;
+      customerLon = newAddress.longitude;
+    } else if (selectedAddressId) {
+      const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
+      if (selectedAddr?.latitude && selectedAddr?.longitude) {
+        customerLat = selectedAddr.latitude;
+        customerLon = selectedAddr.longitude;
+      }
+    }
+    
+    // الحصول على إحداثيات المتجر
+    const storeLat = store?.latitude;
+    const storeLon = store?.longitude;
+    
+    // إذا لم تتوفر الإحداثيات، استخدم رسوم المتجر الافتراضية
+    if (!customerLat || !customerLon || !storeLat || !storeLon) {
+      setDistanceDeliveryFee(null);
+      return;
+    }
+    
+    setCalculatingDeliveryFee(true);
+    try {
+      const res = await axios.get(`${API}/shipping/calculate-by-distance`, {
+        params: {
+          store_lat: storeLat,
+          store_lon: storeLon,
+          customer_lat: customerLat,
+          customer_lon: customerLon,
+          order_total: subtotal,
+          order_type: 'food'
+        }
+      });
+      setDistanceDeliveryFee(res.data);
+    } catch (error) {
+      console.error('Error calculating distance delivery fee:', error);
+      setDistanceDeliveryFee(null);
+    } finally {
+      setCalculatingDeliveryFee(false);
+    }
+  };
+  
+  // إعادة حساب رسوم التوصيل عند تغيير العنوان أو المتجر
+  useEffect(() => {
+    if (store && (selectedAddressId || (useNewAddress && newAddress.latitude))) {
+      calculateDistanceDeliveryFee();
+    }
+  }, [store, selectedAddressId, useNewAddress, newAddress.latitude, newAddress.longitude, subtotal]);
+  
   // حساب خصم العرض (للعروض اشترِ X واحصل على Y)
   const calculateOfferDiscount = () => {
     if (!offers.length || !cartItems.length) return { discount: 0, offer: null };
@@ -236,13 +294,20 @@ const FoodCartPage = () => {
     userCity === storeCity ||
     userCity.includes(storeCity) || storeCity.includes(userCity);
   
-  // التحقق من التوصيل المجاني: فقط إذا كان هناك حد أدنى محدد وتم الوصول إليه والمدن متطابقة
+  // التحقق من التوصيل المجاني
+  const isFreeByDistance = distanceDeliveryFee?.is_free || false;
   const qualifiesForFreeDelivery = citiesMatch && freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
-  const isFreeDelivery = isCouponFreeDelivery || qualifiesForFreeDelivery;
-  const deliveryFee = isFreeDelivery ? 0 : storeDeliveryFee;
+  const isFreeDelivery = isCouponFreeDelivery || qualifiesForFreeDelivery || isFreeByDistance;
+  
+  // استخدام رسوم المسافة إذا كانت متوفرة، وإلا رسوم المتجر
+  const calculatedDeliveryFee = distanceDeliveryFee?.fee ?? storeDeliveryFee;
+  const deliveryFee = isFreeDelivery ? 0 : calculatedDeliveryFee;
+  const deliveryDistance = distanceDeliveryFee?.distance_km || null;
+  
   const total = finalSubtotal + deliveryFee;
-  // إظهار المتبقي للشحن المجاني فقط إذا كانت المدن متطابقة
-  const remainingForFree = citiesMatch && freeDeliveryMin > 0 && !isFreeDelivery ? Math.max(0, freeDeliveryMin - subtotal) : 0;
+  // إظهار المتبقي للشحن المجاني
+  const freeThreshold = distanceDeliveryFee?.free_threshold || freeDeliveryMin;
+  const remainingForFree = !isFreeDelivery && freeThreshold > 0 ? Math.max(0, freeThreshold - subtotal) : 0;
 
   // التحقق من كوبون الخصم
   const validateCoupon = async () => {
@@ -402,8 +467,13 @@ const FoodCartPage = () => {
         delivery_address: addressData.address,
         delivery_city: addressData.city,
         delivery_phone: addressData.phone,
+        delivery_latitude: addressData.latitude,
+        delivery_longitude: addressData.longitude,
         notes: deliveryInfo.notes,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        // رسوم التوصيل
+        delivery_fee: deliveryFee,
+        delivery_distance_km: deliveryDistance
       };
 
       // التحقق من صحة البيانات قبل الإرسال
@@ -1070,8 +1140,15 @@ const FoodCartPage = () => {
             )}
             
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">رسوم التوصيل</span>
-              {isFreeDelivery ? (
+              <span className="text-gray-600">
+                رسوم التوصيل
+                {deliveryDistance && !isFreeDelivery && (
+                  <span className="text-xs text-gray-400 mr-1">({deliveryDistance} كم)</span>
+                )}
+              </span>
+              {calculatingDeliveryFee ? (
+                <span className="text-gray-400">جاري الحساب...</span>
+              ) : isFreeDelivery ? (
                 <span className="text-[#E65000] font-medium">مجاني ✓</span>
               ) : (
                 <span className="text-gray-900">{deliveryFee.toLocaleString()} ل.س</span>

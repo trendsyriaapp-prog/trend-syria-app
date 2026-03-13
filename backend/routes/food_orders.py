@@ -36,11 +36,16 @@ class FoodOrderCreate(BaseModel):
     delivery_address: str
     delivery_city: str
     delivery_phone: str
+    delivery_latitude: Optional[float] = None
+    delivery_longitude: Optional[float] = None
     notes: Optional[str] = None
     payment_method: str = "wallet"  # wallet, cash
     batch_id: Optional[str] = None  # معرف الدفعة للطلبات المجمعة
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    # رسوم التوصيل
+    delivery_fee: Optional[float] = None
+    delivery_distance_km: Optional[float] = None
 
 
 class BatchOrderItem(BaseModel):
@@ -172,16 +177,24 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     total_discount = offer_discount + flash_discount
     
     # حساب رسوم التوصيل
-    store_delivery_fee = store.get("delivery_fee", 5000)
-    free_delivery_min = store.get("free_delivery_minimum", 0)
-    
-    # توصيل مجاني إذا تجاوز المجموع الحد الأدنى (بعد الخصم)
-    final_subtotal = subtotal - total_discount
-    if free_delivery_min > 0 and final_subtotal >= free_delivery_min:
-        delivery_fee = 0
+    # إذا تم إرسال رسوم التوصيل من الـ Frontend (محسوبة بالمسافة)، نستخدمها
+    # وإلا نحسب بناءً على إعدادات المتجر
+    if order.delivery_fee is not None:
+        delivery_fee = order.delivery_fee
+        delivery_distance_km = order.delivery_distance_km
     else:
-        delivery_fee = store_delivery_fee
+        store_delivery_fee = store.get("delivery_fee", 5000)
+        free_delivery_min = store.get("free_delivery_minimum", 0)
+        
+        # توصيل مجاني إذا تجاوز المجموع الحد الأدنى (بعد الخصم)
+        final_subtotal = subtotal - total_discount
+        if free_delivery_min > 0 and final_subtotal >= free_delivery_min:
+            delivery_fee = 0
+        else:
+            delivery_fee = store_delivery_fee
+        delivery_distance_km = None
     
+    final_subtotal = subtotal - total_discount
     total = final_subtotal + delivery_fee
     
     # التحقق من رصيد المحفظة إذا كان الدفع بالمحفظة
@@ -242,12 +255,13 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "total_discount": total_discount,
         "free_items": free_items,
         "delivery_fee": delivery_fee,
+        "delivery_distance_km": delivery_distance_km,
         "total": total,
         "delivery_address": order.delivery_address,
         "delivery_city": order.delivery_city,
         "delivery_phone": order.delivery_phone,
-        "latitude": order.latitude,
-        "longitude": order.longitude,
+        "latitude": order.delivery_latitude or order.latitude,
+        "longitude": order.delivery_longitude or order.longitude,
         "notes": order.notes,
         "payment_method": order.payment_method,
         "payment_status": "paid" if order.payment_method == "wallet" else "pending",
