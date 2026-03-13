@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
@@ -85,15 +85,20 @@ const MapUpdater = ({ center, zoom }) => {
 const DEFAULT_CENTER = [33.5138, 36.2765];
 
 const OrdersMap = ({ 
-  orders = [], 
-  foodOrders = [], 
+  orders: ordersProp, 
+  foodOrders: foodOrdersProp, 
   driverLocation,
   onSelectOrder,
   onTakeOrder,
   onTakeFoodOrder,
-  myOrders = [],        // طلبات السائق الحالية
-  myFoodOrders = []     // طلبات الطعام للسائق
+  myOrders: myOrdersProp,        // طلبات السائق الحالية
+  myFoodOrders: myFoodOrdersProp     // طلبات الطعام للسائق
 }) => {
+  // استخدام useMemo لتجنب إنشاء مصفوفات جديدة في كل render
+  const orders = useMemo(() => ordersProp || [], [ordersProp]);
+  const foodOrders = useMemo(() => foodOrdersProp || [], [foodOrdersProp]);
+  const myOrders = useMemo(() => myOrdersProp || [], [myOrdersProp]);
+  const myFoodOrders = useMemo(() => myFoodOrdersProp || [], [myFoodOrdersProp]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [showLayer, setShowLayer] = useState('all'); // all, food, products, customers
@@ -119,7 +124,11 @@ const OrdersMap = ({
     const updateAutoTheme = () => {
       // قراءة الإعداد من localStorage (قد يتغير من الصفحة الرئيسية)
       const savedMode = localStorage.getItem('driverThemeMode') || 'auto';
-      setThemeMode(savedMode);
+      
+      // تحديث themeMode فقط إذا تغير لتجنب الحلقة اللانهائية
+      if (savedMode !== themeMode) {
+        setThemeMode(savedMode);
+      }
       
       if (savedMode === 'auto') {
         const hour = new Date().getHours();
@@ -135,7 +144,7 @@ const OrdersMap = ({
     // تحديث كل ثانية لالتقاط التغييرات من الصفحة الرئيسية
     const interval = setInterval(updateAutoTheme, 1000);
     return () => clearInterval(interval);
-  }, [themeMode]);
+  }, []); // إزالة themeMode من dependencies لتجنب الحلقة
   
   // رسالة الخطأ داخل الخريطة
   const [mapError, setMapError] = useState(null);

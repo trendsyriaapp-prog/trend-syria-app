@@ -50,6 +50,7 @@ import FoodBatchSuccessPage from "./pages/FoodBatchSuccessPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
 import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
+import DeliveryMapPage from "./pages/DeliveryMapPage";
 
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
@@ -117,6 +118,7 @@ function App() {
                 <Route path="/delivery" element={<Navigate to="/delivery/dashboard" replace />} />
                 <Route path="/delivery/documents" element={<DeliveryDocuments />} />
                 <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+                <Route path="/delivery/map" element={<DeliveryMapPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboardPage />} />
