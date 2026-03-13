@@ -136,6 +136,8 @@ const OrdersMap = ({
   const [priorityOrder, setPriorityOrder] = useState(null); // الطلب ذو الأولوية
   const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
   const [showPriorityPopup, setShowPriorityPopup] = useState(false);
+  const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
+  const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة
 
   // ⭐ جلب طلبات الأولوية كل 10 ثواني
   useEffect(() => {
@@ -143,13 +145,21 @@ const OrdersMap = ({
     
     if (isOpen && (myFoodOrders?.length > 0 || myOrders?.length > 0)) {
       const checkPriorityOrders = async () => {
+        // تحقق إذا تم إيقاف الإشعارات مؤقتاً
+        if (Date.now() < dismissedPriorityUntil) {
+          return;
+        }
+        
         try {
           const response = await axios.get(`${API}/api/food/orders/delivery/priority-orders`);
           const priorityOrders = response.data.priority_orders || [];
           
+          // تصفية الطلبات المرفوضة
+          const availableOrders = priorityOrders.filter(o => !rejectedOrderIds.includes(o.id));
+          
           // إذا وجد طلب جديد ذو أولوية
-          if (priorityOrders.length > 0 && !priorityOrder && !showPriorityPopup) {
-            const newPriorityOrder = priorityOrders[0];
+          if (availableOrders.length > 0 && !priorityOrder && !showPriorityPopup) {
+            const newPriorityOrder = availableOrders[0];
             setPriorityOrder(newPriorityOrder);
             setPriorityCountdown(15);
             setShowPriorityPopup(true);
@@ -169,7 +179,7 @@ const OrdersMap = ({
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup]);
+  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup, dismissedPriorityUntil, rejectedOrderIds]);
 
   // ⭐ العد التنازلي للأولوية
   useEffect(() => {
@@ -213,6 +223,14 @@ const OrdersMap = ({
 
   // رفض طلب الأولوية
   const rejectPriorityOrder = () => {
+    // إضافة الطلب للقائمة المرفوضة
+    if (priorityOrder) {
+      setRejectedOrderIds(prev => [...prev, priorityOrder.id]);
+    }
+    
+    // إيقاف الإشعارات لمدة 60 ثانية
+    setDismissedPriorityUntil(Date.now() + 60000);
+    
     setShowPriorityPopup(false);
     setPriorityOrder(null);
   };
