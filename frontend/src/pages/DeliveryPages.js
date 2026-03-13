@@ -277,19 +277,26 @@ const DeliveryDashboard = () => {
     // استرجاع الإعداد المحفوظ
     return localStorage.getItem('driverThemeMode') || 'auto';
   });
-  const [currentTheme, setCurrentTheme] = useState('dark');
+  
+  // حساب الثيم الحالي مباشرة
+  const calculateCurrentTheme = (mode) => {
+    if (mode === 'auto') {
+      const hour = new Date().getHours();
+      // من 6 صباحاً إلى 6 مساءً = فاتح
+      const isDay = hour >= 6 && hour < 18;
+      return isDay ? 'light' : 'dark';
+    }
+    return mode;
+  };
+  
+  const [currentTheme, setCurrentTheme] = useState(() => calculateCurrentTheme(
+    localStorage.getItem('driverThemeMode') || 'auto'
+  ));
 
   // حساب الثيم التلقائي حسب الوقت
   useEffect(() => {
     const updateAutoTheme = () => {
-      if (themeMode === 'auto') {
-        const hour = new Date().getHours();
-        // من 6 صباحاً إلى 6 مساءً = فاتح
-        const isDay = hour >= 6 && hour < 18;
-        setCurrentTheme(isDay ? 'light' : 'dark');
-      } else {
-        setCurrentTheme(themeMode);
-      }
+      setCurrentTheme(calculateCurrentTheme(themeMode));
     };
     
     updateAutoTheme();
@@ -809,7 +816,7 @@ const DeliveryDashboard = () => {
 
         {/* Earnings Statistics */}
         {activeTab === 'earnings' && (
-          <EarningsStats token={localStorage.getItem('token')} />
+          <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
         )}
       </div>
 
