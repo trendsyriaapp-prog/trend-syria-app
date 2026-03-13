@@ -235,17 +235,24 @@ const OrdersMap = ({
         setIsOpen(true);
         // تركيز على موقع الطلب
         setMapCenter([latitude, longitude]);
-        // البحث عن العلامة المناسبة وتحديدها
+        
+        // رسم المسار تلقائياً بعد فتح الخريطة
         setTimeout(() => {
-          const markerToSelect = {
-            id: `customer-${order.id}`,
-            type: 'customer',
-            position: [latitude, longitude],
-            title: order.customer_name || order.buyer_address?.name || 'العميل',
-            order: order
-          };
-          setSelectedMarker(markerToSelect);
-        }, 500);
+          // التأكد من وجود إحداثيات المتجر والعميل
+          if (order.store_latitude && order.store_longitude) {
+            showRouteForOrder(order);
+          } else if (order.latitude && order.longitude) {
+            // إذا لم يكن هناك إحداثيات متجر، نحاول استخدام بيانات الطلب
+            const orderWithCoords = {
+              ...order,
+              store_latitude: order.store_latitude || order.seller_addresses?.[0]?.latitude || 33.5138,
+              store_longitude: order.store_longitude || order.seller_addresses?.[0]?.longitude || 36.2765,
+              latitude: latitude,
+              longitude: longitude
+            };
+            showRouteForOrder(orderWithCoords);
+          }
+        }, 800);
       }
     };
 
@@ -253,7 +260,7 @@ const OrdersMap = ({
     return () => {
       window.removeEventListener('focusOrderOnMap', handleFocusOrder);
     };
-  }, []);
+  }, [currentDriverLocation]);
 
   // قبول طلب الطعام من الخريطة مع عرض الخطأ داخلها
   const handleAcceptFoodOrderFromMap = async (order) => {
