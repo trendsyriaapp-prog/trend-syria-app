@@ -981,10 +981,12 @@ const OrdersMap = ({
                                   {(marker.order.total).toLocaleString()} ل.س
                                 </p>
                               )}
-                              {marker.type !== 'customer' && (
+                              {/* زر قبول الطلب - يظهر فقط على علامة العميل */}
+                              {marker.type === 'customer' && (
                                 <button
                                   onClick={() => {
-                                    if (marker.type === 'food-store') {
+                                    // تحديد نوع الطلب من خلال وجود restaurant_id أو order_source
+                                    if (marker.order.restaurant_id || marker.order.order_source === 'food') {
                                       handleAcceptFoodOrderFromMap(marker.order);
                                     } else {
                                       handleAcceptOrderFromMap(marker.order);
