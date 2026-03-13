@@ -204,6 +204,7 @@ const MyOrdersList = ({
 
       {orders.map((order) => {
         const isProductOrder = !order.order_type || order.order_type !== 'food';
+        const isFood = order.order_type === 'food' || order.restaurant_id;
         const orderNumber = order.order_number || order.id?.slice(0, 8).toUpperCase();
         const canStartDelivery = order.delivery_status === 'picked_up' || order.status === 'out_for_delivery';
         const canComplete = order.delivery_status === 'on_the_way' || order.status === 'out_for_delivery';
@@ -396,6 +397,7 @@ const MyOrdersList = ({
       {/* طلبات الطعام */}
       {foodOrders.map((order) => {
         const orderNumber = order.order_number || order.id?.slice(0, 8).toUpperCase();
+        const isFood = true; // طلبات الطعام دائماً
         const canComplete = order.status === 'out_for_delivery';
         const isDelivered = order.status === 'delivered';
 
