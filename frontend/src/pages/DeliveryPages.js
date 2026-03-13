@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -17,6 +17,7 @@ import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
+import NotificationToneSettings from '../components/delivery/NotificationToneSettings';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import useDriverLocationTracker from '../hooks/useDriverLocationTracker';
@@ -727,6 +728,19 @@ const DeliveryDashboard = () => {
           >
             💰 الأرباح
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'settings' 
+                ? 'bg-green-500 text-black' 
+                : currentTheme === 'dark'
+                  ? 'bg-[#1a1a1a] text-gray-400 border border-[#333]'
+                  : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+            data-testid="settings-tab-btn"
+          >
+            ⚙️
+          </button>
         </div>
 
         {/* فلتر نوع الطلبات */}
@@ -808,6 +822,26 @@ const DeliveryDashboard = () => {
         {/* Earnings Statistics */}
         {activeTab === 'earnings' && (
           <EarningsStats token={localStorage.getItem('token')} />
+        )}
+
+        {/* Settings Tab - تبويب الإعدادات */}
+        {activeTab === 'settings' && (
+          <div className="space-y-4">
+            {/* نغمات الإشعارات */}
+            <NotificationToneSettings theme={currentTheme} />
+            
+            {/* ملاحظة */}
+            <div className={`p-4 rounded-xl text-center ${
+              currentTheme === 'dark' ? 'bg-[#1a1a1a] border border-[#333]' : 'bg-gray-50 border border-gray-200'
+            }`}>
+              <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                🔊 يمكنك تجربة الأصوات بالضغط على زر التشغيل ▶
+              </p>
+              <p className={`text-[10px] mt-1 ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+                النغمة المختارة ستُستخدم تلقائياً عند وصول طلبات جديدة
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
