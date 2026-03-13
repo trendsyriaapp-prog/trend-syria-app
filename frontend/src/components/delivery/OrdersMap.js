@@ -93,13 +93,26 @@ const OrdersMap = ({
   onTakeOrder,
   onTakeFoodOrder,
   myOrders: myOrdersProp,        // طلبات السائق الحالية
-  myFoodOrders: myFoodOrdersProp     // طلبات الطعام للسائق
+  myFoodOrders: myFoodOrdersProp,     // طلبات الطعام للسائق
+  theme = 'dark'                 // الثيم: dark, light, auto
 }) => {
   // استخدام useMemo لتجنب إنشاء مصفوفات جديدة في كل render
   const orders = useMemo(() => ordersProp || [], [ordersProp]);
   const foodOrders = useMemo(() => foodOrdersProp || [], [foodOrdersProp]);
   const myOrders = useMemo(() => myOrdersProp || [], [myOrdersProp]);
   const myFoodOrders = useMemo(() => myFoodOrdersProp || [], [myFoodOrdersProp]);
+  
+  // تحديد الثيم الفعلي (للوضع التلقائي)
+  const getEffectiveTheme = () => {
+    if (theme === 'auto') {
+      const hour = new Date().getHours();
+      return (hour >= 6 && hour < 18) ? 'light' : 'dark';
+    }
+    return theme;
+  };
+  const effectiveTheme = getEffectiveTheme();
+  const isDark = effectiveTheme === 'dark';
+  
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [showLayer, setShowLayer] = useState('all'); // all, food, products, customers
@@ -118,16 +131,24 @@ const OrdersMap = ({
   
   // ⭐ نظام الثيم (فاتح/داكن) مع تبديل تلقائي
   const [themeMode, setThemeMode] = useState(() => {
-    // استرجاع الإعداد المحفوظ من الصفحة الرئيسية
-    return localStorage.getItem('driverThemeMode') || 'auto';
+    // استرجاع الإعداد المحفوظ من الصفحة الرئيسية أو استخدام القيمة من props
+    return localStorage.getItem('driverThemeMode') || theme || 'auto';
   });
-  const [currentTheme, setCurrentTheme] = useState('dark'); // الثيم الفعلي المُطبق
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    // تحديد الثيم الابتدائي
+    const savedMode = localStorage.getItem('driverThemeMode') || theme || 'auto';
+    if (savedMode === 'auto') {
+      const hour = new Date().getHours();
+      return (hour >= 6 && hour < 18) ? 'light' : 'dark';
+    }
+    return savedMode;
+  });
   
   // حساب الثيم التلقائي حسب الوقت
   useEffect(() => {
     const updateAutoTheme = () => {
       // قراءة الإعداد من localStorage (قد يتغير من الصفحة الرئيسية)
-      const savedMode = localStorage.getItem('driverThemeMode') || 'auto';
+      const savedMode = localStorage.getItem('driverThemeMode') || theme || 'auto';
       
       // تحديث themeMode فقط إذا تغير لتجنب الحلقة اللانهائية
       if (savedMode !== themeMode) {
@@ -148,7 +169,7 @@ const OrdersMap = ({
     // تحديث كل ثانية لالتقاط التغييرات من الصفحة الرئيسية
     const interval = setInterval(updateAutoTheme, 1000);
     return () => clearInterval(interval);
-  }, []); // إزالة themeMode من dependencies لتجنب الحلقة
+  }, [theme]); // إضافة theme للـ dependencies
   
   // رسالة الخطأ داخل الخريطة
   const [mapError, setMapError] = useState(null);
@@ -1284,6 +1305,74 @@ const OrdersMap = ({
         order: order,
         icon: customerIcon,
         hasRealGPS: true
+      });
+    }
+  });
+
+  // إضافة طلباتي من الطعام (المقبولة)
+  myFoodOrders.forEach(order => {
+    const customerCoords = getOrderCoordinates(order);
+    const storeCoords = getStoreCoordinates(order);
+    
+    // موقع المتجر (إذا متوفر)
+    if (storeCoords) {
+      markers.push({
+        id: `my-food-store-${order.id}`,
+        type: 'food-store',
+        position: storeCoords,
+        title: order.store_name || 'متجر طعام',
+        order: order,
+        icon: foodStoreIcon,
+        isMyOrder: true
+      });
+    }
+    
+    // موقع العميل (إذا متوفر)
+    if (customerCoords) {
+      markers.push({
+        id: `my-food-customer-${order.id}`,
+        type: 'customer',
+        position: customerCoords,
+        title: order.customer_name || 'العميل',
+        order: order,
+        icon: customerIcon,
+        hasRealGPS: true,
+        isMyOrder: true
+      });
+    }
+  });
+
+  // إضافة طلباتي من المنتجات (المقبولة)
+  myOrders.forEach(order => {
+    if (order.order_source === 'food') return;
+    
+    const customerCoords = getOrderCoordinates(order);
+    const storeCoords = getStoreCoordinates(order);
+    
+    // موقع البائع (إذا متوفر)
+    if (storeCoords) {
+      markers.push({
+        id: `my-product-store-${order.id}`,
+        type: 'product-store',
+        position: storeCoords,
+        title: order.seller_name || 'متجر',
+        order: order,
+        icon: productStoreIcon,
+        isMyOrder: true
+      });
+    }
+    
+    // موقع العميل (إذا متوفر)
+    if (customerCoords) {
+      markers.push({
+        id: `my-product-customer-${order.id}`,
+        type: 'customer',
+        position: customerCoords,
+        title: order.customer_name || 'العميل',
+        order: order,
+        icon: customerIcon,
+        hasRealGPS: true,
+        isMyOrder: true
       });
     }
   });

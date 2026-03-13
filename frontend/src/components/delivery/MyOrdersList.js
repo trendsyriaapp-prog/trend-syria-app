@@ -181,6 +181,7 @@ const MyOrdersList = ({
           foodOrders={[]}
           myOrders={orders}
           myFoodOrders={foodOrders}
+          theme={theme}
         />
       )}
 
