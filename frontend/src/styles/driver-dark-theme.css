@@ -1,0 +1,413 @@
+/* /app/frontend/src/styles/driver-dark-theme.css */
+/* تصميم داكن احترافي لشاشة السائق - مثل Uber/Careem */
+
+/* المتغيرات الأساسية */
+:root {
+  --driver-bg-primary: #0f0f0f;
+  --driver-bg-secondary: #1a1a1a;
+  --driver-bg-card: #252525;
+  --driver-bg-elevated: #2d2d2d;
+  
+  --driver-text-primary: #ffffff;
+  --driver-text-secondary: #a0a0a0;
+  --driver-text-muted: #666666;
+  
+  --driver-accent-green: #00c853;
+  --driver-accent-yellow: #ffd600;
+  --driver-accent-red: #ff5252;
+  --driver-accent-blue: #448aff;
+  --driver-accent-orange: #ff6b00;
+  
+  --driver-earnings: #00e676;
+  --driver-border: #333333;
+}
+
+/* الحاوية الرئيسية */
+.driver-dark {
+  background: var(--driver-bg-primary);
+  color: var(--driver-text-primary);
+  min-height: 100vh;
+}
+
+.driver-dark * {
+  border-color: var(--driver-border);
+}
+
+/* البطاقات */
+.driver-card {
+  background: var(--driver-bg-card);
+  border: 1px solid var(--driver-border);
+  border-radius: 16px;
+}
+
+.driver-card-elevated {
+  background: var(--driver-bg-elevated);
+  border: 1px solid var(--driver-border);
+  border-radius: 12px;
+}
+
+/* الأزرار */
+.driver-btn-primary {
+  background: var(--driver-accent-green);
+  color: #000000;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.driver-btn-primary:hover {
+  background: #00e676;
+  transform: scale(1.02);
+}
+
+.driver-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.driver-btn-secondary {
+  background: var(--driver-bg-elevated);
+  color: var(--driver-text-primary);
+  border: 1px solid var(--driver-border);
+  border-radius: 12px;
+}
+
+.driver-btn-danger {
+  background: var(--driver-accent-red);
+  color: #ffffff;
+  border-radius: 12px;
+}
+
+/* حالات الطلبات */
+.driver-status-new {
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--driver-accent-green);
+  border: 1px solid var(--driver-accent-green);
+}
+
+.driver-status-priority {
+  background: rgba(255, 214, 0, 0.15);
+  color: var(--driver-accent-yellow);
+  border: 1px solid var(--driver-accent-yellow);
+  animation: pulse-priority 2s infinite;
+}
+
+.driver-status-active {
+  background: rgba(68, 138, 255, 0.15);
+  color: var(--driver-accent-blue);
+  border: 1px solid var(--driver-accent-blue);
+}
+
+@keyframes pulse-priority {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* الأرباح */
+.driver-earnings-text {
+  color: var(--driver-earnings);
+  font-weight: 700;
+}
+
+.driver-earnings-badge {
+  background: rgba(0, 230, 118, 0.15);
+  color: var(--driver-earnings);
+  border: 1px solid var(--driver-earnings);
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+/* التابات */
+.driver-tab {
+  background: var(--driver-bg-secondary);
+  color: var(--driver-text-secondary);
+  border: 1px solid var(--driver-border);
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.driver-tab-active {
+  background: var(--driver-accent-green);
+  color: #000000;
+  border-color: var(--driver-accent-green);
+}
+
+/* الفلاتر */
+.driver-filter-group {
+  background: var(--driver-bg-secondary);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.driver-filter-btn {
+  background: transparent;
+  color: var(--driver-text-secondary);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.driver-filter-btn-active {
+  background: var(--driver-bg-elevated);
+  color: var(--driver-text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* بطاقة الطلب */
+.driver-order-card {
+  background: var(--driver-bg-card);
+  border: 1px solid var(--driver-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.driver-order-card:hover {
+  border-color: var(--driver-accent-green);
+}
+
+.driver-order-header {
+  background: var(--driver-bg-elevated);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--driver-border);
+}
+
+.driver-order-body {
+  padding: 16px;
+}
+
+/* معلومات المسافة */
+.driver-distance-box {
+  background: rgba(0, 200, 83, 0.1);
+  border: 1px solid rgba(0, 200, 83, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.driver-distance-item {
+  text-align: center;
+}
+
+.driver-distance-label {
+  font-size: 10px;
+  color: var(--driver-text-secondary);
+  margin-bottom: 4px;
+}
+
+.driver-distance-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--driver-accent-green);
+}
+
+/* الأيقونات */
+.driver-icon-btn {
+  background: var(--driver-bg-elevated);
+  border: 1px solid var(--driver-border);
+  border-radius: 10px;
+  padding: 8px;
+  color: var(--driver-text-primary);
+  transition: all 0.2s;
+}
+
+.driver-icon-btn:hover {
+  background: var(--driver-bg-card);
+  border-color: var(--driver-accent-green);
+}
+
+/* Header */
+.driver-header {
+  background: var(--driver-bg-secondary);
+  padding: 16px;
+  border-bottom: 1px solid var(--driver-border);
+}
+
+/* زر الحالة (متاح/مغلق) */
+.driver-status-toggle {
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.driver-status-online {
+  background: var(--driver-accent-green);
+  color: #000000;
+  box-shadow: 0 0 20px rgba(0, 200, 83, 0.4);
+}
+
+.driver-status-offline {
+  background: var(--driver-bg-elevated);
+  color: var(--driver-text-secondary);
+  border: 1px solid var(--driver-border);
+}
+
+/* Empty State */
+.driver-empty-state {
+  background: var(--driver-bg-card);
+  border: 1px solid var(--driver-border);
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.driver-empty-state-icon {
+  color: var(--driver-text-muted);
+  margin-bottom: 16px;
+}
+
+.driver-empty-state-text {
+  color: var(--driver-text-secondary);
+  font-size: 14px;
+}
+
+/* Scrollbar */
+.driver-dark::-webkit-scrollbar {
+  width: 6px;
+}
+
+.driver-dark::-webkit-scrollbar-track {
+  background: var(--driver-bg-primary);
+}
+
+.driver-dark::-webkit-scrollbar-thumb {
+  background: var(--driver-border);
+  border-radius: 3px;
+}
+
+/* نافذة الأولوية */
+.driver-priority-modal {
+  background: var(--driver-bg-card);
+  border: 2px solid var(--driver-accent-yellow);
+  border-radius: 20px;
+  animation: shake-priority 0.5s ease-in-out;
+}
+
+@keyframes shake-priority {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.driver-priority-header {
+  background: linear-gradient(135deg, var(--driver-accent-yellow), #ffab00);
+  color: #000000;
+  padding: 16px;
+  border-radius: 18px 18px 0 0;
+}
+
+.driver-priority-timer {
+  background: rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* الخريطة */
+.driver-map-container {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--driver-border);
+}
+
+/* معلومات الطلب */
+.driver-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--driver-border);
+}
+
+.driver-info-row:last-child {
+  border-bottom: none;
+}
+
+.driver-info-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--driver-bg-elevated);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--driver-text-secondary);
+}
+
+.driver-info-label {
+  font-size: 11px;
+  color: var(--driver-text-muted);
+}
+
+.driver-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--driver-text-primary);
+}
+
+/* بطاقة الأرباح */
+.driver-earnings-card {
+  background: linear-gradient(135deg, #1a3a1a, #0d2a0d);
+  border: 1px solid var(--driver-accent-green);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.driver-earnings-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--driver-earnings);
+}
+
+.driver-earnings-label {
+  font-size: 12px;
+  color: var(--driver-text-secondary);
+}
+
+/* زر قبول الطلب */
+.driver-accept-btn {
+  background: linear-gradient(135deg, var(--driver-accent-green), #00a843);
+  color: #000000;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  border-radius: 14px;
+  width: 100%;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+}
+
+.driver-accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+}
+
+.driver-accept-btn:active {
+  transform: translateY(0);
+}
+
+/* التنبيهات */
+.driver-alert-success {
+  background: rgba(0, 200, 83, 0.15);
+  border: 1px solid var(--driver-accent-green);
+  color: var(--driver-accent-green);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.driver-alert-warning {
+  background: rgba(255, 214, 0, 0.15);
+  border: 1px solid var(--driver-accent-yellow);
+  color: var(--driver-accent-yellow);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.driver-alert-error {
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid var(--driver-accent-red);
+  color: var(--driver-accent-red);
+  border-radius: 12px;
+  padding: 12px 16px;
+}

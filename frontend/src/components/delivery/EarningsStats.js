@@ -94,7 +94,7 @@ export default function EarningsStats({ token }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
     );
   }
@@ -102,10 +102,10 @@ export default function EarningsStats({ token }) {
   return (
     <div className="space-y-4" dir="rtl">
       {/* Header with tabs */}
-      <div className="bg-gradient-to-l from-orange-500 to-orange-600 rounded-xl p-4 text-white">
+      <div className="driver-earnings-card">
         <div className="flex items-center gap-2 mb-3">
-          <DollarSign className="w-6 h-6" />
-          <h2 className="text-lg font-bold">إحصائيات الأرباح</h2>
+          <DollarSign className="w-6 h-6 text-green-400" />
+          <h2 className="text-lg font-bold text-white">إحصائيات الأرباح</h2>
         </div>
         
         {/* Tab buttons */}
@@ -118,10 +118,10 @@ export default function EarningsStats({ token }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                 activeTab === tab.id
-                  ? 'bg-white text-orange-600'
-                  : 'bg-white/20 hover:bg-white/30'
+                  ? 'bg-green-500 text-black'
+                  : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
               }`}
             >
               {tab.label}
@@ -144,10 +144,10 @@ export default function EarningsStats({ token }) {
               <button
                 key={p.id}
                 onClick={() => setPeriod(p.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                   period === p.id
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-green-500 text-black'
+                    : 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
                 }`}
               >
                 {p.label}
@@ -158,13 +158,13 @@ export default function EarningsStats({ token }) {
           {/* Main Stats Cards */}
           <div className="grid grid-cols-2 gap-3">
             {/* Current Earnings */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border">
+            <div className="driver-card p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-500 text-sm">{stats.period_label}</span>
+                <span className="text-gray-400 text-sm">{stats.period_label}</span>
                 <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                   stats.comparison.is_improvement
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-red-100 text-red-600'
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-red-500/20 text-red-400'
                 }`}>
                   {stats.comparison.is_improvement ? (
                     <TrendingUp className="w-3 h-3" />
@@ -174,23 +174,23 @@ export default function EarningsStats({ token }) {
                   <span>{Math.abs(stats.comparison.earnings_change)}%</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-green-400">
                 {formatNumber(stats.current.earnings)}
                 <span className="text-sm font-normal text-gray-500 mr-1">ل.س</span>
               </div>
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                 {stats.previous.label}: {formatNumber(stats.previous.earnings)} ل.س
               </div>
             </div>
 
             {/* Orders Count */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border">
+            <div className="driver-card p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-500 text-sm">عدد الطلبات</span>
+                <span className="text-gray-400 text-sm">عدد الطلبات</span>
                 <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                   stats.comparison.orders_change >= 0
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-red-100 text-red-600'
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-red-500/20 text-red-400'
                 }`}>
                   {stats.comparison.orders_change >= 0 ? (
                     <TrendingUp className="w-3 h-3" />
@@ -200,42 +200,42 @@ export default function EarningsStats({ token }) {
                   <span>{Math.abs(stats.comparison.orders_change)}%</span>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-white">
                 {stats.current.orders}
                 <span className="text-sm font-normal text-gray-500 mr-1">طلب</span>
               </div>
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                 {stats.previous.label}: {stats.previous.orders} طلب
               </div>
             </div>
           </div>
 
           {/* Breakdown */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border">
-            <h3 className="font-semibold mb-3 text-gray-800">تفاصيل الطلبات</h3>
+          <div className="driver-card p-4">
+            <h3 className="font-semibold mb-3 text-white">تفاصيل الطلبات</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Utensils className="w-4 h-4 text-orange-600" />
+                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <Utensils className="w-5 h-5 text-green-400" />
                   </div>
-                  <span className="text-gray-700">طلبات الطعام</span>
+                  <span className="text-gray-300">طلبات الطعام</span>
                 </div>
-                <span className="font-semibold">{stats.current.food_orders} طلب</span>
+                <span className="font-semibold text-white">{stats.current.food_orders} طلب</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <ShoppingBag className="w-4 h-4 text-blue-600" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <ShoppingBag className="w-5 h-5 text-blue-400" />
                   </div>
-                  <span className="text-gray-700">طلبات المنتجات</span>
+                  <span className="text-gray-300">طلبات المنتجات</span>
                 </div>
-                <span className="font-semibold">{stats.current.product_orders} طلب</span>
+                <span className="font-semibold text-white">{stats.current.product_orders} طلب</span>
               </div>
-              <div className="border-t pt-3">
+              <div className="border-t border-[#333] pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500">متوسط الربح لكل طلب</span>
-                  <span className="font-semibold text-orange-600">
+                  <span className="text-gray-400">متوسط الربح لكل طلب</span>
+                  <span className="font-semibold text-green-400">
                     {formatNumber(stats.current.avg_per_order)} ل.س
                   </span>
                 </div>
@@ -258,10 +258,10 @@ export default function EarningsStats({ token }) {
               <button
                 key={c.id}
                 onClick={() => setChartType(c.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                   chartType === c.id
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-green-500 text-black'
+                    : 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
                 }`}
               >
                 {c.label}
@@ -270,8 +270,8 @@ export default function EarningsStats({ token }) {
           </div>
 
           {/* Chart */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border">
-            <h3 className="font-semibold mb-4 text-gray-800">الأرباح</h3>
+          <div className="driver-card p-4">
+            <h3 className="font-semibold mb-4 text-white">الأرباح</h3>
             
             {/* Simple Bar Chart */}
             <div className="space-y-3">
@@ -282,16 +282,16 @@ export default function EarningsStats({ token }) {
                 return (
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">{item.label}</span>
-                      <span className="font-medium">{formatNumber(item.earnings)} ل.س</span>
+                      <span className="text-gray-400">{item.label}</span>
+                      <span className="font-medium text-white">{formatNumber(item.earnings)} ل.س</span>
                     </div>
-                    <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-8 bg-[#1a1a1a] rounded-xl overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-l from-orange-400 to-orange-500 rounded-full transition-all duration-500 flex items-center justify-end px-2"
+                        className="h-full bg-gradient-to-l from-green-400 to-green-600 rounded-xl transition-all duration-500 flex items-center justify-end px-3"
                         style={{ width: `${Math.max(percentage, 5)}%` }}
                       >
                         {item.orders > 0 && (
-                          <span className="text-white text-xs font-medium">
+                          <span className="text-black text-xs font-bold">
                             {item.orders} طلب
                           </span>
                         )}
@@ -303,21 +303,21 @@ export default function EarningsStats({ token }) {
             </div>
 
             {/* Summary */}
-            <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
+            <div className="mt-4 pt-4 border-t border-[#333] grid grid-cols-3 gap-2 text-center">
               <div>
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-lg font-bold text-green-400">
                   {formatNumber(chartData.summary.total_earnings)}
                 </div>
                 <div className="text-xs text-gray-500">إجمالي الأرباح</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-lg font-bold text-white">
                   {chartData.summary.total_orders}
                 </div>
                 <div className="text-xs text-gray-500">إجمالي الطلبات</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-lg font-bold text-yellow-400">
                   {chartData.summary.best_period}
                 </div>
                 <div className="text-xs text-gray-500">أفضل فترة</div>
@@ -330,44 +330,44 @@ export default function EarningsStats({ token }) {
       {/* History Tab */}
       {activeTab === 'history' && (
         <div className="space-y-3">
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="p-3 bg-gray-50 border-b">
-              <h3 className="font-semibold text-gray-800">سجل الأرباح</h3>
+          <div className="driver-card overflow-hidden">
+            <div className="p-4 bg-[#1a1a1a] border-b border-[#333]">
+              <h3 className="font-semibold text-white">سجل الأرباح</h3>
             </div>
             
             {history.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>لا توجد طلبات مسلمة بعد</p>
+              <div className="p-8 text-center">
+                <Package className="w-12 h-12 mx-auto mb-2 text-gray-600" />
+                <p className="text-gray-400">لا توجد طلبات مسلمة بعد</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-[#333]">
                 {history.map((order, index) => (
-                  <div key={index} className="p-3 flex items-center justify-between">
+                  <div key={index} className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        order.type === 'food' ? 'bg-orange-100' : 'bg-blue-100'
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        order.type === 'food' ? 'bg-green-500/20' : 'bg-blue-500/20'
                       }`}>
                         {order.type === 'food' ? (
-                          <Utensils className={`w-5 h-5 text-orange-600`} />
+                          <Utensils className="w-6 h-6 text-green-400" />
                         ) : (
-                          <ShoppingBag className={`w-5 h-5 text-blue-600`} />
+                          <ShoppingBag className="w-6 h-6 text-blue-400" />
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-white">
                           #{order.order_number}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-sm text-gray-500">
                           {order.source} • {formatDate(order.delivered_at)}
                         </div>
                       </div>
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-green-600">
+                      <div className="font-bold text-green-400 text-lg">
                         +{formatNumber(order.earnings)} ل.س
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-500">
                         الطلب: {formatNumber(order.order_total)} ل.س
                       </div>
                     </div>
@@ -378,23 +378,23 @@ export default function EarningsStats({ token }) {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="p-3 bg-gray-50 border-t flex items-center justify-between">
+              <div className="p-4 bg-[#1a1a1a] border-t border-[#333] flex items-center justify-between">
                 <button
                   onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
                   disabled={historyPage === 1}
-                  className="p-2 rounded-lg bg-white border disabled:opacity-50"
+                  className="p-2 rounded-xl bg-[#252525] border border-[#333] disabled:opacity-50 text-white"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-400">
                   صفحة {historyPage} من {totalPages}
                 </span>
                 <button
                   onClick={() => setHistoryPage(p => Math.min(totalPages, p + 1))}
                   disabled={historyPage === totalPages}
-                  className="p-2 rounded-lg bg-white border disabled:opacity-50"
+                  className="p-2 rounded-xl bg-[#252525] border border-[#333] disabled:opacity-50 text-white"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
               </div>
             )}

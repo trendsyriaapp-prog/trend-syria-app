@@ -24,6 +24,7 @@ import PushNotificationButton from '../components/PushNotificationButton';
 import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
 import EarningsStats from '../components/delivery/EarningsStats';
+import '../styles/driver-dark-theme.css';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -563,17 +564,18 @@ const DeliveryDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="driver-dark min-h-screen pb-20">
       <div className="max-w-2xl mx-auto px-4 py-4">
         {/* Header - الاسم والأيقونات في سطر واحد */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div>
-              <h1 className="text-base font-bold text-gray-900">مرحباً، {user?.full_name || user?.name}</h1>
-              <p className="text-[10px] text-gray-500">موظف توصيل</p>
+        <div className="flex items-center justify-between mb-4 driver-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-black font-bold text-lg">
+              {(user?.full_name || user?.name || 'س').charAt(0)}
             </div>
-            {/* الإشعارات بجانب الاسم */}
-            <NotificationsDropdown />
+            <div>
+              <h1 className="text-lg font-bold text-white">مرحباً، {user?.full_name || user?.name}</h1>
+              <p className="text-xs text-gray-400">موظف توصيل</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* زر إشعارات Push */}
@@ -581,25 +583,21 @@ const DeliveryDashboard = () => {
             {/* زر تفعيل/إيقاف صوت التنبيه */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`p-1.5 rounded-full transition-colors ${
-                soundEnabled ? 'bg-orange-100 text-orange-600' : 'bg-gray-200 text-gray-400'
-              }`}
+              className={`driver-icon-btn ${soundEnabled ? '!border-green-500 !text-green-500' : ''}`}
               title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
               data-testid="delivery-sound-toggle-btn"
             >
-              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
             {/* زر متاح/مغلق */}
             <button
               onClick={toggleAvailability}
               disabled={isLoadingAvailability}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
-                isAvailable 
-                  ? 'bg-orange-500 text-white shadow-md' 
-                  : 'bg-gray-300 text-gray-600'
-              } ${isLoadingAvailability ? 'opacity-50' : 'cursor-pointer'}`}
+              className={`driver-status-toggle ${
+                isAvailable ? 'driver-status-online' : 'driver-status-offline'
+              } ${isLoadingAvailability ? 'opacity-50' : ''}`}
             >
-              {isLoadingAvailability ? '...' : (isAvailable ? '🟢 متاح' : '⚫ مغلق')}
+              {isLoadingAvailability ? '...' : (isAvailable ? '● متاح' : '○ مغلق')}
             </button>
           </div>
         </div>
@@ -608,33 +606,33 @@ const DeliveryDashboard = () => {
         <DriverChallenges />
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-2">
+        <div className="flex gap-2 mb-3">
           <button
             onClick={() => setActiveTab('available')}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'available' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'bg-white border border-gray-200 text-gray-700'
+                ? 'driver-tab-active' 
+                : 'driver-tab'
             }`}
           >
             طلبات متاحة ({availableOrders.length + availableFoodOrders.length})
           </button>
           <button
             onClick={() => setActiveTab('my')}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'my' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'bg-white border border-gray-200 text-gray-700'
+                ? 'driver-tab-active' 
+                : 'driver-tab'
             }`}
           >
             طلباتي ({myOrders.length + myFoodOrders.length})
           </button>
           <button
             onClick={() => setActiveTab('earnings')}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'earnings' 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'bg-white border border-gray-200 text-gray-700'
+                ? 'driver-tab-active' 
+                : 'driver-tab'
             }`}
             data-testid="earnings-tab-btn"
           >
@@ -644,27 +642,27 @@ const DeliveryDashboard = () => {
 
         {/* فلتر نوع الطلبات */}
         {(activeTab === 'available' || activeTab === 'my') && (
-          <div className="flex gap-1 mb-2 bg-gray-100 p-1 rounded-lg">
+          <div className="driver-filter-group flex gap-1 mb-3">
             <button
               onClick={() => setOrderTypeFilter('all')}
-              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
-                orderTypeFilter === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+                orderTypeFilter === 'all' ? 'driver-filter-btn-active' : 'driver-filter-btn'
               }`}
             >
               الكل
             </button>
             <button
               onClick={() => setOrderTypeFilter('products')}
-              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 ${
-                orderTypeFilter === 'products' ? 'bg-white shadow text-gray-900' : 'text-gray-500'
+              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1 ${
+                orderTypeFilter === 'products' ? 'driver-filter-btn-active' : 'driver-filter-btn'
               }`}
             >
               📦 منتجات
             </button>
             <button
               onClick={() => setOrderTypeFilter('food')}
-              className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1 ${
-                orderTypeFilter === 'food' ? 'bg-white shadow text-orange-600' : 'text-gray-500'
+              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1 ${
+                orderTypeFilter === 'food' ? 'driver-filter-btn-active' : 'driver-filter-btn'
               }`}
             >
               🍔 طعام
