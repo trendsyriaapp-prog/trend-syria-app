@@ -5,6 +5,7 @@ import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Ro
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
+import useNotificationSound from '../../hooks/useNotificationSound';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -112,6 +113,9 @@ const OrdersMap = ({
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
   const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
   
+  // 🔊 أصوات الإشعارات المختلفة
+  const { playPriority, playSuccess } = useNotificationSound();
+  
   // ⭐ نظام الثيم (فاتح/داكن) مع تبديل تلقائي
   const [themeMode, setThemeMode] = useState(() => {
     // استرجاع الإعداد المحفوظ من الصفحة الرئيسية
@@ -203,7 +207,8 @@ const OrdersMap = ({
             setPriorityCountdown(15);
             setShowPriorityPopup(true);
             
-            // تشغيل صوت التنبيه
+            // 🔊 تشغيل صوت الأولوية العاجل
+            playPriority();
             speakInstruction('طلب جديد من نفس المطعم');
           }
         } catch (error) {
@@ -249,6 +254,7 @@ const OrdersMap = ({
     
     try {
       await axios.post(`${API}/api/food/orders/delivery/${priorityOrder.id}/accept`);
+      playSuccess(); // 🔊 صوت النجاح
       speakInstruction('تم قبول الطلب بنجاح');
       setShowPriorityPopup(false);
       setPriorityOrder(null);
@@ -441,6 +447,7 @@ const OrdersMap = ({
   const handleAcceptFoodOrderFromMap = async (order) => {
     try {
       await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`);
+      playSuccess(); // 🔊 صوت النجاح
       setMapError(null);
       onTakeFoodOrder?.(order); // استدعاء الـ callback الأصلي لتحديث البيانات
     } catch (error) {
@@ -454,6 +461,7 @@ const OrdersMap = ({
   // قبول طلب المنتجات من الخريطة مع عرض الخطأ داخلها
   const handleAcceptOrderFromMap = async (order) => {
     try {
+      playSuccess(); // 🔊 صوت النجاح
       // نستدعي الـ callback الأصلي مباشرة
       onTakeOrder?.(order);
       setMapError(null);

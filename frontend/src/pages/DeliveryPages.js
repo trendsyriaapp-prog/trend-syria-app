@@ -300,10 +300,12 @@ const DeliveryDashboard = () => {
     return () => clearInterval(interval);
   }, [themeMode]);
 
-  // صوت التنبيه للطلبات الجديدة
-  const { playSound } = useNotificationSound();
+  // صوت التنبيه للطلبات الجديدة - مع أصوات مختلفة لكل نوع
+  const { playSound, playFood, playProduct, playPriority } = useNotificationSound();
   const [soundEnabled, setSoundEnabled] = useState(true);
   const previousAvailableCountRef = useRef(0);
+  const previousFoodCountRef = useRef(0);
+  const previousProductCountRef = useRef(0);
 
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
@@ -382,21 +384,43 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // التحقق من الطلبات الجديدة وتشغيل الصوت - فقط إذا كان متاحاً
+  // التحقق من الطلبات الجديدة وتشغيل الصوت المناسب - فقط إذا كان متاحاً
   useEffect(() => {
     if (soundEnabled && isAvailable) {
-      const totalAvailable = availableOrders.length + availableFoodOrders.length;
-      if (totalAvailable > previousAvailableCountRef.current && previousAvailableCountRef.current !== 0) {
-        // هناك طلب جديد متاح!
-        playSound();
+      const currentFoodCount = availableFoodOrders.length;
+      const currentProductCount = availableOrders.length;
+      const totalAvailable = currentFoodCount + currentProductCount;
+      
+      // التحقق من طلبات طعام جديدة
+      if (currentFoodCount > previousFoodCountRef.current && previousFoodCountRef.current !== 0) {
+        playFood(); // 🍔 صوت مميز للطعام
         toast({
-          title: "🔔 طلب جديد متاح!",
+          title: "🍔 طلب طعام جديد!",
+          description: `هناك ${currentFoodCount} طلب طعام متاح`,
+        });
+      }
+      // التحقق من طلبات منتجات جديدة
+      else if (currentProductCount > previousProductCountRef.current && previousProductCountRef.current !== 0) {
+        playProduct(); // 📦 صوت مميز للمنتجات
+        toast({
+          title: "📦 طلب منتجات جديد!",
+          description: `هناك ${currentProductCount} طلب منتجات متاح`,
+        });
+      }
+      // طلب جديد عام (أول مرة)
+      else if (totalAvailable > previousAvailableCountRef.current && previousAvailableCountRef.current === 0 && totalAvailable > 0) {
+        playSound('default');
+        toast({
+          title: "🔔 طلبات متاحة!",
           description: `هناك ${totalAvailable} طلب متاح للتوصيل`,
         });
       }
+      
       previousAvailableCountRef.current = totalAvailable;
+      previousFoodCountRef.current = currentFoodCount;
+      previousProductCountRef.current = currentProductCount;
     }
-  }, [availableOrders, availableFoodOrders, soundEnabled, isAvailable, playSound, toast]);
+  }, [availableOrders, availableFoodOrders, soundEnabled, isAvailable, playSound, playFood, playProduct, toast]);
 
   // تحديث الطلبات كل 45 ثانية
   useEffect(() => {
