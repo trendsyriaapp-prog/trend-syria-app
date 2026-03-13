@@ -541,19 +541,376 @@ async def get_delivery_stats(user: dict = Depends(get_current_user)):
         "delivery_status": "out_for_delivery"
     })
     
-    # Get orders for earning calculation
-    delivered_orders = await db.orders.find(
+    # جلب الأرباح الفعلية من الطلبات
+    product_orders = await db.orders.find(
         {"delivery_driver_id": user["id"], "delivery_status": "delivered"},
-        {"_id": 0, "total": 1}
+        {"_id": 0, "driver_earnings": 1}
     ).to_list(1000)
     
-    total_earnings = len(delivered_orders) * 5000  # 5000 ل.س لكل طلب
+    food_orders = await db.food_orders.find(
+        {"driver_id": user["id"], "status": "delivered"},
+        {"_id": 0, "driver_earnings": 1}
+    ).to_list(1000)
+    
+    # حساب الأرباح الفعلية
+    product_earnings = sum(o.get("driver_earnings", 5000) for o in product_orders)
+    food_earnings = sum(o.get("driver_earnings", 5000) for o in food_orders)
+    total_earnings = product_earnings + food_earnings
     
     return {
-        "total_delivered": total_delivered,
+        "total_delivered": total_delivered + len(food_orders),
         "pending_delivery": pending_delivery,
         "total_earnings": total_earnings,
-        "earnings_per_delivery": 5000
+        "product_earnings": product_earnings,
+        "food_earnings": food_earnings,
+        "total_product_orders": len(product_orders),
+        "total_food_orders": len(food_orders)
+    }
+
+# ============== إحصائيات الأرباح التفصيلية ==============
+
+@router.get("/earnings/stats")
+async def get_earnings_statistics(
+    period: str = Query("week", regex="^(today|week|month|year)$"),
+    user: dict = Depends(get_current_user)
+):
+    """إحصائيات الأرباح التفصيلية مع مقارنة بالفترات السابقة"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from datetime import timedelta
+    
+    now = datetime.now(timezone.utc)
+    
+    # تحديد نطاق الفترة الحالية والسابقة
+    if period == "today":
+        current_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        previous_start = current_start - timedelta(days=1)
+        previous_end = current_start
+        period_label = "اليوم"
+        previous_label = "أمس"
+    elif period == "week":
+        current_start = now - timedelta(days=now.weekday())
+        current_start = current_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        previous_start = current_start - timedelta(days=7)
+        previous_end = current_start
+        period_label = "هذا الأسبوع"
+        previous_label = "الأسبوع الماضي"
+    elif period == "month":
+        current_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if now.month == 1:
+            previous_start = datetime(now.year - 1, 12, 1, tzinfo=timezone.utc)
+        else:
+            previous_start = datetime(now.year, now.month - 1, 1, tzinfo=timezone.utc)
+        previous_end = current_start
+        period_label = "هذا الشهر"
+        previous_label = "الشهر الماضي"
+    else:  # year
+        current_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        previous_start = datetime(now.year - 1, 1, 1, tzinfo=timezone.utc)
+        previous_end = current_start
+        period_label = "هذا العام"
+        previous_label = "العام الماضي"
+    
+    # جلب أرباح الفترة الحالية
+    current_product = await db.orders.find({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered",
+        "delivered_at": {"$gte": current_start.isoformat()}
+    }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+    
+    current_food = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "delivered",
+        "delivered_at": {"$gte": current_start.isoformat()}
+    }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+    
+    current_earnings = sum(o.get("driver_earnings", 5000) for o in current_product) + \
+                       sum(o.get("driver_earnings", 5000) for o in current_food)
+    current_orders = len(current_product) + len(current_food)
+    
+    # جلب أرباح الفترة السابقة
+    previous_product = await db.orders.find({
+        "delivery_driver_id": user["id"],
+        "delivery_status": "delivered",
+        "delivered_at": {
+            "$gte": previous_start.isoformat(),
+            "$lt": previous_end.isoformat()
+        }
+    }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+    
+    previous_food = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "delivered",
+        "delivered_at": {
+            "$gte": previous_start.isoformat(),
+            "$lt": previous_end.isoformat()
+        }
+    }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+    
+    previous_earnings = sum(o.get("driver_earnings", 5000) for o in previous_product) + \
+                        sum(o.get("driver_earnings", 5000) for o in previous_food)
+    previous_orders = len(previous_product) + len(previous_food)
+    
+    # حساب نسبة التغير
+    if previous_earnings > 0:
+        earnings_change = round(((current_earnings - previous_earnings) / previous_earnings) * 100, 1)
+    else:
+        earnings_change = 100 if current_earnings > 0 else 0
+    
+    if previous_orders > 0:
+        orders_change = round(((current_orders - previous_orders) / previous_orders) * 100, 1)
+    else:
+        orders_change = 100 if current_orders > 0 else 0
+    
+    # متوسط الربح لكل طلب
+    avg_earning_current = round(current_earnings / current_orders) if current_orders > 0 else 0
+    avg_earning_previous = round(previous_earnings / previous_orders) if previous_orders > 0 else 0
+    
+    return {
+        "period": period,
+        "period_label": period_label,
+        "current": {
+            "earnings": current_earnings,
+            "orders": current_orders,
+            "avg_per_order": avg_earning_current,
+            "product_orders": len(current_product),
+            "food_orders": len(current_food)
+        },
+        "previous": {
+            "label": previous_label,
+            "earnings": previous_earnings,
+            "orders": previous_orders,
+            "avg_per_order": avg_earning_previous
+        },
+        "comparison": {
+            "earnings_change": earnings_change,
+            "orders_change": orders_change,
+            "is_improvement": earnings_change > 0
+        }
+    }
+
+@router.get("/earnings/chart")
+async def get_earnings_chart_data(
+    chart_type: str = Query("daily", regex="^(daily|weekly|monthly)$"),
+    user: dict = Depends(get_current_user)
+):
+    """بيانات الرسم البياني للأرباح"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from datetime import timedelta
+    
+    now = datetime.now(timezone.utc)
+    chart_data = []
+    
+    arabic_days = ["الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
+    arabic_months = {
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل",
+        5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+        9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+    }
+    
+    if chart_type == "daily":
+        # آخر 7 أيام
+        for i in range(6, -1, -1):
+            day_date = now - timedelta(days=i)
+            day_start = day_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            day_end = day_start + timedelta(days=1)
+            
+            # طلبات المنتجات
+            product_orders = await db.orders.find({
+                "delivery_driver_id": user["id"],
+                "delivery_status": "delivered",
+                "delivered_at": {
+                    "$gte": day_start.isoformat(),
+                    "$lt": day_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(100)
+            
+            # طلبات الطعام
+            food_orders = await db.food_orders.find({
+                "driver_id": user["id"],
+                "status": "delivered",
+                "delivered_at": {
+                    "$gte": day_start.isoformat(),
+                    "$lt": day_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(100)
+            
+            earnings = sum(o.get("driver_earnings", 5000) for o in product_orders) + \
+                       sum(o.get("driver_earnings", 5000) for o in food_orders)
+            orders = len(product_orders) + len(food_orders)
+            
+            chart_data.append({
+                "label": arabic_days[day_date.weekday()],
+                "date": day_date.strftime("%d/%m"),
+                "earnings": earnings,
+                "orders": orders,
+                "product_orders": len(product_orders),
+                "food_orders": len(food_orders)
+            })
+    
+    elif chart_type == "weekly":
+        # آخر 4 أسابيع
+        for i in range(3, -1, -1):
+            week_end = now - timedelta(weeks=i)
+            week_start = week_end - timedelta(days=7)
+            
+            product_orders = await db.orders.find({
+                "delivery_driver_id": user["id"],
+                "delivery_status": "delivered",
+                "delivered_at": {
+                    "$gte": week_start.isoformat(),
+                    "$lt": week_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(500)
+            
+            food_orders = await db.food_orders.find({
+                "driver_id": user["id"],
+                "status": "delivered",
+                "delivered_at": {
+                    "$gte": week_start.isoformat(),
+                    "$lt": week_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(500)
+            
+            earnings = sum(o.get("driver_earnings", 5000) for o in product_orders) + \
+                       sum(o.get("driver_earnings", 5000) for o in food_orders)
+            orders = len(product_orders) + len(food_orders)
+            
+            chart_data.append({
+                "label": f"أسبوع {4-i}",
+                "date": f"{week_start.strftime('%d/%m')} - {week_end.strftime('%d/%m')}",
+                "earnings": earnings,
+                "orders": orders
+            })
+    
+    else:  # monthly
+        # آخر 6 أشهر
+        for i in range(5, -1, -1):
+            month_date = now - timedelta(days=i * 30)
+            month_num = month_date.month
+            year = month_date.year
+            
+            month_start = datetime(year, month_num, 1, tzinfo=timezone.utc)
+            if month_num == 12:
+                month_end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+            else:
+                month_end = datetime(year, month_num + 1, 1, tzinfo=timezone.utc)
+            
+            product_orders = await db.orders.find({
+                "delivery_driver_id": user["id"],
+                "delivery_status": "delivered",
+                "delivered_at": {
+                    "$gte": month_start.isoformat(),
+                    "$lt": month_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+            
+            food_orders = await db.food_orders.find({
+                "driver_id": user["id"],
+                "status": "delivered",
+                "delivered_at": {
+                    "$gte": month_start.isoformat(),
+                    "$lt": month_end.isoformat()
+                }
+            }, {"_id": 0, "driver_earnings": 1}).to_list(1000)
+            
+            earnings = sum(o.get("driver_earnings", 5000) for o in product_orders) + \
+                       sum(o.get("driver_earnings", 5000) for o in food_orders)
+            orders = len(product_orders) + len(food_orders)
+            
+            chart_data.append({
+                "label": arabic_months[month_num],
+                "month": month_num,
+                "year": year,
+                "earnings": earnings,
+                "orders": orders
+            })
+    
+    # حساب الإحصائيات
+    total_earnings = sum(d["earnings"] for d in chart_data)
+    total_orders = sum(d["orders"] for d in chart_data)
+    max_earnings = max(d["earnings"] for d in chart_data) if chart_data else 0
+    avg_earnings = round(total_earnings / len(chart_data)) if chart_data else 0
+    
+    return {
+        "chart_type": chart_type,
+        "data": chart_data,
+        "summary": {
+            "total_earnings": total_earnings,
+            "total_orders": total_orders,
+            "max_earnings": max_earnings,
+            "avg_earnings": avg_earnings,
+            "best_period": next((d["label"] for d in chart_data if d["earnings"] == max_earnings), None)
+        }
+    }
+
+@router.get("/earnings/history")
+async def get_earnings_history(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(get_current_user)
+):
+    """سجل الأرباح التفصيلي"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    skip = (page - 1) * limit
+    
+    # جلب طلبات المنتجات المسلمة
+    product_orders = await db.orders.find(
+        {"delivery_driver_id": user["id"], "delivery_status": "delivered"},
+        {"_id": 0, "id": 1, "order_number": 1, "driver_earnings": 1, "delivered_at": 1, "total": 1}
+    ).sort("delivered_at", -1).to_list(1000)
+    
+    # جلب طلبات الطعام المسلمة
+    food_orders = await db.food_orders.find(
+        {"driver_id": user["id"], "status": "delivered"},
+        {"_id": 0, "id": 1, "order_code": 1, "driver_earnings": 1, "delivered_at": 1, "total": 1, "restaurant_name": 1}
+    ).sort("delivered_at", -1).to_list(1000)
+    
+    # دمج وترتيب
+    all_orders = []
+    
+    for o in product_orders:
+        all_orders.append({
+            "id": o["id"],
+            "order_number": o.get("order_number", o["id"][:8]),
+            "type": "product",
+            "type_label": "منتجات",
+            "earnings": o.get("driver_earnings", 5000),
+            "order_total": o.get("total", 0),
+            "delivered_at": o.get("delivered_at"),
+            "source": "متجر"
+        })
+    
+    for o in food_orders:
+        all_orders.append({
+            "id": o["id"],
+            "order_number": o.get("order_code", o["id"][:8]),
+            "type": "food",
+            "type_label": "طعام",
+            "earnings": o.get("driver_earnings", 5000),
+            "order_total": o.get("total", 0),
+            "delivered_at": o.get("delivered_at"),
+            "source": o.get("restaurant_name", "مطعم")
+        })
+    
+    # ترتيب حسب التاريخ
+    all_orders.sort(key=lambda x: x.get("delivered_at", ""), reverse=True)
+    
+    # تطبيق pagination
+    total = len(all_orders)
+    paginated = all_orders[skip:skip + limit]
+    
+    return {
+        "orders": paginated,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit
     }
 
 @router.get("/performance")

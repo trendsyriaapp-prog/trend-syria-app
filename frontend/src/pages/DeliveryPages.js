@@ -23,6 +23,8 @@ import useDriverLocationTracker from '../hooks/useDriverLocationTracker';
 import PushNotificationButton from '../components/PushNotificationButton';
 import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
+import EarningsStats from '../components/delivery/EarningsStats';
+
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 // صفحة رفع وثائق موظف التوصيل
@@ -627,6 +629,17 @@ const DeliveryDashboard = () => {
           >
             طلباتي ({myOrders.length + myFoodOrders.length})
           </button>
+          <button
+            onClick={() => setActiveTab('earnings')}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              activeTab === 'earnings' 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+            data-testid="earnings-tab-btn"
+          >
+            💰 الأرباح
+          </button>
         </div>
 
         {/* فلتر نوع الطلبات */}
@@ -683,6 +696,11 @@ const DeliveryDashboard = () => {
             onOpenETAModal={openETAModal}
             orderTypeFilter={orderTypeFilter}
           />
+        )}
+
+        {/* Earnings Statistics */}
+        {activeTab === 'earnings' && (
+          <EarningsStats token={localStorage.getItem('token')} />
         )}
       </div>
 
