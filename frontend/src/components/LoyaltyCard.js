@@ -9,6 +9,7 @@ import {
   TrendingUp, Sparkles, Crown, Diamond, Medal
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { useTheme } from '../context/ThemeContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -32,6 +33,7 @@ const TIER_ICONS = {
 
 const LoyaltyCard = () => {
   const { toast } = useToast();
+  const { isDarkMode } = useTheme();
   const [data, setData] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,9 +102,9 @@ const LoyaltyCard = () => {
   
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
+      <div className={`rounded-xl p-6 border ${isDarkMode ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'}`}>
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#FF6B00]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-green-500" />
         </div>
       </div>
     );
@@ -127,8 +129,10 @@ const LoyaltyCard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="rounded-xl overflow-hidden"
         style={{ 
-          background: `linear-gradient(135deg, ${data.current_tier?.color || '#FF6B00'}22, ${data.current_tier?.color || '#FF6B00'}44)`,
-          border: `1px solid ${data.current_tier?.color || '#FF6B00'}55`
+          background: isDarkMode 
+            ? `linear-gradient(135deg, ${data.current_tier?.color || '#22c55e'}33, ${data.current_tier?.color || '#22c55e'}22)`
+            : `linear-gradient(135deg, ${data.current_tier?.color || '#FF6B00'}22, ${data.current_tier?.color || '#FF6B00'}44)`,
+          border: `1px solid ${isDarkMode ? '#333' : (data.current_tier?.color || '#FF6B00') + '55'}`
         }}
       >
         <div className="p-3">
@@ -137,18 +141,18 @@ const LoyaltyCard = () => {
             <div className="flex items-center gap-2">
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: data.current_tier?.color || '#FF6B00' }}
+                style={{ backgroundColor: isDarkMode ? '#22c55e' : (data.current_tier?.color || '#FF6B00') }}
               >
                 <TierIcon size={16} className="text-white" />
               </div>
               <div>
-                <p className="text-[10px] text-gray-600">مستوى الولاء</p>
-                <p className="font-bold text-sm text-gray-900">{data.current_tier?.name || 'برونزي'}</p>
+                <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>مستوى الولاء</p>
+                <p className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.current_tier?.name || 'برونزي'}</p>
               </div>
             </div>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="text-gray-500 hover:text-gray-700 p-1.5 rounded-full hover:bg-white/50 transition-colors"
+              className={`p-1.5 rounded-full transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-[#333]' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'}`}
             >
               <History size={14} />
             </button>
@@ -156,38 +160,38 @@ const LoyaltyCard = () => {
           
           {/* Points */}
           <div className="text-center mb-2">
-            <p className="text-2xl font-black text-gray-900">
+            <p className={`text-2xl font-black ${isDarkMode ? 'text-green-400' : 'text-gray-900'}`}>
               {data.available_points?.toLocaleString()}
             </p>
-            <p className="text-xs text-gray-600">نقطة متاحة</p>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>نقطة متاحة</p>
           </div>
           
           {/* Progress to Next Tier */}
           {data.next_tier && (
             <div className="mb-2">
-              <div className="flex items-center justify-between text-[9px] text-gray-600 mb-0.5">
+              <div className={`flex items-center justify-between text-[9px] mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 <span>{data.current_tier?.name}</span>
                 <span>{data.next_tier?.name}</span>
               </div>
-              <div className="h-1.5 bg-white/50 rounded-full overflow-hidden">
+              <div className={`h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#333]' : 'bg-white/50'}`}>
                 <motion.div 
                   className="h-full rounded-full"
-                  style={{ backgroundColor: data.next_tier?.color || '#FFD700' }}
+                  style={{ backgroundColor: isDarkMode ? '#22c55e' : (data.next_tier?.color || '#FFD700') }}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(progressPercent, 100)}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </div>
-              <p className="text-[9px] text-gray-500 text-center mt-0.5">
+              <p className={`text-[9px] text-center mt-0.5 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                 {data.points_to_next_tier?.toLocaleString()} نقطة للمستوى التالي
               </p>
             </div>
           )}
           
           {/* Redeem Section - مصغر */}
-          <div className="bg-white/70 rounded-lg p-2">
-            <p className="text-[10px] font-bold text-gray-700 mb-1.5 flex items-center gap-1">
-              <Gift size={12} className="text-[#FF6B00]" />
+          <div className={`rounded-lg p-2 ${isDarkMode ? 'bg-[#252525]' : 'bg-white/70'}`}>
+            <p className={`text-[10px] font-bold mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <Gift size={12} className={isDarkMode ? 'text-green-400' : 'text-[#FF6B00]'} />
               استبدال النقاط
             </p>
             <div className="flex gap-1.5">
@@ -197,7 +201,11 @@ const LoyaltyCard = () => {
                   value={redeemAmount}
                   onChange={(e) => setRedeemAmount(e.target.value)}
                   placeholder={`الحد الأدنى ${data.min_redeem}`}
-                  className="w-full p-1.5 border border-gray-300 rounded-lg text-xs focus:border-[#FF6B00] focus:outline-none text-left"
+                  className={`w-full p-1.5 border rounded-lg text-xs focus:outline-none text-left ${
+                    isDarkMode 
+                      ? 'bg-[#1a1a1a] border-[#444] text-white focus:border-green-500' 
+                      : 'border-gray-300 focus:border-[#FF6B00]'
+                  }`}
                   min={data.min_redeem}
                   max={data.available_points}
                 />
@@ -205,7 +213,9 @@ const LoyaltyCard = () => {
               <button
                 onClick={handleRedeem}
                 disabled={redeeming || !redeemAmount || parseInt(redeemAmount) < data.min_redeem}
-                className="bg-[#FF6B00] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-50 flex items-center gap-1"
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-50 flex items-center gap-1 ${
+                  isDarkMode ? 'bg-green-600 text-white' : 'bg-[#FF6B00] text-white'
+                }`}
               >
                 {redeeming ? (
                   <Loader2 size={12} className="animate-spin" />
@@ -217,7 +227,7 @@ const LoyaltyCard = () => {
                 )}
               </button>
             </div>
-            <p className="text-[9px] text-gray-500 mt-1">
+            <p className={`text-[9px] mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
               كل نقطة = {data.points_value} ل.س
             </p>
           </div>
@@ -227,7 +237,7 @@ const LoyaltyCard = () => {
         {data.current_tier?.bonus_percent > 0 && (
           <div 
             className="py-1.5 px-3 text-center text-white text-[10px] font-bold"
-            style={{ backgroundColor: data.current_tier?.color || '#FF6B00' }}
+            style={{ backgroundColor: isDarkMode ? '#22c55e' : (data.current_tier?.color || '#FF6B00') }}
           >
             <TrendingUp size={10} className="inline ml-1" />
             بونص {data.current_tier?.bonus_percent}% نقاط إضافية على كل طلب!
@@ -237,13 +247,13 @@ const LoyaltyCard = () => {
       
       {/* Stats - مصغر */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
-          <p className="text-sm font-bold text-gray-900">{data.lifetime_points?.toLocaleString()}</p>
-          <p className="text-[9px] text-gray-500">إجمالي النقاط المكتسبة</p>
+        <div className={`rounded-lg p-2 border text-center ${isDarkMode ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'}`}>
+          <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{data.lifetime_points?.toLocaleString()}</p>
+          <p className={`text-[9px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>إجمالي النقاط المكتسبة</p>
         </div>
-        <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
-          <p className="text-sm font-bold text-[#FF6B00]">{data.redeemed_points?.toLocaleString()}</p>
-          <p className="text-[9px] text-gray-500">النقاط المستبدلة</p>
+        <div className={`rounded-lg p-2 border text-center ${isDarkMode ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'}`}>
+          <p className={`text-sm font-bold ${isDarkMode ? 'text-green-400' : 'text-[#FF6B00]'}`}>{data.redeemed_points?.toLocaleString()}</p>
+          <p className={`text-[9px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>النقاط المستبدلة</p>
         </div>
       </div>
       
@@ -252,36 +262,40 @@ const LoyaltyCard = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+          className={`rounded-lg border overflow-hidden ${isDarkMode ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'}`}
         >
-          <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-            <History size={12} className="text-gray-500" />
-            <h3 className="text-xs font-bold text-gray-900">سجل النقاط</h3>
+          <div className={`p-2 border-b flex items-center gap-2 ${isDarkMode ? 'border-[#333]' : 'border-gray-100'}`}>
+            <History size={12} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+            <h3 className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>سجل النقاط</h3>
           </div>
           
           {history.length === 0 ? (
-            <p className="p-3 text-center text-gray-400 text-xs">لا توجد معاملات بعد</p>
+            <p className={`p-3 text-center text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>لا توجد معاملات بعد</p>
           ) : (
             <div className="max-h-36 overflow-y-auto">
               {history.map((item, i) => (
-                <div key={item.id || i} className="flex items-center justify-between p-2 border-b border-gray-50 last:border-0">
+                <div key={item.id || i} className={`flex items-center justify-between p-2 border-b last:border-0 ${isDarkMode ? 'border-[#333]' : 'border-gray-50'}`}>
                   <div className="flex items-center gap-2">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      item.type === 'earn' ? 'bg-green-100' : 'bg-orange-100'
+                      item.type === 'earn' 
+                        ? isDarkMode ? 'bg-green-900/50' : 'bg-green-100'
+                        : isDarkMode ? 'bg-orange-900/50' : 'bg-orange-100'
                     }`}>
                       {item.type === 'earn' ? (
-                        <TrendingUp size={10} className="text-green-600" />
+                        <TrendingUp size={10} className={isDarkMode ? 'text-green-400' : 'text-green-600'} />
                       ) : (
-                        <Gift size={10} className="text-orange-600" />
+                        <Gift size={10} className={isDarkMode ? 'text-orange-400' : 'text-orange-600'} />
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-700">{item.description}</p>
-                      <p className="text-[8px] text-gray-400">{formatDate(item.created_at)}</p>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{item.description}</p>
+                      <p className={`text-[8px] ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{formatDate(item.created_at)}</p>
                     </div>
                   </div>
                   <span className={`text-xs font-bold ${
-                    item.points > 0 ? 'text-green-600' : 'text-orange-600'
+                    item.points > 0 
+                      ? isDarkMode ? 'text-green-400' : 'text-green-600'
+                      : isDarkMode ? 'text-orange-400' : 'text-orange-600'
                   }`}>
                     {item.points > 0 ? '+' : ''}{item.points}
                   </span>

@@ -39,8 +39,24 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { toast } = useToast();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isDarkMode: globalDarkMode, toggleDarkMode } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
+  
+  // للسائق: استخدام الثيم الخاص به
+  const [driverTheme, setDriverTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('driverThemeMode') || 'auto';
+      if (savedMode === 'auto') {
+        const hour = new Date().getHours();
+        return hour >= 6 && hour < 18 ? 'light' : 'dark';
+      }
+      return savedMode;
+    }
+    return 'dark';
+  });
+  
+  // تحديد الثيم المستخدم حسب نوع المستخدم
+  const isDarkMode = user?.user_type === 'delivery' ? driverTheme === 'dark' : globalDarkMode;
 
   const [activeTab, setActiveTab] = useState(user?.user_type === 'delivery' ? 'driver' : 'loyalty');
   const [addresses, setAddresses] = useState([]);
