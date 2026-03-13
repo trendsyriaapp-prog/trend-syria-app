@@ -1,7 +1,7 @@
 /* /app/frontend/src/styles/driver-dark-theme.css */
-/* تصميم داكن احترافي لشاشة السائق - مثل Uber/Careem */
+/* تصميم احترافي لشاشة السائق - مع دعم الثيم الفاتح والداكن */
 
-/* المتغيرات الأساسية */
+/* ============ المتغيرات - الوضع الداكن (الافتراضي) ============ */
 :root {
   --driver-bg-primary: #0f0f0f;
   --driver-bg-secondary: #1a1a1a;
@@ -22,14 +22,35 @@
   --driver-border: #333333;
 }
 
-/* الحاوية الرئيسية */
+/* ============ المتغيرات - الوضع الفاتح ============ */
+.driver-light {
+  --driver-bg-primary: #f5f5f5;
+  --driver-bg-secondary: #ffffff;
+  --driver-bg-card: #ffffff;
+  --driver-bg-elevated: #fafafa;
+  
+  --driver-text-primary: #1a1a1a;
+  --driver-text-secondary: #666666;
+  --driver-text-muted: #999999;
+  
+  --driver-border: #e0e0e0;
+}
+
+/* الحاوية الرئيسية - داكن */
 .driver-dark {
   background: var(--driver-bg-primary);
   color: var(--driver-text-primary);
   min-height: 100vh;
 }
 
-.driver-dark * {
+/* الحاوية الرئيسية - فاتح */
+.driver-light {
+  background: var(--driver-bg-primary);
+  color: var(--driver-text-primary);
+  min-height: 100vh;
+}
+
+.driver-dark *, .driver-light * {
   border-color: var(--driver-border);
 }
 

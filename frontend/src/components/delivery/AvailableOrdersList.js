@@ -75,7 +75,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
         <button
           onClick={handleGetLocation}
           disabled={loadingLocation}
-          className="w-full mb-3 py-3 bg-[#1a1a1a] border border-[#333] text-gray-300 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:border-green-500 transition-colors disabled:opacity-50"
+          className="w-full mb-3 py-3 bg-[var(--driver-bg-secondary)] border border-[var(--driver-border)] text-[var(--driver-text-secondary)] rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:border-green-500 transition-colors disabled:opacity-50"
         >
           {loadingLocation ? (
             <span className="animate-spin">⏳</span>

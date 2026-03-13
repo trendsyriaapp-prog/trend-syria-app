@@ -107,6 +107,36 @@ const OrdersMap = ({
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
   const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
   
+  // ⭐ نظام الثيم (فاتح/داكن) مع تبديل تلقائي
+  const [themeMode, setThemeMode] = useState(() => {
+    // استرجاع الإعداد المحفوظ من الصفحة الرئيسية
+    return localStorage.getItem('driverThemeMode') || 'auto';
+  });
+  const [currentTheme, setCurrentTheme] = useState('dark'); // الثيم الفعلي المُطبق
+  
+  // حساب الثيم التلقائي حسب الوقت
+  useEffect(() => {
+    const updateAutoTheme = () => {
+      // قراءة الإعداد من localStorage (قد يتغير من الصفحة الرئيسية)
+      const savedMode = localStorage.getItem('driverThemeMode') || 'auto';
+      setThemeMode(savedMode);
+      
+      if (savedMode === 'auto') {
+        const hour = new Date().getHours();
+        // من 6 صباحاً إلى 6 مساءً = فاتح
+        const isDay = hour >= 6 && hour < 18;
+        setCurrentTheme(isDay ? 'light' : 'dark');
+      } else {
+        setCurrentTheme(savedMode);
+      }
+    };
+    
+    updateAutoTheme();
+    // تحديث كل ثانية لالتقاط التغييرات من الصفحة الرئيسية
+    const interval = setInterval(updateAutoTheme, 1000);
+    return () => clearInterval(interval);
+  }, [themeMode]);
+  
   // رسالة الخطأ داخل الخريطة
   const [mapError, setMapError] = useState(null);
   
@@ -1292,23 +1322,33 @@ const OrdersMap = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full bg-[#0f0f0f]"
+              className={`w-full h-full ${currentTheme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-100'}`}
               style={{ paddingTop: 'env(safe-area-inset-top)', margin: 0 }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Header شريط علوي موحد - ثيم داكن */}
-              <div className="bg-[#1a1a1a] flex items-center justify-between px-3 py-2 gap-2 border-b border-[#333]">
+              {/* Header شريط علوي موحد */}
+              <div className={`flex items-center justify-between px-3 py-2 gap-2 border-b ${
+                currentTheme === 'dark' 
+                  ? 'bg-[#1a1a1a] border-[#333]' 
+                  : 'bg-white border-gray-200'
+              }`}>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 bg-[#252525] rounded-lg text-white hover:bg-[#333] transition-colors"
+                    className={`p-2 rounded-lg transition-colors ${
+                      currentTheme === 'dark'
+                        ? 'bg-[#252525] text-white hover:bg-[#333]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 19 7-7-7-7"/>
                       <path d="M19 12H5"/>
                     </svg>
                   </button>
-                  <span className="text-sm font-bold text-white whitespace-nowrap">خريطة الطلبات</span>
+                  <span className={`text-sm font-bold whitespace-nowrap ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    خريطة الطلبات
+                  </span>
                   <button
                     onClick={getDriverLocation}
                     className="p-2 bg-green-500 text-black rounded-lg font-bold"
@@ -1316,10 +1356,30 @@ const OrdersMap = ({
                   >
                     <Locate size={16} />
                   </button>
+                  
+                  {/* ⭐ زر تبديل الثيم */}
+                  <button
+                    onClick={() => {
+                      const modes = ['auto', 'light', 'dark'];
+                      const currentIndex = modes.indexOf(themeMode);
+                      const nextMode = modes[(currentIndex + 1) % modes.length];
+                      setThemeMode(nextMode);
+                    }}
+                    className={`p-2 rounded-lg font-bold text-xs flex items-center gap-1 ${
+                      currentTheme === 'dark'
+                        ? 'bg-[#252525] text-white hover:bg-[#333] border border-[#444]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    }`}
+                    title={`الوضع: ${themeMode === 'auto' ? 'تلقائي' : themeMode === 'light' ? 'فاتح' : 'داكن'}`}
+                  >
+                    {themeMode === 'auto' && '🔄'}
+                    {themeMode === 'light' && '☀️'}
+                    {themeMode === 'dark' && '🌙'}
+                  </button>
                 </div>
                 
-                {/* دليل الألوان - محدث */}
-                <div className="flex flex-1 justify-around text-xs text-gray-300">
+                {/* دليل الألوان */}
+                <div className={`flex flex-1 justify-around text-xs ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                   <span className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span> مطعم
                   </span>
@@ -1330,13 +1390,15 @@ const OrdersMap = ({
                     <span className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span> عميل
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-white shadow-lg"></span> موقعك
+                    <span className={`w-3 h-3 rounded-full shadow-lg ${currentTheme === 'dark' ? 'bg-white' : 'bg-orange-500'}`}></span> موقعك
                   </span>
                 </div>
               </div>
 
-              {/* فلاتر الطبقات - ثيم داكن */}
-              <div className="bg-[#1a1a1a] px-3 py-2 flex gap-2 border-b border-[#333]">
+              {/* فلاتر الطبقات */}
+              <div className={`px-3 py-2 flex gap-2 border-b ${
+                currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
+              }`}>
                 {[
                   { key: 'all', label: 'الكل', icon: '🗺️', color: 'green' },
                   { key: 'food', label: 'طعام', icon: '🍔', color: 'green' },
@@ -1349,7 +1411,9 @@ const OrdersMap = ({
                     className={`flex-1 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                       showLayer === layer.key
                         ? 'bg-green-500 text-black'
-                        : 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
+                        : currentTheme === 'dark'
+                          ? 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200 hover:border-green-500'
                     }`}
                   >
                     {layer.icon} {layer.label}
@@ -1359,13 +1423,17 @@ const OrdersMap = ({
 
               {/* زر عرض ملخص المحطات */}
               {orderedStations.length > 0 && (
-                <div className="bg-[#1a1a1a] px-3 py-2 border-b border-[#333]">
+                <div className={`px-3 py-2 border-b ${
+                  currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
+                }`}>
                   <button
                     onClick={() => setShowStationsSummary(!showStationsSummary)}
                     className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                       showStationsSummary 
                         ? 'bg-blue-500 text-white' 
-                        : 'bg-[#252525] text-blue-400 border border-blue-500/50 hover:bg-blue-500/20'
+                        : currentTheme === 'dark'
+                          ? 'bg-[#252525] text-blue-400 border border-blue-500/50 hover:bg-blue-500/20'
+                          : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'
                     }`}
                   >
                     📋 جدول المحطات ({orderedStations.length})
@@ -1374,14 +1442,16 @@ const OrdersMap = ({
                 </div>
               )}
 
-              {/* بطاقة ملخص المحطات - ثيم داكن */}
+              {/* بطاقة ملخص المحطات */}
               <AnimatePresence>
                 {showStationsSummary && orderedStations.length > 0 && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="bg-[#1a1a1a] border-t border-[#333] overflow-hidden"
+                    className={`border-t overflow-hidden ${
+                      currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-gray-50 border-gray-200'
+                    }`}
                   >
                     <div className="p-3 max-h-[200px] overflow-y-auto">
                       <div className="space-y-2">
@@ -1655,10 +1725,14 @@ const OrdersMap = ({
                   style={{ height: '100%', width: '100%' }}
                   zoomControl={true}
                 >
-                  {/* خريطة داكنة - Dark Matter لتناسب الثيم */}
+                  {/* خريطة تتبدل حسب الثيم */}
                   <TileLayer
+                    key={currentTheme} // مهم لإعادة تحميل الخريطة عند تغيير الثيم
                     attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url={currentTheme === 'dark' 
+                      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    }
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   
