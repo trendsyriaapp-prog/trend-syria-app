@@ -964,23 +964,52 @@ const OrdersMap = ({
                       }}
                     >
                       <Popup>
-                        <div className="text-center min-w-[140px]">
-                          <p className="font-bold text-xs mb-1">{marker.title}</p>
+                        <div className="text-right min-w-[180px] max-w-[220px]">
+                          {/* اسم العميل */}
+                          <p className="font-bold text-xs mb-1 text-gray-800">👤 {marker.title}</p>
+                          
                           {marker.order && (
                             <>
-                              <div className="text-[10px] text-gray-600 mb-1 text-right">
-                                <p className="font-medium truncate">{marker.order.delivery_address || marker.order.address}</p>
+                              {/* معلومات التواصل */}
+                              <div className="text-[10px] text-gray-600 mb-2 bg-gray-50 rounded p-1.5">
+                                <p className="font-medium truncate mb-1">📍 {marker.order.delivery_address || marker.order.address}</p>
                                 {(marker.order.customer_phone || marker.order.delivery_phone) && (
                                   <p className="text-blue-600">
-                                    📞 {marker.order.customer_phone || marker.order.delivery_phone}
+                                    📞 العميل: {marker.order.customer_phone || marker.order.delivery_phone}
+                                  </p>
+                                )}
+                                {/* رقم المطعم/البائع */}
+                                {(marker.order.restaurant_phone || marker.order.store_phone || marker.order.seller_phone) && (
+                                  <p className="text-green-600">
+                                    📞 {marker.order.restaurant_id ? 'المطعم' : 'البائع'}: {marker.order.restaurant_phone || marker.order.store_phone || marker.order.seller_phone}
                                   </p>
                                 )}
                               </div>
-                              {marker.order.total && (
-                                <p className="text-orange-600 font-bold text-xs mb-1">
-                                  {(marker.order.total).toLocaleString()} ل.س
-                                </p>
+                              
+                              {/* قائمة المنتجات/الأطعمة */}
+                              {marker.order.items && marker.order.items.length > 0 && (
+                                <div className="text-[10px] mb-2 bg-orange-50 rounded p-1.5 max-h-[80px] overflow-y-auto">
+                                  <p className="font-bold text-orange-700 mb-1">🍽️ الأصناف:</p>
+                                  {marker.order.items.slice(0, 5).map((item, idx) => (
+                                    <p key={idx} className="text-gray-700 truncate">
+                                      • {item.name} {item.quantity > 1 ? `×${item.quantity}` : ''}
+                                    </p>
+                                  ))}
+                                  {marker.order.items.length > 5 && (
+                                    <p className="text-gray-500 text-[9px]">+{marker.order.items.length - 5} أصناف أخرى</p>
+                                  )}
+                                </div>
                               )}
+                              
+                              {/* السعر الإجمالي */}
+                              {marker.order.total && (
+                                <div className="bg-blue-50 rounded p-1.5 mb-2">
+                                  <p className="text-blue-700 font-bold text-xs text-center">
+                                    💰 المجموع: {(marker.order.total).toLocaleString()} ل.س
+                                  </p>
+                                </div>
+                              )}
+                              
                               {/* زر قبول الطلب - يظهر فقط على علامة العميل */}
                               {marker.type === 'customer' && (
                                 <button
@@ -993,9 +1022,9 @@ const OrdersMap = ({
                                     }
                                     // لا نغلق الخريطة - السائق يبقى لقبول طلبات أخرى
                                   }}
-                                  className="w-full py-1 bg-orange-500 text-white rounded text-[10px] font-bold mb-1"
+                                  className="w-full py-1.5 bg-orange-500 text-white rounded text-[10px] font-bold mb-1"
                                 >
-                                  قبول الطلب
+                                  ✅ قبول الطلب
                                 </button>
                               )}
                               {/* زر عرض المسار */}
@@ -1003,10 +1032,10 @@ const OrdersMap = ({
                                 <button
                                   onClick={() => showRouteForOrder(marker.order)}
                                   disabled={loadingRoute}
-                                  className="w-full py-1 bg-blue-500 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1"
+                                  className="w-full py-1.5 bg-blue-500 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1"
                                 >
                                   {loadingRoute ? '⏳' : <Route size={10} />}
-                                  {loadingRoute ? '...' : 'المسار'}
+                                  {loadingRoute ? '...' : '🗺️ المسار'}
                                 </button>
                               )}
                             </>
