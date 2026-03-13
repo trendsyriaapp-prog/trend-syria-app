@@ -26,6 +26,13 @@ DEFAULT_DISTANCE_DELIVERY = {
     "enabled_for_products": True
 }
 
+# إعدادات أرباح السائق الافتراضية
+DEFAULT_DRIVER_EARNINGS = {
+    "base_fee": 1000,
+    "price_per_km": 300,
+    "min_fee": 1500
+}
+
 # المحافظات القريبة
 NEARBY_CITIES = {
     "دمشق": ["ريف دمشق", "درعا", "السويداء", "القنيطرة"],
@@ -72,6 +79,15 @@ async def get_distance_delivery_settings():
         return settings["distance_delivery"]
     
     return DEFAULT_DISTANCE_DELIVERY
+
+async def get_driver_earnings_settings():
+    """جلب إعدادات أرباح السائق"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if settings and "driver_earnings" in settings:
+        return settings["driver_earnings"]
+    
+    return DEFAULT_DRIVER_EARNINGS
 
 def calculate_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -157,6 +173,79 @@ async def calculate_delivery_fee_by_distance(
         "remaining_for_free": remaining_for_free,
         "free_threshold": free_threshold
     }
+
+async def calculate_driver_earnings(
+    store_lat: float,
+    store_lon: float,
+    customer_lat: float,
+    customer_lon: float,
+    driver_lat: float = None,
+    driver_lon: float = None
+) -> dict:
+    """
+    حساب أرباح السائق بناءً على المسافة الكاملة
+    
+    المسافة الكاملة = (سائق → متجر) + (متجر → عميل)
+    
+    Returns:
+        dict: {
+            "earnings": ربح السائق,
+            "distance_to_store": المسافة للمتجر,
+            "distance_to_customer": المسافة للعميل,
+            "total_distance": المسافة الكلية
+        }
+    """
+    # جلب إعدادات أرباح السائق
+    earnings_settings = await get_driver_earnings_settings()
+    
+    base_fee = earnings_settings.get("base_fee", 1000)
+    price_per_km = earnings_settings.get("price_per_km", 300)
+    min_fee = earnings_settings.get("min_fee", 1500)
+    
+    # حساب المسافة من المتجر للعميل (دائماً)
+    distance_store_to_customer = calculate_distance_km(store_lat, store_lon, customer_lat, customer_lon)
+    
+    # حساب المسافة من السائق للمتجر (إذا توفر موقع السائق)
+    distance_driver_to_store = 0
+    if driver_lat and driver_lon:
+        distance_driver_to_store = calculate_distance_km(driver_lat, driver_lon, store_lat, store_lon)
+    
+    # المسافة الكلية
+    total_distance = distance_driver_to_store + distance_store_to_customer
+    
+    # حساب الربح
+    calculated_earnings = base_fee + (total_distance * price_per_km)
+    final_earnings = max(calculated_earnings, min_fee)
+    final_earnings = round(final_earnings)
+    
+    return {
+        "earnings": final_earnings,
+        "distance_to_store": round(distance_driver_to_store, 2),
+        "distance_to_customer": round(distance_store_to_customer, 2),
+        "total_distance": round(total_distance, 2),
+        "base_fee": base_fee,
+        "price_per_km": price_per_km,
+        "min_fee": min_fee
+    }
+
+@router.get("/calculate-driver-earnings")
+async def api_calculate_driver_earnings(
+    store_lat: float,
+    store_lon: float,
+    customer_lat: float,
+    customer_lon: float,
+    driver_lat: float = None,
+    driver_lon: float = None
+):
+    """
+    API لحساب أرباح السائق المتوقعة
+    """
+    result = await calculate_driver_earnings(
+        store_lat, store_lon,
+        customer_lat, customer_lon,
+        driver_lat, driver_lon
+    )
+    return result
 
 @router.get("/calculate-by-distance")
 async def calculate_shipping_by_distance(

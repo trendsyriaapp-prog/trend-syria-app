@@ -119,15 +119,15 @@ const OrdersMap = ({
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
 
-  // جلب المسار من OSRM (مجاني بدون API Key)
+  // جلب المسار من OSRM (مجاني بدون API Key) مع المسافات المنفصلة والربح
   const fetchRoute = async (start, waypoint, end) => {
     setLoadingRoute(true);
     try {
-      // OSRM يستخدم [lon, lat]
+      // جلب المسار الكامل
       const coords = `${start[1]},${start[0]};${waypoint[1]},${waypoint[0]};${end[1]},${end[0]}`;
       
       const response = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
+        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`
       );
 
       if (response.ok) {
@@ -135,13 +135,47 @@ const OrdersMap = ({
         if (data.routes && data.routes[0]) {
           const route = data.routes[0];
           // تحويل الإحداثيات من [lon, lat] إلى [lat, lon] لـ Leaflet
-          const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-          setRouteCoordinates(coords);
+          const routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+          setRouteCoordinates(routeCoords);
           
-          // معلومات المسار
+          // حساب المسافات المنفصلة من legs
+          const legs = route.legs || [];
+          const distanceToStore = legs[0] ? (legs[0].distance / 1000).toFixed(1) : 0;
+          const distanceToCustomer = legs[1] ? (legs[1].distance / 1000).toFixed(1) : 0;
+          const durationToStore = legs[0] ? Math.round(legs[0].duration / 60) : 0;
+          const durationToCustomer = legs[1] ? Math.round(legs[1].duration / 60) : 0;
+          
+          // المسافة الإجمالية
+          const totalDistance = (route.distance / 1000).toFixed(1);
+          const totalDuration = Math.round(route.duration / 60);
+          
+          // جلب ربح السائق من الـ API
+          let driverEarnings = 0;
+          try {
+            const earningsResponse = await axios.get(`${API}/api/shipping/calculate-driver-earnings`, {
+              params: {
+                store_lat: waypoint[0],
+                store_lon: waypoint[1],
+                customer_lat: end[0],
+                customer_lon: end[1],
+                driver_lat: start[0],
+                driver_lon: start[1]
+              }
+            });
+            driverEarnings = earningsResponse.data.earnings || 0;
+          } catch (err) {
+            console.error('Error fetching driver earnings:', err);
+          }
+          
+          // معلومات المسار مع التفاصيل
           setRouteInfo({
-            distance: (route.distance / 1000).toFixed(1), // كم
-            duration: Math.round(route.duration / 60) // دقيقة
+            distance: totalDistance,
+            duration: totalDuration,
+            distanceToStore: distanceToStore,
+            distanceToCustomer: distanceToCustomer,
+            durationToStore: durationToStore,
+            durationToCustomer: durationToCustomer,
+            driverEarnings: driverEarnings
           });
         }
       } else {
@@ -1391,7 +1425,7 @@ const OrdersMap = ({
                 {routeInfo && selectedOrderForRoute && (
                   <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg p-3 z-[1000]">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-sm text-gray-800">🛣️ مسار التوصيل</h4>
+                      <h4 className="font-bold text-sm text-gray-800">🛣️ تفاصيل التوصيلة</h4>
                       <button 
                         onClick={hideRoute}
                         className="text-gray-400 hover:text-gray-600"
@@ -1400,32 +1434,41 @@ const OrdersMap = ({
                       </button>
                     </div>
                     
-                    {/* خطوات المسار */}
-                    <div className="flex items-center justify-center gap-1 mb-3 text-xs">
-                      <span className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
-                        <span className="w-4 h-4 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center">1</span>
-                        موقعك
-                      </span>
-                      <span className="text-gray-400">➜</span>
-                      <span className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                        <span className="w-4 h-4 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">2</span>
-                        المتجر
-                      </span>
-                      <span className="text-gray-400">➜</span>
-                      <span className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                        <span className="w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">3</span>
-                        العميل
-                      </span>
+                    {/* المسافات المنفصلة */}
+                    <div className="bg-gray-50 rounded-lg p-2 mb-2">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="flex items-center gap-1">
+                          <span className="w-5 h-5 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center">🚗</span>
+                          <span className="text-gray-400">➜</span>
+                          <span className="w-5 h-5 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">🏪</span>
+                          <span className="text-gray-600 mr-1">للمتجر</span>
+                        </span>
+                        <span className="font-bold text-green-600">{routeInfo.distanceToStore || '0'} كم</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="w-5 h-5 bg-green-500 text-white rounded-full text-[10px] flex items-center justify-center">🏪</span>
+                          <span className="text-gray-400">➜</span>
+                          <span className="w-5 h-5 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center">🏠</span>
+                          <span className="text-gray-600 mr-1">للعميل</span>
+                        </span>
+                        <span className="font-bold text-red-600">{routeInfo.distanceToCustomer || '0'} كم</span>
+                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* الإجمالي والوقت والربح */}
+                    <div className="grid grid-cols-3 gap-2">
                       <div className="bg-orange-50 rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-500">المسافة الإجمالية</p>
-                        <p className="font-bold text-orange-600 text-lg">{routeInfo.distance} كم</p>
+                        <p className="text-[10px] text-gray-500">المجموع</p>
+                        <p className="font-bold text-orange-600">{routeInfo.distance} كم</p>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-500">الوقت المتوقع</p>
-                        <p className="font-bold text-blue-600 text-lg">{routeInfo.duration} د</p>
+                        <p className="text-[10px] text-gray-500">الوقت</p>
+                        <p className="font-bold text-blue-600">{routeInfo.duration} د</p>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-gray-500">💰 ربحك</p>
+                        <p className="font-bold text-green-600">{(routeInfo.driverEarnings || 0).toLocaleString()} ل.س</p>
                       </div>
                     </div>
                   </div>

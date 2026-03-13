@@ -229,6 +229,61 @@ async def update_distance_delivery_settings(
         }
     }
 
+# ============== إعدادات أرباح السائق ==============
+
+class DriverEarningsSettings(BaseModel):
+    base_fee: int = 1000  # الأجرة الأساسية للسائق
+    price_per_km: int = 300  # سعر الكيلومتر للسائق
+    min_fee: int = 1500  # الحد الأدنى لربح السائق
+
+@router.get("/driver-earnings")
+async def get_driver_earnings_settings():
+    """جلب إعدادات أرباح السائق"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings or "driver_earnings" not in settings:
+        return {
+            "base_fee": 1000,
+            "price_per_km": 300,
+            "min_fee": 1500
+        }
+    
+    return settings.get("driver_earnings")
+
+@router.put("/driver-earnings")
+async def update_driver_earnings_settings(
+    settings: DriverEarningsSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات أرباح السائق"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "driver_earnings": {
+                    "base_fee": settings.base_fee,
+                    "price_per_km": settings.price_per_km,
+                    "min_fee": settings.min_fee
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات أرباح السائق",
+        "driver_earnings": {
+            "base_fee": settings.base_fee,
+            "price_per_km": settings.price_per_km,
+            "min_fee": settings.min_fee
+        }
+    }
+
 # ============== إعدادات وقت انتظار التوصيل ==============
 
 @router.get("/delivery-wait-time")

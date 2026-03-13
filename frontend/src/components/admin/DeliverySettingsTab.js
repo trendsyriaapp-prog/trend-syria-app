@@ -48,12 +48,20 @@ const DeliverySettingsTab = () => {
     enabled_for_products: true
   });
 
+  // إعدادات أرباح السائق
+  const [driverEarningsSettings, setDriverEarningsSettings] = useState({
+    base_fee: 1000,
+    price_per_km: 300,
+    min_fee: 1500
+  });
+
   // وقت انتظار التوصيل
   const [waitTimeMinutes, setWaitTimeMinutes] = useState(10);
 
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
+    fetchDriverEarningsSettings();
     fetchWaitTime();
   }, []);
 
@@ -83,6 +91,15 @@ const DeliverySettingsTab = () => {
     }
   };
 
+  const fetchDriverEarningsSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/driver-earnings`);
+      setDriverEarningsSettings(res.data);
+    } catch (error) {
+      console.error('Error fetching driver earnings settings:', error);
+    }
+  };
+
   const fetchWaitTime = async () => {
     try {
       const res = await axios.get(`${API}/api/settings/delivery-wait-time`);
@@ -97,6 +114,18 @@ const DeliverySettingsTab = () => {
     try {
       await axios.put(`${API}/api/settings/distance-delivery`, distanceSettings);
       alert('تم حفظ إعدادات أجور التوصيل بالمسافة بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveDriverEarningsSettings = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/driver-earnings`, driverEarningsSettings);
+      alert('تم حفظ إعدادات أرباح السائق بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
@@ -324,6 +353,133 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات أجور التوصيل
+          </button>
+        </div>
+      </div>
+
+      {/* Driver Earnings Settings - إعدادات أرباح السائق */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Truck size={24} />
+            <div>
+              <h2 className="font-bold text-lg">أرباح السائق</h2>
+              <p className="text-sm text-white/80">تحديد ربح السائق بناءً على المسافة الكلية</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          {/* توضيح المعادلة */}
+          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب ربح السائق:</h3>
+            <p className="text-amber-700 font-mono text-sm">
+              الربح = <span className="text-orange-600">{formatPrice(driverEarningsSettings.base_fee)}</span> + (المسافة الكلية × <span className="text-amber-600">{formatPrice(driverEarningsSettings.price_per_km)}</span>)
+            </p>
+            <p className="text-xs text-amber-600 mt-2">
+              المسافة الكلية = (السائق ← المتجر) + (المتجر ← العميل)
+            </p>
+            <p className="text-xs text-amber-600 mt-1">
+              مثال: 5 كم = {formatPrice(driverEarningsSettings.base_fee)} + (5 × {formatPrice(driverEarningsSettings.price_per_km)}) = <strong>{formatPrice(driverEarningsSettings.base_fee + (5 * driverEarningsSettings.price_per_km))}</strong>
+            </p>
+          </div>
+
+          {/* الإعدادات */}
+          <div className="grid gap-4">
+            {/* الأجرة الأساسية للسائق */}
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">💰</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الأجرة الأساسية للسائق</h3>
+                  <p className="text-xs text-gray-500">المبلغ الثابت لكل توصيلة</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.base_fee}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, base_fee: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-orange-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س</span>
+              </div>
+            </div>
+
+            {/* سعر الكيلومتر للسائق */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🛣️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">سعر الكيلومتر للسائق</h3>
+                  <p className="text-xs text-gray-500">المبلغ المضاف لكل كيلومتر</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.price_per_km}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, price_per_km: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-amber-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س/كم</span>
+              </div>
+            </div>
+
+            {/* الحد الأدنى لربح السائق */}
+            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🛡️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد الأدنى لربح السائق</h3>
+                  <p className="text-xs text-gray-500">لا يقل ربح السائق عن هذا المبلغ</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.min_fee}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, min_fee: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-yellow-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س</span>
+              </div>
+            </div>
+          </div>
+
+          {/* مقارنة الأرباح */}
+          <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
+            <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على الأرباح:</h4>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[2, 5, 10].map(km => {
+                const earnings = Math.max(
+                  driverEarningsSettings.base_fee + (km * driverEarningsSettings.price_per_km),
+                  driverEarningsSettings.min_fee
+                );
+                return (
+                  <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div className="text-2xl">🚗</div>
+                    <div className="text-sm text-gray-600">{km} كم</div>
+                    <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveDriverEarningsSettings}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات أرباح السائق
           </button>
         </div>
       </div>
