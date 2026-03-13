@@ -26,6 +26,15 @@ const MyOrdersList = ({
   const navigate = useNavigate();
   const [showOrderCode, setShowOrderCode] = useState(null);
   const [supportPhone, setSupportPhone] = useState('0911111111');
+  
+  // نظام كود التسليم
+  const [showCodeModal, setShowCodeModal] = useState(null);
+  const [deliveryCode, setDeliveryCode] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  
+  // نظام العميل لا يرد
+  const [waitingOrders, setWaitingOrders] = useState({});
 
   useEffect(() => {
     // جلب رقم الدعم
@@ -33,6 +42,81 @@ const MyOrdersList = ({
       .then(res => setSupportPhone(res.data.phone))
       .catch(() => {});
   }, []);
+
+  // تحديث حالة الانتظار لجميع الطلبات
+  useEffect(() => {
+    const checkWaitingStatus = async () => {
+      for (const order of foodOrders) {
+        if (order.customer_not_responding && order.status === 'out_for_delivery') {
+          try {
+            const res = await axios.get(`${API}/food/orders/delivery/${order.id}/waiting-status`);
+            setWaitingOrders(prev => ({
+              ...prev,
+              [order.id]: res.data
+            }));
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }
+    };
+    checkWaitingStatus();
+    const interval = setInterval(checkWaitingStatus, 30000); // تحديث كل 30 ثانية
+    return () => clearInterval(interval);
+  }, [foodOrders]);
+
+  // التحقق من كود التسليم
+  const handleVerifyCode = async (orderId) => {
+    if (!deliveryCode || deliveryCode.length !== 4) {
+      setCodeError('الكود يجب أن يكون 4 أرقام');
+      return;
+    }
+    setSubmitting(true);
+    setCodeError('');
+    try {
+      await axios.post(`${API}/food/orders/delivery/${orderId}/verify-code`, {
+        delivery_code: deliveryCode
+      });
+      setShowCodeModal(null);
+      setDeliveryCode('');
+      alert('تم التسليم بنجاح! ✅');
+      window.location.reload();
+    } catch (err) {
+      setCodeError(err.response?.data?.detail || 'كود خاطئ');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // العميل لا يرد
+  const handleCustomerNotResponding = async (orderId) => {
+    try {
+      const res = await axios.post(`${API}/food/orders/delivery/${orderId}/customer-not-responding`);
+      setWaitingOrders(prev => ({
+        ...prev,
+        [orderId]: {
+          is_waiting: true,
+          remaining_minutes: res.data.remaining_minutes,
+          can_leave_at_door: false
+        }
+      }));
+      alert(`تم تسجيل عدم رد العميل. انتظر ${res.data.wait_time_minutes} دقيقة`);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'حدث خطأ');
+    }
+  };
+
+  // ترك الطلب عند الباب
+  const handleLeaveAtDoor = async (orderId) => {
+    if (!confirm('هل أنت متأكد من ترك الطلب عند الباب؟')) return;
+    try {
+      await axios.post(`${API}/food/orders/delivery/${orderId}/leave-at-door`);
+      alert('تم ترك الطلب عند الباب وإتمام التسليم ✅');
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'حدث خطأ');
+    }
+  };
 
   const allOrders = [...orders, ...foodOrders];
   
@@ -389,7 +473,51 @@ const MyOrdersList = ({
 
               {/* أزرار الإجراءات */}
               <div className="space-y-2">
-                {canComplete && !isDelivered && (
+                {/* نظام كود التسليم للطعام */}
+                {isFood && canComplete && !isDelivered && order.delivery_code && (
+                  <>
+                    {/* حالة انتظار العميل */}
+                    {waitingOrders[order.id]?.is_waiting && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
+                        <p className="text-red-600 font-bold text-sm mb-1">⏳ بانتظار رد العميل</p>
+                        {waitingOrders[order.id]?.can_leave_at_door ? (
+                          <button
+                            onClick={() => handleLeaveAtDoor(order.id)}
+                            className="w-full bg-red-500 text-white py-2 rounded-lg font-bold text-xs"
+                          >
+                            🚪 ترك الطلب عند الباب وإتمام التسليم
+                          </button>
+                        ) : (
+                          <p className="text-xs text-red-500">
+                            تبقى {Math.ceil(waitingOrders[order.id]?.remaining_minutes || 0)} دقيقة
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* أزرار كود التسليم */}
+                    <button
+                      onClick={() => setShowCodeModal(order.id)}
+                      className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    >
+                      <QrCode size={14} />
+                      إدخال كود التسليم
+                    </button>
+                    
+                    {!waitingOrders[order.id]?.is_waiting && (
+                      <button
+                        onClick={() => handleCustomerNotResponding(order.id)}
+                        className="w-full bg-red-100 text-red-600 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                      >
+                        <PhoneCall size={14} />
+                        العميل لا يرد
+                      </button>
+                    )}
+                  </>
+                )}
+                
+                {/* للمنتجات - النظام القديم */}
+                {!isFood && canComplete && !isDelivered && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
                     className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
@@ -398,6 +526,7 @@ const MyOrdersList = ({
                     تأكيد التسليم
                   </button>
                 )}
+                
                 {!isDelivered && (
                   <div className="grid grid-cols-2 gap-2">
                     <a
@@ -426,6 +555,50 @@ const MyOrdersList = ({
           </motion.div>
         );
       })}
+
+      {/* مودال إدخال كود التسليم */}
+      {showCodeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold text-center mb-4">🔐 أدخل كود التسليم</h3>
+            <p className="text-sm text-gray-500 text-center mb-4">اطلب الكود من العميل</p>
+            
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={deliveryCode}
+              onChange={(e) => setDeliveryCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="0000"
+              className="w-full text-center text-3xl font-bold tracking-widest border-2 border-gray-300 rounded-xl p-4 mb-2 focus:border-green-500 focus:outline-none"
+            />
+            
+            {codeError && (
+              <p className="text-red-500 text-sm text-center mb-2">{codeError}</p>
+            )}
+            
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setShowCodeModal(null);
+                  setDeliveryCode('');
+                  setCodeError('');
+                }}
+                className="bg-gray-200 text-gray-700 py-3 rounded-xl font-bold"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => handleVerifyCode(showCodeModal)}
+                disabled={submitting || deliveryCode.length !== 4}
+                className="bg-green-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+              >
+                {submitting ? '...' : 'تأكيد'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

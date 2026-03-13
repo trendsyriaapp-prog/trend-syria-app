@@ -48,9 +48,13 @@ const DeliverySettingsTab = () => {
     enabled_for_products: true
   });
 
+  // وقت انتظار التوصيل
+  const [waitTimeMinutes, setWaitTimeMinutes] = useState(10);
+
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
+    fetchWaitTime();
   }, []);
 
   const fetchSettings = async () => {
@@ -79,11 +83,32 @@ const DeliverySettingsTab = () => {
     }
   };
 
+  const fetchWaitTime = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/delivery-wait-time`);
+      setWaitTimeMinutes(res.data.delivery_wait_time_minutes || 10);
+    } catch (error) {
+      console.error('Error fetching wait time:', error);
+    }
+  };
+
   const handleSaveDistanceSettings = async () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/distance-delivery`, distanceSettings);
       alert('تم حفظ إعدادات أجور التوصيل بالمسافة بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveWaitTime = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/delivery-wait-time?wait_time_minutes=${waitTimeMinutes}`);
+      alert('تم حفظ وقت الانتظار بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
@@ -299,6 +324,67 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات أجور التوصيل
+          </button>
+        </div>
+      </div>
+
+      {/* Wait Time Settings - إعدادات وقت الانتظار */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-pink-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Clock size={24} />
+            <div>
+              <h2 className="font-bold text-lg">وقت انتظار التوصيل</h2>
+              <p className="text-sm text-white/80">الوقت الذي ينتظره السائق إذا لم يرد العميل</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-lg">⏱️</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">وقت الانتظار</h3>
+                <p className="text-xs text-gray-500">بعد هذا الوقت يمكن للسائق ترك الطلب عند الباب</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <input
+                type="number"
+                value={waitTimeMinutes}
+                onChange={(e) => setWaitTimeMinutes(parseInt(e.target.value) || 10)}
+                className="flex-1 p-3 border-2 border-purple-300 rounded-lg text-center text-xl font-bold"
+                min={1}
+                max={60}
+              />
+              <span className="text-lg font-bold text-purple-600">دقيقة</span>
+            </div>
+            <p className="text-center text-xs text-gray-500 mt-2">
+              الحد الأدنى: 1 دقيقة | الحد الأقصى: 60 دقيقة
+            </p>
+          </div>
+
+          <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+            <h4 className="font-bold text-yellow-800 mb-2">⚠️ كيف يعمل النظام:</h4>
+            <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
+              <li>السائق يصل للعميل ويطلب كود التسليم</li>
+              <li>إذا لم يرد العميل، يضغط السائق "العميل لا يرد"</li>
+              <li>يبدأ مؤقت ({waitTimeMinutes} دقيقة)</li>
+              <li>بعد انتهاء الوقت، يترك الطلب عند الباب</li>
+              <li>الأموال لا تُسترد للعميل</li>
+            </ol>
+          </div>
+
+          <button
+            onClick={handleSaveWaitTime}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ وقت الانتظار
           </button>
         </div>
       </div>

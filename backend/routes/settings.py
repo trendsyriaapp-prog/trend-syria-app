@@ -229,6 +229,45 @@ async def update_distance_delivery_settings(
         }
     }
 
+# ============== إعدادات وقت انتظار التوصيل ==============
+
+@router.get("/delivery-wait-time")
+async def get_delivery_wait_time():
+    """جلب وقت انتظار التوصيل (بالدقائق)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    return {
+        "delivery_wait_time_minutes": settings.get("delivery_wait_time_minutes", 10) if settings else 10
+    }
+
+@router.put("/delivery-wait-time")
+async def update_delivery_wait_time(
+    wait_time_minutes: int,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث وقت انتظار التوصيل"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if wait_time_minutes < 1 or wait_time_minutes > 60:
+        raise HTTPException(status_code=400, detail="الوقت يجب أن يكون بين 1 و 60 دقيقة")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "delivery_wait_time_minutes": wait_time_minutes,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث وقت الانتظار",
+        "delivery_wait_time_minutes": wait_time_minutes
+    }
+
 @router.put("/low-stock-threshold")
 async def update_low_stock_threshold(
     threshold: int,

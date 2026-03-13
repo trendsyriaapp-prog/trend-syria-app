@@ -249,6 +249,53 @@ const FoodOrderTracking = () => {
           </div>
         )}
 
+        {/* كود التسليم */}
+        {order.delivery_code && !isCancelled && !isDelivered && order.status === 'out_for_delivery' && (
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-lg">🔐 كود التسليم</p>
+                <p className="text-sm text-white/80">أعطِ هذا الكود للسائق عند الاستلام</p>
+              </div>
+              <div className="bg-white text-purple-600 px-4 py-2 rounded-xl">
+                <span className="text-2xl font-bold tracking-widest">{order.delivery_code}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* تحذير ترك الطلب عند الباب */}
+        {order.customer_not_responding && !isCancelled && !isDelivered && (
+          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={24} className="text-red-500 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-red-800">⚠️ السائق ينتظرك!</p>
+                <p className="text-sm text-red-600">
+                  السائق يحاول الاتصال بك. إذا لم ترد، سيتم ترك الطلب عند الباب ولن تُسترد الأموال.
+                </p>
+                <a 
+                  href={`tel:${order.driver_phone || ''}`}
+                  className="inline-block mt-2 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold"
+                >
+                  📞 اتصل بالسائق
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ملاحظة ترك عند الباب */}
+        {order.left_at_door && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-3">
+            <span className="text-2xl">🚪</span>
+            <div>
+              <p className="font-bold text-yellow-800">تم ترك الطلب عند الباب</p>
+              <p className="text-sm text-yellow-600">لم نتمكن من الوصول إليك</p>
+            </div>
+          </div>
+        )}
+
         {/* خريطة تتبع السائق - تظهر عندما يكون الطلب قيد التوصيل */}
         {(order.status === 'out_for_delivery' || order.status === 'ready') && !isCancelled && (
           <DriverTrackingMap orderId={orderId} orderStatus={order.status} />

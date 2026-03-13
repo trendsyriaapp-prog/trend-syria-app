@@ -228,6 +228,10 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     CANCEL_WINDOW_MINUTES = 3
     can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
     
+    # توليد كود التسليم (4 أرقام)
+    import random
+    delivery_code = str(random.randint(1000, 9999))
+    
     order_doc = {
         "id": order_id,
         "order_number": order_number,
@@ -266,6 +270,11 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "payment_method": order.payment_method,
         "payment_status": "paid" if order.payment_method == "wallet" else "pending",
         "status": "pending",
+        "delivery_code": delivery_code,
+        "delivery_code_verified": False,
+        "customer_not_responding": False,
+        "customer_not_responding_since": None,
+        "left_at_door": False,
         "status_history": [{
             "status": "pending",
             "timestamp": now.isoformat(),
@@ -1131,29 +1140,82 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     
     return {"message": "تم قبول الطلب"}
 
-@router.post("/delivery/{order_id}/complete")
-async def complete_food_delivery(order_id: str, user: dict = Depends(get_current_user)):
-    """إتمام التوصيل"""
+# ===============================
+# نظام تأكيد التسليم بالكود
+# ===============================
+
+class DeliveryCodeVerification(BaseModel):
+    delivery_code: str
+
+@router.post("/delivery/{order_id}/verify-code")
+async def verify_delivery_code(
+    order_id: str, 
+    data: DeliveryCodeVerification, 
+    user: dict = Depends(get_current_user)
+):
+    """التحقق من كود التسليم وإتمام الطلب"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    order = await db.food_orders.find_one({"id": order_id, "driver_id": user["id"], "status": "out_for_delivery"})
+    order = await db.food_orders.find_one({
+        "id": order_id, 
+        "driver_id": user["id"], 
+        "status": "out_for_delivery"
+    })
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
+    # التحقق من الكود
+    if order.get("delivery_code") != data.delivery_code:
+        raise HTTPException(status_code=400, detail="كود التسليم غير صحيح")
+    
+    # إتمام التسليم
+    await complete_delivery_and_pay_driver(order, user, "تم التسليم بكود التأكيد")
+    
+    return {"message": "تم التحقق من الكود وإتمام التسليم بنجاح"}
+
+@router.post("/delivery/{order_id}/customer-not-responding")
+async def mark_customer_not_responding(order_id: str, user: dict = Depends(get_current_user)):
+    """تسجيل أن العميل لا يرد"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id, 
+        "driver_id": user["id"], 
+        "status": "out_for_delivery"
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أنه لم يتم تسجيل عدم الرد مسبقاً
+    if order.get("customer_not_responding"):
+        # حساب الوقت المتبقي
+        since = datetime.fromisoformat(order["customer_not_responding_since"])
+        # جلب وقت الانتظار من الإعدادات
+        settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+        wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
+        elapsed = (datetime.now(timezone.utc) - since).total_seconds() / 60
+        remaining = max(0, wait_time - elapsed)
+        return {
+            "message": "تم تسجيل عدم الرد مسبقاً",
+            "remaining_minutes": round(remaining, 1),
+            "can_leave_at_door": remaining <= 0
+        }
+    
+    now = datetime.now(timezone.utc)
     await db.food_orders.update_one(
         {"id": order_id},
         {
             "$set": {
-                "status": "delivered",
-                "delivered_at": datetime.now(timezone.utc).isoformat(),
-                "payment_status": "paid"
+                "customer_not_responding": True,
+                "customer_not_responding_since": now.isoformat()
             },
             "$push": {
                 "status_history": {
-                    "status": "delivered",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "note": "تم التوصيل بنجاح"
+                    "status": "customer_not_responding",
+                    "timestamp": now.isoformat(),
+                    "note": "العميل لا يرد على الهاتف"
                 }
             }
         }
@@ -1163,20 +1225,206 @@ async def complete_food_delivery(order_id: str, user: dict = Depends(get_current
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": order["customer_id"],
+        "title": "📞 موظف التوصيل يحاول الاتصال بك!",
+        "message": "يرجى الرد على موظف التوصيل أو سيتم ترك طلبك عند الباب",
+        "type": "delivery_waiting",
+        "order_id": order_id,
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    # جلب وقت الانتظار من الإعدادات
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
+    
+    return {
+        "message": "تم تسجيل عدم رد العميل",
+        "wait_time_minutes": wait_time,
+        "remaining_minutes": wait_time,
+        "can_leave_at_door": False
+    }
+
+@router.post("/delivery/{order_id}/leave-at-door")
+async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_user)):
+    """ترك الطلب عند الباب بعد انتهاء وقت الانتظار"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id, 
+        "driver_id": user["id"], 
+        "status": "out_for_delivery"
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من تسجيل عدم الرد
+    if not order.get("customer_not_responding"):
+        raise HTTPException(status_code=400, detail="يجب تسجيل عدم رد العميل أولاً")
+    
+    # التحقق من انتهاء وقت الانتظار
+    since = datetime.fromisoformat(order["customer_not_responding_since"])
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
+    elapsed = (datetime.now(timezone.utc) - since).total_seconds() / 60
+    
+    if elapsed < wait_time:
+        remaining = wait_time - elapsed
+        raise HTTPException(
+            status_code=400, 
+            detail=f"يجب الانتظار {int(remaining)} دقيقة إضافية"
+        )
+    
+    # إتمام التسليم (ترك عند الباب)
+    await complete_delivery_and_pay_driver(order, user, "تم ترك الطلب عند الباب - العميل لم يرد")
+    
+    # تحديث حالة الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {"$set": {"left_at_door": True}}
+    )
+    
+    return {"message": "تم ترك الطلب عند الباب وإتمام التسليم"}
+
+@router.get("/delivery/{order_id}/waiting-status")
+async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)):
+    """جلب حالة الانتظار"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id, 
+        "driver_id": user["id"]
+    }, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("customer_not_responding"):
+        return {
+            "is_waiting": False,
+            "remaining_minutes": 0,
+            "can_leave_at_door": False
+        }
+    
+    since = datetime.fromisoformat(order["customer_not_responding_since"])
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
+    elapsed = (datetime.now(timezone.utc) - since).total_seconds() / 60
+    remaining = max(0, wait_time - elapsed)
+    
+    return {
+        "is_waiting": True,
+        "elapsed_minutes": round(elapsed, 1),
+        "remaining_minutes": round(remaining, 1),
+        "wait_time_minutes": wait_time,
+        "can_leave_at_door": remaining <= 0
+    }
+
+async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str):
+    """إتمام التسليم وإضافة الأجرة لمحفظة السائق"""
+    now = datetime.now(timezone.utc)
+    
+    # تحديث حالة الطلب
+    await db.food_orders.update_one(
+        {"id": order["id"]},
+        {
+            "$set": {
+                "status": "delivered",
+                "delivered_at": now.isoformat(),
+                "payment_status": "paid",
+                "delivery_code_verified": True
+            },
+            "$push": {
+                "status_history": {
+                    "status": "delivered",
+                    "timestamp": now.isoformat(),
+                    "note": note
+                }
+            }
+        }
+    )
+    
+    # إضافة أجرة التوصيل لمحفظة السائق
+    delivery_fee = order.get("delivery_fee", 0)
+    base_earning = 5000  # ربح أساسي ثابت
+    total_earning = base_earning + delivery_fee
+    
+    await db.wallets.update_one(
+        {"user_id": driver["id"]},
+        {"$inc": {"balance": total_earning}},
+        upsert=True
+    )
+    
+    # إضافة سجل المعاملة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": driver["id"],
+        "type": "delivery_earning",
+        "amount": total_earning,
+        "description": f"أجرة توصيل طلب #{order['order_number']}",
+        "order_id": order["id"],
+        "breakdown": {
+            "base_earning": base_earning,
+            "delivery_fee": delivery_fee
+        },
+        "created_at": now.isoformat()
+    })
+    
+    # إشعار العميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["customer_id"],
         "title": "✅ تم التوصيل!",
         "message": f"طلبك #{order['order_number']} وصل. شكراً لك!",
         "type": "order_delivered",
+        "order_id": order["id"],
         "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now.isoformat()
     })
     
-    # إضافة أرباح موظف التوصيل
-    delivery_earning = 5000  # ربح ثابت لكل طلب
-    await db.wallets.update_one(
-        {"user_id": user["id"]},
-        {"$inc": {"balance": delivery_earning}},
-        upsert=True
-    )
+    # إشعار السائق
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": driver["id"],
+        "title": "💰 تم إضافة أرباحك!",
+        "message": f"تم إضافة {total_earning:,} ل.س لمحفظتك",
+        "type": "earning_added",
+        "order_id": order["id"],
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+
+@router.post("/delivery/{order_id}/complete")
+async def complete_food_delivery(order_id: str, user: dict = Depends(get_current_user)):
+    """إتمام التوصيل (الطريقة القديمة - للتوافق)"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({"id": order_id, "driver_id": user["id"], "status": "out_for_delivery"})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # إذا كان الطلب يحتوي على كود تسليم ولم يتم التحقق منه
+    if order.get("delivery_code") and not order.get("delivery_code_verified"):
+        # السماح فقط إذا انتهى وقت الانتظار
+        if order.get("customer_not_responding"):
+            since = datetime.fromisoformat(order["customer_not_responding_since"])
+            settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+            wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
+            elapsed = (datetime.now(timezone.utc) - since).total_seconds() / 60
+            
+            if elapsed < wait_time:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="يجب إدخال كود التسليم أو الانتظار حتى انتهاء المهلة"
+                )
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="يجب إدخال كود التسليم من العميل"
+            )
+    
+    await complete_delivery_and_pay_driver(order, user, "تم التسليم بنجاح")
     
     return {"message": "تم إتمام التوصيل بنجاح"}
 
