@@ -307,7 +307,7 @@ const DeliveryDashboard = () => {
   // Food orders states
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
-  const [orderTypeFilter, setOrderTypeFilter] = useState('food'); // 'all', 'products', 'food' - الافتراضي طعام
+  const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food' - الافتراضي الكل
 
   // تتبع موقع السائق تلقائياً عندما يكون لديه طلبات قيد التوصيل
   const currentOrderId = myFoodOrders.find(o => o.status === 'out_for_delivery')?.id || 
