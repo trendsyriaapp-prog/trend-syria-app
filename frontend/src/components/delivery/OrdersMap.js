@@ -752,9 +752,42 @@ const OrdersMap = ({
 
   // عرض المسار لطلب معين
   const showRouteForOrder = (order) => {
-    const driverPos = currentDriverLocation || driverLocation;
+    let driverPos = currentDriverLocation || driverLocation;
+    
+    // إذا لم يكن موقع السائق متاحاً، استخدم موقع المتجر كنقطة بداية
+    // أو حاول الحصول على الموقع
     if (!driverPos) {
-      alert('يرجى تفعيل موقعك أولاً');
+      // محاولة الحصول على الموقع
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const newLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+            setCurrentDriverLocation(newLocation);
+            // إعادة استدعاء الدالة بعد الحصول على الموقع
+            const storeCoords = [order.store_latitude, order.store_longitude];
+            const customerCoords = [order.latitude, order.longitude];
+            if (storeCoords[0] && customerCoords[0]) {
+              setSelectedOrderForRoute(order);
+              fetchRoute([newLocation.latitude, newLocation.longitude], storeCoords, customerCoords);
+            }
+          },
+          (error) => {
+            // إذا فشل الحصول على الموقع، استخدم موقع المتجر كبداية
+            console.log('استخدام موقع المتجر كنقطة بداية');
+            const storeCoords = [order.store_latitude, order.store_longitude];
+            const customerCoords = [order.latitude, order.longitude];
+            if (storeCoords[0] && customerCoords[0]) {
+              setSelectedOrderForRoute(order);
+              // رسم المسار من المتجر للعميل فقط
+              fetchRouteStoreToCustomer(storeCoords, customerCoords, order);
+            }
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      }
       return;
     }
 
@@ -766,6 +799,59 @@ const OrdersMap = ({
       setSelectedOrderForRoute(order);
       fetchRoute(driverCoords, storeCoords, customerCoords);
     }
+  };
+
+  // رسم المسار من المتجر للعميل فقط (بدون موقع السائق)
+  const fetchRouteStoreToCustomer = async (storeCoords, customerCoords, order) => {
+    setLoadingRoute(true);
+    try {
+      const coords = `${storeCoords[1]},${storeCoords[0]};${customerCoords[1]},${customerCoords[0]}`;
+      
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          const routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+          setRouteCoordinates(routeCoords);
+          
+          const totalDistance = (route.distance / 1000).toFixed(1);
+          const totalDuration = Math.round(route.duration / 60);
+          
+          // جلب ربح السائق
+          let driverEarnings = 0;
+          try {
+            const earningsResponse = await axios.get(`${API}/api/shipping/calculate-driver-earnings`, {
+              params: {
+                store_lat: storeCoords[0],
+                store_lon: storeCoords[1],
+                customer_lat: customerCoords[0],
+                customer_lon: customerCoords[1]
+              }
+            });
+            driverEarnings = earningsResponse.data.earnings || 0;
+          } catch (err) {
+            console.error('Error fetching driver earnings:', err);
+          }
+          
+          setRouteInfo({
+            distance: totalDistance,
+            duration: totalDuration,
+            distanceToStore: '0',
+            distanceToCustomer: totalDistance,
+            durationToStore: 0,
+            durationToCustomer: totalDuration,
+            driverEarnings: driverEarnings
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching route:', error);
+    }
+    setLoadingRoute(false);
   };
 
   // إخفاء المسار
