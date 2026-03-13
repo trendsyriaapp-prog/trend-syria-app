@@ -21,7 +21,8 @@ const MyOrdersList = ({
   onStartDelivery, 
   onShowDeliveryChecklist,
   onOpenETAModal,
-  orderTypeFilter = 'all'
+  orderTypeFilter = 'all',
+  theme = 'dark' // إضافة خاصية الثيم
 }) => {
   const navigate = useNavigate();
   const [showOrderCode, setShowOrderCode] = useState(null);
@@ -35,6 +36,9 @@ const MyOrdersList = ({
   
   // نظام العميل لا يرد
   const [waitingOrders, setWaitingOrders] = useState({});
+  
+  // تحديد إذا كان الثيم داكن
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     // جلب رقم الدعم
@@ -122,9 +126,11 @@ const MyOrdersList = ({
   
   if (allOrders.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-        <Truck size={48} className="text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">
+      <div className={`rounded-xl p-8 text-center border ${
+        isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
+      }`}>
+        <Truck size={48} className={isDark ? 'text-gray-600 mx-auto mb-4' : 'text-gray-300 mx-auto mb-4'} />
+        <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
           {orderTypeFilter === 'food' ? 'لا توجد طلبات طعام لديك' : 
            orderTypeFilter === 'products' ? 'لا توجد طلبات منتجات لديك' : 
            'لم تأخذ أي طلبات بعد'}
@@ -169,7 +175,9 @@ const MyOrdersList = ({
     <div className="space-y-2">
       {/* تنبيه طلبات المنتجات - يجب التسليم اليوم */}
       {undeliveredProductOrders.length > 0 && (
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-3 text-white">
+        <div className={`rounded-xl p-3 text-white ${
+          isDark ? 'bg-gradient-to-r from-red-600 to-orange-600' : 'bg-gradient-to-r from-red-500 to-orange-500'
+        }`}>
           <div className="flex items-start gap-2">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
               <Clock size={18} />
@@ -188,10 +196,12 @@ const MyOrdersList = ({
       )}
 
       {/* زر الاتصال بالدعم */}
-      <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center justify-between">
+      <div className={`rounded-lg p-2 flex items-center justify-between ${
+        isDark ? 'bg-red-900/30 border border-red-800' : 'bg-red-50 border border-red-200'
+      }`}>
         <div className="flex items-center gap-1.5">
           <AlertTriangle size={14} className="text-red-500" />
-          <span className="text-xs text-red-700 font-medium">إذا حدث مشكلة؟</span>
+          <span className={`text-xs font-medium ${isDark ? 'text-red-400' : 'text-red-700'}`}>إذا حدث مشكلة؟</span>
         </div>
         <button
           onClick={callSupport}
@@ -215,22 +225,26 @@ const MyOrdersList = ({
             key={order.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+            className={`rounded-xl border overflow-hidden ${
+              isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
+            }`}
           >
             <div className="p-3">
               {/* شارة يجب التسليم اليوم - للمنتجات فقط */}
               {isProductOrder && !isDelivered && (
-                <div className="bg-red-100 border border-red-300 rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5">
-                  <Clock size={12} className="text-red-600" />
-                  <span className="text-[10px] font-bold text-red-700">🕐 يجب التسليم اليوم</span>
+                <div className={`rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5 ${
+                  isDark ? 'bg-red-900/30 border border-red-800' : 'bg-red-100 border border-red-300'
+                }`}>
+                  <Clock size={12} className="text-red-500" />
+                  <span className={`text-[10px] font-bold ${isDark ? 'text-red-400' : 'text-red-700'}`}>🕐 يجب التسليم اليوم</span>
                 </div>
               )}
 
               {/* رقم الطلب الكبير */}
-              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white p-3 rounded-xl mb-3">
+              <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl mb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs opacity-80">رقم الطلب</p>
+                    <p className="text-xs opacity-80">📦 طلب منتجات</p>
                     <p className="text-2xl font-bold">#{orderNumber}</p>
                   </div>
                   <button
@@ -244,7 +258,9 @@ const MyOrdersList = ({
 
               {/* عرض رقم الطلب للبائع */}
               {showOrderCode === order.id && (
-                <div className="bg-gray-900 text-white p-4 rounded-xl mb-3 text-center">
+                <div className={`p-4 rounded-xl mb-3 text-center ${
+                  isDark ? 'bg-[#252525] text-white' : 'bg-gray-900 text-white'
+                }`}>
                   <p className="text-xs text-gray-400 mb-2">اعرض هذا الرقم للبائع</p>
                   <p className="text-4xl font-bold tracking-widest">#{orderNumber}</p>
                   <p className="text-xs text-gray-400 mt-2">للتحقق من صحة الطلب</p>
@@ -252,100 +268,111 @@ const MyOrdersList = ({
               )}
 
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm text-gray-900">
+                <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {isProductOrder ? 'طلب منتجات' : order.store_name || 'طلب طعام'}
                 </span>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.delivery_status || order.status)}`}>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  isDark ? 'bg-green-900/50 text-green-400' : getStatusColor(order.delivery_status || order.status)
+                }`}>
                   {getStatusLabel(order.delivery_status || order.status)}
                 </span>
               </div>
 
               {/* معلومات العميل */}
-              <div className="bg-yellow-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-yellow-700 mb-1">معلومات العميل:</p>
-                <p className="text-xs text-gray-600">
+              <div className={`rounded-lg p-2 mb-3 ${
+                isDark ? 'bg-[#252525] border border-[#333]' : 'bg-yellow-50'
+              }`}>
+                <p className={`text-xs font-bold mb-1 ${isDark ? 'text-green-400' : 'text-yellow-700'}`}>🏠 معلومات العميل:</p>
+                <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <User size={12} className="inline ml-1" />
                   {order.user_name || order.customer_name}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <MapPin size={12} className="inline ml-1" />
                   {order.address || order.delivery_address}, {order.city || order.delivery_city}
                 </p>
-                <a href={`tel:${order.phone}`} className="text-xs text-yellow-600 flex items-center gap-1 mt-1 font-bold">
+                <a href={`tel:${order.phone}`} className={`text-xs flex items-center gap-1 mt-1 font-bold ${
+                  isDark ? 'text-green-400' : 'text-yellow-600'
+                }`}>
                   <Phone size={12} />
                   اتصال: {order.phone}
                 </a>
                 
-                {/* أزرار الخرائط - ديناميكية حسب حالة الطلب */}
+                {/* أزرار الخرائط */}
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  {/* زر البائع/المطعم - يظهر كأساسي قبل استلام الطلب */}
                   {order.seller_addresses?.[0] && (
                     <button
                       onClick={() => openInGoogleMaps(
                         order.seller_addresses[0]?.address || order.seller_addresses[0]?.business_name, 
                         order.seller_addresses[0]?.city
                       )}
-                      className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-amber-700 text-white"
+                      className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-blue-600 text-white"
                       data-testid={`open-seller-maps-${order.id}`}
                     >
                       <Map size={12} />
-                      🏪 {isProductOrder ? 'البائع' : 'المطعم'}
+                      🏪 البائع
                     </button>
                   )}
-                  {/* زر العميل - يظهر كأساسي بعد استلام الطلب */}
                   <button
                     onClick={() => openInGoogleMaps(order.address || order.delivery_address, order.city || order.delivery_city)}
-                    className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-yellow-500 text-white"
+                    className="py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 bg-green-600 text-white"
                     data-testid={`open-customer-maps-${order.id}`}
                   >
                     <Map size={12} />
                     🏠 العميل
                   </button>
                 </div>
+                
                 {/* تلميح للسائق */}
                 {!canStartDelivery && !canComplete && !isDelivered && (
-                  <p className="text-[9px] text-center text-gray-400 mt-1">
+                  <p className={`text-[9px] text-center mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                     💡 اذهب للبائع أولاً لاستلام الطلب
                   </p>
                 )}
                 {canStartDelivery && (
-                  <p className="text-[9px] text-center text-gray-400 mt-1">
+                  <p className={`text-[9px] text-center mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                     💡 تم استلام الطلب - اذهب للعميل الآن
                   </p>
                 )}
                 
                 {/* ملاحظة العميل */}
                 {order.delivery_note && (
-                  <div className="mt-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="text-[10px] font-bold text-yellow-700">ملاحظة من العميل:</p>
-                    <p className="text-xs text-gray-700">{order.delivery_note}</p>
+                  <div className={`mt-2 p-2 rounded-lg border ${
+                    isDark ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'
+                  }`}>
+                    <p className={`text-[10px] font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>ملاحظة من العميل:</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{order.delivery_note}</p>
                   </div>
                 )}
               </div>
 
               {/* معلومات البائع */}
               {order.seller_phone && (
-                <div className="bg-amber-100 rounded-lg p-2 mb-3">
-                  <p className="text-xs font-bold text-amber-800 mb-1">معلومات البائع:</p>
-                  <p className="text-xs text-gray-600">
+                <div className={`rounded-lg p-2 mb-3 ${
+                  isDark ? 'bg-blue-900/20 border border-blue-800' : 'bg-amber-100'
+                }`}>
+                  <p className={`text-xs font-bold mb-1 ${isDark ? 'text-blue-400' : 'text-amber-800'}`}>🏪 معلومات البائع:</p>
+                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                     <User size={12} className="inline ml-1" />
                     {order.seller_name || 'البائع'}
                   </p>
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-amber-700 flex items-center gap-1 mt-1 font-bold">
+                  <a href={`tel:${order.seller_phone}`} className={`text-xs flex items-center gap-1 mt-1 font-bold ${
+                    isDark ? 'text-blue-400' : 'text-amber-700'
+                  }`}>
                     <Phone size={12} />
                     اتصال: {order.seller_phone}
                   </a>
                 </div>
               )}
 
-              <p className="font-bold text-[#FF6B00] text-sm mb-3">{formatPrice(order.total)}</p>
+              <p className="font-bold text-green-500 text-sm mb-3">{formatPrice(order.total)}</p>
 
               {/* أزرار الإجراءات */}
               <div className="space-y-2">
                 {canStartDelivery && (
                   <button
                     onClick={() => onOpenETAModal ? onOpenETAModal(order.id) : onStartDelivery(order.id)}
-                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <Clock size={14} />
                     في الطريق للعميل
@@ -354,7 +381,7 @@ const MyOrdersList = ({
                 {canComplete && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
-                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={14} />
                     تأكيد التسليم
@@ -364,7 +391,7 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.phone}`}
-                      className="bg-yellow-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
@@ -372,7 +399,7 @@ const MyOrdersList = ({
                     {order.seller_phone && (
                       <a
                         href={`tel:${order.seller_phone}`}
-                        className="bg-amber-700 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        className="bg-blue-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                       >
                         <Phone size={14} />
                         البائع
@@ -383,7 +410,9 @@ const MyOrdersList = ({
                 {/* رابط للتتبع */}
                 <button
                   onClick={() => navigate(`/orders/${order.id}/tracking`)}
-                  className="w-full bg-white border border-gray-200 text-gray-700 py-2 rounded-lg text-sm flex items-center justify-center gap-2"
+                  className={`w-full border py-2 rounded-lg text-sm flex items-center justify-center gap-2 ${
+                    isDark ? 'bg-[#252525] border-[#444] text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+                  }`}
                 >
                   تفاصيل الطلب
                   <ChevronRight size={14} className="rotate-180" />
@@ -406,10 +435,12 @@ const MyOrdersList = ({
             key={order.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 10 }}
-            className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden"
+            className={`rounded-xl border-2 overflow-hidden ${
+              isDark ? 'bg-[#1a1a1a] border-orange-600' : 'bg-white border-orange-200'
+            }`}
           >
             {/* Header */}
-            <div className="bg-orange-500 text-white px-3 py-2 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">🍔 طلب طعام #{orderNumber}</span>
               </div>
@@ -422,10 +453,14 @@ const MyOrdersList = ({
 
             <div className="p-3">
               {/* معلومات المتجر */}
-              <div className="bg-amber-100 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-amber-800 mb-1">📍 من: {order.store_name}</p>
+              <div className={`rounded-lg p-2 mb-3 ${
+                isDark ? 'bg-orange-900/20 border border-orange-800' : 'bg-amber-100'
+              }`}>
+                <p className={`text-xs font-bold mb-1 ${isDark ? 'text-orange-400' : 'text-amber-800'}`}>📍 من: {order.store_name}</p>
                 {order.seller_phone && (
-                  <a href={`tel:${order.seller_phone}`} className="text-xs text-amber-700 flex items-center gap-1">
+                  <a href={`tel:${order.seller_phone}`} className={`text-xs flex items-center gap-1 ${
+                    isDark ? 'text-orange-300' : 'text-amber-700'
+                  }`}>
                     <Phone size={12} />
                     {order.seller_phone}
                   </a>
@@ -433,10 +468,14 @@ const MyOrdersList = ({
               </div>
 
               {/* معلومات العميل */}
-              <div className="bg-yellow-50 rounded-lg p-2 mb-3">
-                <p className="text-xs font-bold text-yellow-700 mb-1">🏠 إلى: {order.customer_name}</p>
-                <p className="text-xs text-gray-600">{order.delivery_address}</p>
-                <a href={`tel:${order.customer_phone}`} className="text-xs text-yellow-600 flex items-center gap-1 mt-1">
+              <div className={`rounded-lg p-2 mb-3 ${
+                isDark ? 'bg-[#252525] border border-[#333]' : 'bg-yellow-50'
+              }`}>
+                <p className={`text-xs font-bold mb-1 ${isDark ? 'text-green-400' : 'text-yellow-700'}`}>🏠 إلى: {order.customer_name}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{order.delivery_address}</p>
+                <a href={`tel:${order.customer_phone}`} className={`text-xs flex items-center gap-1 mt-1 ${
+                  isDark ? 'text-green-400' : 'text-yellow-600'
+                }`}>
                   <Phone size={12} />
                   {order.customer_phone}
                 </a>
@@ -444,29 +483,29 @@ const MyOrdersList = ({
 
               {/* المنتجات */}
               <div className="mb-3">
-                <p className="text-xs font-bold text-gray-700 mb-1">المنتجات:</p>
+                <p className={`text-xs font-bold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>المنتجات:</p>
                 {order.items?.map((item, idx) => (
-                  <p key={idx} className="text-xs text-gray-600">
+                  <p key={idx} className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     • {item.name} × {item.quantity}
                   </p>
                 ))}
               </div>
 
               {/* السعر */}
-              <p className="font-bold text-orange-600 text-sm mb-3">{formatPrice(order.total)}</p>
+              <p className="font-bold text-orange-500 text-sm mb-3">{formatPrice(order.total)}</p>
 
               {/* أزرار الخرائط */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
                   onClick={() => openInGoogleMaps(order.store_name, 'دمشق')}
-                  className="bg-amber-700 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                  className="bg-orange-600 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                 >
                   <Map size={12} />
                   🏪 المتجر
                 </button>
                 <button
                   onClick={() => openInGoogleMaps(order.delivery_address, order.delivery_city || 'دمشق')}
-                  className="bg-yellow-500 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                  className="bg-green-600 text-white py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
                 >
                   <Map size={12} />
                   🏠 العميل
@@ -480,8 +519,10 @@ const MyOrdersList = ({
                   <>
                     {/* حالة انتظار العميل */}
                     {waitingOrders[order.id]?.is_waiting && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-                        <p className="text-red-600 font-bold text-sm mb-1">⏳ بانتظار رد العميل</p>
+                      <div className={`rounded-lg p-3 mb-2 ${
+                        isDark ? 'bg-red-900/30 border border-red-800' : 'bg-red-50 border border-red-200'
+                      }`}>
+                        <p className="text-red-500 font-bold text-sm mb-1">⏳ بانتظار رد العميل</p>
                         {waitingOrders[order.id]?.can_leave_at_door ? (
                           <button
                             onClick={() => handleLeaveAtDoor(order.id)}
@@ -509,7 +550,9 @@ const MyOrdersList = ({
                     {!waitingOrders[order.id]?.is_waiting && (
                       <button
                         onClick={() => handleCustomerNotResponding(order.id)}
-                        className="w-full bg-red-100 text-red-600 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                        className={`w-full py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 ${
+                          isDark ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-red-100 text-red-600'
+                        }`}
                       >
                         <PhoneCall size={14} />
                         العميل لا يرد
@@ -522,7 +565,7 @@ const MyOrdersList = ({
                 {!isFood && canComplete && !isDelivered && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
-                    className="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <CheckCircle size={14} />
                     تأكيد التسليم
@@ -533,14 +576,14 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.customer_phone}`}
-                      className="bg-yellow-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       العميل
                     </a>
                     <a
                       href={`tel:${order.seller_phone}`}
-                      className="bg-amber-700 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className="bg-orange-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                     >
                       <Phone size={14} />
                       المتجر
@@ -548,7 +591,9 @@ const MyOrdersList = ({
                   </div>
                 )}
                 {isDelivered && (
-                  <div className="bg-orange-100 text-orange-700 py-2 rounded-lg text-center text-sm font-bold">
+                  <div className={`py-2 rounded-lg text-center text-sm font-bold ${
+                    isDark ? 'bg-green-900/30 text-green-400' : 'bg-orange-100 text-orange-700'
+                  }`}>
                     ✅ تم التسليم بنجاح
                   </div>
                 )}
@@ -561,9 +606,11 @@ const MyOrdersList = ({
       {/* مودال إدخال كود التسليم */}
       {showCodeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-center mb-4">🔐 أدخل كود التسليم</h3>
-            <p className="text-sm text-gray-500 text-center mb-4">اطلب الكود من العميل</p>
+          <div className={`rounded-2xl p-6 w-full max-w-sm ${
+            isDark ? 'bg-[#1a1a1a]' : 'bg-white'
+          }`}>
+            <h3 className={`text-lg font-bold text-center mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>🔐 أدخل كود التسليم</h3>
+            <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>اطلب الكود من العميل</p>
             
             <input
               type="text"
@@ -572,7 +619,9 @@ const MyOrdersList = ({
               value={deliveryCode}
               onChange={(e) => setDeliveryCode(e.target.value.replace(/\D/g, ''))}
               placeholder="0000"
-              className="w-full text-center text-3xl font-bold tracking-widest border-2 border-gray-300 rounded-xl p-4 mb-2 focus:border-green-500 focus:outline-none"
+              className={`w-full text-center text-3xl font-bold tracking-widest border-2 rounded-xl p-4 mb-2 focus:border-green-500 focus:outline-none ${
+                isDark ? 'bg-[#252525] border-[#444] text-white' : 'border-gray-300'
+              }`}
             />
             
             {codeError && (
@@ -586,7 +635,9 @@ const MyOrdersList = ({
                   setDeliveryCode('');
                   setCodeError('');
                 }}
-                className="bg-gray-200 text-gray-700 py-3 rounded-xl font-bold"
+                className={`py-3 rounded-xl font-bold ${
+                  isDark ? 'bg-[#333] text-gray-300' : 'bg-gray-200 text-gray-700'
+                }`}
               >
                 إلغاء
               </button>

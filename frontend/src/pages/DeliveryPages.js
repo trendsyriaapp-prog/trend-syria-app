@@ -802,6 +802,7 @@ const DeliveryDashboard = () => {
             onShowDeliveryChecklist={(order) => setShowDeliveryChecklist(order)}
             onOpenETAModal={openETAModal}
             orderTypeFilter={orderTypeFilter}
+            theme={currentTheme}
           />
         )}
 
