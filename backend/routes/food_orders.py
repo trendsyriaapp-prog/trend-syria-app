@@ -924,6 +924,20 @@ async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_us
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # التحقق من أن السائق متاح
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0, "is_available": 1, "status": 1}
+    )
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    if not doc.get("is_available", False):
+        raise HTTPException(
+            status_code=403, 
+            detail="يجب تعيين حالتك إلى 'متاح' قبل قبول الطلبات"
+        )
+    
     # جلب جميع طلبات الدفعة الجاهزة
     orders = await db.food_orders.find({
         "batch_id": batch_id,
@@ -1050,6 +1064,20 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     """قبول طلب توصيل مع التحقق من الحد الأقصى والمسافة والأولوية الذكية"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من أن السائق متاح
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0, "is_available": 1, "status": 1}
+    )
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    if not doc.get("is_available", False):
+        raise HTTPException(
+            status_code=403, 
+            detail="يجب تعيين حالتك إلى 'متاح' قبل قبول الطلبات"
+        )
     
     # جلب إعدادات المنصة
     settings = await db.platform_settings.find_one({"id": "main"})

@@ -170,6 +170,28 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # إذا كان السائق يريد تعيين نفسه "غير متاح"، نتحقق من عدم وجود طلبات نشطة
+    if not data.is_available:
+        # التحقق من طلبات المنتجات النشطة
+        active_product_orders = await db.orders.count_documents({
+            "delivery_driver_id": user["id"],
+            "delivery_status": {"$in": ["out_for_delivery", "on_the_way", "picked_up"]}
+        })
+        
+        # التحقق من طلبات الطعام النشطة
+        active_food_orders = await db.food_orders.count_documents({
+            "driver_id": user["id"],
+            "status": "out_for_delivery"
+        })
+        
+        total_active = active_product_orders + active_food_orders
+        
+        if total_active > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكنك تعيين نفسك غير متاح - لديك {total_active} طلب نشط يجب تسليمه أولاً"
+            )
+    
     # تحديث حالة التوفر في وثائق السائق
     result = await db.delivery_documents.update_one(
         {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
@@ -426,6 +448,13 @@ async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_
     )
     if not doc or doc.get("status") != "approved":
         raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    # التحقق من أن السائق متاح
+    if not doc.get("is_available", False):
+        raise HTTPException(
+            status_code=403, 
+            detail="يجب تعيين حالتك إلى 'متاح' قبل قبول الطلبات"
+        )
     
     order = await db.orders.find_one({"id": order_id})
     if not order:
