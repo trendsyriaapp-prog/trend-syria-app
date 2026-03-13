@@ -45,6 +45,9 @@ const CartPage = () => {
   const [customerAddress, setCustomerAddress] = useState(null);
   const [sellerShippingDetails, setSellerShippingDetails] = useState([]);
   
+  // رسوم التوصيل بالمسافة
+  const [distanceDeliveryFee, setDistanceDeliveryFee] = useState(null);
+  
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
   // Fetch customer address and calculate shipping
@@ -76,6 +79,29 @@ const CartPage = () => {
           
           setShippingInfo(shippingRes.data);
           setSellerShippingDetails(detailedRes.data.sellers || []);
+          
+          // حساب رسوم التوصيل بالمسافة إذا كانت الإحداثيات متوفرة
+          if (defaultAddr?.latitude && defaultAddr?.longitude) {
+            // نحصل على موقع البائع الأول (أو نستخدم موقع افتراضي)
+            const firstItem = cart.items[0];
+            if (firstItem?.product?.seller_latitude && firstItem?.product?.seller_longitude) {
+              try {
+                const distanceRes = await axios.get(`${API}/shipping/calculate-by-distance`, {
+                  params: {
+                    store_lat: firstItem.product.seller_latitude,
+                    store_lon: firstItem.product.seller_longitude,
+                    customer_lat: defaultAddr.latitude,
+                    customer_lon: defaultAddr.longitude,
+                    order_total: cart.total,
+                    order_type: 'products'
+                  }
+                });
+                if (isMounted) setDistanceDeliveryFee(distanceRes.data);
+              } catch (err) {
+                console.error('Error calculating distance fee:', err);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching shipping:', error);
@@ -115,13 +141,18 @@ const CartPage = () => {
   const allSellersFreeShipping = sellerShippingDetails.length > 0 && 
     sellerShippingDetails.every(s => s.shipping_status === 'free');
   
-  // حساب تكلفة الشحن الفعلية من بيانات البائعين
-  const actualShippingCost = sellerShippingDetails.length > 0
-    ? sellerShippingDetails.reduce((sum, s) => sum + (s.shipping_cost || 0), 0)
-    : (shippingInfo?.shipping_cost || 0);
+  // حساب تكلفة الشحن الفعلية
+  // أولوية: رسوم المسافة > رسوم البائعين > رسوم النظام
+  const isFreeByDistance = distanceDeliveryFee?.is_free || false;
+  const actualShippingCost = distanceDeliveryFee?.fee ?? (
+    sellerShippingDetails.length > 0
+      ? sellerShippingDetails.reduce((sum, s) => sum + (s.shipping_cost || 0), 0)
+      : (shippingInfo?.shipping_cost || 0)
+  );
   
-  const isFreeShipping = allSellersFreeShipping || (shippingInfo?.qualifies_for_free === true);
+  const isFreeShipping = isFreeByDistance || allSellersFreeShipping || (shippingInfo?.qualifies_for_free === true);
   const shippingCost = isFreeShipping ? 0 : actualShippingCost;
+  const deliveryDistance = distanceDeliveryFee?.distance_km || null;
   
   // Apply coupon
   const handleApplyCoupon = async () => {
@@ -561,10 +592,15 @@ const CartPage = () => {
                   </div>
                 ) : (
                   <div className="flex justify-between text-gray-600 border-t border-gray-100 pt-2 mt-2">
-                    <span>التوصيل</span>
+                    <span>
+                      التوصيل
+                      {deliveryDistance && !isFreeShipping && (
+                        <span className="text-[9px] text-gray-400 mr-1">({deliveryDistance} كم)</span>
+                      )}
+                    </span>
                     {isFreeShipping ? (
                       <span className="text-green-600 font-bold">مجاني ✓</span>
-                    ) : shippingInfo ? (
+                    ) : shippingInfo || distanceDeliveryFee ? (
                       <span className="text-gray-900 font-bold">{formatPrice(shippingCost)}</span>
                     ) : (
                       <span className="text-gray-400">يُحسب عند الدفع</span>

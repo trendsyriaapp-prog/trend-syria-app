@@ -130,12 +130,20 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     CANCEL_WINDOW_MINUTES = 60
     can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
     
+    # حساب رسوم التوصيل (إذا تم إرسالها من الـ Frontend)
+    delivery_fee = order.delivery_fee if order.delivery_fee is not None else 0
+    delivery_distance_km = order.delivery_distance_km
+    final_total = total + delivery_fee
+    
     order_doc = {
         "id": order_id,
         "user_id": user["id"],
         "user_name": user.get("full_name", user.get("name", "")),
         "items": items_details,
-        "total": total,
+        "subtotal": total,
+        "delivery_fee": delivery_fee,
+        "delivery_distance_km": delivery_distance_km,
+        "total": final_total,
         "total_commission": total_commission,
         "total_seller_amount": total_seller_amount,
         "address": order.address,
@@ -182,7 +190,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # البائع سيرى الطلب فقط بعد انتهاء المهلة
     # الإشعار سيُرسل عند تأكيد الطلب تلقائياً
     
-    return {"order_id": order_id, "total": total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال ساعة."}
+    return {"order_id": order_id, "total": final_total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال ساعة."}
 
 @router.get("/orders")
 async def get_orders(user: dict = Depends(get_current_user)):
@@ -654,7 +662,7 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
     # إشعار العميل التفصيلي مع معلومات السائق
     await create_notification_for_user(
         user_id=order["user_id"],
-        title=f"🚚 تم تسليم طلبك لموظف التوصيل",
+        title="🚚 تم تسليم طلبك لموظف التوصيل",
         message=f"السائق: {user.get('full_name', user.get('name', ''))}\nالتقييم: {rating_stars} ({rating:.1f})\n📞 للتواصل: {user.get('phone', '')}\nالوصول المتوقع: خلال 45 دقيقة",
         notification_type="delivery",
         order_id=order_id,

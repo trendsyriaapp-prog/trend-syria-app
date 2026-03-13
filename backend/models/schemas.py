@@ -100,6 +100,9 @@ class OrderCreate(BaseModel):
     payment_phone: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    # رسوم التوصيل بالمسافة
+    delivery_fee: Optional[float] = None
+    delivery_distance_km: Optional[float] = None
 
 # ============== Review Models ==============
 
