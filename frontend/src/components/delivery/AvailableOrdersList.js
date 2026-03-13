@@ -204,8 +204,8 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   {/* معلومات المسافة */}
                   <DistanceInfo orderId={order.id} />
 
-                  {/* أزرار الخرائط - زر للمطعم وزر للعميل */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  {/* أزرار الخرائط - زر للمطعم وزر للعميل وزر الموقع في الخريطة */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -227,6 +227,25 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     >
                       <Map size={12} />
                       🏠 العميل
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // فتح الخريطة الداخلية وتركيز على هذا الطلب
+                        // نستخدم event لإرسال معلومات الطلب للخريطة
+                        const event = new CustomEvent('focusOrderOnMap', { 
+                          detail: { 
+                            order: order,
+                            latitude: order.latitude || order.buyer_address?.latitude,
+                            longitude: order.longitude || order.buyer_address?.longitude
+                          } 
+                        });
+                        window.dispatchEvent(event);
+                      }}
+                      className="bg-blue-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Navigation size={12} />
+                      🗺️ موقع
                     </button>
                   </div>
 
@@ -321,7 +340,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <DistanceInfo orderId={order.id} />
 
                   {/* أزرار الخرائط */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -342,6 +361,24 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     >
                       <Map size={12} />
                       🏠 المشتري
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // فتح الخريطة الداخلية وتركيز على هذا الطلب
+                        const event = new CustomEvent('focusOrderOnMap', { 
+                          detail: { 
+                            order: order,
+                            latitude: order.latitude || order.buyer_address?.latitude,
+                            longitude: order.longitude || order.buyer_address?.longitude
+                          } 
+                        });
+                        window.dispatchEvent(event);
+                      }}
+                      className="bg-blue-500 text-white py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1"
+                    >
+                      <Navigation size={12} />
+                      🗺️ موقع
                     </button>
                   </div>
 

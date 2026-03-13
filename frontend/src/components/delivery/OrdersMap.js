@@ -226,6 +226,35 @@ const OrdersMap = ({
     }
   };
 
+  // ⭐ الاستماع لحدث فتح الخريطة وتركيز على طلب معين
+  useEffect(() => {
+    const handleFocusOrder = (event) => {
+      const { order, latitude, longitude } = event.detail;
+      if (latitude && longitude) {
+        // فتح الخريطة
+        setIsOpen(true);
+        // تركيز على موقع الطلب
+        setMapCenter([latitude, longitude]);
+        // البحث عن العلامة المناسبة وتحديدها
+        setTimeout(() => {
+          const markerToSelect = {
+            id: `customer-${order.id}`,
+            type: 'customer',
+            position: [latitude, longitude],
+            title: order.customer_name || order.buyer_address?.name || 'العميل',
+            order: order
+          };
+          setSelectedMarker(markerToSelect);
+        }, 500);
+      }
+    };
+
+    window.addEventListener('focusOrderOnMap', handleFocusOrder);
+    return () => {
+      window.removeEventListener('focusOrderOnMap', handleFocusOrder);
+    };
+  }, []);
+
   // قبول طلب الطعام من الخريطة مع عرض الخطأ داخلها
   const handleAcceptFoodOrderFromMap = async (order) => {
     try {
