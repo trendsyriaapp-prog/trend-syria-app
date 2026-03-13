@@ -114,6 +114,7 @@ function App() {
                 <Route path="/wallet" element={<WalletPage />} />
                 
                 {/* Delivery Routes */}
+                <Route path="/delivery" element={<Navigate to="/delivery/dashboard" replace />} />
                 <Route path="/delivery/documents" element={<DeliveryDocuments />} />
                 <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
                 
