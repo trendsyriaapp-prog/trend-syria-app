@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
+import OrdersMap from './OrdersMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -173,6 +174,16 @@ const MyOrdersList = ({
 
   return (
     <div className="space-y-2">
+      {/* خريطة طلباتي المقبولة */}
+      {(orders.length > 0 || foodOrders.length > 0) && (
+        <OrdersMap
+          orders={[]}
+          foodOrders={[]}
+          myOrders={orders}
+          myFoodOrders={foodOrders}
+        />
+      )}
+
       {/* تنبيه طلبات المنتجات - يجب التسليم اليوم */}
       {undeliveredProductOrders.length > 0 && (
         <div className={`rounded-xl p-3 text-white ${

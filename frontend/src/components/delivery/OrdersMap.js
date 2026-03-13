@@ -1305,7 +1305,11 @@ const OrdersMap = ({
 
   // عدد الطلبات التي لديها GPS
   const ordersWithGPS = markers.filter(m => m.type === 'customer' && m.hasRealGPS).length;
-  const totalOrders = foodOrders.length + orders.length;
+  // حساب عدد الطلبات - يشمل الطلبات المتاحة وطلباتي
+  const totalOrders = (foodOrders?.length || 0) + (orders?.length || 0) + (myOrders?.length || 0) + (myFoodOrders?.length || 0);
+  
+  // هل نعرض طلباتي فقط (بدون طلبات متاحة)؟
+  const isMyOrdersOnly = (myOrders?.length > 0 || myFoodOrders?.length > 0) && orders?.length === 0 && foodOrders?.length === 0;
 
   return (
     <>
@@ -1315,12 +1319,17 @@ const OrdersMap = ({
         disabled={totalOrders === 0}
         className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
           totalOrders > 0 
-            ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700' 
+            ? isMyOrdersOnly
+              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+              : 'bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700' 
             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
         <Map size={18} />
-        🗺️ عرض الخريطة ({totalOrders} طلب)
+        {isMyOrdersOnly 
+          ? `🗺️ خريطة طلباتي (${totalOrders} طلب)`
+          : `🗺️ عرض الخريطة (${totalOrders} طلب)`
+        }
       </button>
 
       {/* نافذة الخريطة */}

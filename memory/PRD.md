@@ -84,6 +84,11 @@
   - منع السائق من تعيين نفسه "غير متاح" إذا كان لديه طلبات نشطة
   - التحقق في endpoints: `/delivery/orders/{order_id}/accept`, `/food/orders/delivery/{order_id}/accept`, `/food/orders/delivery/batch/{batch_id}/accept`
 
+- ✅ **تحسين عرض الخريطة**:
+  - إخفاء الخريطة من تبويب "طلبات متاحة" - السائق يتصفح القائمة فقط
+  - إظهار الخريطة في تبويب "طلباتي" فقط - للتوجيه إلى الطلبات المقبولة
+  - زر أخضر "🗺️ خريطة طلباتي (X طلب)" في طلباتي
+
 ### 13 مارس 2026 (الجلسة السابقة - UI/UX)
 - ✅ إصلاح خطأ "Maximum update depth exceeded" في OrdersMap.js
 - ✅ إضافة مسار `/delivery/map` مع صفحة DeliveryMapPage.js جديدة

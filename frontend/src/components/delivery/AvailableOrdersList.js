@@ -7,7 +7,6 @@ import {
   calculateOrderDistances, 
   formatDistance 
 } from '../../utils/distanceCalculator';
-import OrdersMap from './OrdersMap';
 
 // فتح العنوان في خرائط Google
 const openInGoogleMaps = (address, city) => {
@@ -117,18 +116,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
 
   return (
     <div className="space-y-4">
-      {/* زر الخريطة التفاعلية */}
-      {allOrders.length > 0 && (
-        <OrdersMap
-          orders={shopOrders}
-          foodOrders={displayFoodOrders}
-          driverLocation={driverLocation}
-          onTakeOrder={onTakeOrder}
-          onTakeFoodOrder={onTakeFoodOrder}
-          myOrders={myOrders}
-          myFoodOrders={myFoodOrders}
-        />
-      )}
+      {/* الخريطة محذوفة من الطلبات المتاحة - ستظهر فقط في طلباتي */}
 
       {/* طلبات الطعام */}
       {displayFoodOrders.length > 0 && (
