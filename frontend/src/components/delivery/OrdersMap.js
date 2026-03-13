@@ -16,32 +16,59 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// أيقونات مخصصة
-const createIcon = (color, emoji) => {
+// أيقونات مخصصة - محسّنة للوضع الداكن
+const createIcon = (color, emoji, size = 44) => {
   return L.divIcon({
     className: 'custom-marker',
     html: `<div style="
       background: ${color};
-      width: 36px;
-      height: 36px;
+      width: ${size}px;
+      height: ${size}px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-size: ${size * 0.5}px;
+      border: 4px solid white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 20px ${color}40;
+      position: relative;
     ">${emoji}</div>`,
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -36]
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size]
   });
 };
 
-const foodStoreIcon = createIcon('#22c55e', '🍔');
-const productStoreIcon = createIcon('#3b82f6', '📦');
-const customerIcon = createIcon('#ef4444', '🏠');
-const driverIcon = createIcon('#f97316', '🚗');
+// أيقونة مرقمة للمحطات
+const createNumberedIcon = (color, number, size = 44) => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="
+      background: ${color};
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: ${size * 0.45}px;
+      font-weight: bold;
+      color: white;
+      border: 4px solid white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 20px ${color}40;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    ">${number}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size]
+  });
+};
+
+// ألوان محسّنة للوضع الداكن
+const foodStoreIcon = createIcon('#22c55e', '🍔', 48); // أخضر ساطع - أكبر
+const productStoreIcon = createIcon('#3b82f6', '📦', 48); // أزرق ساطع
+const customerIcon = createIcon('#f59e0b', '🏠', 44); // أصفر/برتقالي للعميل
+const driverIcon = createIcon('#ffffff', '🚗', 50); // أبيض للسائق - الأكبر
 
 // مكون لتحديث مركز الخريطة
 const MapUpdater = ({ center, zoom }) => {
@@ -1251,60 +1278,60 @@ const OrdersMap = ({
               style={{ paddingTop: 'env(safe-area-inset-top)', margin: 0 }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Header شريط علوي موحد */}
-              <div className="bg-white flex items-center justify-between px-2 py-1.5 gap-2">
-                <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Header شريط علوي موحد - ثيم داكن */}
+              <div className="bg-[#1a1a1a] flex items-center justify-between px-3 py-2 gap-2 border-b border-[#333]">
+                <div className="flex items-center gap-3 flex-shrink-0">
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-1"
+                    className="p-2 bg-[#252525] rounded-lg text-white hover:bg-[#333] transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 19 7-7-7-7"/>
                       <path d="M19 12H5"/>
                     </svg>
                   </button>
-                  <span className="text-xs font-bold text-gray-800 whitespace-nowrap">خريطة الطلبات</span>
+                  <span className="text-sm font-bold text-white whitespace-nowrap">خريطة الطلبات</span>
                   <button
                     onClick={getDriverLocation}
-                    className="p-1.5 bg-orange-500 text-white rounded-full"
+                    className="p-2 bg-green-500 text-black rounded-lg font-bold"
                     title="تحديث موقعي"
                   >
-                    <Locate size={14} />
+                    <Locate size={16} />
                   </button>
                 </div>
                 
-                {/* دليل الألوان */}
-                <div className="flex flex-1 justify-around text-[9px]">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span> مطعم
+                {/* دليل الألوان - محدث */}
+                <div className="flex flex-1 justify-around text-xs text-gray-300">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span> مطعم
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> متجر
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span> متجر
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span> عميل
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span> عميل
                   </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span> موقعك
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-white shadow-lg"></span> موقعك
                   </span>
                 </div>
               </div>
 
-              {/* فلاتر الطبقات */}
-              <div className="bg-white px-2 py-1 flex gap-1">
+              {/* فلاتر الطبقات - ثيم داكن */}
+              <div className="bg-[#1a1a1a] px-3 py-2 flex gap-2 border-b border-[#333]">
                 {[
-                  { key: 'all', label: 'الكل', icon: '🗺️' },
-                  { key: 'food', label: 'طعام', icon: '🍔' },
-                  { key: 'products', label: 'منتجات', icon: '📦' },
-                  { key: 'customers', label: 'عملاء', icon: '🏠' },
+                  { key: 'all', label: 'الكل', icon: '🗺️', color: 'green' },
+                  { key: 'food', label: 'طعام', icon: '🍔', color: 'green' },
+                  { key: 'products', label: 'منتجات', icon: '📦', color: 'blue' },
+                  { key: 'customers', label: 'عملاء', icon: '🏠', color: 'amber' },
                 ].map(layer => (
                   <button
                     key={layer.key}
                     onClick={() => setShowLayer(layer.key)}
-                    className={`flex-1 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                       showLayer === layer.key
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-green-500 text-black'
+                        : 'bg-[#252525] text-gray-400 border border-[#333] hover:border-green-500'
                     }`}
                   >
                     {layer.icon} {layer.label}
@@ -1314,13 +1341,13 @@ const OrdersMap = ({
 
               {/* زر عرض ملخص المحطات */}
               {orderedStations.length > 0 && (
-                <div className="bg-white px-2 py-1.5 border-t border-gray-100">
+                <div className="bg-[#1a1a1a] px-3 py-2 border-b border-[#333]">
                   <button
                     onClick={() => setShowStationsSummary(!showStationsSummary)}
-                    className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                       showStationsSummary 
-                        ? 'bg-purple-500 text-white' 
-                        : 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-300'
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-[#252525] text-blue-400 border border-blue-500/50 hover:bg-blue-500/20'
                     }`}
                   >
                     📋 جدول المحطات ({orderedStations.length})
@@ -1329,49 +1356,49 @@ const OrdersMap = ({
                 </div>
               )}
 
-              {/* بطاقة ملخص المحطات */}
+              {/* بطاقة ملخص المحطات - ثيم داكن */}
               <AnimatePresence>
                 {showStationsSummary && orderedStations.length > 0 && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="bg-gradient-to-b from-purple-50 to-white border-t border-purple-200 overflow-hidden"
+                    className="bg-[#1a1a1a] border-t border-[#333] overflow-hidden"
                   >
                     <div className="p-3 max-h-[200px] overflow-y-auto">
                       <div className="space-y-2">
                         {orderedStations.map((station, idx) => (
                           <div 
                             key={`station-${idx}`}
-                            className={`flex items-center gap-2 p-2 rounded-lg ${
+                            className={`flex items-center gap-3 p-3 rounded-xl ${
                               station.type === 'store' 
-                                ? 'bg-green-50 border border-green-200' 
-                                : 'bg-red-50 border border-red-200'
+                                ? 'bg-green-500/10 border border-green-500/30' 
+                                : 'bg-amber-500/10 border border-amber-500/30'
                             }`}
                           >
                             {/* رقم المحطة */}
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
                               station.type === 'store' 
                                 ? (station.isFood ? 'bg-green-500' : 'bg-blue-500')
-                                : 'bg-red-500'
+                                : 'bg-amber-500'
                             }`}>
                               {station.number}
                             </div>
                             
                             {/* معلومات المحطة */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs">{station.type === 'store' ? (station.isFood ? '🍔' : '📦') : '🏠'}</span>
-                                <span className="font-bold text-xs text-gray-800 truncate">{station.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{station.type === 'store' ? (station.isFood ? '🍔' : '📦') : '🏠'}</span>
+                                <span className="font-bold text-sm text-white truncate">{station.name}</span>
                               </div>
-                              <p className="text-[10px] text-gray-500 truncate">{station.address}</p>
+                              <p className="text-xs text-gray-400 truncate">{station.address}</p>
                             </div>
                             
                             {/* الإجراء */}
-                            <div className={`px-2 py-1 rounded text-[10px] font-bold ${
+                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                               station.action === 'استلام' 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-red-100 text-red-700'
+                                ? 'bg-green-500 text-black' 
+                                : 'bg-amber-500 text-black'
                             }`}>
                               {station.action}
                             </div>
@@ -1380,19 +1407,19 @@ const OrdersMap = ({
                       </div>
                       
                       {/* ملخص الإجمالي */}
-                      <div className="mt-3 p-2 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg border border-purple-300">
-                        <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="mt-3 p-3 bg-[#252525] rounded-xl border border-[#333]">
+                        <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
-                            <p className="text-[10px] text-gray-500">المحطات</p>
-                            <p className="font-bold text-purple-700">{orderedStations.length}</p>
+                            <p className="text-xs text-gray-500">المحطات</p>
+                            <p className="font-bold text-white text-lg">{orderedStations.length}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-gray-500">المسافة</p>
-                            <p className="font-bold text-blue-700">{totalDistance.toFixed(1)} كم</p>
+                            <p className="text-xs text-gray-500">المسافة</p>
+                            <p className="font-bold text-blue-400 text-lg">{totalDistance.toFixed(1)} كم</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-gray-500">💰 الربح</p>
-                            <p className="font-bold text-green-700">{totalEarnings.toLocaleString()} ل.س</p>
+                            <p className="text-xs text-gray-500">💰 الربح</p>
+                            <p className="font-bold text-green-400 text-lg">{totalEarnings.toLocaleString()} ل.س</p>
                           </div>
                         </div>
                       </div>
@@ -1408,10 +1435,11 @@ const OrdersMap = ({
                     initial={{ opacity: 0, scale: 0.9, y: -20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                    className="absolute top-20 left-4 right-4 z-[2000] bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-2xl overflow-hidden border-2 border-amber-300"
+                    className="absolute top-20 left-4 right-4 z-[2000] bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 rounded-2xl shadow-2xl overflow-hidden border-4 border-yellow-300"
+                    style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5)' }}
                   >
                     {/* شريط العد التنازلي */}
-                    <div className="h-1 bg-amber-300/30">
+                    <div className="h-2 bg-black/20">
                       <motion.div
                         initial={{ width: '100%' }}
                         animate={{ width: '0%' }}
@@ -1420,55 +1448,55 @@ const OrdersMap = ({
                       />
                     </div>
                     
-                    <div className="p-4 text-white">
+                    <div className="p-5 text-black">
                       {/* العنوان */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl animate-bounce">🔔</span>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="text-4xl animate-bounce">🔔</span>
                           <div>
-                            <p className="font-bold text-sm">طلب جديد من نفس المطعم!</p>
-                            <p className="text-[10px] text-amber-100">أنت ذاهب لهذا المطعم الآن</p>
+                            <p className="font-black text-lg">طلب جديد من نفس المطعم!</p>
+                            <p className="text-sm text-black/70">أنت ذاهب لهذا المطعم الآن</p>
                           </div>
                         </div>
-                        <div className="bg-white/20 rounded-full px-3 py-1">
-                          <span className="font-bold">{priorityCountdown}</span>
-                          <span className="text-xs mr-1">ث</span>
+                        <div className="bg-black text-yellow-400 rounded-full w-16 h-16 flex flex-col items-center justify-center">
+                          <span className="font-black text-2xl">{priorityCountdown}</span>
+                          <span className="text-xs">ثانية</span>
                         </div>
                       </div>
 
                       {/* معلومات الطلب */}
-                      <div className="bg-white/10 rounded-xl p-3 mb-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">🍔</span>
-                          <span className="font-bold">{priorityOrder.restaurant_name}</span>
+                      <div className="bg-black/10 rounded-xl p-4 mb-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-2xl">🍔</span>
+                          <span className="font-bold text-lg">{priorityOrder.restaurant_name}</span>
                         </div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span>🏠</span>
-                          <span className="text-sm">{priorityOrder.customer_name}</span>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-xl">🏠</span>
+                          <span className="font-medium">{priorityOrder.customer_name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span>📍</span>
-                          <span className="text-xs text-amber-100 truncate">{priorityOrder.delivery_address}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">📍</span>
+                          <span className="text-sm text-black/70 truncate">{priorityOrder.delivery_address}</span>
                         </div>
                       </div>
 
                       {/* الربح المتوقع */}
-                      <div className="bg-green-500/30 rounded-xl p-2 mb-3 text-center">
-                        <span className="text-xs">💰 ربح إضافي: </span>
-                        <span className="font-bold text-lg">+{(priorityOrder.total * 0.1 || 1500).toLocaleString()} ل.س</span>
+                      <div className="bg-green-500 text-white rounded-xl p-4 mb-4 text-center">
+                        <span className="text-sm">💰 ربح إضافي: </span>
+                        <span className="font-black text-2xl">+{(priorityOrder.driver_earnings || priorityOrder.total * 0.1 || 1500).toLocaleString()} ل.س</span>
                       </div>
 
                       {/* أزرار القبول والرفض */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={rejectPriorityOrder}
-                          className="py-3 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition-colors"
+                          className="py-4 bg-white/50 hover:bg-white/70 rounded-xl font-bold text-lg transition-colors border-2 border-black/20"
                         >
                           ❌ رفض
                         </button>
                         <button
                           onClick={acceptPriorityOrder}
-                          className="py-3 bg-green-500 hover:bg-green-600 rounded-xl font-bold text-sm transition-colors shadow-lg"
+                          className="py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors shadow-xl"
                         >
                           ✅ قبول
                         </button>
@@ -1609,10 +1637,10 @@ const OrdersMap = ({
                   style={{ height: '100%', width: '100%' }}
                   zoomControl={true}
                 >
-                  {/* خريطة Positron - فاتحة لرؤية أفضل */}
+                  {/* خريطة داكنة - Dark Matter لتناسب الثيم */}
                   <TileLayer
                     attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   
