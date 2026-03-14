@@ -203,7 +203,10 @@ const OrdersMap = ({
   const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
   const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة
 
-  // ⭐ جلب طلبات الأولوية كل 10 ثواني
+  // ⭐ جلب طلبات الأولوية كل 10 ثواني (معطّل مؤقتاً لتجنب التكرار)
+  // هذا النظام يعرض طلبات من نفس المطعم كأولوية
+  // تم تعطيله بناءً على طلب المستخدم
+  /*
   useEffect(() => {
     let intervalId = null;
     
@@ -245,6 +248,7 @@ const OrdersMap = ({
       if (intervalId) clearInterval(intervalId);
     };
   }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup, dismissedPriorityUntil, rejectedOrderIds]);
+  */
 
   // ⭐ العد التنازلي للأولوية
   useEffect(() => {
@@ -1855,13 +1859,13 @@ const OrdersMap = ({
                   style={{ height: '100%', width: '100%' }}
                   zoomControl={true}
                 >
-                  {/* خريطة تتبدل حسب الثيم */}
+                  {/* خريطة تتبدل حسب الثيم - مع دعم اللغة العربية */}
                   <TileLayer
                     key={currentTheme} // مهم لإعادة تحميل الخريطة عند تغيير الثيم
-                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    attribution='&copy; OpenStreetMap'
                     url={currentTheme === 'dark' 
                       ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                      : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
                     }
                   />
                   <MapUpdater center={mapCenter} zoom={12} />

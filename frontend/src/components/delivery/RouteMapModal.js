@@ -364,10 +364,10 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                 zoomControl={false}
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  attribution='&copy; OpenStreetMap'
                   url={isDark 
                     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
                   }
                 />
                 
