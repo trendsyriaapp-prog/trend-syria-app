@@ -77,6 +77,7 @@ from routes.gifts import router as gifts_router
 from routes.recommendations import router as recommendations_router
 from routes.image_search import router as image_search_router
 from routes.push_notifications import router as push_router
+from routes.admin_settings import router as admin_settings_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -151,6 +152,7 @@ api_router.include_router(gifts_router)
 api_router.include_router(recommendations_router)
 api_router.include_router(image_search_router)
 api_router.include_router(push_router)
+api_router.include_router(admin_settings_router)
 
 # ============== Categories ==============
 

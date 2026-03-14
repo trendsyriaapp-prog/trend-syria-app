@@ -765,6 +765,117 @@ async def get_store_orders(
     
     return orders
 
+
+class PreparationStartRequest(BaseModel):
+    preparation_time_minutes: int = 15  # وقت التحضير بالدقائق
+
+
+@router.post("/store/orders/{order_id}/start-preparation")
+async def start_order_preparation(
+    order_id: str,
+    data: PreparationStartRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    بدء تحضير الطلب - للطعام فقط
+    يرسل الطلب للسائق الأقرب بعد (وقت_التحضير - 7 دقائق)
+    """
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("status") not in ["pending", "confirmed"]:
+        raise HTTPException(status_code=400, detail="لا يمكن بدء التحضير لهذا الطلب")
+    
+    now = datetime.now(timezone.utc)
+    prep_time = data.preparation_time_minutes
+    
+    # حساب وقت إرسال الطلب للسائق (قبل 7 دقائق من الجهوزية)
+    send_to_driver_delay = max(0, prep_time - 7)  # لا يقل عن 0
+    send_to_driver_at = now + timedelta(minutes=send_to_driver_delay)
+    
+    # تحديث الطلب
+    update_data = {
+        "status": "preparing",
+        "status_label": "جاري التحضير",
+        "preparation_started_at": now.isoformat(),
+        "preparation_time_minutes": prep_time,
+        "expected_ready_at": (now + timedelta(minutes=prep_time)).isoformat(),
+        "send_to_driver_at": send_to_driver_at.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    # توليد كود الاستلام مسبقاً
+    import random
+    pickup_code = str(random.randint(1000, 9999))
+    update_data["pickup_code"] = pickup_code
+    update_data["pickup_code_verified"] = False
+    
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": update_data,
+            "$push": {
+                "status_history": {
+                    "status": "preparing",
+                    "timestamp": now.isoformat(),
+                    "note": f"بدأ التحضير - الوقت المتوقع: {prep_time} دقيقة",
+                    "updated_by": user["id"]
+                }
+            }
+        }
+    )
+    
+    # إذا كان وقت الإرسال الآن أو قريب جداً، نرسل فوراً
+    if send_to_driver_delay <= 1:
+        try:
+            from services.driver_assignment import process_driver_assignment
+            
+            store_lat = store.get("latitude", 33.5138)
+            store_lon = store.get("longitude", 36.2765)
+            
+            assignment_result = await process_driver_assignment(
+                order_id=order_id,
+                order_type="food",
+                store_lat=store_lat,
+                store_lon=store_lon,
+                store_name=store.get("name", "")
+            )
+            
+            return {
+                "success": True,
+                "message": "تم بدء التحضير وإرسال الطلب للسائق",
+                "preparation_time": prep_time,
+                "pickup_code": pickup_code,
+                "driver_assignment": assignment_result
+            }
+        except Exception as e:
+            print(f"Error assigning driver: {e}")
+    
+    # إشعار العميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["customer_id"],
+        "title": "🍳 جاري تحضير طلبك",
+        "message": f"طلبك #{order['order_number']} قيد التحضير - الوقت المتوقع: {prep_time} دقيقة",
+        "type": "order_preparing",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": "تم بدء التحضير",
+        "preparation_time": prep_time,
+        "pickup_code": pickup_code,
+        "send_to_driver_at": send_to_driver_at.isoformat()
+    }
+
+
 @router.post("/store/orders/{order_id}/status")
 async def update_order_status(
     order_id: str,
@@ -1278,11 +1389,106 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
         }
     )
     
+    # حساب التعويض إذا كان السائق انتظر
+    compensation_data = {"compensation": 0}
+    try:
+        from services.violation_system import finalize_order_compensation
+        compensation_data = await finalize_order_compensation(order_id)
+    except Exception as e:
+        print(f"Error calculating compensation: {e}")
+    
     return {
         "success": True,
         "message": "تم تأكيد الاستلام بنجاح",
-        "order_id": order_id
+        "order_id": order_id,
+        "compensation": compensation_data
     }
+
+
+@router.post("/delivery/{order_id}/arrived")
+async def driver_arrived_at_store(order_id: str, user: dict = Depends(get_current_user)):
+    """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "driver_id": user["id"]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    
+    # التحقق من أن السائق لم يسجل وصوله بالفعل
+    if order.get("driver_arrived_at"):
+        return {
+            "success": True,
+            "message": "تم تسجيل وصولك مسبقاً",
+            "arrived_at": order.get("driver_arrived_at")
+        }
+    
+    now = datetime.now(timezone.utc)
+    
+    # تسجيل الوصول
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_arrived_at": now.isoformat(),
+                "waiting_started": True
+            },
+            "$push": {
+                "status_history": {
+                    "status": "driver_arrived",
+                    "timestamp": now.isoformat(),
+                    "note": f"وصل السائق {user['name']} للمطعم"
+                }
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "تم تسجيل وصولك للمطعم",
+        "arrived_at": now.isoformat()
+    }
+
+
+@router.get("/delivery/{order_id}/waiting-status")
+async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)):
+    """جلب حالة الانتظار والتعويض المتوقع"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "driver_id": user["id"]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("driver_arrived_at"):
+        return {
+            "waiting": False,
+            "message": "لم تسجل وصولك للمطعم بعد"
+        }
+    
+    try:
+        from services.violation_system import calculate_waiting_compensation
+        compensation_data = await calculate_waiting_compensation(order_id)
+        return {
+            "waiting": True,
+            "arrived_at": order.get("driver_arrived_at"),
+            **compensation_data
+        }
+    except Exception as e:
+        return {
+            "waiting": True,
+            "arrived_at": order.get("driver_arrived_at"),
+            "error": str(e)
+        }
+
 
 @router.get("/delivery/{order_id}/pickup-code")
 async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user)):

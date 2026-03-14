@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
+import { useToast } from '../ui/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -14,6 +15,91 @@ const openInGoogleMaps = (address, city) => {
   const encodedAddress = encodeURIComponent(fullAddress);
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   window.open(mapsUrl, '_blank');
+};
+
+// مكون عداد الانتظار
+const WaitingTimer = ({ arrivedAt, isDark, orderId }) => {
+  const [waitingTime, setWaitingTime] = useState(0);
+  const [compensation, setCompensation] = useState(0);
+  const MAX_WAITING = 10; // 10 دقائق مسموح
+  const COMPENSATION_RATE = 500; // 500 ل.س لكل 5 دقائق
+
+  useEffect(() => {
+    const calculateTime = () => {
+      if (!arrivedAt) return;
+      const arrived = new Date(arrivedAt);
+      const now = new Date();
+      const diffMinutes = (now - arrived) / (1000 * 60);
+      setWaitingTime(Math.floor(diffMinutes));
+      
+      // حساب التعويض
+      if (diffMinutes > MAX_WAITING) {
+        const extraMinutes = diffMinutes - MAX_WAITING;
+        const compensationUnits = Math.ceil(extraMinutes / 5);
+        setCompensation(Math.min(compensationUnits * COMPENSATION_RATE, 2000));
+      }
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [arrivedAt]);
+
+  const formatTime = (minutes) => {
+    const mins = Math.floor(minutes);
+    const secs = Math.floor((minutes % 1) * 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const isOvertime = waitingTime > MAX_WAITING;
+
+  return (
+    <div className={`w-full p-3 rounded-xl mb-3 ${
+      isDark 
+        ? isOvertime ? 'bg-red-900/30 border border-red-800' : 'bg-blue-900/30 border border-blue-800'
+        : isOvertime ? 'bg-red-100 border border-red-300' : 'bg-blue-100 border border-blue-300'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Clock size={16} className={isOvertime ? 'text-red-500' : 'text-blue-500'} />
+          <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            ⏱️ وقت الانتظار: {waitingTime} دقيقة
+          </span>
+        </div>
+        {!isOvertime && (
+          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            الحد: {MAX_WAITING} دقيقة
+          </span>
+        )}
+      </div>
+      
+      {/* شريط التقدم */}
+      <div className={`mt-2 h-2 rounded-full overflow-hidden ${
+        isDark ? 'bg-gray-700' : 'bg-gray-300'
+      }`}>
+        <div 
+          className={`h-full transition-all duration-1000 ${
+            isOvertime ? 'bg-red-500' : 'bg-blue-500'
+          }`}
+          style={{ width: `${Math.min((waitingTime / MAX_WAITING) * 100, 100)}%` }}
+        />
+      </div>
+      
+      {/* التعويض */}
+      {isOvertime && compensation > 0 && (
+        <div className={`mt-2 flex items-center justify-between p-2 rounded-lg ${
+          isDark ? 'bg-green-900/30' : 'bg-green-100'
+        }`}>
+          <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+            💰 تعويض الانتظار:
+          </span>
+          <span className="text-sm font-bold text-green-500">
+            +{compensation.toLocaleString()} ل.س
+          </span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const MyOrdersList = ({ 
@@ -486,6 +572,8 @@ const MyOrdersList = ({
         const isFood = true; // طلبات الطعام دائماً
         const canComplete = order.status === 'out_for_delivery';
         const isDelivered = order.status === 'delivered';
+        // حالات تسمح بتأكيد الاستلام من البائع (قبل استلام الطلب فعلياً)
+        const canConfirmPickup = ['accepted', 'ready_for_pickup', 'preparing', 'ready'].includes(order.status);
 
         return (
           <motion.div
@@ -569,8 +657,31 @@ const MyOrdersList = ({
                 </button>
               </div>
 
-              {/* زر تأكيد الاستلام من البائع - يظهر فقط إذا لم يتم التحقق بعد */}
-              {canComplete && !order.pickup_code_verified && order.pickup_code && (
+              {/* زر وصلت للمطعم + عداد الانتظار */}
+              {canConfirmPickup && !order.driver_arrived_at && (
+                <button
+                  onClick={() => handleDriverArrival(order.id)}
+                  className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 mb-3 ${
+                    isDark 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+                >
+                  📍 وصلت للمطعم
+                </button>
+              )}
+
+              {/* عداد الانتظار */}
+              {order.driver_arrived_at && !order.pickup_code_verified && (
+                <WaitingTimer 
+                  arrivedAt={order.driver_arrived_at} 
+                  isDark={isDark}
+                  orderId={order.id}
+                />
+              )}
+
+              {/* زر تأكيد الاستلام من البائع - يظهر فقط في حالات ما قبل الاستلام */}
+              {canConfirmPickup && !order.pickup_code_verified && order.pickup_code && (
                 <button
                   onClick={() => {
                     setShowPickupCodeModal(order);
@@ -588,13 +699,22 @@ const MyOrdersList = ({
                 </button>
               )}
 
-              {/* علامة تم الاستلام */}
+              {/* علامة تم الاستلام - تظهر فقط إذا تم التحقق */}
               {order.pickup_code_verified && (
                 <div className={`w-full py-2 rounded-xl text-sm flex items-center justify-center gap-2 mb-3 ${
                   isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-100 text-green-700 border border-green-300'
                 }`}>
                   <CheckCircle size={16} />
                   ✅ تم تأكيد الاستلام من البائع
+                </div>
+              )}
+              
+              {/* رسالة إذا الطلب في حالة التوصيل ولم يتم تأكيد الاستلام (حالة قديمة) */}
+              {canComplete && !order.pickup_code_verified && !order.pickup_code && (
+                <div className={`w-full py-2 rounded-xl text-xs flex items-center justify-center gap-2 mb-3 ${
+                  isDark ? 'bg-gray-800 text-gray-400 border border-gray-700' : 'bg-gray-100 text-gray-600 border border-gray-300'
+                }`}>
+                  📦 طلب بدون كود استلام
                 </div>
               )}
 
