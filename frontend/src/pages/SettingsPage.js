@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2
+  LogOut, Wallet, Star, Truck, Volume2, Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -629,6 +629,18 @@ const SettingsPage = () => {
         <section className="mt-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
           <h3 className="text-xs font-bold text-gray-700 p-3 border-b border-gray-100">القانونية والدعم</h3>
           <div className="divide-y divide-gray-100">
+            <button
+              onClick={() => navigate('/about')}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Users size={14} className="text-purple-600" />
+                </div>
+                <span className="text-sm text-gray-900">من نحن</span>
+              </div>
+              <ChevronLeft size={16} className="text-gray-400" />
+            </button>
             <button
               onClick={() => navigate('/privacy')}
               className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
