@@ -64,6 +64,35 @@
 - أداء أفضل مع `Promise.all`
 - **Status:** IMPLEMENTED ✅
 
+#### نظام التوزيع الذكي وتعويض الانتظار (Phase 1) ✅ - 14 Dec 2025
+- **واجهة البائع:**
+  - Modal "بدء التحضير" مع اختيار وقت التحضير (10-60 دقيقة أو مخصص)
+  - شريط تقدم للطلبات قيد التحضير
+  - عرض معلومات السائق المخصص
+  - **ملف:** `FoodStoreDashboard.js` (StoreOrdersTab component)
+
+- **واجهة السائق:**
+  - زر "وصلت للمطعم" (يظهر فقط للحالات: accepted, ready_for_pickup, preparing, ready)
+  - زر "تأكيد الاستلام من البائع" (يظهر فقط بعد وصول السائق ووجود كود)
+  - عداد الانتظار عند الوصول للمطعم
+  - **ملف:** `MyOrdersList.js`
+
+- **واجهة الأدمن:**
+  - قسم "تعويض انتظار السائق في المطعم" في إعدادات التوصيل
+  - ضبط: وقت الانتظار المسموح، التعويض لكل 5 دقائق، الحد الأقصى للتعويض
+  - نظام التحذيرات (تحذير > تحذير أخير > إيقاف)
+  - أمثلة حية على حساب التعويض
+  - **ملف:** `DeliverySettingsTab.js`
+
+- **Backend APIs:**
+  - `POST /api/food/orders/store/orders/{order_id}/start-preparation` - بدء التحضير مع وقت متوقع
+  - `POST /api/food/orders/delivery/{order_id}/arrived` - تسجيل وصول السائق للمطعم
+  - `GET /api/admin/settings/delivery` - جلب إعدادات التعويض
+  - `PUT /api/admin/settings/delivery` - حفظ إعدادات التعويض
+  - **ملفات:** `food_orders.py`, `admin_settings.py`
+
+- **Status:** TESTED ✅ (iteration_57)
+
 ---
 
 ## Prioritized Backlog
@@ -72,7 +101,9 @@
 All critical features are implemented and tested.
 
 ### P1 - High Priority
-- [ ] اختبار المستخدم اليدوي لنظام الكود
+- [ ] اختبار المستخدم اليدوي للنظام الجديد (تحضير > وصول سائق > استلام)
+- [ ] منطق التوزيع التلقائي للسائق الأقرب (Background Task)
+- [ ] حساب التعويض الفعلي وخصمه من المطعم
 
 ### P2 - Medium Priority
 - [ ] تكامل مزود دفع سوري حقيقي
@@ -107,6 +138,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_57.json` - Smart Distribution & Wait Compensation Tests ✅
 - `/app/test_reports/iteration_56.json` - Pickup Code System Tests
 - `/app/test_reports/iteration_55.json` - Previous tests
 
