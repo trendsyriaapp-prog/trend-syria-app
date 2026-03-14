@@ -93,6 +93,31 @@
 
 - **Status:** TESTED ✅ (iteration_57)
 
+#### نظام التوزيع الذكي وتعويض الانتظار (Phase 2) ✅ - 14 Dec 2025
+- **Background Task للتوزيع التلقائي:**
+  - فحص الطلبات الجاهزة للتوزيع كل 10 ثواني
+  - البحث عن أقرب سائق متاح وتعيين الطلب له
+  - إرسال للجميع إذا لم يوجد سائق أو رفض
+  - **ملف:** `services/background_tasks.py`
+
+- **APIs جديدة للأدمن:**
+  - `GET /api/admin/dispatch/status` - حالة نظام التوزيع
+  - `GET /api/admin/violations/report?days=30` - تقرير المخالفات
+  - **ملف:** `routes/admin_settings.py`
+
+- **واجهة الأدمن المحسّنة:**
+  - قسم "حالة التوزيع التلقائي" (النظام يعمل، السائقين المتاحين، بانتظار التوزيع)
+  - قسم "تقرير المخالفات" (إجمالي المخالفات، التعويضات، متوسط التأخير)
+  - **ملف:** `DeliverySettingsTab.js`
+
+- **نظام المخالفات والتعويضات:**
+  - حساب التعويض تلقائياً عند تأكيد الاستلام
+  - خصم من المطعم وإضافة لمحفظة السائق
+  - تسجيل المخالفات وتحديث مستوى التحذير
+  - **ملف:** `services/violation_system.py`
+
+- **Status:** TESTED ✅ (iteration_58)
+
 ---
 
 ## Prioritized Backlog
@@ -101,9 +126,7 @@
 All critical features are implemented and tested.
 
 ### P1 - High Priority
-- [ ] اختبار المستخدم اليدوي للنظام الجديد (تحضير > وصول سائق > استلام)
-- [ ] منطق التوزيع التلقائي للسائق الأقرب (Background Task)
-- [ ] حساب التعويض الفعلي وخصمه من المطعم
+- [ ] اختبار المستخدم اليدوي للنظام الكامل (بائع > سائق > عميل)
 
 ### P2 - Medium Priority
 - [ ] تكامل مزود دفع سوري حقيقي
@@ -138,7 +161,8 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
-- `/app/test_reports/iteration_57.json` - Smart Distribution & Wait Compensation Tests ✅
+- `/app/test_reports/iteration_58.json` - Smart Distribution Phase 2 Tests ✅
+- `/app/test_reports/iteration_57.json` - Smart Distribution Phase 1 Tests ✅
 - `/app/test_reports/iteration_56.json` - Pickup Code System Tests
 - `/app/test_reports/iteration_55.json` - Previous tests
 
