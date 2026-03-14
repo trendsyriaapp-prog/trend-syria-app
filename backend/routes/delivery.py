@@ -364,6 +364,51 @@ async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
     
     return orders
 
+@router.get("/my-product-orders")
+async def get_my_product_orders(user: dict = Depends(get_current_user)):
+    """طلبات المنتجات النشطة للسائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب الطلبات النشطة
+    orders = await db.orders.find(
+        {
+            "delivery_driver_id": user["id"],
+            "delivery_status": {"$in": ["out_for_delivery", "picked_up", "on_the_way"]}
+        },
+        {"_id": 0}
+    ).sort("accepted_at", 1).to_list(20)
+    
+    # جلب الإعدادات
+    settings = await db.settings.find_one({"type": "delivery_settings"})
+    max_orders = 7
+    if settings and settings.get("values", {}).get("max_product_orders_per_driver"):
+        max_orders = settings["values"]["max_product_orders_per_driver"]
+    
+    # إضافة معلومات البائع لكل طلب
+    for order in orders:
+        # معلومات البائع
+        seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
+        if seller_ids:
+            seller = await db.users.find_one(
+                {"id": seller_ids[0]},
+                {"_id": 0, "phone": 1, "name": 1, "full_name": 1, "store_name": 1, "store_address": 1}
+            )
+            if seller:
+                order["seller_phone"] = seller.get("phone")
+                order["seller_name"] = seller.get("store_name") or seller.get("full_name") or seller.get("name")
+                order["seller_address"] = seller.get("store_address", "")
+        
+        # معلومات كود الاستلام
+        order["needs_pickup_code"] = not order.get("pickup_code_verified", False) and order.get("pickup_code")
+    
+    return {
+        "orders": orders,
+        "count": len(orders),
+        "max_orders": max_orders,
+        "can_accept_more": len(orders) < max_orders
+    }
+
 @router.get("/available-food-orders")
 async def get_available_food_orders(user: dict = Depends(get_current_user)):
     """طلبات الطعام المتاحة للتوصيل"""
@@ -444,7 +489,7 @@ async def get_my_food_orders(user: dict = Depends(get_current_user)):
 
 @router.post("/orders/{order_id}/accept")
 async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_user)):
-    """قبول طلب للتوصيل"""
+    """قبول طلب للتوصيل - المنتجات تسمح بقبول عدة طلبات"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -469,28 +514,56 @@ async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_
     if order.get("delivery_driver_id"):
         raise HTTPException(status_code=400, detail="تم قبول هذا الطلب من قبل موظف آخر")
     
+    # حساب عدد طلبات المنتجات الحالية للسائق
+    current_product_orders = await db.orders.count_documents({
+        "delivery_driver_id": user["id"],
+        "delivery_status": {"$in": ["out_for_delivery", "picked_up", "on_the_way"]}
+    })
+    
+    # الحد الأقصى لطلبات المنتجات (يمكن للأدمن تغييره)
+    settings = await db.settings.find_one({"type": "delivery_settings"})
+    max_product_orders = 7  # الافتراضي
+    if settings and settings.get("values", {}).get("max_product_orders_per_driver"):
+        max_product_orders = settings["values"]["max_product_orders_per_driver"]
+    
+    if current_product_orders >= max_product_orders:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"وصلت للحد الأقصى ({max_product_orders} طلبات). قم بتسليم بعض الطلبات أولاً"
+        )
+    
+    # جلب إعدادات وقت الإغلاق
+    platform_settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    closing_hour = platform_settings.get("closing_hour", 21) if platform_settings else 21
+    
     await db.orders.update_one(
         {"id": order_id},
         {
             "$set": {
                 "delivery_driver_id": user["id"],
                 "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_phone": user.get("phone", ""),
                 "delivery_status": "out_for_delivery",
                 "accepted_at": datetime.now(timezone.utc).isoformat()
             }
         }
     )
     
-    # Notify customer
+    # Notify customer مع موعد التوصيل
     await create_notification_for_user(
         user_id=order["user_id"],
         title="طلبك في الطريق!",
-        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} في طريقه إليك",
+        message=f"موظف التوصيل {user.get('full_name', user.get('name', ''))} قبل طلبك وسيصلك اليوم قبل الساعة {closing_hour}:00",
         notification_type="delivery",
         order_id=order_id
     )
     
-    return {"message": "تم قبول الطلب"}
+    return {
+        "message": "تم قبول الطلب",
+        "current_orders": current_product_orders + 1,
+        "max_orders": max_product_orders,
+        "delivery_deadline": f"اليوم قبل الساعة {closing_hour}:00"
+    }
 
 @router.post("/orders/{order_id}/deliver")
 async def mark_order_delivered(order_id: str, user: dict = Depends(get_current_user)):

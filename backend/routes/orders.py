@@ -549,7 +549,9 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
 
 @router.post("/orders/{order_id}/seller/shipped")
 async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None, user: dict = Depends(get_current_user)):
-    """البائع يشحن الطلب"""
+    """البائع يشحن الطلب - يُنشئ كود استلام للسائق"""
+    import random
+    
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
@@ -560,9 +562,20 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
         raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
     
+    # إنشاء كود استلام من البائع (4 أرقام)
+    pickup_code = str(random.randint(1000, 9999))
+    
+    # جلب إعدادات وقت الإغلاق
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    closing_hour = settings.get("closing_hour", 21) if settings else 21  # الافتراضي 9 مساءً
+    
     update_data = {
         "delivery_status": "shipped",
-        "shipped_at": datetime.now(timezone.utc).isoformat()
+        "shipped_at": datetime.now(timezone.utc).isoformat(),
+        "pickup_code": pickup_code,
+        "pickup_code_verified": False,
+        "expected_delivery": "today",
+        "delivery_deadline_hour": closing_hour
     }
     if tracking_number:
         update_data["tracking_number"] = tracking_number
@@ -583,10 +596,11 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
         }
     )
     
+    # إشعار العميل مع موعد التوصيل
     await create_notification_for_user(
         user_id=order["user_id"],
         title=f"🚚 تم شحن طلبك #{order_id[:8]}",
-        message="طلبك جاهز وبانتظار موظف التوصيل\nسيتم إعلامك فور استلامه",
+        message=f"طلبك جاهز وسيصلك اليوم قبل الساعة {closing_hour}:00\nسيتم إعلامك فور استلام موظف التوصيل",
         notification_type="order_status",
         order_id=order_id
     )
@@ -600,9 +614,112 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
         order_id=order_id
     )
     
-    return {"message": "تم شحن الطلب"}
+    return {
+        "message": "تم شحن الطلب",
+        "pickup_code": pickup_code,
+        "note": "أعطِ هذا الكود لموظف التوصيل عند الاستلام"
+    }
 
 # ============== Delivery Driver Order Management ==============
+
+class VerifyProductPickupCode(BaseModel):
+    code: str
+
+@router.post("/orders/{order_id}/delivery/verify-pickup")
+async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCode, user: dict = Depends(get_current_user)):
+    """التحقق من كود استلام المنتج من البائع"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن الطلب مخصص لهذا السائق
+    if order.get("delivery_driver_id") and order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="هذا الطلب مخصص لسائق آخر")
+    
+    # التحقق من الكود
+    correct_code = order.get("pickup_code")
+    if not correct_code:
+        raise HTTPException(status_code=400, detail="لا يوجد كود استلام لهذا الطلب")
+    
+    if data.code != correct_code:
+        raise HTTPException(status_code=400, detail="كود الاستلام غير صحيح")
+    
+    # تحديث الطلب
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "pickup_code_verified": True,
+                "pickup_code_verified_at": datetime.now(timezone.utc).isoformat(),
+                "delivery_driver_id": user["id"],
+                "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_phone": user.get("phone", ""),
+                "delivery_status": "picked_up",
+                "picked_up_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "picked_up",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "note": "تم التحقق من كود الاستلام"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title=f"📦 تم استلام طلبك #{order_id[:8]}",
+        message=f"موظف التوصيل {user.get('full_name', '')} استلم طلبك وسيصلك اليوم",
+        notification_type="order_status",
+        order_id=order_id
+    )
+    
+    # إشعار البائع
+    for item in order.get("items", []):
+        seller_id = item.get("seller_id")
+        if seller_id:
+            await create_notification_for_user(
+                user_id=seller_id,
+                title=f"✅ تم استلام الطلب #{order_id[:8]}",
+                message=f"موظف التوصيل {user.get('full_name', '')} استلم الطلب",
+                notification_type="order_pickup",
+                order_id=order_id
+            )
+    
+    return {
+        "success": True,
+        "message": "تم التحقق من الكود واستلام الطلب بنجاح"
+    }
+
+@router.get("/orders/{order_id}/seller/pickup-code")
+async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current_user)):
+    """البائع يحصل على كود الاستلام لإعطائه للسائق"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+        raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
+    
+    pickup_code = order.get("pickup_code")
+    if not pickup_code:
+        raise HTTPException(status_code=400, detail="لم يتم شحن الطلب بعد")
+    
+    return {
+        "pickup_code": pickup_code,
+        "is_verified": order.get("pickup_code_verified", False),
+        "order_id": order_id
+    }
 
 @router.post("/orders/{order_id}/delivery/pickup")
 async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)):
