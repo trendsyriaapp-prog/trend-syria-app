@@ -1191,6 +1191,36 @@ const StoreOrdersTab = ({ token }) => {
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
 
+  // الإبلاغ عن وصول كاذب للسائق
+  const reportFalseArrival = async (orderId) => {
+    if (!window.confirm('هل أنت متأكد أن السائق لم يصل فعلياً للمتجر؟')) {
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API}/food/orders/store/orders/${orderId}/report-false-arrival`,
+        null,
+        { 
+          params: { reason: 'السائق لم يصل فعلياً' },
+          headers: { Authorization: `Bearer ${token}` } 
+        }
+      );
+      
+      toast({ 
+        title: "تم الإبلاغ", 
+        description: res.data.warning || "تم إلغاء عداد الانتظار وتسجيل الشكوى"
+      });
+      fetchOrders();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل إرسال الشكوى", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   // حساب الوقت المتبقي للتحضير
   const getRemainingPrepTime = (order) => {
     if (!order.expected_ready_at) return null;
@@ -1381,9 +1411,21 @@ const StoreOrdersTab = ({ token }) => {
                             🚗 موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
                           </p>
                           {order.driver_arrived_at && (
-                            <p className="text-xs text-blue-600 mt-1">
-                              ✅ وصل للمتجر
-                            </p>
+                            <>
+                              <p className="text-xs text-blue-600 mt-1">
+                                ✅ وصل للمتجر
+                              </p>
+                              {/* زر الإبلاغ عن وصول كاذب */}
+                              {!order.pickup_code_verified && (
+                                <button
+                                  onClick={() => reportFalseArrival(order.id)}
+                                  data-testid={`report-false-arrival-${order.id}`}
+                                  className="mt-2 w-full text-xs bg-red-100 text-red-600 py-1.5 rounded-lg hover:bg-red-200 flex items-center justify-center gap-1"
+                                >
+                                  ⚠️ السائق لم يصل فعلياً؟
+                                </button>
+                              )}
+                            </>
                           )}
                           {order.driver_phone && (
                             <a 

@@ -945,6 +945,125 @@ async def update_order_status(
     
     return {"message": "تم تحديث حالة الطلب"}
 
+
+@router.post("/store/orders/{order_id}/report-false-arrival")
+async def report_false_driver_arrival(
+    order_id: str,
+    reason: str = "السائق لم يصل فعلياً",
+    user: dict = Depends(get_current_user)
+):
+    """
+    إبلاغ البائع عن وصول كاذب للسائق
+    يُسجل شكوى ويُلغي عداد الانتظار
+    """
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "store_id": store["id"]
+    }, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("driver_arrived_at"):
+        raise HTTPException(status_code=400, detail="السائق لم يسجل وصوله بعد")
+    
+    driver_id = order.get("driver_id")
+    now = datetime.now(timezone.utc)
+    
+    # تسجيل الشكوى
+    complaint_id = str(uuid.uuid4())
+    await db.driver_complaints.insert_one({
+        "id": complaint_id,
+        "driver_id": driver_id,
+        "store_id": store["id"],
+        "store_name": store.get("name", ""),
+        "order_id": order_id,
+        "type": "false_arrival",
+        "reason": reason,
+        "driver_arrival_location": order.get("driver_arrival_location"),
+        "store_location": {
+            "latitude": store.get("latitude"),
+            "longitude": store.get("longitude")
+        },
+        "created_at": now.isoformat(),
+        "status": "pending"  # pending, confirmed, rejected
+    })
+    
+    # إلغاء تسجيل الوصول وعداد الانتظار
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_arrived_at": None,
+                "waiting_started": False,
+                "false_arrival_reported": True,
+                "false_arrival_reported_at": now.isoformat()
+            },
+            "$push": {
+                "status_history": {
+                    "status": "false_arrival_reported",
+                    "timestamp": now.isoformat(),
+                    "note": f"أبلغ البائع عن وصول كاذب: {reason}"
+                }
+            }
+        }
+    )
+    
+    # تحديث عداد شكاوى السائق
+    await db.users.update_one(
+        {"id": driver_id},
+        {
+            "$inc": {"false_arrival_complaints": 1},
+            "$set": {"last_complaint_at": now.isoformat()}
+        }
+    )
+    
+    # جلب عدد الشكاوى الحالي
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "false_arrival_complaints": 1, "name": 1})
+    complaints_count = driver.get("false_arrival_complaints", 1) if driver else 1
+    
+    # تطبيق العقوبات حسب عدد الشكاوى
+    warning_message = ""
+    if complaints_count >= 5:
+        # إيقاف السائق مؤقتاً
+        await db.delivery_documents.update_one(
+            {"user_id": driver_id},
+            {
+                "$set": {
+                    "is_available": False,
+                    "suspended_until": (now + timedelta(hours=24)).isoformat(),
+                    "suspension_reason": "شكاوى متكررة عن وصول كاذب"
+                }
+            }
+        )
+        warning_message = "تم إيقاف السائق مؤقتاً لمدة 24 ساعة"
+    elif complaints_count >= 3:
+        warning_message = f"تحذير: السائق لديه {complaints_count} شكاوى"
+    
+    # إشعار السائق
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": driver_id,
+        "title": "⚠️ شكوى وصول كاذب",
+        "message": f"أبلغ المتجر {store.get('name', '')} عن وصول كاذب. يرجى الالتزام بالتسجيل فقط عند الوصول الفعلي.",
+        "type": "complaint",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": "تم تسجيل الشكوى وإلغاء عداد الانتظار",
+        "complaint_id": complaint_id,
+        "driver_complaints_count": complaints_count,
+        "warning": warning_message
+    }
+
+
 # ===============================
 # طلبات التوصيل
 # ===============================
@@ -1406,7 +1525,12 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
 
 
 @router.post("/delivery/{order_id}/arrived")
-async def driver_arrived_at_store(order_id: str, user: dict = Depends(get_current_user)):
+async def driver_arrived_at_store(
+    order_id: str, 
+    latitude: float = None,
+    longitude: float = None,
+    user: dict = Depends(get_current_user)
+):
     """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -1427,16 +1551,53 @@ async def driver_arrived_at_store(order_id: str, user: dict = Depends(get_curren
             "arrived_at": order.get("driver_arrived_at")
         }
     
+    # === Geofencing: التحقق من موقع السائق ===
+    MAX_DISTANCE_METERS = 300  # الحد الأقصى للمسافة المسموحة
+    
+    if latitude and longitude:
+        # جلب موقع المتجر
+        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+        if store and store.get("latitude") and store.get("longitude"):
+            store_lat = store.get("latitude")
+            store_lon = store.get("longitude")
+            
+            # حساب المسافة بين السائق والمتجر (Haversine formula)
+            import math
+            R = 6371000  # نصف قطر الأرض بالمتر
+            
+            lat1_rad = math.radians(latitude)
+            lat2_rad = math.radians(store_lat)
+            delta_lat = math.radians(store_lat - latitude)
+            delta_lon = math.radians(store_lon - longitude)
+            
+            a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            distance_meters = R * c
+            
+            if distance_meters > MAX_DISTANCE_METERS:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"يجب أن تكون قرب المتجر لتسجيل الوصول. أنت على بعد {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
+                )
+    
     now = datetime.now(timezone.utc)
     
-    # تسجيل الوصول
+    # تسجيل الوصول مع موقع السائق
+    update_data = {
+        "driver_arrived_at": now.isoformat(),
+        "waiting_started": True
+    }
+    
+    if latitude and longitude:
+        update_data["driver_arrival_location"] = {
+            "latitude": latitude,
+            "longitude": longitude
+        }
+    
     await db.food_orders.update_one(
         {"id": order_id},
         {
-            "$set": {
-                "driver_arrived_at": now.isoformat(),
-                "waiting_started": True
-            },
+            "$set": update_data,
             "$push": {
                 "status_history": {
                     "status": "driver_arrived",
@@ -1716,39 +1877,6 @@ async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_us
     
     return {"message": "تم ترك الطلب عند الباب وإتمام التسليم"}
 
-@router.get("/delivery/{order_id}/waiting-status")
-async def get_waiting_status(order_id: str, user: dict = Depends(get_current_user)):
-    """جلب حالة الانتظار"""
-    if user["user_type"] != "delivery":
-        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
-    
-    order = await db.food_orders.find_one({
-        "id": order_id, 
-        "driver_id": user["id"]
-    }, {"_id": 0})
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير موجود")
-    
-    if not order.get("customer_not_responding"):
-        return {
-            "is_waiting": False,
-            "remaining_minutes": 0,
-            "can_leave_at_door": False
-        }
-    
-    since = datetime.fromisoformat(order["customer_not_responding_since"])
-    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
-    wait_time = settings.get("delivery_wait_time_minutes", 10) if settings else 10
-    elapsed = (datetime.now(timezone.utc) - since).total_seconds() / 60
-    remaining = max(0, wait_time - elapsed)
-    
-    return {
-        "is_waiting": True,
-        "elapsed_minutes": round(elapsed, 1),
-        "remaining_minutes": round(remaining, 1),
-        "wait_time_minutes": wait_time,
-        "can_leave_at_door": remaining <= 0
-    }
 
 async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str):
     """إتمام التسليم وإضافة الأجرة لمحفظة السائق"""

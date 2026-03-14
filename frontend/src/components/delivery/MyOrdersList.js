@@ -224,15 +224,75 @@ const MyOrdersList = ({
     }
   };
 
-  // تسجيل وصول السائق للمطعم
+  // تسجيل وصول السائق للمطعم مع التحقق من الموقع
   const handleDriverArrival = async (orderId) => {
-    try {
-      const res = await axios.post(`${API}/food/orders/delivery/${orderId}/arrived`);
-      alert('✅ تم تسجيل وصولك للمطعم. سيبدأ عداد الانتظار الآن.');
-      window.location.reload();
-    } catch (err) {
-      alert(err.response?.data?.detail || 'حدث خطأ');
+    // الحصول على موقع السائق الحالي
+    if (!navigator.geolocation) {
+      alert('متصفحك لا يدعم تحديد الموقع. يرجى تحديث المتصفح.');
+      return;
     }
+
+    // عرض رسالة انتظار
+    const loadingToast = toast({
+      title: "جاري تحديد موقعك...",
+      description: "يرجى الانتظار",
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          const res = await axios.post(
+            `${API}/food/orders/delivery/${orderId}/arrived`,
+            null,
+            { params: { latitude, longitude } }
+          );
+          toast({
+            title: "✅ تم تسجيل وصولك",
+            description: "سيبدأ عداد الانتظار الآن",
+          });
+          window.location.reload();
+        } catch (err) {
+          toast({
+            title: "❌ خطأ",
+            description: err.response?.data?.detail || 'حدث خطأ',
+            variant: "destructive"
+          });
+        }
+      },
+      (error) => {
+        // في حالة رفض الموقع أو خطأ، نحاول بدون موقع
+        console.error('Geolocation error:', error);
+        toast({
+          title: "⚠️ تعذر تحديد الموقع",
+          description: "سيتم المحاولة بدون تحديد الموقع",
+          variant: "destructive"
+        });
+        
+        // محاولة بدون موقع (للحالات الطارئة)
+        axios.post(`${API}/food/orders/delivery/${orderId}/arrived`)
+          .then(() => {
+            toast({
+              title: "✅ تم تسجيل وصولك",
+              description: "سيبدأ عداد الانتظار الآن",
+            });
+            window.location.reload();
+          })
+          .catch((err) => {
+            toast({
+              title: "❌ خطأ",
+              description: err.response?.data?.detail || 'حدث خطأ',
+              variant: "destructive"
+            });
+          });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   // العميل لا يرد
