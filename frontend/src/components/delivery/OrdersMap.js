@@ -201,12 +201,25 @@ const OrdersMap = ({
   const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
   const [showPriorityPopup, setShowPriorityPopup] = useState(false);
   const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
-  const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة
+  const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة يدوياً
+  const [maxLimitOrderIds, setMaxLimitOrderIds] = useState([]); // الطلبات المؤجلة بسبب الحد الأقصى
+  const [previousOrderCount, setPreviousOrderCount] = useState(0); // عدد الطلبات السابق لمراقبة التغيير
 
-  // ⭐ جلب طلبات الأولوية كل 10 ثواني (معطّل مؤقتاً لتجنب التكرار)
-  // هذا النظام يعرض طلبات من نفس المطعم كأولوية
-  // تم تعطيله بناءً على طلب المستخدم
-  /*
+  // ⭐ مراقبة تغيير عدد الطلبات - لإعادة إظهار الطلبات المؤجلة عند انخفاض العدد
+  useEffect(() => {
+    const currentOrderCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
+    
+    // إذا انخفض عدد الطلبات (السائق سلّم طلب)
+    if (currentOrderCount < previousOrderCount && maxLimitOrderIds.length > 0) {
+      // مسح قائمة الطلبات المؤجلة بسبب الحد الأقصى
+      setMaxLimitOrderIds([]);
+      console.log('تم مسح الطلبات المؤجلة - أصبح لديك مجال لطلبات جديدة');
+    }
+    
+    setPreviousOrderCount(currentOrderCount);
+  }, [myFoodOrders, myOrders, previousOrderCount, maxLimitOrderIds.length]);
+
+  // ⭐ جلب طلبات الأولوية كل 10 ثواني
   useEffect(() => {
     let intervalId = null;
     
@@ -221,8 +234,9 @@ const OrdersMap = ({
           const response = await axios.get(`${API}/api/food/orders/delivery/priority-orders`);
           const priorityOrders = response.data.priority_orders || [];
           
-          // تصفية الطلبات المرفوضة
-          const availableOrders = priorityOrders.filter(o => !rejectedOrderIds.includes(o.id));
+          // تصفية الطلبات المرفوضة يدوياً والمؤجلة بسبب الحد الأقصى
+          const allExcludedIds = [...rejectedOrderIds, ...maxLimitOrderIds];
+          const availableOrders = priorityOrders.filter(o => !allExcludedIds.includes(o.id));
           
           // إذا وجد طلب جديد ذو أولوية
           if (availableOrders.length > 0 && !priorityOrder && !showPriorityPopup) {
@@ -247,8 +261,7 @@ const OrdersMap = ({
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup, dismissedPriorityUntil, rejectedOrderIds]);
-  */
+  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup, dismissedPriorityUntil, rejectedOrderIds, maxLimitOrderIds]);
 
   // ⭐ العد التنازلي للأولوية
   useEffect(() => {
@@ -286,6 +299,20 @@ const OrdersMap = ({
       onTakeFoodOrder?.(priorityOrder);
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'حدث خطأ';
+      
+      // التحقق إذا كان الخطأ بسبب الحد الأقصى
+      const isMaxLimitError = errorMessage.includes('الحد الأقصى') || 
+                              errorMessage.includes('حد الطلبات') ||
+                              errorMessage.includes('maximum') ||
+                              errorMessage.includes('limit');
+      
+      if (isMaxLimitError) {
+        // إضافة الطلب لقائمة المؤجلة بسبب الحد الأقصى
+        // سيظهر مرة أخرى عندما ينقص عدد الطلبات
+        setMaxLimitOrderIds(prev => [...prev, priorityOrder.id]);
+        console.log('تم تأجيل الطلب بسبب الحد الأقصى - سيظهر عند انخفاض عدد طلباتك');
+      }
+      
       // إغلاق popup الإشعار أولاً ثم إظهار الخطأ
       setShowPriorityPopup(false);
       setPriorityOrder(null);
@@ -1863,10 +1890,8 @@ const OrdersMap = ({
                   <TileLayer
                     key={currentTheme} // مهم لإعادة تحميل الخريطة عند تغيير الثيم
                     attribution='&copy; OpenStreetMap'
-                    url={currentTheme === 'dark' 
-                      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                      : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
-                    }
+                    url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
+                    className={currentTheme === 'dark' ? 'dark-map-tiles' : ''}
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   

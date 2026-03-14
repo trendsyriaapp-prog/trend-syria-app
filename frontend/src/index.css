@@ -230,3 +230,14 @@ input:-webkit-autofill:focus {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* خريطة الوضع الليلي مع الحفاظ على وضوح النص */
+.dark-map-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+
+/* إصلاح ألوان العلامات في الوضع الليلي */
+.dark-map-tiles ~ .leaflet-marker-pane img,
+.dark-map-tiles ~ .leaflet-shadow-pane img {
+  filter: invert(1) hue-rotate(180deg);
+}

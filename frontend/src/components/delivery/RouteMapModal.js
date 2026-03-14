@@ -365,10 +365,8 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
               >
                 <TileLayer
                   attribution='&copy; OpenStreetMap'
-                  url={isDark 
-                    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
-                  }
+                  url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=ar"
+                  className={isDark ? 'dark-map-tiles' : ''}
                 />
                 
                 {bounds && <FitBoundsComponent bounds={bounds} />}
