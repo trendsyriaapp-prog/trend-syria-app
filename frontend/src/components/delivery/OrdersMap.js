@@ -282,8 +282,14 @@ const OrdersMap = ({
       onTakeFoodOrder?.(priorityOrder);
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'حدث خطأ';
+      // إغلاق popup الإشعار أولاً ثم إظهار الخطأ
+      setShowPriorityPopup(false);
+      setPriorityOrder(null);
+      // عرض الخطأ بشكل واضح فوق كل شيء
       setMapError(errorMessage);
-      setTimeout(() => setMapError(null), 5000);
+      // تشغيل صوت خطأ
+      speakInstruction(errorMessage);
+      setTimeout(() => setMapError(null), 8000); // وقت أطول للقراءة
     }
   };
 
@@ -1704,28 +1710,33 @@ const OrdersMap = ({
                 )}
               </AnimatePresence>
 
-              {/* رسالة الخطأ داخل الخريطة */}
+              {/* رسالة الخطأ داخل الخريطة - z-index عالي لتظهر فوق كل شيء */}
               <AnimatePresence>
                 {mapError && (
                   <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="bg-red-500 text-white px-4 py-3 flex items-center justify-between"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-md"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">⚠️</span>
-                      <div>
-                        <p className="font-bold text-sm">خطأ</p>
-                        <p className="text-xs opacity-90">{mapError}</p>
+                    <div className="bg-red-600 text-white rounded-2xl shadow-2xl overflow-hidden">
+                      <div className="bg-red-700 px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">⚠️</span>
+                          <span className="font-bold text-lg">تنبيه!</span>
+                        </div>
+                        <button 
+                          onClick={() => setMapError(null)}
+                          className="text-white/80 hover:text-white bg-red-800 rounded-full p-1"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                      <div className="p-5 text-center">
+                        <p className="text-lg font-bold mb-2">{mapError}</p>
+                        <p className="text-sm opacity-80">يرجى إتمام الطلبات الحالية أولاً</p>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => setMapError(null)}
-                      className="text-white/80 hover:text-white"
-                    >
-                      <X size={18} />
-                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

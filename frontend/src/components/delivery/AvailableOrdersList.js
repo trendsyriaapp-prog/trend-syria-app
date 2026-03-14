@@ -16,7 +16,7 @@ const openInGoogleMaps = (address, city) => {
   window.open(mapsUrl, '_blank');
 };
 
-const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', myOrders = [], myFoodOrders = [], theme = 'dark' }) => {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', theme = 'dark', onShowRouteForOrder }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [orderDistances, setOrderDistances] = useState({});
@@ -152,14 +152,33 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   </div>
                 </div>
                 <div className="p-4">
-                  {/* رقم الطلب والسعر */}
+                  {/* رقم الطلب والسعر ورسوم التوصيل */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      #{order.order_number || order.id?.slice(0, 8)}
-                    </span>
+                    <div>
+                      <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        #{order.order_number || order.id?.slice(0, 8)}
+                      </span>
+                      {order.delivery_fee && (
+                        <span className={`mr-2 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                          🚗 {order.delivery_fee.toLocaleString()} ل.س
+                        </span>
+                      )}
+                    </div>
                     <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
                       isDark ? 'bg-green-500/20 text-green-400 border border-green-500' : 'bg-green-100 text-green-700 border border-green-300'
                     }`}>{formatPrice(order.total)}</span>
+                  </div>
+
+                  {/* وقت الطلب وعدد الأصناف */}
+                  <div className={`flex items-center gap-4 mb-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} />
+                      {order.created_at ? new Date(order.created_at).toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' }) : 'الآن'}
+                    </span>
+                    <span>📦 {order.items?.length || 0} صنف</span>
+                    {order.is_priority && (
+                      <span className="bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold">⚡ أولوية</span>
+                    )}
                   </div>
 
                   {/* من أين - المتجر */}
@@ -170,10 +189,13 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
                         <Navigation size={14} className="text-white" />
                       </div>
-                      <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>من ({order.store_name})</span>
+                      <div className="flex-1">
+                        <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>من ({order.store_name})</span>
+                      </div>
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <p className="font-medium">{seller.address || seller.city}</p>
                         <p>{seller.city}</p>
                         {seller.phone && (
                           <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
@@ -192,11 +214,10 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                         <MapPin size={14} className="text-white" />
                       </div>
-                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى (العميل)</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى ({order.buyer_address?.name || 'العميل'})</span>
                     </div>
                     <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.name}</p>
-                      <p>{order.buyer_address?.address}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.address}</p>
                       <p>{order.buyer_address?.city}</p>
                       <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}
@@ -207,12 +228,11 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   {/* معلومات المسافة */}
                   <DistanceInfo orderId={order.id} />
 
-                  {/* أزرار الخرائط - زر للمطعم وزر للعميل وزر الموقع في الخريطة */}
+                  {/* أزرار الخرائط - زر للمطعم وزر للعميل وزر المسار */}
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // فتح موقع المطعم
                         const storeAddr = order.seller_addresses?.[0];
                         openInGoogleMaps(storeAddr?.address || order.store_name, storeAddr?.city || 'دمشق');
                       }}
@@ -234,28 +254,17 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // فتح الخريطة الداخلية وتركيز على هذا الطلب
-                        // نستخدم event لإرسال معلومات الطلب للخريطة
-                        const event = new CustomEvent('focusOrderOnMap', { 
-                          detail: { 
-                            order: order,
-                            latitude: order.latitude || order.buyer_address?.latitude,
-                            longitude: order.longitude || order.buyer_address?.longitude
-                          } 
-                        });
-                        window.dispatchEvent(event);
+                        // عرض المسار على الخريطة الداخلية
+                        if (onShowRouteForOrder) {
+                          onShowRouteForOrder(order, 'food');
+                        }
                       }}
                       className="bg-blue-500 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >
                       <Navigation size={14} />
-                      الخريطة
+                      المسار
                     </button>
                   </div>
-
-                  {/* عدد المنتجات */}
-                  <p className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    عدد الأصناف: {order.items?.length || 0}
-                  </p>
 
                   {/* زر قبول الطلب */}
                   <button
@@ -303,9 +312,25 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 </div>
                 
                 <div className="p-4">
-                  {/* رقم الطلب */}
+                  {/* رقم الطلب ورسوم التوصيل */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>#{order.id?.slice(0, 8)}</span>
+                    <div>
+                      <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>#{order.id?.slice(0, 8)}</span>
+                      {order.delivery_fee && (
+                        <span className={`mr-2 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                          🚗 {order.delivery_fee.toLocaleString()} ل.س
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <Clock size={12} className="inline ml-1" />
+                      {order.created_at ? new Date(order.created_at).toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' }) : 'الآن'}
+                    </span>
+                  </div>
+
+                  {/* عدد المنتجات */}
+                  <div className={`mb-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    📦 {order.items?.length || 0} منتج
                   </div>
 
                   {/* من أين - البائع */}
@@ -321,6 +346,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{seller.business_name || seller.name}</p>
+                        <p>{seller.address || seller.city}</p>
                         <p>{seller.city}</p>
                         <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                           <Phone size={12} /> {seller.phone}
@@ -337,11 +363,10 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                         <MapPin size={14} className="text-white" />
                       </div>
-                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى (المشتري)</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى ({order.buyer_address?.name || 'المشتري'})</span>
                     </div>
                     <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.name}</p>
-                      <p>{order.buyer_address?.address}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.address}</p>
                       <p>{order.buyer_address?.city}</p>
                       <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}
@@ -378,15 +403,10 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // فتح الخريطة الداخلية وتركيز على هذا الطلب
-                        const event = new CustomEvent('focusOrderOnMap', { 
-                          detail: { 
-                            order: order,
-                            latitude: order.latitude || order.buyer_address?.latitude,
-                            longitude: order.longitude || order.buyer_address?.longitude
-                          } 
-                        });
-                        window.dispatchEvent(event);
+                        // عرض المسار على الخريطة الداخلية
+                        if (onShowRouteForOrder) {
+                          onShowRouteForOrder(order, 'product');
+                        }
                       }}
                       className="bg-blue-500 text-white py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
                     >

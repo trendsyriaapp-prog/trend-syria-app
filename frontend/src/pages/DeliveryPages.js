@@ -10,6 +10,7 @@ import {
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
 import MyOrdersList from '../components/delivery/MyOrdersList';
+import RouteMapModal from '../components/delivery/RouteMapModal';
 import MyBoxCard from '../components/delivery/MyBoxCard';
 import DriverPerformance from '../components/delivery/DriverPerformance';
 import DriverChallenges from '../components/delivery/DriverChallenges';
@@ -348,6 +349,9 @@ const DeliveryDashboard = () => {
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
   const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food' - الافتراضي الكل
+  
+  // State لعرض الخريطة مع مسار طلب معين
+  const [showRouteMapForOrder, setShowRouteMapForOrder] = useState(null);
 
   // تتبع موقع السائق تلقائياً عندما يكون لديه طلبات قيد التوصيل
   const currentOrderId = myFoodOrders.find(o => o.status === 'out_for_delivery')?.id || 
@@ -826,9 +830,8 @@ const DeliveryDashboard = () => {
                 onTakeOrder={(order) => setShowPickupChecklist(order)}
                 onTakeFoodOrder={handleTakeFoodOrder}
                 orderTypeFilter={orderTypeFilter}
-                myOrders={myOrders}
-                myFoodOrders={myFoodOrders}
                 theme={currentTheme}
+                onShowRouteForOrder={(order, type) => setShowRouteMapForOrder({ order, type })}
               />
             )}
           </>
@@ -962,6 +965,16 @@ const DeliveryDashboard = () => {
         userType="delivery" 
         userName={user?.full_name || 'سائق التوصيل'} 
       />
+
+      {/* Route Map Modal - عرض مسار طلب معين */}
+      {showRouteMapForOrder && (
+        <RouteMapModal
+          order={showRouteMapForOrder.order}
+          orderType={showRouteMapForOrder.type}
+          onClose={() => setShowRouteMapForOrder(null)}
+          theme={currentTheme}
+        />
+      )}
 
     </div>
   );
