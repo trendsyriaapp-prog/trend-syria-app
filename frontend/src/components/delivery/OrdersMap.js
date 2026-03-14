@@ -230,6 +230,9 @@ const OrdersMap = ({
   useEffect(() => {
     let intervalId = null;
     
+    // الحد الأقصى للطلبات (من نفس المطعم = 7، من مطاعم مختلفة = 5)
+    const MAX_ORDERS_SAME_STORE = 7;
+    
     if (isOpen && (myFoodOrders?.length > 0 || myOrders?.length > 0)) {
       const checkPriorityOrders = async () => {
         // تحقق إذا تم إيقاف الإشعارات مؤقتاً
@@ -239,6 +242,13 @@ const OrdersMap = ({
         
         // لا تعرض popup جديد إذا كان هناك popup مفتوح
         if (showPriorityPopup || priorityOrder) {
+          return;
+        }
+        
+        // ⭐ التحقق من الحد الأقصى - لا تعرض popup إذا السائق وصل للحد
+        const currentOrdersCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
+        if (currentOrdersCount >= MAX_ORDERS_SAME_STORE) {
+          console.log('🚫 السائق وصل للحد الأقصى، لن يظهر popup الأولوية:', currentOrdersCount);
           return;
         }
         
@@ -255,7 +265,8 @@ const OrdersMap = ({
             total: priorityOrders.length, 
             excluded: allExcludedIds.length,
             available: availableOrders.length,
-            maxLimitIds: maxLimitOrderIdsRef.current
+            currentOrders: currentOrdersCount,
+            maxLimit: MAX_ORDERS_SAME_STORE
           });
           
           // إذا وجد طلب جديد ذو أولوية
