@@ -285,11 +285,10 @@ const OrdersMap = ({
       // إغلاق popup الإشعار أولاً ثم إظهار الخطأ
       setShowPriorityPopup(false);
       setPriorityOrder(null);
-      // عرض الخطأ بشكل واضح فوق كل شيء
+      // عرض الخطأ - سيختفي تلقائياً بعد 5 ثواني بفضل شريط التقدم
       setMapError(errorMessage);
       // تشغيل صوت خطأ
       speakInstruction(errorMessage);
-      setTimeout(() => setMapError(null), 8000); // وقت أطول للقراءة
     }
   };
 
@@ -1710,31 +1709,41 @@ const OrdersMap = ({
                 )}
               </AnimatePresence>
 
-              {/* رسالة الخطأ داخل الخريطة - z-index عالي لتظهر فوق كل شيء */}
+              {/* رسالة الخطأ - أعلى الشاشة مع شريط تقدم */}
               <AnimatePresence>
                 {mapError && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-md"
+                    initial={{ opacity: 0, y: -50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    className="absolute top-0 left-0 right-0 z-[9999]"
                   >
-                    <div className="bg-red-600 text-white rounded-2xl shadow-2xl overflow-hidden">
-                      <div className="bg-red-700 px-4 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                    <div className="bg-red-600 text-white shadow-2xl">
+                      {/* Header */}
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
                           <span className="text-2xl">⚠️</span>
-                          <span className="font-bold text-lg">تنبيه!</span>
+                          <div>
+                            <p className="font-bold text-base">{mapError}</p>
+                            <p className="text-xs opacity-80">يرجى إتمام الطلبات الحالية أولاً</p>
+                          </div>
                         </div>
                         <button 
                           onClick={() => setMapError(null)}
-                          className="text-white/80 hover:text-white bg-red-800 rounded-full p-1"
+                          className="text-white/80 hover:text-white bg-red-700 hover:bg-red-800 rounded-full p-2 transition-colors"
                         >
-                          <X size={20} />
+                          <X size={18} />
                         </button>
                       </div>
-                      <div className="p-5 text-center">
-                        <p className="text-lg font-bold mb-2">{mapError}</p>
-                        <p className="text-sm opacity-80">يرجى إتمام الطلبات الحالية أولاً</p>
+                      {/* شريط التقدم */}
+                      <div className="h-1 bg-red-800">
+                        <motion.div 
+                          initial={{ width: '100%' }}
+                          animate={{ width: '0%' }}
+                          transition={{ duration: 5, ease: 'linear' }}
+                          onAnimationComplete={() => setMapError(null)}
+                          className="h-full bg-white/50"
+                        />
                       </div>
                     </div>
                   </motion.div>

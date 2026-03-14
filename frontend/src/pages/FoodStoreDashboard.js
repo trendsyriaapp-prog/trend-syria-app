@@ -1265,8 +1265,47 @@ const StoreOrdersTab = ({ token }) => {
                   )}
 
                   {order.status === 'ready' && (
-                    <div className="bg-green-50 text-green-700 text-sm p-2 rounded-lg text-center">
-                      بانتظار موظف التوصيل
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                      <p className="text-green-700 text-sm mb-2">بانتظار موظف التوصيل</p>
+                      
+                      {/* كود الاستلام */}
+                      {order.pickup_code && (
+                        <div className="bg-white rounded-lg p-4 mt-2 border-2 border-dashed border-green-400">
+                          <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
+                          <div className="flex justify-center gap-2" dir="ltr">
+                            {order.pickup_code.split('').map((digit, i) => (
+                              <span 
+                                key={i} 
+                                className="w-12 h-14 flex items-center justify-center text-2xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                              >
+                                {digit}
+                              </span>
+                            ))}
+                          </div>
+                          {order.pickup_code_verified && (
+                            <p className="text-green-600 text-xs mt-2 font-bold">
+                              ✅ تم تأكيد الاستلام
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* معلومات السائق */}
+                      {order.driver_name && (
+                        <div className="mt-3 p-2 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-700">
+                            🚗 موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
+                          </p>
+                          {order.driver_phone && (
+                            <a 
+                              href={`tel:${order.driver_phone}`}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              📞 {order.driver_phone}
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Navigation, MapPin, Clock, Truck } from 'lucide-react';
+import { X, Navigation, MapPin, Clock, Truck, Locate } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -14,6 +14,15 @@ L.Icon.Default.mergeOptions({
 });
 
 // أيقونات مخصصة
+const driverIcon = new L.DivIcon({
+  className: 'custom-marker',
+  html: `<div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+    <span style="font-size: 22px;">🚗</span>
+  </div>`,
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
+});
+
 const storeIcon = new L.DivIcon({
   className: 'custom-marker',
   html: `<div style="background: linear-gradient(135deg, #22c55e, #16a34a); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
@@ -65,10 +74,32 @@ const fetchRoute = async (from, to) => {
   }
 };
 
+// جلب موقع السائق الحالي
+const getDriverLocation = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve([position.coords.latitude, position.coords.longitude]);
+      },
+      (error) => {
+        reject(error);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+};
+
 const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
-  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [driverCoords, setDriverCoords] = useState(null);
+  const [driverToStoreRoute, setDriverToStoreRoute] = useState([]);
+  const [storeToCustomerRoute, setStoreToCustomerRoute] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [locationError, setLocationError] = useState(false);
   
   const isDark = theme === 'dark';
   
@@ -84,35 +115,100 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
   
   const hasValidCoords = storeCoords[0] && storeCoords[1] && customerCoords[0] && customerCoords[1];
   
-  // جلب المسار عند فتح النافذة
+  // جلب موقع السائق والمسارات عند فتح النافذة
   useEffect(() => {
-    const loadRoute = async () => {
+    const loadRoutes = async () => {
       if (!hasValidCoords) {
         setLoading(false);
         return;
       }
       
       setLoading(true);
-      const route = await fetchRoute(storeCoords, customerCoords);
       
-      if (route) {
-        setRouteCoordinates(route.coordinates);
-        setRouteInfo({
-          distance: (route.distance / 1000).toFixed(1),
-          duration: Math.round(route.duration / 60)
-        });
-      } else {
-        // Fallback: خط مستقيم
-        setRouteCoordinates([storeCoords, customerCoords]);
-        setRouteInfo(null);
+      // محاولة جلب موقع السائق
+      let driverPosition = null;
+      try {
+        driverPosition = await getDriverLocation();
+        setDriverCoords(driverPosition);
+      } catch (error) {
+        console.log('Could not get driver location:', error);
+        setLocationError(true);
       }
+      
+      // جلب المسارات بشكل متوازي
+      const routePromises = [];
+      
+      // المسار 1: السائق ← المتجر (إذا توفر موقع السائق)
+      if (driverPosition) {
+        routePromises.push(
+          fetchRoute(driverPosition, storeCoords)
+            .then(r => ({ type: 'driverToStore', route: r }))
+            .catch(() => ({ type: 'driverToStore', route: null }))
+        );
+      }
+      
+      // المسار 2: المتجر ← العميل
+      routePromises.push(
+        fetchRoute(storeCoords, customerCoords)
+          .then(r => ({ type: 'storeToCustomer', route: r }))
+          .catch(() => ({ type: 'storeToCustomer', route: null }))
+      );
+      
+      const results = await Promise.all(routePromises);
+      
+      let totalDistance = 0;
+      let totalDuration = 0;
+      let driverToStoreDistance = 0;
+      let driverToStoreDuration = 0;
+      let storeToCustomerDistance = 0;
+      let storeToCustomerDuration = 0;
+      
+      results.forEach(({ type, route }) => {
+        if (type === 'driverToStore' && route) {
+          setDriverToStoreRoute(route.coordinates);
+          driverToStoreDistance = route.distance;
+          driverToStoreDuration = route.duration;
+          totalDistance += route.distance;
+          totalDuration += route.duration;
+        } else if (type === 'storeToCustomer' && route) {
+          setStoreToCustomerRoute(route.coordinates);
+          storeToCustomerDistance = route.distance;
+          storeToCustomerDuration = route.duration;
+          totalDistance += route.distance;
+          totalDuration += route.duration;
+        } else if (type === 'storeToCustomer' && !route) {
+          // Fallback: خط مستقيم
+          setStoreToCustomerRoute([storeCoords, customerCoords]);
+        }
+      });
+      
+      setRouteInfo({
+        totalDistance: (totalDistance / 1000).toFixed(1),
+        totalDuration: Math.round(totalDuration / 60),
+        driverToStore: {
+          distance: (driverToStoreDistance / 1000).toFixed(1),
+          duration: Math.round(driverToStoreDuration / 60)
+        },
+        storeToCustomer: {
+          distance: (storeToCustomerDistance / 1000).toFixed(1),
+          duration: Math.round(storeToCustomerDuration / 60)
+        }
+      });
+      
       setLoading(false);
     };
     
-    loadRoute();
+    loadRoutes();
   }, [order.id]);
   
-  const bounds = hasValidCoords ? [storeCoords, customerCoords] : null;
+  // حساب bounds تشمل جميع النقاط
+  const allPoints = [];
+  if (driverCoords) allPoints.push(driverCoords);
+  if (hasValidCoords) {
+    allPoints.push(storeCoords);
+    allPoints.push(customerCoords);
+  }
+  const bounds = allPoints.length >= 2 ? allPoints : null;
   const center = hasValidCoords 
     ? [(storeCoords[0] + customerCoords[0]) / 2, (storeCoords[1] + customerCoords[1]) / 2]
     : [33.5138, 36.2765]; // دمشق
@@ -162,25 +258,76 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
           
           {/* Route Info */}
           {routeInfo && (
-            <div className={`grid grid-cols-2 gap-4 p-4 border-b ${
+            <div className={`p-4 border-b ${
               isDark ? 'border-[#333] bg-[#1f1f1f]' : 'border-gray-200 bg-gray-50'
             }`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
-                  <Truck size={20} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
+              {/* المسافة الكلية والوقت */}
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                    <Truck size={20} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
+                  </div>
+                  <div>
+                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>المسافة الكلية</p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{routeInfo.totalDistance} كم</p>
+                  </div>
                 </div>
-                <div>
-                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>المسافة</p>
-                  <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{routeInfo.distance} كم</p>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${isDark ? 'bg-amber-500/20' : 'bg-amber-100'}`}>
+                    <Clock size={20} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
+                  </div>
+                  <div>
+                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>الوقت الكلي</p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{routeInfo.totalDuration} دقيقة</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl ${isDark ? 'bg-amber-500/20' : 'bg-amber-100'}`}>
-                  <Clock size={20} className={isDark ? 'text-amber-400' : 'text-amber-600'} />
+              
+              {/* تفاصيل المسار */}
+              <div className={`flex items-center justify-between p-3 rounded-xl ${
+                isDark ? 'bg-[#252525]' : 'bg-gray-100'
+              }`}>
+                {/* موقعك */}
+                <div className="text-center flex-1">
+                  <div className="text-2xl mb-1">🚗</div>
+                  <p className={`text-xs font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>موقعك</p>
+                  {locationError && (
+                    <p className={`text-xs ${isDark ? 'text-red-400' : 'text-red-500'}`}>غير متاح</p>
+                  )}
                 </div>
-                <div>
-                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>الوقت المتوقع</p>
-                  <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{routeInfo.duration} دقيقة</p>
+                
+                {/* سهم + مسافة للمتجر */}
+                <div className="text-center px-2">
+                  <p className={`text-xs font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                    {driverCoords ? `${routeInfo.driverToStore.distance} كم` : '---'}
+                  </p>
+                  <div className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>→</div>
+                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    {driverCoords ? `${routeInfo.driverToStore.duration} د` : ''}
+                  </p>
+                </div>
+                
+                {/* المتجر */}
+                <div className="text-center flex-1">
+                  <div className="text-2xl mb-1">🏪</div>
+                  <p className={`text-xs font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>المتجر</p>
+                </div>
+                
+                {/* سهم + مسافة للعميل */}
+                <div className="text-center px-2">
+                  <p className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                    {routeInfo.storeToCustomer.distance} كم
+                  </p>
+                  <div className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>→</div>
+                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    {routeInfo.storeToCustomer.duration} د
+                  </p>
+                </div>
+                
+                {/* العميل */}
+                <div className="text-center flex-1">
+                  <div className="text-2xl mb-1">🏠</div>
+                  <p className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>العميل</p>
                 </div>
               </div>
             </div>
@@ -226,6 +373,18 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                 
                 {bounds && <FitBoundsComponent bounds={bounds} />}
                 
+                {/* علامة السائق */}
+                {driverCoords && (
+                  <Marker position={driverCoords} icon={driverIcon}>
+                    <Popup>
+                      <div className="text-center p-2">
+                        <p className="font-bold">🚗 موقعك الحالي</p>
+                        <p className="text-sm text-gray-500">نقطة البداية</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+                
                 {/* علامة المتجر */}
                 <Marker position={storeCoords} icon={storeIcon}>
                   <Popup>
@@ -246,10 +405,21 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                   </Popup>
                 </Marker>
                 
-                {/* المسار */}
-                {routeCoordinates.length > 0 && (
+                {/* المسار من السائق للمتجر - أخضر */}
+                {driverToStoreRoute.length > 0 && (
                   <Polyline 
-                    positions={routeCoordinates} 
+                    positions={driverToStoreRoute} 
+                    color="#22c55e"
+                    weight={5}
+                    opacity={0.8}
+                    dashArray="10, 10"
+                  />
+                )}
+                
+                {/* المسار من المتجر للعميل - أزرق */}
+                {storeToCustomerRoute.length > 0 && (
+                  <Polyline 
+                    positions={storeToCustomerRoute} 
                     color="#3b82f6"
                     weight={5}
                     opacity={0.8}

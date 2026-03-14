@@ -29,11 +29,17 @@ const MyOrdersList = ({
   const [showOrderCode, setShowOrderCode] = useState(null);
   const [supportPhone, setSupportPhone] = useState('0911111111');
   
-  // نظام كود التسليم
+  // نظام كود التسليم للعميل
   const [showCodeModal, setShowCodeModal] = useState(null);
   const [deliveryCode, setDeliveryCode] = useState('');
   const [codeError, setCodeError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  // نظام كود الاستلام من البائع (جديد)
+  const [showPickupCodeModal, setShowPickupCodeModal] = useState(null);
+  const [pickupCode, setPickupCode] = useState(['', '', '', '']);
+  const [pickupCodeError, setPickupCodeError] = useState('');
+  const [pickupSubmitting, setPickupSubmitting] = useState(false);
   
   // نظام العميل لا يرد
   const [waitingOrders, setWaitingOrders] = useState({});
@@ -70,7 +76,7 @@ const MyOrdersList = ({
     return () => clearInterval(interval);
   }, [foodOrders]);
 
-  // التحقق من كود التسليم
+  // التحقق من كود التسليم للعميل
   const handleVerifyCode = async (orderId) => {
     if (!deliveryCode || deliveryCode.length !== 4) {
       setCodeError('الكود يجب أن يكون 4 أرقام');
@@ -90,6 +96,45 @@ const MyOrdersList = ({
       setCodeError(err.response?.data?.detail || 'كود خاطئ');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // التحقق من كود الاستلام من البائع
+  const handleVerifyPickupCode = async (orderId) => {
+    const code = pickupCode.join('');
+    if (code.length !== 4) {
+      setPickupCodeError('الكود يجب أن يكون 4 أرقام');
+      return;
+    }
+    setPickupSubmitting(true);
+    setPickupCodeError('');
+    try {
+      await axios.post(`${API}/food/orders/delivery/${orderId}/verify-pickup`, {
+        code: code
+      });
+      setShowPickupCodeModal(null);
+      setPickupCode(['', '', '', '']);
+      alert('تم تأكيد الاستلام من البائع بنجاح! ✅');
+      window.location.reload();
+    } catch (err) {
+      setPickupCodeError(err.response?.data?.detail || 'كود خاطئ');
+    } finally {
+      setPickupSubmitting(false);
+    }
+  };
+
+  // إدخال كود الاستلام رقم برقم
+  const handlePickupCodeChange = (index, value) => {
+    if (value.length > 1) return;
+    const newCode = [...pickupCode];
+    newCode[index] = value;
+    setPickupCode(newCode);
+    setPickupCodeError('');
+    
+    // الانتقال للحقل التالي تلقائياً
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`pickup-code-${index + 1}`);
+      if (nextInput) nextInput.focus();
     }
   };
 
@@ -524,6 +569,35 @@ const MyOrdersList = ({
                 </button>
               </div>
 
+              {/* زر تأكيد الاستلام من البائع - يظهر فقط إذا لم يتم التحقق بعد */}
+              {canComplete && !order.pickup_code_verified && order.pickup_code && (
+                <button
+                  onClick={() => {
+                    setShowPickupCodeModal(order);
+                    setPickupCode(['', '', '', '']);
+                    setPickupCodeError('');
+                  }}
+                  className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 mb-3 ${
+                    isDark 
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                      : 'bg-purple-500 hover:bg-purple-600 text-white'
+                  }`}
+                >
+                  <QrCode size={18} />
+                  📦 تأكيد الاستلام من البائع
+                </button>
+              )}
+
+              {/* علامة تم الاستلام */}
+              {order.pickup_code_verified && (
+                <div className={`w-full py-2 rounded-xl text-sm flex items-center justify-center gap-2 mb-3 ${
+                  isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-100 text-green-700 border border-green-300'
+                }`}>
+                  <CheckCircle size={16} />
+                  ✅ تم تأكيد الاستلام من البائع
+                </div>
+              )}
+
               {/* أزرار الإجراءات */}
               <div className="space-y-2">
                 {/* نظام كود التسليم للطعام */}
@@ -662,6 +736,92 @@ const MyOrdersList = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal إدخال كود الاستلام من البائع */}
+      {showPickupCodeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl ${
+              isDark ? 'bg-[#1a1a1a]' : 'bg-white'
+            }`}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <QrCode size={24} />
+                  <span className="font-bold">تأكيد الاستلام من البائع</span>
+                </div>
+                <button 
+                  onClick={() => setShowPickupCodeModal(null)}
+                  className="text-white/80 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm opacity-80 mt-2">
+                اطلب الكود من البائع وأدخله هنا
+              </p>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <p className={`text-center text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                🏪 {showPickupCodeModal.store_name}
+              </p>
+
+              {/* حقول الكود */}
+              <div className="flex justify-center gap-3 mb-4" dir="ltr">
+                {pickupCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`pickup-code-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handlePickupCodeChange(index, e.target.value.replace(/\D/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' && !digit && index > 0) {
+                        const prevInput = document.getElementById(`pickup-code-${index - 1}`);
+                        if (prevInput) prevInput.focus();
+                      }
+                    }}
+                    className={`w-14 h-16 text-center text-2xl font-bold rounded-xl border-2 transition-all ${
+                      isDark 
+                        ? 'bg-[#252525] border-purple-600 text-white focus:border-purple-400' 
+                        : 'bg-gray-50 border-purple-300 text-gray-900 focus:border-purple-500'
+                    } focus:outline-none`}
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </div>
+
+              {/* رسالة الخطأ */}
+              {pickupCodeError && (
+                <p className="text-red-500 text-center text-sm mb-4">
+                  ❌ {pickupCodeError}
+                </p>
+              )}
+
+              {/* زر التأكيد */}
+              <button
+                onClick={() => handleVerifyPickupCode(showPickupCodeModal.id)}
+                disabled={pickupSubmitting || pickupCode.join('').length !== 4}
+                className={`w-full py-3 rounded-xl font-bold transition-all ${
+                  pickupCode.join('').length === 4
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {pickupSubmitting ? '⏳ جاري التحقق...' : '✓ تأكيد الاستلام'}
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

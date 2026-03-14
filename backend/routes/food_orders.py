@@ -799,6 +799,13 @@ async def update_order_status(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
+    # إذا كان الطلب جاهز للاستلام، نولد كود استلام
+    import random
+    if new_status == "ready":
+        pickup_code = str(random.randint(1000, 9999))
+        update_data["pickup_code"] = pickup_code
+        update_data["pickup_code_verified"] = False
+    
     await db.food_orders.update_one(
         {"id": order_id},
         {
@@ -1198,6 +1205,87 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     })
     
     return {"message": "تم قبول الطلب", "is_same_restaurant": is_same_restaurant}
+
+# ============== التحقق من كود الاستلام ==============
+
+class VerifyPickupCode(BaseModel):
+    code: str
+
+@router.post("/delivery/{order_id}/verify-pickup")
+async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict = Depends(get_current_user)):
+    """التحقق من كود الاستلام من البائع"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب الطلب
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "driver_id": user["id"]
+    })
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    
+    # التحقق من الكود
+    correct_code = order.get("pickup_code")
+    if not correct_code:
+        raise HTTPException(status_code=400, detail="لا يوجد كود استلام لهذا الطلب")
+    
+    if data.code != correct_code:
+        raise HTTPException(status_code=400, detail="الكود غير صحيح")
+    
+    # تحديث حالة الاستلام
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "pickup_code_verified": True,
+                "pickup_verified_at": datetime.now(timezone.utc).isoformat(),
+                "pickup_verified_by": user["id"]
+            },
+            "$push": {
+                "status_history": {
+                    "status": "pickup_verified",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "note": f"تم تأكيد الاستلام بالكود بواسطة {user['name']}"
+                }
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "تم تأكيد الاستلام بنجاح",
+        "order_id": order_id
+    }
+
+@router.get("/delivery/{order_id}/pickup-code")
+async def get_pickup_code(order_id: str, user: dict = Depends(get_current_user)):
+    """جلب كود الاستلام للبائع"""
+    # يمكن للبائع أو المشرف فقط رؤية الكود
+    if user["user_type"] not in ["seller", "admin"]:
+        raise HTTPException(status_code=403, detail="للبائع أو المشرف فقط")
+    
+    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن البائع هو صاحب الطلب
+    if user["user_type"] == "seller":
+        store = await db.food_stores.find_one({"owner_id": user["id"]})
+        if not store or store["id"] != order.get("store_id"):
+            raise HTTPException(status_code=403, detail="ليس لديك صلاحية لهذا الطلب")
+    
+    pickup_code = order.get("pickup_code")
+    if not pickup_code:
+        raise HTTPException(status_code=400, detail="لا يوجد كود استلام بعد")
+    
+    return {
+        "pickup_code": pickup_code,
+        "is_verified": order.get("pickup_code_verified", False),
+        "order_number": order.get("order_number"),
+        "driver_name": order.get("driver_name")
+    }
 
 # ============== الأولوية الذكية - طلبات من نفس المطعم ==============
 
