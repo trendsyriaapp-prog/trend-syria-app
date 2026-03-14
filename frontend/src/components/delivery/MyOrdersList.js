@@ -224,6 +224,17 @@ const MyOrdersList = ({
     }
   };
 
+  // تسجيل وصول السائق للمطعم
+  const handleDriverArrival = async (orderId) => {
+    try {
+      const res = await axios.post(`${API}/food/orders/delivery/${orderId}/arrived`);
+      alert('✅ تم تسجيل وصولك للمطعم. سيبدأ عداد الانتظار الآن.');
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'حدث خطأ');
+    }
+  };
+
   // العميل لا يرد
   const handleCustomerNotResponding = async (orderId) => {
     try {
