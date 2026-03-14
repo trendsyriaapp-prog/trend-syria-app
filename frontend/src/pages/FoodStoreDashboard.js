@@ -9,7 +9,7 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin
+  ChefHat, Truck, Phone, MapPin, Timer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -1110,6 +1110,11 @@ const StoreOrdersTab = ({ token }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  
+  // Modal لبدء التحضير مع تحديد الوقت
+  const [showPrepModal, setShowPrepModal] = useState(null);
+  const [prepTime, setPrepTime] = useState(15);
+  const [prepSubmitting, setPrepSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -1146,6 +1151,33 @@ const StoreOrdersTab = ({ token }) => {
     }
   };
 
+  // بدء التحضير مع تحديد الوقت
+  const startPreparation = async (orderId) => {
+    setPrepSubmitting(true);
+    try {
+      const res = await axios.post(
+        `${API}/food/orders/store/orders/${orderId}/start-preparation`,
+        { preparation_time_minutes: prepTime },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast({ 
+        title: "تم بدء التحضير", 
+        description: `سيتم إرسال الطلب للسائق قبل ${Math.max(0, prepTime - 7)} دقيقة من الجهوزية`
+      });
+      setShowPrepModal(null);
+      setPrepTime(15);
+      fetchOrders();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل بدء التحضير", 
+        variant: "destructive" 
+      });
+    } finally {
+      setPrepSubmitting(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-700',
@@ -1159,13 +1191,13 @@ const StoreOrdersTab = ({ token }) => {
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
 
-  const getNextAction = (status) => {
-    const actions = {
-      pending: { label: 'تأكيد', nextStatus: 'confirmed', icon: Check },
-      confirmed: { label: 'بدء التحضير', nextStatus: 'preparing', icon: ChefHat },
-      preparing: { label: 'جاهز', nextStatus: 'ready', icon: Package }
-    };
-    return actions[status];
+  // حساب الوقت المتبقي للتحضير
+  const getRemainingPrepTime = (order) => {
+    if (!order.expected_ready_at) return null;
+    const expected = new Date(order.expected_ready_at);
+    const now = new Date();
+    const diffMinutes = Math.ceil((expected - now) / (1000 * 60));
+    return Math.max(0, diffMinutes);
   };
 
   if (loading) {
@@ -1190,6 +1222,7 @@ const StoreOrdersTab = ({ token }) => {
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
+            data-testid={`filter-${f.id}`}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
               filter === f.id ? 'bg-green-500 text-white' : 'bg-white text-gray-600 border'
             }`}
@@ -1207,9 +1240,9 @@ const StoreOrdersTab = ({ token }) => {
       ) : (
         <div className="space-y-3">
           {orders.map((order) => {
-            const nextAction = getNextAction(order.status);
+            const remainingTime = getRemainingPrepTime(order);
             return (
-              <div key={order.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div key={order.id} data-testid={`order-card-${order.id}`} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
@@ -1218,15 +1251,15 @@ const StoreOrdersTab = ({ token }) => {
                         {order.status_label}
                       </span>
                     </div>
-                    <span className="font-bold text-green-600">{order.total.toLocaleString()} ل.س</span>
+                    <span className="font-bold text-green-600">{order.total?.toLocaleString()} ل.س</span>
                   </div>
 
                   {/* Items */}
                   <div className="space-y-1 mb-3">
-                    {order.items.map((item, i) => (
+                    {order.items?.map((item, i) => (
                       <div key={i} className="flex justify-between text-sm">
                         <span className="text-gray-600">{item.name} x{item.quantity}</span>
-                        <span className="text-gray-900">{item.total.toLocaleString()}</span>
+                        <span className="text-gray-900">{item.total?.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -1243,24 +1276,75 @@ const StoreOrdersTab = ({ token }) => {
                     </span>
                   </div>
 
-                  {/* Actions */}
-                  {nextAction && order.status !== 'cancelled' && (
+                  {/* Actions based on status */}
+                  {order.status === 'pending' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => updateStatus(order.id, nextAction.nextStatus)}
+                        onClick={() => updateStatus(order.id, 'confirmed')}
+                        data-testid={`confirm-order-${order.id}`}
                         className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
                       >
-                        <nextAction.icon size={16} />
-                        {nextAction.label}
+                        <Check size={16} />
+                        تأكيد الطلب
                       </button>
-                      {order.status === 'pending' && (
-                        <button
-                          onClick={() => updateStatus(order.id, 'cancelled')}
-                          className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                        >
-                          رفض
-                        </button>
+                      <button
+                        onClick={() => updateStatus(order.id, 'cancelled')}
+                        data-testid={`reject-order-${order.id}`}
+                        className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                      >
+                        رفض
+                      </button>
+                    </div>
+                  )}
+
+                  {order.status === 'confirmed' && (
+                    <button
+                      onClick={() => setShowPrepModal(order)}
+                      data-testid={`start-prep-${order.id}`}
+                      className="w-full bg-orange-500 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-orange-600"
+                    >
+                      <ChefHat size={18} />
+                      بدء التحضير
+                    </button>
+                  )}
+
+                  {order.status === 'preparing' && (
+                    <div className="space-y-3">
+                      {/* شريط التقدم */}
+                      {remainingTime !== null && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-orange-700 font-medium flex items-center gap-1">
+                              <Clock size={14} />
+                              جاري التحضير
+                            </span>
+                            <span className="text-sm font-bold text-orange-600">
+                              {remainingTime > 0 ? `${remainingTime} دقيقة متبقية` : 'حان الوقت!'}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-orange-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-orange-500 transition-all duration-1000"
+                              style={{ 
+                                width: `${Math.min(100, ((order.preparation_time_minutes - remainingTime) / order.preparation_time_minutes) * 100)}%` 
+                              }}
+                            />
+                          </div>
+                          {order.driver_name && (
+                            <p className="text-xs text-orange-600 mt-2">
+                              🚗 السائق {order.driver_name} في الطريق
+                            </p>
+                          )}
+                        </div>
                       )}
+                      <button
+                        onClick={() => updateStatus(order.id, 'ready')}
+                        data-testid={`mark-ready-${order.id}`}
+                        className="w-full bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                      >
+                        <Package size={16} />
+                        الطلب جاهز
+                      </button>
                     </div>
                   )}
 
@@ -1296,6 +1380,11 @@ const StoreOrdersTab = ({ token }) => {
                           <p className="text-sm text-blue-700">
                             🚗 موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
                           </p>
+                          {order.driver_arrived_at && (
+                            <p className="text-xs text-blue-600 mt-1">
+                              ✅ وصل للمتجر
+                            </p>
+                          )}
                           {order.driver_phone && (
                             <a 
                               href={`tel:${order.driver_phone}`}
@@ -1308,10 +1397,112 @@ const StoreOrdersTab = ({ token }) => {
                       )}
                     </div>
                   )}
+
+                  {order.status === 'out_for_delivery' && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                      <p className="text-purple-700 text-sm font-medium">🚗 جاري التوصيل</p>
+                      {order.driver_name && (
+                        <p className="text-xs text-purple-600 mt-1">
+                          بواسطة: {order.driver_name}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal بدء التحضير */}
+      {showPrepModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            className="bg-white rounded-t-3xl w-full max-w-lg p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">بدء تحضير الطلب</h3>
+              <button 
+                onClick={() => setShowPrepModal(null)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="bg-orange-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-orange-700 mb-2 font-medium">
+                طلب #{showPrepModal.order_number}
+              </p>
+              <p className="text-xs text-orange-600">
+                حدد الوقت المتوقع للتحضير. سيتم إرسال الطلب للسائق الأقرب قبل 7 دقائق من الجهوزية.
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                وقت التحضير المتوقع
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[10, 15, 20, 30, 45, 60].map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setPrepTime(time)}
+                    data-testid={`prep-time-${time}`}
+                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
+                      prepTime === time
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {time} دقيقة
+                  </button>
+                ))}
+              </div>
+              
+              {/* إدخال وقت مخصص */}
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  type="number"
+                  value={prepTime}
+                  onChange={(e) => setPrepTime(parseInt(e.target.value) || 15)}
+                  min={5}
+                  max={120}
+                  className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-center"
+                />
+                <span className="text-sm text-gray-500">دقيقة</span>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-3 mb-6">
+              <p className="text-sm text-blue-700 flex items-center gap-2">
+                <Truck size={16} />
+                <span>
+                  سيتم إرسال الطلب للسائق بعد <strong>{Math.max(0, prepTime - 7)}</strong> دقيقة
+                </span>
+              </p>
+            </div>
+
+            <button
+              onClick={() => startPreparation(showPrepModal.id)}
+              disabled={prepSubmitting}
+              data-testid="confirm-start-prep"
+              className="w-full bg-orange-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange-600 disabled:opacity-50"
+            >
+              {prepSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <ChefHat size={20} />
+                  بدء التحضير الآن
+                </>
+              )}
+            </button>
+          </motion.div>
         </div>
       )}
     </div>

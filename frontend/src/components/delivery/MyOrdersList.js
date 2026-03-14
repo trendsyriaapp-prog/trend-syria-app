@@ -5,7 +5,7 @@ import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map,
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
-import { useToast } from '../ui/use-toast';
+import { useToast } from '../../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -583,8 +583,10 @@ const MyOrdersList = ({
         const isFood = true; // طلبات الطعام دائماً
         const canComplete = order.status === 'out_for_delivery';
         const isDelivered = order.status === 'delivered';
-        // حالات تسمح بتأكيد الاستلام من البائع (قبل استلام الطلب فعلياً)
-        const canConfirmPickup = ['accepted', 'ready_for_pickup', 'preparing', 'ready'].includes(order.status);
+        // حالات تسمح بالضغط على "وصلت للمطعم" (قبل الاستلام)
+        const canMarkArrived = ['accepted', 'ready_for_pickup', 'preparing', 'ready'].includes(order.status);
+        // حالات تسمح بتأكيد الاستلام من البائع (يجب أن يكون السائق وصل أولاً ويوجد كود)
+        const canConfirmPickup = canMarkArrived && order.driver_arrived_at && order.pickup_code && !order.pickup_code_verified;
 
         return (
           <motion.div
@@ -669,9 +671,10 @@ const MyOrdersList = ({
               </div>
 
               {/* زر وصلت للمطعم + عداد الانتظار */}
-              {canConfirmPickup && !order.driver_arrived_at && (
+              {canMarkArrived && !order.driver_arrived_at && (
                 <button
                   onClick={() => handleDriverArrival(order.id)}
+                  data-testid={`arrived-btn-${order.id}`}
                   className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 mb-3 ${
                     isDark 
                       ? 'bg-blue-600 hover:bg-blue-700 text-white' 
@@ -691,14 +694,15 @@ const MyOrdersList = ({
                 />
               )}
 
-              {/* زر تأكيد الاستلام من البائع - يظهر فقط في حالات ما قبل الاستلام */}
-              {canConfirmPickup && !order.pickup_code_verified && order.pickup_code && (
+              {/* زر تأكيد الاستلام من البائع - يظهر فقط بعد وصول السائق ووجود كود */}
+              {canConfirmPickup && (
                 <button
                   onClick={() => {
                     setShowPickupCodeModal(order);
                     setPickupCode(['', '', '', '']);
                     setPickupCodeError('');
                   }}
+                  data-testid={`pickup-code-btn-${order.id}`}
                   className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 mb-3 ${
                     isDark 
                       ? 'bg-purple-600 hover:bg-purple-700 text-white' 

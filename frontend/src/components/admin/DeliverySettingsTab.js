@@ -58,6 +58,17 @@ const DeliverySettingsTab = () => {
   // وقت انتظار التوصيل
   const [waitTimeMinutes, setWaitTimeMinutes] = useState(10);
 
+  // إعدادات تعويض انتظار السائق (جديد)
+  const [waitCompensationSettings, setWaitCompensationSettings] = useState({
+    max_waiting_time_minutes: 10,
+    compensation_per_5_minutes: 500,
+    max_compensation_per_order: 2000,
+    warnings_before_alert: 3,
+    warnings_before_final: 7,
+    warnings_before_suspend: 10,
+    suspend_duration_hours: 24
+  });
+
   // إعدادات حدود الطلبات الذكية
   const [smartOrderLimits, setSmartOrderLimits] = useState({
     max_orders_different_stores: 5,
@@ -72,6 +83,7 @@ const DeliverySettingsTab = () => {
     fetchDriverEarningsSettings();
     fetchWaitTime();
     fetchSmartOrderLimits();
+    fetchWaitCompensationSettings();
   }, []);
 
   const fetchSettings = async () => {
@@ -160,6 +172,29 @@ const DeliverySettingsTab = () => {
       setSmartOrderLimits(res.data);
     } catch (error) {
       console.error('Error fetching smart order limits:', error);
+    }
+  };
+
+  const fetchWaitCompensationSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/settings/delivery`);
+      if (res.data.settings) {
+        setWaitCompensationSettings(res.data.settings);
+      }
+    } catch (error) {
+      console.error('Error fetching wait compensation settings:', error);
+    }
+  };
+
+  const handleSaveWaitCompensationSettings = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/admin/settings/delivery`, waitCompensationSettings);
+      alert('تم حفظ إعدادات تعويض الانتظار بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -571,6 +606,198 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ وقت الانتظار
+          </button>
+        </div>
+      </div>
+
+      {/* Wait Compensation Settings - إعدادات تعويض انتظار السائق في المطعم */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⏰</span>
+            <div>
+              <h2 className="font-bold text-lg">تعويض انتظار السائق في المطعم</h2>
+              <p className="text-sm text-white/80">حماية السائقين من تأخيرات المطاعم</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          {/* توضيح النظام */}
+          <div className="bg-rose-50 rounded-xl p-4 border border-rose-200">
+            <h4 className="font-bold text-rose-800 mb-2">🛡️ كيف يعمل نظام حماية السائقين:</h4>
+            <ol className="text-sm text-rose-700 space-y-1 list-decimal list-inside">
+              <li>السائق يصل للمطعم ويضغط "وصلت للمطعم"</li>
+              <li>يبدأ عداد الانتظار</li>
+              <li>إذا تجاوز الانتظار <strong>{waitCompensationSettings.max_waiting_time_minutes} دقائق</strong>، يُحسب التعويض</li>
+              <li>التعويض يُخصم من المطعم ويُضاف لمحفظة السائق</li>
+            </ol>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* وقت الانتظار المسموح */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">⏱️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">وقت الانتظار المسموح</h3>
+                  <p className="text-xs text-gray-500">بعده يبدأ حساب التعويض</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={waitCompensationSettings.max_waiting_time_minutes}
+                onChange={(e) => setWaitCompensationSettings({
+                  ...waitCompensationSettings,
+                  max_waiting_time_minutes: parseInt(e.target.value) || 10
+                })}
+                className="w-full p-3 border-2 border-blue-300 rounded-lg text-center text-xl font-bold"
+                min={5}
+                max={30}
+              />
+              <p className="text-center text-sm text-blue-600 mt-2">دقيقة</p>
+            </div>
+
+            {/* التعويض لكل 5 دقائق */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">💰</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">تعويض كل 5 دقائق</h3>
+                  <p className="text-xs text-gray-500">المبلغ المضاف للسائق</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={waitCompensationSettings.compensation_per_5_minutes}
+                onChange={(e) => setWaitCompensationSettings({
+                  ...waitCompensationSettings,
+                  compensation_per_5_minutes: parseInt(e.target.value) || 500
+                })}
+                className="w-full p-3 border-2 border-green-300 rounded-lg text-center text-xl font-bold"
+                min={100}
+                step={100}
+              />
+              <p className="text-center text-sm text-green-600 mt-2">ل.س</p>
+            </div>
+
+            {/* الحد الأقصى للتعويض */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🔒</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد الأقصى</h3>
+                  <p className="text-xs text-gray-500">أقصى تعويض للطلب الواحد</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={waitCompensationSettings.max_compensation_per_order}
+                onChange={(e) => setWaitCompensationSettings({
+                  ...waitCompensationSettings,
+                  max_compensation_per_order: parseInt(e.target.value) || 2000
+                })}
+                className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-xl font-bold"
+                min={500}
+                step={500}
+              />
+              <p className="text-center text-sm text-amber-600 mt-2">ل.س</p>
+            </div>
+          </div>
+
+          {/* أمثلة على التعويضات */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200">
+            <h4 className="font-bold text-gray-700 mb-3">📊 أمثلة على التعويضات:</h4>
+            <div className="grid grid-cols-4 gap-2 text-center">
+              {[12, 15, 20, 30].map(minutes => {
+                const extraMinutes = Math.max(0, minutes - waitCompensationSettings.max_waiting_time_minutes);
+                const units = Math.ceil(extraMinutes / 5);
+                const comp = Math.min(units * waitCompensationSettings.compensation_per_5_minutes, waitCompensationSettings.max_compensation_per_order);
+                return (
+                  <div key={minutes} className="bg-white rounded-lg p-2 shadow-sm">
+                    <div className="text-lg">⏱️</div>
+                    <div className="text-sm text-gray-600">{minutes} دقيقة</div>
+                    <div className={`font-bold ${comp > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                      {comp > 0 ? `+${formatPrice(comp)}` : 'لا تعويض'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* نظام التحذيرات */}
+          <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+            <h4 className="font-bold text-red-800 mb-3">⚠️ نظام تحذيرات المطاعم:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل التحذير</label>
+                <input
+                  type="number"
+                  value={waitCompensationSettings.warnings_before_alert}
+                  onChange={(e) => setWaitCompensationSettings({
+                    ...waitCompensationSettings,
+                    warnings_before_alert: parseInt(e.target.value) || 3
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-center"
+                  min={1}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل التحذير الأخير</label>
+                <input
+                  type="number"
+                  value={waitCompensationSettings.warnings_before_final}
+                  onChange={(e) => setWaitCompensationSettings({
+                    ...waitCompensationSettings,
+                    warnings_before_final: parseInt(e.target.value) || 7
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-center"
+                  min={1}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل الإيقاف</label>
+                <input
+                  type="number"
+                  value={waitCompensationSettings.warnings_before_suspend}
+                  onChange={(e) => setWaitCompensationSettings({
+                    ...waitCompensationSettings,
+                    warnings_before_suspend: parseInt(e.target.value) || 10
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-center"
+                  min={1}
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">مدة الإيقاف (ساعات)</label>
+              <input
+                type="number"
+                value={waitCompensationSettings.suspend_duration_hours}
+                onChange={(e) => setWaitCompensationSettings({
+                  ...waitCompensationSettings,
+                  suspend_duration_hours: parseInt(e.target.value) || 24
+                })}
+                className="w-32 p-2 border border-gray-300 rounded-lg text-center"
+                min={1}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveWaitCompensationSettings}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات تعويض الانتظار
           </button>
         </div>
       </div>
