@@ -138,6 +138,30 @@
 
 - **Status:** TESTED ✅ (iteration_59)
 
+#### تحسينات توصيل المنتجات ✅ - 14 Dec 2025
+- **قبول عدة طلبات:**
+  - السائق يمكنه قبول حتى 7 طلبات منتجات في نفس الوقت
+  - عداد يظهر (count/max_orders) و can_accept_more
+  - **ملف:** `delivery.py` (endpoint accept + my-product-orders)
+
+- **كود استلام للبائع:**
+  - كود 4 أرقام يُنشأ عند شحن الطلب
+  - البائع يعطي الكود للسائق
+  - السائق يدخله للتأكيد
+  - **ملف:** `orders.py` (seller/shipped + verify-pickup)
+
+- **رسالة التوصيل اليوم:**
+  - العميل يرى "سيصلك اليوم قبل الساعة X"
+  - X من إعدادات المنصة (closing_hour)
+
+- **APIs جديدة:**
+  - `GET /api/delivery/my-product-orders` - طلبات السائق مع العداد
+  - `POST /api/orders/{id}/seller/shipped` - شحن + كود استلام
+  - `GET /api/orders/{id}/seller/pickup-code` - البائع يحصل الكود
+  - `POST /api/orders/{id}/delivery/verify-pickup` - السائق يتحقق
+
+- **Status:** TESTED ✅ (iteration_60)
+
 ---
 
 ## Prioritized Backlog
@@ -181,11 +205,11 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_60.json` - Product Delivery Improvements ✅
 - `/app/test_reports/iteration_59.json` - Geofencing & False Arrival System ✅
 - `/app/test_reports/iteration_58.json` - Smart Distribution Phase 2 Tests ✅
 - `/app/test_reports/iteration_57.json` - Smart Distribution Phase 1 Tests ✅
 - `/app/test_reports/iteration_56.json` - Pickup Code System Tests
-- `/app/test_reports/iteration_55.json` - Previous tests
 
 ## Credentials
 - **Driver:** 0900000000 / delivery123
