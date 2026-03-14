@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall, Route } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
+import MultiRouteOptimizer from './MultiRouteOptimizer';
 import { useToast } from '../../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -129,6 +130,9 @@ const MyOrdersList = ({
   
   // نظام العميل لا يرد
   const [waitingOrders, setWaitingOrders] = useState({});
+  
+  // نظام تخطيط المسار الذكي
+  const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
   
   // تحديد إذا كان الثيم داكن
   const isDark = theme === 'dark';
@@ -383,6 +387,43 @@ const MyOrdersList = ({
           foodOrders={[]}
           myOrders={orders}
           myFoodOrders={foodOrders}
+          theme={theme}
+        />
+      )}
+
+      {/* زر تخطيط المسار الذكي */}
+      {(orders.length > 0 || foodOrders.length > 0) && (
+        <button
+          onClick={() => setShowRouteOptimizer(true)}
+          className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+            isDark 
+              ? 'bg-gradient-to-l from-orange-600/20 to-red-600/20 border border-orange-500/30 hover:border-orange-500/50' 
+              : 'bg-gradient-to-l from-orange-50 to-red-50 border border-orange-200 hover:border-orange-300'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Route size={20} className="text-white" />
+            </div>
+            <div className="text-right">
+              <p className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                تخطيط المسار الذكي
+              </p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                احصل على أفضل ترتيب للتوصيل ووفّر الوقت والبنزين
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={20} className={isDark ? 'text-orange-400' : 'text-orange-500'} />
+        </button>
+      )}
+
+      {/* Modal تخطيط المسار */}
+      {showRouteOptimizer && (
+        <MultiRouteOptimizer
+          foodOrders={foodOrders}
+          productOrders={orders}
+          onClose={() => setShowRouteOptimizer(false)}
           theme={theme}
         />
       )}
