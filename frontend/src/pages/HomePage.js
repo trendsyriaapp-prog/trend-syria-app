@@ -546,6 +546,52 @@ const HomePage = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Footer Section */}
+      <footer className="bg-white border-t border-gray-100 py-6 mt-4">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Logo and Description */}
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <span className="text-[#FF6B00]">ترند</span> سورية
+            </h3>
+            <p className="text-gray-500 text-sm">منصة التسوق والتوصيل الأولى في سوريا</p>
+          </div>
+
+          {/* Quick Links */}
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            <Link to="/about" className="text-gray-600 hover:text-[#FF6B00] text-sm transition-colors">
+              من نحن
+            </Link>
+            <span className="text-gray-300">|</span>
+            <Link to="/privacy" className="text-gray-600 hover:text-[#FF6B00] text-sm transition-colors">
+              سياسة الخصوصية
+            </Link>
+            <span className="text-gray-300">|</span>
+            <Link to="/terms" className="text-gray-600 hover:text-[#FF6B00] text-sm transition-colors">
+              شروط الاستخدام
+            </Link>
+            <span className="text-gray-300">|</span>
+            <Link to="/returns" className="text-gray-600 hover:text-[#FF6B00] text-sm transition-colors">
+              سياسة الإرجاع
+            </Link>
+          </div>
+
+          {/* Contact Info */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 mb-4">
+            <a href="mailto:trendsyria.app@gmail.com" className="hover:text-[#FF6B00] transition-colors">
+              trendsyria.app@gmail.com
+            </a>
+            <span className="hidden sm:inline">•</span>
+            <span>حلب، سوريا</span>
+          </div>
+
+          {/* Copyright */}
+          <div className="text-center text-gray-400 text-xs">
+            © 2025 ترند سورية. جميع الحقوق محفوظة.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -327,6 +327,14 @@ const RegisterPage = () => {
             {loading ? 'جاري التسجيل...' : 'إنشاء الحساب'}
           </button>
 
+          {/* Terms Agreement */}
+          <p className="text-center text-xs text-gray-500 mt-3">
+            بالتسجيل، أنت توافق على{' '}
+            <Link to="/terms" className="text-[#FF6B00] hover:underline">شروط الاستخدام</Link>
+            {' '}و{' '}
+            <Link to="/privacy" className="text-[#FF6B00] hover:underline">سياسة الخصوصية</Link>
+          </p>
+
           <p className="text-center text-gray-500 mt-4">
             لديك حساب بالفعل؟{' '}
             <Link to="/login" className="text-[#FF6B00] hover:underline font-medium">
