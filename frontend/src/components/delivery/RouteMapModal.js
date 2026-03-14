@@ -219,7 +219,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-start justify-center pt-4 pb-24 bg-black/60 backdrop-blur-sm overflow-y-auto"
         onClick={onClose}
       >
         <motion.div
@@ -227,7 +227,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${
+          className={`w-full max-w-2xl mx-4 rounded-2xl shadow-2xl ${
             isDark ? 'bg-[#1a1a1a]' : 'bg-white'
           }`}
         >
@@ -334,7 +334,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
           )}
           
           {/* Map */}
-          <div className="h-[400px] relative">
+          <div className="h-[280px] relative">
             {loading ? (
               <div className={`absolute inset-0 flex items-center justify-center ${
                 isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'

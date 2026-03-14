@@ -494,13 +494,19 @@ const DeliveryDashboard = () => {
       setAvailableOrders(availableRes.data);
       setMyOrders(myRes.data);
       
-      // معالجة طلبات الطعام - دمج الطلبات الفردية والمجمعة
+      // معالجة طلبات الطعام - دمج الطلبات الفردية والمجمعة مع إزالة التكرار
       const foodData = availableFoodRes.data || {};
       const singleOrders = foodData.single_orders || [];
       const batchOrders = (foodData.batch_orders || []).flatMap(batch => 
         batch.orders.map(order => ({ ...order, is_batch: true, batch_info: batch }))
       );
-      setAvailableFoodOrders([...singleOrders, ...batchOrders]);
+      
+      // إزالة أي طلبات مكررة بناءً على الـ id
+      const allFoodOrders = [...singleOrders, ...batchOrders];
+      const uniqueFoodOrders = allFoodOrders.filter((order, index, self) => 
+        index === self.findIndex(o => o.id === order.id)
+      );
+      setAvailableFoodOrders(uniqueFoodOrders);
       
       setMyFoodOrders(myFoodRes.data || []);
     } catch (error) {
@@ -527,20 +533,17 @@ const DeliveryDashboard = () => {
   };
 
   const handleTakeFoodOrder = async (order) => {
-    // منع التكرار - إزالة الطلب مؤقتاً من القائمة أثناء المعالجة
-    const originalOrders = [...availableFoodOrders];
-    setAvailableFoodOrders(prev => prev.filter(o => o.id !== order.id));
-    
     try {
       await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
       toast({
         title: "تم بنجاح",
         description: "تم قبول طلب التوصيل"
       });
+      // إزالة الطلب من القائمة المحلية فوراً بعد النجاح
+      setAvailableFoodOrders(prev => prev.filter(o => o.id !== order.id));
       fetchOrders();
     } catch (error) {
-      // إعادة الطلب للقائمة عند الفشل
-      setAvailableFoodOrders(originalOrders);
+      // عند الفشل، لا نغير شيء - الطلب يبقى كما هو
       toast({
         title: "خطأ",
         description: error.response?.data?.detail || "حدث خطأ",
