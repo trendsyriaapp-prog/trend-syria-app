@@ -118,6 +118,26 @@
 
 - **Status:** TESTED ✅ (iteration_58)
 
+#### نظام حماية البائع من الغش (Geofencing + شكاوى) ✅ - 14 Dec 2025
+- **Geofencing (التحقق من الموقع):**
+  - عند ضغط السائق "وصلت للمتجر"، يتم التحقق من موقعه GPS
+  - يجب أن يكون ضمن 300 متر من المتجر
+  - إذا كان بعيداً، يُرفض التسجيل مع رسالة واضحة
+  - **ملف:** `food_orders.py` (endpoint arrived مع Haversine formula)
+
+- **نظام شكاوى الوصول الكاذب:**
+  - البائع يمكنه الإبلاغ "السائق لم يصل فعلياً"
+  - يُلغي عداد الانتظار ويُسجل شكوى
+  - عقوبات تصاعدية: 3 شكاوى = تحذير، 5 شكاوى = إيقاف 24 ساعة
+  - **ملف:** `food_orders.py` (endpoint report-false-arrival)
+
+- **Frontend:**
+  - السائق: يستخدم Geolocation API لإرسال موقعه
+  - البائع: زر "السائق لم يصل فعلياً؟" عند وجود driver_arrived_at
+  - **ملفات:** `MyOrdersList.js`, `FoodStoreDashboard.js`
+
+- **Status:** TESTED ✅ (iteration_59)
+
 ---
 
 ## Prioritized Backlog
@@ -161,6 +181,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_59.json` - Geofencing & False Arrival System ✅
 - `/app/test_reports/iteration_58.json` - Smart Distribution Phase 2 Tests ✅
 - `/app/test_reports/iteration_57.json` - Smart Distribution Phase 1 Tests ✅
 - `/app/test_reports/iteration_56.json` - Pickup Code System Tests
