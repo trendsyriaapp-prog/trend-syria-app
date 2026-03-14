@@ -417,12 +417,18 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
 
 @router.get("/my-food-orders")
 async def get_my_food_orders(user: dict = Depends(get_current_user)):
-    """طلبات الطعام التي استلمها السائق"""
+    """طلبات الطعام النشطة التي استلمها السائق (غير المسلّمة)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # جلب فقط الطلبات النشطة (غير المسلّمة وغير الملغاة)
+    active_statuses = ["accepted", "picked_up", "on_the_way", "out_for_delivery", "arriving", "driver_assigned", "ready_for_pickup"]
+    
     food_orders = await db.food_orders.find(
-        {"driver_id": user["id"]},
+        {
+            "driver_id": user["id"],
+            "status": {"$in": active_statuses}
+        },
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
