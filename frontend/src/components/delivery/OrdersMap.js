@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
@@ -203,7 +203,13 @@ const OrdersMap = ({
   const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
   const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة يدوياً
   const [maxLimitOrderIds, setMaxLimitOrderIds] = useState([]); // الطلبات المؤجلة بسبب الحد الأقصى
+  const maxLimitOrderIdsRef = useRef([]); // ref للحفاظ على القيمة الصحيحة في الـ interval
   const [previousOrderCount, setPreviousOrderCount] = useState(0); // عدد الطلبات السابق لمراقبة التغيير
+
+  // تحديث الـ ref عند تغيير الـ state
+  useEffect(() => {
+    maxLimitOrderIdsRef.current = maxLimitOrderIds;
+  }, [maxLimitOrderIds]);
 
   // ⭐ مراقبة تغيير عدد الطلبات - لإعادة إظهار الطلبات المؤجلة عند انخفاض العدد
   useEffect(() => {
@@ -213,6 +219,7 @@ const OrdersMap = ({
     if (currentOrderCount < previousOrderCount && maxLimitOrderIds.length > 0) {
       // مسح قائمة الطلبات المؤجلة بسبب الحد الأقصى
       setMaxLimitOrderIds([]);
+      maxLimitOrderIdsRef.current = [];
       console.log('تم مسح الطلبات المؤجلة - أصبح لديك مجال لطلبات جديدة');
     }
     
@@ -230,16 +237,29 @@ const OrdersMap = ({
           return;
         }
         
+        // لا تعرض popup جديد إذا كان هناك popup مفتوح
+        if (showPriorityPopup || priorityOrder) {
+          return;
+        }
+        
         try {
           const response = await axios.get(`${API}/api/food/orders/delivery/priority-orders`);
           const priorityOrders = response.data.priority_orders || [];
           
           // تصفية الطلبات المرفوضة يدوياً والمؤجلة بسبب الحد الأقصى
-          const allExcludedIds = [...rejectedOrderIds, ...maxLimitOrderIds];
+          // استخدام الـ ref للحصول على القيمة الحالية الصحيحة
+          const allExcludedIds = [...rejectedOrderIds, ...maxLimitOrderIdsRef.current];
           const availableOrders = priorityOrders.filter(o => !allExcludedIds.includes(o.id));
           
+          console.log('Priority check:', { 
+            total: priorityOrders.length, 
+            excluded: allExcludedIds.length,
+            available: availableOrders.length,
+            maxLimitIds: maxLimitOrderIdsRef.current
+          });
+          
           // إذا وجد طلب جديد ذو أولوية
-          if (availableOrders.length > 0 && !priorityOrder && !showPriorityPopup) {
+          if (availableOrders.length > 0) {
             const newPriorityOrder = availableOrders[0];
             setPriorityOrder(newPriorityOrder);
             setPriorityCountdown(15);
@@ -254,14 +274,20 @@ const OrdersMap = ({
         }
       };
       
-      checkPriorityOrders();
+      // تأخير أول استدعاء لإعطاء وقت للـ state للتحديث
+      const initialTimeout = setTimeout(checkPriorityOrders, 2000);
       intervalId = setInterval(checkPriorityOrders, 10000);
+      
+      return () => {
+        clearTimeout(initialTimeout);
+        if (intervalId) clearInterval(intervalId);
+      };
     }
     
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isOpen, myFoodOrders, myOrders, priorityOrder, showPriorityPopup, dismissedPriorityUntil, rejectedOrderIds, maxLimitOrderIds]);
+  }, [isOpen, myFoodOrders, myOrders, dismissedPriorityUntil, rejectedOrderIds]);
 
   // ⭐ العد التنازلي للأولوية
   useEffect(() => {
@@ -1623,9 +1649,13 @@ const OrdersMap = ({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">{station.type === 'store' ? (station.isFood ? '🍔' : '📦') : '🏠'}</span>
-                                <span className="font-bold text-sm text-white truncate">{station.name}</span>
+                                <span className={`font-bold text-sm truncate ${
+                                  currentTheme === 'dark' ? 'text-white' : 'text-gray-900'
+                                }`}>{station.name}</span>
                               </div>
-                              <p className="text-xs text-gray-400 truncate">{station.address}</p>
+                              <p className={`text-xs truncate ${
+                                currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                              }`}>{station.address}</p>
                             </div>
                             
                             {/* الإجراء */}
@@ -1641,19 +1671,23 @@ const OrdersMap = ({
                       </div>
                       
                       {/* ملخص الإجمالي */}
-                      <div className="mt-3 p-3 bg-[#252525] rounded-xl border border-[#333]">
+                      <div className={`mt-3 p-3 rounded-xl border ${
+                        currentTheme === 'dark' 
+                          ? 'bg-[#252525] border-[#333]' 
+                          : 'bg-white border-gray-200 shadow-sm'
+                      }`}>
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
-                            <p className="text-xs text-gray-500">المحطات</p>
-                            <p className="font-bold text-white text-lg">{orderedStations.length}</p>
+                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>المحطات</p>
+                            <p className={`font-bold text-lg ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{orderedStations.length}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">المسافة</p>
-                            <p className="font-bold text-blue-400 text-lg">{totalDistance.toFixed(1)} كم</p>
+                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>المسافة</p>
+                            <p className="font-bold text-blue-500 text-lg">{totalDistance.toFixed(1)} كم</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">💰 الربح</p>
-                            <p className="font-bold text-green-400 text-lg">{totalEarnings.toLocaleString()} ل.س</p>
+                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>💰 الربح</p>
+                            <p className="font-bold text-green-500 text-lg">{totalEarnings.toLocaleString()} ل.س</p>
                           </div>
                         </div>
                       </div>
