@@ -972,16 +972,16 @@ const DeliverySettingsTab = () => {
         </div>
         
         <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* الحد الأقصى للطلبات */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* الحد الأقصى لطلبات الطعام */}
             <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">📦</span>
+                  <span className="text-white text-lg">🍔</span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">الحد الأقصى للطلبات</h3>
-                  <p className="text-xs text-gray-500">عدد طلبات الطعام المسموح بها في نفس الوقت</p>
+                  <h3 className="font-bold text-gray-800">طلبات الطعام</h3>
+                  <p className="text-xs text-gray-500">الحد الأقصى في نفس الوقت</p>
                 </div>
               </div>
               <input
@@ -996,7 +996,34 @@ const DeliverySettingsTab = () => {
                 max={10}
               />
               <p className="text-center text-sm text-orange-600 mt-2">
-                {max_food_orders_per_driver} طلبات كحد أقصى
+                {max_food_orders_per_driver} طلبات طعام
+              </p>
+            </div>
+
+            {/* الحد الأقصى لطلبات المنتجات */}
+            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">📦</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">طلبات المنتجات</h3>
+                  <p className="text-xs text-gray-500">الحد الأقصى في نفس الوقت</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={waitCompensationSettings.max_product_orders_per_driver || 7}
+                onChange={(e) => setWaitCompensationSettings({
+                  ...waitCompensationSettings,
+                  max_product_orders_per_driver: parseInt(e.target.value) || 7
+                })}
+                className="w-full p-3 border-2 border-purple-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={15}
+              />
+              <p className="text-center text-sm text-purple-600 mt-2">
+                {waitCompensationSettings.max_product_orders_per_driver || 7} طلبات منتجات
               </p>
             </div>
 
@@ -1008,7 +1035,7 @@ const DeliverySettingsTab = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800">المسافة القصوى</h3>
-                  <p className="text-xs text-gray-500">المسافة بين مواقع عملاء الطلبات</p>
+                  <p className="text-xs text-gray-500">بين عملاء الطعام</p>
                 </div>
               </div>
               <input
@@ -1024,7 +1051,7 @@ const DeliverySettingsTab = () => {
                 step={0.5}
               />
               <p className="text-center text-sm text-blue-600 mt-2">
-                {food_orders_max_distance_km} كم كحد أقصى
+                {food_orders_max_distance_km} كم
               </p>
             </div>
           </div>
@@ -1033,14 +1060,13 @@ const DeliverySettingsTab = () => {
           <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <h4 className="font-bold text-gray-700 mb-2">📋 كيف تعمل هذه القواعد:</h4>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات طعام</strong> في نفس الوقت</li>
-              <li>• الطلب الثاني والثالث يجب أن يكون عميلهم ضمن <strong>{food_orders_max_distance_km} كم</strong> من عميل الطلب الأول</li>
-              <li>• هذا يضمن توصيل الطعام ساخناً وطازجاً</li>
+              <li>• <strong>الطعام:</strong> السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات</strong> من نفس المطعم أو مطاعم قريبة (عملاء ضمن {food_orders_max_distance_km} كم)</li>
+              <li>• <strong>المنتجات:</strong> السائق يستطيع قبول حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> من أي متجر (التوصيل نفس اليوم)</li>
             </ul>
           </div>
 
           <button
-            onClick={handleSaveOrderLimits}
+            onClick={() => { handleSaveOrderLimits(); handleSaveWaitCompensationSettings(); }}
             disabled={saving}
             className="mt-4 w-full bg-gradient-to-l from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
