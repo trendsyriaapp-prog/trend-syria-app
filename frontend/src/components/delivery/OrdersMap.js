@@ -335,8 +335,21 @@ const OrdersMap = ({
       if (isMaxLimitError) {
         // إضافة الطلب لقائمة المؤجلة بسبب الحد الأقصى
         // سيظهر مرة أخرى عندما ينقص عدد الطلبات
-        setMaxLimitOrderIds(prev => [...prev, priorityOrder.id]);
-        console.log('تم تأجيل الطلب بسبب الحد الأقصى - سيظهر عند انخفاض عدد طلباتك');
+        const orderId = priorityOrder.id;
+        setMaxLimitOrderIds(prev => {
+          // تأكد من عدم التكرار
+          if (prev.includes(orderId)) return prev;
+          return [...prev, orderId];
+        });
+        // تحديث الـ ref فوراً لمنع الـ interval من إظهار الطلب مرة أخرى
+        if (!maxLimitOrderIdsRef.current.includes(orderId)) {
+          maxLimitOrderIdsRef.current = [...maxLimitOrderIdsRef.current, orderId];
+        }
+        console.log('🚫 تم تأجيل الطلب بسبب الحد الأقصى:', orderId);
+        console.log('📋 قائمة المؤجلة الآن:', maxLimitOrderIdsRef.current);
+        
+        // إيقاف الإشعارات لمدة 60 ثانية لمنع الظهور المتكرر (زيادة من 30 إلى 60)
+        setDismissedPriorityUntil(Date.now() + 60000);
       }
       
       // إغلاق popup الإشعار أولاً ثم إظهار الخطأ
