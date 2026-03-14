@@ -77,6 +77,10 @@ const DeliverySettingsTab = () => {
     enable_smart_priority: true
   });
 
+  // حالة التوزيع التلقائي
+  const [dispatchStatus, setDispatchStatus] = useState(null);
+  const [violationsReport, setViolationsReport] = useState(null);
+
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
@@ -84,6 +88,8 @@ const DeliverySettingsTab = () => {
     fetchWaitTime();
     fetchSmartOrderLimits();
     fetchWaitCompensationSettings();
+    fetchDispatchStatus();
+    fetchViolationsReport();
   }, []);
 
   const fetchSettings = async () => {
@@ -186,6 +192,24 @@ const DeliverySettingsTab = () => {
     }
   };
 
+  const fetchDispatchStatus = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/dispatch/status`);
+      setDispatchStatus(res.data.status);
+    } catch (error) {
+      console.error('Error fetching dispatch status:', error);
+    }
+  };
+
+  const fetchViolationsReport = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/violations/report?days=30`);
+      setViolationsReport(res.data.report);
+    } catch (error) {
+      console.error('Error fetching violations report:', error);
+    }
+  };
+
   const handleSaveWaitCompensationSettings = async () => {
     setSaving(true);
     try {
@@ -273,6 +297,102 @@ const DeliverySettingsTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Dispatch Status & Violations Report - حالة التوزيع التلقائي */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* حالة التوزيع */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-blue-500 to-indigo-500 p-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🚀</span>
+              <h2 className="font-bold text-lg">حالة التوزيع التلقائي</h2>
+            </div>
+          </div>
+          <div className="p-4">
+            {dispatchStatus ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-600">النظام</span>
+                  <span className={`font-bold ${dispatchStatus.background_task_running ? 'text-green-600' : 'text-red-600'}`}>
+                    {dispatchStatus.background_task_running ? '✅ يعمل' : '❌ متوقف'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <span className="text-gray-600">السائقين المتاحين</span>
+                  <span className="font-bold text-blue-600">{dispatchStatus.available_drivers}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600">بانتظار التوزيع</span>
+                  <span className="font-bold text-orange-600">{dispatchStatus.pending_dispatch}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <span className="text-gray-600">تم توزيعها اليوم</span>
+                  <span className="font-bold text-purple-600">{dispatchStatus.dispatched_today}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">جاري التحميل...</div>
+            )}
+            <button
+              onClick={fetchDispatchStatus}
+              className="mt-4 w-full bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={16} />
+              تحديث
+            </button>
+          </div>
+        </div>
+
+        {/* تقرير المخالفات */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📊</span>
+              <h2 className="font-bold text-lg">تقرير المخالفات (30 يوم)</h2>
+            </div>
+          </div>
+          <div className="p-4">
+            {violationsReport ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <span className="text-gray-600">إجمالي المخالفات</span>
+                  <span className="font-bold text-red-600">{violationsReport.total_violations}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-600">إجمالي التعويضات</span>
+                  <span className="font-bold text-green-600">{formatPrice(violationsReport.total_compensations)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <span className="text-gray-600">متوسط وقت التأخير</span>
+                  <span className="font-bold text-yellow-600">{violationsReport.average_waiting_minutes} دقيقة</span>
+                </div>
+                {violationsReport.violating_stores?.length > 0 && (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-700 mb-2">المتاجر المخالفة:</p>
+                    <div className="space-y-1">
+                      {violationsReport.violating_stores.slice(0, 3).map((store, i) => (
+                        <div key={i} className="flex justify-between text-sm">
+                          <span className="text-gray-600">{store.name}</span>
+                          <span className="text-red-600">{store.count} مخالفة</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">جاري التحميل...</div>
+            )}
+            <button
+              onClick={fetchViolationsReport}
+              className="mt-4 w-full bg-red-100 text-red-700 py-2 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={16} />
+              تحديث
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Distance Delivery Settings - إعدادات أجور التوصيل بالمسافة */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-green-500 to-teal-500 p-4 text-white">

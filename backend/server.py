@@ -543,8 +543,26 @@ async def init_database_indexes():
     """⚡ إنشاء فهارس قاعدة البيانات لتحسين الأداء"""
     await create_database_indexes(db)
 
+@app.on_event("startup")
+async def start_dispatch_background_tasks():
+    """🚀 بدء مهام التوزيع التلقائي"""
+    try:
+        from services.background_tasks import start_background_tasks
+        start_background_tasks()
+        logger.info("✅ Background dispatch tasks started")
+    except Exception as e:
+        logger.error(f"❌ Failed to start background tasks: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # إيقاف مهام الخلفية
+    try:
+        from services.background_tasks import stop_background_tasks
+        stop_background_tasks()
+        logger.info("Background tasks stopped")
+    except Exception as e:
+        logger.error(f"Error stopping background tasks: {e}")
+    
     client.close()
 
 # ============== Performance Monitoring Middleware ==============

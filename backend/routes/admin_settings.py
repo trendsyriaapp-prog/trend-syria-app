@@ -13,7 +13,7 @@ from services.violation_system import (
     get_admin_violations_report
 )
 
-router = APIRouter(prefix="/admin/settings", tags=["Admin Settings"])
+router = APIRouter(prefix="/admin", tags=["Admin Settings"])
 
 
 class DeliverySettingsUpdate(BaseModel):
@@ -27,7 +27,7 @@ class DeliverySettingsUpdate(BaseModel):
     suspend_duration_hours: Optional[int] = None
 
 
-@router.get("/delivery")
+@router.get("/settings/delivery")
 async def get_delivery_settings_api(user: dict = Depends(get_current_user)):
     """جلب إعدادات التوصيل"""
     if user.get("user_type") != "admin":
@@ -40,7 +40,7 @@ async def get_delivery_settings_api(user: dict = Depends(get_current_user)):
     }
 
 
-@router.put("/delivery")
+@router.put("/settings/delivery")
 async def update_delivery_settings_api(
     data: DeliverySettingsUpdate,
     user: dict = Depends(get_current_user)
@@ -137,3 +137,61 @@ async def unsuspend_store(store_id: str, user: dict = Depends(get_current_user))
         return {"success": True, "message": "تم إلغاء إيقاف المتجر"}
     
     raise HTTPException(status_code=404, detail="المتجر غير موجود")
+
+
+@router.get("/violations/report")
+async def get_violations_report(
+    days: int = 30,
+    user: dict = Depends(get_current_user)
+):
+    """تقرير المخالفات الشامل للأدمن"""
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    try:
+        from services.violation_system import get_admin_violations_report
+        report = await get_admin_violations_report(days)
+        return {"success": True, "report": report}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dispatch/status")
+async def get_dispatch_status(user: dict = Depends(get_current_user)):
+    """حالة نظام التوزيع التلقائي"""
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
+    
+    # الطلبات الجاهزة للتوزيع
+    pending_dispatch = await db.food_orders.count_documents({
+        "status": {"$in": ["preparing", "confirmed"]},
+        "driver_id": None,
+        "dispatched": {"$ne": True}
+    })
+    
+    # الطلبات المُوزعة اليوم
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    dispatched_today = await db.food_orders.count_documents({
+        "dispatched": True,
+        "dispatched_at": {"$gte": today_start}
+    })
+    
+    # السائقين المتاحين
+    available_drivers = await db.delivery_documents.count_documents({
+        "is_available": True,
+        "status": "approved"
+    })
+    
+    return {
+        "success": True,
+        "status": {
+            "pending_dispatch": pending_dispatch,
+            "dispatched_today": dispatched_today,
+            "available_drivers": available_drivers,
+            "background_task_running": True
+        }
+    }
+
