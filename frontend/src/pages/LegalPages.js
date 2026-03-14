@@ -160,11 +160,15 @@ export const PrivacyPolicyPage = () => {
           <div className="space-y-2 text-sm text-gray-600">
             <p className="flex items-center gap-2">
               <Mail size={16} className="text-[#FF6B00]" />
-              privacy@trendsyria.com
+              support@trendsyria.com
             </p>
             <p className="flex items-center gap-2">
-              <Phone size={16} className="text-[#FF6B00]" />
-              +963 XX XXX XXXX
+              <MapPin size={16} className="text-[#FF6B00]" />
+              حلب، سوريا
+            </p>
+            <p className="flex items-center gap-2">
+              <Lock size={16} className="text-[#FF6B00]" />
+              ساعات الدعم: 10:00 صباحاً - 11:00 مساءً
             </p>
           </div>
         </motion.div>
@@ -575,11 +579,15 @@ export const ReturnPolicyPage = () => {
           <div className="space-y-2 text-sm text-gray-600">
             <p className="flex items-center gap-2">
               <Mail size={16} className="text-[#FF6B00]" />
-              returns@trendsyria.com
+              support@trendsyria.com
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin size={16} className="text-[#FF6B00]" />
+              حلب، سوريا
             </p>
             <p className="flex items-center gap-2">
               <Phone size={16} className="text-[#FF6B00]" />
-              +963 XX XXX XXXX
+              ساعات الدعم: 10:00 صباحاً - 11:00 مساءً
             </p>
           </div>
         </motion.div>
