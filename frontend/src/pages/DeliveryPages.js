@@ -527,6 +527,10 @@ const DeliveryDashboard = () => {
   };
 
   const handleTakeFoodOrder = async (order) => {
+    // منع التكرار - إزالة الطلب مؤقتاً من القائمة أثناء المعالجة
+    const originalOrders = [...availableFoodOrders];
+    setAvailableFoodOrders(prev => prev.filter(o => o.id !== order.id));
+    
     try {
       await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
       toast({
@@ -535,6 +539,8 @@ const DeliveryDashboard = () => {
       });
       fetchOrders();
     } catch (error) {
+      // إعادة الطلب للقائمة عند الفشل
+      setAvailableFoodOrders(originalOrders);
       toast({
         title: "خطأ",
         description: error.response?.data?.detail || "حدث خطأ",

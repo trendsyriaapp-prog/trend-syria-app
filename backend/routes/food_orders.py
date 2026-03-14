@@ -866,6 +866,31 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
         
+        # إضافة إحداثيات المتجر للسائق
+        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0, "latitude": 1, "longitude": 1, "address": 1, "city": 1})
+        if store:
+            order["store_latitude"] = store.get("latitude")
+            order["store_longitude"] = store.get("longitude")
+            # إضافة عنوان البائع كـ seller_addresses للتوافق مع الفرونت إند
+            if not order.get("seller_addresses"):
+                order["seller_addresses"] = [{
+                    "address": store.get("address", order.get("store_name", "")),
+                    "city": store.get("city", order.get("delivery_city", "دمشق")),
+                    "latitude": store.get("latitude"),
+                    "longitude": store.get("longitude")
+                }]
+        
+        # إضافة عنوان العميل كـ buyer_address للتوافق
+        if not order.get("buyer_address"):
+            order["buyer_address"] = {
+                "name": order.get("customer_name", "العميل"),
+                "address": order.get("delivery_address", ""),
+                "city": order.get("delivery_city", "دمشق"),
+                "phone": order.get("customer_phone", ""),
+                "latitude": order.get("latitude"),
+                "longitude": order.get("longitude")
+            }
+        
         # إرسال إشعار للسائق إذا لم يُرسل بعد
         if not order.get("driver_notified", False):
             order_num = order.get('order_number', order.get('id', '')[:8])

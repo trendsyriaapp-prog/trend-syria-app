@@ -23,6 +23,12 @@
 
 ### December 2025
 
+#### إصلاحات واجهة السائق (Driver UI Fixes) ✅ - 14 Dec 2025
+- **مشكلة الجداول خلف الشريط**: تم إضافة scroll وpadding للـ RouteMapModal
+- **تكرار الطلب بعد الخطأ**: تم إزالة الطلب مؤقتاً أثناء المعالجة
+- **المسافة = 0**: تم إصلاح حساب المسافة باستخدام الإحداثيات الفعلية
+- **ملفات معدّلة**: RouteMapModal.js, DeliveryPages.js, distanceCalculator.js, food_orders.py
+
 #### نظام كود تأكيد الاستلام (Pickup Code System) ✅
 - **Backend:**
   - توليد كود 4 أرقام عند وضع الطلب "جاهز"

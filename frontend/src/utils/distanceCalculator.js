@@ -103,18 +103,36 @@ export const getLocationFromAddress = (address, city) => {
  * @returns {{ toSeller: number, toCustomer: number, total: number, estimatedTime: number }}
  */
 export const calculateOrderDistances = (driverLocation, order) => {
-  // موقع البائع/المطعم
+  // موقع البائع/المطعم - نفضل الإحداثيات الفعلية إذا وجدت
   const sellerAddress = order.seller_addresses?.[0];
-  const sellerLocation = getLocationFromAddress(
-    sellerAddress?.address,
-    sellerAddress?.city || order.delivery_city
-  );
+  let sellerLocation;
   
-  // موقع العميل
-  const customerLocation = getLocationFromAddress(
-    order.buyer_address?.address || order.delivery_address,
-    order.buyer_address?.city || order.delivery_city
-  );
+  // استخدام إحداثيات المتجر الفعلية إذا وجدت
+  if (order.store_latitude && order.store_longitude) {
+    sellerLocation = { lat: order.store_latitude, lon: order.store_longitude };
+  } else if (sellerAddress?.latitude && sellerAddress?.longitude) {
+    sellerLocation = { lat: sellerAddress.latitude, lon: sellerAddress.longitude };
+  } else {
+    sellerLocation = getLocationFromAddress(
+      sellerAddress?.address,
+      sellerAddress?.city || order.delivery_city
+    );
+  }
+  
+  // موقع العميل - نفضل الإحداثيات الفعلية إذا وجدت
+  let customerLocation;
+  
+  // استخدام إحداثيات العميل الفعلية إذا وجدت
+  if (order.latitude && order.longitude) {
+    customerLocation = { lat: order.latitude, lon: order.longitude };
+  } else if (order.buyer_address?.latitude && order.buyer_address?.longitude) {
+    customerLocation = { lat: order.buyer_address.latitude, lon: order.buyer_address.longitude };
+  } else {
+    customerLocation = getLocationFromAddress(
+      order.buyer_address?.address || order.delivery_address,
+      order.buyer_address?.city || order.delivery_city
+    );
+  }
   
   // حساب المسافات
   const toSeller = calculateDistance(

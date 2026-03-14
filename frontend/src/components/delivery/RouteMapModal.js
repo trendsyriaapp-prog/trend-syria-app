@@ -227,7 +227,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl ${
+          className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${
             isDark ? 'bg-[#1a1a1a]' : 'bg-white'
           }`}
         >
@@ -430,7 +430,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
           </div>
           
           {/* Footer - معلومات إضافية */}
-          <div className={`p-4 border-t ${isDark ? 'border-[#333]' : 'border-gray-200'}`}>
+          <div className={`p-4 pb-6 border-t ${isDark ? 'border-[#333]' : 'border-gray-200'}`}>
             <div className="grid grid-cols-2 gap-4">
               {/* من */}
               <div className={`p-3 rounded-xl ${isDark ? 'bg-green-500/10' : 'bg-green-50'}`}>
