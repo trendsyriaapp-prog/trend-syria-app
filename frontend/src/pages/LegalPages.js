@@ -160,7 +160,7 @@ export const PrivacyPolicyPage = () => {
           <div className="space-y-2 text-sm text-gray-600">
             <p className="flex items-center gap-2">
               <Mail size={16} className="text-[#FF6B00]" />
-              support@trendsyria.com
+              trendsyria.app@gmail.com
             </p>
             <p className="flex items-center gap-2">
               <MapPin size={16} className="text-[#FF6B00]" />
@@ -579,7 +579,7 @@ export const ReturnPolicyPage = () => {
           <div className="space-y-2 text-sm text-gray-600">
             <p className="flex items-center gap-2">
               <Mail size={16} className="text-[#FF6B00]" />
-              support@trendsyria.com
+              trendsyria.app@gmail.com
             </p>
             <p className="flex items-center gap-2">
               <MapPin size={16} className="text-[#FF6B00]" />
