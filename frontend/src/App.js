@@ -36,6 +36,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
 import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
+import AboutPage from "./pages/AboutPage";
 import PackagingGuidePage from "./pages/PackagingGuidePage";
 import JoinAsSellerPage from "./pages/JoinAsSellerPage";
 import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
@@ -127,6 +128,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/returns" element={<ReturnPolicyPage />} />
+                <Route path="/about" element={<AboutPage />} />
                 <Route path="/packaging-guide" element={<PackagingGuidePage />} />
                 
                 {/* Landing Pages */}
