@@ -26,6 +26,7 @@ class DeliverySettingsUpdate(BaseModel):
     warnings_before_suspend: Optional[int] = None
     suspend_duration_hours: Optional[int] = None
     geofencing_max_distance_meters: Optional[int] = None  # المسافة المسموحة لتسجيل الوصول
+    max_product_orders_per_driver: Optional[int] = None  # الحد الأقصى لطلبات المنتجات للسائق
 
 
 @router.get("/settings/delivery")

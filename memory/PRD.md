@@ -140,7 +140,7 @@
 
 #### تحسينات توصيل المنتجات ✅ - 14 Dec 2025
 - **قبول عدة طلبات:**
-  - السائق يمكنه قبول حتى 7 طلبات منتجات في نفس الوقت
+  - السائق يمكنه قبول حتى 7 طلبات منتجات في نفس الوقت (قابل للتعديل)
   - عداد يظهر (count/max_orders) و can_accept_more
   - **ملف:** `delivery.py` (endpoint accept + my-product-orders)
 
@@ -154,13 +154,20 @@
   - العميل يرى "سيصلك اليوم قبل الساعة X"
   - X من إعدادات المنصة (closing_hour)
 
+- **تحكم المدير في حد الطلبات:** ✅ (أضيف 14 Dec 2025)
+  - الأدمن يمكنه تحديد الحد الأقصى لطلبات المنتجات (`max_product_orders_per_driver`)
+  - الأدمن يمكنه تحديد الحد الأقصى لطلبات الطعام (`max_food_orders_per_driver`)
+  - واجهة في "إعدادات قبول طلبات الطعام" مع حقول منفصلة
+  - **ملفات:** `DeliverySettingsTab.js`, `admin_settings.py`
+
 - **APIs جديدة:**
   - `GET /api/delivery/my-product-orders` - طلبات السائق مع العداد
   - `POST /api/orders/{id}/seller/shipped` - شحن + كود استلام
   - `GET /api/orders/{id}/seller/pickup-code` - البائع يحصل الكود
   - `POST /api/orders/{id}/delivery/verify-pickup` - السائق يتحقق
+  - `PUT /api/admin/settings/delivery` - تحديث إعدادات التوصيل (يشمل max_product_orders_per_driver)
 
-- **Status:** TESTED ✅ (iteration_60)
+- **Status:** TESTED ✅ (iteration_60 + curl tests)
 
 ---
 
@@ -170,6 +177,7 @@
 All critical features are implemented and tested.
 
 ### P1 - High Priority
+- [ ] نظام إيداع ومستويات الثقة للسائقين (Driver Deposit & Trust Level)
 - [ ] اختبار المستخدم اليدوي للنظام الكامل (بائع > سائق > عميل)
 
 ### P2 - Medium Priority
@@ -201,6 +209,11 @@ All critical features are implemented and tested.
 ### Database (MongoDB)
 - `food_orders` collection with `pickup_code`, `pickup_code_verified`
 - `delivery_documents` for driver availability
+
+---
+
+## Known Issues
+- **Priority Order Popup Bug (P1):** نافذة الطلب ذات الأولوية قد تظهر مجدداً بعد الرفض في `OrdersMap.js`. يحتاج refactoring للـ state management.
 
 ---
 

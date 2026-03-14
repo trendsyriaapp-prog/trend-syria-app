@@ -67,7 +67,8 @@ const DeliverySettingsTab = () => {
     warnings_before_final: 7,
     warnings_before_suspend: 10,
     suspend_duration_hours: 24,
-    geofencing_max_distance_meters: 150
+    geofencing_max_distance_meters: 150,
+    max_product_orders_per_driver: 7  // الحد الأقصى لطلبات المنتجات للسائق
   });
 
   // إعدادات حدود الطلبات الذكية
@@ -186,7 +187,7 @@ const DeliverySettingsTab = () => {
     try {
       const res = await axios.get(`${API}/api/admin/settings/delivery`);
       if (res.data.settings) {
-        setWaitCompensationSettings(res.data.settings);
+        setWaitCompensationSettings(prev => ({...prev, ...res.data.settings}));
       }
     } catch (error) {
       console.error('Error fetching wait compensation settings:', error);
