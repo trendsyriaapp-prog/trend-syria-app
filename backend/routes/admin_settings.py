@@ -25,6 +25,7 @@ class DeliverySettingsUpdate(BaseModel):
     warnings_before_final: Optional[int] = None
     warnings_before_suspend: Optional[int] = None
     suspend_duration_hours: Optional[int] = None
+    geofencing_max_distance_meters: Optional[int] = None  # المسافة المسموحة لتسجيل الوصول
 
 
 @router.get("/settings/delivery")

@@ -1552,7 +1552,11 @@ async def driver_arrived_at_store(
         }
     
     # === Geofencing: التحقق من موقع السائق ===
-    MAX_DISTANCE_METERS = 300  # الحد الأقصى للمسافة المسموحة
+    # جلب المسافة المسموحة من الإعدادات (الافتراضي 150 متر)
+    settings = await db.settings.find_one({"type": "delivery_settings"})
+    MAX_DISTANCE_METERS = 150  # الافتراضي
+    if settings and settings.get("values", {}).get("geofencing_max_distance_meters"):
+        MAX_DISTANCE_METERS = settings["values"]["geofencing_max_distance_meters"]
     
     if latitude and longitude:
         # جلب موقع المتجر

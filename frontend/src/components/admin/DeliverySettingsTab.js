@@ -66,7 +66,8 @@ const DeliverySettingsTab = () => {
     warnings_before_alert: 3,
     warnings_before_final: 7,
     warnings_before_suspend: 10,
-    suspend_duration_hours: 24
+    suspend_duration_hours: 24,
+    geofencing_max_distance_meters: 150
   });
 
   // إعدادات حدود الطلبات الذكية
@@ -850,6 +851,42 @@ const DeliverySettingsTab = () => {
                 );
               })}
             </div>
+          </div>
+
+          {/* إعدادات Geofencing - التحقق من موقع السائق */}
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <h4 className="font-bold text-blue-800 mb-3">📍 التحقق من موقع السائق (Geofencing):</h4>
+            <p className="text-sm text-blue-600 mb-3">
+              عند ضغط السائق "وصلت للمتجر"، يتم التحقق من أنه فعلاً قرب المتجر
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">المسافة المسموحة من المتجر</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={waitCompensationSettings.geofencing_max_distance_meters}
+                    onChange={(e) => setWaitCompensationSettings({
+                      ...waitCompensationSettings,
+                      geofencing_max_distance_meters: parseInt(e.target.value) || 150
+                    })}
+                    className="w-24 p-2 border border-blue-300 rounded-lg text-center text-lg font-bold"
+                    min={50}
+                    max={500}
+                    step={10}
+                  />
+                  <span className="text-sm text-blue-600 font-medium">متر</span>
+                </div>
+              </div>
+              <div className="text-center p-3 bg-white rounded-lg border border-blue-200">
+                <p className="text-xs text-gray-500">مثال</p>
+                <p className="text-lg font-bold text-blue-600">{waitCompensationSettings.geofencing_max_distance_meters}م</p>
+                <p className="text-xs text-gray-500">≈ {Math.round(waitCompensationSettings.geofencing_max_distance_meters / 80)} دقيقة مشي</p>
+              </div>
+            </div>
+            <p className="text-xs text-blue-500 mt-2">
+              💡 إذا كان السائق أبعد من هذه المسافة، لن يستطيع تسجيل وصوله
+            </p>
           </div>
 
           {/* نظام التحذيرات */}

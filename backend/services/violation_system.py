@@ -20,7 +20,8 @@ DEFAULT_SETTINGS = {
     "warnings_before_alert": 3,  # عدد المخالفات قبل التحذير
     "warnings_before_final": 7,  # عدد المخالفات قبل التحذير الأخير
     "warnings_before_suspend": 10,  # عدد المخالفات قبل الإيقاف
-    "suspend_duration_hours": 24  # مدة الإيقاف
+    "suspend_duration_hours": 24,  # مدة الإيقاف
+    "geofencing_max_distance_meters": 150  # المسافة المسموحة لتسجيل الوصول
 }
 
 
