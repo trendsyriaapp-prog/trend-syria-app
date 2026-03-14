@@ -289,7 +289,7 @@ const OrdersMap = ({
     };
   }, [isOpen, myFoodOrders, myOrders, dismissedPriorityUntil, rejectedOrderIds]);
 
-  // ⭐ العد التنازلي للأولوية
+  // ⭐ العد التنازلي للأولوية - الـ popup يبقى ظاهراً بعد انتهاء العد
   useEffect(() => {
     let countdownInterval = null;
     
@@ -297,9 +297,8 @@ const OrdersMap = ({
       countdownInterval = setInterval(() => {
         setPriorityCountdown(prev => {
           if (prev <= 1) {
-            // انتهى الوقت - إغلاق النافذة
-            setShowPriorityPopup(false);
-            setPriorityOrder(null);
+            // انتهى الوقت - لكن الـ popup يبقى ظاهراً!
+            // فقط نوقف العد عند 0
             return 0;
           }
           return prev - 1;
@@ -1716,32 +1715,54 @@ const OrdersMap = ({
                     initial={{ opacity: 0, scale: 0.9, y: -20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                    className="absolute top-20 left-4 right-4 z-[2000] bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 rounded-2xl shadow-2xl overflow-hidden border-4 border-yellow-300"
-                    style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5)' }}
+                    className={`absolute top-20 left-4 right-4 z-[2000] rounded-2xl shadow-2xl overflow-hidden border-4 ${
+                      priorityCountdown > 0 
+                        ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 border-yellow-300' 
+                        : 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300'
+                    }`}
+                    style={{ boxShadow: priorityCountdown > 0 ? '0 0 40px rgba(251, 191, 36, 0.5)' : '0 0 40px rgba(239, 68, 68, 0.5)' }}
                   >
                     {/* شريط العد التنازلي */}
                     <div className="h-2 bg-black/20">
-                      <motion.div
-                        initial={{ width: '100%' }}
-                        animate={{ width: '0%' }}
-                        transition={{ duration: priorityCountdown, ease: 'linear' }}
-                        className="h-full bg-white"
-                      />
+                      {priorityCountdown > 0 ? (
+                        <motion.div
+                          initial={{ width: '100%' }}
+                          animate={{ width: '0%' }}
+                          transition={{ duration: priorityCountdown, ease: 'linear' }}
+                          className="h-full bg-white"
+                        />
+                      ) : (
+                        <div className="h-full bg-white animate-pulse" />
+                      )}
                     </div>
                     
                     <div className="p-5 text-black">
                       {/* العنوان */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <span className="text-4xl animate-bounce">🔔</span>
+                          <span className={`text-4xl ${priorityCountdown > 0 ? 'animate-bounce' : 'animate-pulse'}`}>
+                            {priorityCountdown > 0 ? '🔔' : '⚠️'}
+                          </span>
                           <div>
-                            <p className="font-black text-lg">طلب جديد من نفس المطعم!</p>
-                            <p className="text-sm text-black/70">أنت ذاهب لهذا المطعم الآن</p>
+                            <p className="font-black text-lg">
+                              {priorityCountdown > 0 ? 'طلب جديد من نفس المطعم!' : '⏰ قرر الآن!'}
+                            </p>
+                            <p className={`text-sm ${priorityCountdown > 0 ? 'text-black/70' : 'text-white font-bold'}`}>
+                              {priorityCountdown > 0 ? 'أنت ذاهب لهذا المطعم الآن' : 'الطلب قد يُأخذ من سائق آخر'}
+                            </p>
                           </div>
                         </div>
-                        <div className="bg-black text-yellow-400 rounded-full w-16 h-16 flex flex-col items-center justify-center">
-                          <span className="font-black text-2xl">{priorityCountdown}</span>
-                          <span className="text-xs">ثانية</span>
+                        <div className={`rounded-full w-16 h-16 flex flex-col items-center justify-center ${
+                          priorityCountdown > 0 ? 'bg-black text-yellow-400' : 'bg-white text-red-500 animate-pulse'
+                        }`}>
+                          {priorityCountdown > 0 ? (
+                            <>
+                              <span className="font-black text-2xl">{priorityCountdown}</span>
+                              <span className="text-xs">ثانية</span>
+                            </>
+                          ) : (
+                            <span className="font-black text-xl">!</span>
+                          )}
                         </div>
                       </div>
 
