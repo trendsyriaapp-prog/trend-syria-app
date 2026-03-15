@@ -819,7 +819,7 @@ const DeliverySettingsTab = () => {
                 );
                 return (
                   <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
-                    <div className="text-2xl">🚗</div>
+                    <div className="text-2xl">🏍️</div>
                     <div className="text-sm text-gray-600">{km} كم</div>
                     <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
                   </div>

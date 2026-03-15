@@ -18,7 +18,7 @@ const SYRIAN_CITIES = [
 
 const VEHICLE_TYPES = [
   { id: 'motorcycle', name: 'دراجة نارية', icon: '🏍️' },
-  { id: 'car', name: 'سيارة', icon: '🚗' },
+  { id: 'car', name: 'موتور', icon: '🏍️' },
   { id: 'bicycle', name: 'دراجة هوائية', icon: '🚲' },
 ];
 

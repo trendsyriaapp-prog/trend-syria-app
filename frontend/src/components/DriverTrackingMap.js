@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import axios from 'axios';
@@ -23,7 +23,7 @@ const createIcon = (emoji, color) => {
   });
 };
 
-const driverIcon = createIcon('🚗', '#f97316');
+const driverIcon = createIcon('🏍️', '#f97316');
 const customerIcon = createIcon('🏠', '#22c55e');
 
 /**
@@ -33,6 +33,8 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
   const [loading, setLoading] = useState(true);
   const [locationData, setLocationData] = useState(null);
   const [error, setError] = useState(null);
+  const [soundPlayed, setSoundPlayed] = useState(false);
+  const audioRef = useRef(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   // جلب موقع السائق
@@ -79,6 +81,36 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
     return timeInMinutes;
   };
 
+  // دالة تشغيل صوت الإشعار
+  const playNotificationSound = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/notification.mp3');
+      }
+      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    } catch (e) {
+      console.log('Audio error:', e);
+    }
+  };
+
+  // حساب المسافة للتتبع
+  const driverLat = locationData?.driver_latitude;
+  const driverLon = locationData?.driver_longitude;
+  const customerLat = locationData?.customer_latitude;
+  const customerLon = locationData?.customer_longitude;
+  
+  const isNearby = driverLat && driverLon && customerLat && customerLon
+    ? calculateDistance(driverLat, driverLon, customerLat, customerLon) < 0.5
+    : false;
+
+  // تشغيل صوت الإشعار عند اقتراب السائق
+  useEffect(() => {
+    if (isNearby && !soundPlayed) {
+      playNotificationSound();
+      setSoundPlayed(true);
+    }
+  }, [isNearby, soundPlayed]);
+
   if (loading) {
     return (
       <div className="bg-gray-100 rounded-xl p-6 flex items-center justify-center">
@@ -118,14 +150,12 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
   // حساب المسافة والوقت
   let distance = null;
   let estimatedTime = null;
-  let isNearby = false;
   if (customerPos) {
     distance = calculateDistance(
       locationData.driver_latitude, locationData.driver_longitude,
       locationData.customer_latitude, locationData.customer_longitude
     );
     estimatedTime = estimateArrivalTime(distance);
-    isNearby = distance < 0.5; // أقل من 500 متر
   }
 
   // مركز الخريطة
@@ -136,10 +166,10 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* إشعار اقتراب السائق */}
-      {isNearby && (
+      {distance && distance < 0.5 && (
         <div className="bg-green-500 text-white p-3 flex items-center gap-2 animate-pulse">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            🚗
+            🏍️
           </div>
           <div>
             <p className="font-bold text-sm">السائق وصل!</p>
@@ -149,7 +179,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
       )}
       
       {/* معلومات التتبع */}
-      <div className={`p-3 ${isNearby ? 'bg-green-600' : 'bg-gradient-to-l from-orange-500 to-orange-600'} text-white`}>
+      <div className={`p-3 ${distance && distance < 0.5 ? 'bg-green-600' : 'bg-gradient-to-l from-orange-500 to-orange-600'} text-white`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Navigation size={18} />
@@ -195,7 +225,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
           <Marker position={driverPos} icon={driverIcon}>
             <Popup>
               <div className="text-center">
-                <span className="font-bold">🚗 موظف التوصيل</span>
+                <span className="font-bold">🏍️ موظف التوصيل</span>
                 <p className="text-xs text-gray-500">في الطريق إليك</p>
               </div>
             </Popup>

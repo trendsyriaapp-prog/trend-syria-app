@@ -17,7 +17,7 @@ L.Icon.Default.mergeOptions({
 const driverIcon = new L.DivIcon({
   className: 'custom-marker',
   html: `<div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-    <span style="font-size: 22px;">🚗</span>
+    <span style="font-size: 22px;">🏍️</span>
   </div>`,
   iconSize: [44, 44],
   iconAnchor: [22, 22],
@@ -289,7 +289,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
               }`}>
                 {/* موقعك */}
                 <div className="text-center flex-1">
-                  <div className="text-2xl mb-1">🚗</div>
+                  <div className="text-2xl mb-1">🏍️</div>
                   <p className={`text-xs font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>موقعك</p>
                   {locationError && (
                     <p className={`text-xs ${isDark ? 'text-red-400' : 'text-red-500'}`}>غير متاح</p>
@@ -376,7 +376,7 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                   <Marker position={driverCoords} icon={driverIcon}>
                     <Popup>
                       <div className="text-center p-2">
-                        <p className="font-bold">🚗 موقعك الحالي</p>
+                        <p className="font-bold">🏍️ موقعك الحالي</p>
                         <p className="text-sm text-gray-500">نقطة البداية</p>
                       </div>
                     </Popup>

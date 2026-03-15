@@ -95,7 +95,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       <div className="driver-distance-box mb-3">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="driver-distance-item">
-            <p className="driver-distance-label">🚗 للمطعم</p>
+            <p className="driver-distance-label">🏍️ للمطعم</p>
             <p className="driver-distance-value">{formatDistance(distance.toSeller)}</p>
           </div>
           <div className="driver-distance-item">
@@ -160,7 +160,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       </span>
                       {order.delivery_fee && (
                         <span className={`mr-2 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                          🚗 {order.delivery_fee.toLocaleString()} ل.س
+                          🏍️ {order.delivery_fee.toLocaleString()} ل.س
                         </span>
                       )}
                     </div>
@@ -318,7 +318,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>#{order.id?.slice(0, 8)}</span>
                       {order.delivery_fee && (
                         <span className={`mr-2 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                          🚗 {order.delivery_fee.toLocaleString()} ل.س
+                          🏍️ {order.delivery_fee.toLocaleString()} ل.س
                         </span>
                       )}
                     </div>

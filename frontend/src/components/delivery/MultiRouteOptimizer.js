@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
 const driverIcon = new L.DivIcon({
   className: 'custom-marker',
   html: `<div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1000;">
-    <span style="font-size: 24px;">🚗</span>
+    <span style="font-size: 24px;">🏍️</span>
   </div>`,
   iconSize: [48, 48],
   iconAnchor: [24, 24],
@@ -451,7 +451,7 @@ const MultiRouteOptimizer = ({
                   <Marker position={driverCoords} icon={driverIcon}>
                     <Popup>
                       <div className="text-center p-2">
-                        <p className="font-bold text-lg">🚗 موقعك</p>
+                        <p className="font-bold text-lg">🏍️ موقعك</p>
                         <p className="text-sm text-gray-500">نقطة البداية</p>
                       </div>
                     </Popup>
@@ -517,7 +517,7 @@ const MultiRouteOptimizer = ({
               {/* نقطة البداية */}
               <div className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
                 <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                  🚗
+                  🏍️
                 </div>
                 <div className="flex-1">
                   <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>موقعك الحالي</p>

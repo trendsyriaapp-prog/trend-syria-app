@@ -1383,7 +1383,7 @@ const StoreOrdersTab = ({ token }) => {
                           </div>
                           {order.driver_name && (
                             <p className="text-xs text-orange-600 mt-2">
-                              🚗 السائق {order.driver_name} في الطريق
+                              🏍️ السائق {order.driver_name} في الطريق
                             </p>
                           )}
                         </div>
@@ -1429,7 +1429,7 @@ const StoreOrdersTab = ({ token }) => {
                       {order.driver_name && (
                         <div className="mt-3 p-2 bg-blue-50 rounded-lg">
                           <p className="text-sm text-blue-700">
-                            🚗 موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
+                            🏍️ موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
                           </p>
                           {order.driver_arrived_at && (
                             <>
@@ -1463,7 +1463,7 @@ const StoreOrdersTab = ({ token }) => {
 
                   {order.status === 'out_for_delivery' && (
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                      <p className="text-purple-700 text-sm font-medium">🚗 جاري التوصيل</p>
+                      <p className="text-purple-700 text-sm font-medium">🏍️ جاري التوصيل</p>
                       {order.driver_name && (
                         <p className="text-xs text-purple-600 mt-1">
                           بواسطة: {order.driver_name}

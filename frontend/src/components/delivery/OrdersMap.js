@@ -69,7 +69,7 @@ const createNumberedIcon = (color, number, size = 44) => {
 const foodStoreIcon = createIcon('#22c55e', '🍔', 48); // أخضر ساطع - أكبر
 const productStoreIcon = createIcon('#3b82f6', '📦', 48); // أزرق ساطع
 const customerIcon = createIcon('#f59e0b', '🏠', 44); // أصفر/برتقالي للعميل
-const driverIcon = createIcon('#ffffff', '🚗', 50); // أبيض للسائق - الأكبر
+const driverIcon = createIcon('#ffffff', '🏍️', 50); // أبيض للسائق - الأكبر
 
 // مكون لتحديث مركز الخريطة
 const MapUpdater = ({ center, zoom }) => {
@@ -1961,7 +1961,7 @@ const OrdersMap = ({
                         disabled={loadingRoute}
                         className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                       >
-                        {loadingRoute ? '⏳ جاري التحميل...' : '🚗 ابدأ التنقل خطوة بخطوة'}
+                        {loadingRoute ? '⏳ جاري التحميل...' : '🏍️ ابدأ التنقل خطوة بخطوة'}
                       </button>
                     </>
                   ) : (
@@ -2139,7 +2139,7 @@ const OrdersMap = ({
                       ).map((stop, idx) => {
                         // تحديد لون العلامة
                         let bgColor = '#f97316'; // برتقالي للسائق
-                        let emoji = '🚗';
+                        let emoji = '🏍️';
                         
                         if (stop.type === 'store') {
                           bgColor = stop.isFood ? '#22c55e' : '#3b82f6';
@@ -2517,7 +2517,7 @@ const OrdersMap = ({
                     <div className="bg-[#252525] rounded-xl p-3 mb-3 border border-[#333]">
                       <div className="flex items-center justify-between text-sm mb-2">
                         <span className="flex items-center gap-2">
-                          <span className="w-6 h-6 bg-white text-black rounded-full text-xs flex items-center justify-center">🚗</span>
+                          <span className="w-6 h-6 bg-white text-black rounded-full text-xs flex items-center justify-center">🏍️</span>
                           <span className="text-gray-500">➜</span>
                           <span className="w-6 h-6 bg-green-500 text-white rounded-full text-xs flex items-center justify-center">🏪</span>
                           <span className="text-gray-400 mr-1">للمتجر</span>
