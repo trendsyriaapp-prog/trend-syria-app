@@ -111,7 +111,7 @@ async def get_food_stores(
     skip: int = 0,
     limit: int = 20
 ):
-    """جلب متاجر الطعام"""
+    """جلب متاجر الطعام مع حالة الفتح/الإغلاق"""
     query = {"is_active": True, "is_approved": True}
     
     if category and category != 'all':
@@ -126,11 +126,85 @@ async def get_food_stores(
     
     stores = await db.food_stores.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(None)
     
-    # إضافة اسم الفئة
+    # الوقت الحالي
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    # تحويل للتوقيت المحلي (سوريا +3)
+    local_hour = (now.hour + 3) % 24
+    local_minute = now.minute
+    current_day = (now.weekday() + 1) % 7  # 0=الأحد، 1=الإثنين، ...
+    day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    current_day_name = day_names[current_day]
+    
+    # إضافة اسم الفئة وحالة الفتح
     for store in stores:
         store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
+        
+        # التحقق من أوقات العمل
+        working_hours = store.get("working_hours", {})
+        
+        if not working_hours:
+            # إذا لم يحدد أوقات عمل، يعتبر مفتوح دائماً
+            store["is_open"] = True
+            store["open_status"] = "مفتوح"
+            store["next_open_time"] = None
+        else:
+            # التحقق من أوقات اليوم الحالي
+            today_hours = working_hours.get(current_day_name, {})
+            
+            if not today_hours or not today_hours.get("is_open", True):
+                # المتجر مغلق اليوم
+                store["is_open"] = False
+                store["open_status"] = "مغلق اليوم"
+                store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+            else:
+                # التحقق من الساعات
+                open_hour = today_hours.get("open_hour", 8)
+                open_minute = today_hours.get("open_minute", 0)
+                close_hour = today_hours.get("close_hour", 22)
+                close_minute = today_hours.get("close_minute", 0)
+                
+                current_time = local_hour * 60 + local_minute
+                open_time = open_hour * 60 + open_minute
+                close_time = close_hour * 60 + close_minute
+                
+                if open_time <= current_time < close_time:
+                    store["is_open"] = True
+                    store["open_status"] = "مفتوح"
+                    store["closes_at"] = f"{close_hour:02d}:{close_minute:02d}"
+                elif current_time < open_time:
+                    store["is_open"] = False
+                    store["open_status"] = f"يفتح الساعة {open_hour:02d}:{open_minute:02d}"
+                    store["next_open_time"] = f"{open_hour:02d}:{open_minute:02d}"
+                else:
+                    store["is_open"] = False
+                    store["open_status"] = "مغلق الآن"
+                    store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+    
+    # ترتيب: المتاجر المفتوحة أولاً
+    stores.sort(key=lambda x: (0 if x.get("is_open", True) else 1))
     
     return stores
+
+def _get_next_open_time(working_hours: dict, current_day: int) -> str:
+    """حساب وقت الفتح التالي"""
+    day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    
+    for i in range(1, 8):
+        next_day = (current_day + i) % 7
+        next_day_name = day_names[next_day]
+        day_hours = working_hours.get(next_day_name, {})
+        
+        if day_hours and day_hours.get("is_open", True):
+            open_hour = day_hours.get("open_hour", 8)
+            open_minute = day_hours.get("open_minute", 0)
+            day_arabic = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
+            if i == 1:
+                return f"غداً {open_hour:02d}:{open_minute:02d}"
+            else:
+                return f"{day_arabic[next_day]} {open_hour:02d}:{open_minute:02d}"
+    
+    return None
 
 @router.get("/stores/{store_id}")
 async def get_food_store(store_id: str):
