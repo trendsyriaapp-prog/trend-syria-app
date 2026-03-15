@@ -534,13 +534,26 @@ const DeliveryDashboard = () => {
 
   const handleTakeFoodOrder = async (order) => {
     try {
-      await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
-      toast({
-        title: "تم بنجاح",
-        description: "تم قبول طلب التوصيل"
-      });
-      // إزالة الطلب من القائمة المحلية فوراً بعد النجاح
-      setAvailableFoodOrders(prev => prev.filter(o => o.id !== order.id));
+      // التحقق من نوع الطلب (عادي أم تجميعي)
+      if (order.is_batch && order.batch_info?.batch_id) {
+        // قبول جميع طلبات الدفعة
+        await axios.post(`${API}/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`);
+        toast({
+          title: "تم بنجاح",
+          description: `تم قبول الطلب التجميعي (${order.batch_info.stores?.length || 0} متاجر)`
+        });
+        // إزالة جميع طلبات الدفعة من القائمة
+        setAvailableFoodOrders(prev => prev.filter(o => o.batch_info?.batch_id !== order.batch_info.batch_id));
+      } else {
+        // طلب عادي
+        await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
+        toast({
+          title: "تم بنجاح",
+          description: "تم قبول طلب التوصيل"
+        });
+        // إزالة الطلب من القائمة المحلية فوراً بعد النجاح
+        setAvailableFoodOrders(prev => prev.filter(o => o.id !== order.id));
+      }
       fetchOrders();
     } catch (error) {
       // عند الفشل، لا نغير شيء - الطلب يبقى كما هو

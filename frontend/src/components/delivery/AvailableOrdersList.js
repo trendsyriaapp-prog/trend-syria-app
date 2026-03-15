@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock, Star } from 'lucide-react';
+import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock, Star, Layers } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import { 
   getCurrentLocation, 
@@ -132,25 +132,83 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`rounded-2xl border overflow-hidden ${
-                  isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm'
+                  order.is_batch 
+                    ? (isDark ? 'bg-gradient-to-br from-[#1a1a2e] to-[#1a1a1a] border-purple-500/50 ring-1 ring-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-white border-purple-300 shadow-purple-100 shadow-lg')
+                    : (isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm')
                 }`}
               >
                 <div className={`flex items-center justify-between px-4 py-3 border-b ${
-                  isDark ? 'bg-[#252525] border-[#333]' : 'bg-gray-50 border-gray-200'
+                  order.is_batch 
+                    ? (isDark ? 'bg-purple-900/30 border-purple-500/30' : 'bg-purple-100 border-purple-200')
+                    : (isDark ? 'bg-[#252525] border-[#333]' : 'bg-gray-50 border-gray-200')
                 }`}>
                   <div className="flex items-center gap-2">
-                    <UtensilsCrossed size={14} className={isDark ? 'text-green-400' : 'text-green-600'} />
-                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلب طعام</span>
+                    {order.is_batch ? (
+                      <>
+                        <div className="relative">
+                          <Layers size={16} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                            {order.batch_info?.stores?.length || '?'}
+                          </span>
+                        </div>
+                        <span className={`text-sm font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                          طلب تجميعي
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          isDark ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50' : 'bg-purple-200 text-purple-700'
+                        }`}>
+                          {order.batch_info?.stores?.length || 0} متاجر
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <UtensilsCrossed size={14} className={isDark ? 'text-green-400' : 'text-green-600'} />
+                        <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>طلب طعام</span>
+                      </>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
-                    }`}>
-                      {order.store_type === 'restaurant' ? 'مطعم' : 
-                       order.store_type === 'grocery' ? 'مواد غذائية' : 'خضروات'}
-                    </span>
+                    {!order.is_batch && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {order.store_type === 'restaurant' ? 'مطعم' : 
+                         order.store_type === 'grocery' ? 'مواد غذائية' : 'خضروات'}
+                      </span>
+                    )}
                   </div>
                 </div>
+                
+                {/* عرض معلومات الطلب التجميعي */}
+                {order.is_batch && order.batch_info && (
+                  <div className={`px-4 py-3 border-b ${isDark ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                    <p className={`text-xs mb-2 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
+                      📍 نقاط الاستلام:
+                    </p>
+                    <div className="space-y-2">
+                      {order.batch_info.stores?.map((store, idx) => (
+                        <div key={idx} className={`flex items-center justify-between text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                              isDark ? 'bg-purple-500 text-white' : 'bg-purple-500 text-white'
+                            }`}>{idx + 1}</span>
+                            <span>{store.store_name}</span>
+                          </div>
+                          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {formatPrice(store.subtotal || 0)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={`mt-2 pt-2 border-t flex justify-between items-center ${isDark ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                      <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>المجموع الكلي:</span>
+                      <span className={`font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                        {formatPrice(order.batch_info.total_amount || order.total)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-4">
                   {/* رقم الطلب والسعر ورسوم التوصيل */}
                   <div className="flex items-center justify-between mb-3">
@@ -270,9 +328,15 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   <button
                     onClick={() => onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
                     disabled={!isWorkingHours()}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full py-3 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                      order.is_batch 
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                        : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                    }`}
                   >
-                    {isWorkingHours() ? 'قبول طلب التوصيل' : 'خارج أوقات العمل'}
+                    {!isWorkingHours() ? 'خارج أوقات العمل' : 
+                     order.is_batch ? `قبول الطلب التجميعي (${order.batch_info?.stores?.length || 0} متاجر)` : 
+                     'قبول طلب التوصيل'}
                   </button>
                 </div>
               </motion.div>

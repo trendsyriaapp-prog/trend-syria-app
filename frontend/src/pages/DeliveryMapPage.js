@@ -107,7 +107,14 @@ const DeliveryMapPage = () => {
   // قبول طلب طعام
   const handleTakeFoodOrder = async (order) => {
     try {
-      await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
+      // التحقق من نوع الطلب (عادي أم تجميعي)
+      if (order.is_batch && order.batch_info?.batch_id) {
+        // قبول جميع طلبات الدفعة
+        await axios.post(`${API}/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`);
+      } else {
+        // طلب عادي
+        await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
+      }
       // إعادة جلب البيانات
       const [availableFoodRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
