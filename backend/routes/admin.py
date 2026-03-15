@@ -256,8 +256,11 @@ DEFAULT_CATEGORY_COMMISSIONS = {
 # عمولات متاجر الطعام
 DEFAULT_FOOD_COMMISSIONS = {
     "restaurants": 0.20,  # مطاعم
-    "groceries": 0.20,    # مواد غذائية
-    "vegetables": 0.20,   # خضروات وفواكه
+    "fast_food": 0.20,    # وجبات سريعة
+    "market": 0.15,       # ماركت
+    "vegetables": 0.12,   # خضروات وفواكه
+    "sweets": 0.18,       # حلويات
+    "groceries": 0.15,    # مواد غذائية
     "default": 0.20,
 }
 

@@ -390,6 +390,43 @@ async def get_my_store(user: dict = Depends(get_current_user)):
     
     return {"store": store, "products": products}
 
+
+@router.get("/my-store/commission")
+async def get_my_store_commission(user: dict = Depends(get_current_user)):
+    """جلب نسبة العمولة لمتجر البائع"""
+    store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
+    if not store:
+        raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
+    
+    store_type = store.get("store_type", "restaurants")
+    
+    # جلب نسبة العمولة من قاعدة البيانات
+    from routes.admin import get_food_commission_rates_from_db
+    commission_rates = await get_food_commission_rates_from_db()
+    commission_rate = commission_rates.get(store_type, commission_rates.get("default", 0.20))
+    
+    # حساب إجمالي العمولات المدفوعة
+    orders = await db.food_orders.find(
+        {"store_id": store["id"], "status": "delivered"},
+        {"platform_commission": 1, "seller_earning": 1, "subtotal": 1}
+    ).to_list(None)
+    
+    total_sales = sum(o.get("subtotal", 0) for o in orders)
+    total_commission = sum(o.get("platform_commission", 0) for o in orders)
+    total_earnings = sum(o.get("seller_earning", 0) for o in orders)
+    
+    return {
+        "store_type": store_type,
+        "store_type_name": FOOD_STORE_TYPES.get(store_type, store_type),
+        "commission_rate": commission_rate,
+        "commission_percentage": f"{int(commission_rate * 100)}%",
+        "total_sales": total_sales,
+        "total_commission_paid": total_commission,
+        "total_earnings": total_earnings,
+        "orders_count": len(orders),
+        "message": f"نسبة عمولة المنصة هي {int(commission_rate * 100)}% من قيمة كل طلب"
+    }
+
 @router.put("/my-store")
 async def update_my_store(update_data: dict, user: dict = Depends(get_current_user)):
     """تحديث معلومات متجر المستخدم"""

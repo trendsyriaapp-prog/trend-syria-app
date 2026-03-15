@@ -24,6 +24,7 @@ const FoodStoreDashboard = () => {
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
+  const [commissionInfo, setCommissionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -98,6 +99,16 @@ const FoodStoreDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOffers(offersRes.data || []);
+      
+      // جلب معلومات العمولة
+      try {
+        const commissionRes = await axios.get(`${API}/food/my-store/commission`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCommissionInfo(commissionRes.data);
+      } catch (e) {
+        console.log('Commission info not available');
+      }
     } catch (error) {
       if (error.response?.status === 404) {
         // No store found
@@ -327,12 +338,46 @@ const FoodStoreDashboard = () => {
                       : 'غير مفعل'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">الهاتف</span>
-                  <span className="text-gray-900">{store.phone}</span>
-                </div>
               </div>
             </div>
+
+            {/* بطاقة العمولة */}
+            {commissionInfo && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                    <DollarSign size={16} className="text-white" />
+                  </div>
+                  <h3 className="font-bold text-amber-800">عمولة المنصة</h3>
+                </div>
+                
+                <div className="bg-white/60 rounded-lg p-3 mb-3">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-amber-600">{commissionInfo.commission_percentage}</p>
+                    <p className="text-sm text-amber-700">نسبة العمولة من كل طلب</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="bg-white/40 rounded-lg p-2">
+                    <p className="font-bold text-gray-800">{commissionInfo.orders_count}</p>
+                    <p className="text-xs text-gray-600">طلب مكتمل</p>
+                  </div>
+                  <div className="bg-white/40 rounded-lg p-2">
+                    <p className="font-bold text-red-600">{commissionInfo.total_commission_paid?.toLocaleString() || 0}</p>
+                    <p className="text-xs text-gray-600">عمولات مدفوعة</p>
+                  </div>
+                  <div className="bg-white/40 rounded-lg p-2">
+                    <p className="font-bold text-green-600">{commissionInfo.total_earnings?.toLocaleString() || 0}</p>
+                    <p className="text-xs text-gray-600">صافي أرباحك</p>
+                  </div>
+                </div>
+                
+                <p className="mt-3 text-xs text-amber-700 text-center">
+                  💡 مثال: طلب بقيمة 100,000 ل.س = {(100000 * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س لك
+                </p>
+              </div>
+            )}
           </div>
         )}
 

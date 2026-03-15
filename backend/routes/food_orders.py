@@ -1911,8 +1911,31 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
     base_earning = 5000  # ربح أساسي ثابت
     driver_earning = base_earning + delivery_fee
     
-    # حساب أرباح البائع (subtotal - خصومات)
-    seller_earning = order.get("subtotal", 0) - order.get("offer_discount", 0) - order.get("flash_discount", 0)
+    # جلب المتجر لحساب العمولة
+    store = await db.food_stores.find_one({"id": order.get("store_id")})
+    store_type = store.get("store_type", "restaurants") if store else "restaurants"
+    
+    # جلب نسبة العمولة من قاعدة البيانات
+    from routes.admin import get_food_commission_rates_from_db
+    commission_rates = await get_food_commission_rates_from_db()
+    commission_rate = commission_rates.get(store_type, commission_rates.get("default", 0.20))
+    
+    # حساب أرباح البائع (subtotal - خصومات - عمولة المنصة)
+    subtotal = order.get("subtotal", 0) - order.get("offer_discount", 0) - order.get("flash_discount", 0)
+    platform_commission = subtotal * commission_rate
+    seller_earning = subtotal - platform_commission
+    
+    # تحديث الطلب بمعلومات العمولة
+    await db.food_orders.update_one(
+        {"id": order["id"]},
+        {
+            "$set": {
+                "platform_commission": platform_commission,
+                "commission_rate": commission_rate,
+                "seller_earning": seller_earning
+            }
+        }
+    )
     
     # استخدام نظام تعليق الأرباح
     try:
@@ -1930,8 +1953,7 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
                 description=f"أجرة توصيل طلب #{order['order_number']}"
             )
             
-            # إضافة أرباح البائع (معلقة)
-            store = await db.food_stores.find_one({"id": order.get("store_id")})
+            # إضافة أرباح البائع (معلقة) - بعد خصم العمولة
             if store and store.get("owner_id") and seller_earning > 0:
                 await add_held_earnings(
                     user_id=store["owner_id"],
@@ -1939,19 +1961,17 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
                     amount=seller_earning,
                     order_id=order["id"],
                     order_type="food",
-                    description=f"أرباح طلب #{order['order_number']}"
+                    description=f"أرباح طلب #{order['order_number']} (بعد عمولة {int(commission_rate*100)}%)"
                 )
         else:
             # إضافة مباشرة بدون تعليق
             await add_earnings_directly(driver, driver_earning, order, "delivery")
-            store = await db.food_stores.find_one({"id": order.get("store_id")})
             if store and store.get("owner_id") and seller_earning > 0:
                 await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
     except Exception as e:
         print(f"Error using hold system, falling back to direct: {e}")
         # Fallback للإضافة المباشرة
         await add_earnings_directly(driver, driver_earning, order, "delivery")
-        store = await db.food_stores.find_one({"id": order.get("store_id")})
         if store and store.get("owner_id") and seller_earning > 0:
             await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
     
