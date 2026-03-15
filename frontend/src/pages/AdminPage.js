@@ -47,7 +47,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { toast } = useToast();
 
   // State
@@ -381,6 +381,7 @@ const AdminDashboardPage = () => {
                 user={user}
                 onSaveRates={handleSaveRates}
                 toast={toast}
+                token={token}
               />
             )}
             {activeTab === 'notifications' && (

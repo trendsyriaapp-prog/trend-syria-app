@@ -1,11 +1,25 @@
 // /app/frontend/src/components/admin/CommissionsTab.js
 // مكون إدارة العمولات
 
-import { useState } from 'react';
-import { Percent, Edit2, Trash2, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Percent, Edit2, Trash2, Plus, Store, Utensils, Save, X } from 'lucide-react';
+import axios from 'axios';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
+
+// أسماء أنواع المتاجر بالعربي
+const FOOD_STORE_TYPE_NAMES = {
+  restaurants: 'مطاعم',
+  fast_food: 'وجبات سريعة',
+  market: 'ماركت',
+  vegetables: 'خضار وفواكه',
+  sweets: 'حلويات',
+  groceries: 'مواد غذائية',
+  default: 'افتراضي'
 };
 
 const CommissionsTab = ({ 
@@ -13,13 +27,69 @@ const CommissionsTab = ({
   commissionRates, 
   user,
   onSaveRates,
-  toast
+  toast,
+  token
 }) => {
   const [editingRates, setEditingRates] = useState(false);
   const [editedRates, setEditedRates] = useState({});
   const [newCategory, setNewCategory] = useState({ name: '', rate: '' });
   const [editingCategory, setEditingCategory] = useState(null);
   const [tempRate, setTempRate] = useState('');
+  
+  // عمولات الطعام
+  const [foodCommissions, setFoodCommissions] = useState(null);
+  const [editingFoodRate, setEditingFoodRate] = useState(null);
+  const [tempFoodRate, setTempFoodRate] = useState('');
+  const [savingFood, setSavingFood] = useState(false);
+
+  // جلب عمولات الطعام
+  useEffect(() => {
+    if (token) {
+      fetchFoodCommissions();
+    }
+  }, [token]);
+
+  const fetchFoodCommissions = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/food/commissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFoodCommissions(res.data.commissions);
+    } catch (error) {
+      console.error('Error fetching food commissions:', error);
+    }
+  };
+
+  const handleSaveFoodRate = async (storeType) => {
+    if (!tempFoodRate) return;
+    
+    setSavingFood(true);
+    try {
+      const updatedCommissions = { ...foodCommissions };
+      updatedCommissions[storeType] = parseFloat(tempFoodRate) / 100;
+      
+      await axios.put(`${API}/admin/food/commissions`, updatedCommissions, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setFoodCommissions(updatedCommissions);
+      setEditingFoodRate(null);
+      setTempFoodRate('');
+      
+      toast({
+        title: "تم الحفظ ✅",
+        description: `تم تحديث عمولة ${FOOD_STORE_TYPE_NAMES[storeType]} إلى ${tempFoodRate}%`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل حفظ العمولة",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingFood(false);
+    }
+  };
 
   const handleStartEditRates = () => {
     if (commissionRates) {
@@ -116,6 +186,94 @@ const CommissionsTab = ({
 
   return (
     <section>
+      {/* ===== قسم عمولات الطعام ===== */}
+      {foodCommissions && (
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+              <Utensils size={16} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-orange-800">عمولات قسم الطعام</h3>
+              <p className="text-xs text-orange-600">نسب العمولة لمتاجر الطعام والمطاعم</p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            {Object.entries(foodCommissions).map(([storeType, rate]) => (
+              <div 
+                key={storeType}
+                className="flex items-center justify-between bg-white rounded-lg p-3 border border-orange-100"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">
+                    {storeType === 'restaurants' && '🍽️'}
+                    {storeType === 'fast_food' && '🍔'}
+                    {storeType === 'market' && '🛒'}
+                    {storeType === 'vegetables' && '🥬'}
+                    {storeType === 'sweets' && '🍰'}
+                    {storeType === 'groceries' && '🥫'}
+                    {storeType === 'default' && '📦'}
+                  </span>
+                  <span className="font-medium text-gray-800 text-sm">
+                    {FOOD_STORE_TYPE_NAMES[storeType] || storeType}
+                  </span>
+                </div>
+                
+                {editingFoodRate === storeType ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={tempFoodRate}
+                      onChange={(e) => setTempFoodRate(e.target.value)}
+                      className="w-16 border border-orange-300 rounded px-2 py-1 text-sm text-center"
+                      min="0"
+                      max="100"
+                      autoFocus
+                    />
+                    <span className="text-sm text-gray-500">%</span>
+                    <button
+                      onClick={() => handleSaveFoodRate(storeType)}
+                      disabled={savingFood}
+                      className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      <Save size={14} />
+                    </button>
+                    <button
+                      onClick={() => { setEditingFoodRate(null); setTempFoodRate(''); }}
+                      className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-orange-600 text-lg">
+                      {Math.round(rate * 100)}%
+                    </span>
+                    {user.user_type === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setEditingFoodRate(storeType);
+                          setTempFoodRate(Math.round(rate * 100).toString());
+                        }}
+                        className="p-1 text-gray-400 hover:text-orange-500"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <p className="mt-3 text-xs text-orange-700 text-center bg-orange-100 rounded-lg p-2">
+            💡 التغييرات تنعكس مباشرة على البائعين وتُحسب عند تسليم كل طلب
+          </p>
+        </div>
+      )}
+
       {/* ملخص العمولات */}
       {commissionsReport && (
         <div className="grid grid-cols-2 gap-2 mb-4">
