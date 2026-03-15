@@ -11,6 +11,26 @@ from core.database import db, get_current_user
 
 router = APIRouter(prefix="/food/orders", tags=["Food Orders"])
 
+# ============== تصنيفات أنواع المتاجر للتوصيل ==============
+# ساخن/طازج: يحتاج توصيل سريع (حد أقصى 2 طلبات)
+HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
+# بارد/جاف: يتحمل الانتظار (حد أقصى 5 طلبات)
+COLD_DRY_STORE_TYPES = ["market", "vegetables"]
+
+# الحدود الافتراضية
+DEFAULT_HOT_FRESH_LIMIT = 2  # طلبات ساخنة/طازجة
+DEFAULT_COLD_DRY_LIMIT = 5   # طلبات باردة/جافة
+
+def get_store_delivery_category(store_type: str) -> str:
+    """تحديد تصنيف التوصيل للمتجر (hot_fresh أو cold_dry)"""
+    if store_type in HOT_FRESH_STORE_TYPES:
+        return "hot_fresh"
+    elif store_type in COLD_DRY_STORE_TYPES:
+        return "cold_dry"
+    else:
+        # افتراضياً نعامله كساخن/طازج للأمان
+        return "hot_fresh"
+
 # حالات الطلب
 ORDER_STATUSES = {
     "pending": "بانتظار التأكيد",
@@ -1524,7 +1544,7 @@ async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_curren
 
 @router.post("/delivery/{order_id}/accept")
 async def accept_food_order(order_id: str, user: dict = Depends(get_current_user)):
-    """قبول طلب توصيل مع التحقق من الحد الأقصى والمسافة والأولوية الذكية"""
+    """قبول طلب توصيل مع التحقق من الحد الأقصى حسب نوع المتجر (ساخن/طازج أو بارد/جاف)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1545,10 +1565,10 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     # جلب إعدادات المنصة
     settings = await db.platform_settings.find_one({"id": "main"})
     
-    # جلب إعدادات الحدود الذكية
-    smart_limits = settings.get("smart_order_limits", {}) if settings else {}
-    max_orders_different = smart_limits.get("max_orders_different_stores", 5)
-    max_orders_same = smart_limits.get("max_orders_same_store", 7)
+    # جلب حدود التوصيل الجديدة (حسب نوع المتجر)
+    delivery_limits = settings.get("food_delivery_limits", {}) if settings else {}
+    hot_fresh_limit = delivery_limits.get("hot_fresh_limit", DEFAULT_HOT_FRESH_LIMIT)
+    cold_dry_limit = delivery_limits.get("cold_dry_limit", DEFAULT_COLD_DRY_LIMIT)
     max_distance_km = settings.get("food_orders_max_distance_km", 10) if settings else 10
     
     # البحث عن الطلب الجديد أولاً
@@ -1560,7 +1580,10 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير متاح")
     
-    new_restaurant_id = order.get("restaurant_id") or order.get("store_id")
+    # جلب معلومات المتجر لمعرفة نوعه
+    store = await db.food_stores.find_one({"id": order.get("store_id")})
+    new_store_type = store.get("store_type", "restaurants") if store else "restaurants"
+    new_store_category = get_store_delivery_category(new_store_type)
     
     # التحقق من عدد الطلبات الحالية للسائق
     current_orders = await db.food_orders.find({
@@ -1568,50 +1591,47 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
         "status": "out_for_delivery"
     }).to_list(length=100)
     
-    current_count = len(current_orders)
+    # تصنيف الطلبات الحالية حسب نوع المتجر
+    hot_fresh_count = 0
+    cold_dry_count = 0
     
-    # حساب عدد الطلبات من نفس المطعم
-    same_restaurant_count = sum(
-        1 for o in current_orders 
-        if (o.get("restaurant_id") or o.get("store_id")) == new_restaurant_id
-    )
+    for o in current_orders:
+        o_store = await db.food_stores.find_one({"id": o.get("store_id")})
+        o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
+        o_category = get_store_delivery_category(o_store_type)
+        
+        if o_category == "hot_fresh":
+            hot_fresh_count += 1
+        else:
+            cold_dry_count += 1
     
-    # منطق الحدود الذكي
-    is_same_restaurant = same_restaurant_count > 0
-    
-    if is_same_restaurant:
-        # إذا كان من نفس المطعم، استخدم الحد الأعلى
-        if current_count >= max_orders_same:
+    # التحقق من الحدود حسب نوع الطلب الجديد
+    if new_store_category == "hot_fresh":
+        # طلب ساخن/طازج
+        if hot_fresh_count >= hot_fresh_limit:
             raise HTTPException(
                 status_code=400, 
-                detail=f"لقد وصلت للحد الأقصى ({max_orders_same} طلبات من نفس المطعم). يرجى إتمام الطلبات الحالية أولاً"
+                detail=f"🔥 لديك {hot_fresh_count} طلب ساخن/طازج (الحد الأقصى: {hot_fresh_limit}). أكمل التوصيلات الحالية أولاً لضمان وصول الطعام طازجاً."
             )
     else:
-        # إذا كان من مطعم مختلف، استخدم الحد العادي
-        # حساب عدد المطاعم المختلفة
-        unique_restaurants = set(
-            o.get("restaurant_id") or o.get("store_id") 
-            for o in current_orders
-        )
-        if len(unique_restaurants) >= max_orders_different:
+        # طلب بارد/جاف
+        if cold_dry_count >= cold_dry_limit:
             raise HTTPException(
                 status_code=400, 
-                detail=f"لقد وصلت للحد الأقصى ({max_orders_different} طلبات من مطاعم مختلفة). يرجى إتمام الطلبات الحالية أولاً"
+                detail=f"📦 لديك {cold_dry_count} طلب بارد/جاف (الحد الأقصى: {cold_dry_limit}). أكمل التوصيلات الحالية أولاً."
             )
     
-    # التحقق من المسافة إذا كان لديه طلبات سابقة (فقط للمطاعم المختلفة)
-    if len(current_orders) > 0 and not is_same_restaurant:
+    # التحقق من المسافة إذا كان لديه طلبات سابقة
+    if len(current_orders) > 0:
         first_order = current_orders[0]
-        # الحصول على إحداثيات الطلب الأول والطلب الجديد
         first_lat = first_order.get("latitude")
         first_lon = first_order.get("longitude")
         new_lat = order.get("latitude")
         new_lon = order.get("longitude")
         
         if first_lat and first_lon and new_lat and new_lon:
-            # حساب المسافة بين الطلبين (صيغة Haversine مبسطة)
             import math
-            R = 6371  # نصف قطر الأرض بالكيلومتر
+            R = 6371
             
             lat1, lon1 = math.radians(first_lat), math.radians(first_lon)
             lat2, lon2 = math.radians(new_lat), math.radians(new_lon)
@@ -1660,7 +1680,12 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "تم قبول الطلب", "is_same_restaurant": is_same_restaurant}
+    return {
+        "message": "تم قبول الطلب", 
+        "store_category": new_store_category,
+        "hot_fresh_count": hot_fresh_count + (1 if new_store_category == "hot_fresh" else 0),
+        "cold_dry_count": cold_dry_count + (1 if new_store_category == "cold_dry" else 0)
+    }
 
 # ============== التحقق من كود الاستلام ==============
 

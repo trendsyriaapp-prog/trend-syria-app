@@ -36,7 +36,10 @@ const DeliverySettingsTab = () => {
     },
     // إعدادات قبول الطلبات
     max_food_orders_per_driver: 3,
-    food_orders_max_distance_km: 2
+    food_orders_max_distance_km: 5,
+    // إعدادات حدود التوصيل الجديدة (ساخن/طازج vs بارد/جاف)
+    hot_fresh_limit: 2,
+    cold_dry_limit: 5
   });
 
   // إعدادات أجور التوصيل بالمسافة
@@ -135,7 +138,10 @@ const DeliverySettingsTab = () => {
         ...res.data,
         leaderboard_rewards: res.data.leaderboard_rewards || settings.leaderboard_rewards,
         max_food_orders_per_driver: res.data.max_food_orders_per_driver || 3,
-        food_orders_max_distance_km: res.data.food_orders_max_distance_km || 2
+        food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5,
+        // إعدادات حدود التوصيل الجديدة
+        hot_fresh_limit: res.data.food_delivery_limits?.hot_fresh_limit || 2,
+        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -381,6 +387,26 @@ const DeliverySettingsTab = () => {
       alert('تم حفظ إعدادات قبول الطلبات بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // حفظ إعدادات حدود توصيل الطعام الجديدة (ساخن/طازج vs بارد/جاف)
+  const handleSaveFoodDeliveryLimits = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/food-delivery-limits`, {
+        hot_fresh_limit: settings.hot_fresh_limit || 2,
+        cold_dry_limit: settings.cold_dry_limit || 5,
+        max_distance_km: settings.food_orders_max_distance_km || 5
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم حفظ إعدادات حدود التوصيل بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات');
     } finally {
       setSaving(false);
     }
@@ -1169,11 +1195,76 @@ const DeliverySettingsTab = () => {
               </p>
             </div>
 
+            {/* الحد الأقصى لطلبات الطعام الساخنة/الطازجة */}
+            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🔥</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">ساخن / طازج</h3>
+                  <p className="text-xs text-gray-500">مطاعم، مقاهي، مخابز، مشروبات، حلويات</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={settings.hot_fresh_limit || 2}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  hot_fresh_limit: parseInt(e.target.value) || 2
+                })}
+                className="w-full p-3 border-2 border-red-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={5}
+              />
+              <p className="text-center text-sm text-red-600 mt-2">
+                {settings.hot_fresh_limit || 2} طلبات كحد أقصى
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1 justify-center">
+                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🍔 وجبات</span>
+                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">☕ مقاهي</span>
+                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🥐 مخابز</span>
+                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🥤 مشروبات</span>
+                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🍰 حلويات</span>
+              </div>
+            </div>
+
+            {/* الحد الأقصى لطلبات الطعام الباردة/الجافة */}
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">📦</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">بارد / جاف</h3>
+                  <p className="text-xs text-gray-500">ماركت، خضار وفواكه</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={settings.cold_dry_limit || 5}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  cold_dry_limit: parseInt(e.target.value) || 5
+                })}
+                className="w-full p-3 border-2 border-emerald-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={10}
+              />
+              <p className="text-center text-sm text-emerald-600 mt-2">
+                {settings.cold_dry_limit || 5} طلبات كحد أقصى
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1 justify-center">
+                <span className="text-xs bg-emerald-100 px-2 py-0.5 rounded">🛒 ماركت</span>
+                <span className="text-xs bg-emerald-100 px-2 py-0.5 rounded">🥬 خضار</span>
+              </div>
+            </div>
+
             {/* الحد الأقصى لطلبات المنتجات */}
             <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">📦</span>
+                  <span className="text-white text-lg">🛍️</span>
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800">طلبات المنتجات</h3>
@@ -1212,10 +1303,10 @@ const DeliverySettingsTab = () => {
                 value={food_orders_max_distance_km}
                 onChange={(e) => setSettings({
                   ...settings,
-                  food_orders_max_distance_km: parseFloat(e.target.value) || 1
+                  food_orders_max_distance_km: parseFloat(e.target.value) || 5
                 })}
                 className="w-full p-3 border-2 border-blue-300 rounded-lg text-center text-2xl font-bold"
-                min={0.5}
+                min={1}
                 max={20}
                 step={0.5}
               />
@@ -1228,14 +1319,24 @@ const DeliverySettingsTab = () => {
           {/* شرح القواعد */}
           <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <h4 className="font-bold text-gray-700 mb-2">📋 كيف تعمل هذه القواعد:</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• <strong>الطعام:</strong> السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات</strong> من نفس المطعم أو مطاعم قريبة (عملاء ضمن {food_orders_max_distance_km} كم)</li>
-              <li>• <strong>المنتجات:</strong> السائق يستطيع قبول حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> من أي متجر (التوصيل نفس اليوم)</li>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-red-500">🔥</span>
+                <span><strong>ساخن/طازج:</strong> السائق يستطيع قبول <strong>{settings.hot_fresh_limit || 2} طلبات</strong> (مطاعم، مقاهي، مخابز، مشروبات، حلويات) - لضمان وصول الطعام ساخناً</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500">📦</span>
+                <span><strong>بارد/جاف:</strong> السائق يستطيع قبول <strong>{settings.cold_dry_limit || 5} طلبات</strong> (ماركت، خضار) - هذه المنتجات تتحمل الانتظار</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500">🛍️</span>
+                <span><strong>المنتجات:</strong> السائق يستطيع قبول <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> (التوصيل نفس اليوم)</span>
+              </li>
             </ul>
           </div>
 
           <button
-            onClick={() => { handleSaveOrderLimits(); handleSaveWaitCompensationSettings(); }}
+            onClick={() => { handleSaveFoodDeliveryLimits(); handleSaveWaitCompensationSettings(); }}
             disabled={saving}
             className="mt-4 w-full bg-gradient-to-l from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >

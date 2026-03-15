@@ -683,3 +683,82 @@ async def update_order_limits(
         "max_food_orders_per_driver": limits.max_food_orders_per_driver,
         "food_orders_max_distance_km": limits.food_orders_max_distance_km
     }
+
+
+# ============== إعدادات حدود التوصيل الجديدة (ساخن/طازج vs بارد/جاف) ==============
+
+class FoodDeliveryLimits(BaseModel):
+    hot_fresh_limit: int = 2  # حد الطلبات الساخنة/الطازجة (مطاعم، مقاهي، مخابز، مشروبات، حلويات)
+    cold_dry_limit: int = 5   # حد الطلبات الباردة/الجافة (ماركت، خضار)
+    max_distance_km: float = 5.0  # المسافة القصوى بين الطلبات
+
+@router.get("/food-delivery-limits")
+async def get_food_delivery_limits(user: dict = Depends(get_current_user)):
+    """جلب إعدادات حدود توصيل الطعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"})
+    limits = settings.get("food_delivery_limits", {}) if settings else {}
+    
+    return {
+        "hot_fresh_limit": limits.get("hot_fresh_limit", 2),
+        "cold_dry_limit": limits.get("cold_dry_limit", 5),
+        "max_distance_km": settings.get("food_orders_max_distance_km", 5.0) if settings else 5.0,
+        # معلومات التصنيفات
+        "hot_fresh_types": ["restaurants", "cafes", "bakery", "drinks", "sweets"],
+        "cold_dry_types": ["market", "vegetables"],
+        "hot_fresh_names": {
+            "restaurants": "وجبات سريعة 🍔",
+            "cafes": "مقاهي ☕",
+            "bakery": "مخابز 🥐",
+            "drinks": "مشروبات 🥤",
+            "sweets": "حلويات 🍰"
+        },
+        "cold_dry_names": {
+            "market": "ماركت 🛒",
+            "vegetables": "خضار وفواكه 🥬"
+        }
+    }
+
+@router.put("/food-delivery-limits")
+async def update_food_delivery_limits(
+    limits: FoodDeliveryLimits,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات حدود توصيل الطعام (ساخن/طازج vs بارد/جاف)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    if limits.hot_fresh_limit < 1 or limits.hot_fresh_limit > 5:
+        raise HTTPException(status_code=400, detail="حد الطلبات الساخنة يجب أن يكون بين 1 و 5")
+    
+    if limits.cold_dry_limit < 1 or limits.cold_dry_limit > 10:
+        raise HTTPException(status_code=400, detail="حد الطلبات الباردة يجب أن يكون بين 1 و 10")
+    
+    if limits.max_distance_km < 1 or limits.max_distance_km > 20:
+        raise HTTPException(status_code=400, detail="المسافة يجب أن تكون بين 1 و 20 كم")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "food_delivery_limits": {
+                    "hot_fresh_limit": limits.hot_fresh_limit,
+                    "cold_dry_limit": limits.cold_dry_limit
+                },
+                "food_orders_max_distance_km": limits.max_distance_km,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات حدود التوصيل بنجاح",
+        "hot_fresh_limit": limits.hot_fresh_limit,
+        "cold_dry_limit": limits.cold_dry_limit,
+        "max_distance_km": limits.max_distance_km
+    }

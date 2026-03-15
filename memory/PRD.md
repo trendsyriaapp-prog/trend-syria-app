@@ -469,6 +469,25 @@ All critical features are implemented and tested.
 
 ## What's Been Implemented - Latest
 
+### نظام تصنيف حدود توصيل الطعام (ساخن/طازج vs بارد/جاف) ✅ - 15 Dec 2025
+- **الميزة:** تصنيف أنواع المتاجر إلى فئتين بحدود مختلفة للتوصيل
+- **التصنيفات:**
+  - 🔥 **ساخن/طازج** (2 طلبات): مطاعم، مقاهي، مخابز، مشروبات، حلويات
+  - 📦 **بارد/جاف** (5 طلبات): ماركت، خضار وفواكه
+- **الهدف:** ضمان جودة الطعام الساخن مع السماح بكفاءة أعلى للمنتجات الباردة
+- **Backend:**
+  - `GET /api/settings/food-delivery-limits` - جلب الحدود والتصنيفات
+  - `PUT /api/settings/food-delivery-limits` - تحديث الحدود
+  - تعديل `accept_food_order` لاستخدام الحدود الجديدة
+- **Frontend:**
+  - لوحة الأدمن ← إعدادات التوصيل ← قسم جديد للحدود
+  - عرض التصنيفات بألوان مختلفة (أحمر للساخن، أخضر للبارد)
+- **الملفات:**
+  - `backend/routes/food_orders.py` - التصنيفات ومنطق الحدود
+  - `backend/routes/settings.py` - endpoints الإعدادات الجديدة
+  - `frontend/src/components/admin/DeliverySettingsTab.js` - واجهة الإعدادات
+- **Status:** IMPLEMENTED ✅ - APIs tested via curl
+
 ### نظام أولوية توصيل الطعام (Food Delivery Priority) ✅ - 15 Dec 2025
 - **الميزة:** منع السائق من تسليم طلبات المنتجات أثناء وجود طلب طعام نشط
 - **الهدف:** ضمان وصول الطعام طازجاً للعميل (الطعام لا يتحمل الانتظار)
