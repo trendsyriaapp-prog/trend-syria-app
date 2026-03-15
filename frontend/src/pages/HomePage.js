@@ -7,7 +7,8 @@ import {
   Home as HomeIcon, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
   Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight,
-  Pill, Car, MapPin, Watch
+  Pill, Car, MapPin, Watch, Gift, Sparkles, Laptop, Footprints,
+  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -21,7 +22,8 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, SprayCan,
-  ShoppingBasket, Apple, Pill, Car, Watch
+  ShoppingBasket, Apple, Pill, Car, Watch, Gift, Sparkles,
+  Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 };
 
 const HomePage = () => {

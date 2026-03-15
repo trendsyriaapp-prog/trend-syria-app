@@ -33,17 +33,30 @@ async def get_categories():
         return cached_categories
     
     categories_with_icons = [
+        # قسم المنتجات
         {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
+        {"id": "mobiles", "name": "موبايلات", "icon": "Smartphone", "type": "shopping"},
+        {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "Laptop", "type": "shopping"},
         {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
+        {"id": "shoes", "name": "أحذية", "icon": "Footprints", "type": "shopping"},
         {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
+        {"id": "perfumes", "name": "عطور", "icon": "Sparkles", "type": "shopping"},
         {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
+        {"id": "furniture", "name": "أثاث", "icon": "Sofa", "type": "shopping"},
+        {"id": "appliances", "name": "أجهزة منزلية", "icon": "Refrigerator", "type": "shopping"},
         {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
         {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
         {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
         {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+        {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
         {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
         {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
+        # قسم الطعام
         {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
+        {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
+        {"id": "sweets", "name": "حلويات", "icon": "Cake", "type": "food"},
+        {"id": "bakery", "name": "مخابز", "icon": "Croissant", "type": "food"},
+        {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
         {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
         {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
     ]

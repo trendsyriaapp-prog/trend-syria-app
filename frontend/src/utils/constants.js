@@ -1,14 +1,22 @@
 // App constants
 
 export const CATEGORIES = [
+  // قسم المنتجات
   { id: 'electronics', name: 'إلكترونيات' },
+  { id: 'mobiles', name: 'موبايلات' },
+  { id: 'computers', name: 'كمبيوتر ولابتوب' },
   { id: 'clothes', name: 'ملابس' },
+  { id: 'shoes', name: 'أحذية' },
   { id: 'accessories', name: 'إكسسوارات' },
+  { id: 'perfumes', name: 'عطور' },
   { id: 'home', name: 'المنزل' },
+  { id: 'furniture', name: 'أثاث' },
+  { id: 'appliances', name: 'أجهزة منزلية' },
   { id: 'beauty', name: 'تجميل' },
   { id: 'sports', name: 'رياضة' },
   { id: 'kids', name: 'أطفال' },
   { id: 'books', name: 'كتب' },
+  { id: 'gifts', name: 'هدايا' },
   { id: 'medicines', name: 'أدوية' },
   { id: 'cars', name: 'سيارات' },
 ];

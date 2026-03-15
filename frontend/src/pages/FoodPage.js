@@ -1,5 +1,5 @@
 // /app/frontend/src/pages/FoodPage.js
-// صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات
+// صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات، مقاهي، مخابز، مشروبات
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles, Cake,
-  Scale, Package, Utensils, IceCream
+  Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -63,6 +63,42 @@ const CATEGORY_CONFIG = {
     unit: 'قطعة',
     unitIcon: IceCream,
     emoji: '🍰'
+  },
+  cafes: {
+    name: 'مقاهي',
+    icon: Coffee,
+    color: 'bg-amber-600',
+    textColor: 'text-amber-600',
+    bgLight: 'bg-amber-50',
+    borderColor: 'border-amber-600',
+    gradient: 'from-amber-600 to-amber-700',
+    unit: 'كوب',
+    unitIcon: Coffee,
+    emoji: '☕'
+  },
+  bakery: {
+    name: 'مخابز',
+    icon: Croissant,
+    color: 'bg-yellow-600',
+    textColor: 'text-yellow-600',
+    bgLight: 'bg-yellow-50',
+    borderColor: 'border-yellow-600',
+    gradient: 'from-yellow-600 to-yellow-700',
+    unit: 'قطعة',
+    unitIcon: Croissant,
+    emoji: '🥐'
+  },
+  drinks: {
+    name: 'مشروبات',
+    icon: GlassWater,
+    color: 'bg-cyan-500',
+    textColor: 'text-cyan-500',
+    bgLight: 'bg-cyan-50',
+    borderColor: 'border-cyan-500',
+    gradient: 'from-cyan-500 to-cyan-600',
+    unit: 'كوب',
+    unitIcon: GlassWater,
+    emoji: '🥤'
   }
 };
 
@@ -497,6 +533,9 @@ const EmptyState = ({ category }) => {
     market: 'لا توجد متاجر ماركت حالياً',
     vegetables: 'لا توجد متاجر خضار وفواكه حالياً',
     sweets: 'لا توجد متاجر حلويات حالياً',
+    cafes: 'لا توجد مقاهي حالياً',
+    bakery: 'لا توجد مخابز حالياً',
+    drinks: 'لا توجد متاجر مشروبات حالياً',
     all: 'لا توجد متاجر أو منتجات متاحة حالياً'
   };
 
@@ -505,6 +544,9 @@ const EmptyState = ({ category }) => {
     market: 'انضم كمتجر ماركت',
     vegetables: 'انضم كمتجر خضار وفواكه',
     sweets: 'انضم كمتجر حلويات',
+    cafes: 'انضم كمقهى',
+    bakery: 'انضم كمخبز',
+    drinks: 'انضم كمتجر مشروبات',
     all: 'انضم كمتجر طعام'
   };
 
