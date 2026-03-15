@@ -349,11 +349,26 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     weather_surcharge_amount = weather_surcharge.get("amount", 0) if weather_surcharge_active else 0
     weather_surcharge_reason = weather_surcharge.get("reason", "") if weather_surcharge_active else ""
     
+    # التحقق من عرض الشحن المجاني الشامل
+    global_free_shipping = await db.settings.find_one({"key": "global_free_shipping"})
+    is_global_free_shipping = False
+    if global_free_shipping and global_free_shipping.get("is_active"):
+        applies_to = global_free_shipping.get("applies_to", "all")
+        if applies_to in ["all", "food"]:
+            # التحقق من تاريخ الانتهاء
+            end_date = global_free_shipping.get("end_date")
+            if end_date:
+                end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) <= end_datetime:
+                    is_global_free_shipping = True
+            else:
+                is_global_free_shipping = True
+    
     # حساب المجموع النهائي قبل التوصيل
     final_subtotal = subtotal - total_discount
     
-    # التحقق من الحد المجاني للتوصيل (لكل متجر على حدة)
-    is_free_delivery = food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold
+    # التحقق من الحد المجاني للتوصيل (لكل متجر على حدة) أو العرض الشامل
+    is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold)
     
     if order.delivery_fee is not None:
         delivery_fee = order.delivery_fee if not is_free_delivery else 0
@@ -564,14 +579,28 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
     # رسوم التوصيل الموحدة من إعدادات المنصة
     food_delivery_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
     
+    # التحقق من عرض الشحن المجاني الشامل
+    global_free_shipping = await db.settings.find_one({"key": "global_free_shipping"})
+    is_global_free_shipping = False
+    if global_free_shipping and global_free_shipping.get("is_active"):
+        applies_to = global_free_shipping.get("applies_to", "all")
+        if applies_to in ["all", "food"]:
+            end_date = global_free_shipping.get("end_date")
+            if end_date:
+                end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) <= end_datetime:
+                    is_global_free_shipping = True
+            else:
+                is_global_free_shipping = True
+    
     # حساب الإجمالي للتحقق من المحفظة
     for info in stores_info:
         store = info["store"]
         subtotal = info["subtotal"]
         
-        # رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة
-        if food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold:
-            delivery_fee = 0  # مجاني - العميل وصل للحد
+        # رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
+        if is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold):
+            delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
             delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
         
@@ -611,9 +640,9 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         items_list = info["items"]
         notes = info["notes"]
         
-        # حساب رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة
-        if food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold:
-            delivery_fee = 0  # مجاني - العميل وصل للحد
+        # حساب رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
+        if is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold):
+            delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
             delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
         

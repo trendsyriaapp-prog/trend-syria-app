@@ -196,7 +196,76 @@ async def update_food_free_delivery_threshold(
     }
 
 
-# ============== إعدادات أجور التوصيل بالمسافة ==============
+# ============== عرض الشحن المجاني الشامل ==============
+
+class GlobalFreeShippingPromo(BaseModel):
+    is_active: bool = False
+    applies_to: str = "all"  # "all", "food", "products"
+    end_date: Optional[str] = None  # ISO date string
+    message: Optional[str] = None
+
+@router.get("/global-free-shipping")
+async def get_global_free_shipping():
+    """جلب إعدادات عرض الشحن المجاني الشامل (للجميع)"""
+    settings = await db.settings.find_one({"key": "global_free_shipping"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "is_active": False,
+            "applies_to": "all",
+            "end_date": None,
+            "message": None
+        }
+    
+    # التحقق من انتهاء العرض
+    if settings.get("end_date"):
+        end_date = datetime.fromisoformat(settings["end_date"].replace("Z", "+00:00"))
+        if datetime.now(timezone.utc) > end_date:
+            # العرض انتهى، نعطله تلقائياً
+            await db.settings.update_one(
+                {"key": "global_free_shipping"},
+                {"$set": {"is_active": False}}
+            )
+            settings["is_active"] = False
+    
+    return {
+        "is_active": settings.get("is_active", False),
+        "applies_to": settings.get("applies_to", "all"),
+        "end_date": settings.get("end_date"),
+        "message": settings.get("message")
+    }
+
+@router.put("/global-free-shipping")
+async def update_global_free_shipping(
+    promo: GlobalFreeShippingPromo,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث عرض الشحن المجاني الشامل"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    update_data = {
+        "key": "global_free_shipping",
+        "is_active": promo.is_active,
+        "applies_to": promo.applies_to,
+        "end_date": promo.end_date,
+        "message": promo.message,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": user["id"]
+    }
+    
+    await db.settings.update_one(
+        {"key": "global_free_shipping"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    status = "تم تفعيل" if promo.is_active else "تم إلغاء"
+    
+    return {
+        "message": f"{status} عرض الشحن المجاني الشامل",
+        **update_data
+    }
 
 class DistanceDeliverySettings(BaseModel):
     base_fee: int = 500  # الرسوم الأساسية

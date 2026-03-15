@@ -128,6 +128,7 @@ const FoodPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [userCity, setUserCity] = useState(null);
   const [showCitySelector, setShowCitySelector] = useState(false);
+  const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
 
   // جلب مدينة المستخدم من العنوان الافتراضي
   useEffect(() => {
@@ -195,7 +196,7 @@ const FoodPage = () => {
     setLoading(true);
     try {
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
-      const [storesRes, productsRes, flashRes, bannersRes] = await Promise.all([
+      const [storesRes, productsRes, flashRes, bannersRes, promoRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity
@@ -205,18 +206,28 @@ const FoodPage = () => {
           city: userCity
         }}),
         axios.get(`${API}/food/flash-sales/active`),
-        axios.get(`${API}/food/banners`).catch(() => ({ data: [] }))
+        axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
+        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
       setFlashSales(flashRes.data || []);
       setFoodBanners(bannersRes.data || []);
+      
+      // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل الطعام
+      const promo = promoRes.data;
+      if (promo?.is_active && ['all', 'food'].includes(promo.applies_to)) {
+        setGlobalFreeShipping(promo);
+      } else {
+        setGlobalFreeShipping(null);
+      }
     } catch (error) {
       console.error('Error fetching food data:', error);
       setStores([]);
       setProducts([]);
       setFlashSales([]);
       setFoodBanners([]);
+      setGlobalFreeShipping(null);
     } finally {
       setLoading(false);
     }
@@ -320,6 +331,28 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
+            {/* 🎁 بانر الشحن المجاني الشامل */}
+            {globalFreeShipping && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Truck size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg">🎁 توصيل مجاني!</h3>
+                    <p className="text-white/90 text-sm">
+                      {globalFreeShipping.message || 'احتفالاً بالافتتاح - جميع طلبات الطعام بتوصيل مجاني!'}
+                    </p>
+                  </div>
+                  <Sparkles size={24} className="text-yellow-300 animate-pulse" />
+                </div>
+              </motion.div>
+            )}
+
             {/* Flash Sales Banner */}
             {flashSales.length > 0 && (
               <section className="mb-4">

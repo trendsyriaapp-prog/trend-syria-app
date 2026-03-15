@@ -6,12 +6,182 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, UtensilsCrossed, ShoppingBag, Truck, Wallet, 
-  Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare, MessageCircle, Phone
+  Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare, MessageCircle, Phone,
+  Gift, Calendar, AlertCircle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// 🎁 مكون عرض الشحن المجاني الشامل
+const GlobalFreeShippingPromo = () => {
+  const { toast } = useToast();
+  const [promo, setPromo] = useState({
+    is_active: false,
+    applies_to: 'all',
+    end_date: '',
+    message: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchPromo();
+  }, []);
+
+  const fetchPromo = async () => {
+    try {
+      const res = await axios.get(`${API}/api/settings/global-free-shipping`);
+      setPromo({
+        is_active: res.data.is_active || false,
+        applies_to: res.data.applies_to || 'all',
+        end_date: res.data.end_date ? res.data.end_date.split('T')[0] : '',
+        message: res.data.message || ''
+      });
+    } catch (error) {
+      console.error('Error fetching promo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/global-free-shipping`, {
+        is_active: promo.is_active,
+        applies_to: promo.applies_to,
+        end_date: promo.end_date ? new Date(promo.end_date).toISOString() : null,
+        message: promo.message || null
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: promo.is_active ? "🎉 تم تفعيل العرض" : "تم إلغاء العرض",
+        description: promo.is_active ? "الشحن المجاني الشامل مفعّل الآن" : "تم إيقاف عرض الشحن المجاني"
+      });
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className={`bg-gradient-to-r ${promo.is_active ? 'from-green-50 to-emerald-50 border-green-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 ${promo.is_active ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+            <Gift size={24} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">🎁 عرض الشحن المجاني الشامل</h3>
+            <p className="text-xs text-gray-500">تفعيل توصيل مجاني لجميع الطلبات (المنصة تتحمل التكلفة)</p>
+          </div>
+        </div>
+        
+        {/* Toggle */}
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={promo.is_active}
+            onChange={(e) => setPromo({ ...promo, is_active: e.target.checked })}
+            className="sr-only peer"
+            data-testid="toggle-global-free-shipping"
+          />
+          <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+        </label>
+      </div>
+
+      {promo.is_active && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="space-y-3 pt-3 border-t border-green-200"
+        >
+          {/* نوع العرض */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">يُطبق على:</label>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { value: 'all', label: '🌟 جميع الطلبات', color: 'green' },
+                { value: 'food', label: '🍕 طلبات الطعام فقط', color: 'orange' },
+                { value: 'products', label: '🛒 طلبات المنتجات فقط', color: 'blue' }
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPromo({ ...promo, applies_to: opt.value })}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    promo.applies_to === opt.value
+                      ? `bg-${opt.color}-500 text-white`
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* تاريخ الانتهاء */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              <Calendar size={14} className="inline ml-1" />
+              تاريخ انتهاء العرض (اختياري):
+            </label>
+            <input
+              type="date"
+              value={promo.end_date}
+              onChange={(e) => setPromo({ ...promo, end_date: e.target.value })}
+              min={new Date().toISOString().split('T')[0]}
+              className="border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
+            />
+            <p className="text-xs text-gray-400 mt-1">اتركه فارغاً لعرض بدون تاريخ انتهاء (يدوي)</p>
+          </div>
+
+          {/* رسالة للعملاء */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">رسالة للعملاء (تظهر في التطبيق):</label>
+            <input
+              type="text"
+              value={promo.message}
+              onChange={(e) => setPromo({ ...promo, message: e.target.value })}
+              placeholder="🎉 احتفالاً بالافتتاح - توصيل مجاني!"
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
+            />
+          </div>
+
+          {/* تحذير */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle size={18} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-yellow-800">
+              <strong>ملاحظة:</strong> السائقون سيحصلون على أجرة التوصيل كاملة. المنصة ستتحمل هذه التكلفة خلال فترة العرض.
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* زر الحفظ */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+          promo.is_active 
+            ? 'bg-green-500 hover:bg-green-600 text-white' 
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+        } disabled:opacity-50`}
+        data-testid="save-global-free-shipping"
+      >
+        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+        {promo.is_active ? 'تفعيل العرض' : 'حفظ الإعدادات'}
+      </button>
+    </div>
+  );
+};
 
 // قوالب الإشعارات الجاهزة لكل قسم
 const NOTIFICATION_TEMPLATES = {
@@ -371,6 +541,9 @@ const PlatformSettingsTab = () => {
           <strong>⚠️ ملاحظة:</strong> عند إيقاف أي قسم، سيختفي من التطبيق للمستخدمين ولكن البيانات ستبقى محفوظة. عند التفعيل، يمكنك إرسال إشعار للمستخدمين.
         </p>
       </div>
+
+      {/* 🎁 عرض الشحن المجاني الشامل */}
+      <GlobalFreeShippingPromo />
 
       {/* إعدادات الشحن المجاني */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
