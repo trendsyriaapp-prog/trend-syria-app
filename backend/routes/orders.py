@@ -130,8 +130,38 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     CANCEL_WINDOW_MINUTES = 60
     can_process_after = now + timedelta(minutes=CANCEL_WINDOW_MINUTES)
     
-    # حساب رسوم التوصيل (إذا تم إرسالها من الـ Frontend)
-    delivery_fee = order.delivery_fee if order.delivery_fee is not None else 0
+    # جلب إعدادات المنصة
+    platform_settings = await db.platform_settings.find_one({"id": "main"})
+    products_free_shipping_threshold = platform_settings.get("free_shipping_threshold", 150000) if platform_settings else 150000
+    
+    # التحقق من عرض الشحن المجاني الشامل
+    global_free_shipping = await db.settings.find_one({"key": "global_free_shipping"})
+    is_global_free_shipping = False
+    if global_free_shipping and global_free_shipping.get("is_active"):
+        applies_to = global_free_shipping.get("applies_to", "all")
+        if applies_to in ["all", "products"]:
+            # التحقق من تاريخ الانتهاء
+            end_date = global_free_shipping.get("end_date")
+            if end_date:
+                end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if now <= end_datetime:
+                    is_global_free_shipping = True
+            else:
+                is_global_free_shipping = True
+    
+    # حساب رسوم التوصيل
+    # التحقق من الشحن المجاني: عرض شامل أو وصول للحد الأدنى
+    is_free_shipping = is_global_free_shipping or (products_free_shipping_threshold > 0 and total >= products_free_shipping_threshold)
+    
+    if is_free_shipping:
+        delivery_fee = 0
+    elif order.delivery_fee is not None:
+        delivery_fee = order.delivery_fee
+    else:
+        # رسوم توصيل افتراضية من الإعدادات
+        delivery_fees = platform_settings.get("delivery_fees", {}) if platform_settings else {}
+        delivery_fee = delivery_fees.get("same_city", 5000)
+    
     delivery_distance_km = order.delivery_distance_km
     final_total = total + delivery_fee
     

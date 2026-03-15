@@ -2,11 +2,94 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2 } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Truck, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// 🎁 مكون بانر الشحن المجاني مع عداد تنازلي
+const FreeShippingBanner = ({ promo }) => {
+  const [timeLeft, setTimeLeft] = useState(null);
+  
+  useEffect(() => {
+    if (!promo.end_date) {
+      setTimeLeft(null);
+      return;
+    }
+    
+    const calculateTimeLeft = () => {
+      const endDate = new Date(promo.end_date);
+      const now = new Date();
+      const diff = endDate - now;
+      
+      if (diff <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+    
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    
+    return () => clearInterval(timer);
+  }, [promo.end_date]);
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Truck size={24} />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-lg">🎁 توصيل مجاني!</h3>
+          <p className="text-white/90 text-sm">
+            {promo.message || 'عرض خاص - توصيل مجاني لجميع طلبات المنتجات!'}
+          </p>
+        </div>
+        <Sparkles size={24} className="text-yellow-300 animate-pulse" />
+      </div>
+      
+      {/* العداد التنازلي */}
+      {timeLeft && (
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-white/80 text-xs mb-2 text-center">⏰ ينتهي العرض خلال:</p>
+          <div className="flex justify-center gap-2">
+            {timeLeft.days > 0 && (
+              <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
+                <div className="text-lg font-bold">{timeLeft.days}</div>
+                <div className="text-[10px] text-white/70">يوم</div>
+              </div>
+            )}
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
+              <div className="text-lg font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
+              <div className="text-[10px] text-white/70">ساعة</div>
+            </div>
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
+              <div className="text-lg font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+              <div className="text-[10px] text-white/70">دقيقة</div>
+            </div>
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
+              <div className="text-lg font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+              <div className="text-[10px] text-white/70">ثانية</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +104,7 @@ const ProductsPage = () => {
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
   
@@ -28,6 +112,24 @@ const ProductsPage = () => {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+
+  // جلب عرض الشحن المجاني الشامل
+  useEffect(() => {
+    const fetchPromo = async () => {
+      try {
+        const res = await axios.get(`${API}/settings/global-free-shipping`);
+        const promo = res.data;
+        if (promo?.is_active && ['all', 'products'].includes(promo.applies_to)) {
+          setGlobalFreeShipping(promo);
+        } else {
+          setGlobalFreeShipping(null);
+        }
+      } catch (error) {
+        console.error('Error fetching promo:', error);
+      }
+    };
+    fetchPromo();
+  }, []);
 
   // استعادة موقع التمرير بعد تحميل البيانات
   useEffect(() => {
@@ -241,6 +343,11 @@ const ProductsPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 py-4">
+        {/* 🎁 بانر الشحن المجاني الشامل */}
+        {globalFreeShipping && (
+          <FreeShippingBanner promo={globalFreeShipping} />
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
