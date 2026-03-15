@@ -11,6 +11,28 @@ from core.database import db, get_current_user, create_notification_for_user
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
 
+# ============== تصنيفات أنواع المتاجر للقفل ==============
+# الطلبات الساخنة/الطازجة فقط هي التي تقفل المنتجات
+HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
+
+async def count_hot_fresh_food_orders(driver_id: str) -> int:
+    """حساب عدد طلبات الطعام الساخنة/الطازجة النشطة للسائق"""
+    # جلب طلبات الطعام النشطة
+    active_food_orders = await db.food_orders.find({
+        "driver_id": driver_id,
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
+    }).to_list(length=100)
+    
+    hot_fresh_count = 0
+    for order in active_food_orders:
+        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        # إذا لم نجد المتجر أو لم نعرف نوعه، نفترض أنه ساخن/طازج للأمان
+        store_type = store.get("store_type", "restaurants") if store else "restaurants"
+        if store_type in HOT_FRESH_STORE_TYPES:
+            hot_fresh_count += 1
+    
+    return hot_fresh_count
+
 # ===== تتبع موقع السائق =====
 
 class LocationUpdate(BaseModel):
@@ -438,17 +460,15 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     # الحصول على مدينة السائق
     driver_city = user.get("city") or doc.get("city")
     
-    # التحقق من وجود طلبات طعام نشطة
-    active_food_orders = await db.food_orders.count_documents({
-        "driver_id": user["id"],
-        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
-    })
+    # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة فقط
+    # الطلبات الباردة/الجافة (ماركت، خضار) لا تمنع قبول طلبات المنتجات
+    hot_fresh_count = await count_hot_fresh_food_orders(user["id"])
     
-    has_active_food_orders = active_food_orders > 0
+    has_hot_fresh_orders = hot_fresh_count > 0
     
-    # جلب طلبات المتجر العادية - فقط إذا لم يكن لديه طلبات طعام نشطة
+    # جلب طلبات المتجر العادية - فقط إذا لم يكن لديه طلبات طعام ساخنة/طازجة
     shop_orders = []
-    if not has_active_food_orders:
+    if not has_hot_fresh_orders:
         shop_query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
         if driver_city:
             shop_query["shipping_city"] = driver_city
@@ -530,13 +550,11 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    # التحقق من وجود طلبات طعام نشطة
-    active_food_orders = await db.food_orders.count_documents({
-        "driver_id": user["id"],
-        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
-    })
+    # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة فقط
+    # الطلبات الباردة/الجافة (ماركت، خضار) لا تقفل المنتجات
+    hot_fresh_count = await count_hot_fresh_food_orders(user["id"])
     
-    is_locked = active_food_orders > 0
+    is_locked = hot_fresh_count > 0
     
     # جلب الطلبات النشطة
     orders = await db.orders.find(
@@ -558,10 +576,10 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
         # إضافة حالة القفل لكل طلب
         order["is_locked"] = is_locked
         if is_locked:
-            order["lock_reason"] = f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً"
+            order["lock_reason"] = f"🔥 لديك {hot_fresh_count} طلب طعام ساخن/طازج. أكمل توصيله أولاً لضمان وصوله طازجاً"
             # إخفاء المعلومات الحساسة
             order["buyer_phone"] = "مقفل"
-            order["delivery_address_details"] = "مقفل - أكمل طلبات الطعام أولاً"
+            order["delivery_address_details"] = "مقفل - أكمل طلبات الطعام الساخنة أولاً"
         
         # معلومات البائع
         seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
@@ -584,8 +602,8 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
         "max_orders": max_orders,
         "can_accept_more": len(orders) < max_orders and not is_locked,
         "is_locked": is_locked,
-        "active_food_orders": active_food_orders,
-        "lock_message": f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً ثم يمكنك تسليم المنتجات" if is_locked else None
+        "active_food_orders": hot_fresh_count,
+        "lock_message": f"🔥 لديك {hot_fresh_count} طلب طعام ساخن/طازج. أكمل توصيله أولاً ثم يمكنك تسليم المنتجات" if is_locked else None
     }
 
 @router.get("/available-food-orders")

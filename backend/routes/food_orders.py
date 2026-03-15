@@ -2214,15 +2214,26 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
     })
     
     # ===== إشعار فك القفل للسائق =====
-    # التحقق إذا كان هذا آخر طلب طعام نشط للسائق
-    remaining_food_orders = await db.food_orders.count_documents({
+    # التحقق إذا كان هذا آخر طلب طعام ساخن/طازج نشط للسائق
+    # الطلبات الباردة/الجافة لا تقفل المنتجات
+    
+    # جلب طلبات الطعام المتبقية
+    remaining_food_orders = await db.food_orders.find({
         "driver_id": driver["id"],
         "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]},
         "id": {"$ne": order["id"]}  # استثناء الطلب الحالي
-    })
+    }).to_list(length=100)
     
-    # إذا لم يعد هناك طلبات طعام أخرى
-    if remaining_food_orders == 0:
+    # حساب عدد الطلبات الساخنة/الطازجة المتبقية
+    remaining_hot_fresh = 0
+    for o in remaining_food_orders:
+        o_store = await db.food_stores.find_one({"id": o.get("store_id")})
+        o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
+        if o_store_type in HOT_FRESH_STORE_TYPES:
+            remaining_hot_fresh += 1
+    
+    # إذا لم يعد هناك طلبات طعام ساخنة/طازجة
+    if remaining_hot_fresh == 0:
         # التحقق من وجود طلبات منتجات معلقة
         pending_product_orders = await db.orders.count_documents({
             "delivery_driver_id": driver["id"],
@@ -2235,7 +2246,7 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
                 "id": str(uuid.uuid4()),
                 "user_id": driver["id"],
                 "title": "🔓 تم فك القفل!",
-                "message": f"أكملت طلبات الطعام! لديك {pending_product_orders} طلب منتجات بانتظار التسليم. يمكنك الآن إكمال توصيلها.",
+                "message": f"أكملت طلبات الطعام الساخنة! لديك {pending_product_orders} طلب منتجات بانتظار التسليم. يمكنك الآن إكمال توصيلها.",
                 "type": "lock_released",
                 "is_read": False,
                 "play_sound": True,

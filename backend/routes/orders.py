@@ -879,16 +879,27 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    # التحقق من وجود طلبات طعام نشطة
-    active_food_orders = await db.food_orders.count_documents({
+    # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة فقط
+    # الطلبات الباردة/الجافة (ماركت، خضار) لا تمنع تسليم المنتجات
+    HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
+    
+    active_food_orders = await db.food_orders.find({
         "driver_id": user["id"],
         "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
-    })
+    }).to_list(length=100)
     
-    if active_food_orders > 0:
+    # حساب عدد الطلبات الساخنة/الطازجة فقط
+    hot_fresh_count = 0
+    for order in active_food_orders:
+        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        store_type = store.get("store_type", "restaurants") if store else "restaurants"
+        if store_type in HOT_FRESH_STORE_TYPES:
+            hot_fresh_count += 1
+    
+    if hot_fresh_count > 0:
         raise HTTPException(
             status_code=403, 
-            detail=f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً ثم يمكنك تسليم المنتجات"
+            detail=f"🔥 لديك {hot_fresh_count} طلب طعام ساخن/طازج. أكمل توصيله أولاً لضمان وصوله طازجاً"
         )
     
     order = await db.orders.find_one({"id": order_id})
