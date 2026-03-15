@@ -553,7 +553,7 @@ async def update_my_store(update_data: dict, user: dict = Depends(get_current_us
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
     # الحقول المسموح بتعديلها
-    allowed_fields = ["name", "description", "phone", "delivery_time", "minimum_order", "free_delivery_minimum", "delivery_fee", "logo", "cover_image"]
+    allowed_fields = ["name", "description", "phone", "delivery_time", "minimum_order", "free_delivery_minimum", "delivery_fee", "logo", "cover_image", "working_hours"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     

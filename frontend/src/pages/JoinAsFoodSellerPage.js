@@ -75,6 +75,19 @@ const JoinAsFoodSellerPage = () => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [sameHoursAllDays, setSameHoursAllDays] = useState(true);
+  
+  // ساعات العمل الافتراضية
+  const defaultWorkingHours = {
+    sunday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+    monday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+    tuesday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+    wednesday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+    thursday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+    friday: { is_open: true, open_hour: 10, open_minute: 0, close_hour: 22, close_minute: 0 },
+    saturday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
+  };
+  
   const [formData, setFormData] = useState({
     store_type: '',
     name: '',
@@ -90,7 +103,34 @@ const JoinAsFoodSellerPage = () => {
     free_delivery_minimum: 0,
     latitude: null,
     longitude: null,
+    working_hours: defaultWorkingHours,
   });
+  
+  const DAY_NAMES = {
+    sunday: 'الأحد',
+    monday: 'الإثنين',
+    tuesday: 'الثلاثاء',
+    wednesday: 'الأربعاء',
+    thursday: 'الخميس',
+    friday: 'الجمعة',
+    saturday: 'السبت',
+  };
+  
+  const handleWorkingHoursChange = (day, field, value) => {
+    const newHours = { ...formData.working_hours };
+    newHours[day] = { ...newHours[day], [field]: value };
+    
+    // إذا كان "نفس الساعات لكل الأيام" مفعل، نطبق على كل الأيام
+    if (sameHoursAllDays && field !== 'is_open') {
+      Object.keys(newHours).forEach(d => {
+        if (d !== day) {
+          newHours[d] = { ...newHours[d], [field]: value };
+        }
+      });
+    }
+    
+    setFormData({ ...formData, working_hours: newHours });
+  };
 
   const handleTypeSelect = (typeId) => {
     // جلب الإعدادات الافتراضية حسب نوع المتجر
@@ -419,6 +459,101 @@ const JoinAsFoodSellerPage = () => {
               <p className="text-xs text-gray-500 -mt-2">
                 اترك "توصيل مجاني عند" على 0 لتعطيل التوصيل المجاني
               </p>
+
+              {/* ساعات العمل */}
+              <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <Clock size={18} className="text-[#FF6B00]" />
+                    ساعات العمل *
+                  </h3>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sameHoursAllDays}
+                      onChange={(e) => setSameHoursAllDays(e.target.checked)}
+                      className="w-4 h-4 text-[#FF6B00] rounded"
+                    />
+                    <span className="text-gray-600">نفس الساعات لكل الأيام</span>
+                  </label>
+                </div>
+                
+                {sameHoursAllDays ? (
+                  // عرض مبسط - ساعات موحدة
+                  <div className="bg-white rounded-lg p-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm text-gray-600">من</span>
+                      <select
+                        value={formData.working_hours.sunday.open_hour}
+                        onChange={(e) => handleWorkingHoursChange('sunday', 'open_hour', parseInt(e.target.value))}
+                        className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      >
+                        {[...Array(24)].map((_, i) => (
+                          <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
+                        ))}
+                      </select>
+                      <span className="text-sm text-gray-600">إلى</span>
+                      <select
+                        value={formData.working_hours.sunday.close_hour}
+                        onChange={(e) => handleWorkingHoursChange('sunday', 'close_hour', parseInt(e.target.value))}
+                        className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      >
+                        {[...Array(24)].map((_, i) => (
+                          <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      ✓ سيتم تطبيق هذه الساعات على جميع أيام الأسبوع
+                    </p>
+                  </div>
+                ) : (
+                  // عرض تفصيلي - كل يوم على حدة
+                  <div className="space-y-2">
+                    {Object.entries(DAY_NAMES).map(([day, arabicName]) => (
+                      <div key={day} className="bg-white rounded-lg p-3 flex items-center gap-3 flex-wrap">
+                        <label className="flex items-center gap-2 min-w-[80px]">
+                          <input
+                            type="checkbox"
+                            checked={formData.working_hours[day]?.is_open !== false}
+                            onChange={(e) => handleWorkingHoursChange(day, 'is_open', e.target.checked)}
+                            className="w-4 h-4 text-[#FF6B00] rounded"
+                          />
+                          <span className="text-sm font-medium">{arabicName}</span>
+                        </label>
+                        
+                        {formData.working_hours[day]?.is_open !== false && (
+                          <>
+                            <select
+                              value={formData.working_hours[day]?.open_hour || 8}
+                              onChange={(e) => handleWorkingHoursChange(day, 'open_hour', parseInt(e.target.value))}
+                              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                            >
+                              {[...Array(24)].map((_, i) => (
+                                <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
+                              ))}
+                            </select>
+                            <span className="text-gray-400">-</span>
+                            <select
+                              value={formData.working_hours[day]?.close_hour || 22}
+                              onChange={(e) => handleWorkingHoursChange(day, 'close_hour', parseInt(e.target.value))}
+                              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                            >
+                              {[...Array(24)].map((_, i) => (
+                                <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
+                              ))}
+                            </select>
+                          </>
+                        )}
+                        
+                        {formData.working_hours[day]?.is_open === false && (
+                          <span className="text-red-500 text-sm">مغلق</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Logo Upload */}
               <div>
