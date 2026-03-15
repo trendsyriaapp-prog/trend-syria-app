@@ -3,13 +3,13 @@
 export const CATEGORIES = [
   { id: 'electronics', name: 'إلكترونيات' },
   { id: 'fashion', name: 'أزياء' },
+  { id: 'clothes', name: 'ملابس' },
   { id: 'home', name: 'المنزل' },
   { id: 'beauty', name: 'تجميل' },
   { id: 'sports', name: 'رياضة' },
+  { id: 'kids', name: 'أطفال' },
   { id: 'books', name: 'كتب' },
-  { id: 'toys', name: 'ألعاب' },
-  { id: 'food', name: 'طعام' },
-  { id: 'health', name: 'صحة' },
+  { id: 'medicines', name: 'أدوية' },
   { id: 'cars', name: 'سيارات' },
 ];
 
