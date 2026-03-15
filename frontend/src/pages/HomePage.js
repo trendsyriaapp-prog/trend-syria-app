@@ -55,49 +55,35 @@ const FreeShippingBanner = ({ promo }) => {
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -5 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg"
+      className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-2.5 text-white shadow-md"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Truck size={24} />
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Truck size={16} />
         </div>
-        <div className="flex-1">
-          <h3 className="font-bold text-lg">🎁 توصيل مجاني!</h3>
-          <p className="text-white/90 text-sm">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-sm">🎁 توصيل مجاني!</h3>
+          <p className="text-white/90 text-xs truncate">
             {promo.message || 'عرض خاص - توصيل مجاني لجميع الطلبات!'}
           </p>
         </div>
-        <Sparkles size={24} className="text-yellow-300 animate-pulse" />
-      </div>
-      
-      {/* العداد التنازلي */}
-      {timeLeft && (
-        <div className="mt-3 pt-3 border-t border-white/20">
-          <p className="text-white/80 text-xs mb-2 text-center">⏰ ينتهي العرض خلال:</p>
-          <div className="flex justify-center gap-2">
+        {/* العداد التنازلي مدمج */}
+        {timeLeft && (
+          <div className="flex gap-1 flex-shrink-0">
             {timeLeft.days > 0 && (
-              <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
-                <div className="text-lg font-bold">{timeLeft.days}</div>
-                <div className="text-[10px] text-white/70">يوم</div>
+              <div className="bg-white/20 rounded px-1.5 py-0.5 text-center">
+                <div className="text-xs font-bold">{timeLeft.days}d</div>
               </div>
             )}
-            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
-              <div className="text-lg font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
-              <div className="text-[10px] text-white/70">ساعة</div>
-            </div>
-            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
-              <div className="text-lg font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
-              <div className="text-[10px] text-white/70">دقيقة</div>
-            </div>
-            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-center min-w-[50px]">
-              <div className="text-lg font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
-              <div className="text-[10px] text-white/70">ثانية</div>
+            <div className="bg-white/20 rounded px-1.5 py-0.5 text-center">
+              <div className="text-xs font-bold">{timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}</div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        <Sparkles size={16} className="text-yellow-300 animate-pulse flex-shrink-0" />
+      </div>
     </motion.div>
   );
 };
