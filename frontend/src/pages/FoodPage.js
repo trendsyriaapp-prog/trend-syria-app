@@ -1,5 +1,5 @@
 // /app/frontend/src/pages/FoodPage.js
-// صفحة توصيل الطعام - مطاعم ومواد غذائية وخضروات
+// صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -7,18 +7,72 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
-  Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles, Cake
+  Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles, Cake,
+  Scale, Package, Utensils, IceCream
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const foodCategories = [
-  { id: 'restaurants', name: 'وجبات سريعة', icon: UtensilsCrossed, color: 'bg-red-500' },
-  { id: 'market', name: 'ماركت', icon: ShoppingCart, color: 'bg-blue-500' },
-  { id: 'vegetables', name: 'خضار وفواكه', icon: Apple, color: 'bg-emerald-500' },
-  { id: 'sweets', name: 'حلويات', icon: Cake, color: 'bg-pink-500' },
-];
+// إعدادات كل قسم - ألوان وأيقونات ووحدات القياس
+const CATEGORY_CONFIG = {
+  restaurants: {
+    name: 'وجبات سريعة',
+    icon: UtensilsCrossed,
+    color: 'bg-red-500',
+    textColor: 'text-red-500',
+    bgLight: 'bg-red-50',
+    borderColor: 'border-red-500',
+    gradient: 'from-red-500 to-red-600',
+    unit: 'وجبة',
+    unitIcon: Utensils,
+    emoji: '🍔'
+  },
+  market: {
+    name: 'ماركت',
+    icon: ShoppingCart,
+    color: 'bg-blue-500',
+    textColor: 'text-blue-500',
+    bgLight: 'bg-blue-50',
+    borderColor: 'border-blue-500',
+    gradient: 'from-blue-500 to-blue-600',
+    unit: 'قطعة',
+    unitIcon: Package,
+    emoji: '🛒'
+  },
+  vegetables: {
+    name: 'خضار وفواكه',
+    icon: Apple,
+    color: 'bg-emerald-500',
+    textColor: 'text-emerald-500',
+    bgLight: 'bg-emerald-50',
+    borderColor: 'border-emerald-500',
+    gradient: 'from-emerald-500 to-emerald-600',
+    unit: 'كيلو',
+    unitIcon: Scale,
+    emoji: '🥬'
+  },
+  sweets: {
+    name: 'حلويات',
+    icon: Cake,
+    color: 'bg-pink-500',
+    textColor: 'text-pink-500',
+    bgLight: 'bg-pink-50',
+    borderColor: 'border-pink-500',
+    gradient: 'from-pink-500 to-pink-600',
+    unit: 'قطعة',
+    unitIcon: IceCream,
+    emoji: '🍰'
+  }
+};
+
+// للتوافق مع الكود القديم
+const foodCategories = Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
+  id,
+  name: config.name,
+  icon: config.icon,
+  color: config.color
+}));
 
 // قائمة المدن السورية
 const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'];
@@ -278,64 +332,75 @@ const FoodPage = () => {
   );
 };
 
-const StoreCard = ({ store }) => (
-  <Link to={`/food/store/${store.id}`}>
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-    >
-      <div className="h-24 bg-gradient-to-br from-orange-100 to-orange-50 relative overflow-hidden">
-        {store.cover_image ? (
-          <img src={store.cover_image} alt={store.name} className="w-full h-full object-cover" />
-        ) : (
-          <img 
-            src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" 
-            alt="" 
-            className="w-full h-full object-cover opacity-30"
-          />
-        )}
-        <div className="absolute bottom-2 right-2">
-          {store.logo ? (
-            <img src={store.logo} alt={store.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg" />
+const StoreCard = ({ store }) => {
+  // جلب إعدادات القسم حسب نوع المتجر
+  const categoryConfig = CATEGORY_CONFIG[store.store_type] || CATEGORY_CONFIG.restaurants;
+  const CategoryIcon = categoryConfig.icon;
+  
+  return (
+    <Link to={`/food/store/${store.id}`}>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={`bg-white rounded-xl border-2 ${store.store_type ? categoryConfig.borderColor : 'border-gray-200'} overflow-hidden hover:shadow-md transition-shadow`}
+      >
+        <div className={`h-24 bg-gradient-to-br ${categoryConfig.bgLight} relative overflow-hidden`}>
+          {store.cover_image ? (
+            <img src={store.cover_image} alt={store.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-12 h-12 bg-[#FF6B00] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-              <Store size={20} className="text-white" />
-            </div>
+            <div className={`w-full h-full bg-gradient-to-br ${categoryConfig.gradient} opacity-20`} />
           )}
-        </div>
-      </div>
-      <div className="p-3">
-        <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
-        <p className="text-xs text-gray-500 truncate">{store.category_name}</p>
-        {/* العنوان الكامل */}
-        {store.address && (
-          <div className="flex items-center gap-1 mt-1">
-            <MapPin size={10} className="text-gray-400 flex-shrink-0" />
-            <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+          {/* شارة نوع المتجر */}
+          <div className={`absolute top-2 left-2 ${categoryConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
+            <CategoryIcon size={10} />
+            <span>{categoryConfig.name}</span>
           </div>
-        )}
-        <div className="flex items-center gap-2 mt-2">
-          {store.rating > 0 && (
-            <div className="flex items-center gap-1 text-xs">
-              <Star size={12} className="text-yellow-500 fill-yellow-500" />
-              <span>{store.rating.toFixed(1)}</span>
-            </div>
-          )}
-          {store.delivery_time && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Clock size={12} />
-              <span>{store.delivery_time} د</span>
-            </div>
-          )}
+          <div className="absolute bottom-2 right-2">
+            {store.logo ? (
+              <img src={store.logo} alt={store.name} className={`w-12 h-12 rounded-full object-cover border-2 ${categoryConfig.borderColor} shadow-lg`} />
+            ) : (
+              <div className={`w-12 h-12 ${categoryConfig.color} rounded-full flex items-center justify-center border-2 border-white shadow-lg`}>
+                <CategoryIcon size={20} className="text-white" />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </motion.div>
-  </Link>
-);
+        <div className="p-3">
+          <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
+          <p className={`text-xs ${categoryConfig.textColor} truncate font-medium`}>{categoryConfig.emoji} {categoryConfig.name}</p>
+          {/* العنوان الكامل */}
+          {store.address && (
+            <div className="flex items-center gap-1 mt-1">
+              <MapPin size={10} className="text-gray-400 flex-shrink-0" />
+              <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            {store.rating > 0 && (
+              <div className="flex items-center gap-1 text-xs">
+                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                <span>{store.rating.toFixed(1)}</span>
+              </div>
+            )}
+            {store.delivery_time && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Clock size={12} />
+                <span>{store.delivery_time} د</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+};
 
 // بطاقة منتج الطعام - توجه للمتجر وليس لصفحة المنتج
 const FoodProductCard = ({ product }) => {
+  // جلب إعدادات القسم حسب نوع المتجر
+  const categoryConfig = CATEGORY_CONFIG[product.store_type] || CATEGORY_CONFIG.restaurants;
+  const UnitIcon = categoryConfig.unitIcon;
+  
   const isNew = product.created_at && 
     (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
 
@@ -347,7 +412,7 @@ const FoodProductCard = ({ product }) => {
     <Link to={`/food/store/${product.store_id}`}>
       <motion.div
         whileHover={{ y: -4 }}
-        className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all"
+        className={`bg-white rounded-xl border-2 ${categoryConfig.borderColor} overflow-hidden hover:shadow-md transition-all`}
       >
         <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
           {(product.image || product.images?.[0]) ? (
@@ -357,8 +422,8 @@ const FoodProductCard = ({ product }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-orange-50">
-              <UtensilsCrossed size={32} className="text-orange-300" />
+            <div className={`w-full h-full flex items-center justify-center ${categoryConfig.bgLight}`}>
+              <categoryConfig.icon size={32} className={categoryConfig.textColor} />
             </div>
           )}
           
@@ -376,6 +441,12 @@ const FoodProductCard = ({ product }) => {
               </span>
             )}
           </div>
+
+          {/* شارة نوع القسم */}
+          <div className={`absolute bottom-2 right-2 ${categoryConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
+            <UnitIcon size={10} />
+            <span>/{categoryConfig.unit}</span>
+          </div>
           
           {/* Favorite */}
           <button 
@@ -389,14 +460,15 @@ const FoodProductCard = ({ product }) => {
         <div className="p-3">
           <h3 className="font-bold text-gray-900 text-sm truncate mb-1">{product.name}</h3>
           {product.store_name && (
-            <p className="text-xs text-gray-500 mb-2 truncate flex items-center gap-1">
-              <Store size={10} />
+            <p className={`text-xs ${categoryConfig.textColor} mb-2 truncate flex items-center gap-1 font-medium`}>
+              <categoryConfig.icon size={10} />
               {product.store_name}
             </p>
           )}
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[#FF6B00] font-bold text-sm">{formatPrice(product.price)}</span>
+              <span className={`${categoryConfig.textColor} font-bold text-sm`}>{formatPrice(product.price)}</span>
+              <span className="text-gray-400 text-[10px] mr-1">/{categoryConfig.unit}</span>
               {product.original_price && product.original_price > product.price && (
                 <span className="text-gray-400 text-xs line-through mr-1">
                   {formatPrice(product.original_price)}
@@ -417,29 +489,40 @@ const FoodProductCard = ({ product }) => {
 };
 
 const EmptyState = ({ category }) => {
+  const categoryConfig = CATEGORY_CONFIG[category] || null;
+  const CategoryIcon = categoryConfig?.icon || Store;
+  
   const messages = {
-    restaurants: 'لا توجد مطاعم متاحة حالياً',
+    restaurants: 'لا توجد مطاعم وجبات سريعة حالياً',
     market: 'لا توجد متاجر ماركت حالياً',
-    vegetables: 'لا توجد متاجر خضار حالياً',
+    vegetables: 'لا توجد متاجر خضار وفواكه حالياً',
     sweets: 'لا توجد متاجر حلويات حالياً',
     all: 'لا توجد متاجر أو منتجات متاحة حالياً'
   };
 
+  const joinMessages = {
+    restaurants: 'انضم كمطعم وجبات سريعة',
+    market: 'انضم كمتجر ماركت',
+    vegetables: 'انضم كمتجر خضار وفواكه',
+    sweets: 'انضم كمتجر حلويات',
+    all: 'انضم كمتجر طعام'
+  };
+
   return (
     <div className="text-center py-12">
-      <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <UtensilsCrossed size={32} className="text-[#FF6B00]" />
+      <div className={`w-20 h-20 ${categoryConfig?.bgLight || 'bg-orange-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+        <CategoryIcon size={32} className={categoryConfig?.textColor || 'text-[#FF6B00]'} />
       </div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">{messages[category] || messages.all}</h3>
       <p className="text-gray-500 text-sm mb-4">
-        كن أول من ينضم كمتجر طعام في ترند سورية!
+        كن أول من ينضم في ترند سورية! {categoryConfig?.emoji || '🍽️'}
       </p>
       <Link
         to="/join/food-seller"
-        className="inline-flex items-center gap-2 bg-[#FF6B00] text-white px-6 py-2 rounded-full font-medium hover:bg-[#E65000] transition-colors"
+        className={`inline-flex items-center gap-2 ${categoryConfig?.color || 'bg-[#FF6B00]'} text-white px-6 py-2 rounded-full font-medium hover:opacity-90 transition-colors`}
       >
-        <Store size={18} />
-        انضم كمتجر طعام
+        <CategoryIcon size={18} />
+        {joinMessages[category] || joinMessages.all}
       </Link>
     </div>
   );
