@@ -23,6 +23,21 @@
 
 ### December 2025
 
+#### ميزة حالة المتجر مغلق (Store Closed Status) ✅ - 15 Dec 2025
+- **الميزة:** عرض حالة فتح/إغلاق المتاجر للعملاء بناءً على ساعات العمل
+- **الوظائف:**
+  - API يُرجع `is_open`, `open_status`, `next_open_time` لكل متجر
+  - المتاجر المغلقة تظهر في نهاية القائمة
+  - بطاقة المتجر المغلق: grayscale، شارة "مغلق الآن"، غير قابلة للنقر
+  - صفحة المتجر المغلق: بانر أحمر "المتجر مغلق حالياً"، أزرار إضافة معطلة
+- **حساب التوقيت:** يستخدم توقيت سوريا (UTC+3)
+- **إعدادات أوقات العمل:** يمكن للبائع تحديد ساعات العمل لكل يوم
+- **الملفات:**
+  - `routes/food.py` - `get_food_stores()`, `get_food_store()` مع حالة is_open
+  - `pages/FoodPage.js` - `StoreCard` معدل لعرض حالة الإغلاق
+  - `pages/FoodStorePage.js` - بانر الإغلاق، تعطيل الأزرار
+- **Status:** TESTED ✅ (iteration_70)
+
 #### نظام تعليق الأرباح (Hold Period) ✅ - 15 Dec 2025
 - **الميزة:** تعليق الأرباح لفترة محددة قبل إضافتها للرصيد المتاح
 - **الغرض:** حماية المنصة من الإرجاعات - الأرباح تبقى معلقة حتى انتهاء فترة الإرجاع
@@ -582,10 +597,12 @@ All critical features are implemented and tested.
 - [ ] نظام مكافآت السائقين (Quests)
 - [ ] أرقام هاتف مقنّعة
 - [ ] دردشة داخلية
+- [ ] صفحة عرض جميع المتاجر (/food/stores)
 
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_70.json` - Store Closed Status Feature ✅
 - `/app/test_reports/iteration_69.json` - Food Delivery Priority System ✅
 - `/app/test_reports/iteration_67.json` - Commission Calculator for Sellers ✅
 - `/app/test_reports/iteration_66.json` - Commission System for Sellers ✅
