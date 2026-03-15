@@ -80,6 +80,28 @@
 - **الملف:** `scripts/seed_food_data.py`
 - **Status:** TESTED ✅ (iteration_63)
 
+#### تغيير أيقونة السيارة إلى موتور 🏍️ ✅ - 15 Dec 2025
+- **السبب:** موظفي التوصيل يعملون على الموتور وليس السيارة
+- **الملفات المعدّلة:**
+  - `DriverTrackingMap.js` - 3 أيقونات
+  - `OrdersMap.js` - 4 أيقونات
+  - `AvailableOrdersList.js` - 2 أيقونات
+  - `RouteMapModal.js` - 3 أيقونات
+  - `MultiRouteOptimizer.js` - 3 أيقونات
+  - `DeliverySettingsTab.js` - 2 أيقونات
+  - `FoodStoreDashboard.js` - 3 أيقونات
+- **Status:** TESTED ✅ (iteration_64)
+
+#### صوت إشعار اقتراب السائق 🔔 ✅ - 15 Dec 2025
+- **الميزة:** تشغيل صوت إشعار عند اقتراب السائق من العميل
+- **الشرط:** المسافة أقل من 500 متر (0.5 كم)
+- **التفاصيل:**
+  - ملف الصوت: `/public/notification.mp3`
+  - دالة: `playNotificationSound()`
+  - منع التكرار: `soundPlayed` state
+- **الملف:** `components/DriverTrackingMap.js`
+- **Status:** TESTED ✅ (iteration_64)
+
 #### إصلاح مشكلة نافذة الأولوية ✅ - 15 Dec 2025
 - **المشكلة:** نافذة طلب الأولوية كانت تعود للظهور بعد رفضها
 - **السبب:** مشكلة في إدارة الحالة داخل الـ interval callbacks (closure issue)
@@ -411,6 +433,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_64.json` - Motorcycle Icons & Sound Notification ✅
 - `/app/test_reports/iteration_63.json` - Food Seed Data & Driver Proximity ✅
 - `/app/test_reports/iteration_62.json` - Earnings Hold Period & Live Tracking ✅
 - `/app/test_reports/iteration_61.json` - Password Recovery Feature ✅
