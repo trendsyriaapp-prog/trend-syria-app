@@ -71,6 +71,15 @@ const DeliverySettingsTab = () => {
     max_product_orders_per_driver: 7  // الحد الأقصى لطلبات المنتجات للسائق
   });
 
+  // إعدادات وقت التوصيل والعقوبات
+  const [deliveryTimeSettings, setDeliveryTimeSettings] = useState({
+    buffer_minutes: 8,
+    warning_before_minutes: 3,
+    warnings_before_penalty: 3,
+    penalty_amount: 500,
+    max_penalty_per_day: 2000
+  });
+
   // إعدادات حدود الطلبات الذكية
   const [smartOrderLimits, setSmartOrderLimits] = useState({
     max_orders_different_stores: 5,
@@ -92,6 +101,7 @@ const DeliverySettingsTab = () => {
     fetchWaitCompensationSettings();
     fetchDispatchStatus();
     fetchViolationsReport();
+    fetchDeliveryTimeSettings();
   }, []);
 
   const fetchSettings = async () => {
@@ -209,6 +219,30 @@ const DeliverySettingsTab = () => {
       setViolationsReport(res.data.report);
     } catch (error) {
       console.error('Error fetching violations report:', error);
+    }
+  };
+
+  const fetchDeliveryTimeSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/delivery-time-settings`);
+      if (res.data.settings) {
+        setDeliveryTimeSettings(prev => ({...prev, ...res.data.settings}));
+      }
+    } catch (error) {
+      console.error('Error fetching delivery time settings:', error);
+    }
+  };
+
+  const handleSaveDeliveryTimeSettings = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/admin/delivery-time-settings`, deliveryTimeSettings);
+      alert('تم حفظ إعدادات وقت التوصيل بنجاح!');
+    } catch (error) {
+      console.error('Error saving delivery time settings:', error);
+      alert('حدث خطأ أثناء حفظ الإعدادات');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1214,6 +1248,186 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات الحدود الذكية
+          </button>
+        </div>
+      </div>
+
+      {/* إعدادات وقت التوصيل والعقوبات */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-pink-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⏱️</span>
+            <div>
+              <h2 className="font-bold text-lg">إعدادات وقت التوصيل والعقوبات</h2>
+              <p className="text-sm text-white/80">تحكم في وقت التوصيل ونظام العقوبات للتأخير</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          {/* شرح النظام */}
+          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <h4 className="font-bold text-blue-700 mb-2">ℹ️ كيف يعمل النظام:</h4>
+            <p className="text-sm text-gray-600">
+              عندما يستلم السائق الطلب من المطعم، يبدأ العداد. الوقت المسموح = وقت GPS + Buffer الإضافي.
+              إذا تأخر السائق، يحصل على تحذيرات أولاً ثم خصومات.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Buffer الإضافي */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">➕</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الوقت الإضافي (Buffer)</h3>
+                  <p className="text-xs text-gray-500">يُضاف لوقت GPS لحماية السائق</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={deliveryTimeSettings.buffer_minutes}
+                onChange={(e) => setDeliveryTimeSettings({
+                  ...deliveryTimeSettings,
+                  buffer_minutes: parseInt(e.target.value) || 5
+                })}
+                className="w-full p-3 border-2 border-green-300 rounded-lg text-center text-2xl font-bold"
+                min={3}
+                max={20}
+              />
+              <p className="text-center text-sm text-green-600 mt-2">
+                {deliveryTimeSettings.buffer_minutes} دقائق
+              </p>
+              <p className="text-xs text-gray-500 mt-1 text-center">
+                مثال: GPS يقول 15 دقيقة → السائق لديه {15 + deliveryTimeSettings.buffer_minutes} دقيقة
+              </p>
+            </div>
+
+            {/* التحذير قبل انتهاء الوقت */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">⚠️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">تحذير قبل الانتهاء</h3>
+                  <p className="text-xs text-gray-500">متى يظهر تحذير للسائق</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={deliveryTimeSettings.warning_before_minutes}
+                onChange={(e) => setDeliveryTimeSettings({
+                  ...deliveryTimeSettings,
+                  warning_before_minutes: parseInt(e.target.value) || 3
+                })}
+                className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={10}
+              />
+              <p className="text-center text-sm text-amber-600 mt-2">
+                {deliveryTimeSettings.warning_before_minutes} دقائق قبل الانتهاء
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* عدد التحذيرات قبل الخصم */}
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🔔</span>
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm">تحذيرات قبل الخصم</h3>
+              </div>
+              <input
+                type="number"
+                value={deliveryTimeSettings.warnings_before_penalty}
+                onChange={(e) => setDeliveryTimeSettings({
+                  ...deliveryTimeSettings,
+                  warnings_before_penalty: parseInt(e.target.value) || 3
+                })}
+                className="w-full p-2 border-2 border-orange-300 rounded-lg text-center text-xl font-bold"
+                min={1}
+                max={10}
+              />
+              <p className="text-center text-xs text-orange-600 mt-1">
+                {deliveryTimeSettings.warnings_before_penalty} تحذيرات
+              </p>
+            </div>
+
+            {/* مبلغ الخصم */}
+            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">💸</span>
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm">مبلغ الخصم</h3>
+              </div>
+              <input
+                type="number"
+                value={deliveryTimeSettings.penalty_amount}
+                onChange={(e) => setDeliveryTimeSettings({
+                  ...deliveryTimeSettings,
+                  penalty_amount: parseInt(e.target.value) || 500
+                })}
+                className="w-full p-2 border-2 border-red-300 rounded-lg text-center text-xl font-bold"
+                min={100}
+                max={5000}
+                step={100}
+              />
+              <p className="text-center text-xs text-red-600 mt-1">
+                {deliveryTimeSettings.penalty_amount} ل.س
+              </p>
+            </div>
+
+            {/* الحد الأقصى للخصم اليومي */}
+            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🛡️</span>
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm">حد الخصم اليومي</h3>
+              </div>
+              <input
+                type="number"
+                value={deliveryTimeSettings.max_penalty_per_day}
+                onChange={(e) => setDeliveryTimeSettings({
+                  ...deliveryTimeSettings,
+                  max_penalty_per_day: parseInt(e.target.value) || 2000
+                })}
+                className="w-full p-2 border-2 border-purple-300 rounded-lg text-center text-xl font-bold"
+                min={500}
+                max={10000}
+                step={500}
+              />
+              <p className="text-center text-xs text-purple-600 mt-1">
+                {deliveryTimeSettings.max_penalty_per_day} ل.س كحد أقصى
+              </p>
+            </div>
+          </div>
+
+          {/* شرح آلية العقوبات */}
+          <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200">
+            <h4 className="font-bold text-red-700 mb-2">⚖️ آلية العقوبات:</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• التأخير الأول: <strong className="text-amber-600">تحذير 1/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
+              <li>• التأخير الثاني: <strong className="text-amber-600">تحذير 2/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
+              <li>• التأخير الثالث: <strong className="text-amber-600">تحذير 3/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
+              <li>• التأخير الرابع وما بعده: <strong className="text-red-600">خصم {deliveryTimeSettings.penalty_amount} ل.س</strong></li>
+              <li>• الحد الأقصى للخصم في اليوم: <strong className="text-purple-600">{deliveryTimeSettings.max_penalty_per_day} ل.س</strong></li>
+            </ul>
+          </div>
+
+          <button
+            onClick={handleSaveDeliveryTimeSettings}
+            disabled={saving}
+            className="mt-4 w-full bg-gradient-to-l from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ إعدادات وقت التوصيل
           </button>
         </div>
       </div>

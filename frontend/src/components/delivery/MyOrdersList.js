@@ -5,7 +5,7 @@ import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map,
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
-import MultiRouteOptimizer from './MultiRouteOptimizer';
+import RouteSelector from './RouteSelector';
 import { useToast } from '../../hooks/use-toast';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -420,7 +420,7 @@ const MyOrdersList = ({
 
       {/* Modal تخطيط المسار */}
       {showRouteOptimizer && (
-        <MultiRouteOptimizer
+        <RouteSelector
           foodOrders={foodOrders}
           productOrders={orders}
           onClose={() => setShowRouteOptimizer(false)}

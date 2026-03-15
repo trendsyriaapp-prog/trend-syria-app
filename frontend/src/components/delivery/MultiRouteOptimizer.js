@@ -194,7 +194,8 @@ const MultiRouteOptimizer = ({
   foodOrders = [], 
   productOrders = [], 
   onClose, 
-  theme = 'dark' 
+  theme = 'dark',
+  mode = 'all' // 'food', 'product', 'all'
 }) => {
   const [driverCoords, setDriverCoords] = useState(null);
   const [optimizedRoute, setOptimizedRoute] = useState([]);
@@ -206,75 +207,79 @@ const MultiRouteOptimizer = ({
   
   const isDark = theme === 'dark';
 
-  // تحويل الطلبات لنقاط
+  // تحويل الطلبات لنقاط حسب الوضع المختار
   const getAllDeliveryPoints = () => {
     const points = [];
     
-    // طلبات الطعام - نحتاج الذهاب للمطعم ثم العميل
-    foodOrders.forEach((order, idx) => {
-      // نقطة المطعم (للاستلام)
-      if (order.store_latitude && order.store_longitude && order.status !== 'picked_up' && order.status !== 'out_for_delivery') {
-        points.push({
-          id: `food-store-${order.id}`,
-          orderId: order.id,
-          type: 'store',
-          orderType: 'food',
-          name: order.store_name || 'مطعم',
-          lat: order.store_latitude,
-          lng: order.store_longitude,
-          order: order
-        });
-      }
-      
-      // نقطة العميل (للتوصيل)
-      if (order.latitude && order.longitude) {
-        points.push({
-          id: `food-customer-${order.id}`,
-          orderId: order.id,
-          type: 'customer',
-          orderType: 'food',
-          name: order.buyer_address?.name || 'عميل',
-          address: order.buyer_address?.address,
-          lat: order.latitude,
-          lng: order.longitude,
-          order: order
-        });
-      }
-    });
+    // طلبات الطعام (فقط إذا mode = 'food' أو 'all')
+    if (mode === 'food' || mode === 'all') {
+      foodOrders.forEach((order, idx) => {
+        // نقطة المطعم (للاستلام)
+        if (order.store_latitude && order.store_longitude && order.status !== 'picked_up' && order.status !== 'out_for_delivery') {
+          points.push({
+            id: `food-store-${order.id}`,
+            orderId: order.id,
+            type: 'store',
+            orderType: 'food',
+            name: order.store_name || 'مطعم',
+            lat: order.store_latitude,
+            lng: order.store_longitude,
+            order: order
+          });
+        }
+        
+        // نقطة العميل (للتوصيل)
+        if (order.latitude && order.longitude) {
+          points.push({
+            id: `food-customer-${order.id}`,
+            orderId: order.id,
+            type: 'customer',
+            orderType: 'food',
+            name: order.buyer_address?.name || 'عميل',
+            address: order.buyer_address?.address,
+            lat: order.latitude,
+            lng: order.longitude,
+            order: order
+          });
+        }
+      });
+    }
     
-    // طلبات المنتجات
-    productOrders.forEach((order, idx) => {
-      // نقطة المتجر (للاستلام)
-      const sellerAddr = order.seller_addresses?.[0];
-      if (sellerAddr?.latitude && sellerAddr?.longitude && !order.pickup_code_verified) {
-        points.push({
-          id: `product-store-${order.id}`,
-          orderId: order.id,
-          type: 'store',
-          orderType: 'product',
-          name: sellerAddr.business_name || 'متجر',
-          lat: sellerAddr.latitude,
-          lng: sellerAddr.longitude,
-          order: order
-        });
-      }
-      
-      // نقطة العميل (للتوصيل)
-      const buyerAddr = order.buyer_address;
-      if (buyerAddr?.latitude && buyerAddr?.longitude) {
-        points.push({
-          id: `product-customer-${order.id}`,
-          orderId: order.id,
-          type: 'customer',
-          orderType: 'product',
-          name: buyerAddr.name || 'عميل',
-          address: buyerAddr.address,
-          lat: buyerAddr.latitude,
-          lng: buyerAddr.longitude,
-          order: order
-        });
-      }
-    });
+    // طلبات المنتجات (فقط إذا mode = 'product' أو 'all')
+    if (mode === 'product' || mode === 'all') {
+      productOrders.forEach((order, idx) => {
+        // نقطة المتجر (للاستلام)
+        const sellerAddr = order.seller_addresses?.[0];
+        if (sellerAddr?.latitude && sellerAddr?.longitude && !order.pickup_code_verified) {
+          points.push({
+            id: `product-store-${order.id}`,
+            orderId: order.id,
+            type: 'store',
+            orderType: 'product',
+            name: sellerAddr.business_name || 'متجر',
+            lat: sellerAddr.latitude,
+            lng: sellerAddr.longitude,
+            order: order
+          });
+        }
+        
+        // نقطة العميل (للتوصيل)
+        const buyerAddr = order.buyer_address;
+        if (buyerAddr?.latitude && buyerAddr?.longitude) {
+          points.push({
+            id: `product-customer-${order.id}`,
+            orderId: order.id,
+            type: 'customer',
+            orderType: 'product',
+            name: buyerAddr.name || 'عميل',
+            address: buyerAddr.address,
+            lat: buyerAddr.latitude,
+            lng: buyerAddr.longitude,
+            order: order
+          });
+        }
+      });
+    }
     
     return points;
   };
@@ -362,15 +367,21 @@ const MultiRouteOptimizer = ({
             isDark ? 'border-[#333] bg-gradient-to-l from-[#252525] to-[#1f1f1f]' : 'border-gray-200 bg-gradient-to-l from-gray-100 to-gray-50'
           }`}>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-orange-500 to-red-500">
+              <div className={`p-2.5 rounded-xl bg-gradient-to-br ${
+                mode === 'food' ? 'from-green-500 to-emerald-600' :
+                mode === 'product' ? 'from-purple-500 to-indigo-600' :
+                'from-orange-500 to-red-500'
+              }`}>
                 <Route size={22} className="text-white" />
               </div>
               <div>
                 <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  تخطيط المسار الذكي
+                  {mode === 'food' ? 'مسار الطعام' : mode === 'product' ? 'مسار المنتجات' : 'المسار المدمج'}
                 </h3>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {foodOrders.length + productOrders.length} طلبات • {optimizedRoute.length} نقاط توقف
+                  {mode === 'food' ? `${foodOrders.length} طلبات طعام` : 
+                   mode === 'product' ? `${productOrders.length} طلبات منتجات` :
+                   `${foodOrders.length + productOrders.length} طلبات`} • {optimizedRoute.length} نقاط توقف
                 </p>
               </div>
             </div>
