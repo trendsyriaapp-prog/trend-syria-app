@@ -102,6 +102,29 @@
   - `pages/FoodStoreDashboard.js` - بطاقة عرض العمولة
 - **Status:** TESTED ✅ (iteration_66)
 
+#### حاسبة العمولة عند تسعير المنتجات ✅ - 15 Dec 2025
+- **الميزة:** عرض تفاصيل الأرباح للبائع عند إدخال سعر المنتج
+- **ما تعرضه الحاسبة:**
+  - 💵 سعر البيع
+  - 🔴 عمولة المنصة (النسبة والمبلغ)
+  - 🟢 صافي الربح (باللون الأخضر)
+- **أماكن الظهور:**
+  - نموذج إضافة منتج (FoodStoreDashboard + SellerPages)
+  - نموذج تعديل منتج
+  - قائمة المنتجات (صافي ربحك لكل منتج)
+- **الملفات:**
+  - `pages/FoodStoreDashboard.js` - ProductModal
+  - `components/seller/AddProductModal.js`
+  - `components/seller/EditProductModal.js`
+  - `pages/SellerPages.js` - تمرير commissionInfo
+- **مثال:**
+  ```
+  سعر البيع: 100,000 ل.س
+  عمولة المنصة (20%): - 20,000 ل.س
+  صافي ربحك: 80,000 ل.س ✅
+  ```
+- **Status:** TESTED ✅ (iteration_67)
+
 #### تغيير أيقونة السيارة إلى موتور 🏍️ ✅ - 15 Dec 2025
 - **السبب:** موظفي التوصيل يعملون على الموتور وليس السيارة
 - **الملفات المعدّلة:**
@@ -459,6 +482,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_67.json` - Commission Calculator for Sellers ✅
 - `/app/test_reports/iteration_66.json` - Commission System for Sellers ✅
 - `/app/test_reports/iteration_65.json` - Seller Driver Proximity Notification ✅
 - `/app/test_reports/iteration_64.json` - Motorcycle Icons & Sound Notification ✅
