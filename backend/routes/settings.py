@@ -762,3 +762,51 @@ async def update_food_delivery_limits(
         "cold_dry_limit": limits.cold_dry_limit,
         "max_distance_km": limits.max_distance_km
     }
+
+
+
+# ============== إعداد المسافة القصوى بين المطعم والعميل ==============
+
+class StoreCustomerDistance(BaseModel):
+    max_distance_km: float = 5.0  # المسافة القصوى بين المطعم والعميل
+
+@router.get("/store-customer-distance")
+async def get_store_customer_distance(user: dict = Depends(get_current_user)):
+    """جلب إعداد المسافة القصوى بين المطعم والعميل"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"})
+    
+    return {
+        "max_distance_km": settings.get("max_store_customer_distance_km", 5.0) if settings else 5.0
+    }
+
+@router.put("/store-customer-distance")
+async def update_store_customer_distance(
+    distance: StoreCustomerDistance,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث المسافة القصوى بين المطعم والعميل"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if distance.max_distance_km < 1 or distance.max_distance_km > 30:
+        raise HTTPException(status_code=400, detail="المسافة يجب أن تكون بين 1 و 30 كم")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "max_store_customer_distance_km": distance.max_distance_km,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث المسافة القصوى بنجاح",
+        "max_distance_km": distance.max_distance_km
+    }

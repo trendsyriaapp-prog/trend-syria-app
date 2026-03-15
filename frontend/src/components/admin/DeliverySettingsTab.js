@@ -141,7 +141,9 @@ const DeliverySettingsTab = () => {
         food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5,
         // إعدادات حدود التوصيل الجديدة
         hot_fresh_limit: res.data.food_delivery_limits?.hot_fresh_limit || 2,
-        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5
+        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5,
+        // المسافة بين المطعم والعميل
+        max_store_customer_distance_km: res.data.max_store_customer_distance_km || 5
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -397,6 +399,7 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
+      // حفظ حدود التوصيل
       await axios.put(`${API}/api/settings/food-delivery-limits`, {
         hot_fresh_limit: settings.hot_fresh_limit || 2,
         cold_dry_limit: settings.cold_dry_limit || 5,
@@ -404,6 +407,14 @@ const DeliverySettingsTab = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // حفظ المسافة بين المطعم والعميل
+      await axios.put(`${API}/api/settings/store-customer-distance`, {
+        max_distance_km: settings.max_store_customer_distance_km || 5
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       alert('تم حفظ إعدادات حدود التوصيل بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات');
@@ -1287,15 +1298,15 @@ const DeliverySettingsTab = () => {
               </p>
             </div>
 
-            {/* المسافة القصوى */}
+            {/* المسافة القصوى بين عملاء الطعام */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <MapPin size={20} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">المسافة القصوى</h3>
-                  <p className="text-xs text-gray-500">بين عملاء الطعام</p>
+                  <h3 className="font-bold text-gray-800">المسافة بين العملاء</h3>
+                  <p className="text-xs text-gray-500">للسائق الذي يحمل عدة طلبات</p>
                 </div>
               </div>
               <input
@@ -1312,6 +1323,37 @@ const DeliverySettingsTab = () => {
               />
               <p className="text-center text-sm text-blue-600 mt-2">
                 {food_orders_max_distance_km} كم
+              </p>
+            </div>
+
+            {/* المسافة القصوى بين المطعم والعميل */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🏪</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">المسافة بين المطعم والعميل</h3>
+                  <p className="text-xs text-gray-500">الحد الأقصى لنطاق التوصيل</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={settings.max_store_customer_distance_km || 5}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  max_store_customer_distance_km: parseFloat(e.target.value) || 5
+                })}
+                className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
+                min={1}
+                max={30}
+                step={0.5}
+              />
+              <p className="text-center text-sm text-amber-600 mt-2">
+                {settings.max_store_customer_distance_km || 5} كم
+              </p>
+              <p className="text-center text-xs text-gray-500 mt-1">
+                العميل لا يستطيع الطلب من متجر يبعد أكثر من هذه المسافة
               </p>
             </div>
           </div>

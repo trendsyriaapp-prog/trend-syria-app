@@ -133,29 +133,45 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 animate={{ opacity: 1, y: 0 }}
                 className={`rounded-2xl border overflow-hidden ${
                   order.is_batch 
-                    ? (isDark ? 'bg-gradient-to-br from-[#1a1a2e] to-[#1a1a1a] border-purple-500/50 ring-1 ring-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-white border-purple-300 shadow-purple-100 shadow-lg')
+                    ? order.batch_category === 'cold_dry'
+                      ? (isDark ? 'bg-gradient-to-br from-[#1a2e1a] to-[#1a1a1a] border-emerald-500/50 ring-1 ring-emerald-500/30' : 'bg-gradient-to-br from-emerald-50 to-white border-emerald-300 shadow-emerald-100 shadow-lg')
+                      : (isDark ? 'bg-gradient-to-br from-[#2e1a1a] to-[#1a1a1a] border-orange-500/50 ring-1 ring-orange-500/30' : 'bg-gradient-to-br from-orange-50 to-white border-orange-300 shadow-orange-100 shadow-lg')
                     : (isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm')
                 }`}
               >
                 <div className={`flex items-center justify-between px-4 py-3 border-b ${
                   order.is_batch 
-                    ? (isDark ? 'bg-purple-900/30 border-purple-500/30' : 'bg-purple-100 border-purple-200')
+                    ? order.batch_category === 'cold_dry'
+                      ? (isDark ? 'bg-emerald-900/30 border-emerald-500/30' : 'bg-emerald-100 border-emerald-200')
+                      : (isDark ? 'bg-orange-900/30 border-orange-500/30' : 'bg-orange-100 border-orange-200')
                     : (isDark ? 'bg-[#252525] border-[#333]' : 'bg-gray-50 border-gray-200')
                 }`}>
                   <div className="flex items-center gap-2">
                     {order.is_batch ? (
                       <>
                         <div className="relative">
-                          <Layers size={16} className={isDark ? 'text-purple-400' : 'text-purple-600'} />
-                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                          {order.batch_category === 'cold_dry' ? (
+                            <span className="text-xl">📦</span>
+                          ) : (
+                            <span className="text-xl">🔥</span>
+                          )}
+                          <span className={`absolute -top-1 -right-1 w-4 h-4 text-white text-[10px] rounded-full flex items-center justify-center font-bold ${
+                            order.batch_category === 'cold_dry' ? 'bg-emerald-500' : 'bg-orange-500'
+                          }`}>
                             {order.batch_info?.stores?.length || '?'}
                           </span>
                         </div>
-                        <span className={`text-sm font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
-                          طلب تجميعي
+                        <span className={`text-sm font-bold ${
+                          order.batch_category === 'cold_dry' 
+                            ? (isDark ? 'text-emerald-300' : 'text-emerald-700')
+                            : (isDark ? 'text-orange-300' : 'text-orange-700')
+                        }`}>
+                          {order.batch_category === 'cold_dry' ? 'طلب تجميعي (بارد)' : 'طلب تجميعي (ساخن)'}
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          isDark ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50' : 'bg-purple-200 text-purple-700'
+                          order.batch_category === 'cold_dry'
+                            ? (isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50' : 'bg-emerald-200 text-emerald-700')
+                            : (isDark ? 'bg-orange-500/20 text-orange-300 border border-orange-500/50' : 'bg-orange-200 text-orange-700')
                         }`}>
                           {order.batch_info?.stores?.length || 0} متاجر
                         </span>
@@ -181,16 +197,24 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 
                 {/* عرض معلومات الطلب التجميعي */}
                 {order.is_batch && order.batch_info && (
-                  <div className={`px-4 py-3 border-b ${isDark ? 'border-purple-500/20' : 'border-purple-200'}`}>
-                    <p className={`text-xs mb-2 ${isDark ? 'text-purple-300' : 'text-purple-600'}`}>
+                  <div className={`px-4 py-3 border-b ${
+                    order.batch_category === 'cold_dry'
+                      ? (isDark ? 'border-emerald-500/20' : 'border-emerald-200')
+                      : (isDark ? 'border-orange-500/20' : 'border-orange-200')
+                  }`}>
+                    <p className={`text-xs mb-2 ${
+                      order.batch_category === 'cold_dry'
+                        ? (isDark ? 'text-emerald-300' : 'text-emerald-600')
+                        : (isDark ? 'text-orange-300' : 'text-orange-600')
+                    }`}>
                       📍 نقاط الاستلام:
                     </p>
                     <div className="space-y-2">
                       {order.batch_info.stores?.map((store, idx) => (
                         <div key={idx} className={`flex items-center justify-between text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                           <div className="flex items-center gap-2">
-                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                              isDark ? 'bg-purple-500 text-white' : 'bg-purple-500 text-white'
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                              order.batch_category === 'cold_dry' ? 'bg-emerald-500' : 'bg-orange-500'
                             }`}>{idx + 1}</span>
                             <span>{store.store_name}</span>
                           </div>
@@ -200,9 +224,17 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                         </div>
                       ))}
                     </div>
-                    <div className={`mt-2 pt-2 border-t flex justify-between items-center ${isDark ? 'border-purple-500/20' : 'border-purple-200'}`}>
+                    <div className={`mt-2 pt-2 border-t flex justify-between items-center ${
+                      order.batch_category === 'cold_dry'
+                        ? (isDark ? 'border-emerald-500/20' : 'border-emerald-200')
+                        : (isDark ? 'border-orange-500/20' : 'border-orange-200')
+                    }`}>
                       <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>المجموع الكلي:</span>
-                      <span className={`font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                      <span className={`font-bold ${
+                        order.batch_category === 'cold_dry'
+                          ? (isDark ? 'text-emerald-300' : 'text-emerald-700')
+                          : (isDark ? 'text-orange-300' : 'text-orange-700')
+                      }`}>
                         {formatPrice(order.batch_info.total_amount || order.total)}
                       </span>
                     </div>
@@ -330,13 +362,18 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     disabled={!isWorkingHours()}
                     className={`w-full py-3 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       order.is_batch 
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                        ? order.batch_category === 'cold_dry'
+                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
+                          : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
                         : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                     }`}
                   >
                     {!isWorkingHours() ? 'خارج أوقات العمل' : 
-                     order.is_batch ? `قبول الطلب التجميعي (${order.batch_info?.stores?.length || 0} متاجر)` : 
-                     'قبول طلب التوصيل'}
+                     order.is_batch 
+                       ? order.batch_category === 'cold_dry'
+                         ? `📦 قبول طلب بارد (${order.batch_info?.stores?.length || 0} متاجر)`
+                         : `🔥 قبول طلب ساخن (${order.batch_info?.stores?.length || 0} متاجر)`
+                       : 'قبول طلب التوصيل'}
                   </button>
                 </div>
               </motion.div>

@@ -200,6 +200,39 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير متاح")
     
+    # ===== التحقق من المسافة بين المطعم والعميل =====
+    # جلب إعدادات المسافة القصوى
+    settings = await db.platform_settings.find_one({"id": "main"})
+    max_delivery_distance = 5.0  # الافتراضي 5 كم
+    if settings:
+        max_delivery_distance = settings.get("max_store_customer_distance_km", 5.0)
+    
+    # حساب المسافة إذا كانت الإحداثيات متوفرة
+    store_lat = store.get("latitude")
+    store_lng = store.get("longitude")
+    customer_lat = order.latitude or order.delivery_latitude
+    customer_lng = order.longitude or order.delivery_longitude
+    
+    if store_lat and store_lng and customer_lat and customer_lng:
+        import math
+        R = 6371  # نصف قطر الأرض بالكيلومتر
+        
+        lat1, lon1 = math.radians(store_lat), math.radians(store_lng)
+        lat2, lon2 = math.radians(customer_lat), math.radians(customer_lng)
+        
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        c = 2 * math.asin(math.sqrt(a))
+        distance = R * c
+        
+        if distance > max_delivery_distance:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"📍 المتجر بعيد عنك ({distance:.1f} كم). الحد الأقصى للتوصيل: {max_delivery_distance:.0f} كم. جرّب متجراً أقرب!"
+            )
+    
     # حساب المجموع
     subtotal = 0
     order_items = []
