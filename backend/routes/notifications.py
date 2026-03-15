@@ -86,6 +86,42 @@ async def get_notifications(
     
     return notifications
 
+
+@router.get("/unread")
+async def get_unread_notifications(user: dict = Depends(get_current_user)):
+    """جلب الإشعارات غير المقروءة للمستخدم"""
+    # Get user's read notifications
+    user_reads = await db.notification_reads.find(
+        {"user_id": user["id"]},
+        {"_id": 0, "notification_id": 1}
+    ).to_list(100)
+    read_ids = {r["notification_id"] for r in user_reads}
+    
+    # Get notifications for user
+    user_type = user.get("user_type", "buyer")
+    target_role = user_type + "s" if not user_type.endswith("s") else user_type
+    
+    notifications = await db.notifications.find(
+        {"$or": [
+            {"target": "all"},
+            {"target": target_role},
+            {"target": user_type},
+            {"user_id": user["id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    # Filter only unread notifications
+    unread_notifications = [n for n in notifications if n["id"] not in read_ids]
+    
+    # Add is_read flag (always False for this endpoint)
+    for n in unread_notifications:
+        n["is_read"] = False
+    
+    return unread_notifications
+
+
+
 @router.post("/{notification_id}/read")
 async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
     await db.notification_reads.update_one(

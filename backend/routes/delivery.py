@@ -83,56 +83,103 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
 
 
 async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon: float, driver: dict):
-    """فحص قرب السائق من العميل وإرسال إشعار"""
+    """فحص قرب السائق من العميل والمتجر وإرسال إشعارات"""
     from math import radians, sin, cos, sqrt, atan2
     
-    customer_lat = order.get("latitude") or order.get("delivery_latitude")
-    customer_lon = order.get("longitude") or order.get("delivery_longitude")
-    
-    if not customer_lat or not customer_lon:
-        return
-    
-    # حساب المسافة (Haversine formula)
-    R = 6371  # كم
-    lat1 = radians(driver_lat)
-    lat2 = radians(float(customer_lat))
-    dlat = radians(float(customer_lat) - driver_lat)
-    dlon = radians(float(customer_lon) - driver_lon)
-    
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1-a))
-    distance_km = R * c
-    
-    # إذا كان السائق قريباً (أقل من 500 متر) وليس قد أُرسل الإشعار
-    if distance_km < 0.5:
-        nearby_notified = order.get("nearby_notification_sent", False)
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        """حساب المسافة بين نقطتين (Haversine)"""
+        R = 6371  # كم
+        rlat1 = radians(lat1)
+        rlat2 = radians(float(lat2))
+        dlat = radians(float(lat2) - lat1)
+        dlon = radians(float(lon2) - lon1)
         
-        if not nearby_notified:
-            customer_id = order.get("customer_id") or order.get("user_id")
-            order_number = order.get("order_number", "")
-            driver_name = driver.get("full_name") or driver.get("name", "السائق")
+        a = sin(dlat/2)**2 + cos(rlat1) * cos(rlat2) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        return R * c
+    
+    order_number = order.get("order_number", "")
+    driver_name = driver.get("full_name") or driver.get("name", "السائق")
+    order_id = order.get("id")
+    collection = "food_orders" if "store_id" in order else "orders"
+    
+    # ========== 1. إشعار البائع (عند اقتراب السائق من المتجر) ==========
+    store_id = order.get("store_id")
+    if store_id and order.get("status") in ["accepted", "ready_for_pickup", "driver_assigned"]:
+        store = await db.food_stores.find_one({"id": store_id})
+        if store:
+            store_lat = store.get("latitude")
+            store_lon = store.get("longitude")
             
-            # إرسال إشعار
-            notification = {
-                "id": str(uuid.uuid4()),
-                "user_id": customer_id,
-                "title": "🚗 طلبك على وشك الوصول!",
-                "message": f"{driver_name} أصبح قريباً منك. طلبك #{order_number} سيصل خلال دقائق!",
-                "type": "driver_nearby",
-                "order_id": order.get("id"),
-                "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-            await db.notifications.insert_one(notification)
+            if store_lat and store_lon:
+                distance_to_store = calculate_distance(driver_lat, driver_lon, store_lat, store_lon)
+                
+                # إذا كان السائق قريباً من المتجر (أقل من 500 متر)
+                if distance_to_store < 0.5:
+                    store_notified = order.get("store_nearby_notification_sent", False)
+                    
+                    if not store_notified:
+                        seller_id = store.get("owner_id")
+                        
+                        if seller_id:
+                            # إرسال إشعار للبائع
+                            notification = {
+                                "id": str(uuid.uuid4()),
+                                "user_id": seller_id,
+                                "title": "🏍️ السائق وصل!",
+                                "message": f"{driver_name} على بعد {int(distance_to_store*1000)} متر. جهّز الطلب #{order_number}!",
+                                "type": "driver_arriving_store",
+                                "order_id": order_id,
+                                "is_read": False,
+                                "play_sound": True,
+                                "created_at": datetime.now(timezone.utc).isoformat()
+                            }
+                            await db.notifications.insert_one(notification)
+                            
+                            # تحديث الطلب لمنع إرسال إشعار مكرر
+                            await db[collection].update_one(
+                                {"id": order_id},
+                                {"$set": {"store_nearby_notification_sent": True}}
+                            )
+                            
+                            print(f"🏪 إشعار للبائع: السائق {driver_name} على بعد {distance_to_store*1000:.0f}م من المتجر")
+    
+    # ========== 2. إشعار العميل (عند اقتراب السائق من موقع التسليم) ==========
+    if order.get("status") in ["picked_up", "on_the_way", "out_for_delivery"]:
+        customer_lat = order.get("latitude") or order.get("delivery_latitude")
+        customer_lon = order.get("longitude") or order.get("delivery_longitude")
+        
+        if customer_lat and customer_lon:
+            distance_to_customer = calculate_distance(driver_lat, driver_lon, customer_lat, customer_lon)
             
-            # تحديث الطلب لمنع إرسال إشعار مكرر
-            collection = "food_orders" if "store_id" in order else "orders"
-            await db[collection].update_one(
-                {"id": order["id"]},
-                {"$set": {"nearby_notification_sent": True}}
-            )
-            
-            print(f"📍 إشعار قرب: السائق {driver_name} على بعد {distance_km*1000:.0f}م من العميل")
+            # إذا كان السائق قريباً من العميل (أقل من 500 متر)
+            if distance_to_customer < 0.5:
+                customer_notified = order.get("nearby_notification_sent", False)
+                
+                if not customer_notified:
+                    customer_id = order.get("customer_id") or order.get("user_id")
+                    
+                    # إرسال إشعار للعميل
+                    notification = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": customer_id,
+                        "title": "🏍️ طلبك على وشك الوصول!",
+                        "message": f"{driver_name} أصبح قريباً منك. طلبك #{order_number} سيصل خلال دقائق!",
+                        "type": "driver_nearby",
+                        "order_id": order_id,
+                        "is_read": False,
+                        "play_sound": True,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    await db.notifications.insert_one(notification)
+                    
+                    # تحديث الطلب لمنع إرسال إشعار مكرر
+                    await db[collection].update_one(
+                        {"id": order_id},
+                        {"$set": {"nearby_notification_sent": True}}
+                    )
+                    
+                    print(f"📍 إشعار للعميل: السائق {driver_name} على بعد {distance_to_customer*1000:.0f}م")
 
 @router.get("/location/{order_id}")
 async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_current_user)):

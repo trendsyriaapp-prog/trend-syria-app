@@ -1,7 +1,7 @@
 // /app/frontend/src/pages/FoodStoreDashboard.js
 // لوحة تحكم متجر الطعام
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin, Timer, Wallet
+  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -29,10 +29,59 @@ const FoodStoreDashboard = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddOffer, setShowAddOffer] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [driverArrivingAlert, setDriverArrivingAlert] = useState(null);
+  
+  // مرجع لصوت الإشعار
+  const audioRef = useRef(null);
+  const lastNotificationId = useRef(null);
+
+  // تشغيل صوت الإشعار
+  const playNotificationSound = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/notification.mp3');
+      }
+      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    } catch (e) {
+      console.log('Audio error:', e);
+    }
+  };
+
+  // فحص الإشعارات الجديدة (اقتراب السائق)
+  const checkDriverArrivingNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${API}/notifications/unread`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const notifications = res.data || [];
+      const driverArriving = notifications.find(n => 
+        n.type === 'driver_arriving_store' && 
+        n.id !== lastNotificationId.current
+      );
+      
+      if (driverArriving) {
+        lastNotificationId.current = driverArriving.id;
+        setDriverArrivingAlert(driverArriving);
+        playNotificationSound();
+        
+        // إخفاء الإشعار بعد 10 ثواني
+        setTimeout(() => setDriverArrivingAlert(null), 10000);
+      }
+    } catch (error) {
+      // Ignore errors
+    }
+  };
 
   useEffect(() => {
     if (token) {
       fetchStoreData();
+      checkDriverArrivingNotifications();
+      
+      // فحص الإشعارات كل 10 ثواني
+      const interval = setInterval(checkDriverArrivingNotifications, 10000);
+      return () => clearInterval(interval);
     }
   }, [token]);
 
@@ -136,8 +185,34 @@ const FoodStoreDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* إشعار اقتراب السائق */}
+      {driverArrivingAlert && (
+        <motion.div 
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 shadow-lg"
+        >
+          <div className="max-w-4xl mx-auto flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+              <span className="text-2xl">🏍️</span>
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-lg">{driverArrivingAlert.title}</p>
+              <p className="text-white/90 text-sm">{driverArrivingAlert.message}</p>
+            </div>
+            <button 
+              onClick={() => setDriverArrivingAlert(null)}
+              className="p-2 hover:bg-white/20 rounded-full"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
-      <div className="bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6">
+      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6 ${driverArrivingAlert ? 'mt-20' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
