@@ -23,6 +23,27 @@
 
 ### December 2025
 
+#### استعادة كلمة المرور ✅ - 15 Dec 2025
+- **الميزة:** نظام متكامل لاستعادة كلمة المرور عند نسيانها
+- **طريقة التحقق 1:** آخر 4 أرقام من رقم الطوارئ المسجل
+- **طريقة التحقق 2:** الاسم الثلاثي (بديل إذا لم يكن هناك رقم طوارئ)
+- **الملفات:**
+  - `ForgotPasswordPage.js` - صفحة استعادة كلمة المرور (جديد)
+  - `AuthPages.js` - رابط "نسيت كلمة المرور" + حقل رقم الطوارئ
+  - `auth.py` - 3 endpoints جديدة
+  - `schemas.py` - Models جديدة
+- **APIs:**
+  - `POST /api/auth/forgot-password` - البحث عن الحساب برقم الهاتف
+  - `POST /api/auth/verify-identity` - التحقق من الهوية (emergency أو name)
+  - `POST /api/auth/reset-password` - إعادة تعيين كلمة المرور
+  - `PUT /api/auth/user/emergency-phone` - تحديث رقم الطوارئ
+- **أمان:**
+  - Rate limiting: 3/دقيقة لـ forgot-password و reset-password، 5/دقيقة لـ verify-identity
+  - رمز إعادة التعيين (32 حرف) صالح لمدة 15 دقيقة فقط
+  - تسجيل المحاولات الفاشلة للتحقق
+  - حذف refresh tokens القديمة بعد تغيير كلمة المرور
+- **Status:** TESTED ✅ (iteration_61)
+
 #### تخطيط المسار الذكي المُحسَّن ✅ - 15 Dec 2025
 - **فصل المسارات (3 خيارات):**
   - 🍔 مسار الطعام - طلبات الطعام فقط (أولوية الطعام الساخن)
@@ -286,6 +307,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_61.json` - Password Recovery Feature ✅
 - `/app/test_reports/iteration_60.json` - Product Delivery Improvements ✅
 - `/app/test_reports/iteration_59.json` - Geofencing & False Arrival System ✅
 - `/app/test_reports/iteration_58.json` - Smart Distribution Phase 2 Tests ✅
@@ -295,3 +317,4 @@ All critical features are implemented and tested.
 ## Credentials
 - **Driver:** 0900000000 / delivery123
 - **Admin:** 0911111111 / admin123
+- **Test User Emergency Phone:** 0912345678 (last 4: 5678)
