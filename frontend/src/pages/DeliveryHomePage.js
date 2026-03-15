@@ -59,7 +59,7 @@ const DeliveryHomePage = () => {
       const [statsRes, availableRes, myOrdersRes] = await Promise.all([
         axios.get(`${API}/delivery/stats`).catch(() => ({ data: {} })),
         axios.get(`${API}/delivery/available-orders`).catch(() => ({ data: [] })),
-        axios.get(`${API}/delivery/my-orders`).catch(() => ({ data: [] }))
+        axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [] } }))
       ]);
       
       setStats({
@@ -70,7 +70,8 @@ const DeliveryHomePage = () => {
         walletBalance: statsRes.data.wallet_balance || 0
       });
       setAvailableOrders(availableRes.data || []);
-      setMyOrders(myOrdersRes.data?.filter(o => o.delivery_status === 'out_for_delivery') || []);
+      const ordersData = myOrdersRes.data?.orders || myOrdersRes.data || [];
+      setMyOrders(Array.isArray(ordersData) ? ordersData.filter(o => o.delivery_status === 'out_for_delivery') : []);
     } catch (error) {
       console.error('Error fetching delivery data:', error);
     } finally {

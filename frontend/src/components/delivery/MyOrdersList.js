@@ -498,6 +498,8 @@ const MyOrdersList = ({
         const canStartDelivery = order.delivery_status === 'picked_up' || order.status === 'out_for_delivery';
         const canComplete = order.delivery_status === 'on_the_way' || order.status === 'out_for_delivery';
         const isDelivered = order.delivery_status === 'delivered' || order.status === 'delivered';
+        // التحقق من حالة القفل (عندما يكون لدى السائق طلبات طعام نشطة)
+        const isLocked = order.is_locked === true;
 
         return (
           <motion.div
@@ -505,12 +507,35 @@ const MyOrdersList = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`rounded-xl border overflow-hidden ${
-              isDark ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200'
+              isLocked
+                ? isDark 
+                  ? 'bg-[#1a1a1a]/50 border-orange-600/50 opacity-75' 
+                  : 'bg-gray-50 border-orange-300 opacity-75'
+                : isDark 
+                  ? 'bg-[#1a1a1a] border-[#333]' 
+                  : 'bg-white border-gray-200'
             }`}
           >
             <div className="p-3">
-              {/* شارة يجب التسليم اليوم - للمنتجات فقط */}
-              {isProductOrder && !isDelivered && (
+              {/* شارة الطلب المقفل - عندما يكون لدى السائق طلبات طعام نشطة */}
+              {isLocked && !isDelivered && (
+                <div className={`rounded-lg px-3 py-2 mb-3 flex items-start gap-2 ${
+                  isDark ? 'bg-orange-900/40 border border-orange-700' : 'bg-orange-100 border border-orange-300'
+                }`}>
+                  <Lock size={16} className="text-orange-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className={`text-xs font-bold ${isDark ? 'text-orange-400' : 'text-orange-700'}`}>
+                      🔒 طلب مقفل مؤقتاً
+                    </p>
+                    <p className={`text-[10px] mt-0.5 ${isDark ? 'text-orange-300/80' : 'text-orange-600'}`}>
+                      {order.lock_reason || 'أكمل توصيل طلبات الطعام أولاً ثم يمكنك تسليم هذا الطلب'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* شارة يجب التسليم اليوم - للمنتجات فقط (تظهر فقط إذا لم يكن مقفلاً) */}
+              {isProductOrder && !isDelivered && !isLocked && (
                 <div className={`rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5 ${
                   isDark ? 'bg-red-900/30 border border-red-800' : 'bg-red-100 border border-red-300'
                 }`}>
@@ -520,10 +545,14 @@ const MyOrdersList = ({
               )}
 
               {/* رقم الطلب الكبير */}
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl mb-3">
+              <div className={`text-white p-3 rounded-xl mb-3 ${
+                isLocked 
+                  ? 'bg-gradient-to-r from-gray-500 to-gray-600' 
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600'
+              }`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs opacity-80">📦 طلب منتجات</p>
+                    <p className="text-xs opacity-80">📦 طلب منتجات {isLocked && '🔒'}</p>
                     <p className="text-2xl font-bold">#{orderNumber}</p>
                   </div>
                   <button
@@ -644,23 +673,40 @@ const MyOrdersList = ({
                 </div>
               )}
 
-              <p className="font-bold text-green-500 text-sm mb-3">{formatPrice(order.total)}</p>
+              <p className={`font-bold text-sm mb-3 ${isLocked ? 'text-gray-400' : 'text-green-500'}`}>{formatPrice(order.total)}</p>
 
               {/* أزرار الإجراءات */}
               <div className="space-y-2">
-                {canStartDelivery && (
+                {/* أزرار معطلة عندما يكون الطلب مقفلاً */}
+                {isLocked && !isDelivered && (
+                  <div className={`w-full py-3 rounded-lg text-center ${
+                    isDark ? 'bg-orange-900/30 border border-orange-700' : 'bg-orange-50 border border-orange-200'
+                  }`}>
+                    <Lock size={18} className="mx-auto text-orange-500 mb-1" />
+                    <p className={`text-xs font-bold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
+                      🔒 الإجراءات مقفلة
+                    </p>
+                    <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      أكمل طلبات الطعام أولاً
+                    </p>
+                  </div>
+                )}
+                
+                {canStartDelivery && !isLocked && (
                   <button
                     onClick={() => onOpenETAModal ? onOpenETAModal(order.id) : onStartDelivery(order.id)}
                     className="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    data-testid={`start-delivery-btn-${order.id}`}
                   >
                     <Clock size={14} />
                     في الطريق للعميل
                   </button>
                 )}
-                {canComplete && (
+                {canComplete && !isLocked && (
                   <button
                     onClick={() => onShowDeliveryChecklist(order)}
                     className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                    data-testid={`confirm-delivery-btn-${order.id}`}
                   >
                     <CheckCircle size={14} />
                     تأكيد التسليم
@@ -670,7 +716,9 @@ const MyOrdersList = ({
                   <div className="grid grid-cols-2 gap-2">
                     <a
                       href={`tel:${order.phone}`}
-                      className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
+                        isLocked ? 'bg-gray-400 text-white' : 'bg-green-600 text-white'
+                      }`}
                     >
                       <Phone size={14} />
                       العميل
@@ -678,7 +726,9 @@ const MyOrdersList = ({
                     {order.seller_phone && (
                       <a
                         href={`tel:${order.seller_phone}`}
-                        className="bg-blue-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
+                          isLocked ? 'bg-gray-400 text-white' : 'bg-blue-600 text-white'
+                        }`}
                       >
                         <Phone size={14} />
                         البائع

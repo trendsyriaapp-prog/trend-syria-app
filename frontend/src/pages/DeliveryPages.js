@@ -485,14 +485,16 @@ const DeliveryDashboard = () => {
 
   const fetchOrders = async () => {
     try {
-      const [availableRes, myRes, availableFoodRes, myFoodRes] = await Promise.all([
+      const [availableRes, myProductRes, availableFoodRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/delivery/available-orders`),
-        axios.get(`${API}/delivery/my-orders`),
+        axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [], is_locked: false } })),
         axios.get(`${API}/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
         axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
       setAvailableOrders(availableRes.data);
-      setMyOrders(myRes.data);
+      // استخدام my-product-orders الذي يحتوي على معلومات القفل
+      const productOrdersData = myProductRes.data;
+      setMyOrders(productOrdersData.orders || []);
       
       // معالجة طلبات الطعام - دمج الطلبات الفردية والمجمعة مع إزالة التكرار
       const foodData = availableFoodRes.data || {};
