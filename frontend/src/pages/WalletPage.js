@@ -39,7 +39,7 @@ const WalletPage = () => {
   const [submitting, setSubmitting] = useState(false);
   
   useEffect(() => {
-    if (user && (user.user_type === 'seller' || user.user_type === 'delivery')) {
+    if (user && (user.user_type === 'seller' || user.user_type === 'food_seller' || user.user_type === 'delivery')) {
       fetchWalletData();
       fetchWithdrawalLimits();
     }
@@ -48,14 +48,14 @@ const WalletPage = () => {
   const fetchWithdrawalLimits = async () => {
     try {
       const res = await axios.get(`${API}/api/settings/wallet`);
-      if (user.user_type === 'seller') {
+      if (user.user_type === 'seller' || user.user_type === 'food_seller') {
         setMinWithdrawal(res.data.seller_min_withdrawal || 50000);
       } else {
         setMinWithdrawal(res.data.delivery_min_withdrawal || 25000);
       }
     } catch (error) {
       // استخدام القيم الافتراضية
-      setMinWithdrawal(user.user_type === 'seller' ? 50000 : 25000);
+      setMinWithdrawal((user.user_type === 'seller' || user.user_type === 'food_seller') ? 50000 : 25000);
     }
   };
   
@@ -124,7 +124,7 @@ const WalletPage = () => {
     }
   };
   
-  if (!user || (user.user_type !== 'seller' && user.user_type !== 'delivery')) {
+  if (!user || (user.user_type !== 'seller' && user.user_type !== 'food_seller' && user.user_type !== 'delivery')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-gray-500">هذه الصفحة للبائعين وموظفي التوصيل فقط</p>

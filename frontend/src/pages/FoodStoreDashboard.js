@@ -9,7 +9,7 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin, Timer
+  ChefHat, Truck, Phone, MapPin, Timer, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -185,6 +185,7 @@ const FoodStoreDashboard = () => {
             { id: 'offers', label: 'العروض' },
             { id: 'flash', label: 'الفلاش' },
             { id: 'orders', label: 'الطلبات' },
+            { id: 'wallet', label: '💰 المحفظة' },
             { id: 'settings', label: 'الإعدادات' },
           ].map((tab) => (
             <button
@@ -354,6 +355,26 @@ const FoodStoreDashboard = () => {
         {/* Orders Tab */}
         {activeTab === 'orders' && (
           <StoreOrdersTab token={token} />
+        )}
+
+        {/* Wallet Tab */}
+        {activeTab === 'wallet' && (
+          <div className="bg-white rounded-xl p-6 border border-gray-100">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Wallet size={32} className="text-green-600" />
+              </div>
+              <h3 className="font-bold text-xl text-gray-900">المحفظة</h3>
+              <p className="text-gray-500 text-sm">إدارة أرباحك وطلبات السحب</p>
+            </div>
+            <button
+              onClick={() => navigate('/wallet')}
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+            >
+              <Wallet size={20} />
+              الذهاب للمحفظة
+            </button>
+          </div>
         )}
 
         {/* Settings Tab */}
