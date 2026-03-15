@@ -879,6 +879,18 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # التحقق من وجود طلبات طعام نشطة
+    active_food_orders = await db.food_orders.count_documents({
+        "driver_id": user["id"],
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
+    })
+    
+    if active_food_orders > 0:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً ثم يمكنك تسليم المنتجات"
+        )
+    
     order = await db.orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")

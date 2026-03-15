@@ -438,19 +438,29 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     # الحصول على مدينة السائق
     driver_city = user.get("city") or doc.get("city")
     
-    # جلب طلبات المتجر العادية - في نفس مدينة السائق فقط
-    shop_query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
-    if driver_city:
-        shop_query["shipping_city"] = driver_city
+    # التحقق من وجود طلبات طعام نشطة
+    active_food_orders = await db.food_orders.count_documents({
+        "driver_id": user["id"],
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
+    })
     
-    shop_orders = await db.orders.find(
-        shop_query,
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
+    has_active_food_orders = active_food_orders > 0
     
-    # تحويل طلبات المتجر لتنسيق موحد
-    for order in shop_orders:
-        order["order_source"] = "shop"
+    # جلب طلبات المتجر العادية - فقط إذا لم يكن لديه طلبات طعام نشطة
+    shop_orders = []
+    if not has_active_food_orders:
+        shop_query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
+        if driver_city:
+            shop_query["shipping_city"] = driver_city
+        
+        shop_orders = await db.orders.find(
+            shop_query,
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        
+        # تحويل طلبات المتجر لتنسيق موحد
+        for order in shop_orders:
+            order["order_source"] = "shop"
     
     # جلب طلبات الطعام الجاهزة - في نفس مدينة السائق فقط
     food_query = {"status": "ready", "driver_id": None}
@@ -520,6 +530,14 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
+    # التحقق من وجود طلبات طعام نشطة
+    active_food_orders = await db.food_orders.count_documents({
+        "driver_id": user["id"],
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
+    })
+    
+    is_locked = active_food_orders > 0
+    
     # جلب الطلبات النشطة
     orders = await db.orders.find(
         {
@@ -537,6 +555,14 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     
     # إضافة معلومات البائع لكل طلب
     for order in orders:
+        # إضافة حالة القفل لكل طلب
+        order["is_locked"] = is_locked
+        if is_locked:
+            order["lock_reason"] = f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً"
+            # إخفاء المعلومات الحساسة
+            order["buyer_phone"] = "مقفل"
+            order["delivery_address_details"] = "مقفل - أكمل طلبات الطعام أولاً"
+        
         # معلومات البائع
         seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
         if seller_ids:
@@ -545,7 +571,7 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
                 {"_id": 0, "phone": 1, "name": 1, "full_name": 1, "store_name": 1, "store_address": 1}
             )
             if seller:
-                order["seller_phone"] = seller.get("phone")
+                order["seller_phone"] = seller.get("phone") if not is_locked else "مقفل"
                 order["seller_name"] = seller.get("store_name") or seller.get("full_name") or seller.get("name")
                 order["seller_address"] = seller.get("store_address", "")
         
@@ -556,7 +582,10 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
         "orders": orders,
         "count": len(orders),
         "max_orders": max_orders,
-        "can_accept_more": len(orders) < max_orders
+        "can_accept_more": len(orders) < max_orders and not is_locked,
+        "is_locked": is_locked,
+        "active_food_orders": active_food_orders,
+        "lock_message": f"لديك {active_food_orders} طلب طعام نشط. أكمل توصيل الطعام أولاً ثم يمكنك تسليم المنتجات" if is_locked else None
     }
 
 @router.get("/available-food-orders")
