@@ -956,3 +956,67 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     )
     
     return {"message": "تم تأكيد التسليم", "delivery_fee": delivery_fee}
+
+
+
+# ============== Seller Commission Info ==============
+
+@router.get("/seller/commission")
+async def get_seller_commission_info(user: dict = Depends(get_current_user)):
+    """جلب معلومات العمولة للبائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    # جلب منتجات البائع لتحديد الفئات
+    products = await db.products.find(
+        {"seller_id": user["id"]},
+        {"category": 1}
+    ).to_list(100)
+    
+    # جمع الفئات الفريدة
+    categories = list(set(p.get("category", "default") for p in products))
+    
+    # جلب نسب العمولات لكل فئة
+    rates = await get_commission_rates_from_db()
+    
+    category_rates = {}
+    for cat in categories:
+        rate = rates.get(cat, rates.get("default", 0.15))
+        category_rates[cat] = {
+            "rate": rate,
+            "percentage": f"{int(rate * 100)}%"
+        }
+    
+    # حساب متوسط العمولة
+    if categories:
+        avg_rate = sum(rates.get(c, rates.get("default", 0.15)) for c in categories) / len(categories)
+    else:
+        avg_rate = rates.get("default", 0.15)
+    
+    # جلب إحصائيات الطلبات
+    orders = await db.orders.find(
+        {"items.seller_id": user["id"], "status": "delivered"},
+        {"items": 1}
+    ).to_list(1000)
+    
+    total_sales = 0
+    total_commission = 0
+    
+    for order in orders:
+        for item in order.get("items", []):
+            if item.get("seller_id") == user["id"]:
+                total_sales += item.get("item_total", 0)
+                total_commission += item.get("commission_amount", 0)
+    
+    total_earnings = total_sales - total_commission
+    
+    return {
+        "average_commission_rate": avg_rate,
+        "commission_percentage": f"{int(avg_rate * 100)}%",
+        "category_rates": category_rates,
+        "total_sales": total_sales,
+        "total_commission_paid": total_commission,
+        "total_earnings": total_earnings,
+        "products_count": len(products),
+        "message": f"متوسط نسبة العمولة هو {int(avg_rate * 100)}% من قيمة كل طلب"
+    }

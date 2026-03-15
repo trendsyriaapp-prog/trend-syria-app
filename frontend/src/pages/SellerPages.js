@@ -417,6 +417,7 @@ const SellerDashboardPage = () => {
   const [savingEdit, setSavingEdit] = useState(false);
   const [activeStatView, setActiveStatView] = useState(null);
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
+  const [commissionInfo, setCommissionInfo] = useState(null);
 
   // صوت التنبيه للطلبات الجديدة
   const { playSound } = useNotificationSound();
@@ -472,8 +473,19 @@ const SellerDashboardPage = () => {
     if (user?.user_type === 'seller' || user?.user_type === 'food_seller') {
       fetchData();
       fetchWallet();
+      fetchCommissionInfo();
     }
   }, [user]);
+
+  const fetchCommissionInfo = async () => {
+    try {
+      const endpoint = isFoodSeller ? '/food/my-store/commission' : '/orders/seller/commission';
+      const res = await axios.get(`${API}${endpoint}`);
+      setCommissionInfo(res.data);
+    } catch (error) {
+      console.log('Commission info not available');
+    }
+  };
 
   const fetchWallet = async () => {
     try {
@@ -923,6 +935,7 @@ const SellerDashboardPage = () => {
         saving={saving}
         toast={toast}
         isFoodSeller={isFoodSeller}
+        commissionInfo={commissionInfo}
       />
 
       {/* Edit Product Modal */}
@@ -935,6 +948,7 @@ const SellerDashboardPage = () => {
         onSave={handleSaveEdit}
         onClose={() => setEditingProduct(null)}
         saving={savingEdit}
+        commissionInfo={commissionInfo}
       />
 
       {/* Stat Details Modal */}

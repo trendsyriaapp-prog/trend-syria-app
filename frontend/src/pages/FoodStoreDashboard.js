@@ -419,6 +419,13 @@ const FoodStoreDashboard = () => {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-gray-900 truncate">{product.name}</h4>
                       <p className="text-green-600 font-bold">{product.price?.toLocaleString()} ل.س</p>
+                      {commissionInfo && (
+                        <p className="text-xs text-gray-500">
+                          صافي ربحك: <span className="text-green-600 font-medium">
+                            {Math.round(product.price * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -509,6 +516,7 @@ const FoodStoreDashboard = () => {
           store={store}
           product={editingProduct}
           token={token}
+          commissionInfo={commissionInfo}
           onClose={() => {
             setShowAddProduct(false);
             setEditingProduct(null);
@@ -1043,7 +1051,7 @@ const OfferModal = ({ offer, products, token, onClose, onSave }) => {
 };
 
 // Product Modal Component
-const ProductModal = ({ store, product, token, onClose, onSave }) => {
+const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -1175,6 +1183,35 @@ const ProductModal = ({ store, product, token, onClose, onSave }) => {
               />
             </div>
           </div>
+
+          {/* حاسبة الأرباح والعمولة */}
+          {formData.price > 0 && commissionInfo && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+              <h4 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
+                <DollarSign size={18} />
+                تفاصيل أرباحك من هذا المنتج
+              </h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center py-2 border-b border-amber-200">
+                  <span className="text-gray-700">سعر البيع</span>
+                  <span className="font-bold text-gray-900">{Number(formData.price).toLocaleString()} ل.س</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-200">
+                  <span className="text-red-600">عمولة المنصة ({commissionInfo.commission_percentage})</span>
+                  <span className="font-bold text-red-600">- {Math.round(Number(formData.price) * commissionInfo.commission_rate).toLocaleString()} ل.س</span>
+                </div>
+                <div className="flex justify-between items-center py-2 bg-green-100 rounded-lg px-3 -mx-1">
+                  <span className="font-bold text-green-700">صافي ربحك ✅</span>
+                  <span className="font-bold text-green-700 text-lg">
+                    {Math.round(Number(formData.price) * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-amber-700 text-center">
+                💡 هذا هو المبلغ الذي ستحصل عليه عند بيع كل قطعة من هذا المنتج
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

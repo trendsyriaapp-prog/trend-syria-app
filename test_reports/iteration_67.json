@@ -1,0 +1,69 @@
+{
+  "summary": "Commission Calculator feature testing completed successfully. Both backend APIs and frontend UI are working correctly. All 9 backend tests pass. Commission calculator displays correctly in FoodStoreDashboard overview, Add Product Modal, and product list.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_commission_calculator.py",
+    "/app/test_reports/pytest/commission_calculator_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Commission calculator implementation is complete and well-designed",
+    "Food seller commission API (/api/food/my-store/commission) returns all expected fields",
+    "Product seller commission API (/api/seller/commission) works correctly for sellers",
+    "Commission calculator in ProductModal shows: selling price, commission (rate + amount), net profit",
+    "Net profit calculation is mathematically correct (price * (1 - commission_rate))",
+    "Product list displays net profit for each product (صافي ربحك)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_commission_calculator.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "food_seller": {
+      "phone": "0999999999",
+      "password": "seller123"
+    }
+  },
+  "seed_data_creation": "None - Used existing test seller with food store",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Commission Calculator feature fully tested and working. Key findings: 1) GET /api/food/my-store/commission returns store_type, commission_rate (0.20 for restaurants), commission_percentage (20%), total_sales, total_commission_paid, total_earnings, orders_count. 2) GET /api/seller/commission returns category-based commission rates for product sellers. 3) FoodStoreDashboard shows commission card with 20% rate and example calculation. 4) Add Product Modal shows dynamic commission calculator when price > 0: selling price, commission deduction in red, net profit in green. 5) Product list shows صافي ربحك (net profit) for each product.",
+  "features_tested": {
+    "food_seller_commission_api": {
+      "endpoint": "GET /api/food/my-store/commission",
+      "status": "WORKING",
+      "response_fields": ["store_type", "store_type_name", "commission_rate", "commission_percentage", "total_sales", "total_commission_paid", "total_earnings", "orders_count", "message"]
+    },
+    "product_seller_commission_api": {
+      "endpoint": "GET /api/seller/commission",
+      "status": "WORKING",
+      "response_fields": ["average_commission_rate", "commission_percentage", "category_rates", "total_sales", "total_commission_paid", "total_earnings", "products_count", "message"]
+    },
+    "food_dashboard_commission_card": {
+      "location": "/food/dashboard - Overview tab",
+      "status": "WORKING",
+      "displays": ["20% commission rate", "orders count", "commissions paid", "net earnings", "example calculation (100,000 -> 80,000)"]
+    },
+    "add_product_modal_calculator": {
+      "location": "FoodStoreDashboard -> Products -> Add Product",
+      "status": "WORKING",
+      "displays": ["تفاصيل أرباحك من هذا المنتج", "سعر البيع", "عمولة المنصة (20%)", "صافي ربحك with green highlight"]
+    },
+    "product_list_net_profit": {
+      "location": "Products tab product cards",
+      "status": "WORKING",
+      "displays": "صافي ربحك for each product"
+    }
+  }
+}

@@ -12,7 +12,8 @@ const AddProductModal = ({
   onSave, 
   saving,
   toast,
-  isFoodSeller = false
+  isFoodSeller = false,
+  commissionInfo = null
 }) => {
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -300,6 +301,29 @@ const AddProductModal = ({
                   data-testid="product-price-input"
                 />
               </div>
+              
+              {/* حاسبة الأرباح والعمولة */}
+              {newProduct.price > 0 && commissionInfo && (
+                <div className="col-span-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200">
+                  <h4 className="font-bold text-amber-800 text-xs mb-2 flex items-center gap-1">
+                    <Info size={12} />
+                    تفاصيل أرباحك
+                  </h4>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-600">سعر البيع:</span>
+                    <span className="font-medium">{Number(newProduct.price).toLocaleString()} ل.س</span>
+                  </div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-red-600">عمولة المنصة ({commissionInfo.commission_percentage}):</span>
+                    <span className="font-medium text-red-600">- {Math.round(Number(newProduct.price) * commissionInfo.commission_rate).toLocaleString()} ل.س</span>
+                  </div>
+                  <div className="flex justify-between text-xs bg-green-100 rounded px-2 py-1 mt-2">
+                    <span className="font-bold text-green-700">صافي ربحك:</span>
+                    <span className="font-bold text-green-700">{Math.round(Number(newProduct.price) * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س ✅</span>
+                  </div>
+                </div>
+              )}
+              
               {isFoodSeller ? (
                 <div>
                   <label className="block text-[10px] font-medium mb-1 text-gray-700">وقت التحضير (دقيقة)</label>
