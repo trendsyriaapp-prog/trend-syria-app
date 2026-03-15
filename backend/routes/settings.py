@@ -810,3 +810,101 @@ async def update_store_customer_distance(
         "message": "تم تحديث المسافة القصوى بنجاح",
         "max_distance_km": distance.max_distance_km
     }
+
+
+
+# ============== رسوم الطقس الصعب (Weather Surcharge) ==============
+
+class WeatherSurcharge(BaseModel):
+    is_active: bool = False
+    amount: float = 5000  # المبلغ الإضافي
+    reason: str = "طقس صعب"  # السبب (مطر، ثلج، حرارة...)
+
+@router.get("/weather-surcharge")
+async def get_weather_surcharge(user: dict = Depends(get_current_user)):
+    """جلب إعدادات رسوم الطقس الصعب"""
+    settings = await db.platform_settings.find_one({"id": "main"})
+    weather = settings.get("weather_surcharge", {}) if settings else {}
+    
+    return {
+        "is_active": weather.get("is_active", False),
+        "amount": weather.get("amount", 5000),
+        "reason": weather.get("reason", "طقس صعب"),
+        "activated_at": weather.get("activated_at"),
+        "activated_by": weather.get("activated_by")
+    }
+
+@router.put("/weather-surcharge")
+async def update_weather_surcharge(
+    surcharge: WeatherSurcharge,
+    user: dict = Depends(get_current_user)
+):
+    """تفعيل/إيقاف رسوم الطقس الصعب مع إرسال إشعارات للسائقين"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if surcharge.amount < 0 or surcharge.amount > 50000:
+        raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون بين 0 و 50,000 ل.س")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الإعدادات
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "weather_surcharge": {
+                    "is_active": surcharge.is_active,
+                    "amount": surcharge.amount,
+                    "reason": surcharge.reason,
+                    "activated_at": now if surcharge.is_active else None,
+                    "activated_by": user["id"] if surcharge.is_active else None,
+                    "deactivated_at": now if not surcharge.is_active else None
+                },
+                "updated_at": now,
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    # إرسال إشعارات لجميع السائقين
+    drivers = await db.users.find(
+        {"user_type": "delivery", "is_active": {"$ne": False}},
+        {"_id": 0, "id": 1}
+    ).to_list(1000)
+    
+    if surcharge.is_active:
+        # إشعار التفعيل
+        notification_title = "🌧️ رسوم طقس صعب - فرصة ربح!"
+        notification_message = f"تم تفعيل رسوم إضافية بسبب: {surcharge.reason}\n💰 +{surcharge.amount:,.0f} ل.س على كل طلب\n🚀 اعمل الآن واكسب أكثر!"
+    else:
+        # إشعار الإيقاف
+        notification_title = "☀️ انتهاء رسوم الطقس الصعب"
+        notification_message = "تم إيقاف رسوم الطقس الصعب. الرسوم عادت لوضعها الطبيعي."
+    
+    # إنشاء الإشعارات
+    import uuid
+    notifications = []
+    for driver in drivers:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": driver["id"],
+            "title": notification_title,
+            "message": notification_message,
+            "type": "weather_surcharge",
+            "is_read": False,
+            "play_sound": True,
+            "created_at": now
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return {
+        "message": f"تم {'تفعيل' if surcharge.is_active else 'إيقاف'} رسوم الطقس الصعب",
+        "is_active": surcharge.is_active,
+        "amount": surcharge.amount,
+        "reason": surcharge.reason,
+        "notifications_sent": len(notifications)
+    }

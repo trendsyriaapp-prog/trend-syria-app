@@ -42,6 +42,13 @@ const DeliverySettingsTab = () => {
     cold_dry_limit: 5
   });
 
+  // إعدادات رسوم الطقس الصعب
+  const [weatherSurcharge, setWeatherSurcharge] = useState({
+    is_active: false,
+    amount: 5000,
+    reason: 'طقس صعب'
+  });
+
   // إعدادات أجور التوصيل بالمسافة
   const [distanceSettings, setDistanceSettings] = useState({
     base_fee: 500,
@@ -128,6 +135,7 @@ const DeliverySettingsTab = () => {
     fetchUndeliveredReport();
     fetchHoldSettings();
     fetchHoldSummary();
+    fetchWeatherSurcharge();
   }, []);
 
   const fetchSettings = async () => {
@@ -418,6 +426,42 @@ const DeliverySettingsTab = () => {
       alert('تم حفظ إعدادات حدود التوصيل بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ============== رسوم الطقس الصعب ==============
+  const fetchWeatherSurcharge = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/settings/weather-surcharge`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWeatherSurcharge({
+        is_active: res.data.is_active || false,
+        amount: res.data.amount || 5000,
+        reason: res.data.reason || 'طقس صعب'
+      });
+    } catch (error) {
+      console.error('Error fetching weather surcharge:', error);
+    }
+  };
+
+  const handleSaveWeatherSurcharge = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(`${API}/api/settings/weather-surcharge`, {
+        is_active: weatherSurcharge.is_active,
+        amount: weatherSurcharge.amount,
+        reason: weatherSurcharge.reason
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(`${res.data.message}\nتم إرسال ${res.data.notifications_sent} إشعار للسائقين`);
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
       setSaving(false);
     }
@@ -1161,6 +1205,140 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات تعويض الانتظار
+          </button>
+        </div>
+      </div>
+
+      {/* Weather Surcharge Section - رسوم الطقس الصعب */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className={`p-4 text-white ${weatherSurcharge.is_active ? 'bg-gradient-to-l from-amber-500 to-orange-500' : 'bg-gradient-to-l from-gray-500 to-gray-600'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{weatherSurcharge.is_active ? '🌧️' : '☀️'}</span>
+              <div>
+                <h2 className="font-bold text-lg">رسوم الطقس الصعب</h2>
+                <p className="text-sm text-white/80">
+                  {weatherSurcharge.is_active ? 'مفعّل - يتم تطبيق رسوم إضافية' : 'متوقف - لا توجد رسوم إضافية'}
+                </p>
+              </div>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-sm font-bold ${weatherSurcharge.is_active ? 'bg-white/20' : 'bg-gray-400/50'}`}>
+              {weatherSurcharge.is_active ? '🟢 مفعّل' : '⚪ متوقف'}
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* تفعيل/إيقاف */}
+            <div className={`rounded-xl p-4 border-2 ${weatherSurcharge.is_active ? 'bg-amber-50 border-amber-300' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{weatherSurcharge.is_active ? '🌧️' : '☀️'}</span>
+                  <div>
+                    <h3 className="font-bold text-gray-800">حالة الرسوم</h3>
+                    <p className="text-xs text-gray-500">تفعيل/إيقاف الرسوم الإضافية</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setWeatherSurcharge({...weatherSurcharge, is_active: !weatherSurcharge.is_active})}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${weatherSurcharge.is_active ? 'bg-amber-500' : 'bg-gray-300'}`}
+                >
+                  <span className={`absolute top-0.5 ${weatherSurcharge.is_active ? 'right-0.5' : 'left-0.5'} w-6 h-6 bg-white rounded-full shadow transition-all`}></span>
+                </button>
+              </div>
+              
+              {/* المبلغ */}
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">💰 المبلغ الإضافي (ل.س)</label>
+                <input
+                  type="number"
+                  value={weatherSurcharge.amount}
+                  onChange={(e) => setWeatherSurcharge({...weatherSurcharge, amount: parseInt(e.target.value) || 0})}
+                  className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
+                  min={0}
+                  max={50000}
+                  step={500}
+                />
+                <p className="text-center text-sm text-amber-600 mt-1">
+                  +{weatherSurcharge.amount?.toLocaleString()} ل.س على كل طلب
+                </p>
+              </div>
+              
+              {/* السبب */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">📝 سبب الرسوم</label>
+                <select
+                  value={weatherSurcharge.reason}
+                  onChange={(e) => setWeatherSurcharge({...weatherSurcharge, reason: e.target.value})}
+                  className="w-full p-3 border-2 border-amber-300 rounded-lg font-medium"
+                >
+                  <option value="طقس صعب">🌧️ طقس صعب</option>
+                  <option value="مطر غزير">🌧️ مطر غزير</option>
+                  <option value="ثلوج">❄️ ثلوج</option>
+                  <option value="عاصفة رملية">💨 عاصفة رملية</option>
+                  <option value="حرارة شديدة">🌡️ حرارة شديدة</option>
+                  <option value="ضغط عالي">📈 ضغط عالي على الطلبات</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* معاينة ما سيراه العميل */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <h3 className="font-bold text-gray-800 mb-3">👁️ معاينة - ما سيراه العميل:</h3>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">المنتجات:</span>
+                    <span className="font-medium">45,000 ل.س</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">رسوم التوصيل:</span>
+                    <span className="font-medium">5,000 ل.س</span>
+                  </div>
+                  {weatherSurcharge.is_active && (
+                    <div className="flex justify-between text-amber-600">
+                      <span className="flex items-center gap-1">
+                        <span>🌧️</span>
+                        <span>رسوم {weatherSurcharge.reason}:</span>
+                      </span>
+                      <span className="font-bold">+{weatherSurcharge.amount?.toLocaleString()} ل.س</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 flex justify-between font-bold">
+                    <span>المجموع:</span>
+                    <span className={weatherSurcharge.is_active ? 'text-amber-600' : ''}>
+                      {(50000 + (weatherSurcharge.is_active ? weatherSurcharge.amount : 0)).toLocaleString()} ل.س
+                    </span>
+                  </div>
+                </div>
+                {!weatherSurcharge.is_active && (
+                  <p className="text-xs text-gray-400 mt-3 text-center">
+                    * عند التفعيل ستظهر رسوم الطقس الصعب هنا
+                  </p>
+                )}
+              </div>
+              
+              {/* ملاحظة مهمة */}
+              <div className={`mt-4 p-3 rounded-lg ${weatherSurcharge.is_active ? 'bg-amber-100 border border-amber-300' : 'bg-blue-50 border border-blue-200'}`}>
+                <p className="text-xs text-gray-700">
+                  <strong>📌 ملاحظة:</strong> رسوم الطقس الصعب تُطبق فقط على الطلبات التي <strong>لم تصل للحد المجاني</strong> للتوصيل.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleSaveWeatherSurcharge}
+            disabled={saving}
+            className={`mt-4 w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold text-white ${
+              weatherSurcharge.is_active 
+                ? 'bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                : 'bg-gradient-to-l from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+            }`}
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            {weatherSurcharge.is_active ? '💾 تفعيل وإرسال إشعار للسائقين' : '💾 إيقاف وإرسال إشعار للسائقين'}
           </button>
         </div>
       </div>

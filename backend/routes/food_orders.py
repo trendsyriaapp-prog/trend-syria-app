@@ -336,26 +336,42 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # حساب رسوم التوصيل
     # إذا تم إرسال رسوم التوصيل من الـ Frontend (محسوبة بالمسافة)، نستخدمها
     # وإلا نحسب بناءً على إعدادات المنصة الموحدة
+    
+    # جلب إعدادات المنصة
+    platform_settings = await db.platform_settings.find_one({"id": "main"})
+    food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
+    
+    # جلب رسوم الطقس الصعب
+    weather_surcharge = platform_settings.get("weather_surcharge", {}) if platform_settings else {}
+    weather_surcharge_active = weather_surcharge.get("is_active", False)
+    weather_surcharge_amount = weather_surcharge.get("amount", 0) if weather_surcharge_active else 0
+    weather_surcharge_reason = weather_surcharge.get("reason", "") if weather_surcharge_active else ""
+    
+    # حساب المجموع النهائي قبل التوصيل
+    final_subtotal = subtotal - total_discount
+    
+    # التحقق من الحد المجاني للتوصيل
+    is_free_delivery = food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold
+    
     if order.delivery_fee is not None:
-        delivery_fee = order.delivery_fee
+        delivery_fee = order.delivery_fee if not is_free_delivery else 0
         delivery_distance_km = order.delivery_distance_km
     else:
         store_delivery_fee = store.get("delivery_fee", 5000)
         
-        # جلب حد التوصيل المجاني الموحد من إعدادات المنصة
-        platform_settings = await db.platform_settings.find_one({"id": "main"})
-        food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
-        
         # توصيل مجاني إذا تجاوز المجموع الحد الموحد (بعد الخصم)
-        final_subtotal = subtotal - total_discount
-        if food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold:
+        if is_free_delivery:
             delivery_fee = 0
         else:
             delivery_fee = store_delivery_fee
         delivery_distance_km = None
     
-    final_subtotal = subtotal - total_discount
-    total = final_subtotal + delivery_fee
+    # إضافة رسوم الطقس الصعب (فقط إذا لم يكن التوصيل مجاني)
+    applied_weather_surcharge = 0
+    if weather_surcharge_active and not is_free_delivery:
+        applied_weather_surcharge = weather_surcharge_amount
+    
+    total = final_subtotal + delivery_fee + applied_weather_surcharge
     
     # التحقق من رصيد المحفظة إذا كان الدفع بالمحفظة
     if order.payment_method == "wallet":
@@ -420,6 +436,8 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "free_items": free_items,
         "delivery_fee": delivery_fee,
         "delivery_distance_km": delivery_distance_km,
+        "weather_surcharge": applied_weather_surcharge,
+        "weather_surcharge_reason": weather_surcharge_reason if applied_weather_surcharge > 0 else None,
         "total": total,
         "delivery_address": order.delivery_address,
         "delivery_city": order.delivery_city,

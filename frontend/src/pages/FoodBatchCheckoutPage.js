@@ -60,6 +60,7 @@ const FoodBatchCheckoutPage = () => {
   
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
+  const [weatherSurcharge, setWeatherSurcharge] = useState({ is_active: false, amount: 0, reason: '' });
   
   useEffect(() => {
     if (!user || !token) {
@@ -95,7 +96,11 @@ const FoodBatchCheckoutPage = () => {
   }, [stores.length]);
   
   const totalDeliveryFee = Object.values(deliveryFees).reduce((sum, fee) => sum + fee, 0);
-  const grandTotal = totalAmount + totalDeliveryFee;
+  
+  // حساب رسوم الطقس الصعب (فقط إذا التوصيل ليس مجاني)
+  const appliedWeatherSurcharge = (weatherSurcharge.is_active && totalDeliveryFee > 0) ? weatherSurcharge.amount : 0;
+  
+  const grandTotal = totalAmount + totalDeliveryFee + appliedWeatherSurcharge;
   
   // حساب طريقة الدفع الحالية
   const getCurrentPaymentMethod = () => {
@@ -113,11 +118,14 @@ const FoodBatchCheckoutPage = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [walletRes, addressesRes, paymentsRes] = await Promise.all([
+      const [walletRes, addressesRes, paymentsRes, weatherRes] = await Promise.all([
         axios.get(`${API}/wallet/balance`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { balance: 0 } })),
         axios.get(`${API}/user/addresses`).catch(() => ({ data: [] })),
+        axios.get(`${API}/settings/weather-surcharge`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: { is_active: false, amount: 0, reason: '' } })),
         axios.get(`${API}/user/payment-methods`).catch(() => ({ data: [] }))
       ]);
       
@@ -153,6 +161,11 @@ const FoodBatchCheckoutPage = () => {
       const defaultPayment = paymentsRes.data.find(p => p.is_default);
       if (defaultPayment) {
         setSelectedPaymentId(defaultPayment.id);
+      }
+      
+      // تعيين رسوم الطقس الصعب
+      if (weatherRes?.data) {
+        setWeatherSurcharge(weatherRes.data);
       }
       
       // تعبئة بيانات المستخدم
@@ -747,6 +760,15 @@ const FoodBatchCheckoutPage = () => {
               <span className="text-gray-900">{formatPrice(totalDeliveryFee)}</span>
             )}
           </div>
+          {appliedWeatherSurcharge > 0 && (
+            <div className="flex justify-between text-sm text-amber-600">
+              <span className="flex items-center gap-1">
+                <span>🌧️</span>
+                <span>رسوم {weatherSurcharge.reason || 'طقس صعب'}</span>
+              </span>
+              <span className="font-medium">+{formatPrice(appliedWeatherSurcharge)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-100">
             <span className="text-gray-900">الإجمالي</span>
             <span className="text-[#FF6B00]">{formatPrice(grandTotal)}</span>
