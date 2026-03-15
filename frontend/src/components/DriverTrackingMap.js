@@ -118,12 +118,14 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
   // حساب المسافة والوقت
   let distance = null;
   let estimatedTime = null;
+  let isNearby = false;
   if (customerPos) {
     distance = calculateDistance(
       locationData.driver_latitude, locationData.driver_longitude,
       locationData.customer_latitude, locationData.customer_longitude
     );
     estimatedTime = estimateArrivalTime(distance);
+    isNearby = distance < 0.5; // أقل من 500 متر
   }
 
   // مركز الخريطة
@@ -133,8 +135,21 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* إشعار اقتراب السائق */}
+      {isNearby && (
+        <div className="bg-green-500 text-white p-3 flex items-center gap-2 animate-pulse">
+          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            🚗
+          </div>
+          <div>
+            <p className="font-bold text-sm">السائق وصل!</p>
+            <p className="text-xs text-white/90">على بعد {Math.round(distance * 1000)} متر منك</p>
+          </div>
+        </div>
+      )}
+      
       {/* معلومات التتبع */}
-      <div className="p-3 bg-gradient-to-l from-orange-500 to-orange-600 text-white">
+      <div className={`p-3 ${isNearby ? 'bg-green-600' : 'bg-gradient-to-l from-orange-500 to-orange-600'} text-white`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Navigation size={18} />
@@ -153,7 +168,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
           <div className="flex items-center gap-4 mt-2 text-sm">
             <div className="flex items-center gap-1">
               <MapPin size={14} />
-              <span>{distance.toFixed(1)} كم</span>
+              <span>{distance < 1 ? `${Math.round(distance * 1000)} متر` : `${distance.toFixed(1)} كم`}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock size={14} />

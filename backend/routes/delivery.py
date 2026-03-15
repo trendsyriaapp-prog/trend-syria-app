@@ -20,7 +20,7 @@ class LocationUpdate(BaseModel):
 
 @router.put("/location")
 async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_current_user)):
-    """تحديث موقع السائق - يُستدعى تلقائياً كل 30 ثانية"""
+    """تحديث موقع السائق - يُستدعى تلقائياً كل 10 ثواني"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -35,6 +35,8 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
                 "driver_name": user.get("full_name", user.get("name", "")),
                 "latitude": data.latitude,
                 "longitude": data.longitude,
+                "speed": getattr(data, 'speed', None),
+                "heading": getattr(data, 'heading', None),
                 "current_order_id": data.order_id,
                 "updated_at": now
             }
@@ -42,10 +44,10 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
         upsert=True
     )
     
-    # إذا كان هناك طلب، تحديث موقع السائق في الطلب أيضاً
+    # إذا كان هناك طلب، تحديث موقع السائق في الطلب وفحص القرب
     if data.order_id:
         # تحديث طلب الطعام
-        await db.food_orders.update_one(
+        food_order = await db.food_orders.find_one_and_update(
             {"id": data.order_id, "driver_id": user["id"]},
             {
                 "$set": {
@@ -53,10 +55,16 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
                     "driver_longitude": data.longitude,
                     "driver_location_updated_at": now
                 }
-            }
+            },
+            return_document=True
         )
+        
+        # فحص القرب وإرسال إشعار للعميل
+        if food_order:
+            await check_proximity_and_notify(food_order, data.latitude, data.longitude, user)
+        
         # تحديث طلب المنتجات
-        await db.orders.update_one(
+        product_order = await db.orders.find_one_and_update(
             {"id": data.order_id, "driver_id": user["id"]},
             {
                 "$set": {
@@ -64,10 +72,67 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
                     "driver_longitude": data.longitude,
                     "driver_location_updated_at": now
                 }
-            }
+            },
+            return_document=True
         )
+        
+        if product_order:
+            await check_proximity_and_notify(product_order, data.latitude, data.longitude, user)
     
     return {"success": True, "message": "تم تحديث الموقع"}
+
+
+async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon: float, driver: dict):
+    """فحص قرب السائق من العميل وإرسال إشعار"""
+    from math import radians, sin, cos, sqrt, atan2
+    
+    customer_lat = order.get("latitude") or order.get("delivery_latitude")
+    customer_lon = order.get("longitude") or order.get("delivery_longitude")
+    
+    if not customer_lat or not customer_lon:
+        return
+    
+    # حساب المسافة (Haversine formula)
+    R = 6371  # كم
+    lat1 = radians(driver_lat)
+    lat2 = radians(float(customer_lat))
+    dlat = radians(float(customer_lat) - driver_lat)
+    dlon = radians(float(customer_lon) - driver_lon)
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    distance_km = R * c
+    
+    # إذا كان السائق قريباً (أقل من 500 متر) وليس قد أُرسل الإشعار
+    if distance_km < 0.5:
+        nearby_notified = order.get("nearby_notification_sent", False)
+        
+        if not nearby_notified:
+            customer_id = order.get("customer_id") or order.get("user_id")
+            order_number = order.get("order_number", "")
+            driver_name = driver.get("full_name") or driver.get("name", "السائق")
+            
+            # إرسال إشعار
+            notification = {
+                "id": str(uuid.uuid4()),
+                "user_id": customer_id,
+                "title": "🚗 طلبك على وشك الوصول!",
+                "message": f"{driver_name} أصبح قريباً منك. طلبك #{order_number} سيصل خلال دقائق!",
+                "type": "driver_nearby",
+                "order_id": order.get("id"),
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.notifications.insert_one(notification)
+            
+            # تحديث الطلب لمنع إرسال إشعار مكرر
+            collection = "food_orders" if "store_id" in order else "orders"
+            await db[collection].update_one(
+                {"id": order["id"]},
+                {"$set": {"nearby_notification_sent": True}}
+            )
+            
+            print(f"📍 إشعار قرب: السائق {driver_name} على بعد {distance_km*1000:.0f}م من العميل")
 
 @router.get("/location/{order_id}")
 async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_current_user)):
@@ -1970,19 +2035,52 @@ async def get_order_live_tracking(order_id: str, user: dict = Depends(get_curren
     }
 
 def calculate_eta(driver_location: dict, order: dict) -> dict:
-    """حساب الوقت المتوقع للوصول (تقديري)"""
+    """حساب الوقت المتوقع للوصول"""
     if not driver_location or driver_location.get("is_stale"):
         return None
     
-    # تقدير بسيط - في الواقع يحتاج حساب المسافة الفعلية
-    speed = driver_location.get("speed", 30)  # افتراضي 30 كم/ساعة
+    # محاولة حساب المسافة الفعلية
+    delivery_lat = order.get("latitude") or order.get("delivery_latitude")
+    delivery_lon = order.get("longitude") or order.get("delivery_longitude")
     
-    # نفترض مسافة متوسطة 5 كم
+    if delivery_lat and delivery_lon:
+        from math import radians, sin, cos, sqrt, atan2
+        
+        # حساب المسافة بين نقطتين (Haversine formula)
+        R = 6371  # نصف قطر الأرض بالكيلومتر
+        
+        lat1 = radians(driver_location["latitude"])
+        lat2 = radians(float(delivery_lat))
+        dlat = radians(float(delivery_lat) - driver_location["latitude"])
+        dlon = radians(float(delivery_lon) - driver_location["longitude"])
+        
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        distance_km = R * c
+        
+        # حساب الوقت المتوقع
+        speed = driver_location.get("speed") or 30  # افتراضي 30 كم/ساعة
+        if speed < 5:
+            speed = 30  # إذا كان السرعة منخفضة جداً
+        
+        estimated_minutes = max(2, int((distance_km / speed) * 60))
+        
+        return {
+            "minutes": estimated_minutes,
+            "text": f"خلال {estimated_minutes} دقيقة تقريباً",
+            "distance_km": round(distance_km, 2),
+            "is_nearby": distance_km < 0.5  # قريب إذا أقل من 500 متر
+        }
+    
+    # تقدير افتراضي
+    speed = driver_location.get("speed", 30)
     estimated_minutes = max(5, min(30, int(5 / (speed / 60)) if speed > 0 else 15))
     
     return {
         "minutes": estimated_minutes,
-        "text": f"خلال {estimated_minutes} دقيقة تقريباً"
+        "text": f"خلال {estimated_minutes} دقيقة تقريباً",
+        "distance_km": None,
+        "is_nearby": False
     }
 
 
