@@ -2187,6 +2187,36 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
         "is_read": False,
         "created_at": now.isoformat()
     })
+    
+    # ===== إشعار فك القفل للسائق =====
+    # التحقق إذا كان هذا آخر طلب طعام نشط للسائق
+    remaining_food_orders = await db.food_orders.count_documents({
+        "driver_id": driver["id"],
+        "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]},
+        "id": {"$ne": order["id"]}  # استثناء الطلب الحالي
+    })
+    
+    # إذا لم يعد هناك طلبات طعام أخرى
+    if remaining_food_orders == 0:
+        # التحقق من وجود طلبات منتجات معلقة
+        pending_product_orders = await db.orders.count_documents({
+            "delivery_driver_id": driver["id"],
+            "delivery_status": {"$in": ["out_for_delivery", "picked_up", "on_the_way"]}
+        })
+        
+        # إذا كان لديه طلبات منتجات معلقة، أرسل إشعار فك القفل
+        if pending_product_orders > 0:
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": driver["id"],
+                "title": "🔓 تم فك القفل!",
+                "message": f"أكملت طلبات الطعام! لديك {pending_product_orders} طلب منتجات بانتظار التسليم. يمكنك الآن إكمال توصيلها.",
+                "type": "lock_released",
+                "is_read": False,
+                "play_sound": True,
+                "created_at": now.isoformat()
+            })
+            print(f"🔓 إشعار فك القفل للسائق {driver['id']}: {pending_product_orders} طلب منتجات")
 
 
 async def add_earnings_directly(driver: dict, amount: float, order: dict, user_type: str):

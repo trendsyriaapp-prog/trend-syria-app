@@ -484,9 +484,14 @@ All critical features are implemented and tested.
   - طلبات المنتجات المقفلة تظهر بلون رمادي مع أيقونة 🔒
   - أزرار التسليم معطلة مع رسالة توضيحية
   - الأزرار الخرائط والاتصال تبقى متاحة
+- **إشعار فك القفل:** ✅ (جديد)
+  - عند تسليم آخر طلب طعام، يُرسل إشعار للسائق
+  - الرسالة: "🔓 تم فك القفل! لديك X طلب منتجات بانتظار التسليم"
+  - الإشعار يُصدر صوت (play_sound: true)
 - **الملفات:**
   - `backend/routes/delivery.py` - منطق `is_locked` في my-product-orders
   - `backend/routes/orders.py` - حماية delivery_complete من التسليم
+  - `backend/routes/food_orders.py` - إشعار فك القفل
   - `frontend/src/components/delivery/MyOrdersList.js` - واجهة القفل
   - `frontend/src/pages/DeliveryPages.js` - استخدام endpoint الصحيح
   - `frontend/src/pages/DeliveryHomePage.js` - تحديث endpoint
