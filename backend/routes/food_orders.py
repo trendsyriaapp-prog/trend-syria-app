@@ -63,6 +63,110 @@ class BatchOrderCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
+
+# ===============================
+# دوال مساعدة للطلبات التجميعية
+# ===============================
+
+async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id: str):
+    """
+    تحقق من جهوزية جميع طلبات الدفعة وأرسل إشعار للسائق
+    مع ترتيب الاستلام الأمثل (الأبعد عن العميل أولاً)
+    """
+    # جلب جميع طلبات الدفعة
+    batch_orders = await db.food_orders.find({"batch_id": batch_id}).to_list(None)
+    
+    if not batch_orders:
+        return
+    
+    # حساب عدد الطلبات الجاهزة
+    ready_orders = [o for o in batch_orders if o.get("status") == "ready"]
+    total_orders = len(batch_orders)
+    ready_count = len(ready_orders)
+    
+    # إذا جهز أول طلب (حوالي 50% أو أكثر)، أرسل إشعار للسائقين
+    ready_percentage = (ready_count / total_orders) * 100
+    
+    # إذا جهز على الأقل طلب واحد ولم يتم إرسال إشعار بعد
+    first_order = batch_orders[0]
+    if ready_count >= 1 and not first_order.get("drivers_notified_for_batch"):
+        # تحديث جميع الطلبات لتسجيل أننا أرسلنا إشعار
+        await db.food_orders.update_many(
+            {"batch_id": batch_id},
+            {"$set": {"drivers_notified_for_batch": True}}
+        )
+        
+        # إرسال إشعار للسائقين
+        try:
+            from routes.push_notifications import send_new_order_notification_to_delivery
+            customer_city = first_order.get("delivery_city", "")
+            await send_new_order_notification_to_delivery(
+                order_type=f"طلب تجميعي ({ready_count}/{total_orders} جاهز)",
+                city=customer_city
+            )
+        except Exception as e:
+            print(f"Push notification error: {e}")
+
+async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, driver_lng: float):
+    """
+    حساب ترتيب الاستلام الأمثل للطلب التجميعي
+    المنطق: استلم من المتجر الأبعد عن العميل أولاً، والأقرب أخيراً
+    هكذا الطعام الذي يُستلم أخيراً يكون الأحدث
+    """
+    from math import radians, sin, cos, sqrt, atan2
+    
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371  # نصف قطر الأرض بالكيلومتر
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        return R * c
+    
+    # جلب طلبات الدفعة
+    batch_orders = await db.food_orders.find({"batch_id": batch_id, "status": "ready"}).to_list(None)
+    
+    if not batch_orders:
+        return []
+    
+    # جلب إحداثيات العميل
+    customer_lat = batch_orders[0].get("latitude")
+    customer_lng = batch_orders[0].get("longitude")
+    
+    if not customer_lat or not customer_lng:
+        return batch_orders  # إرجاع بدون ترتيب
+    
+    # حساب المسافة من كل متجر للعميل
+    stores_with_distance = []
+    for order in batch_orders:
+        store = await db.food_stores.find_one({"id": order["store_id"]})
+        if store and store.get("latitude") and store.get("longitude"):
+            distance_to_customer = haversine(
+                store["latitude"], store["longitude"],
+                customer_lat, customer_lng
+            )
+            stores_with_distance.append({
+                "order": order,
+                "store": store,
+                "distance_to_customer": distance_to_customer,
+                "ready_at": order.get("ready_at")
+            })
+        else:
+            # إذا لا توجد إحداثيات، أضفه في النهاية
+            stores_with_distance.append({
+                "order": order,
+                "store": store,
+                "distance_to_customer": 0,
+                "ready_at": order.get("ready_at")
+            })
+    
+    # ترتيب: الأبعد عن العميل أولاً (سيُستلم أولاً، يبقى أكثر في السيارة لكنه طُبخ مبكراً)
+    # والأقرب أخيراً (سيُستلم أخيراً، يصل طازجاً)
+    stores_with_distance.sort(key=lambda x: x["distance_to_customer"], reverse=True)
+    
+    return stores_with_distance
+
+
 # ===============================
 # طلبات العميل
 # ===============================
@@ -915,12 +1019,17 @@ async def update_order_status(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    # إذا كان الطلب جاهز للاستلام، نولد كود استلام
+    # إذا كان الطلب جاهز للاستلام، نولد كود استلام ونحفظ وقت الجهوزية
     import random
     if new_status == "ready":
         pickup_code = str(random.randint(1000, 9999))
         update_data["pickup_code"] = pickup_code
         update_data["pickup_code_verified"] = False
+        update_data["ready_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # إذا كان طلب تجميعي، تحقق من جهوزية باقي الطلبات
+        if order.get("batch_id"):
+            await check_batch_readiness_and_notify_driver(order["batch_id"], order_id)
     
     await db.food_orders.update_one(
         {"id": order_id},
@@ -1259,7 +1368,94 @@ async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_us
     }
 
 
-@router.post("/delivery/batch/{batch_id}/complete")
+@router.get("/delivery/batch/{batch_id}/pickup-plan")
+async def get_batch_pickup_plan(
+    batch_id: str,
+    driver_lat: float = Query(None, description="خط عرض السائق"),
+    driver_lng: float = Query(None, description="خط طول السائق"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    الحصول على خطة الاستلام المثلى للطلب التجميعي
+    يرتب المتاجر بحيث يُستلم من الأبعد عن العميل أولاً والأقرب أخيراً
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب طلبات الدفعة
+    orders = await db.food_orders.find({"batch_id": batch_id}).to_list(None)
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="لا توجد طلبات في هذه الدفعة")
+    
+    # حساب الترتيب الأمثل
+    if driver_lat and driver_lng:
+        optimal_order = await calculate_optimal_pickup_order(batch_id, driver_lat, driver_lng)
+    else:
+        # إذا لا توجد إحداثيات السائق، نستخدم ترتيب افتراضي
+        optimal_order = []
+        for order in orders:
+            store = await db.food_stores.find_one({"id": order["store_id"]})
+            optimal_order.append({
+                "order": order,
+                "store": store,
+                "distance_to_customer": 0
+            })
+    
+    # تجهيز خطة الاستلام
+    pickup_plan = []
+    for idx, item in enumerate(optimal_order):
+        order = item["order"]
+        store = item["store"] or {}
+        
+        pickup_plan.append({
+            "sequence": idx + 1,
+            "order_id": order["id"],
+            "order_number": order["order_number"],
+            "store_id": order["store_id"],
+            "store_name": order["store_name"],
+            "store_address": store.get("address", ""),
+            "store_phone": store.get("phone", ""),
+            "store_latitude": store.get("latitude"),
+            "store_longitude": store.get("longitude"),
+            "status": order["status"],
+            "ready_at": order.get("ready_at"),
+            "pickup_code": order.get("pickup_code"),
+            "items_count": len(order.get("items", [])),
+            "subtotal": order.get("subtotal", 0),
+            "distance_to_customer_km": round(item.get("distance_to_customer", 0), 2),
+            "note": "استلم من هنا أولاً - الأبعد عن العميل" if idx == 0 else 
+                   "استلم من هنا أخيراً - الأقرب للعميل" if idx == len(optimal_order) - 1 else
+                   f"محطة رقم {idx + 1}"
+        })
+    
+    # معلومات التوصيل النهائي
+    first_order = orders[0]
+    customer_info = {
+        "name": first_order.get("customer_name"),
+        "phone": first_order.get("delivery_phone"),
+        "address": first_order.get("delivery_address"),
+        "city": first_order.get("delivery_city"),
+        "latitude": first_order.get("latitude"),
+        "longitude": first_order.get("longitude")
+    }
+    
+    total_amount = sum(o.get("total", 0) for o in orders)
+    total_delivery_fee = sum(o.get("delivery_fee", 0) for o in orders)
+    
+    return {
+        "batch_id": batch_id,
+        "total_stores": len(pickup_plan),
+        "total_amount": total_amount,
+        "total_delivery_fee": total_delivery_fee,
+        "pickup_plan": pickup_plan,
+        "customer": customer_info,
+        "tips": [
+            "🔥 استلم من المتاجر بالترتيب المحدد للحفاظ على الطعام ساخناً",
+            "📍 المتجر الأخير هو الأقرب للعميل - استلم منه أخيراً",
+            "⏱️ تحقق من جهوزية كل متجر قبل الذهاب إليه"
+        ]
+    }
 async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_current_user)):
     """إتمام توصيل جميع طلبات الدفعة"""
     if user["user_type"] != "delivery":
