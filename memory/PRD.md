@@ -80,6 +80,28 @@
 - **الملف:** `scripts/seed_food_data.py`
 - **Status:** TESTED ✅ (iteration_63)
 
+#### نظام عمولات المنصة للبائعين ✅ - 15 Dec 2025
+- **الميزة:** خصم نسبة من أرباح البائع كعمولة للمنصة
+- **نسب العمولات:**
+  - 🍔 وجبات سريعة (fast_food): **20%**
+  - 🍕 مطاعم (restaurants): **20%**
+  - 🛒 ماركت (market): **15%**
+  - 🥬 خضار وفواكه (vegetables): **12%**
+  - 🍰 حلويات (sweets): **18%**
+- **التطبيق:**
+  - العمولة تُخصم تلقائياً عند تسليم الطلب
+  - حقول جديدة في الطلب: `platform_commission`, `commission_rate`, `seller_earning`
+- **عرض للبائع:**
+  - بطاقة عمولة في لوحة التحكم (تبويب نظرة عامة)
+  - تُظهر: نسبة العمولة، إجمالي العمولات المدفوعة، صافي الأرباح
+- **API:** `GET /api/food/my-store/commission`
+- **الملفات:**
+  - `routes/food_orders.py` - حساب العمولة عند التسليم
+  - `routes/food.py` - API جلب معلومات العمولة
+  - `routes/admin.py` - DEFAULT_FOOD_COMMISSIONS
+  - `pages/FoodStoreDashboard.js` - بطاقة عرض العمولة
+- **Status:** TESTED ✅ (iteration_66)
+
 #### تغيير أيقونة السيارة إلى موتور 🏍️ ✅ - 15 Dec 2025
 - **السبب:** موظفي التوصيل يعملون على الموتور وليس السيارة
 - **الملفات المعدّلة:**
@@ -437,6 +459,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_66.json` - Commission System for Sellers ✅
 - `/app/test_reports/iteration_65.json` - Seller Driver Proximity Notification ✅
 - `/app/test_reports/iteration_64.json` - Motorcycle Icons & Sound Notification ✅
 - `/app/test_reports/iteration_63.json` - Food Seed Data & Driver Proximity ✅
