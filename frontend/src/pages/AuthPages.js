@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Phone, User } from 'lucide-react';
+import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 
@@ -111,7 +111,17 @@ const LoginPage = () => {
             {loading ? 'جاري الدخول...' : 'دخول'}
           </button>
 
-          <p className="text-center text-gray-500 mt-4">
+          <div className="text-center mt-4">
+            <Link 
+              to="/forgot-password" 
+              className="text-sm text-gray-500 hover:text-[#FF6B00] transition-colors"
+              data-testid="forgot-password-link"
+            >
+              نسيت كلمة المرور؟
+            </Link>
+          </div>
+
+          <p className="text-center text-gray-500 mt-3">
             ليس لديك حساب؟{' '}
             <Link to="/register" className="text-[#FF6B00] hover:underline font-medium" data-testid="register-link">
               إنشاء حساب
@@ -145,7 +155,8 @@ const RegisterPage = () => {
     phone: '',
     password: '',
     city: 'دمشق',
-    user_type: defaultType
+    user_type: defaultType,
+    emergency_phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -309,6 +320,22 @@ const RegisterPage = () => {
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">رقم الطوارئ (اختياري)</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={formData.emergency_phone}
+                  onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                  placeholder="09xxxxxxxx"
+                  data-testid="emergency-phone-input"
+                />
+                <Phone size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">رقم شخص قريب منك - يُستخدم لاستعادة كلمة المرور</p>
             </div>
           </div>
 

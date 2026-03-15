@@ -23,7 +23,12 @@ from core.security import (
     should_refresh_token,
     limiter
 )
-from models.schemas import UserRegister, UserLogin, SellerDocuments, DeliveryDocuments
+from models.schemas import (
+    UserRegister, UserLogin, SellerDocuments, DeliveryDocuments,
+    ForgotPasswordRequest, VerifyIdentityRequest, ResetPasswordRequest
+)
+import random
+import string
 from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -59,6 +64,7 @@ async def register(request: Request, user: UserRegister):
         "password": hash_password_secure(user.password),  # 🔒 bcrypt
         "city": clean_city,
         "user_type": user.user_type,
+        "emergency_phone": user.emergency_phone,  # رقم الطوارئ
         "is_verified": user.user_type == "buyer",
         "is_approved": user.user_type == "buyer",
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -686,3 +692,204 @@ async def set_default_delivery_payment_account(account_id: str, user: dict = Dep
     
     return {"message": "تم تعيين الحساب كافتراضي"}
 
+
+
+# ============================================
+# 🔐 استعادة كلمة المرور
+# ============================================
+
+def generate_reset_token():
+    """توليد رمز إعادة تعيين كلمة المرور"""
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+
+
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, data: ForgotPasswordRequest):
+    """
+    الخطوة الأولى: التحقق من وجود رقم الهاتف
+    """
+    client_ip = get_remote_address(request)
+    
+    # التحقق من صحة رقم الهاتف
+    if not validate_phone(data.phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # البحث عن المستخدم
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0, "id": 1, "full_name": 1, "name": 1, "emergency_phone": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    # التحقق من وجود رقم طوارئ
+    has_emergency = bool(user.get("emergency_phone"))
+    
+    return {
+        "found": True,
+        "has_emergency_phone": has_emergency,
+        "message": "تم العثور على الحساب. اختر طريقة التحقق."
+    }
+
+
+@router.post("/verify-identity")
+@limiter.limit("5/minute")
+async def verify_identity(request: Request, data: VerifyIdentityRequest):
+    """
+    الخطوة الثانية: التحقق من الهوية عبر رقم الطوارئ أو الاسم الثلاثي
+    """
+    client_ip = get_remote_address(request)
+    
+    # البحث عن المستخدم
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    verified = False
+    
+    if data.verification_type == "emergency":
+        # التحقق من آخر 4 أرقام من رقم الطوارئ
+        emergency_phone = user.get("emergency_phone", "")
+        if not emergency_phone:
+            raise HTTPException(status_code=400, detail="لا يوجد رقم طوارئ مسجل. جرب التحقق بالاسم الثلاثي.")
+        
+        # استخراج آخر 4 أرقام
+        actual_last_4 = emergency_phone[-4:] if len(emergency_phone) >= 4 else emergency_phone
+        provided_last_4 = data.emergency_last_4 or ""
+        
+        if provided_last_4 == actual_last_4:
+            verified = True
+        else:
+            # تسجيل محاولة فاشلة
+            log_suspicious_activity(
+                "failed_identity_verification",
+                f"Failed emergency phone verification for {data.phone}",
+                client_ip
+            )
+            raise HTTPException(status_code=401, detail="آخر 4 أرقام غير صحيحة")
+    
+    elif data.verification_type == "name":
+        # التحقق من الاسم الثلاثي
+        user_name = user.get("full_name", user.get("name", "")).strip().lower()
+        provided_name = (data.full_name or "").strip().lower()
+        
+        if not provided_name:
+            raise HTTPException(status_code=400, detail="يرجى إدخال الاسم الثلاثي")
+        
+        # مقارنة الأسماء (مرنة - تتجاهل الفراغات الزائدة)
+        user_name_parts = set(user_name.split())
+        provided_name_parts = set(provided_name.split())
+        
+        # يجب أن يكون هناك تطابق في 3 أجزاء على الأقل
+        matching_parts = user_name_parts.intersection(provided_name_parts)
+        
+        if len(matching_parts) >= 3 or user_name == provided_name:
+            verified = True
+        else:
+            log_suspicious_activity(
+                "failed_identity_verification",
+                f"Failed name verification for {data.phone}",
+                client_ip
+            )
+            raise HTTPException(status_code=401, detail="الاسم الثلاثي غير مطابق")
+    
+    else:
+        raise HTTPException(status_code=400, detail="نوع التحقق غير صالح")
+    
+    if verified:
+        # توليد رمز إعادة التعيين
+        reset_token = generate_reset_token()
+        
+        # حفظ الرمز في قاعدة البيانات (صالح لمدة 15 دقيقة)
+        await db.password_resets.update_one(
+            {"phone": data.phone},
+            {
+                "$set": {
+                    "phone": data.phone,
+                    "user_id": user["id"],
+                    "token": reset_token,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "used": False
+                }
+            },
+            upsert=True
+        )
+        
+        return {
+            "verified": True,
+            "reset_token": reset_token,
+            "message": "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور."
+        }
+
+
+@router.post("/reset-password")
+@limiter.limit("3/minute")
+async def reset_password(request: Request, data: ResetPasswordRequest):
+    """
+    الخطوة الثالثة: إعادة تعيين كلمة المرور
+    """
+    client_ip = get_remote_address(request)
+    
+    # التحقق من قوة كلمة المرور الجديدة
+    is_valid, issues = validate_password_strength(data.new_password)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=issues[0])
+    
+    # البحث عن رمز إعادة التعيين
+    reset_record = await db.password_resets.find_one({
+        "phone": data.phone,
+        "token": data.reset_token,
+        "used": False
+    })
+    
+    if not reset_record:
+        raise HTTPException(status_code=401, detail="رمز إعادة التعيين غير صالح أو منتهي الصلاحية")
+    
+    # التحقق من انتهاء الصلاحية (15 دقيقة)
+    from datetime import timedelta
+    created_at = datetime.fromisoformat(reset_record["created_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) - created_at > timedelta(minutes=15):
+        raise HTTPException(status_code=401, detail="انتهت صلاحية رمز إعادة التعيين. يرجى طلب رمز جديد.")
+    
+    # تحديث كلمة المرور
+    new_password_hash = hash_password_secure(data.new_password)
+    await db.users.update_one(
+        {"phone": data.phone},
+        {"$set": {"password": new_password_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # تحديد الرمز كمستخدم
+    await db.password_resets.update_one(
+        {"phone": data.phone, "token": data.reset_token},
+        {"$set": {"used": True}}
+    )
+    
+    # حذف refresh tokens القديمة لإجبار المستخدم على تسجيل الدخول من جديد
+    await db.refresh_tokens.delete_many({"user_id": reset_record["user_id"]})
+    
+    return {
+        "success": True,
+        "message": "تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول."
+    }
+
+
+@router.put("/user/emergency-phone")
+async def update_emergency_phone(request: Request, user: dict = Depends(get_current_user)):
+    """تحديث رقم الطوارئ للمستخدم"""
+    body = await request.json()
+    emergency_phone = body.get("emergency_phone", "")
+    
+    if emergency_phone and not validate_phone(emergency_phone):
+        raise HTTPException(status_code=400, detail="رقم الطوارئ غير صحيح")
+    
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"emergency_phone": emergency_phone, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم تحديث رقم الطوارئ بنجاح"}
+
+
+@router.get("/user/emergency-phone")
+async def get_emergency_phone(user: dict = Depends(get_current_user)):
+    """جلب رقم الطوارئ للمستخدم"""
+    user_data = await db.users.find_one({"id": user["id"]}, {"_id": 0, "emergency_phone": 1})
+    return {"emergency_phone": user_data.get("emergency_phone", "")}

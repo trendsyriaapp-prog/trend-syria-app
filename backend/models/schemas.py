@@ -12,6 +12,24 @@ class UserRegister(BaseModel):
     password: str
     city: str
     user_type: str = "buyer"
+    emergency_phone: Optional[str] = None  # رقم الطوارئ (اختياري)
+
+
+class ForgotPasswordRequest(BaseModel):
+    phone: str
+
+
+class VerifyIdentityRequest(BaseModel):
+    phone: str
+    verification_type: str  # "emergency" or "name"
+    emergency_last_4: Optional[str] = None  # آخر 4 أرقام من رقم الطوارئ
+    full_name: Optional[str] = None  # الاسم الثلاثي
+
+
+class ResetPasswordRequest(BaseModel):
+    phone: str
+    reset_token: str
+    new_password: str
 
 class UserLogin(BaseModel):
     phone: str

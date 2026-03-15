@@ -27,6 +27,7 @@ import OrdersPage from "./pages/OrdersPage";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
 import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
 import { DeliveryDocuments, DeliveryDashboard } from "./pages/DeliveryPages";
 import AdminDashboardPage from "./pages/AdminPage";
@@ -97,6 +98,7 @@ function App() {
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 
                 {/* Buyer Routes */}
                 <Route path="/cart" element={<CartPage />} />
