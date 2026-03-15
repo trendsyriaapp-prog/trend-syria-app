@@ -90,38 +90,47 @@ const FreeShippingFloatingBanner = () => {
     }
   }, [cartItems]);
   
-  // جلب بيانات الشحن للطعام
+  // جلب بيانات الشحن للطعام - استخدام الحد الموحد من إعدادات المنصة
   const fetchFoodShipping = useCallback(async () => {
     if (foodStores.length === 0) return [];
     
     try {
+      // جلب حد التوصيل المجاني الموحد من الإعدادات
+      let foodFreeDeliveryThreshold = 100000; // قيمة افتراضية
+      try {
+        const settingsRes = await axios.get(`${API}/settings/public`);
+        foodFreeDeliveryThreshold = settingsRes.data.food_free_delivery_threshold || 100000;
+      } catch (e) {
+        // استخدام القيمة الافتراضية
+      }
+      
       const storesData = await Promise.all(
         foodStores.map(async (store) => {
           try {
             const res = await axios.get(`${API}/food/stores/${store.storeId}`);
             const storeData = res.data;
-            const freeMin = storeData.free_delivery_minimum || 50000;
             
+            // استخدام الحد الموحد من المنصة
             return {
               seller_id: store.storeId,
               seller_name: storeData.name || 'متجر طعام',
               subtotal: store.totalAmount,
-              free_shipping_threshold: freeMin,
+              free_shipping_threshold: foodFreeDeliveryThreshold,
               type: 'food',
-              progress: Math.min((store.totalAmount / freeMin) * 100, 100),
-              remaining: Math.max(freeMin - store.totalAmount, 0),
-              isFree: store.totalAmount >= freeMin
+              progress: Math.min((store.totalAmount / foodFreeDeliveryThreshold) * 100, 100),
+              remaining: Math.max(foodFreeDeliveryThreshold - store.totalAmount, 0),
+              isFree: store.totalAmount >= foodFreeDeliveryThreshold
             };
           } catch (e) {
             return {
               seller_id: store.storeId,
               seller_name: 'متجر طعام',
               subtotal: store.totalAmount,
-              free_shipping_threshold: 50000,
+              free_shipping_threshold: foodFreeDeliveryThreshold,
               type: 'food',
-              progress: Math.min((store.totalAmount / 50000) * 100, 100),
-              remaining: Math.max(50000 - store.totalAmount, 0),
-              isFree: store.totalAmount >= 50000
+              progress: Math.min((store.totalAmount / foodFreeDeliveryThreshold) * 100, 100),
+              remaining: Math.max(foodFreeDeliveryThreshold - store.totalAmount, 0),
+              isFree: store.totalAmount >= foodFreeDeliveryThreshold
             };
           }
         })

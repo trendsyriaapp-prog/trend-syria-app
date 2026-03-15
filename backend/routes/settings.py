@@ -65,12 +65,14 @@ async def get_public_settings():
                 "medium": 8000,
                 "far": 12000
             },
-            "free_shipping_threshold": 150000
+            "free_shipping_threshold": 150000,
+            "food_free_delivery_threshold": 100000
         }
     
     return {
         "delivery_fees": settings.get("delivery_fees", {}),
-        "free_shipping_threshold": settings.get("free_shipping_threshold", 150000)
+        "free_shipping_threshold": settings.get("free_shipping_threshold", 150000),
+        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000)
     }
 
 # ============== Update Settings ==============
@@ -165,6 +167,34 @@ async def update_free_shipping_threshold(
         "message": "تم تحديث حد الشحن المجاني",
         "free_shipping_threshold": threshold
     }
+
+
+@router.put("/food-free-delivery")
+async def update_food_free_delivery_threshold(
+    threshold: int,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث حد التوصيل المجاني للطعام"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "food_free_delivery_threshold": threshold,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث حد التوصيل المجاني للطعام",
+        "food_free_delivery_threshold": threshold
+    }
+
 
 # ============== إعدادات أجور التوصيل بالمسافة ==============
 

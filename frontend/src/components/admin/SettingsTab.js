@@ -32,6 +32,7 @@ const SettingsTab = ({ user }) => {
     delivery: 25000
   });
   const [freeShipping, setFreeShipping] = useState(150000);
+  const [foodFreeDelivery, setFoodFreeDelivery] = useState(100000);
   const [lowStockThreshold, setLowStockThreshold] = useState(5);
   
   useEffect(() => {
@@ -54,6 +55,9 @@ const SettingsTab = ({ user }) => {
       }
       if (res.data.free_shipping_threshold) {
         setFreeShipping(res.data.free_shipping_threshold);
+      }
+      if (res.data.food_free_delivery_threshold) {
+        setFoodFreeDelivery(res.data.food_free_delivery_threshold);
       }
       if (res.data.low_stock_threshold) {
         setLowStockThreshold(res.data.low_stock_threshold);
@@ -110,7 +114,27 @@ const SettingsTab = ({ user }) => {
       });
       // تحديث الإعدادات في كل التطبيق
       await refreshSettings();
-      toast({ title: "تم الحفظ", description: "تم تحديث حد الشحن المجاني" });
+      toast({ title: "تم الحفظ", description: "تم تحديث حد الشحن المجاني للمنتجات" });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل الحفظ",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveFoodFreeDelivery = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/settings/food-free-delivery`, null, {
+        params: { threshold: foodFreeDelivery }
+      });
+      // تحديث الإعدادات في كل التطبيق
+      await refreshSettings();
+      toast({ title: "تم الحفظ", description: "تم تحديث حد التوصيل المجاني للطعام" });
     } catch (error) {
       toast({
         title: "خطأ",
@@ -250,15 +274,15 @@ const SettingsTab = ({ user }) => {
         </div>
       </div>
       
-      {/* Free Shipping Threshold */}
+      {/* Free Shipping Threshold - Products */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Package size={18} className="text-blue-500" />
-          <h3 className="font-bold text-gray-900">حد الشحن المجاني</h3>
+          <h3 className="font-bold text-gray-900">حد الشحن المجاني - المنتجات</h3>
         </div>
         <div className="p-4">
           <p className="text-xs text-gray-500 mb-3">
-            الحد الأدنى لقيمة الطلب للحصول على شحن مجاني (نفس المحافظة)
+            الحد الأدنى لقيمة الطلب للحصول على شحن مجاني للمنتجات
           </p>
           <div className="flex items-center gap-2 mb-4">
             <input
@@ -274,6 +298,37 @@ const SettingsTab = ({ user }) => {
             onClick={saveFreeShipping}
             disabled={saving}
             className="w-full bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Save size={16} />
+            حفظ
+          </button>
+        </div>
+      </div>
+
+      {/* Free Delivery Threshold - Food */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+          <Truck size={18} className="text-green-500" />
+          <h3 className="font-bold text-gray-900">حد التوصيل المجاني - الطعام</h3>
+        </div>
+        <div className="p-4">
+          <p className="text-xs text-gray-500 mb-3">
+            الحد الأدنى لقيمة الطلب للحصول على توصيل مجاني لجميع متاجر الطعام
+          </p>
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="number"
+              value={foodFreeDelivery}
+              onChange={(e) => setFoodFreeDelivery(parseInt(e.target.value) || 0)}
+              className="flex-1 p-2 border border-gray-300 rounded-lg text-left"
+              step="10000"
+            />
+            <span className="text-sm text-gray-400">ل.س</span>
+          </div>
+          <button
+            onClick={saveFoodFreeDelivery}
+            disabled={saving}
+            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Save size={16} />
             حفظ

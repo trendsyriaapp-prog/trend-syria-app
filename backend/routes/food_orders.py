@@ -178,17 +178,20 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     
     # حساب رسوم التوصيل
     # إذا تم إرسال رسوم التوصيل من الـ Frontend (محسوبة بالمسافة)، نستخدمها
-    # وإلا نحسب بناءً على إعدادات المتجر
+    # وإلا نحسب بناءً على إعدادات المنصة الموحدة
     if order.delivery_fee is not None:
         delivery_fee = order.delivery_fee
         delivery_distance_km = order.delivery_distance_km
     else:
         store_delivery_fee = store.get("delivery_fee", 5000)
-        free_delivery_min = store.get("free_delivery_minimum", 0)
         
-        # توصيل مجاني إذا تجاوز المجموع الحد الأدنى (بعد الخصم)
+        # جلب حد التوصيل المجاني الموحد من إعدادات المنصة
+        platform_settings = await db.platform_settings.find_one({"id": "main"})
+        food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
+        
+        # توصيل مجاني إذا تجاوز المجموع الحد الموحد (بعد الخصم)
         final_subtotal = subtotal - total_discount
-        if free_delivery_min > 0 and final_subtotal >= free_delivery_min:
+        if food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold:
             delivery_fee = 0
         else:
             delivery_fee = store_delivery_fee
@@ -380,14 +383,17 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "notes": order_item.notes
         })
     
+    # جلب حد التوصيل المجاني الموحد من إعدادات المنصة
+    platform_settings = await db.platform_settings.find_one({"id": "main"})
+    food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
+    
     # حساب الإجمالي للتحقق من المحفظة
     for info in stores_info:
         store = info["store"]
         subtotal = info["subtotal"]
         
-        # رسوم التوصيل
-        free_delivery_min = store.get("free_delivery_minimum", 0)
-        if free_delivery_min > 0 and subtotal >= free_delivery_min:
+        # رسوم التوصيل - استخدام الحد الموحد
+        if food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold:
             delivery_fee = 0
         else:
             delivery_fee = store.get("delivery_fee", 5000)
@@ -428,9 +434,8 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         items_list = info["items"]
         notes = info["notes"]
         
-        # حساب رسوم التوصيل
-        free_delivery_min = store.get("free_delivery_minimum", 0)
-        if free_delivery_min > 0 and subtotal >= free_delivery_min:
+        # حساب رسوم التوصيل - استخدام الحد الموحد
+        if food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold:
             delivery_fee = 0
         else:
             delivery_fee = store.get("delivery_fee", 5000)
