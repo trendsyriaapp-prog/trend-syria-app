@@ -764,6 +764,51 @@ async def update_food_delivery_limits(
     }
 
 
+# ============== رسوم توصيل الطعام الموحدة ==============
+
+class FoodDeliveryFee(BaseModel):
+    delivery_fee: float = 5000  # رسوم التوصيل الموحدة للطعام
+
+@router.get("/food-delivery-fee")
+async def get_food_delivery_fee(user: dict = Depends(get_current_user)):
+    """جلب رسوم توصيل الطعام الموحدة"""
+    settings = await db.platform_settings.find_one({"id": "main"})
+    
+    return {
+        "delivery_fee": settings.get("food_delivery_fee", 5000) if settings else 5000
+    }
+
+@router.put("/food-delivery-fee")
+async def update_food_delivery_fee(
+    fee: FoodDeliveryFee,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث رسوم توصيل الطعام الموحدة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    if fee.delivery_fee < 0 or fee.delivery_fee > 50000:
+        raise HTTPException(status_code=400, detail="رسوم التوصيل يجب أن تكون بين 0 و 50,000 ل.س")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "food_delivery_fee": fee.delivery_fee,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث رسوم توصيل الطعام بنجاح",
+        "delivery_fee": fee.delivery_fee
+    }
+
+
+
 
 # ============== إعداد المسافة القصوى بين المطعم والعميل ==============
 

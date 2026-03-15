@@ -418,7 +418,25 @@ const PlatformSettingsTab = () => {
               />
               <span className="text-sm text-gray-500">ل.س</span>
             </div>
-            <p className="text-xs text-gray-400 mt-1">عند طلب طعام بهذا المبلغ أو أكثر، يحصل المشتري على توصيل مجاني</p>
+            <p className="text-xs text-gray-400 mt-1">عند طلب طعام بهذا المبلغ أو أكثر من <strong>نفس المتجر</strong>، يحصل المشتري على توصيل مجاني</p>
+          </div>
+
+          {/* رسوم توصيل الطعام الموحدة */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              🚚 رسوم توصيل الطعام
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={settings?.food_delivery_fee || 5000}
+                onChange={(e) => setSettings(prev => ({ ...prev, food_delivery_fee: parseInt(e.target.value) || 0 }))}
+                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                placeholder="5000"
+              />
+              <span className="text-sm text-gray-500">ل.س</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">رسوم التوصيل الموحدة لجميع متاجر الطعام (تذهب للسائق)</p>
           </div>
         </div>
       </div>
