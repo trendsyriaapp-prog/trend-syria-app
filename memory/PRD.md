@@ -93,14 +93,18 @@
 - **Status:** TESTED ✅ (iteration_64)
 
 #### صوت إشعار اقتراب السائق 🔔 ✅ - 15 Dec 2025
-- **الميزة:** تشغيل صوت إشعار عند اقتراب السائق من العميل
-- **الشرط:** المسافة أقل من 500 متر (0.5 كم)
+- **الميزة:** تشغيل صوت إشعار عند اقتراب السائق
+- **للعميل:** عند اقتراب السائق من موقع التسليم (< 500م)
+- **للبائع:** عند اقتراب السائق من المتجر للاستلام (< 500م)
 - **التفاصيل:**
   - ملف الصوت: `/public/notification.mp3`
-  - دالة: `playNotificationSound()`
-  - منع التكرار: `soundPlayed` state
-- **الملف:** `components/DriverTrackingMap.js`
-- **Status:** TESTED ✅ (iteration_64)
+  - Backend: `check_proximity_and_notify()` in `delivery.py`
+  - Frontend: `playNotificationSound()` in `DriverTrackingMap.js` و `FoodStoreDashboard.js`
+  - حقول منع التكرار: `nearby_notification_sent` (للعميل), `store_nearby_notification_sent` (للبائع)
+- **أنواع الإشعارات:**
+  - `driver_nearby` - للعميل
+  - `driver_arriving_store` - للبائع
+- **Status:** TESTED ✅ (iteration_65)
 
 #### إصلاح مشكلة نافذة الأولوية ✅ - 15 Dec 2025
 - **المشكلة:** نافذة طلب الأولوية كانت تعود للظهور بعد رفضها
@@ -433,6 +437,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_65.json` - Seller Driver Proximity Notification ✅
 - `/app/test_reports/iteration_64.json` - Motorcycle Icons & Sound Notification ✅
 - `/app/test_reports/iteration_63.json` - Food Seed Data & Driver Proximity ✅
 - `/app/test_reports/iteration_62.json` - Earnings Hold Period & Live Tracking ✅
