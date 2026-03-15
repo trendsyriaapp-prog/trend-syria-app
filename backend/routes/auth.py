@@ -29,6 +29,7 @@ from models.schemas import (
 )
 import random
 import string
+import os
 from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -701,6 +702,163 @@ async def set_default_delivery_payment_account(account_id: str, user: dict = Dep
 def generate_reset_token():
     """توليد رمز إعادة تعيين كلمة المرور"""
     return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+
+
+def generate_sms_code():
+    """توليد كود SMS من 6 أرقام"""
+    return ''.join(random.choices(string.digits, k=6))
+
+
+# وضع المحاكاة - True للتطوير، False للإنتاج مع Twilio
+SMS_MOCK_MODE = os.environ.get("SMS_MOCK_MODE", "true").lower() == "true"
+
+
+async def send_sms(phone: str, message: str) -> dict:
+    """
+    إرسال SMS - محاكاة أو Twilio
+    """
+    if SMS_MOCK_MODE:
+        # وضع المحاكاة - نطبع الكود في الـ logs
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"📱 [MOCK SMS] إلى {phone}: {message}")
+        print(f"\n{'='*50}")
+        print(f"📱 MOCK SMS to {phone}")
+        print(f"Message: {message}")
+        print(f"{'='*50}\n")
+        return {"success": True, "mock": True, "message": message}
+    else:
+        # Twilio - يمكن تفعيله لاحقاً
+        # from twilio.rest import Client
+        # account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+        # auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+        # from_number = os.environ.get("TWILIO_PHONE_NUMBER")
+        # client = Client(account_sid, auth_token)
+        # message = client.messages.create(body=message, from_=from_number, to=phone)
+        # return {"success": True, "sid": message.sid}
+        raise HTTPException(status_code=500, detail="SMS service not configured")
+
+
+@router.post("/send-sms-code")
+@limiter.limit("3/minute")
+async def send_sms_code(request: Request, data: ForgotPasswordRequest):
+    """
+    إرسال كود التحقق عبر SMS
+    """
+    client_ip = get_remote_address(request)
+    
+    # التحقق من صحة رقم الهاتف
+    if not validate_phone(data.phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # البحث عن المستخدم
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0, "id": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    # توليد كود جديد
+    sms_code = generate_sms_code()
+    
+    # حفظ الكود في قاعدة البيانات (صالح لمدة 5 دقائق)
+    await db.sms_codes.update_one(
+        {"phone": data.phone},
+        {
+            "$set": {
+                "phone": data.phone,
+                "code": sms_code,
+                "user_id": user["id"],
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "attempts": 0,
+                "verified": False
+            }
+        },
+        upsert=True
+    )
+    
+    # إرسال SMS
+    message = f"كود التحقق الخاص بك في ترند سورية: {sms_code}\nصالح لمدة 5 دقائق فقط."
+    result = await send_sms(data.phone, message)
+    
+    response = {
+        "sent": True,
+        "message": "تم إرسال كود التحقق إلى رقم هاتفك"
+    }
+    
+    # في وضع المحاكاة، نرجع الكود للتطوير
+    if SMS_MOCK_MODE:
+        response["mock_code"] = sms_code
+        response["mock_mode"] = True
+    
+    return response
+
+
+@router.post("/verify-sms-code")
+@limiter.limit("5/minute")
+async def verify_sms_code(request: Request):
+    """
+    التحقق من كود SMS
+    """
+    body = await request.json()
+    phone = body.get("phone", "")
+    code = body.get("code", "")
+    
+    if not phone or not code:
+        raise HTTPException(status_code=400, detail="رقم الهاتف والكود مطلوبان")
+    
+    # البحث عن الكود
+    sms_record = await db.sms_codes.find_one({"phone": phone, "verified": False})
+    if not sms_record:
+        raise HTTPException(status_code=404, detail="لم يتم إرسال كود لهذا الرقم")
+    
+    # التحقق من انتهاء الصلاحية (5 دقائق)
+    from datetime import timedelta
+    created_at = datetime.fromisoformat(sms_record["created_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) - created_at > timedelta(minutes=5):
+        raise HTTPException(status_code=401, detail="انتهت صلاحية الكود. اطلب كود جديد.")
+    
+    # التحقق من عدد المحاولات (حد أقصى 5)
+    if sms_record.get("attempts", 0) >= 5:
+        raise HTTPException(status_code=429, detail="تجاوزت الحد الأقصى للمحاولات. اطلب كود جديد.")
+    
+    # زيادة عداد المحاولات
+    await db.sms_codes.update_one(
+        {"phone": phone},
+        {"$inc": {"attempts": 1}}
+    )
+    
+    # التحقق من الكود
+    if sms_record["code"] != code:
+        remaining = 5 - sms_record.get("attempts", 0) - 1
+        raise HTTPException(status_code=401, detail=f"الكود غير صحيح. متبقي {remaining} محاولات.")
+    
+    # الكود صحيح - توليد reset token
+    reset_token = generate_reset_token()
+    
+    # تحديث الكود كمستخدم وحفظ reset token
+    await db.sms_codes.update_one(
+        {"phone": phone},
+        {"$set": {"verified": True}}
+    )
+    
+    await db.password_resets.update_one(
+        {"phone": phone},
+        {
+            "$set": {
+                "phone": phone,
+                "user_id": sms_record["user_id"],
+                "token": reset_token,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "used": False
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "verified": True,
+        "reset_token": reset_token,
+        "message": "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور."
+    }
 
 
 @router.post("/forgot-password")

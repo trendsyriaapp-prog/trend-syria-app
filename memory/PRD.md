@@ -25,23 +25,28 @@
 
 #### استعادة كلمة المرور ✅ - 15 Dec 2025
 - **الميزة:** نظام متكامل لاستعادة كلمة المرور عند نسيانها
-- **طريقة التحقق 1:** آخر 4 أرقام من رقم الطوارئ المسجل
-- **طريقة التحقق 2:** الاسم الثلاثي (بديل إذا لم يكن هناك رقم طوارئ)
+- **3 طرق للتحقق:**
+  1. **كود SMS** (الافتراضي) - يُرسل كود 6 أرقام للهاتف
+  2. **رقم الطوارئ** - آخر 4 أرقام من رقم الطوارئ المسجل
+  3. **الاسم الثلاثي** - مطابقة الاسم المسجل
+- **وضع المحاكاة (MOCK):** الكود يظهر في الواجهة للتطوير
+- **Twilio Ready:** يمكن التبديل لـ Twilio بتغيير `SMS_MOCK_MODE=false`
 - **الملفات:**
-  - `ForgotPasswordPage.js` - صفحة استعادة كلمة المرور (جديد)
+  - `ForgotPasswordPage.js` - صفحة استعادة كلمة المرور
   - `AuthPages.js` - رابط "نسيت كلمة المرور" + حقل رقم الطوارئ
-  - `auth.py` - 3 endpoints جديدة
+  - `auth.py` - 5 endpoints جديدة
   - `schemas.py` - Models جديدة
 - **APIs:**
-  - `POST /api/auth/forgot-password` - البحث عن الحساب برقم الهاتف
-  - `POST /api/auth/verify-identity` - التحقق من الهوية (emergency أو name)
+  - `POST /api/auth/forgot-password` - البحث عن الحساب
+  - `POST /api/auth/send-sms-code` - إرسال كود SMS
+  - `POST /api/auth/verify-sms-code` - التحقق من كود SMS
+  - `POST /api/auth/verify-identity` - التحقق (emergency/name)
   - `POST /api/auth/reset-password` - إعادة تعيين كلمة المرور
-  - `PUT /api/auth/user/emergency-phone` - تحديث رقم الطوارئ
 - **أمان:**
-  - Rate limiting: 3/دقيقة لـ forgot-password و reset-password، 5/دقيقة لـ verify-identity
-  - رمز إعادة التعيين (32 حرف) صالح لمدة 15 دقيقة فقط
-  - تسجيل المحاولات الفاشلة للتحقق
-  - حذف refresh tokens القديمة بعد تغيير كلمة المرور
+  - Rate limiting: 3/دقيقة للإرسال، 5/دقيقة للتحقق
+  - كود SMS صالح 5 دقائق فقط
+  - حد أقصى 5 محاولات للكود
+  - رمز إعادة التعيين 15 دقيقة فقط
 - **Status:** TESTED ✅ (iteration_61)
 
 #### تخطيط المسار الذكي المُحسَّن ✅ - 15 Dec 2025

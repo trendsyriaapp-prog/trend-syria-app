@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, User, KeyRound, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, HelpCircle } from 'lucide-react';
+import { Phone, User, KeyRound, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, HelpCircle, MessageSquare, RefreshCw } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
 
@@ -19,12 +19,26 @@ const ForgotPasswordPage = () => {
   // بيانات المستخدم
   const [phone, setPhone] = useState('');
   const [hasEmergencyPhone, setHasEmergencyPhone] = useState(false);
-  const [verificationType, setVerificationType] = useState('emergency'); // emergency or name
+  const [verificationType, setVerificationType] = useState('sms'); // sms, emergency, or name
   const [emergencyLast4, setEmergencyLast4] = useState('');
   const [fullName, setFullName] = useState('');
+  const [smsCode, setSmsCode] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // SMS related
+  const [smsSent, setSmsSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [mockCode, setMockCode] = useState(''); // للتطوير فقط
+
+  // عداد إعادة إرسال SMS
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   // الخطوة 1: البحث عن الحساب
   const handleFindAccount = async (e) => {
@@ -34,7 +48,7 @@ const ForgotPasswordPage = () => {
     try {
       const response = await axios.post(`${API}/api/auth/forgot-password`, { phone });
       setHasEmergencyPhone(response.data.has_emergency_phone);
-      setVerificationType(response.data.has_emergency_phone ? 'emergency' : 'name');
+      setVerificationType('sms'); // الافتراضي هو SMS
       setStep(2);
       toast({ title: "تم العثور على الحساب", description: "اختر طريقة التحقق" });
     } catch (error) {
@@ -48,7 +62,53 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  // الخطوة 2: التحقق من الهوية
+  // إرسال كود SMS
+  const handleSendSMS = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/api/auth/send-sms-code`, { phone });
+      setSmsSent(true);
+      setCountdown(60); // انتظار 60 ثانية قبل إعادة الإرسال
+      
+      // في وضع المحاكاة، نعرض الكود
+      if (response.data.mock_mode && response.data.mock_code) {
+        setMockCode(response.data.mock_code);
+      }
+      
+      toast({ title: "تم الإرسال", description: "تحقق من رسائل هاتفك" });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل إرسال الكود",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // التحقق من كود SMS
+  const handleVerifySMS = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API}/api/auth/verify-sms-code`, { phone, code: smsCode });
+      setResetToken(response.data.reset_token);
+      setStep(3);
+      toast({ title: "تم التحقق بنجاح", description: "أدخل كلمة المرور الجديدة" });
+    } catch (error) {
+      toast({
+        title: "فشل التحقق",
+        description: error.response?.data?.detail || "الكود غير صحيح",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // الخطوة 2: التحقق من الهوية (الطرق البديلة)
   const handleVerifyIdentity = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -193,106 +253,211 @@ const ForgotPasswordPage = () => {
 
             {/* الخطوة 2: التحقق من الهوية */}
             {step === 2 && (
-              <motion.form
+              <motion.div
                 key="step2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                onSubmit={handleVerifyIdentity}
                 className="space-y-4"
               >
-                {/* اختيار طريقة التحقق */}
-                {hasEmergencyPhone && (
-                  <div className="flex gap-2 p-1 bg-gray-100 rounded-full mb-4">
+                {/* اختيار طريقة التحقق - 3 خيارات */}
+                <div className="flex gap-1 p-1 bg-gray-100 rounded-full mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setVerificationType('sms'); setSmsSent(false); }}
+                    className={`flex-1 py-2 rounded-full transition-colors text-xs ${
+                      verificationType === 'sms' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
+                    }`}
+                    data-testid="verify-sms-btn"
+                  >
+                    <MessageSquare size={14} className="inline ml-1" />
+                    كود SMS
+                  </button>
+                  {hasEmergencyPhone && (
                     <button
                       type="button"
                       onClick={() => setVerificationType('emergency')}
-                      className={`flex-1 py-2 rounded-full transition-colors text-sm ${
+                      className={`flex-1 py-2 rounded-full transition-colors text-xs ${
                         verificationType === 'emergency' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
                       }`}
                       data-testid="verify-emergency-btn"
                     >
                       رقم الطوارئ
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setVerificationType('name')}
-                      className={`flex-1 py-2 rounded-full transition-colors text-sm ${
-                        verificationType === 'name' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
-                      }`}
-                      data-testid="verify-name-btn"
-                    >
-                      الاسم الثلاثي
-                    </button>
-                  </div>
-                )}
-
-                {verificationType === 'emergency' && hasEmergencyPhone ? (
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700">
-                      آخر 4 أرقام من رقم الطوارئ
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={emergencyLast4}
-                        onChange={(e) => setEmergencyLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 text-center text-2xl tracking-widest placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                        placeholder="XXXX"
-                        maxLength={4}
-                        required
-                        data-testid="emergency-last4-input"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2 text-center">
-                      أدخل آخر 4 أرقام من رقم الطوارئ الذي سجلته عند إنشاء الحساب
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الثلاثي</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
-                        placeholder="الاسم الثلاثي كما في التسجيل"
-                        required
-                        data-testid="fullname-input"
-                      />
-                      <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2">
-                      أدخل اسمك الثلاثي كما كتبته عند التسجيل
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
+                  )}
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
-                    className="flex-1 bg-gray-100 text-gray-700 font-medium py-3 rounded-full hover:bg-gray-200 transition-colors"
+                    onClick={() => setVerificationType('name')}
+                    className={`flex-1 py-2 rounded-full transition-colors text-xs ${
+                      verificationType === 'name' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
+                    }`}
+                    data-testid="verify-name-btn"
                   >
-                    رجوع
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
-                    data-testid="verify-identity-btn"
-                  >
-                    {loading ? 'جاري التحقق...' : 'تحقق'}
+                    الاسم الثلاثي
                   </button>
                 </div>
+
+                {/* التحقق عبر SMS */}
+                {verificationType === 'sms' && (
+                  <form onSubmit={handleVerifySMS} className="space-y-4">
+                    {!smsSent ? (
+                      <div className="text-center py-4">
+                        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <MessageSquare size={28} className="text-[#FF6B00]" />
+                        </div>
+                        <p className="text-gray-700 mb-2">سنرسل كود تحقق إلى رقمك</p>
+                        <p className="text-lg font-bold text-gray-900 mb-4 direction-ltr">{phone}</p>
+                        <button
+                          type="button"
+                          onClick={handleSendSMS}
+                          disabled={loading}
+                          className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+                          data-testid="send-sms-btn"
+                        >
+                          {loading ? 'جاري الإرسال...' : 'إرسال الكود'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-700 text-center">
+                          أدخل الكود المرسل إلى {phone}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={smsCode}
+                            onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-lg py-4 px-4 text-gray-900 text-center text-3xl tracking-[0.5em] placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors font-mono"
+                            placeholder="••••••"
+                            maxLength={6}
+                            required
+                            autoFocus
+                            data-testid="sms-code-input"
+                          />
+                        </div>
+                        
+                        {/* وضع المحاكاة - عرض الكود للتطوير */}
+                        {mockCode && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <p className="text-sm text-blue-800 text-center">
+                              <span className="font-medium">وضع التطوير:</span> الكود هو{' '}
+                              <span className="font-bold text-lg">{mockCode}</span>
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-center gap-2 mt-3">
+                          {countdown > 0 ? (
+                            <p className="text-sm text-gray-500">
+                              إعادة الإرسال بعد {countdown} ثانية
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleSendSMS}
+                              disabled={loading}
+                              className="text-sm text-[#FF6B00] hover:underline flex items-center gap-1"
+                            >
+                              <RefreshCw size={14} />
+                              إعادة إرسال الكود
+                            </button>
+                          )}
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading || smsCode.length !== 6}
+                          className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+                          data-testid="verify-sms-code-btn"
+                        >
+                          {loading ? 'جاري التحقق...' : 'تحقق'}
+                        </button>
+                      </div>
+                    )}
+                  </form>
+                )}
+
+                {/* التحقق عبر رقم الطوارئ */}
+                {verificationType === 'emergency' && hasEmergencyPhone && (
+                  <form onSubmit={handleVerifyIdentity} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">
+                        آخر 4 أرقام من رقم الطوارئ
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={emergencyLast4}
+                          onChange={(e) => setEmergencyLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-gray-900 text-center text-2xl tracking-widest placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                          placeholder="XXXX"
+                          maxLength={4}
+                          required
+                          data-testid="emergency-last4-input"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2 text-center">
+                        أدخل آخر 4 أرقام من رقم الطوارئ الذي سجلته عند إنشاء الحساب
+                      </p>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+                      data-testid="verify-identity-btn"
+                    >
+                      {loading ? 'جاري التحقق...' : 'تحقق'}
+                    </button>
+                  </form>
+                )}
+
+                {/* التحقق عبر الاسم الثلاثي */}
+                {verificationType === 'name' && (
+                  <form onSubmit={handleVerifyIdentity} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الثلاثي</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none transition-colors"
+                          placeholder="الاسم الثلاثي كما في التسجيل"
+                          required
+                          data-testid="fullname-input"
+                        />
+                        <User size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        أدخل اسمك الثلاثي كما كتبته عند التسجيل
+                      </p>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+                      data-testid="verify-identity-btn"
+                    >
+                      {loading ? 'جاري التحقق...' : 'تحقق'}
+                    </button>
+                  </form>
+                )}
+
+                {/* زر الرجوع */}
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setSmsSent(false); setMockCode(''); }}
+                  className="w-full bg-gray-100 text-gray-700 font-medium py-3 rounded-full hover:bg-gray-200 transition-colors mt-2"
+                >
+                  رجوع
+                </button>
 
                 {/* نسيت كل شيء؟ */}
                 <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
                   <div className="flex items-start gap-2">
                     <HelpCircle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-amber-800">
-                      <p className="font-medium">لا تتذكر أياً منها؟</p>
+                      <p className="font-medium">لا تستطيع التحقق؟</p>
                       <p className="text-amber-700 mt-1">
                         تواصل مع الدعم على واتساب:{' '}
                         <a 
@@ -307,7 +472,7 @@ const ForgotPasswordPage = () => {
                     </div>
                   </div>
                 </div>
-              </motion.form>
+              </motion.div>
             )}
 
             {/* الخطوة 3: كلمة المرور الجديدة */}
