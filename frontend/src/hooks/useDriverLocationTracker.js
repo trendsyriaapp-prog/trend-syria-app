@@ -5,7 +5,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 /**
  * Hook لتتبع موقع السائق تلقائياً
- * يُحدّث الموقع كل 30 ثانية عندما يكون السائق لديه طلب قيد التوصيل
+ * يُحدّث الموقع كل 10 ثواني عندما يكون السائق لديه طلب قيد التوصيل
  */
 const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
   const [isTracking, setIsTracking] = useState(false);
@@ -15,14 +15,16 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
   const watchIdRef = useRef(null);
 
   // إرسال الموقع للخادم
-  const sendLocationToServer = async (latitude, longitude) => {
+  const sendLocationToServer = async (latitude, longitude, speed = null, heading = null) => {
     try {
       await axios.put(`${API}/delivery/location`, {
         latitude,
         longitude,
+        speed,
+        heading,
         order_id: currentOrderId
       });
-      setLastLocation({ latitude, longitude, timestamp: new Date() });
+      setLastLocation({ latitude, longitude, speed, timestamp: new Date() });
       setError(null);
       return true;
     } catch (err) {
@@ -41,8 +43,10 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        sendLocationToServer(latitude, longitude);
+        const { latitude, longitude, speed, heading } = position.coords;
+        // تحويل السرعة من م/ث إلى كم/س
+        const speedKmh = speed ? speed * 3.6 : null;
+        sendLocationToServer(latitude, longitude, speedKmh, heading);
       },
       (err) => {
         console.error('Geolocation error:', err);
@@ -67,8 +71,8 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
     setIsTracking(true);
     updateLocation(); // إرسال الموقع فوراً
     
-    // تحديث كل 30 ثانية
-    intervalRef.current = setInterval(updateLocation, 30000);
+    // تحديث كل 10 ثواني للتتبع الحي
+    intervalRef.current = setInterval(updateLocation, 10000);
   };
 
   // إيقاف التتبع

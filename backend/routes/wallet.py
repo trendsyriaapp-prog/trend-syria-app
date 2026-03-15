@@ -294,3 +294,22 @@ async def confirm_pending_earnings(order_id: str):
             notification_type="wallet",
             order_id=order_id
         )
+
+
+# ============== Held Earnings APIs ==============
+
+@router.get("/held-earnings")
+async def get_held_earnings(user: dict = Depends(get_current_user)):
+    """جلب الأرباح المعلقة للمستخدم"""
+    if user["user_type"] not in ["seller", "food_seller", "delivery"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    from services.earnings_hold import get_user_held_earnings
+    return await get_user_held_earnings(user["id"])
+
+
+@router.get("/hold-settings")
+async def get_hold_settings():
+    """جلب إعدادات فترة التعليق"""
+    from services.earnings_hold import get_hold_settings
+    return await get_hold_settings()

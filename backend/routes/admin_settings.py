@@ -71,19 +71,96 @@ async def update_delivery_settings_api(
     }
 
 
-@router.get("/violations/report")
-async def get_violations_report(
-    days: int = 30,
-    user: dict = Depends(get_current_user)
-):
-    """تقرير المخالفات للأدمن"""
+# ============== إعدادات تعليق الأرباح (Hold Period) ==============
+
+class HoldSettingsUpdate(BaseModel):
+    food_hold_hours: Optional[int] = None  # فترة تعليق طلبات الطعام (ساعات)
+    products_hold_hours: Optional[int] = None  # فترة تعليق طلبات المنتجات (ساعات)
+    enabled: Optional[bool] = None  # تفعيل/تعطيل نظام التعليق
+
+
+@router.get("/settings/earnings-hold")
+async def get_earnings_hold_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات تعليق الأرباح"""
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    report = await get_admin_violations_report(days)
+    from services.earnings_hold import get_hold_settings
+    settings = await get_hold_settings()
     return {
         "success": True,
-        "report": report
+        "settings": settings
+    }
+
+
+@router.put("/settings/earnings-hold")
+async def update_earnings_hold_settings(
+    data: HoldSettingsUpdate,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات تعليق الأرباح"""
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from services.earnings_hold import get_hold_settings
+    current = await get_hold_settings()
+    
+    update_data = data.dict(exclude_none=True)
+    new_settings = {**current, **update_data}
+    
+    await db.settings.update_one(
+        {"type": "earnings_hold"},
+        {"$set": new_settings},
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "message": "تم تحديث إعدادات التعليق",
+        "settings": new_settings
+    }
+
+
+@router.get("/held-earnings/summary")
+async def get_held_earnings_summary(user: dict = Depends(get_current_user)):
+    """ملخص الأرباح المعلقة للمدير"""
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # إجمالي الأرباح المعلقة
+    held = await db.held_earnings.find({"status": "held"}, {"_id": 0}).to_list(1000)
+    
+    total_held = sum(e["amount"] for e in held)
+    count = len(held)
+    
+    # تفصيل حسب النوع
+    food_held = sum(e["amount"] for e in held if e.get("order_type") == "food")
+    products_held = sum(e["amount"] for e in held if e.get("order_type") == "product")
+    
+    return {
+        "success": True,
+        "summary": {
+            "total_held": total_held,
+            "count": count,
+            "food_held": food_held,
+            "products_held": products_held
+        }
+    }
+
+
+@router.post("/held-earnings/release-all")
+async def manual_release_held_earnings(user: dict = Depends(get_current_user)):
+    """إطلاق جميع الأرباح المعلقة يدوياً"""
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from services.earnings_hold import release_held_earnings
+    result = await release_held_earnings()
+    
+    return {
+        "success": True,
+        "message": f"تم إطلاق {result['released_count']} أرباح بقيمة {result['total_released']:,.0f} ل.س",
+        "result": result
     }
 
 

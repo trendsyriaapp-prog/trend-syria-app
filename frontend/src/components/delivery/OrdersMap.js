@@ -211,6 +211,12 @@ const OrdersMap = ({
     maxLimitOrderIdsRef.current = maxLimitOrderIds;
   }, [maxLimitOrderIds]);
 
+  // ref للطلبات المرفوضة للحفاظ على القيمة الصحيحة في الـ interval
+  const rejectedOrderIdsRef = useRef([]);
+  useEffect(() => {
+    rejectedOrderIdsRef.current = rejectedOrderIds;
+  }, [rejectedOrderIds]);
+
   // ⭐ مراقبة تغيير عدد الطلبات - لإعادة إظهار الطلبات المؤجلة عند انخفاض العدد
   useEffect(() => {
     const currentOrderCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
@@ -257,16 +263,18 @@ const OrdersMap = ({
           const priorityOrders = response.data.priority_orders || [];
           
           // تصفية الطلبات المرفوضة يدوياً والمؤجلة بسبب الحد الأقصى
-          // استخدام الـ ref للحصول على القيمة الحالية الصحيحة
-          const allExcludedIds = [...rejectedOrderIds, ...maxLimitOrderIdsRef.current];
+          // استخدام الـ refs للحصول على القيم الحالية الصحيحة
+          const allExcludedIds = [...rejectedOrderIdsRef.current, ...maxLimitOrderIdsRef.current];
           const availableOrders = priorityOrders.filter(o => !allExcludedIds.includes(o.id));
           
           console.log('Priority check:', { 
             total: priorityOrders.length, 
+            rejected: rejectedOrderIdsRef.current.length,
+            maxLimit: maxLimitOrderIdsRef.current.length,
             excluded: allExcludedIds.length,
             available: availableOrders.length,
             currentOrders: currentOrdersCount,
-            maxLimit: MAX_ORDERS_SAME_STORE
+            maxOrderLimit: MAX_ORDERS_SAME_STORE
           });
           
           // إذا وجد طلب جديد ذو أولوية
@@ -298,7 +306,7 @@ const OrdersMap = ({
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isOpen, myFoodOrders, myOrders, dismissedPriorityUntil, rejectedOrderIds]);
+  }, [isOpen, myFoodOrders, myOrders, dismissedPriorityUntil]); // إزالة rejectedOrderIds لأننا نستخدم ref
 
   // ⭐ العد التنازلي للأولوية - الـ popup يبقى ظاهراً بعد انتهاء العد
   useEffect(() => {
@@ -376,7 +384,17 @@ const OrdersMap = ({
   const rejectPriorityOrder = () => {
     // إضافة الطلب للقائمة المرفوضة
     if (priorityOrder) {
-      setRejectedOrderIds(prev => [...prev, priorityOrder.id]);
+      const orderId = priorityOrder.id;
+      setRejectedOrderIds(prev => {
+        if (prev.includes(orderId)) return prev;
+        return [...prev, orderId];
+      });
+      // تحديث الـ ref فوراً لمنع الـ interval من إظهار الطلب مرة أخرى
+      if (!rejectedOrderIdsRef.current.includes(orderId)) {
+        rejectedOrderIdsRef.current = [...rejectedOrderIdsRef.current, orderId];
+      }
+      console.log('❌ تم رفض الطلب:', orderId);
+      console.log('📋 قائمة المرفوضة الآن:', rejectedOrderIdsRef.current);
     }
     
     // إيقاف الإشعارات لمدة 60 ثانية

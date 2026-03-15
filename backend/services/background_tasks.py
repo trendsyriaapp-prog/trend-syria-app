@@ -172,6 +172,9 @@ async def background_dispatch_loop():
     logger.info("Starting background dispatch loop...")
     task_running = True
     
+    # عداد لإطلاق الأرباح المعلقة (كل 5 دقائق = 30 * 10 ثواني)
+    release_counter = 0
+    
     while task_running:
         try:
             # فحص الطلبات الجاهزة للتوزيع
@@ -181,6 +184,18 @@ async def background_dispatch_loop():
             
             # فحص التعيينات المنتهية
             await check_expired_driver_assignments()
+            
+            # إطلاق الأرباح المعلقة كل 5 دقائق
+            release_counter += 1
+            if release_counter >= 30:  # 30 * 10 = 300 ثانية = 5 دقائق
+                release_counter = 0
+                try:
+                    from services.earnings_hold import release_held_earnings
+                    result = await release_held_earnings()
+                    if result["released_count"] > 0:
+                        logger.info(f"Released {result['released_count']} held earnings, total: {result['total_released']} SYP")
+                except Exception as e:
+                    logger.error(f"Error releasing held earnings: {e}")
             
         except Exception as e:
             logger.error(f"Error in dispatch loop: {e}")

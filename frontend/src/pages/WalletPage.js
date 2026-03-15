@@ -61,12 +61,17 @@ const WalletPage = () => {
   
   const fetchWalletData = async () => {
     try {
-      const [walletRes, transactionsRes, withdrawalsRes] = await Promise.all([
+      const [walletRes, transactionsRes, withdrawalsRes, heldRes] = await Promise.all([
         axios.get(`${API}/api/wallet/balance`),
         axios.get(`${API}/api/wallet/transactions`),
-        axios.get(`${API}/api/wallet/withdrawals`)
+        axios.get(`${API}/api/wallet/withdrawals`),
+        axios.get(`${API}/api/wallet/held-earnings`).catch(() => ({ data: { held_earnings: [], total_held: 0 } }))
       ]);
-      setWallet(walletRes.data);
+      setWallet({
+        ...walletRes.data,
+        held_balance: heldRes.data.total_held || 0,
+        held_earnings: heldRes.data.held_earnings || []
+      });
       setTransactions(transactionsRes.data);
       setWithdrawals(withdrawalsRes.data);
     } catch (error) {
@@ -163,10 +168,14 @@ const WalletPage = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
             <div>
-              <p className="text-white/60 text-xs">رصيد معلق</p>
+              <p className="text-white/60 text-xs">رصيد معلق للسحب</p>
               <p className="font-bold">{formatPrice(wallet?.pending_balance || 0)}</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-xs">⏳ قيد التأكيد</p>
+              <p className="font-bold text-yellow-200">{formatPrice(wallet?.held_balance || 0)}</p>
             </div>
             <div>
               <p className="text-white/60 text-xs">إجمالي الأرباح</p>
@@ -174,6 +183,19 @@ const WalletPage = () => {
             </div>
           </div>
         </motion.div>
+        
+        {/* Held Earnings Notice */}
+        {(wallet?.held_balance || 0) > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+            <Clock size={20} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-bold text-yellow-800 text-sm">أرباح قيد التأكيد</p>
+              <p className="text-xs text-yellow-600">
+                لديك {formatPrice(wallet?.held_balance || 0)} معلقة حتى انتهاء فترة الإرجاع
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Withdraw Button */}
         <button

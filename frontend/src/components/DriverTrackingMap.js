@@ -50,11 +50,11 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
     }
   };
 
-  // جلب الموقع عند التحميل وكل 15 ثانية
+  // جلب الموقع عند التحميل وكل 5 ثواني (تتبع مباشر)
   useEffect(() => {
     fetchDriverLocation();
     
-    const interval = setInterval(fetchDriverLocation, 15000);
+    const interval = setInterval(fetchDriverLocation, 5000);
     
     return () => clearInterval(interval);
   }, [orderId]);

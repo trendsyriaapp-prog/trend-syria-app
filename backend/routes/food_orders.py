@@ -1883,7 +1883,7 @@ async def leave_order_at_door(order_id: str, user: dict = Depends(get_current_us
 
 
 async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str):
-    """إتمام التسليم وإضافة الأجرة لمحفظة السائق"""
+    """إتمام التسليم وإضافة الأجرة لمحفظة السائق (مع التعليق)"""
     now = datetime.now(timezone.utc)
     
     # تحديث حالة الطلب
@@ -1906,31 +1906,54 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
         }
     )
     
-    # إضافة أجرة التوصيل لمحفظة السائق
+    # حساب أرباح السائق
     delivery_fee = order.get("delivery_fee", 0)
     base_earning = 5000  # ربح أساسي ثابت
-    total_earning = base_earning + delivery_fee
+    driver_earning = base_earning + delivery_fee
     
-    await db.wallets.update_one(
-        {"user_id": driver["id"]},
-        {"$inc": {"balance": total_earning}},
-        upsert=True
-    )
+    # حساب أرباح البائع (subtotal - خصومات)
+    seller_earning = order.get("subtotal", 0) - order.get("offer_discount", 0) - order.get("flash_discount", 0)
     
-    # إضافة سجل المعاملة
-    await db.wallet_transactions.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": driver["id"],
-        "type": "delivery_earning",
-        "amount": total_earning,
-        "description": f"أجرة توصيل طلب #{order['order_number']}",
-        "order_id": order["id"],
-        "breakdown": {
-            "base_earning": base_earning,
-            "delivery_fee": delivery_fee
-        },
-        "created_at": now.isoformat()
-    })
+    # استخدام نظام تعليق الأرباح
+    try:
+        from services.earnings_hold import add_held_earnings, get_hold_settings
+        settings = await get_hold_settings()
+        
+        if settings.get("enabled", True):
+            # إضافة أرباح السائق (معلقة)
+            await add_held_earnings(
+                user_id=driver["id"],
+                user_type="delivery",
+                amount=driver_earning,
+                order_id=order["id"],
+                order_type="food",
+                description=f"أجرة توصيل طلب #{order['order_number']}"
+            )
+            
+            # إضافة أرباح البائع (معلقة)
+            store = await db.food_stores.find_one({"id": order.get("store_id")})
+            if store and store.get("owner_id") and seller_earning > 0:
+                await add_held_earnings(
+                    user_id=store["owner_id"],
+                    user_type="food_seller",
+                    amount=seller_earning,
+                    order_id=order["id"],
+                    order_type="food",
+                    description=f"أرباح طلب #{order['order_number']}"
+                )
+        else:
+            # إضافة مباشرة بدون تعليق
+            await add_earnings_directly(driver, driver_earning, order, "delivery")
+            store = await db.food_stores.find_one({"id": order.get("store_id")})
+            if store and store.get("owner_id") and seller_earning > 0:
+                await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
+    except Exception as e:
+        print(f"Error using hold system, falling back to direct: {e}")
+        # Fallback للإضافة المباشرة
+        await add_earnings_directly(driver, driver_earning, order, "delivery")
+        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        if store and store.get("owner_id") and seller_earning > 0:
+            await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
     
     # إشعار العميل
     await db.notifications.insert_one({
@@ -1943,16 +1966,57 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
         "is_read": False,
         "created_at": now.isoformat()
     })
+
+
+async def add_earnings_directly(driver: dict, amount: float, order: dict, user_type: str):
+    """إضافة أرباح مباشرة بدون تعليق (Fallback)"""
+    now = datetime.now(timezone.utc)
     
-    # إشعار السائق
+    await db.wallets.update_one(
+        {"user_id": driver["id"]},
+        {"$inc": {"balance": amount, "total_earned": amount}},
+        upsert=True
+    )
+    
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": driver["id"],
+        "type": "delivery_earning",
+        "amount": amount,
+        "description": f"أجرة توصيل طلب #{order['order_number']}",
+        "order_id": order["id"],
+        "created_at": now.isoformat()
+    })
+    
     await db.notifications.insert_one({
         "id": str(uuid.uuid4()),
         "user_id": driver["id"],
         "title": "💰 تم إضافة أرباحك!",
-        "message": f"تم إضافة {total_earning:,} ل.س لمحفظتك",
+        "message": f"تم إضافة {amount:,} ل.س لمحفظتك",
         "type": "earning_added",
         "order_id": order["id"],
         "is_read": False,
+        "created_at": now.isoformat()
+    })
+
+
+async def add_seller_earnings_directly(seller_id: str, amount: float, order: dict):
+    """إضافة أرباح البائع مباشرة"""
+    now = datetime.now(timezone.utc)
+    
+    await db.wallets.update_one(
+        {"user_id": seller_id},
+        {"$inc": {"balance": amount, "total_earned": amount}},
+        upsert=True
+    )
+    
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": seller_id,
+        "type": "sales_earning",
+        "amount": amount,
+        "description": f"أرباح مبيعات طلب #{order['order_number']}",
+        "order_id": order["id"],
         "created_at": now.isoformat()
     })
 
