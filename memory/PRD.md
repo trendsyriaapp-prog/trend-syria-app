@@ -23,6 +23,56 @@
 
 ### December 2025
 
+#### نظام تعليق الأرباح (Hold Period) ✅ - 15 Dec 2025
+- **الميزة:** تعليق الأرباح لفترة محددة قبل إضافتها للرصيد المتاح
+- **الغرض:** حماية المنصة من الإرجاعات - الأرباح تبقى معلقة حتى انتهاء فترة الإرجاع
+- **الإعدادات:**
+  - فترة تعليق طلبات الطعام: 1 ساعة (افتراضي)
+  - فترة تعليق طلبات المنتجات: 24 ساعة (افتراضي)
+  - إمكانية تفعيل/تعطيل النظام
+- **مراحل الأرباح:**
+  1. عند التسليم: الأرباح تُضاف كـ `held_balance`
+  2. بعد انتهاء فترة التعليق: تُنقل تلقائياً للـ `balance`
+- **Background Task:** إطلاق الأرباح المعلقة تلقائياً كل 5 دقائق
+- **الملفات:**
+  - `services/earnings_hold.py` - نظام التعليق الكامل (جديد)
+  - `routes/admin_settings.py` - APIs الإعدادات
+  - `routes/wallet.py` - API الأرباح المعلقة للمستخدم
+  - `routes/food_orders.py` - تعديل دالة الدفع للسائق
+  - `services/background_tasks.py` - Background task للإطلاق التلقائي
+  - `pages/WalletPage.js` - عرض الرصيد المعلق
+  - `admin/DeliverySettingsTab.js` - واجهة الإعدادات
+- **APIs:**
+  - `GET /api/admin/settings/earnings-hold` - جلب الإعدادات
+  - `PUT /api/admin/settings/earnings-hold` - تحديث الإعدادات
+  - `GET /api/admin/held-earnings/summary` - ملخص الأرباح المعلقة
+  - `POST /api/admin/held-earnings/release-all` - إطلاق يدوي
+  - `GET /api/wallet/held-earnings` - الأرباح المعلقة للمستخدم
+- **Status:** TESTED ✅ (iteration_62)
+
+#### تتبع السائق المباشر للعملاء ✅ - 15 Dec 2025
+- **الميزة:** تتبع موقع السائق في الوقت الحقيقي
+- **التحديثات:**
+  - تحديث موقع السائق كل 10 ثواني (بدلاً من 30)
+  - جلب موقع السائق للعميل كل 5 ثواني
+  - إرسال بيانات إضافية: السرعة (كم/س)، الاتجاه
+- **الملفات:**
+  - `hooks/useDriverLocationTracker.js` - تتبع موقع السائق (محسّن)
+  - `components/DriverTrackingMap.js` - عرض موقع السائق (محسّن)
+  - `routes/delivery.py` - API التتبع الحي
+- **Status:** IMPLEMENTED ✅
+
+#### إصلاح مشكلة نافذة الأولوية ✅ - 15 Dec 2025
+- **المشكلة:** نافذة طلب الأولوية كانت تعود للظهور بعد رفضها
+- **السبب:** مشكلة في إدارة الحالة داخل الـ interval callbacks (closure issue)
+- **الحل:** استخدام `useRef` للحفاظ على قائمة الطلبات المرفوضة
+- **الملف:** `components/delivery/OrdersMap.js`
+- **التغييرات:**
+  - إضافة `rejectedOrderIdsRef` باستخدام `useRef`
+  - تحديث الـ ref فوراً عند رفض الطلب
+  - استخدام الـ refs في الـ interval بدلاً من الـ state
+- **Status:** FIXED ✅
+
 #### نظام ساعات توصيل المنتجات والخصم التلقائي ✅ - 15 Dec 2025
 - **ساعات التوصيل المسموحة:**
   - المدير يحدد أول وآخر وقت للتوصيل (مثال: 8 صباحاً - 11 مساءً)
@@ -324,13 +374,13 @@ All critical features are implemented and tested.
 ---
 
 ## Known Issues
-- **Priority Order Popup Bug (P1):** نافذة الطلب ذات الأولوية قد تظهر مجدداً بعد الرفض في `OrdersMap.js`. يحتاج refactoring للـ state management.
+- **Priority Order Popup Bug:** ✅ **FIXED** - تم إصلاح مشكلة ظهور النافذة المتكرر باستخدام `useRef` للحفاظ على قائمة الطلبات المرفوضة بشكل صحيح في callbacks.
 
 ---
 
 ## Upcoming Tasks (P1)
-- [ ] نظام إيداع ومستويات الثقة للسائقين (Driver Deposit & Trust Level)
 - [ ] اختبار المستخدم اليدوي للنظام الكامل
+- [ ] إضافة سائق تجريبي جديد للاختبار
 
 ## Future Tasks (P2/P3)
 - [ ] تكامل مزود دفع سوري
@@ -339,11 +389,11 @@ All critical features are implemented and tested.
 - [ ] نظام مكافآت السائقين (Quests)
 - [ ] أرقام هاتف مقنّعة
 - [ ] دردشة داخلية
-- [ ] تتبع السائق للعملاء
 
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_62.json` - Earnings Hold Period & Live Tracking ✅
 - `/app/test_reports/iteration_61.json` - Password Recovery Feature ✅
 - `/app/test_reports/iteration_60.json` - Product Delivery Improvements ✅
 - `/app/test_reports/iteration_59.json` - Geofencing & False Arrival System ✅
