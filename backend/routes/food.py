@@ -215,6 +215,50 @@ async def get_food_store(store_id: str):
     
     store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
     
+    # حساب حالة الفتح/الإغلاق
+    now = datetime.now(timezone.utc)
+    local_hour = (now.hour + 3) % 24  # توقيت سوريا +3
+    local_minute = now.minute
+    current_day = (now.weekday() + 1) % 7
+    day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    current_day_name = day_names[current_day]
+    
+    working_hours = store.get("working_hours", {})
+    
+    if not working_hours:
+        store["is_open"] = True
+        store["open_status"] = "مفتوح"
+        store["next_open_time"] = None
+    else:
+        today_hours = working_hours.get(current_day_name, {})
+        
+        if not today_hours or not today_hours.get("is_open", True):
+            store["is_open"] = False
+            store["open_status"] = "مغلق اليوم"
+            store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+        else:
+            open_hour = today_hours.get("open_hour", 8)
+            open_minute = today_hours.get("open_minute", 0)
+            close_hour = today_hours.get("close_hour", 22)
+            close_minute = today_hours.get("close_minute", 0)
+            
+            current_time = local_hour * 60 + local_minute
+            open_time = open_hour * 60 + open_minute
+            close_time = close_hour * 60 + close_minute
+            
+            if open_time <= current_time < close_time:
+                store["is_open"] = True
+                store["open_status"] = "مفتوح"
+                store["closes_at"] = f"{close_hour:02d}:{close_minute:02d}"
+            elif current_time < open_time:
+                store["is_open"] = False
+                store["open_status"] = f"يفتح الساعة {open_hour:02d}:{open_minute:02d}"
+                store["next_open_time"] = f"{open_hour:02d}:{open_minute:02d}"
+            else:
+                store["is_open"] = False
+                store["open_status"] = "مغلق الآن"
+                store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+    
     # جلب منتجات المتجر
     products = await db.food_products.find(
         {"store_id": store_id, "is_available": True}, 

@@ -64,6 +64,16 @@ const FoodStorePage = () => {
   };
 
   const addToCart = (product, quantity = 1) => {
+    // منع الإضافة إذا المتجر مغلق
+    if (store?.is_open === false) {
+      toast({ 
+        title: "المتجر مغلق", 
+        description: "لا يمكنك الطلب حالياً، يرجى العودة عندما يفتح المتجر", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     const existingIndex = cart.findIndex(item => item.product_id === product.id);
     
     if (existingIndex >= 0) {
@@ -114,8 +124,24 @@ const FoodStorePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
+      {/* بانر المتجر مغلق */}
+      {store.is_open === false && (
+        <div className="bg-red-600 text-white px-4 py-3 text-center sticky top-0 z-50">
+          <div className="flex items-center justify-center gap-2">
+            <Clock size={18} />
+            <span className="font-bold">المتجر مغلق حالياً</span>
+          </div>
+          {store.open_status && (
+            <p className="text-sm text-red-100 mt-1">
+              {store.open_status}
+              {store.next_open_time && ` • يفتح ${store.next_open_time}`}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Header Image */}
-      <div className="relative h-48 bg-gradient-to-br from-[#FF6B00] to-[#E65000]">
+      <div className={`relative h-48 bg-gradient-to-br from-[#FF6B00] to-[#E65000] ${store.is_open === false ? 'grayscale' : ''}`}>
         {store.cover_image && (
           <img 
             src={store.cover_image} 
@@ -231,6 +257,7 @@ const FoodStorePage = () => {
                     cartQuantity={getCartQuantity(product.id)}
                     onAdd={() => addToCart(product)}
                     onView={() => setSelectedProduct(product)}
+                    isStoreClosed={store?.is_open === false}
                   />
                 ))}
               </div>
@@ -239,12 +266,13 @@ const FoodStorePage = () => {
         )}
       </div>
 
-      {/* Cart Button */}
-      {cartItemsCount > 0 && (
+      {/* Cart Button - يظهر فقط إذا المتجر مفتوح */}
+      {cartItemsCount > 0 && store?.is_open !== false && (
         <div className="fixed bottom-16 left-0 right-0 p-3 bg-white border-t border-gray-200 z-40 shadow-lg">
           <button
             onClick={() => navigate(`/food/cart/${storeId}`)}
             className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold flex items-center justify-between px-4 hover:bg-[#E65000]"
+            data-testid="view-cart-button"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag size={20} />
@@ -282,11 +310,12 @@ const FoodStorePage = () => {
   );
 };
 
-const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
+const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed }) => (
   <motion.div
     whileTap={{ scale: 0.98 }}
     onClick={onView}
-    className="bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer hover:shadow-md transition-shadow"
+    className={`bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer transition-shadow
+      ${isStoreClosed ? 'opacity-60' : 'hover:shadow-md'}`}
   >
     <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
       {product.images?.[0] ? (
@@ -314,15 +343,18 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView }) => (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onAdd();
+            if (!isStoreClosed) onAdd();
           }}
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            cartQuantity > 0 
-              ? 'bg-[#FF6B00] text-white' 
-              : 'bg-orange-100 text-[#E65000]'
-          } shadow-sm`}
+          disabled={isStoreClosed}
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm
+            ${isStoreClosed 
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+              : cartQuantity > 0 
+                ? 'bg-[#FF6B00] text-white' 
+                : 'bg-orange-100 text-[#E65000]'
+            }`}
         >
-          {cartQuantity > 0 ? cartQuantity : <Plus size={20} />}
+          {cartQuantity > 0 && !isStoreClosed ? cartQuantity : <Plus size={20} />}
         </button>
       </div>
     </div>

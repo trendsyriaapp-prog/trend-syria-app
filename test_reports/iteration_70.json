@@ -1,0 +1,92 @@
+{
+  "summary": "Store Closed Status Feature Testing Complete. Backend APIs correctly return is_open and open_status fields. Frontend properly displays closed store banner, disables add buttons, and shows grayscale effect on store detail page. Store 'مطعم الشام' (ID: 421443ed-55d6-4f1e-990a-2f3f53b2427e) correctly shows as closed since Syria time (~2AM) is outside working hours (8AM-11PM).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Food Page /food",
+        "issues": ["Minor: Only 4 stores shown (slice 0,4), closed stores sorted last so may not be visible on main page. Users need to click 'عرض الكل' which leads to missing /food/stores page."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_store_closed_status.py",
+    "/app/test_reports/pytest/store_closed_status_results.xml"
+  ],
+  "action_items": [
+    "MINOR: Create /food/stores page or update 'عرض الكل' link to show more stores"
+  ],
+  "critical_code_review_comments": [
+    "Backend food.py lines 106-185: get_food_stores correctly calculates is_open based on Syria timezone (+3) and working_hours",
+    "Backend food.py lines 213-270: get_food_store correctly adds is_open for single store detail",
+    "Frontend FoodPage.js StoreCard lines 371-461: Correctly shows grayscale, closed badge, cursor-not-allowed for closed stores",
+    "Frontend FoodStorePage.js lines 127-141: Correctly shows red 'المتجر مغلق حالياً' banner for closed stores",
+    "Frontend FoodStorePage.js ProductCard lines 313-362: Add buttons correctly disabled (isStoreClosed check) with gray styling"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_store_closed_status.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "customer": {"phone": "0922222222", "password": "user123"}
+  },
+  "seed_data_creation": "None - Used existing store 'مطعم الشام' with working_hours configured",
+  "retest_needed": false,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Store Closed Status feature fully working. Backend returns is_open/open_status based on Syria timezone (+3). Frontend shows: 1) Red banner 'المتجر مغلق حالياً', 2) Grayscale store image, 3) Disabled add buttons with toast message when clicked. Test store: مطعم الشام (421443ed-55d6-4f1e-990a-2f3f53b2427e) with working hours 8AM-11PM Syria time.",
+  "features_tested": {
+    "GET_food_stores_is_open": {
+      "endpoint": "GET /api/food/stores",
+      "status": "WORKING",
+      "verification": "Returns is_open and open_status for all stores. Open stores sorted first."
+    },
+    "GET_food_store_single_is_open": {
+      "endpoint": "GET /api/food/stores/{store_id}",
+      "status": "WORKING",
+      "verification": "Returns is_open=false and open_status='يفتح الساعة 08:00' for closed store"
+    },
+    "frontend_closed_banner": {
+      "component": "FoodStorePage.js",
+      "status": "WORKING",
+      "verification": "Red banner shows 'المتجر مغلق حالياً' with next open time"
+    },
+    "frontend_disabled_add_buttons": {
+      "component": "FoodStorePage.js ProductCard",
+      "status": "WORKING",
+      "verification": "Buttons disabled=true, has gray class, cursor-not-allowed"
+    },
+    "frontend_toast_on_add_attempt": {
+      "component": "FoodStorePage.js addToCart",
+      "status": "WORKING",
+      "verification": "Toast shows 'المتجر مغلق - لا يمكنك الطلب حالياً، يرجى العودة عندما يفتح المتجر'"
+    },
+    "frontend_store_card_closed_visual": {
+      "component": "FoodPage.js StoreCard",
+      "status": "WORKING",
+      "verification": "Closed stores show grayscale, 'مغلق الآن' badge, not clickable (cursor-not-allowed)"
+    }
+  },
+  "api_test_results": {
+    "stores_list": {
+      "total_stores": 13,
+      "closed_stores": 1,
+      "closed_store_name": "مطعم الشام"
+    },
+    "closed_store_detail": {
+      "id": "421443ed-55d6-4f1e-990a-2f3f53b2427e",
+      "name": "مطعم الشام",
+      "is_open": false,
+      "open_status": "يفتح الساعة 08:00",
+      "next_open_time": "08:00",
+      "working_hours": "8AM-11PM all days"
+    }
+  }
+}

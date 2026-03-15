@@ -372,61 +372,91 @@ const StoreCard = ({ store }) => {
   // جلب إعدادات القسم حسب نوع المتجر
   const categoryConfig = CATEGORY_CONFIG[store.store_type] || CATEGORY_CONFIG.restaurants;
   const CategoryIcon = categoryConfig.icon;
+  const isOpen = store.is_open !== false; // افتراضياً مفتوح إذا لم يُحدد
   
-  return (
-    <Link to={`/food/store/${store.id}`}>
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`bg-white rounded-xl border-2 ${store.store_type ? categoryConfig.borderColor : 'border-gray-200'} overflow-hidden hover:shadow-md transition-shadow`}
-      >
-        <div className={`h-24 bg-gradient-to-br ${categoryConfig.bgLight} relative overflow-hidden`}>
-          {store.cover_image ? (
-            <img src={store.cover_image} alt={store.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${categoryConfig.gradient} opacity-20`} />
-          )}
-          {/* شارة نوع المتجر */}
-          <div className={`absolute top-2 left-2 ${categoryConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
-            <CategoryIcon size={10} />
-            <span>{categoryConfig.name}</span>
-          </div>
-          <div className="absolute bottom-2 right-2">
-            {store.logo ? (
-              <img src={store.logo} alt={store.name} className={`w-12 h-12 rounded-full object-cover border-2 ${categoryConfig.borderColor} shadow-lg`} />
-            ) : (
-              <div className={`w-12 h-12 ${categoryConfig.color} rounded-full flex items-center justify-center border-2 border-white shadow-lg`}>
-                <CategoryIcon size={20} className="text-white" />
-              </div>
-            )}
+  const cardContent = (
+    <motion.div
+      whileHover={isOpen ? { scale: 1.02 } : {}}
+      whileTap={isOpen ? { scale: 0.98 } : {}}
+      className={`bg-white rounded-xl border-2 ${store.store_type ? categoryConfig.borderColor : 'border-gray-200'} overflow-hidden transition-shadow relative
+        ${isOpen ? 'hover:shadow-md' : 'grayscale opacity-70'}`}
+    >
+      {/* شارة مغلق */}
+      {!isOpen && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 rounded-xl">
+          <div className="bg-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+            <Clock size={16} />
+            <span>مغلق الآن</span>
           </div>
         </div>
-        <div className="p-3">
-          <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
-          <p className={`text-xs ${categoryConfig.textColor} truncate font-medium`}>{categoryConfig.emoji} {categoryConfig.name}</p>
-          {/* العنوان الكامل */}
-          {store.address && (
-            <div className="flex items-center gap-1 mt-1">
-              <MapPin size={10} className="text-gray-400 flex-shrink-0" />
-              <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+      )}
+      
+      <div className={`h-24 bg-gradient-to-br ${categoryConfig.bgLight} relative overflow-hidden`}>
+        {store.cover_image ? (
+          <img src={store.cover_image} alt={store.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${categoryConfig.gradient} opacity-20`} />
+        )}
+        {/* شارة نوع المتجر */}
+        <div className={`absolute top-2 left-2 ${categoryConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
+          <CategoryIcon size={10} />
+          <span>{categoryConfig.name}</span>
+        </div>
+        <div className="absolute bottom-2 right-2">
+          {store.logo ? (
+            <img src={store.logo} alt={store.name} className={`w-12 h-12 rounded-full object-cover border-2 ${categoryConfig.borderColor} shadow-lg`} />
+          ) : (
+            <div className={`w-12 h-12 ${categoryConfig.color} rounded-full flex items-center justify-center border-2 border-white shadow-lg`}>
+              <CategoryIcon size={20} className="text-white" />
             </div>
           )}
-          <div className="flex items-center gap-2 mt-2">
-            {store.rating > 0 && (
-              <div className="flex items-center gap-1 text-xs">
-                <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                <span>{store.rating.toFixed(1)}</span>
-              </div>
-            )}
-            {store.delivery_time && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Clock size={12} />
-                <span>{store.delivery_time} د</span>
-              </div>
+        </div>
+      </div>
+      <div className="p-3">
+        <h3 className="font-bold text-gray-900 text-sm truncate">{store.name}</h3>
+        <p className={`text-xs ${categoryConfig.textColor} truncate font-medium`}>{categoryConfig.emoji} {categoryConfig.name}</p>
+        {/* العنوان الكامل */}
+        {store.address && (
+          <div className="flex items-center gap-1 mt-1">
+            <MapPin size={10} className="text-gray-400 flex-shrink-0" />
+            <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+          </div>
+        )}
+        <div className="flex items-center gap-2 mt-2">
+          {store.rating > 0 && (
+            <div className="flex items-center gap-1 text-xs">
+              <Star size={12} className="text-yellow-500 fill-yellow-500" />
+              <span>{store.rating.toFixed(1)}</span>
+            </div>
+          )}
+          {store.delivery_time && (
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Clock size={12} />
+              <span>{store.delivery_time} د</span>
+            </div>
+          )}
+        </div>
+        {/* حالة الفتح/الإغلاق */}
+        {!isOpen && store.open_status && (
+          <div className="mt-2 text-xs text-red-600 font-medium">
+            {store.open_status}
+            {store.next_open_time && (
+              <span className="text-gray-500 mr-1">• يفتح {store.next_open_time}</span>
             )}
           </div>
-        </div>
-      </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+  
+  // إذا كان المتجر مغلقاً، لا نجعله رابطاً قابلاً للنقر
+  if (!isOpen) {
+    return <div className="cursor-not-allowed" data-testid={`store-card-closed-${store.id}`}>{cardContent}</div>;
+  }
+  
+  return (
+    <Link to={`/food/store/${store.id}`} data-testid={`store-card-${store.id}`}>
+      {cardContent}
     </Link>
   );
 };
