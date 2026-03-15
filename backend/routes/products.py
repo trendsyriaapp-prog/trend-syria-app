@@ -34,8 +34,8 @@ async def get_categories():
     
     categories_with_icons = [
         {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
-        {"id": "fashion", "name": "أزياء", "icon": "Sparkles", "type": "shopping"},
         {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
+        {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
         {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
         {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
         {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},

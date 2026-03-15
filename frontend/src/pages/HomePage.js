@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
-  Home as HomeIcon, Sparkles, Dumbbell, BookOpen, Gamepad2, 
-  UtensilsCrossed, Heart, SprayCan, ChevronLeft, TrendingUp,
+  Home as HomeIcon, Dumbbell, BookOpen, Gamepad2, 
+  UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
   Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight,
-  Pill, Car, MapPin
+  Pill, Car, MapPin, Watch
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -19,9 +19,9 @@ import { useSettings } from '../context/SettingsContext';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const iconMap = {
-  Smartphone, Shirt, Home: HomeIcon, Sparkles, Dumbbell, 
-  BookOpen, Gamepad2, UtensilsCrossed, Heart, SprayCan,
-  ShoppingBasket, Apple, Pill, Car
+  Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
+  BookOpen, Gamepad2, UtensilsCrossed, SprayCan,
+  ShoppingBasket, Apple, Pill, Car, Watch
 };
 
 const HomePage = () => {

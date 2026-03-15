@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  Smartphone, Shirt, Home as HomeIcon, Sparkles, Dumbbell, 
-  BookOpen, Gamepad2, UtensilsCrossed, Heart, Car 
+  Smartphone, Shirt, Home as HomeIcon, Dumbbell, 
+  BookOpen, Gamepad2, UtensilsCrossed, Car, Watch, SprayCan, Pill, ShoppingBasket, Apple
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const iconMap = {
-  Smartphone, Shirt, Home: HomeIcon, Sparkles, Dumbbell, 
-  BookOpen, Gamepad2, UtensilsCrossed, Heart, Car
+  Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
+  BookOpen, Gamepad2, UtensilsCrossed, Car, Watch, SprayCan, Pill, ShoppingBasket, Apple
 };
 
 const CategoriesPage = () => {

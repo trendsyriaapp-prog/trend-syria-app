@@ -2,8 +2,8 @@
 
 export const CATEGORIES = [
   { id: 'electronics', name: 'إلكترونيات' },
-  { id: 'fashion', name: 'أزياء' },
   { id: 'clothes', name: 'ملابس' },
+  { id: 'accessories', name: 'إكسسوارات' },
   { id: 'home', name: 'المنزل' },
   { id: 'beauty', name: 'تجميل' },
   { id: 'sports', name: 'رياضة' },
