@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  UtensilsCrossed, ShoppingBasket, Apple, Store, MapPin, 
-  Phone, Clock, ArrowLeft, CheckCircle, Upload, Image
+  UtensilsCrossed, ShoppingCart, Apple, Store, MapPin, 
+  Phone, Clock, ArrowLeft, CheckCircle, Upload, Image, Cake
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -15,10 +15,52 @@ import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// أنواع المتاجر مع الإعدادات الافتراضية
 const STORE_TYPES = [
-  { id: 'restaurants', name: 'مطعم', icon: UtensilsCrossed, color: 'bg-red-500', description: 'وجبات جاهزة، مطاعم، كافيهات' },
-  { id: 'groceries', name: 'مواد غذائية', icon: ShoppingBasket, color: 'bg-blue-500', description: 'سوبرماركت، بقالة، مواد استهلاكية' },
-  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-[#FF6B00]', description: 'خضار طازجة، فواكه، منتجات زراعية' },
+  { 
+    id: 'restaurants', 
+    name: 'وجبات سريعة', 
+    icon: UtensilsCrossed, 
+    color: 'bg-red-500', 
+    description: 'مطاعم، شاورما، بيتزا، برغر، سندويشات',
+    default_delivery_time: 20,
+    default_minimum_order: 15000,
+    default_delivery_fee: 5000,
+    default_free_delivery: 50000
+  },
+  { 
+    id: 'market', 
+    name: 'ماركت', 
+    icon: ShoppingCart, 
+    color: 'bg-blue-500', 
+    description: 'سوبرماركت، بقالة، مواد استهلاكية',
+    default_delivery_time: 10,
+    default_minimum_order: 20000,
+    default_delivery_fee: 5000,
+    default_free_delivery: 75000
+  },
+  { 
+    id: 'vegetables', 
+    name: 'خضار وفواكه', 
+    icon: Apple, 
+    color: 'bg-emerald-500', 
+    description: 'خضار طازجة، فواكه موسمية، أعشاب',
+    default_delivery_time: 8,
+    default_minimum_order: 10000,
+    default_delivery_fee: 3000,
+    default_free_delivery: 40000
+  },
+  { 
+    id: 'sweets', 
+    name: 'حلويات', 
+    icon: Cake, 
+    color: 'bg-pink-500', 
+    description: 'حلويات شرقية وغربية، معجنات، آيس كريم',
+    default_delivery_time: 15,
+    default_minimum_order: 15000,
+    default_delivery_fee: 5000,
+    default_free_delivery: 50000
+  },
 ];
 
 const CITIES = [
@@ -51,7 +93,16 @@ const JoinAsFoodSellerPage = () => {
   });
 
   const handleTypeSelect = (typeId) => {
-    setFormData({ ...formData, store_type: typeId });
+    // جلب الإعدادات الافتراضية حسب نوع المتجر
+    const selectedType = STORE_TYPES.find(t => t.id === typeId);
+    setFormData({ 
+      ...formData, 
+      store_type: typeId,
+      delivery_time: selectedType?.default_delivery_time || 30,
+      minimum_order: selectedType?.default_minimum_order || 0,
+      delivery_fee: selectedType?.default_delivery_fee || 5000,
+      free_delivery_minimum: selectedType?.default_free_delivery || 0
+    });
     setStep(2);
   };
 

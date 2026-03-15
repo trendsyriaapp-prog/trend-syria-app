@@ -6,17 +6,18 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  UtensilsCrossed, ShoppingBasket, Apple, Search, MapPin, 
-  Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles
+  UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
+  Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles, Cake
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const foodCategories = [
-  { id: 'restaurants', name: 'مطاعم', icon: UtensilsCrossed, color: 'bg-red-500' },
-  { id: 'groceries', name: 'مواد غذائية', icon: ShoppingBasket, color: 'bg-blue-500' },
-  { id: 'vegetables', name: 'خضروات وفواكه', icon: Apple, color: 'bg-emerald-500' },
+  { id: 'restaurants', name: 'وجبات سريعة', icon: UtensilsCrossed, color: 'bg-red-500' },
+  { id: 'market', name: 'ماركت', icon: ShoppingCart, color: 'bg-blue-500' },
+  { id: 'vegetables', name: 'خضار وفواكه', icon: Apple, color: 'bg-emerald-500' },
+  { id: 'sweets', name: 'حلويات', icon: Cake, color: 'bg-pink-500' },
 ];
 
 // قائمة المدن السورية
@@ -418,8 +419,9 @@ const FoodProductCard = ({ product }) => {
 const EmptyState = ({ category }) => {
   const messages = {
     restaurants: 'لا توجد مطاعم متاحة حالياً',
-    groceries: 'لا توجد متاجر مواد غذائية حالياً',
-    vegetables: 'لا توجد متاجر خضروات حالياً',
+    market: 'لا توجد متاجر ماركت حالياً',
+    vegetables: 'لا توجد متاجر خضار حالياً',
+    sweets: 'لا توجد متاجر حلويات حالياً',
     all: 'لا توجد متاجر أو منتجات متاحة حالياً'
   };
 
@@ -494,8 +496,10 @@ const FlashSaleBanner = ({ flash }) => {
                 <span className="text-white/80 text-xs truncate">
                   {!flash.applicable_categories?.length ? 'جميع الأصناف' : 
                     flash.applicable_categories.map(c => 
-                      c === 'restaurants' ? 'مطاعم' : 
-                      c === 'groceries' ? 'غذائية' : 'خضروات'
+                      c === 'restaurants' ? 'وجبات' : 
+                      c === 'market' ? 'ماركت' : 
+                      c === 'vegetables' ? 'خضار' :
+                      c === 'sweets' ? 'حلويات' : c
                     ).join(' • ')}
                 </span>
               </div>

@@ -13,21 +13,32 @@ router = APIRouter(prefix="/food", tags=["Food Delivery"])
 
 # أنواع متاجر الطعام
 FOOD_STORE_TYPES = {
-    "restaurants": "مطاعم",
-    "groceries": "مواد غذائية", 
-    "vegetables": "خضروات وفواكه"
+    "restaurants": "وجبات سريعة",
+    "market": "ماركت", 
+    "vegetables": "خضار وفواكه",
+    "sweets": "حلويات"
+}
+
+# أوقات التحضير الافتراضية لكل نوع
+DEFAULT_PREPARATION_TIMES = {
+    "restaurants": 20,  # دقيقة
+    "market": 10,
+    "vegetables": 8,
+    "sweets": 15
 }
 
 # Models
 class FoodStoreCreate(BaseModel):
     name: str
-    store_type: str  # restaurants, groceries, vegetables
+    store_type: str  # restaurants, market, vegetables, sweets
     description: Optional[str] = None
     phone: str
     address: str
     city: str
     logo: Optional[str] = None
     cover_image: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     delivery_time: Optional[int] = 30  # بالدقائق
     minimum_order: Optional[float] = 0
     free_delivery_minimum: Optional[float] = 0  # الحد الأدنى للتوصيل المجاني
