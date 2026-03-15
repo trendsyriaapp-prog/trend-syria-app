@@ -56,11 +56,29 @@
   - تحديث موقع السائق كل 10 ثواني (بدلاً من 30)
   - جلب موقع السائق للعميل كل 5 ثواني
   - إرسال بيانات إضافية: السرعة (كم/س)، الاتجاه
+- **إشعار اقتراب السائق:**
+  - عند اقتراب السائق لأقل من 500 متر من العميل
+  - إشعار "🚗 طلبك على وشك الوصول!" يُرسل للعميل
+  - علامة `nearby_notification_sent` تمنع تكرار الإشعار
+  - واجهة المستخدم تعرض "السائق وصل!" مع المسافة بالأمتار
+- **حساب المسافة (Haversine):**
+  - حساب دقيق للمسافة بين السائق والعميل
+  - تقدير وقت الوصول بناءً على السرعة
 - **الملفات:**
   - `hooks/useDriverLocationTracker.js` - تتبع موقع السائق (محسّن)
-  - `components/DriverTrackingMap.js` - عرض موقع السائق (محسّن)
-  - `routes/delivery.py` - API التتبع الحي
-- **Status:** IMPLEMENTED ✅
+  - `components/DriverTrackingMap.js` - عرض موقع السائق + إشعار القرب
+  - `routes/delivery.py` - check_proximity_and_notify(), calculate_eta()
+- **Status:** TESTED ✅ (iteration_63)
+
+#### بيانات تجريبية لأقسام الطعام ✅ - 15 Dec 2025
+- **المتاجر الجديدة (8 متاجر):**
+  - 🍔 **وجبات سريعة:** برغر كينغ دمشق، بيتزا هت سورية
+  - 🛒 **ماركت:** سوبر ماركت الأمانة، بقالة السعادة
+  - 🥬 **خضار وفواكه:** خضار أبو محمد، فواكه الشام
+  - 🍰 **حلويات:** حلويات الشرق، آيس كريم كولد ستون
+- **المنتجات:** 54 منتج متنوع (برغر، بيتزا، حليب، بيض، خضار، فواكه، بقلاوة، آيس كريم...)
+- **الملف:** `scripts/seed_food_data.py`
+- **Status:** TESTED ✅ (iteration_63)
 
 #### إصلاح مشكلة نافذة الأولوية ✅ - 15 Dec 2025
 - **المشكلة:** نافذة طلب الأولوية كانت تعود للظهور بعد رفضها
@@ -393,6 +411,7 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_63.json` - Food Seed Data & Driver Proximity ✅
 - `/app/test_reports/iteration_62.json` - Earnings Hold Period & Live Tracking ✅
 - `/app/test_reports/iteration_61.json` - Password Recovery Feature ✅
 - `/app/test_reports/iteration_60.json` - Product Delivery Improvements ✅
