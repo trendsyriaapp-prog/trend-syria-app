@@ -119,31 +119,72 @@ const getDriverLocation = () => {
   });
 };
 
-// خوارزمية Nearest Neighbor لترتيب النقاط
-const optimizeRoute = (startPoint, points) => {
-  if (points.length === 0) return [];
-  if (points.length === 1) return points;
+// خوارزمية ذكية: الأقرب فالأقرب مع مراعاة أن الاستلام يسبق التوصيل
+const optimizeRouteSmartly = (startPoint, allPoints) => {
+  if (allPoints.length === 0) return [];
+  if (allPoints.length === 1) return allPoints;
   
   const optimized = [];
-  const remaining = [...points];
+  const remaining = [...allPoints];
   let current = startPoint;
   
+  // تتبع الطلبات التي تم استلامها (يمكن توصيلها)
+  const pickedUpOrders = new Set();
+  
   while (remaining.length > 0) {
-    let nearestIndex = 0;
-    let nearestDistance = Infinity;
+    let bestIndex = -1;
+    let bestDistance = Infinity;
     
     for (let i = 0; i < remaining.length; i++) {
       const point = remaining[i];
+      
+      // إذا كانت نقطة عميل (توصيل) - تحقق أن الطلب تم استلامه
+      if (point.type === 'customer') {
+        // لا يمكن توصيل طلب إلا إذا استلمناه من البائع
+        if (!pickedUpOrders.has(point.orderId)) {
+          continue; // تخطي هذا العميل، لم نستلم طلبه بعد
+        }
+      }
+      
+      // حساب المسافة
       const distance = calculateDistance(current[0], current[1], point.lat, point.lng);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = i;
+      
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
       }
     }
     
-    const nearest = remaining.splice(nearestIndex, 1)[0];
-    optimized.push(nearest);
-    current = [nearest.lat, nearest.lng];
+    // إذا لم نجد نقطة مناسبة (كل المتبقي عملاء وطلباتهم لم تُستلم)
+    // نضطر لاختيار أقرب بائع
+    if (bestIndex === -1) {
+      for (let i = 0; i < remaining.length; i++) {
+        const point = remaining[i];
+        if (point.type === 'store') {
+          const distance = calculateDistance(current[0], current[1], point.lat, point.lng);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = i;
+          }
+        }
+      }
+    }
+    
+    // إذا لا يزال لم نجد (لا يجب أن يحدث)
+    if (bestIndex === -1) {
+      bestIndex = 0;
+    }
+    
+    const selected = remaining.splice(bestIndex, 1)[0];
+    optimized.push(selected);
+    
+    // إذا كانت نقطة بائع، أضف الطلب للقائمة المستلمة
+    if (selected.type === 'store') {
+      pickedUpOrders.add(selected.orderId);
+    }
+    
+    // تحديث الموقع الحالي
+    current = [selected.lat, selected.lng];
   }
   
   return optimized;
@@ -263,23 +304,9 @@ const MultiRouteOptimizer = ({
         return;
       }
       
-      // ترتيب النقاط باستخدام خوارزمية أقرب جار مع مراعاة أن الاستلام يسبق التوصيل
-      let optimized = [];
-      
-      // فصل نقاط الاستلام عن التوصيل
-      const storePoints = allPoints.filter(p => p.type === 'store');
-      const customerPoints = allPoints.filter(p => p.type === 'customer');
-      
-      // تحسين مسار الاستلام أولاً
-      const optimizedStores = optimizeRoute(driverPos, storePoints);
-      
-      // ثم تحسين مسار التوصيل
-      const lastStorePoint = optimizedStores.length > 0 
-        ? [optimizedStores[optimizedStores.length - 1].lat, optimizedStores[optimizedStores.length - 1].lng]
-        : driverPos;
-      const optimizedCustomers = optimizeRoute(lastStorePoint, customerPoints);
-      
-      optimized = [...optimizedStores, ...optimizedCustomers];
+      // ترتيب النقاط باستخدام الخوارزمية الذكية
+      // الأقرب فالأقرب مع مراعاة أن الاستلام يسبق التوصيل
+      const optimized = optimizeRouteSmartly(driverPos, allPoints);
       setOptimizedRoute(optimized);
       
       // جلب المسار الفعلي من OSRM
