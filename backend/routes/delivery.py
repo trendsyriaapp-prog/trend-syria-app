@@ -148,6 +148,44 @@ async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_
 class AvailabilityUpdate(BaseModel):
     is_available: bool
 
+
+@router.get("/delivery-hours")
+async def get_delivery_hours_for_driver(user: dict = Depends(get_current_user)):
+    """جلب ساعات التوصيل المسموحة للسائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    settings = await db.settings.find_one({"type": "product_delivery_hours"}, {"_id": 0})
+    
+    if not settings:
+        settings = {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 0
+        }
+    
+    # الوقت الحالي بتوقيت سوريا (UTC+3)
+    from datetime import timedelta
+    now_utc = datetime.now(timezone.utc)
+    syria_tz = timezone(timedelta(hours=3))
+    now_syria = now_utc.astimezone(syria_tz)
+    
+    current_minutes = now_syria.hour * 60 + now_syria.minute
+    start_minutes = settings["start_hour"] * 60 + settings["start_minute"]
+    end_minutes = settings["end_hour"] * 60 + settings["end_minute"]
+    
+    is_allowed = start_minutes <= current_minutes <= end_minutes
+    
+    return {
+        "is_delivery_allowed": is_allowed,
+        "current_time": now_syria.strftime("%H:%M"),
+        "start_time": f"{settings['start_hour']:02d}:{settings['start_minute']:02d}",
+        "end_time": f"{settings['end_hour']:02d}:{settings['end_minute']:02d}",
+        "message": "يمكنك التوصيل الآن" if is_allowed else f"التوصيل متاح من {settings['start_hour']:02d}:{settings['start_minute']:02d}"
+    }
+
+
 @router.get("/availability")
 async def get_availability(user: dict = Depends(get_current_user)):
     """الحصول على حالة توفر السائق"""
@@ -577,6 +615,28 @@ async def mark_order_delivered(order_id: str, user: dict = Depends(get_current_u
     
     if order.get("delivery_driver_id") != user["id"]:
         raise HTTPException(status_code=403, detail="هذا الطلب ليس مسنداً إليك")
+    
+    # التحقق من ساعات التوصيل المسموحة
+    from datetime import timedelta
+    settings = await db.settings.find_one({"type": "product_delivery_hours"}, {"_id": 0})
+    if not settings:
+        settings = {"start_hour": 8, "start_minute": 0, "end_hour": 23, "end_minute": 0}
+    
+    now_utc = datetime.now(timezone.utc)
+    syria_tz = timezone(timedelta(hours=3))
+    now_syria = now_utc.astimezone(syria_tz)
+    
+    current_minutes = now_syria.hour * 60 + now_syria.minute
+    start_minutes = settings["start_hour"] * 60 + settings["start_minute"]
+    end_minutes = settings["end_hour"] * 60 + settings["end_minute"]
+    
+    if not (start_minutes <= current_minutes <= end_minutes):
+        start_time = f"{settings['start_hour']:02d}:{settings['start_minute']:02d}"
+        end_time = f"{settings['end_hour']:02d}:{settings['end_minute']:02d}"
+        raise HTTPException(
+            status_code=400, 
+            detail=f"التوصيل متاح فقط من {start_time} إلى {end_time}. لا تزعج العميل الآن."
+        )
     
     await db.orders.update_one(
         {"id": order_id},

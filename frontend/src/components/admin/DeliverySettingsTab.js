@@ -80,6 +80,17 @@ const DeliverySettingsTab = () => {
     max_penalty_per_day: 2000
   });
 
+  // إعدادات ساعات توصيل المنتجات
+  const [productDeliveryHours, setProductDeliveryHours] = useState({
+    start_hour: 8,
+    start_minute: 0,
+    end_hour: 23,
+    end_minute: 0
+  });
+
+  // تقرير الطلبات غير المُسلّمة
+  const [undeliveredReport, setUndeliveredReport] = useState(null);
+
   // إعدادات حدود الطلبات الذكية
   const [smartOrderLimits, setSmartOrderLimits] = useState({
     max_orders_different_stores: 5,
@@ -102,6 +113,8 @@ const DeliverySettingsTab = () => {
     fetchDispatchStatus();
     fetchViolationsReport();
     fetchDeliveryTimeSettings();
+    fetchProductDeliveryHours();
+    fetchUndeliveredReport();
   }, []);
 
   const fetchSettings = async () => {
@@ -314,6 +327,75 @@ const DeliverySettingsTab = () => {
         food_orders_max_distance_km: settings.food_orders_max_distance_km
       });
       alert('تم حفظ إعدادات قبول الطلبات بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // جلب إعدادات ساعات توصيل المنتجات
+  const fetchProductDeliveryHours = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/admin/settings/product-delivery-hours`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.settings) {
+        setProductDeliveryHours({
+          start_hour: res.data.settings.start_hour || 8,
+          start_minute: res.data.settings.start_minute || 0,
+          end_hour: res.data.settings.end_hour || 23,
+          end_minute: res.data.settings.end_minute || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching product delivery hours:', error);
+    }
+  };
+
+  // حفظ إعدادات ساعات توصيل المنتجات
+  const handleSaveProductDeliveryHours = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/admin/settings/product-delivery-hours`, productDeliveryHours, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم حفظ ساعات توصيل المنتجات بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // جلب تقرير الطلبات غير المُسلّمة
+  const fetchUndeliveredReport = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/admin/delivery/undelivered-report`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUndeliveredReport(res.data.report);
+    } catch (error) {
+      console.error('Error fetching undelivered report:', error);
+    }
+  };
+
+  // معالجة الطلبات غير المُسلّمة (خصم من رصيد السائقين)
+  const handleProcessUndelivered = async () => {
+    if (!confirm('هل أنت متأكد من خصم قيمة الطلبات غير المُسلّمة من رصيد السائقين؟')) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API}/api/admin/delivery/process-undelivered`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(`تم معالجة ${res.data.deductions.length} طلب. إجمالي الخصم: ${formatPrice(res.data.total_deducted)}`);
+      fetchUndeliveredReport();
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
@@ -1776,6 +1858,167 @@ const DeliverySettingsTab = () => {
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ ساعات العمل
           </button>
+        </div>
+      </div>
+
+      {/* Product Delivery Hours Section */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Truck size={24} />
+            <div>
+              <h2 className="font-bold text-lg">ساعات توصيل المنتجات</h2>
+              <p className="text-sm text-white/80">حدد الأوقات التي يُسمح فيها للسائق بتوصيل المنتجات للعميل</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+            <p className="text-amber-800 text-sm">
+              <strong>ملاحظة:</strong> السائق لن يستطيع تأكيد تسليم الطلب خارج هذه الساعات لعدم إزعاج العميل ليلاً أو صباحاً باكراً.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
+                أول وقت للتوصيل (صباحاً)
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={productDeliveryHours.start_hour}
+                  onChange={(e) => setProductDeliveryHours({
+                    ...productDeliveryHours,
+                    start_hour: parseInt(e.target.value)
+                  })}
+                  className="flex-1 p-3 border rounded-lg"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i === 0 ? '12' : i > 12 ? i - 12 : i}:00 {i < 12 ? 'صباحاً' : 'مساءً'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
+                آخر وقت للتوصيل (مساءً)
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={productDeliveryHours.end_hour}
+                  onChange={(e) => setProductDeliveryHours({
+                    ...productDeliveryHours,
+                    end_hour: parseInt(e.target.value)
+                  })}
+                  className="flex-1 p-3 border rounded-lg"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i === 0 ? '12' : i > 12 ? i - 12 : i}:00 {i < 12 ? 'صباحاً' : 'مساءً'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-200">
+            <div className="flex items-center gap-2 text-purple-700">
+              <Clock size={18} />
+              <span className="font-bold">
+                التوصيل مسموح من {productDeliveryHours.start_hour}:00 إلى {productDeliveryHours.end_hour}:00
+              </span>
+            </div>
+            <p className="text-sm text-purple-600 mt-1">
+              خارج هذه الأوقات، السائق لن يستطيع تأكيد التسليم
+            </p>
+          </div>
+
+          <button
+            onClick={handleSaveProductDeliveryHours}
+            disabled={saving}
+            className="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            حفظ ساعات التوصيل
+          </button>
+        </div>
+      </div>
+
+      {/* Undelivered Orders Report Section */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-orange-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <AlertCircle size={24} />
+            <div>
+              <h2 className="font-bold text-lg">الطلبات غير المُسلّمة</h2>
+              <p className="text-sm text-white/80">مراقبة وخصم قيمة الطلبات التي لم يسلمها السائقون</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          {undeliveredReport ? (
+            <div className="space-y-4">
+              {/* طلبات اليوم */}
+              <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                <h3 className="font-bold text-yellow-800 mb-2">طلبات اليوم (قيد التوصيل)</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-2xl font-bold text-yellow-700">{undeliveredReport.today.count}</span>
+                    <span className="text-yellow-600 mr-2">طلب</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-yellow-600">القيمة الإجمالية</p>
+                    <p className="font-bold text-yellow-800">{formatPrice(undeliveredReport.today.total_value)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* طلبات الأمس (تحتاج خصم) */}
+              <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+                <h3 className="font-bold text-red-800 mb-2">طلبات الأمس (تحتاج خصم)</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-2xl font-bold text-red-700">{undeliveredReport.yesterday_pending_penalty.count}</span>
+                    <span className="text-red-600 mr-2">طلب</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-red-600">القيمة الإجمالية</p>
+                    <p className="font-bold text-red-800">{formatPrice(undeliveredReport.yesterday_pending_penalty.total_value)}</p>
+                  </div>
+                </div>
+
+                {undeliveredReport.yesterday_pending_penalty.count > 0 && (
+                  <button
+                    onClick={handleProcessUndelivered}
+                    disabled={saving}
+                    className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <RefreshCw size={18} className="animate-spin" /> : <AlertCircle size={18} />}
+                    خصم {formatPrice(undeliveredReport.yesterday_pending_penalty.total_value)} من رصيد السائقين
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={fetchUndeliveredReport}
+                className="text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1"
+              >
+                <RefreshCw size={14} />
+                تحديث التقرير
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <RefreshCw size={24} className="animate-spin mx-auto mb-2" />
+              جاري تحميل التقرير...
+            </div>
+          )}
         </div>
       </div>
     </div>

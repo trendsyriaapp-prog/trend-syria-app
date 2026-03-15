@@ -134,8 +134,32 @@ const MyOrdersList = ({
   // نظام تخطيط المسار الذكي
   const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
   
+  // ساعات التوصيل المسموحة
+  const [deliveryHours, setDeliveryHours] = useState({
+    is_delivery_allowed: true,
+    start_time: '08:00',
+    end_time: '23:00',
+    message: ''
+  });
+  
   // تحديد إذا كان الثيم داكن
   const isDark = theme === 'dark';
+
+  // جلب ساعات التوصيل
+  useEffect(() => {
+    const fetchDeliveryHours = async () => {
+      try {
+        const res = await axios.get(`${API}/delivery/delivery-hours`);
+        setDeliveryHours(res.data);
+      } catch (err) {
+        console.error('Error fetching delivery hours:', err);
+      }
+    };
+    fetchDeliveryHours();
+    // تحديث كل دقيقة
+    const interval = setInterval(fetchDeliveryHours, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // جلب رقم الدعم
@@ -885,13 +909,28 @@ const MyOrdersList = ({
                 
                 {/* للمنتجات - النظام القديم */}
                 {!isFood && canComplete && !isDelivered && (
-                  <button
-                    onClick={() => onShowDeliveryChecklist(order)}
-                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={14} />
-                    تأكيد التسليم
-                  </button>
+                  <>
+                    {deliveryHours.is_delivery_allowed ? (
+                      <button
+                        onClick={() => onShowDeliveryChecklist(order)}
+                        className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={14} />
+                        تأكيد التسليم
+                      </button>
+                    ) : (
+                      <div className={`w-full py-3 rounded-lg text-center ${
+                        isDark ? 'bg-red-900/30 border border-red-800' : 'bg-red-50 border border-red-200'
+                      }`}>
+                        <p className={`text-sm font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                          🚫 التوصيل متاح من {deliveryHours.start_time}
+                        </p>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-red-500' : 'text-red-500'}`}>
+                          (لا تزعج العميل الآن)
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
                 
                 {!isDelivered && (
