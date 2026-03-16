@@ -623,8 +623,131 @@ async def delete_food_product(product_id: str, user: dict = Depends(get_current_
 
 
 # ===============================
-# العروض والخصومات
+# نظام حالة توفر المنتجات (3 حالات)
 # ===============================
+
+class AvailabilityStatus:
+    AVAILABLE = "available"      # 🟢 متاح
+    SOLD_OUT_TODAY = "sold_out_today"  # 🟡 نفد مؤقتاً (يعود غداً)
+    UNAVAILABLE = "unavailable"  # 🔴 متوقف
+
+@router.put("/products/{product_id}/availability")
+async def update_product_availability(
+    product_id: str,
+    status: str,  # available, sold_out_today, unavailable
+    user: dict = Depends(get_current_user)
+):
+    """
+    تغيير حالة توفر منتج طعام
+    
+    الحالات:
+    - available: 🟢 متاح للطلب
+    - sold_out_today: 🟡 نفد مؤقتاً (يعود متاحاً غداً تلقائياً)
+    - unavailable: 🔴 متوقف (يحتاج تفعيل يدوي)
+    """
+    # التحقق من صحة الحالة
+    valid_statuses = ["available", "sold_out_today", "unavailable"]
+    if status not in valid_statuses:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"حالة غير صالحة. الحالات المتاحة: {', '.join(valid_statuses)}"
+        )
+    
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    store = await db.food_stores.find_one({"id": product["store_id"]})
+    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    now = datetime.now(timezone.utc)
+    
+    update_data = {
+        "availability_status": status,
+        "is_available": status == "available",
+        "availability_updated_at": now.isoformat()
+    }
+    
+    # إذا نفد مؤقتاً، نحفظ تاريخ اليوم للإعادة التلقائية
+    if status == "sold_out_today":
+        update_data["sold_out_date"] = now.date().isoformat()
+    
+    await db.food_products.update_one(
+        {"id": product_id},
+        {"$set": update_data}
+    )
+    
+    status_labels = {
+        "available": "🟢 متاح",
+        "sold_out_today": "🟡 نفد مؤقتاً",
+        "unavailable": "🔴 متوقف"
+    }
+    
+    return {
+        "message": f"تم تحديث حالة المنتج إلى: {status_labels[status]}",
+        "product_id": product_id,
+        "status": status,
+        "is_available": status == "available"
+    }
+
+@router.post("/products/reset-sold-out")
+async def reset_sold_out_products():
+    """
+    إعادة المنتجات التي نفدت مؤقتاً إلى حالة "متاح"
+    يُستدعى تلقائياً كل يوم في منتصف الليل
+    أو يمكن استدعاؤه يدوياً من المدير
+    """
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    # جلب المنتجات التي نفدت قبل اليوم
+    result = await db.food_products.update_many(
+        {
+            "availability_status": "sold_out_today",
+            "sold_out_date": {"$lt": today}
+        },
+        {
+            "$set": {
+                "availability_status": "available",
+                "is_available": True,
+                "availability_updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$unset": {"sold_out_date": ""}
+        }
+    )
+    
+    return {
+        "message": f"تم إعادة {result.modified_count} منتج إلى حالة 'متاح'",
+        "products_reset": result.modified_count
+    }
+
+@router.get("/products/{product_id}/availability")
+async def get_product_availability(product_id: str):
+    """جلب حالة توفر منتج"""
+    product = await db.food_products.find_one(
+        {"id": product_id},
+        {"_id": 0, "id": 1, "name": 1, "availability_status": 1, "is_available": 1, "sold_out_date": 1}
+    )
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    status = product.get("availability_status", "available" if product.get("is_available", True) else "unavailable")
+    
+    status_info = {
+        "available": {"label": "متاح", "color": "green", "icon": "🟢"},
+        "sold_out_today": {"label": "نفد مؤقتاً", "color": "yellow", "icon": "🟡"},
+        "unavailable": {"label": "متوقف", "color": "red", "icon": "🔴"}
+    }
+    
+    return {
+        "product_id": product_id,
+        "name": product.get("name"),
+        "status": status,
+        "is_available": status == "available",
+        "status_info": status_info.get(status, status_info["unavailable"]),
+        "sold_out_date": product.get("sold_out_date") if status == "sold_out_today" else None
+    }
 
 @router.post("/offers")
 async def create_food_offer(offer: FoodOfferCreate, user: dict = Depends(get_current_user)):

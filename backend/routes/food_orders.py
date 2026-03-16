@@ -326,9 +326,16 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     order_items = []
     
     for item in order.items:
-        product = await db.food_products.find_one({"id": item.product_id, "is_available": True})
+        product = await db.food_products.find_one({"id": item.product_id})
         if not product:
-            raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير متاح")
+            raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير موجود")
+        
+        # التحقق من حالة التوفر
+        availability_status = product.get("availability_status", "available" if product.get("is_available", True) else "unavailable")
+        if availability_status == "sold_out_today":
+            raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' نفد مؤقتاً اليوم، سيعود غداً")
+        elif availability_status == "unavailable" or not product.get("is_available", True):
+            raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' غير متاح حالياً")
         
         item_total = product["price"] * item.quantity
         subtotal += item_total
@@ -738,9 +745,17 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         # حساب مجموع كل متجر
         store_subtotal = 0
         for item in order_item.items:
-            product = await db.food_products.find_one({"id": item.product_id, "is_available": True})
+            product = await db.food_products.find_one({"id": item.product_id})
             if not product:
-                raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير متاح")
+                raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير موجود")
+            
+            # التحقق من حالة التوفر
+            availability_status = product.get("availability_status", "available" if product.get("is_available", True) else "unavailable")
+            if availability_status == "sold_out_today":
+                raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' نفد مؤقتاً اليوم، سيعود غداً")
+            elif availability_status == "unavailable" or not product.get("is_available", True):
+                raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' غير متاح حالياً")
+            
             store_subtotal += product["price"] * item.quantity
         
         # التحقق من الحد الأدنى

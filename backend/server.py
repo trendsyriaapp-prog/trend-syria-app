@@ -185,6 +185,50 @@ async def get_categories():
 async def root():
     return {"message": "مرحباً بك في ترند سورية API"}
 
+# ============== Background Tasks ==============
+
+import asyncio
+
+async def reset_sold_out_products_task():
+    """
+    مهمة خلفية لإعادة المنتجات التي نفدت مؤقتاً
+    تُشغّل كل ساعة للتحقق من المنتجات التي يجب إعادتها
+    """
+    while True:
+        try:
+            today = datetime.now(timezone.utc).date().isoformat()
+            
+            # إعادة المنتجات التي نفدت قبل اليوم
+            result = await db.food_products.update_many(
+                {
+                    "availability_status": "sold_out_today",
+                    "sold_out_date": {"$lt": today}
+                },
+                {
+                    "$set": {
+                        "availability_status": "available",
+                        "is_available": True,
+                        "availability_updated_at": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$unset": {"sold_out_date": ""}
+                }
+            )
+            
+            if result.modified_count > 0:
+                logging.info(f"✅ تم إعادة {result.modified_count} منتج طعام إلى حالة 'متاح'")
+        
+        except Exception as e:
+            logging.error(f"❌ خطأ في إعادة المنتجات: {e}")
+        
+        # انتظار ساعة
+        await asyncio.sleep(3600)
+
+@app.on_event("startup")
+async def start_background_tasks():
+    """تشغيل المهام الخلفية"""
+    asyncio.create_task(reset_sold_out_products_task())
+    logging.info("🔄 تم تشغيل مهمة إعادة المنتجات المنتهية")
+
 # ============== Performance Stats ==============
 
 @api_router.get("/performance/stats")
