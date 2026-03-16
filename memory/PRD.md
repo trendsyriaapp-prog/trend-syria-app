@@ -42,6 +42,26 @@
 - **الحل:** إضافة `token` إلى `useAuth()` destructure
 - **Status:** FIXED & VERIFIED ✅
 
+##### إصلاح Bug في لوحة المدير ✅
+- **المشكلة:** `ReferenceError: Camera is not defined` في AdminPage
+- **الملف:** `/app/frontend/src/pages/AdminPage.js`
+- **الحل:** إضافة `Camera` إلى imports من lucide-react
+- **Status:** FIXED & VERIFIED ✅
+
+##### تأكيد عمل bcrypt ✅
+- **bcrypt version:** 4.1.3
+- **الحالة:** يعمل بشكل صحيح (التشفير والتحقق)
+- **ملاحظة:** الأخطاء القديمة في الـ logs من جلسات سابقة، النظام الحالي سليم
+- **Status:** VERIFIED ✅
+
+##### إصلاح مشكلة Screenshot Tool ✅
+- **المشكلة:** كان يفشل في صفحات تسجيل الدخول
+- **السبب:** استخدام selector خاطئ (button بدلاً من Link)
+- **الحل:** 
+  1. الذهاب مباشرة لـ `/login` بدلاً من النقر على زر الدخول
+  2. استخدام `data-testid="login-submit-btn"` بدلاً من `button[type="submit"]`
+- **Status:** WORKING ✅
+
 ##### نتائج الاختبار:
 - Backend: 100% (16/17 اختبار، 1 skipped)
 - Frontend: 95% (جميع الميزات تعمل)
