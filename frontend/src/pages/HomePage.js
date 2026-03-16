@@ -115,45 +115,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
-      {/* Header - Modern & Compact */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-9 h-9 bg-gradient-to-br from-[#FF6B00] to-[#FF8533] rounded-xl flex items-center justify-center shadow-md">
-                <TrendingUp size={20} className="text-white" />
-              </div>
-              <span className="text-lg font-bold text-gray-900 hidden sm:block">
-                ترند<span className="text-[#FF6B00]">سورية</span>
-              </span>
-            </Link>
-            
-            {/* Search Bar */}
-            <div className="flex-1 relative">
-              <Link 
-                to="/search"
-                className="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span className="text-gray-400 text-sm">ابحث عن منتجات...</span>
-              </Link>
-            </div>
-            
-            {/* Cart Icon */}
-            <Link 
-              to="/cart" 
-              className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              data-testid="header-cart-btn"
-            >
-              <ShoppingBasket size={24} className="text-gray-700" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* Quick Features Banner - Minimal */}
       <div className="bg-gradient-to-r from-[#FF6B00]/5 to-transparent py-2 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
