@@ -383,6 +383,228 @@ const ReferralProgramSettings = () => {
   );
 };
 
+// ⚡ مكون التسعير الديناميكي (Surge Pricing)
+const SurgePricingSettings = () => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    is_active: false,
+    multiplier: 1.5,
+    fixed_amount: 0,
+    reason: 'زيادة الطلب',
+    applies_to: 'all',
+    min_order_value: 0,
+    max_surge_amount: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/settings/surge-pricing`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings({
+        is_active: res.data.is_active ?? false,
+        multiplier: res.data.multiplier || 1.5,
+        fixed_amount: res.data.fixed_amount || 0,
+        reason: res.data.reason || 'زيادة الطلب',
+        applies_to: res.data.applies_to || 'all',
+        min_order_value: res.data.min_order_value || 0,
+        max_surge_amount: res.data.max_surge_amount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching surge pricing settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put(`${API}/api/settings/surge-pricing`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: settings.is_active ? "⚡ تم تفعيل التسعير الديناميكي" : "تم الإيقاف",
+        description: res.data.example ? `مثال: ${res.data.example.original_fee.toLocaleString()} → ${res.data.example.surge_fee.toLocaleString()} ل.س` : ""
+      });
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل حفظ الإعدادات", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // حساب مثال على الزيادة
+  const exampleFee = 5000;
+  let surgeFee = exampleFee;
+  if (settings.is_active) {
+    if (settings.fixed_amount > 0) {
+      surgeFee = exampleFee + settings.fixed_amount;
+    } else {
+      surgeFee = Math.round(exampleFee * settings.multiplier);
+    }
+    if (settings.max_surge_amount > 0) {
+      surgeFee = Math.min(surgeFee, exampleFee + settings.max_surge_amount);
+    }
+  }
+
+  if (loading) return null;
+
+  return (
+    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-orange-50 to-red-50 border-orange-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-orange-500 to-red-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+            <Zap size={24} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">التسعير الديناميكي</h3>
+            <p className="text-xs text-gray-500">زيادة أسعار التوصيل في أوقات الذروة</p>
+          </div>
+        </div>
+        
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.is_active}
+            onChange={(e) => setSettings({ ...settings, is_active: e.target.checked })}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+        </label>
+      </div>
+
+      {settings.is_active && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="space-y-4"
+        >
+          {/* سبب الزيادة */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              📝 سبب الزيادة (يظهر للعملاء)
+            </label>
+            <select
+              value={settings.reason}
+              onChange={(e) => setSettings({ ...settings, reason: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+            >
+              <option value="زيادة الطلب">زيادة الطلب</option>
+              <option value="ساعات الذروة">ساعات الذروة</option>
+              <option value="طقس سيء">طقس سيء</option>
+              <option value="عطلة رسمية">عطلة رسمية</option>
+              <option value="مناسبة خاصة">مناسبة خاصة</option>
+            </select>
+          </div>
+
+          {/* نوع الزيادة */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                📈 نسبة الزيادة
+              </label>
+              <select
+                value={settings.multiplier}
+                onChange={(e) => setSettings({ ...settings, multiplier: parseFloat(e.target.value), fixed_amount: 0 })}
+                className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                disabled={settings.fixed_amount > 0}
+              >
+                <option value="1.25">25% زيادة</option>
+                <option value="1.5">50% زيادة</option>
+                <option value="1.75">75% زيادة</option>
+                <option value="2">100% زيادة (الضعف)</option>
+                <option value="2.5">150% زيادة</option>
+                <option value="3">200% زيادة</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                💰 أو مبلغ ثابت (ل.س)
+              </label>
+              <input
+                type="number"
+                value={settings.fixed_amount}
+                onChange={(e) => setSettings({ ...settings, fixed_amount: parseInt(e.target.value) || 0 })}
+                className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                placeholder="0 = استخدم النسبة"
+              />
+            </div>
+          </div>
+
+          {/* يطبق على */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              🎯 يطبق على
+            </label>
+            <select
+              value={settings.applies_to}
+              onChange={(e) => setSettings({ ...settings, applies_to: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+            >
+              <option value="all">جميع الطلبات</option>
+              <option value="food_only">طلبات الطعام فقط</option>
+              <option value="products_only">طلبات المنتجات فقط</option>
+            </select>
+          </div>
+
+          {/* الحد الأقصى للزيادة */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              🔒 الحد الأقصى للزيادة (ل.س)
+            </label>
+            <input
+              type="number"
+              value={settings.max_surge_amount}
+              onChange={(e) => setSettings({ ...settings, max_surge_amount: parseInt(e.target.value) || 0 })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+              placeholder="0 = بدون حد"
+            />
+            <p className="text-xs text-gray-500 mt-1">حد أقصى للزيادة حتى لو كانت النسبة أكبر (0 = بدون حد)</p>
+          </div>
+
+          {/* مثال على الزيادة */}
+          <div className="bg-orange-100 rounded-xl p-3">
+            <p className="text-sm font-medium text-orange-800 mb-1">مثال على التطبيق:</p>
+            <div className="flex items-center gap-2 text-orange-700">
+              <span>رسوم توصيل {exampleFee.toLocaleString()} ل.س</span>
+              <span>→</span>
+              <span className="font-bold">{surgeFee.toLocaleString()} ل.س</span>
+              <span className="text-xs bg-orange-200 px-2 py-0.5 rounded">
+                +{((surgeFee - exampleFee) / exampleFee * 100).toFixed(0)}%
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* زر الحفظ */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+          settings.is_active 
+            ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+        } disabled:opacity-50`}
+        data-testid="save-surge-pricing-settings"
+      >
+        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+        {settings.is_active ? 'تفعيل التسعير الديناميكي' : 'حفظ الإعدادات'}
+      </button>
+    </div>
+  );
+};
+
 // قوالب الإشعارات الجاهزة لكل قسم
 const NOTIFICATION_TEMPLATES = {
   food_enabled: [
@@ -747,6 +969,9 @@ const PlatformSettingsTab = () => {
 
       {/* 👥 برنامج الإحالات */}
       <ReferralProgramSettings />
+
+      {/* ⚡ التسعير الديناميكي */}
+      <SurgePricingSettings />
 
       {/* إعدادات الشحن المجاني */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">

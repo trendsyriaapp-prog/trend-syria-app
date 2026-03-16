@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from typing import Optional
+import uuid
 
 from core.database import db, get_current_user
 
@@ -1086,4 +1087,167 @@ async def update_weather_surcharge(
         "amount": surcharge.amount,
         "reason": surcharge.reason,
         "notifications_sent": len(notifications)
+    }
+
+
+# ============== Surge Pricing - التسعير الديناميكي ==============
+
+class SurgePricingSettings(BaseModel):
+    is_active: bool = False
+    multiplier: float = 1.5  # مضاعف السعر (1.5 = زيادة 50%)
+    fixed_amount: int = 0  # مبلغ ثابت إضافي (اختياري)
+    reason: str = "زيادة الطلب"  # سبب التسعير الديناميكي
+    applies_to: str = "all"  # all, food_only, products_only
+    min_order_value: int = 0  # الحد الأدنى للطلب لتطبيق الزيادة
+    max_surge_amount: int = 0  # الحد الأقصى للزيادة (0 = بدون حد)
+
+@router.get("/surge-pricing")
+async def get_surge_pricing():
+    """
+    جلب حالة التسعير الديناميكي (عام - للعملاء والمدير)
+    """
+    settings = await db.platform_settings.find_one({"id": "surge_pricing"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "is_active": False,
+            "multiplier": 1.0,
+            "fixed_amount": 0,
+            "reason": "",
+            "applies_to": "all",
+            "min_order_value": 0,
+            "max_surge_amount": 0
+        }
+    
+    return {
+        "is_active": settings.get("is_active", False),
+        "multiplier": settings.get("multiplier", 1.0),
+        "fixed_amount": settings.get("fixed_amount", 0),
+        "reason": settings.get("reason", ""),
+        "applies_to": settings.get("applies_to", "all"),
+        "min_order_value": settings.get("min_order_value", 0),
+        "max_surge_amount": settings.get("max_surge_amount", 0),
+        "updated_at": settings.get("updated_at", None)
+    }
+
+@router.put("/surge-pricing")
+async def update_surge_pricing(
+    data: SurgePricingSettings,
+    user: dict = Depends(get_current_user)
+):
+    """
+    تحديث إعدادات التسعير الديناميكي (للمدير فقط)
+    
+    - is_active: تفعيل/إيقاف
+    - multiplier: مضاعف السعر (1.5 = 50% زيادة، 2.0 = 100% زيادة)
+    - fixed_amount: مبلغ ثابت إضافي بدلاً من المضاعف
+    - reason: سبب الزيادة (يظهر للعملاء)
+    - applies_to: all, food_only, products_only
+    - min_order_value: الحد الأدنى للطلب لتطبيق الزيادة
+    - max_surge_amount: الحد الأقصى للزيادة
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # التحقق من صحة القيم
+    if data.multiplier < 1.0:
+        raise HTTPException(status_code=400, detail="المضاعف يجب أن يكون 1.0 أو أكثر")
+    
+    if data.multiplier > 5.0:
+        raise HTTPException(status_code=400, detail="المضاعف لا يمكن أن يتجاوز 5.0 (500%)")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.platform_settings.update_one(
+        {"id": "surge_pricing"},
+        {"$set": {
+            "id": "surge_pricing",
+            "is_active": data.is_active,
+            "multiplier": data.multiplier,
+            "fixed_amount": data.fixed_amount,
+            "reason": data.reason,
+            "applies_to": data.applies_to,
+            "min_order_value": data.min_order_value,
+            "max_surge_amount": data.max_surge_amount,
+            "updated_at": now,
+            "updated_by": user["id"]
+        }},
+        upsert=True
+    )
+    
+    # إرسال إشعارات للعملاء إذا تم التفعيل
+    if data.is_active:
+        # جلب العملاء النشطين
+        active_customers = await db.users.find(
+            {"user_type": {"$in": ["buyer", "customer"]}},
+            {"_id": 0, "id": 1}
+        ).limit(1000).to_list(1000)
+        
+        notifications = []
+        for customer in active_customers:
+            notifications.append({
+                "id": str(uuid.uuid4()),
+                "user_id": customer["id"],
+                "type": "surge_pricing",
+                "title": "⚡ تنبيه: زيادة مؤقتة في أسعار التوصيل",
+                "message": f"{data.reason}. رسوم التوصيل زادت بنسبة {int((data.multiplier - 1) * 100)}%",
+                "is_read": False,
+                "created_at": now
+            })
+        
+        if notifications:
+            await db.notifications.insert_many(notifications)
+    
+    # حساب مثال على الزيادة
+    example_fee = 5000
+    if data.fixed_amount > 0:
+        surge_fee = example_fee + data.fixed_amount
+    else:
+        surge_fee = int(example_fee * data.multiplier)
+    
+    if data.max_surge_amount > 0:
+        surge_fee = min(surge_fee, example_fee + data.max_surge_amount)
+    
+    return {
+        "message": f"تم {'تفعيل' if data.is_active else 'إيقاف'} التسعير الديناميكي",
+        "is_active": data.is_active,
+        "multiplier": data.multiplier,
+        "fixed_amount": data.fixed_amount,
+        "reason": data.reason,
+        "example": {
+            "original_fee": example_fee,
+            "surge_fee": surge_fee if data.is_active else example_fee,
+            "increase": surge_fee - example_fee if data.is_active else 0
+        }
+    }
+
+@router.post("/surge-pricing/calculate")
+async def calculate_surge_fee(base_fee: int = 5000):
+    """
+    حساب رسوم التوصيل مع التسعير الديناميكي
+    يُستخدم من قبل نظام إنشاء الطلبات
+    """
+    settings = await db.platform_settings.find_one({"id": "surge_pricing"}, {"_id": 0})
+    
+    if not settings or not settings.get("is_active", False):
+        return {"original_fee": base_fee, "final_fee": base_fee, "surge_applied": False}
+    
+    # حساب الزيادة
+    if settings.get("fixed_amount", 0) > 0:
+        surge_fee = base_fee + settings["fixed_amount"]
+    else:
+        surge_fee = int(base_fee * settings.get("multiplier", 1.0))
+    
+    # تطبيق الحد الأقصى
+    max_surge = settings.get("max_surge_amount", 0)
+    if max_surge > 0:
+        surge_fee = min(surge_fee, base_fee + max_surge)
+    
+    return {
+        "original_fee": base_fee,
+        "final_fee": surge_fee,
+        "surge_applied": True,
+        "surge_reason": settings.get("reason", "زيادة الطلب"),
+        "increase_amount": surge_fee - base_fee,
+        "increase_percentage": round((surge_fee - base_fee) / base_fee * 100, 1)
     }
