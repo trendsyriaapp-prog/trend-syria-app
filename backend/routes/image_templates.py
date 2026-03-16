@@ -1,5 +1,5 @@
 # /app/backend/routes/image_templates.py
-# نظام قوالب صور المنتجات - مجاني + AI مدفوع
+# نظام قوالب صور المنتجات - مجاني + AI مدفوع (Gemini Imagen)
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import JSONResponse
@@ -7,15 +7,19 @@ from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 import io
 import base64
 import os
-import httpx
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 from routes.auth import get_current_user
+from dotenv import load_dotenv
+
+# تحميل المتغيرات البيئية
+load_dotenv()
 
 router = APIRouter(prefix="/templates", tags=["Image Templates"])
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.environ.get("DB_NAME", "trend_syria")
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
@@ -297,6 +301,85 @@ def image_to_base64(image: Image.Image, format: str = 'JPEG', quality: int = 95)
     return f"data:{mime};base64,{base64.b64encode(output.getvalue()).decode('utf-8')}"
 
 
+# ============== Gemini AI Image Generation ==============
+
+def get_template_prompt(template_id: str, template: dict) -> str:
+    """إنشاء prompt مناسب لكل قالب"""
+    prompts = {
+        "ramadan": "Place this product on an elegant 3D purple velvet platform with golden crescent moon behind, hanging glowing lanterns, Islamic geometric patterns, gold sparkles and stars floating, Ramadan theme, photorealistic product photography, premium retail display, dramatic lighting",
+        
+        "eid": "Place this product on a festive 3D green platform with golden decorations, celebration theme, confetti and stars, Eid Mubarak celebration, professional product photography, joyful atmosphere",
+        
+        "hot_sale": "Place this product on a glossy white 3D podium with bold 50% OFF text floating above, fire and flames at bottom, orange red gradient background, lightning bolts, explosive energy, hot sale promotion, cinematic lighting",
+        
+        "flash_deal": "Place this product on a dynamic yellow 3D platform with lightning bolts around, urgency timer, flash deal promotion, electric energy effects, modern e-commerce style",
+        
+        "premium": "Place this product on a black velvet 3D platform with gold accents and sparkles, PREMIUM badge, luxurious dark background, spotlight from above, high-end luxury product photography, reflection on glossy surface",
+        
+        "tech": "Place this product on a floating white 3D pedestal with holographic purple and blue neon glow background, geometric 3D shapes floating, futuristic tech style, glass reflections, Apple style minimalist",
+        
+        "fashion": "Place this product on an elegant beige 3D platform with soft fabric texture, fashion runway style, warm elegant lighting, stylish modern aesthetic, fashion e-commerce photography",
+        
+        "beauty": "Place this product on a pink marble 3D platform with rose petals and sparkles, beauty and cosmetics theme, soft glamorous lighting, luxury beauty product photography",
+        
+        "sports": "Place this product on a dynamic green 3D platform with energy lines and motion blur effects, sports and fitness theme, energetic powerful atmosphere, athletic product photography",
+        
+        "kids": "Place this product on a colorful playful 3D platform with rainbow colors, toys and stars floating, fun cheerful kids theme, bright happy lighting, children products photography",
+        
+        "winter": "Place this product on an icy blue 3D crystal platform with snowflakes falling, winter frost effects, cold elegant atmosphere, winter season theme, magical lighting",
+        
+        "summer": "Place this product on a sunny golden 3D platform with sun rays and warm glow, summer beach vibes, bright cheerful atmosphere, summer season theme"
+    }
+    
+    base_prompt = prompts.get(template_id, "Place this product on an elegant 3D white platform with professional studio lighting, e-commerce product photography")
+    
+    return base_prompt
+
+
+async def generate_ai_image(image_base64: str, template_id: str, template: dict) -> str:
+    """إنشاء صورة احترافية باستخدام Gemini Imagen"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+    import uuid
+    
+    if not EMERGENT_LLM_KEY:
+        raise Exception("EMERGENT_LLM_KEY not configured")
+    
+    # إنشاء prompt للقالب
+    prompt = get_template_prompt(template_id, template)
+    
+    # إنشاء session جديد
+    session_id = f"template-{uuid.uuid4().hex[:8]}"
+    
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY, 
+        session_id=session_id, 
+        system_message="You are a professional product photographer. Generate high-quality e-commerce product images."
+    )
+    
+    chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+    
+    # إزالة prefix من base64 إذا موجود
+    if image_base64.startswith('data:'):
+        image_base64 = image_base64.split(',')[1]
+    
+    # إنشاء الرسالة مع الصورة
+    msg = UserMessage(
+        text=prompt,
+        file_contents=[ImageContent(image_base64)]
+    )
+    
+    # إرسال وانتظار النتيجة
+    text_response, images = await chat.send_message_multimodal_response(msg)
+    
+    if images and len(images) > 0:
+        # إرجاع الصورة الأولى
+        img_data = images[0].get('data', '')
+        mime_type = images[0].get('mime_type', 'image/png')
+        return f"data:{mime_type};base64,{img_data}"
+    else:
+        raise Exception("No image generated from AI")
+
+
 # ============== API Endpoints ==============
 
 @router.get("/list")
@@ -400,23 +483,35 @@ async def apply_ai_template(
         # قراءة الصورة
         image_data = await file.read()
         
-        # TODO: استدعاء API الذكاء الاصطناعي لإنشاء الصورة
-        # حالياً نستخدم المعالجة المحلية كـ fallback
+        # تحويل الصورة إلى base64
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
         
-        product_image = Image.open(io.BytesIO(image_data))
+        result_base64 = None
+        method = "ai_gemini"
         
-        # تطبيق معالجة محسنة (محاكاة AI)
-        result_image = apply_template_to_product(product_image, template_id)
-        
-        # تحسينات إضافية للنسخة المدفوعة
-        enhancer = ImageEnhance.Contrast(result_image)
-        result_image = enhancer.enhance(1.1)
-        enhancer = ImageEnhance.Color(result_image)
-        result_image = enhancer.enhance(1.1)
-        enhancer = ImageEnhance.Sharpness(result_image)
-        result_image = enhancer.enhance(1.2)
-        
-        result_base64 = image_to_base64(result_image, quality=98)
+        # محاولة استخدام Gemini AI
+        try:
+            if EMERGENT_LLM_KEY:
+                result_base64 = await generate_ai_image(image_base64, template_id, template)
+                print(f"AI image generated successfully for template: {template_id}")
+            else:
+                raise Exception("No API key")
+        except Exception as ai_error:
+            print(f"AI generation failed: {ai_error}, using local fallback")
+            # Fallback للمعالجة المحلية
+            product_image = Image.open(io.BytesIO(image_data))
+            result_image = apply_template_to_product(product_image, template_id)
+            
+            # تحسينات إضافية للنسخة المدفوعة
+            enhancer = ImageEnhance.Contrast(result_image)
+            result_image = enhancer.enhance(1.1)
+            enhancer = ImageEnhance.Color(result_image)
+            result_image = enhancer.enhance(1.1)
+            enhancer = ImageEnhance.Sharpness(result_image)
+            result_image = enhancer.enhance(1.2)
+            
+            result_base64 = image_to_base64(result_image, quality=98)
+            method = "ai_fallback"
         
         # خصم من رصيد البائع
         await db.users.update_one(
@@ -439,6 +534,7 @@ async def apply_ai_template(
             "seller_phone": user["phone"],
             "template_id": template_id,
             "cost": AI_IMAGE_PRICE,
+            "method": method,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
@@ -451,7 +547,7 @@ async def apply_ai_template(
             "template_name": template["name"],
             "cost": AI_IMAGE_PRICE,
             "new_balance": new_balance,
-            "method": "ai_enhanced"
+            "method": method
         }
         
     except HTTPException:
