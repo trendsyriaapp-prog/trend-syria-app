@@ -34,7 +34,9 @@ import StatDetailsModal from '../components/seller/StatDetailsModal';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 // مكون عرض أطباق الطعام
-const FoodItemsGrid = ({ items, onEdit, onDelete, onToggleAvailability }) => {
+const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
+  const [showStatusMenu, setShowStatusMenu] = useState(null);
+  
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
@@ -45,56 +47,102 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onToggleAvailability }) => {
     );
   }
 
+  const getStatusInfo = (item) => {
+    const status = item.availability_status || (item.is_available ? 'available' : 'unavailable');
+    const statusMap = {
+      'available': { label: 'متاح', color: 'bg-green-500', textColor: 'text-green-700', bgLight: 'bg-green-100', icon: '🟢' },
+      'sold_out_today': { label: 'نفد اليوم', color: 'bg-yellow-500', textColor: 'text-yellow-700', bgLight: 'bg-yellow-100', icon: '🟡' },
+      'unavailable': { label: 'متوقف', color: 'bg-red-500', textColor: 'text-red-700', bgLight: 'bg-red-100', icon: '🔴' }
+    };
+    return statusMap[status] || statusMap['available'];
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-      {items.map(item => (
-        <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="relative">
-            <img 
-              src={item.image || 'https://via.placeholder.com/150?text=طبق'} 
-              alt={item.name} 
-              className={`w-full h-24 object-cover ${!item.is_available ? 'opacity-50 grayscale' : ''}`}
-            />
-            {!item.is_available && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span className="text-white text-xs font-bold bg-red-500 px-2 py-1 rounded">غير متاح</span>
+      {items.map(item => {
+        const statusInfo = getStatusInfo(item);
+        const currentStatus = item.availability_status || (item.is_available ? 'available' : 'unavailable');
+        
+        return (
+          <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
+            <div className="relative">
+              <img 
+                src={item.image || 'https://via.placeholder.com/150?text=طبق'} 
+                alt={item.name} 
+                className={`w-full h-24 object-cover ${currentStatus !== 'available' ? 'opacity-60 grayscale' : ''}`}
+              />
+              {/* شارة الحالة */}
+              <div className={`absolute top-1 right-1 ${statusInfo.color} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full`}>
+                {statusInfo.icon} {statusInfo.label}
               </div>
-            )}
-          </div>
-          <div className="p-2">
-            <h3 className="font-bold text-xs text-gray-900 truncate">{item.name}</h3>
-            <p className="text-[10px] text-gray-500 truncate">{item.description}</p>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-[#FF6B00] font-bold text-xs">{item.price?.toLocaleString()} ل.س</span>
-              <span className="text-gray-400 text-[9px]">{item.preparation_time} دقيقة</span>
             </div>
-            <div className="flex gap-1 mt-2">
-              <button
-                onClick={() => onToggleAvailability(item.id, item.is_available)}
-                className={`flex-1 py-1 rounded text-[9px] font-bold ${
-                  item.is_available 
-                    ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-600 hover:bg-green-200'
-                }`}
-              >
-                {item.is_available ? 'إيقاف' : 'تفعيل'}
-              </button>
-              <button
-                onClick={() => onEdit(item)}
-                className="flex-1 bg-gray-100 text-gray-600 py-1 rounded text-[9px] font-bold hover:bg-gray-200"
-              >
-                تعديل
-              </button>
-              <button
-                onClick={() => onDelete(item.id)}
-                className="px-2 bg-red-50 text-red-500 py-1 rounded text-[9px] hover:bg-red-100"
-              >
-                <Trash2 size={10} />
-              </button>
+            <div className="p-2">
+              <h3 className="font-bold text-xs text-gray-900 truncate">{item.name}</h3>
+              <p className="text-[10px] text-gray-500 truncate">{item.description}</p>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-[#FF6B00] font-bold text-xs">{item.price?.toLocaleString()} ل.س</span>
+                <span className="text-gray-400 text-[9px]">{item.preparation_time} دقيقة</span>
+              </div>
+              
+              {/* أزرار تغيير الحالة */}
+              <div className="flex gap-0.5 mt-2 relative">
+                <button
+                  onClick={() => onChangeAvailability(item.id, 'available')}
+                  disabled={currentStatus === 'available'}
+                  className={`flex-1 py-1.5 rounded-l text-[9px] font-bold transition-all ${
+                    currentStatus === 'available' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-green-100 text-green-600 hover:bg-green-200'
+                  }`}
+                  title="متاح"
+                >
+                  🟢
+                </button>
+                <button
+                  onClick={() => onChangeAvailability(item.id, 'sold_out_today')}
+                  disabled={currentStatus === 'sold_out_today'}
+                  className={`flex-1 py-1.5 text-[9px] font-bold transition-all ${
+                    currentStatus === 'sold_out_today' 
+                      ? 'bg-yellow-500 text-white' 
+                      : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+                  }`}
+                  title="نفد اليوم"
+                >
+                  🟡
+                </button>
+                <button
+                  onClick={() => onChangeAvailability(item.id, 'unavailable')}
+                  disabled={currentStatus === 'unavailable'}
+                  className={`flex-1 py-1.5 rounded-r text-[9px] font-bold transition-all ${
+                    currentStatus === 'unavailable' 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-red-100 text-red-600 hover:bg-red-200'
+                  }`}
+                  title="متوقف"
+                >
+                  🔴
+                </button>
+              </div>
+              
+              {/* أزرار التعديل والحذف */}
+              <div className="flex gap-1 mt-1">
+                <button
+                  onClick={() => onEdit(item)}
+                  className="flex-1 bg-gray-100 text-gray-600 py-1 rounded text-[9px] font-bold hover:bg-gray-200"
+                >
+                  تعديل
+                </button>
+                <button
+                  onClick={() => onDelete(item.id)}
+                  className="px-2 bg-red-50 text-red-500 py-1 rounded text-[9px] hover:bg-red-100"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -642,23 +690,35 @@ const SellerDashboardPage = () => {
   };
 
   // دوال خاصة ببائع الطعام
-  const handleToggleFoodAvailability = async (itemId, currentStatus) => {
+  // Handler جديد لتغيير حالة توفر منتج الطعام (3 حالات)
+  const handleChangeFoodAvailability = async (itemId, newStatus) => {
     try {
-      await axios.put(`${API}/food/items/${itemId}/availability`, {
-        is_available: !currentStatus
+      await axios.put(`${API}/food/products/${itemId}/availability?status=${newStatus}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      toast({
-        title: currentStatus ? "تم إيقاف الطبق" : "تم تفعيل الطبق",
-        description: currentStatus ? "الطبق غير متاح الآن" : "الطبق متاح الآن للطلب"
-      });
+      
+      const statusMessages = {
+        'available': { title: '🟢 تم تفعيل الطبق', desc: 'الطبق متاح الآن للطلب' },
+        'sold_out_today': { title: '🟡 نفد مؤقتاً', desc: 'الطبق سيعود متاحاً غداً تلقائياً' },
+        'unavailable': { title: '🔴 تم إيقاف الطبق', desc: 'الطبق متوقف حتى تفعّله مجدداً' }
+      };
+      
+      const msg = statusMessages[newStatus] || { title: 'تم التحديث', desc: '' };
+      toast({ title: msg.title, description: msg.desc });
       fetchData();
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل في تغيير حالة الطبق",
+        description: error.response?.data?.detail || "فشل في تغيير حالة الطبق",
         variant: "destructive"
       });
     }
+  };
+
+  // Handler قديم (للتوافق الخلفي)
+  const handleToggleFoodAvailability = async (itemId, currentStatus) => {
+    const newStatus = currentStatus ? 'unavailable' : 'available';
+    await handleChangeFoodAvailability(itemId, newStatus);
   };
 
   const handleFoodOrderStatus = async (orderId, newStatus) => {
@@ -894,7 +954,7 @@ const SellerDashboardPage = () => {
                   items={foodItems} 
                   onEdit={handleEditProduct} 
                   onDelete={handleDeleteProduct}
-                  onToggleAvailability={handleToggleFoodAvailability}
+                  onChangeAvailability={handleChangeFoodAvailability}
                 />
               ) : (
                 <SellerProductsGrid 

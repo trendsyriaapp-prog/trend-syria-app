@@ -105,10 +105,14 @@
   - البائع يغير الحالة بضغطة زر
   - رسائل خطأ واضحة للعملاء عند محاولة طلب منتج غير متاح
   - مهمة خلفية تلقائية تعيد المنتجات "نفد مؤقتاً" إلى "متاح" كل يوم
+  - **واجهة للبائع:** 3 أزرار ملونة (🟢🟡🔴) بجانب كل منتج في لوحة التحكم
 - **APIs:**
   - `GET /api/food/products/{id}/availability` - جلب حالة التوفر
   - `PUT /api/food/products/{id}/availability?status=xxx` - تغيير الحالة
   - `POST /api/food/products/reset-sold-out` - إعادة المنتجات يدوياً
+- **الملفات:**
+  - `routes/food.py` - APIs الجديدة
+  - `pages/SellerPages.js` - واجهة البائع مع الأزرار الملونة
 - **Status:** TESTED ✅
 
 ### December 2025
