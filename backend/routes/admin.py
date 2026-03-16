@@ -1951,3 +1951,467 @@ async def update_flash_sale_settings(settings_data: dict, user: dict = Depends(g
     )
     
     return {"message": "تم تحديث الإعدادات"}
+
+
+
+# ============== أدوات حل المشاكل للمدير ==============
+
+from pydantic import BaseModel
+from typing import Optional
+
+class CompensationRequest(BaseModel):
+    user_id: str
+    amount: float
+    reason: str
+    order_id: Optional[str] = None
+
+
+class PartialRefundRequest(BaseModel):
+    order_id: str
+    amount: float
+    reason: str
+
+
+class ReassignDriverRequest(BaseModel):
+    order_id: str
+    new_driver_id: Optional[str] = None  # إذا فارغ، يتم البحث عن سائق متاح
+
+
+# 1️⃣ إضافة رصيد تعويضي للمستخدم
+@router.post("/compensate-user")
+async def compensate_user(
+    req: CompensationRequest,
+    user: dict = Depends(get_current_user)
+):
+    """إضافة رصيد تعويضي لمستخدم (عميل/سائق/بائع)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون أكبر من صفر")
+    
+    if req.amount > 500000:  # حد أقصى 500,000 ل.س
+        raise HTTPException(status_code=400, detail="المبلغ يتجاوز الحد المسموح (500,000 ل.س)")
+    
+    # التحقق من وجود المستخدم
+    target_user = await db.users.find_one({"id": req.user_id}, {"_id": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    now = datetime.now(timezone.utc)
+    
+    # إضافة الرصيد للمحفظة
+    wallet = await db.wallets.find_one({"user_id": req.user_id})
+    if wallet:
+        await db.wallets.update_one(
+            {"user_id": req.user_id},
+            {"$inc": {"balance": req.amount}}
+        )
+    else:
+        await db.wallets.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": req.user_id,
+            "balance": req.amount,
+            "created_at": now.isoformat()
+        })
+    
+    # تسجيل العملية
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": req.user_id,
+        "type": "compensation",
+        "amount": req.amount,
+        "description": f"تعويض من الإدارة: {req.reason}",
+        "order_id": req.order_id,
+        "admin_id": user["id"],
+        "admin_name": user.get("full_name") or user.get("name"),
+        "created_at": now.isoformat()
+    }
+    await db.wallet_transactions.insert_one(transaction)
+    
+    # تسجيل في سجل النشاط
+    try:
+        from routes.activity_log import log_admin_activity
+        await log_admin_activity(
+            admin_id=user["id"],
+            admin_name=user.get("full_name") or user.get("name"),
+            action=f"إضافة تعويض {req.amount} ل.س للمستخدم",
+            action_type="payment",
+            target_type="user",
+            target_id=req.user_id,
+            target_name=target_user.get("full_name") or target_user.get("name"),
+            details={"amount": req.amount, "reason": req.reason, "order_id": req.order_id}
+        )
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+    
+    # إرسال إشعار للمستخدم
+    try:
+        from core.database import create_notification_for_user
+        await create_notification_for_user(
+            user_id=req.user_id,
+            title="💰 تم إضافة تعويض لحسابك",
+            message=f"تم إضافة {req.amount:,.0f} ل.س كتعويض. السبب: {req.reason}",
+            notification_type="compensation"
+        )
+    except Exception as e:
+        print(f"Error sending notification: {e}")
+    
+    return {
+        "message": f"تم إضافة {req.amount:,.0f} ل.س للمستخدم بنجاح",
+        "transaction_id": transaction["id"],
+        "new_balance": (wallet.get("balance", 0) if wallet else 0) + req.amount
+    }
+
+
+# 2️⃣ حذف تقييم مسيء
+@router.delete("/reviews/{review_id}")
+async def admin_delete_review(
+    review_id: str,
+    reason: str = "مخالفة سياسة الاستخدام",
+    user: dict = Depends(get_current_user)
+):
+    """حذف تقييم مسيء أو غير لائق"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    # البحث في تقييمات المنتجات
+    review = await db.reviews.find_one({"id": review_id}, {"_id": 0})
+    collection = db.reviews
+    
+    # البحث في تقييمات المتاجر
+    if not review:
+        review = await db.food_store_reviews.find_one({"id": review_id}, {"_id": 0})
+        collection = db.food_store_reviews
+    
+    # البحث في تقييمات السائقين
+    if not review:
+        review = await db.driver_ratings.find_one({"id": review_id}, {"_id": 0})
+        collection = db.driver_ratings
+    
+    if not review:
+        raise HTTPException(status_code=404, detail="التقييم غير موجود")
+    
+    now = datetime.now(timezone.utc)
+    
+    # حفظ نسخة من التقييم المحذوف
+    deleted_review = {
+        **review,
+        "deleted_at": now.isoformat(),
+        "deleted_by": user["id"],
+        "deletion_reason": reason
+    }
+    await db.deleted_reviews.insert_one(deleted_review)
+    
+    # حذف التقييم
+    await collection.delete_one({"id": review_id})
+    
+    # تسجيل في سجل النشاط
+    try:
+        from routes.activity_log import log_admin_activity
+        await log_admin_activity(
+            admin_id=user["id"],
+            admin_name=user.get("full_name") or user.get("name"),
+            action=f"حذف تقييم - السبب: {reason}",
+            action_type="other",
+            target_type="review",
+            target_id=review_id,
+            details={"review_text": review.get("review", review.get("comment", ""))[:100], "rating": review.get("rating")}
+        )
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+    
+    return {"message": "تم حذف التقييم بنجاح"}
+
+
+# 3️⃣ استرداد جزئي للطلب
+@router.post("/orders/{order_id}/partial-refund")
+async def admin_partial_refund(
+    order_id: str,
+    req: PartialRefundRequest,
+    user: dict = Depends(get_current_user)
+):
+    """استرداد جزئي لمبلغ الطلب"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="المبلغ يجب أن يكون أكبر من صفر")
+    
+    # البحث عن الطلب
+    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    order_type = "food"
+    
+    if not order:
+        order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+        order_type = "product"
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من المبلغ
+    order_total = order.get("total", 0)
+    if req.amount > order_total:
+        raise HTTPException(status_code=400, detail=f"المبلغ أكبر من قيمة الطلب ({order_total:,.0f} ل.س)")
+    
+    # التحقق من الاسترداد السابق
+    previous_refunds = order.get("partial_refunds", [])
+    total_refunded = sum(r.get("amount", 0) for r in previous_refunds)
+    
+    if total_refunded + req.amount > order_total:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"إجمالي الاسترداد سيتجاوز قيمة الطلب. المسترد سابقاً: {total_refunded:,.0f} ل.س"
+        )
+    
+    now = datetime.now(timezone.utc)
+    customer_id = order.get("customer_id") or order.get("user_id")
+    
+    # إضافة الرصيد للعميل
+    await db.wallets.update_one(
+        {"user_id": customer_id},
+        {"$inc": {"balance": req.amount}},
+        upsert=True
+    )
+    
+    # تسجيل عملية الاسترداد
+    refund_record = {
+        "id": str(uuid.uuid4()),
+        "amount": req.amount,
+        "reason": req.reason,
+        "admin_id": user["id"],
+        "admin_name": user.get("full_name") or user.get("name"),
+        "created_at": now.isoformat()
+    }
+    
+    # تحديث الطلب
+    collection = db.food_orders if order_type == "food" else db.orders
+    await collection.update_one(
+        {"id": order_id},
+        {
+            "$push": {"partial_refunds": refund_record},
+            "$inc": {"total_refunded": req.amount}
+        }
+    )
+    
+    # تسجيل في المحفظة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": customer_id,
+        "type": "partial_refund",
+        "amount": req.amount,
+        "description": f"استرداد جزئي للطلب #{order.get('order_number', order_id[:8])} - {req.reason}",
+        "order_id": order_id,
+        "admin_id": user["id"],
+        "created_at": now.isoformat()
+    })
+    
+    # إرسال إشعار للعميل
+    try:
+        from core.database import create_notification_for_user
+        await create_notification_for_user(
+            user_id=customer_id,
+            title="💸 تم استرداد جزء من المبلغ",
+            message=f"تم إضافة {req.amount:,.0f} ل.س لمحفظتك (استرداد جزئي للطلب #{order.get('order_number', '')})",
+            notification_type="refund"
+        )
+    except Exception as e:
+        print(f"Error sending notification: {e}")
+    
+    # تسجيل في سجل النشاط
+    try:
+        from routes.activity_log import log_admin_activity
+        await log_admin_activity(
+            admin_id=user["id"],
+            admin_name=user.get("full_name") or user.get("name"),
+            action=f"استرداد جزئي {req.amount:,.0f} ل.س للطلب #{order.get('order_number', '')}",
+            action_type="payment",
+            target_type="order",
+            target_id=order_id,
+            details={"amount": req.amount, "reason": req.reason, "total_refunded": total_refunded + req.amount}
+        )
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+    
+    return {
+        "message": f"تم استرداد {req.amount:,.0f} ل.س بنجاح",
+        "refund_id": refund_record["id"],
+        "total_refunded": total_refunded + req.amount
+    }
+
+
+# 4️⃣ تغيير/تعيين سائق بديل
+@router.post("/orders/{order_id}/reassign-driver")
+async def admin_reassign_driver(
+    order_id: str,
+    req: ReassignDriverRequest,
+    user: dict = Depends(get_current_user)
+):
+    """تغيير السائق أو تعيين سائق بديل للطلب"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    # البحث عن الطلب
+    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    collection = db.food_orders
+    
+    if not order:
+        order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+        collection = db.orders
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من حالة الطلب
+    allowed_statuses = ["pending", "accepted", "preparing", "ready", "ready_for_pickup", "out_for_delivery"]
+    if order.get("status") not in allowed_statuses:
+        raise HTTPException(status_code=400, detail=f"لا يمكن تغيير السائق. حالة الطلب: {order.get('status')}")
+    
+    now = datetime.now(timezone.utc)
+    old_driver_id = order.get("driver_id")
+    old_driver_name = None
+    
+    # جلب اسم السائق القديم
+    if old_driver_id:
+        old_driver = await db.users.find_one({"id": old_driver_id}, {"_id": 0, "full_name": 1, "name": 1})
+        old_driver_name = old_driver.get("full_name") or old_driver.get("name") if old_driver else None
+    
+    new_driver_id = req.new_driver_id
+    new_driver_name = None
+    
+    # إذا لم يتم تحديد سائق، البحث عن سائق متاح
+    if not new_driver_id:
+        # البحث عن سائقين متاحين
+        available_drivers = await db.users.find({
+            "user_type": "delivery",
+            "is_active": True,
+            "is_available": True,
+            "is_suspended": {"$ne": True}
+        }, {"_id": 0, "id": 1, "full_name": 1, "name": 1}).to_list(10)
+        
+        if not available_drivers:
+            raise HTTPException(status_code=400, detail="لا يوجد سائقين متاحين حالياً")
+        
+        # اختيار سائق عشوائي (يمكن تحسينه لاحقاً)
+        import random
+        new_driver = random.choice(available_drivers)
+        new_driver_id = new_driver["id"]
+        new_driver_name = new_driver.get("full_name") or new_driver.get("name")
+    else:
+        # التحقق من السائق المحدد
+        new_driver = await db.users.find_one(
+            {"id": new_driver_id, "user_type": "delivery"},
+            {"_id": 0, "id": 1, "full_name": 1, "name": 1, "is_active": 1}
+        )
+        if not new_driver:
+            raise HTTPException(status_code=404, detail="السائق غير موجود")
+        new_driver_name = new_driver.get("full_name") or new_driver.get("name")
+    
+    # تحديث الطلب
+    await collection.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_id": new_driver_id,
+                "driver_name": new_driver_name,
+                "driver_reassigned_at": now.isoformat(),
+                "driver_reassigned_by": user["id"]
+            },
+            "$push": {
+                "driver_history": {
+                    "old_driver_id": old_driver_id,
+                    "old_driver_name": old_driver_name,
+                    "new_driver_id": new_driver_id,
+                    "new_driver_name": new_driver_name,
+                    "changed_at": now.isoformat(),
+                    "changed_by": user["id"],
+                    "changed_by_name": user.get("full_name") or user.get("name")
+                },
+                "status_history": {
+                    "status": order.get("status"),
+                    "timestamp": now.isoformat(),
+                    "note": f"تم تغيير السائق من {old_driver_name or 'غير معين'} إلى {new_driver_name}"
+                }
+            }
+        }
+    )
+    
+    # إرسال إشعار للسائق الجديد
+    try:
+        from core.database import create_notification_for_user
+        await create_notification_for_user(
+            user_id=new_driver_id,
+            title="🚚 تم تعيينك لطلب جديد",
+            message=f"تم تعيينك للطلب #{order.get('order_number', '')} من قبل الإدارة",
+            notification_type="new_order"
+        )
+    except Exception as e:
+        print(f"Error sending notification to new driver: {e}")
+    
+    # إرسال إشعار للسائق القديم
+    if old_driver_id and old_driver_id != new_driver_id:
+        try:
+            from core.database import create_notification_for_user
+            await create_notification_for_user(
+                user_id=old_driver_id,
+                title="📋 تم إعادة تعيين الطلب",
+                message=f"تم إسناد الطلب #{order.get('order_number', '')} لسائق آخر",
+                notification_type="order_update"
+            )
+        except Exception as e:
+            print(f"Error sending notification to old driver: {e}")
+    
+    # تسجيل في سجل النشاط
+    try:
+        from routes.activity_log import log_admin_activity
+        await log_admin_activity(
+            admin_id=user["id"],
+            admin_name=user.get("full_name") or user.get("name"),
+            action=f"تغيير سائق الطلب #{order.get('order_number', '')}",
+            action_type="driver",
+            target_type="order",
+            target_id=order_id,
+            details={
+                "old_driver": old_driver_name,
+                "new_driver": new_driver_name
+            }
+        )
+    except Exception as e:
+        print(f"Error logging activity: {e}")
+    
+    return {
+        "message": f"تم تعيين السائق {new_driver_name} بنجاح",
+        "old_driver": old_driver_name,
+        "new_driver": new_driver_name,
+        "new_driver_id": new_driver_id
+    }
+
+
+# 5️⃣ جلب قائمة السائقين المتاحين
+@router.get("/available-drivers")
+async def get_available_drivers(user: dict = Depends(get_current_user)):
+    """جلب قائمة السائقين المتاحين للتعيين"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    drivers = await db.users.find(
+        {
+            "user_type": "delivery",
+            "is_active": True,
+            "is_suspended": {"$ne": True}
+        },
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1, "is_available": 1, "city": 1}
+    ).to_list(100)
+    
+    return {
+        "drivers": [
+            {
+                "id": d["id"],
+                "name": d.get("full_name") or d.get("name"),
+                "phone": d.get("phone"),
+                "is_available": d.get("is_available", False),
+                "city": d.get("city")
+            }
+            for d in drivers
+        ]
+    }

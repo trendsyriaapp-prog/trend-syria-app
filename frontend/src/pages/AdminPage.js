@@ -46,6 +46,7 @@ import DriversMapTab from '../components/admin/DriversMapTab';
 import DriversPerformanceTab from '../components/admin/DriversPerformanceTab';
 import ActivityLogTab from '../components/admin/ActivityLogTab';
 import SupportTicketsAdmin from '../components/admin/SupportTicketsAdmin';
+import ProblemSolverTools from '../components/admin/ProblemSolverTools';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -324,7 +325,8 @@ const AdminDashboardPage = () => {
     'drivers-map': 'خريطة السائقين',
     'drivers-performance': 'أداء السائقين',
     'activity-log': 'سجل النشاط',
-    'support-management': 'إدارة الدعم'
+    'support-management': 'إدارة الدعم',
+    'problem-solver': 'حل المشاكل'
   };
 
   return (
@@ -466,6 +468,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'support-management' && (
               <SupportTicketsAdmin />
+            )}
+            {activeTab === 'problem-solver' && (
+              <ProblemSolverTools />
             )}
           </>
         ) : (
@@ -772,6 +777,18 @@ const AdminDashboardPage = () => {
                       <Clock size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">سجل النشاط</span>
+                  </button>
+
+                  {/* حل المشاكل */}
+                  <button
+                    onClick={() => setActiveTab('problem-solver')}
+                    className="bg-gradient-to-r from-red-100 to-orange-100 rounded-xl p-3 border border-red-200 hover:border-red-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="problem-solver-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-600 flex items-center justify-center">
+                      <AlertTriangle size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">حل المشاكل</span>
                   </button>
                 </>
               )}
