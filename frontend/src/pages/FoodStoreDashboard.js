@@ -1968,19 +1968,21 @@ const FlashSalesTab = ({ store, products, token }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Info Card */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-4 text-white">
-        <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-          <span className="text-2xl">⚡</span>
-          انضم لعروض الفلاش
-        </h3>
-        <p className="text-sm opacity-90 mb-3">
-          شارك منتجاتك في عروض الفلاش لزيادة المبيعات! رسوم الانضمام {settings.join_fee?.toLocaleString()} ل.س لكل منتج.
-        </p>
-        <div className="flex items-center gap-2 text-xs bg-white/20 rounded-lg px-3 py-2">
-          <span>💡</span>
-          <span>يتم خصم الرسوم من محفظتك تلقائياً عند الطلب</span>
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 text-white -mx-4">
+        <div className="max-w-7xl mx-auto px-4">
+          <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
+            <span className="text-lg">⚡</span>
+            انضم لعروض الفلاش
+          </h3>
+          <p className="text-xs opacity-90 mb-2">
+            شارك منتجاتك في عروض الفلاش لزيادة المبيعات! رسوم الانضمام {settings.join_fee?.toLocaleString()} ل.س
+          </p>
+          <div className="flex items-center gap-2 text-[10px] bg-white/20 rounded-lg px-2 py-1.5">
+            <span>💡</span>
+            <span>يتم خصم الرسوم من محفظتك تلقائياً</span>
+          </div>
         </div>
       </div>
 

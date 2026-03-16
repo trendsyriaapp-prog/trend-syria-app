@@ -137,22 +137,21 @@ const AboutPage = () => {
         </motion.div>
 
         {/* Vision & Mission */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="grid md:grid-cols-2 gap-4 mb-4 px-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white"
+            className="bg-gradient-to-br from-orange-500 to-red-500 p-4 text-white"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Eye size={24} />
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Eye size={20} />
               </div>
-              <h3 className="text-xl font-bold">رؤيتنا</h3>
+              <h3 className="text-base font-bold">رؤيتنا</h3>
             </div>
-            <p className="text-white/90 leading-relaxed">
-              أن نكون المنصة الرائدة للتجارة الإلكترونية والتوصيل في سوريا، 
-              ونساهم في تطوير الاقتصاد الرقمي السوري.
+            <p className="text-white/90 leading-relaxed text-sm">
+              أن نكون المنصة الرائدة للتجارة الإلكترونية في سوريا.
             </p>
           </motion.div>
 
@@ -160,17 +159,16 @@ const AboutPage = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl p-6 text-white"
+            className="bg-gradient-to-br from-blue-500 to-indigo-500 p-4 text-white"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Target size={24} />
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Target size={20} />
               </div>
-              <h3 className="text-xl font-bold">مهمتنا</h3>
+              <h3 className="text-base font-bold">مهمتنا</h3>
             </div>
-            <p className="text-white/90 leading-relaxed">
-              توفير تجربة تسوق وتوصيل سهلة وآمنة وسريعة لكل سوري، 
-              مع دعم التجار المحليين وخلق فرص عمل للشباب.
+            <p className="text-white/90 leading-relaxed text-sm">
+              توفير تجربة تسوق سهلة وآمنة لكل سوري.
             </p>
           </motion.div>
         </div>
@@ -261,35 +259,35 @@ const AboutPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 mb-6 text-white"
+          className="bg-gradient-to-r from-orange-500 to-red-500 p-4 mb-4 text-white"
         >
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <span className="text-2xl">🤝</span>
+          <h3 className="text-base font-bold mb-3 flex items-center gap-2">
+            <span className="text-lg">🤝</span>
             انضم إلى عائلة ترند سورية
           </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white/10 rounded-xl p-4">
-              <h4 className="font-bold mb-2 flex items-center gap-2">
-                <Store size={20} />
+          <div className="grid md:grid-cols-2 gap-3">
+            <div className="bg-white/10 rounded-lg p-3">
+              <h4 className="font-bold mb-1.5 flex items-center gap-2 text-sm">
+                <Store size={16} />
                 هل أنت تاجر؟
               </h4>
-              <p className="text-sm text-white/80 mb-3">
-                سجل متجرك مجاناً وابدأ ببيع منتجاتك لآلاف العملاء
+              <p className="text-xs text-white/80 mb-2">
+                سجل متجرك مجاناً وابدأ ببيع منتجاتك
               </p>
               <button 
                 onClick={() => navigate('/register')}
-                className="bg-white text-orange-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-50 transition-colors"
+                className="bg-white text-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-50 transition-colors"
               >
                 سجل كبائع
               </button>
             </div>
-            <div className="bg-white/10 rounded-xl p-4">
-              <h4 className="font-bold mb-2 flex items-center gap-2">
-                <Truck size={20} />
+            <div className="bg-white/10 rounded-lg p-3">
+              <h4 className="font-bold mb-1.5 flex items-center gap-2 text-sm">
+                <Truck size={16} />
                 هل تريد العمل معنا؟
               </h4>
-              <p className="text-sm text-white/80 mb-3">
-                انضم كسائق توصيل واكسب دخلاً إضافياً بمرونة
+              <p className="text-xs text-white/80 mb-2">
+                انضم كسائق توصيل واكسب دخلاً إضافياً
               </p>
               <button 
                 onClick={() => navigate('/register')}
