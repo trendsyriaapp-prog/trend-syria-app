@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3 } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -225,6 +225,21 @@ const MobileNav = () => {
                     <Gift size={20} className="text-pink-500" />
                   </div>
                   <span className="font-medium text-gray-900">هداياي</span>
+                </Link>
+
+                <Link
+                  to="/referrals"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                  data-testid="referrals-menu-link"
+                >
+                  <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+                    <Users size={20} className="text-green-500" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-900">ادعُ صديقاً</span>
+                    <p className="text-xs text-green-600">اكسب 10,000 ل.س</p>
+                  </div>
                 </Link>
 
                 <Link

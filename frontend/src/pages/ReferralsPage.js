@@ -23,6 +23,7 @@ const ReferralsPage = () => {
   const [referralData, setReferralData] = useState(null);
   const [referrals, setReferrals] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [systemActive, setSystemActive] = useState(true);
 
   useEffect(() => {
     if (token) {
@@ -32,6 +33,15 @@ const ReferralsPage = () => {
 
   const fetchReferralData = async () => {
     try {
+      // التحقق من حالة تفعيل النظام أولاً
+      const statusRes = await axios.get(`${API}/api/referrals/status`);
+      setSystemActive(statusRes.data.is_active);
+      
+      if (!statusRes.data.is_active) {
+        setLoading(false);
+        return;
+      }
+
       const [codeRes, referralsRes] = await Promise.all([
         axios.get(`${API}/api/referrals/my-code`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -109,6 +119,36 @@ const ReferralsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // عرض رسالة إذا كان النظام متوقفاً
+  if (!systemActive) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-24" dir="rtl">
+        <div className="bg-gradient-to-br from-gray-400 to-gray-500 text-white px-4 py-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/20 rounded-full">
+              <ArrowRight size={20} />
+            </button>
+            <h1 className="text-xl font-bold">دعوة الأصدقاء</h1>
+          </div>
+        </div>
+        
+        <div className="p-4 text-center mt-10">
+          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <Users size={48} className="text-gray-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">برنامج الإحالات متوقف حالياً</h2>
+          <p className="text-gray-600 mb-6">سيتم إعادة تفعيل البرنامج قريباً، ترقبوا العروض!</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-3 bg-[#FF6B00] text-white rounded-xl font-bold"
+          >
+            العودة للرئيسية
+          </button>
+        </div>
       </div>
     );
   }

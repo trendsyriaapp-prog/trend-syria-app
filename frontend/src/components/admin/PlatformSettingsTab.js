@@ -183,6 +183,158 @@ const GlobalFreeShippingPromo = () => {
   );
 };
 
+// 👥 مكون إعدادات برنامج الإحالات
+const ReferralProgramSettings = () => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    is_active: true,
+    referrer_reward: 10000,
+    referee_discount: 20,
+    min_order_for_reward: 30000
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/referrals/admin/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings({
+        is_active: res.data.is_active ?? true,
+        referrer_reward: res.data.referrer_reward || 10000,
+        referee_discount: res.data.referee_discount || 20,
+        min_order_for_reward: res.data.min_order_for_reward || 30000
+      });
+    } catch (error) {
+      console.error('Error fetching referral settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/referrals/admin/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: "تم الحفظ!",
+        description: settings.is_active ? "برنامج الإحالات مفعّل" : "برنامج الإحالات متوقف"
+      });
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-pink-50 to-rose-50 border-pink-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-pink-500 to-rose-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+            <Users size={24} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">برنامج الإحالات</h3>
+            <p className="text-xs text-gray-500">ادعُ صديقاً واكسب مكافآت</p>
+          </div>
+        </div>
+        
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.is_active}
+            onChange={(e) => setSettings({ ...settings, is_active: e.target.checked })}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+        </label>
+      </div>
+
+      {settings.is_active && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="space-y-4"
+        >
+          {/* مكافأة المُحيل */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              💰 مكافأة المُحيل (ل.س)
+            </label>
+            <input
+              type="number"
+              value={settings.referrer_reward}
+              onChange={(e) => setSettings({ ...settings, referrer_reward: parseInt(e.target.value) || 0 })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              placeholder="10000"
+            />
+            <p className="text-xs text-gray-500 mt-1">المبلغ الذي يحصل عليه المُحيل عند إتمام الإحالة</p>
+          </div>
+
+          {/* خصم المُحال */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              🎁 خصم الصديق (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={settings.referee_discount}
+              onChange={(e) => setSettings({ ...settings, referee_discount: parseInt(e.target.value) || 0 })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              placeholder="20"
+            />
+            <p className="text-xs text-gray-500 mt-1">نسبة الخصم التي يحصل عليها الصديق الجديد على أول طلب</p>
+          </div>
+
+          {/* الحد الأدنى للطلب */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              📦 الحد الأدنى للطلب (ل.س)
+            </label>
+            <input
+              type="number"
+              value={settings.min_order_for_reward}
+              onChange={(e) => setSettings({ ...settings, min_order_for_reward: parseInt(e.target.value) || 0 })}
+              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              placeholder="30000"
+            />
+            <p className="text-xs text-gray-500 mt-1">الحد الأدنى لقيمة الطلب لاحتساب الإحالة كناجحة</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* زر الحفظ */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+          settings.is_active 
+            ? 'bg-pink-500 hover:bg-pink-600 text-white' 
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+        } disabled:opacity-50`}
+        data-testid="save-referral-settings"
+      >
+        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+        حفظ الإعدادات
+      </button>
+    </div>
+  );
+};
+
 // قوالب الإشعارات الجاهزة لكل قسم
 const NOTIFICATION_TEMPLATES = {
   food_enabled: [
@@ -544,6 +696,9 @@ const PlatformSettingsTab = () => {
 
       {/* 🎁 عرض الشحن المجاني الشامل */}
       <GlobalFreeShippingPromo />
+
+      {/* 👥 برنامج الإحالات */}
+      <ReferralProgramSettings />
 
       {/* إعدادات الشحن المجاني */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">

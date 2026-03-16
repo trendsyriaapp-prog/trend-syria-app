@@ -408,3 +408,27 @@ async def update_referral_settings(data: dict, user: dict = Depends(get_current_
     )
     
     return {"message": "تم تحديث الإعدادات"}
+
+
+
+@router.get("/status")
+async def get_referral_status():
+    """
+    التحقق من حالة تفعيل نظام الإحالات (للواجهة)
+    هذا الـ endpoint عام ولا يتطلب تسجيل دخول
+    """
+    settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
+    
+    if not settings:
+        # القيم الافتراضية
+        return {
+            "is_active": True,
+            "referrer_reward": 10000,
+            "referee_discount": 20
+        }
+    
+    return {
+        "is_active": settings.get("is_active", True),
+        "referrer_reward": settings.get("referrer_reward", 10000),
+        "referee_discount": settings.get("referee_discount", 20)
+    }
