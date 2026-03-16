@@ -220,6 +220,9 @@ async def get_global_free_shipping():
     # التحقق من انتهاء العرض
     if settings.get("end_date"):
         end_date = datetime.fromisoformat(settings["end_date"].replace("Z", "+00:00"))
+        # تأكد من أن end_date له timezone
+        if end_date.tzinfo is None:
+            end_date = end_date.replace(tzinfo=timezone.utc)
         if datetime.now(timezone.utc) > end_date:
             # العرض انتهى، نعطله تلقائياً
             await db.settings.update_one(

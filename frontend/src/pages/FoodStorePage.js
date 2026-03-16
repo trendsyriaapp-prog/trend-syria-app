@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   Store, Star, Clock, MapPin, Phone, Plus, Minus, ShoppingBag,
-  ArrowLeft, Heart, Share2, ChevronLeft, MessageCircle, User
+  ArrowLeft, Heart, Share2, ChevronLeft, MessageCircle, User, DollarSign, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -27,10 +27,12 @@ const FoodStorePage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showReviews, setShowReviews] = useState(false);
   const [reviews, setReviews] = useState({ reviews: [], stats: null });
+  const [priceRating, setPriceRating] = useState(null);
 
   useEffect(() => {
     fetchStore();
     loadCart();
+    fetchPriceRating();
   }, [storeId]);
 
   const fetchStore = async () => {
@@ -53,6 +55,15 @@ const FoodStorePage = () => {
     const savedCart = localStorage.getItem(`food_cart_${storeId}`);
     if (savedCart) {
       setCart(JSON.parse(savedCart));
+    }
+  };
+
+  const fetchPriceRating = async () => {
+    try {
+      const res = await axios.get(`${API}/price-reports/store/${storeId}/rating`);
+      setPriceRating(res.data);
+    } catch (e) {
+      // لا مشكلة إذا فشل - المتجر جديد أو لا توجد بيانات
     }
   };
 
@@ -187,6 +198,27 @@ const FoodStorePage = () => {
               <span className="text-gray-400 text-sm">({store.reviews_count} تقييم)</span>
             </button>
           )}
+          
+          {/* شارة تقييم الأسعار */}
+          {priceRating && (
+            <div 
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
+                priceRating.status === 'excellent' || priceRating.status === 'good' 
+                  ? 'bg-green-50 text-green-700' 
+                  : priceRating.status === 'average' 
+                    ? 'bg-yellow-50 text-yellow-700'
+                    : 'bg-red-50 text-red-700'
+              }`}
+              title={`تقييم الأسعار: ${priceRating.rating}/5`}
+            >
+              <DollarSign size={14} />
+              <span className="text-xs font-medium">{priceRating.status_text}</span>
+              {priceRating.show_warning && (
+                <AlertTriangle size={12} className="text-orange-500" />
+              )}
+            </div>
+          )}
+          
           <div className="flex items-center gap-1 text-gray-600">
             <Clock size={16} />
             <span className="text-sm">{store.delivery_time} دقيقة</span>

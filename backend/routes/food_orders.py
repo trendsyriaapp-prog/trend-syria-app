@@ -1967,6 +1967,145 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
         "cold_dry_count": cold_dry_count + (1 if new_store_category == "cold_dry" else 0)
     }
 
+
+# ============== التوجيه الذكي ==============
+
+class SmartRouteEvaluateRequest(BaseModel):
+    order_id: str
+    driver_lat: float
+    driver_lon: float
+
+@router.post("/delivery/smart-route/evaluate")
+async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: dict = Depends(get_current_user)):
+    """
+    تقييم ما إذا كان الطلب الجديد على مسار السائق الحالي
+    يساعد السائق في اتخاذ قرار قبول الطلب
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from services.smart_routing import evaluate_new_order
+    
+    # جلب الطلب الجديد
+    new_order = await db.food_orders.find_one({
+        "id": data.order_id,
+        "status": {"$in": ["ready", "ready_for_pickup"]},
+        "driver_id": None
+    })
+    if not new_order:
+        raise HTTPException(status_code=404, detail="الطلب غير متاح")
+    
+    # إضافة معلومات المتجر
+    store = await db.food_stores.find_one({"id": new_order.get("store_id")})
+    if store:
+        new_order["store_lat"] = store.get("latitude")
+        new_order["store_lng"] = store.get("longitude")
+        new_order["store_type"] = store.get("store_type", "restaurants")
+    
+    # جلب الطلبات الحالية للسائق
+    current_orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=20)
+    
+    # إضافة معلومات المتاجر للطلبات الحالية
+    for order in current_orders:
+        o_store = await db.food_stores.find_one({"id": order.get("store_id")})
+        if o_store:
+            order["store_lat"] = o_store.get("latitude")
+            order["store_lng"] = o_store.get("longitude")
+    
+    # جلب الإعدادات
+    settings = await db.platform_settings.find_one({"id": "main"}) or {}
+    
+    # تقييم الطلب
+    evaluation = await evaluate_new_order(
+        driver_id=user["id"],
+        driver_location=(data.driver_lat, data.driver_lon),
+        current_orders=current_orders,
+        new_order=new_order,
+        settings=settings
+    )
+    
+    return {
+        "order_id": data.order_id,
+        "can_accept": evaluation["can_accept"],
+        "score": evaluation["score"],
+        "added_distance_km": evaluation["added_distance_km"],
+        "added_time_min": evaluation["added_time_min"],
+        "added_earnings": evaluation["added_earnings"],
+        "is_on_route": evaluation["route_analysis"]["is_on_route"],
+        "reasons": evaluation["reasons"],
+        "recommendation": "✅ يُنصح بالقبول" if evaluation["can_accept"] else "⚠️ بعيد عن مسارك"
+    }
+
+@router.get("/delivery/optimize-route")
+async def get_optimized_route(user: dict = Depends(get_current_user)):
+    """
+    الحصول على الترتيب الأمثل لتوصيل الطلبات الحالية
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    from services.smart_routing import optimize_delivery_order
+    
+    # جلب الطلبات الحالية
+    orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=20)
+    
+    if not orders:
+        return {"optimized_route": [], "total_distance_km": 0, "estimated_time_min": 0}
+    
+    # إضافة معلومات المتاجر
+    for order in orders:
+        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        if store:
+            order["store_lat"] = store.get("latitude")
+            order["store_lng"] = store.get("longitude")
+            order["store_name"] = store.get("name")
+    
+    # جلب موقع السائق الأخير
+    driver_loc = await db.driver_locations.find_one({"driver_id": user["id"]})
+    driver_lat = driver_loc.get("lat", 33.5138) if driver_loc else 33.5138
+    driver_lon = driver_loc.get("lng", 36.2765) if driver_loc else 36.2765
+    
+    # تحسين المسار
+    optimized = await optimize_delivery_order(
+        driver_location=(driver_lat, driver_lon),
+        orders=orders,
+        mode="mixed"
+    )
+    
+    # حساب المسافة الإجمالية
+    total_distance = 0
+    current_lat, current_lon = driver_lat, driver_lon
+    
+    for point in optimized:
+        from services.smart_routing import calculate_distance
+        dist = calculate_distance(current_lat, current_lon, point["lat"], point["lon"])
+        total_distance += dist
+        current_lat, current_lon = point["lat"], point["lon"]
+    
+    return {
+        "optimized_route": [
+            {
+                "step": i + 1,
+                "type": p["type"],
+                "type_ar": "استلام" if p["type"] == "pickup" else "توصيل",
+                "name": p["name"],
+                "order_id": p["order_id"],
+                "lat": p["lat"],
+                "lon": p["lon"]
+            }
+            for i, p in enumerate(optimized)
+        ],
+        "total_distance_km": round(total_distance, 1),
+        "estimated_time_min": round(total_distance * 3, 0)  # تقدير 3 دقائق/كم
+    }
+
+
 # ============== التحقق من كود الاستلام ==============
 
 class VerifyPickupCode(BaseModel):

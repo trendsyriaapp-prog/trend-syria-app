@@ -348,7 +348,7 @@ async def update_seller_violation_points(
         "report_id": None,
         "points": update.points,
         "reason": update.reason,
-        "admin_notes": f"تعديل يدوي بواسطة الأدمن",
+        "admin_notes": "تعديل يدوي بواسطة الأدمن",
         "assigned_by": user["id"],
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -412,3 +412,127 @@ async def unsuspend_seller(seller_id: str, user: dict = Depends(get_current_user
     })
     
     return {"message": "تم إلغاء تعليق حساب البائع"}
+
+
+# ============== Store Price Rating ==============
+
+@router.get("/store/{store_id}/rating")
+async def get_store_price_rating(store_id: str):
+    """
+    الحصول على تقييم أسعار المتجر بناءً على البلاغات
+    
+    Returns:
+        - rating: تقييم من 1-5 (5 = أسعار ممتازة)
+        - total_reports: إجمالي البلاغات
+        - approved_reports: البلاغات المعتمدة (أسعار مرتفعة فعلاً)
+        - status: حالة المتجر من حيث الأسعار
+    """
+    # جلب المتجر
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    seller_id = store.get("owner_id")
+    
+    # جلب البلاغات المتعلقة بمنتجات هذا المتجر
+    pipeline = [
+        {
+            "$match": {
+                "seller_id": seller_id,
+                "product_type": "food"
+            }
+        },
+        {
+            "$group": {
+                "_id": "$status",
+                "count": {"$sum": 1}
+            }
+        }
+    ]
+    
+    stats = await db.price_reports.aggregate(pipeline).to_list(length=10)
+    
+    total_reports = 0
+    approved_reports = 0
+    rejected_reports = 0
+    
+    for stat in stats:
+        total_reports += stat["count"]
+        if stat["_id"] == "approved":
+            approved_reports = stat["count"]
+        elif stat["_id"] == "rejected":
+            rejected_reports = stat["count"]
+    
+    # حساب التقييم (5 = لا توجد بلاغات، 1 = كثير من البلاغات المعتمدة)
+    # البلاغات المعتمدة = أسعار مرتفعة فعلاً
+    if total_reports == 0:
+        rating = 5.0  # لا توجد بلاغات = أسعار جيدة
+        status = "excellent"
+        status_text = "أسعار ممتازة"
+    elif approved_reports == 0:
+        rating = 4.5  # كل البلاغات مرفوضة = أسعار جيدة
+        status = "good"
+        status_text = "أسعار جيدة"
+    else:
+        # حساب نسبة البلاغات المعتمدة
+        approval_rate = approved_reports / total_reports
+        rating = max(1.0, 5.0 - (approval_rate * 4))
+        
+        if rating >= 4:
+            status = "good"
+            status_text = "أسعار جيدة"
+        elif rating >= 3:
+            status = "average"
+            status_text = "أسعار متوسطة"
+        elif rating >= 2:
+            status = "high"
+            status_text = "أسعار مرتفعة قليلاً"
+        else:
+            status = "very_high"
+            status_text = "أسعار مرتفعة"
+    
+    # جلب نقاط المخالفة للبائع
+    seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "violation_points": 1})
+    violation_points = seller.get("violation_points", 0) if seller else 0
+    
+    return {
+        "store_id": store_id,
+        "rating": round(rating, 1),
+        "total_reports": total_reports,
+        "approved_reports": approved_reports,
+        "rejected_reports": rejected_reports,
+        "status": status,
+        "status_text": status_text,
+        "violation_points": violation_points,
+        "show_warning": violation_points >= 5 or approved_reports >= 3
+    }
+
+@router.get("/seller/{seller_id}/price-stats")
+async def get_seller_price_stats(seller_id: str):
+    """
+    إحصائيات الأسعار للبائع (للوحة البائع)
+    """
+    # إجمالي البلاغات
+    total = await db.price_reports.count_documents({"seller_id": seller_id})
+    approved = await db.price_reports.count_documents({"seller_id": seller_id, "status": "approved"})
+    pending = await db.price_reports.count_documents({"seller_id": seller_id, "status": "pending"})
+    
+    # نقاط المخالفة
+    seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "violation_points": 1})
+    violation_points = seller.get("violation_points", 0) if seller else 0
+    
+    # آخر البلاغات
+    recent = await db.price_reports.find(
+        {"seller_id": seller_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    return {
+        "total_reports": total,
+        "approved_reports": approved,
+        "pending_reports": pending,
+        "violation_points": violation_points,
+        "max_points": 15,  # الحد الأقصى قبل التعليق
+        "recent_reports": recent,
+        "warning": violation_points >= 10
+    }
