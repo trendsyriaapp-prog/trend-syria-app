@@ -762,6 +762,19 @@ const DeliveryDashboard = () => {
           >
             💰 الأرباح
           </button>
+          <button
+            onClick={() => setActiveTab('achievements')}
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'achievements' 
+                ? 'bg-green-500 text-black' 
+                : currentTheme === 'dark'
+                  ? 'bg-[#1a1a1a] text-gray-400 border border-[#333]'
+                  : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+            data-testid="achievements-tab-btn"
+          >
+            🏆 إنجازاتي
+          </button>
         </div>
 
         {/* فلتر نوع الطلبات */}
@@ -877,6 +890,11 @@ const DeliveryDashboard = () => {
         {/* Earnings Statistics */}
         {activeTab === 'earnings' && (
           <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
+        )}
+
+        {/* Achievements */}
+        {activeTab === 'achievements' && (
+          <DriverAchievements />
         )}
       </div>
 
