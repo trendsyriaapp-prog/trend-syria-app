@@ -23,6 +23,31 @@
 
 ### March 2026
 
+#### تحديثات 16 مارس 2026 (الجلسة السادسة - الاختبار الشامل) ✅
+
+##### اختبار نظام معالجة الصور بالكامل ✅
+- **الهدف:** اختبار شامل لنظام القوالب والصور AI
+- **النتائج:**
+  - ✅ `/api/templates/list` - 12 قالب 3D (رمضان، عيد، تخفيضات، فاخر، تقني، أزياء، جمال، رياضي، أطفال، شتاء، صيف، عرض خاطف)
+  - ✅ `/api/templates/apply-free` - القوالب المجانية تعمل بدون توكن
+  - ✅ `/api/templates/apply-ai` - Gemini Imagen يعمل (3,000 ل.س)
+  - ✅ `/api/templates/check-balance` - فحص رصيد البائع
+  - ✅ `/api/settings/images/public` - إعدادات الصور (3 صور/منتج)
+  - ✅ خصم المحفظة يعمل بشكل صحيح
+  - ✅ رفض الطلب عند رصيد غير كافٍ
+
+##### إصلاح Bug في لوحة البائع ✅
+- **المشكلة:** `ReferenceError: token is not defined` في SellerDashboardPage
+- **الملف:** `/app/frontend/src/pages/SellerPages.js` سطر 445
+- **الحل:** إضافة `token` إلى `useAuth()` destructure
+- **Status:** FIXED & VERIFIED ✅
+
+##### نتائج الاختبار:
+- Backend: 100% (16/17 اختبار، 1 skipped)
+- Frontend: 95% (جميع الميزات تعمل)
+- **Test Report:** `/app/test_reports/iteration_77.json`
+
+---
 
 #### تحديثات 16 مارس 2026 (الجلسة الخامسة) ✅
 
