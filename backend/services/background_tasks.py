@@ -272,6 +272,8 @@ async def background_dispatch_loop():
     release_counter = 0
     # عداد لفحص نقص السائقين (كل دقيقة = 6 * 10 ثواني)
     shortage_counter = 0
+    # عداد لفحص الطقس (كل 30 دقيقة = 180 * 10 ثواني)
+    weather_counter = 0
     
     while task_running:
         try:
@@ -288,6 +290,18 @@ async def background_dispatch_loop():
             if shortage_counter >= 6:  # 6 * 10 = 60 ثانية = 1 دقيقة
                 shortage_counter = 0
                 await check_driver_shortage()
+            
+            # فحص الطقس وتحديث الرسوم تلقائياً
+            weather_counter += 1
+            if weather_counter >= 180:  # 180 * 10 = 1800 ثانية = 30 دقيقة
+                weather_counter = 0
+                try:
+                    from services.weather_service import update_weather_surcharge_automatically
+                    result = await update_weather_surcharge_automatically()
+                    if result.get("updated"):
+                        logger.info(f"Weather surcharge updated: {result}")
+                except Exception as e:
+                    logger.error(f"Error updating weather surcharge: {e}")
             
             # إطلاق الأرباح المعلقة كل 5 دقائق
             release_counter += 1

@@ -7,6 +7,7 @@ import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { ScrollProvider } from "./context/ScrollContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { WebSocketProvider } from "./context/WebSocketContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -81,6 +82,7 @@ function App() {
           <AuthProvider>
             <CartProvider>
               <FoodCartProvider>
+              <WebSocketProvider>
               <BrowserRouter>
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
@@ -160,6 +162,7 @@ function App() {
           </div>
           </ScrollProvider>
         </BrowserRouter>
+        </WebSocketProvider>
         </FoodCartProvider>
       </CartProvider>
     </AuthProvider>

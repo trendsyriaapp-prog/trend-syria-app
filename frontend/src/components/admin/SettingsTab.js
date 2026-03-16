@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users } from 'lucide-react';
+import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users, Cloud, Thermometer } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -374,6 +374,9 @@ const SettingsTab = ({ user }) => {
       
       {/* 🔔 إشعارات نقص السائقين */}
       <DriverShortageAlertSettings toast={toast} />
+      
+      {/* ☁️ إعدادات الطقس التلقائي */}
+      <AutoWeatherSettings toast={toast} />
       
     </section>
   );
@@ -769,6 +772,279 @@ const DriverShortageAlertSettings = ({ toast }) => {
           </button>
         </div>
       )}
+    </div>
+  );
+};
+
+// مكون إعدادات الطقس التلقائي
+const AutoWeatherSettings = ({ toast }) => {
+  const [settings, setSettings] = useState({
+    enabled: false,
+    api_key: '',
+    base_amount: 5000,
+    monitored_cities: ['دمشق'],
+    has_api_key: false
+  });
+  const [currentWeather, setCurrentWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [checking, setChecking] = useState(false);
+
+  const availableCities = [
+    'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',
+    'دير الزور', 'الرقة', 'إدلب', 'درعا', 'السويداء', 'القنيطرة'
+  ];
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/settings/weather-api`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(prev => ({
+        ...prev,
+        ...res.data,
+        api_key: res.data.has_api_key ? '**********' : ''
+      }));
+    } catch (err) {
+      console.error('Error fetching weather settings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/weather-api`, {
+        enabled: settings.enabled,
+        api_key: settings.api_key,
+        base_amount: parseInt(settings.base_amount) || 5000,
+        monitored_cities: settings.monitored_cities
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: 'تم الحفظ', description: 'تم تحديث إعدادات الطقس' });
+      fetchSettings();
+    } catch (err) {
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'فشل الحفظ', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const checkWeatherNow = async () => {
+    setChecking(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/settings/weather-current?city=${settings.monitored_cities[0] || 'دمشق'}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCurrentWeather(res.data);
+      toast({ title: 'تم الفحص', description: `الطقس في ${res.data.weather?.city}: ${res.data.weather?.condition_ar}` });
+    } catch (err) {
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'فشل فحص الطقس', variant: 'destructive' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const triggerAutoCheck = async () => {
+    setChecking(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API}/api/settings/weather-check-now`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.updated) {
+        toast({ 
+          title: res.data.action === 'activated' ? '⚠️ تم تفعيل رسوم الطقس' : '✅ تم إيقاف رسوم الطقس',
+          description: res.data.reason || 'تحسن الطقس'
+        });
+      } else {
+        toast({ title: 'لا تغيير', description: 'لا حاجة لتغيير رسوم الطقس' });
+      }
+    } catch (err) {
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'فشل الفحص', variant: 'destructive' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const toggleCity = (city) => {
+    setSettings(prev => {
+      const cities = prev.monitored_cities || [];
+      if (cities.includes(city)) {
+        return { ...prev, monitored_cities: cities.filter(c => c !== city) };
+      } else {
+        return { ...prev, monitored_cities: [...cities, city] };
+      }
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-center h-32">
+        <RefreshCw size={24} className="text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+          <Cloud size={20} className="text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">الطقس التلقائي</h3>
+          <p className="text-xs text-gray-500">تفعيل رسوم الطقس السيء تلقائياً</p>
+        </div>
+      </div>
+
+      {/* مفتاح API */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          مفتاح OpenWeatherMap API
+        </label>
+        <input
+          type="text"
+          value={settings.api_key}
+          onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
+          placeholder="أدخل مفتاح API..."
+          className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          احصل على مفتاح مجاني من <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openweathermap.org</a>
+        </p>
+      </div>
+
+      {/* تفعيل التلقائي */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-4">
+        <div>
+          <p className="font-medium text-gray-900">تفعيل الرسوم التلقائية</p>
+          <p className="text-xs text-gray-500">فحص الطقس كل 30 دقيقة وتفعيل الرسوم عند الحاجة</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.enabled}
+            onChange={(e) => setSettings(prev => ({ ...prev, enabled: e.target.checked }))}
+            className="sr-only peer"
+            disabled={!settings.has_api_key && !settings.api_key}
+          />
+          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-disabled:opacity-50"></div>
+        </label>
+      </div>
+
+      {/* المبلغ الأساسي */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          المبلغ الأساسي للرسوم (ل.س)
+        </label>
+        <input
+          type="number"
+          min="1000"
+          step="1000"
+          value={settings.base_amount}
+          onChange={(e) => setSettings(prev => ({ ...prev, base_amount: e.target.value }))}
+          className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          سيتم ضرب هذا المبلغ بمضاعف حسب شدة الطقس (مطر خفيف ×0.5، مطر ×1، عاصفة ×1.5، ثلج ×2)
+        </p>
+      </div>
+
+      {/* المدن المراقبة */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          المدن المراقبة
+        </label>
+        <div className="grid grid-cols-3 gap-2">
+          {availableCities.map(city => (
+            <label
+              key={city}
+              className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all text-sm ${
+                settings.monitored_cities?.includes(city)
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-blue-300'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={settings.monitored_cities?.includes(city)}
+                onChange={() => toggleCity(city)}
+                className="w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
+              />
+              <span>{city}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* أزرار */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={checkWeatherNow}
+          disabled={checking || !settings.has_api_key}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+        >
+          {checking ? <RefreshCw size={16} className="animate-spin" /> : <Thermometer size={16} />}
+          فحص الطقس الآن
+        </button>
+        <button
+          onClick={triggerAutoCheck}
+          disabled={checking || !settings.has_api_key}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50"
+        >
+          {checking ? <RefreshCw size={16} className="animate-spin" /> : <Cloud size={16} />}
+          تشغيل الفحص التلقائي
+        </button>
+      </div>
+
+      {/* عرض الطقس الحالي */}
+      {currentWeather && (
+        <div className={`p-3 rounded-xl mb-4 ${currentWeather.is_bad_weather ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
+          <div className="flex items-center gap-3">
+            <img 
+              src={`https://openweathermap.org/img/wn/${currentWeather.weather?.icon}@2x.png`}
+              alt="weather"
+              className="w-12 h-12"
+            />
+            <div>
+              <p className="font-bold text-gray-900">{currentWeather.weather?.city}</p>
+              <p className="text-sm text-gray-600">{currentWeather.weather?.condition_ar}</p>
+              <p className="text-sm text-gray-500">{currentWeather.weather?.temperature}°C</p>
+            </div>
+            <div className="mr-auto text-left">
+              {currentWeather.is_bad_weather ? (
+                <>
+                  <p className="text-orange-600 font-bold">⚠️ طقس سيء</p>
+                  <p className="text-sm text-orange-600">{currentWeather.bad_reason}</p>
+                  <p className="text-xs text-gray-500">رسوم مقترحة: {currentWeather.suggested_surcharge} ل.س</p>
+                </>
+              ) : (
+                <p className="text-green-600 font-bold">✅ طقس جيد</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* زر الحفظ */}
+      <button
+        onClick={saveSettings}
+        disabled={saving}
+        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+      >
+        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+        حفظ إعدادات الطقس
+      </button>
     </div>
   );
 };

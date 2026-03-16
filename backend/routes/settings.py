@@ -1090,6 +1090,119 @@ async def update_weather_surcharge(
     }
 
 
+
+# ============== إعدادات الطقس التلقائي ==============
+
+class AutoWeatherSettings(BaseModel):
+    enabled: bool = False
+    api_key: str = ""
+    base_amount: int = 5000  # المبلغ الأساسي للرسوم
+    monitored_cities: list = ["دمشق"]  # المدن المراقبة
+    check_interval_minutes: int = 30  # فترة الفحص
+
+@router.get("/weather-api")
+async def get_weather_api_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات API الطقس"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    weather_api = settings.get("weather_api", {}) if settings else {}
+    auto_weather = settings.get("auto_weather_surcharge", {}) if settings else {}
+    
+    return {
+        "api_key": weather_api.get("api_key", "")[:10] + "***" if weather_api.get("api_key") else "",
+        "has_api_key": bool(weather_api.get("api_key")),
+        "auto_enabled": auto_weather.get("enabled", False),
+        "base_amount": auto_weather.get("base_amount", 5000),
+        "monitored_cities": auto_weather.get("monitored_cities", ["دمشق"]),
+        "check_interval_minutes": auto_weather.get("check_interval_minutes", 30)
+    }
+
+@router.put("/weather-api")
+async def update_weather_api_settings(
+    data: AutoWeatherSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات API الطقس"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    update_data = {
+        "auto_weather_surcharge": {
+            "enabled": data.enabled,
+            "base_amount": data.base_amount,
+            "monitored_cities": data.monitored_cities,
+            "check_interval_minutes": data.check_interval_minutes
+        }
+    }
+    
+    # تحديث مفتاح API فقط إذا تم إرساله (ليس فارغاً ولا يحتوي على ***)
+    if data.api_key and "***" not in data.api_key:
+        update_data["weather_api"] = {"api_key": data.api_key}
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "تم تحديث إعدادات الطقس"}
+
+@router.get("/weather-current")
+async def get_current_weather(
+    city: str = "دمشق",
+    user: dict = Depends(get_current_user)
+):
+    """جلب الطقس الحالي لمدينة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from services.weather_service import fetch_current_weather, check_bad_weather
+    
+    weather = await fetch_current_weather(city)
+    if not weather:
+        raise HTTPException(status_code=500, detail="فشل جلب بيانات الطقس. تأكد من مفتاح API")
+    
+    bad_check = await check_bad_weather(city)
+    
+    return {
+        "weather": weather,
+        "is_bad_weather": bad_check["is_bad"],
+        "bad_reason": bad_check.get("reason"),
+        "suggested_surcharge": int(bad_check.get("surcharge_multiplier", 0) * 5000)
+    }
+
+@router.get("/weather-all-cities")
+async def get_weather_all_cities(user: dict = Depends(get_current_user)):
+    """جلب الطقس لجميع المدن"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from services.weather_service import get_weather_for_all_cities, SYRIAN_CITIES_COORDS
+    
+    weather_data = await get_weather_for_all_cities()
+    
+    return {
+        "cities": list(SYRIAN_CITIES_COORDS.keys()),
+        "weather": weather_data
+    }
+
+@router.post("/weather-check-now")
+async def trigger_weather_check(user: dict = Depends(get_current_user)):
+    """تشغيل فحص الطقس يدوياً"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    from services.weather_service import update_weather_surcharge_automatically
+    
+    result = await update_weather_surcharge_automatically()
+    
+    return result
+
+
+
 # ============== Surge Pricing - التسعير الديناميكي ==============
 
 class SurgePricingSettings(BaseModel):
