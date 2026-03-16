@@ -3,10 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  Truck, Shield, CreditCard, ArrowLeft, Smartphone, Shirt, 
+  ArrowLeft, Smartphone, Shirt, 
   Home as HomeIcon, Dumbbell, BookOpen, Gamepad2, 
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
-  Package, Clock, Star, ShoppingBasket, Apple, Zap, ChevronRight,
+  Package, Star, ShoppingBasket, Apple, Zap, ChevronRight,
   Pill, Car, MapPin, Watch, Gift, Sparkles, Laptop, Footprints,
   Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 } from 'lucide-react';
@@ -124,12 +124,12 @@ const HomePage = () => {
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* 🎯 شريط العروض المتحرك - Offers Ticker */}
       {tickerEnabled && tickerMessages.length > 0 && (
-        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-1.5 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-1 md:py-1.5 overflow-hidden">
           <div className="ticker-wrapper">
-            <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap">
+            <div className="ticker-content animate-ticker flex items-center gap-4 md:gap-8 whitespace-nowrap">
               {[...tickerMessages, ...tickerMessages].map((msg, i) => (
-                <span key={i} className="flex items-center gap-2 text-sm font-medium">
-                  {msg.highlight && <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">حصري</span>}
+                <span key={i} className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-sm font-medium">
+                  {msg.highlight && <span className="bg-white/20 px-1.5 md:px-2 py-0.5 rounded-full text-[9px] md:text-xs">حصري</span>}
                   {msg.text}
                   <span className="text-white/50">|</span>
                 </span>
@@ -138,30 +138,6 @@ const HomePage = () => {
           </div>
         </div>
       )}
-
-      {/* Quick Features Banner - Minimal */}
-      <div className="bg-gradient-to-r from-[#FF6B00]/5 to-transparent py-2 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-6 text-xs text-gray-600">
-            <span className="flex items-center gap-1.5">
-              <Truck size={14} className="text-[#FF6B00]" />
-              توصيل مجاني
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Shield size={14} className="text-[#FF6B00]" />
-              ضمان الجودة
-            </span>
-            <span className="flex items-center gap-1.5 hidden sm:flex">
-              <CreditCard size={14} className="text-[#FF6B00]" />
-              دفع آمن
-            </span>
-            <span className="flex items-center gap-1.5 hidden sm:flex">
-              <Clock size={14} className="text-[#FF6B00]" />
-              دعم 24/7
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* 🎁 بانر الشحن المجاني الشامل */}
       {globalFreeShipping && (

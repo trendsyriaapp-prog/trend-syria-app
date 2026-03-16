@@ -195,15 +195,18 @@ const Header = () => {
   if (isSellerPage || isDeliveryPage) return null;
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+198|    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 py-2">
         {/* الصف الأول: البحث + الأيقونات */}
         <div className="flex items-center gap-2">
-          {/* Home Button - على اليمين */}
-          <Link to="/" className="flex-shrink-0">
-            <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
+          {/* Logo - الشعار */}
+          <Link to="/" className="flex-shrink-0 flex items-center gap-1.5">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8533] flex items-center justify-center shadow-sm">
               <Home size={16} className="text-white" />
             </div>
+            <span className="hidden sm:block text-sm font-bold text-gray-900">
+              ترند<span className="text-[#FF6B00]">سورية</span>
+            </span>
           </Link>
 
           {/* Search Bar - شريط البحث الطويل - يختفي في صفحات الطعام ولوحة تحكم البائع */}
