@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Truck, Store, Heart, Sparkles, Cake,
-  Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater
+  Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -185,6 +185,7 @@ const FreeShippingBanner = ({ promo }) => {
 const FoodPage = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
+  const searchParam = searchParams.get('search');
   const { user } = useAuth();
   
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
@@ -194,10 +195,15 @@ const FoodPage = () => {
   const [foodBanners, setFoodBanners] = useState([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParam || '');
   const [userCity, setUserCity] = useState(null);
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
+
+  // تحديث searchQuery عند تغير searchParam
+  useEffect(() => {
+    setSearchQuery(searchParam || '');
+  }, [searchParam]);
 
   // جلب مدينة المستخدم من العنوان الافتراضي
   useEffect(() => {
@@ -247,7 +253,7 @@ const FoodPage = () => {
     if (userCity) {
       fetchData();
     }
-  }, [activeCategory, userCity]);
+  }, [activeCategory, userCity, searchQuery]);
 
   // Auto-rotate banners
   useEffect(() => {
@@ -268,11 +274,13 @@ const FoodPage = () => {
       const [storesRes, productsRes, flashRes, bannersRes, promoRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
-          city: userCity
+          city: userCity,
+          search: searchQuery || undefined
         }}),
         axios.get(`${API}/food/products`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
-          city: userCity
+          city: userCity,
+          search: searchQuery || undefined
         }}),
         axios.get(`${API}/food/flash-sales/active`),
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
@@ -361,6 +369,7 @@ const FoodPage = () => {
       </div>
 
       {/* Categories with Food Images */}
+      {/* الفئات */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex gap-2 overflow-x-auto hide-scrollbar">
