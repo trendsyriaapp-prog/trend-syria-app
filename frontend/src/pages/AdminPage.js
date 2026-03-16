@@ -47,6 +47,7 @@ import DriversPerformanceTab from '../components/admin/DriversPerformanceTab';
 import ActivityLogTab from '../components/admin/ActivityLogTab';
 import SupportTicketsAdmin from '../components/admin/SupportTicketsAdmin';
 import ProblemSolverTools from '../components/admin/ProblemSolverTools';
+import TickerMessagesTab from '../components/admin/TickerMessagesTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -472,6 +473,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'problem-solver' && (
               <ProblemSolverTools />
             )}
+            {activeTab === 'ticker-messages' && user.user_type === 'admin' && (
+              <TickerMessagesTab />
+            )}
           </>
         ) : (
           <>
@@ -717,6 +721,18 @@ const AdminDashboardPage = () => {
                       <Flame size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">صفقات اليوم</span>
+                  </button>
+
+                  {/* شريط العروض المتحرك */}
+                  <button
+                    onClick={() => setActiveTab('ticker-messages')}
+                    className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl p-3 border border-amber-200 hover:border-amber-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="ticker-messages-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+                      <Megaphone size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">شريط العروض</span>
                   </button>
 
                   {/* إعدادات المنصة - تفعيل/إيقاف الأقسام */}

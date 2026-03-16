@@ -1611,3 +1611,136 @@ async def get_available_cities_for_monitoring(user: dict = Depends(get_current_u
         })
     
     return {"cities": city_stats}
+
+
+# ============== شريط العروض المتحرك (Ticker) ==============
+
+class TickerMessage(BaseModel):
+    text: str
+    highlight: bool = False
+    is_active: bool = True
+
+class TickerMessagesUpdate(BaseModel):
+    messages: list[TickerMessage]
+
+@router.get("/ticker-messages")
+async def get_ticker_messages():
+    """جلب رسائل الشريط المتحرك (للجميع)"""
+    ticker = await db.ticker_messages.find_one({"id": "main"}, {"_id": 0})
+    
+    if not ticker:
+        # رسائل افتراضية
+        default_messages = [
+            {"id": str(uuid.uuid4()), "text": "🔥 عروض رمضان - خصومات تصل إلى 50%", "highlight": True, "is_active": True},
+            {"id": str(uuid.uuid4()), "text": "🚚 توصيل مجاني للطلبات فوق 50,000 ل.س", "highlight": False, "is_active": True},
+            {"id": str(uuid.uuid4()), "text": "⚡ عروض فلاش جديدة كل يوم!", "highlight": True, "is_active": True},
+            {"id": str(uuid.uuid4()), "text": "💳 ادفع عند الاستلام متاح الآن", "highlight": False, "is_active": True},
+            {"id": str(uuid.uuid4()), "text": "🎁 اشترِ 2 واحصل على الثالث مجاناً", "highlight": True, "is_active": True},
+            {"id": str(uuid.uuid4()), "text": "⭐ منتجات جديدة كل أسبوع", "highlight": False, "is_active": True},
+        ]
+        ticker = {
+            "id": "main",
+            "messages": default_messages,
+            "is_enabled": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.ticker_messages.insert_one(ticker)
+        ticker.pop("_id", None)
+    
+    # إرجاع الرسائل النشطة فقط
+    active_messages = [m for m in ticker.get("messages", []) if m.get("is_active", True)]
+    return {
+        "messages": active_messages,
+        "is_enabled": ticker.get("is_enabled", True)
+    }
+
+@router.get("/ticker-messages/admin")
+async def get_ticker_messages_admin(user: dict = Depends(get_current_user)):
+    """جلب جميع رسائل الشريط (للمدراء)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    ticker = await db.ticker_messages.find_one({"id": "main"}, {"_id": 0})
+    
+    if not ticker:
+        return await get_ticker_messages()
+    
+    return ticker
+
+@router.put("/ticker-messages")
+async def update_ticker_messages(data: dict, user: dict = Depends(get_current_user)):
+    """تحديث رسائل الشريط المتحرك"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    messages = data.get("messages", [])
+    is_enabled = data.get("is_enabled", True)
+    
+    # إضافة ID لكل رسالة جديدة
+    for msg in messages:
+        if not msg.get("id"):
+            msg["id"] = str(uuid.uuid4())
+    
+    await db.ticker_messages.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "messages": messages,
+                "is_enabled": is_enabled,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": "تم تحديث رسائل الشريط بنجاح"}
+
+@router.post("/ticker-messages/add")
+async def add_ticker_message(data: dict, user: dict = Depends(get_current_user)):
+    """إضافة رسالة جديدة للشريط"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    new_message = {
+        "id": str(uuid.uuid4()),
+        "text": data.get("text", ""),
+        "highlight": data.get("highlight", False),
+        "is_active": data.get("is_active", True)
+    }
+    
+    await db.ticker_messages.update_one(
+        {"id": "main"},
+        {"$push": {"messages": new_message}},
+        upsert=True
+    )
+    
+    return {"success": True, "message": new_message}
+
+@router.delete("/ticker-messages/{message_id}")
+async def delete_ticker_message(message_id: str, user: dict = Depends(get_current_user)):
+    """حذف رسالة من الشريط"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    await db.ticker_messages.update_one(
+        {"id": "main"},
+        {"$pull": {"messages": {"id": message_id}}}
+    )
+    
+    return {"success": True, "message": "تم حذف الرسالة بنجاح"}
+
+@router.put("/ticker-messages/toggle")
+async def toggle_ticker(data: dict, user: dict = Depends(get_current_user)):
+    """تفعيل/تعطيل الشريط"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    is_enabled = data.get("is_enabled", True)
+    
+    await db.ticker_messages.update_one(
+        {"id": "main"},
+        {"$set": {"is_enabled": is_enabled}},
+        upsert=True
+    )
+    
+    return {"success": True, "is_enabled": is_enabled}

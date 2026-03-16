@@ -37,6 +37,8 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
+  const [tickerMessages, setTickerMessages] = useState([]);
+  const [tickerEnabled, setTickerEnabled] = useState(true);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -71,13 +73,14 @@ const HomePage = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes] = await Promise.all([
         axios.get(`${API}/products/featured`),
         axios.get(`${API}/categories`),
         axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
         axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
         axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] })),
-        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null }))
+        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
+        axios.get(`${API}/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } }))
       ]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
@@ -85,6 +88,10 @@ const HomePage = () => {
       setShopFlashProducts(shopFlashRes.data?.products || []);
       setShopFlashSale(shopFlashRes.data?.flash_sale || null);
       setSponsoredProducts(sponsoredRes.data || []);
+      
+      // شريط العروض
+      setTickerMessages(tickerRes.data?.messages || []);
+      setTickerEnabled(tickerRes.data?.is_enabled !== false);
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
       const promo = promoRes.data;
@@ -113,32 +120,24 @@ const HomePage = () => {
     seedData();
   }, []);
 
-  // رسائل شريط العروض المتحرك
-  const tickerMessages = [
-    { text: "🔥 عروض رمضان - خصومات تصل إلى 50%", highlight: true },
-    { text: "🚚 توصيل مجاني للطلبات فوق 50,000 ل.س", highlight: false },
-    { text: "⚡ عروض فلاش جديدة كل يوم!", highlight: true },
-    { text: "💳 ادفع عند الاستلام متاح الآن", highlight: false },
-    { text: "🎁 اشترِ 2 واحصل على الثالث مجاناً", highlight: true },
-    { text: "⭐ منتجات جديدة كل أسبوع", highlight: false },
-  ];
-
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* 🎯 شريط العروض المتحرك - Offers Ticker */}
-      <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-1.5 overflow-hidden">
-        <div className="ticker-wrapper">
-          <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap">
-            {[...tickerMessages, ...tickerMessages].map((msg, i) => (
-              <span key={i} className="flex items-center gap-2 text-sm font-medium">
-                {msg.highlight && <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">حصري</span>}
-                {msg.text}
-                <span className="text-white/50">|</span>
-              </span>
-            ))}
+      {tickerEnabled && tickerMessages.length > 0 && (
+        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-1.5 overflow-hidden">
+          <div className="ticker-wrapper">
+            <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap">
+              {[...tickerMessages, ...tickerMessages].map((msg, i) => (
+                <span key={i} className="flex items-center gap-2 text-sm font-medium">
+                  {msg.highlight && <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">حصري</span>}
+                  {msg.text}
+                  <span className="text-white/50">|</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Quick Features Banner - Minimal */}
       <div className="bg-gradient-to-r from-[#FF6B00]/5 to-transparent py-2 overflow-hidden">
