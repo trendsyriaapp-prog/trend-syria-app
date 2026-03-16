@@ -442,7 +442,7 @@ const SellerDocumentsPage = () => {
 const SellerDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { toast } = useToast();
 
   // تحديد نوع البائع (منتجات أو طعام)
