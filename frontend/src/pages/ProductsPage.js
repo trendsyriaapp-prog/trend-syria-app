@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Truck, Sparkles } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Truck, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useScroll } from '../context/ScrollContext';
 
@@ -77,6 +77,44 @@ const FreeShippingBanner = ({ promo }) => {
   );
 };
 
+// 🔥 مكون العداد التنازلي لفلاش
+const FlashCountdown = ({ endTime }) => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const end = new Date(endTime).getTime();
+      const now = new Date().getTime();
+      const difference = end - now;
+
+      if (difference <= 0) return;
+
+      setTimeLeft({
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [endTime]);
+
+  return (
+    <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-lg">
+      <span className="text-xs">ينتهي خلال</span>
+      <div className="flex gap-0.5 font-mono font-bold text-sm">
+        <span className="bg-white/20 px-1 rounded">{String(timeLeft.hours).padStart(2, '0')}</span>
+        <span>:</span>
+        <span className="bg-white/20 px-1 rounded">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        <span>:</span>
+        <span className="bg-white/20 px-1 rounded">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      </div>
+    </div>
+  );
+};
+
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -91,6 +129,15 @@ const ProductsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
+  
+  // New states for ads, flash, best sellers, lowest price
+  const [ads, setAds] = useState([]);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [flashProducts, setFlashProducts] = useState([]);
+  const [flashSale, setFlashSale] = useState(null);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [lowestPriceProducts, setLowestPriceProducts] = useState([]);
+  
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
   
@@ -99,23 +146,46 @@ const ProductsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
 
-  // جلب عرض الشحن المجاني الشامل
+  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + الأقل سعراً
   useEffect(() => {
-    const fetchPromo = async () => {
+    const fetchExtras = async () => {
       try {
-        const res = await axios.get(`${API}/settings/global-free-shipping`);
-        const promo = res.data;
+        const [promoRes, adsRes, flashRes, bestSellersRes, lowestPriceRes] = await Promise.all([
+          axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
+          axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
+          axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
+          axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
+          axios.get(`${API}/products/lowest-price`).catch(() => ({ data: [] }))
+        ]);
+        
+        const promo = promoRes.data;
         if (promo?.is_active && ['all', 'products'].includes(promo.applies_to)) {
           setGlobalFreeShipping(promo);
         } else {
           setGlobalFreeShipping(null);
         }
+        
+        setAds(adsRes.data || []);
+        setFlashProducts(flashRes.data?.products || []);
+        setFlashSale(flashRes.data?.flash_sale || null);
+        setBestSellers(bestSellersRes.data || []);
+        setLowestPriceProducts(lowestPriceRes.data || []);
       } catch (error) {
-        console.error('Error fetching promo:', error);
+        console.error('Error fetching extras:', error);
       }
     };
-    fetchPromo();
+    fetchExtras();
   }, []);
+
+  // Auto-rotate ads
+  useEffect(() => {
+    if (ads.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentAdIndex((prev) => (prev + 1) % ads.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [ads.length]);
 
   // استعادة موقع التمرير بعد تحميل البيانات
   useEffect(() => {
@@ -332,6 +402,300 @@ const ProductsPage = () => {
         {/* 🎁 بانر الشحن المجاني الشامل */}
         {globalFreeShipping && (
           <FreeShippingBanner promo={globalFreeShipping} />
+        )}
+
+        {/* 📢 شريط الإعلانات */}
+        {ads.length > 0 && (
+          <div className="mb-3">
+            <div className="relative overflow-hidden rounded-2xl">
+              <motion.div
+                key={currentAdIndex}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Link to={ads[currentAdIndex]?.link || '#'}>
+                  {ads[currentAdIndex]?.link === '/food' ? (
+                    <div className="relative h-16 md:h-20 rounded-xl overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+                      <div className="absolute inset-0 opacity-15">
+                        <div className="absolute top-1 right-3 text-3xl">🍕</div>
+                        <div className="absolute bottom-1 left-6 text-2xl">🍔</div>
+                        <div className="absolute top-2 left-1/4 text-xl">🌮</div>
+                      </div>
+                      <div className="relative h-full flex items-center justify-between px-3 md:px-4">
+                        <div className="text-white">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
+                              جديد ✨
+                            </span>
+                          </div>
+                          <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
+                          <p className="text-white/90 text-[10px] md:text-xs">توصيل سريع من أفضل المطاعم</p>
+                        </div>
+                        <div className="bg-white text-[#FF6B00] px-3 py-1.5 rounded-full font-bold text-xs shadow-md">
+                          اطلب الآن
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className="relative h-16 md:h-20 rounded-2xl overflow-hidden"
+                      style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
+                    >
+                      {ads[currentAdIndex]?.image ? (
+                        <img 
+                          src={ads[currentAdIndex].image} 
+                          alt={ads[currentAdIndex].title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center px-4">
+                          <div className="text-center text-white">
+                            <h3 className="text-sm md:text-base font-bold">{ads[currentAdIndex]?.title}</h3>
+                            {ads[currentAdIndex]?.description && (
+                              <p className="text-xs opacity-90 mt-0.5">{ads[currentAdIndex].description}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Link>
+              </motion.div>
+              
+              {ads.length > 1 && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {ads.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentAdIndex(i)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i === currentAdIndex ? 'bg-white w-4' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ⚡ شريط فلاش */}
+        {flashProducts.length > 0 && flashSale && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                  <Zap size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">عروض فلاش</h2>
+                  <p className="text-[10px] text-gray-500">{flashSale.name}</p>
+                </div>
+              </div>
+              <FlashCountdown endTime={flashSale.end_time} />
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {flashProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            -{product.flash_discount}%
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-orange-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-orange-600 font-bold text-sm">
+                              {product.flash_price?.toLocaleString()}
+                            </span>
+                            <span className="text-gray-400 text-xs line-through">
+                              {product.price?.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 🔥 شريط الأكثر مبيعاً */}
+        {bestSellers.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg">
+                  <TrendingUp size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">الأكثر مبيعاً</h2>
+                  <p className="text-[10px] text-gray-500">المنتجات المفضلة لدى العملاء</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=popular"
+                className="text-red-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {bestSellers.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-red-100 hover:border-red-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <TrendingUp size={10} />
+                            {product.sales_count} مبيع
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-red-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-red-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 💰 شريط الأقل سعراً */}
+        {lowestPriceProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                  <Tag size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">أقل الأسعار</h2>
+                  <p className="text-[10px] text-gray-500">أفضل العروض بأقل الأسعار</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=price_low"
+                className="text-green-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {lowestPriceProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            💰 سعر مميز
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-green-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-green-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Header */}

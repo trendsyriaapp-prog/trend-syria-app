@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -41,6 +41,7 @@ import DailyDealsTab from '../components/admin/DailyDealsTab';
 import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
 import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
 import ViolationsTab from '../components/admin/ViolationsTab';
+import PriceReportsTab from '../components/admin/PriceReportsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -306,6 +307,7 @@ const AdminDashboardPage = () => {
     'challenges': 'التحديات والمكافآت',
     'delivery-settings': 'إعدادات التوصيل',
     'violations': 'مخالفات السائقين',
+    'price-reports': 'بلاغات الأسعار',
     'support-tickets': 'تذاكر الدعم الفني',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
@@ -414,6 +416,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'violations' && user.user_type === 'admin' && (
               <ViolationsTab />
+            )}
+            {activeTab === 'price-reports' && (
+              <PriceReportsTab />
             )}
             {activeTab === 'support-tickets' && (
               <SupportTicketsTab />
@@ -593,6 +598,17 @@ const AdminDashboardPage = () => {
                       <AlertTriangle size={16} className="text-red-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">مخالفات السائقين</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('price-reports')}
+                    className="bg-white rounded-xl p-3 border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="price-reports-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                      <Flag size={16} className="text-orange-600" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">بلاغات الأسعار</span>
                   </button>
                   
                   <button

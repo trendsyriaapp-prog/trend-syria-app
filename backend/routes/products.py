@@ -330,6 +330,72 @@ async def get_sponsored_products(limit: int = Query(default=10, le=20)):
     
     return products
 
+# ============== الأكثر مبيعاً والأقل سعراً ==============
+
+@router.get("/best-sellers")
+async def get_best_selling_products(limit: int = Query(default=10, le=20)):
+    """جلب المنتجات الأكثر مبيعاً"""
+    # التحقق من الكاش
+    cache_key = f"best_sellers_{limit}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+    
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},
+        "rating": 1,
+        "reviews_count": 1,
+        "sales_count": 1,
+        "stock": 1,
+        "city": 1
+    }
+    
+    products = await db.products.find(
+        {"is_active": True, "is_approved": True, "sales_count": {"$gt": 0}},
+        projection
+    ).sort("sales_count", -1).limit(limit).to_list(limit)
+    
+    # حفظ في الكاش لمدة 10 دقائق
+    cache.set(cache_key, products, ttl_seconds=600)
+    
+    return products
+
+@router.get("/lowest-price")
+async def get_lowest_price_products(limit: int = Query(default=10, le=20)):
+    """جلب المنتجات الأقل سعراً"""
+    # التحقق من الكاش
+    cache_key = f"lowest_price_{limit}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+    
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},
+        "rating": 1,
+        "reviews_count": 1,
+        "sales_count": 1,
+        "stock": 1,
+        "city": 1
+    }
+    
+    products = await db.products.find(
+        {"is_active": True, "is_approved": True, "stock": {"$gt": 0}, "price": {"$gt": 0}},
+        projection
+    ).sort("price", 1).limit(limit).to_list(limit)
+    
+    # حفظ في الكاش لمدة 10 دقائق
+    cache.set(cache_key, products, ttl_seconds=600)
+    
+    return products
+
 # ============== سجل البحث ==============
 
 @router.get("/search-history")

@@ -79,6 +79,7 @@ from routes.image_search import router as image_search_router
 from routes.push_notifications import router as push_router
 from routes.admin_settings import router as admin_settings_router
 from routes.delivery_time import router as delivery_time_router
+from routes.price_reports import router as price_reports_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -155,6 +156,7 @@ api_router.include_router(image_search_router)
 api_router.include_router(push_router)
 api_router.include_router(admin_settings_router)
 api_router.include_router(delivery_time_router)
+api_router.include_router(price_reports_router)
 
 # ============== Categories ==============
 

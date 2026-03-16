@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Star, ShoppingCart, Minus, Plus, Truck, Shield, 
-  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift, MessageSquare, Trash2
+  MessageCircle, ChevronLeft, Camera, X, Send, Loader2, Store, Play, Zap, Share2, Clock, Ruler, Check, ShoppingBag, Gift, MessageSquare, Trash2, AlertTriangle, Flag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -16,6 +16,178 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
+};
+
+// 🚩 مكون الإبلاغ عن السعر المرتفع
+const ReportPriceModal = ({ isOpen, onClose, productId, productName, productType = "product" }) => {
+  const { toast } = useToast();
+  const [reason, setReason] = useState('');
+  const [suggestedPrice, setSuggestedPrice] = useState('');
+  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const reasons = [
+    "السعر أعلى بكثير من السوق المحلي",
+    "السعر أعلى من المتاجر الأخرى على المنصة",
+    "السعر غير منطقي للمنتج",
+    "السعر ارتفع بشكل مفاجئ",
+    "سبب آخر"
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reason) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار سبب الإبلاغ",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(`${API}/price-reports`, {
+        product_id: productId,
+        product_type: productType,
+        reason,
+        suggested_price: suggestedPrice ? parseFloat(suggestedPrice) : null,
+        comment
+      });
+
+      toast({
+        title: "تم إرسال البلاغ",
+        description: "شكراً لمساعدتك في ضبط الأسعار. سيتم مراجعة بلاغك من قبل الإدارة."
+      });
+      
+      onClose();
+      setReason('');
+      setSuggestedPrice('');
+      setComment('');
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ أثناء إرسال البلاغ",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl max-w-md w-full max-h-[80vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gradient-to-r from-red-500 to-orange-500">
+          <h3 className="font-bold text-white text-sm flex items-center gap-2">
+            <Flag size={16} />
+            الإبلاغ عن سعر مرتفع
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto max-h-[60vh]">
+          {/* Product Name */}
+          <div className="bg-gray-50 rounded-lg p-2 mb-4 text-sm text-gray-700">
+            <span className="font-medium">المنتج: </span>
+            {productName}
+          </div>
+          
+          {/* Reason Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              سبب الإبلاغ <span className="text-red-500">*</span>
+            </label>
+            <div className="space-y-2">
+              {reasons.map((r, i) => (
+                <label key={i} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="reason"
+                    value={r}
+                    checked={reason === r}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-4 h-4 text-[#FF6B00] focus:ring-[#FF6B00]"
+                  />
+                  <span className="text-sm text-gray-700">{r}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          {/* Suggested Price */}
+          <div className="mb-4">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              السعر المقترح (اختياري)
+            </label>
+            <input
+              type="number"
+              value={suggestedPrice}
+              onChange={(e) => setSuggestedPrice(e.target.value)}
+              placeholder="ما هو السعر العادل برأيك؟"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none"
+            />
+          </div>
+          
+          {/* Comment */}
+          <div className="mb-4">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              ملاحظات إضافية (اختياري)
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="أي معلومات إضافية تساعدنا في التحقق..."
+              rows={3}
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none"
+            />
+          </div>
+          
+          {/* Privacy Notice */}
+          <div className="bg-blue-50 rounded-lg p-2 mb-4 text-[11px] text-blue-700">
+            <p className="flex items-center gap-1">
+              <Shield size={12} />
+              <span className="font-bold">خصوصيتك محمية:</span>
+            </p>
+            <p className="mt-1">بياناتك الشخصية لن تُشارك مع البائع. سيتم مراجعة البلاغ من قبل الإدارة فقط.</p>
+          </div>
+          
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading || !reason}
+            className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-3 rounded-full hover:opacity-90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                جاري الإرسال...
+              </>
+            ) : (
+              <>
+                <Flag size={18} />
+                إرسال البلاغ
+              </>
+            )}
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
 };
 
 // مكون التقييم بالنجوم
@@ -558,6 +730,9 @@ const ProductDetailPage = () => {
   
   // Gift modal state
   const [showGiftModal, setShowGiftModal] = useState(false);
+  
+  // Price report modal state
+  const [showPriceReportModal, setShowPriceReportModal] = useState(false);
   
   // Similar products state
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -1239,14 +1414,30 @@ const ProductDetailPage = () => {
 
             {/* Seller/Store Info */}
             <div className="mt-1.5 p-1.5 bg-white rounded-lg border border-gray-200">
-              <p className="text-[10px] text-gray-500">المتجر</p>
-              <Link 
-                to={`/store/${product.seller_id || ''}`}
-                className="font-bold text-xs text-[#FF6B00] hover:underline flex items-center gap-1"
-              >
-                <Store size={12} />
-                {product.business_name || 'متجر'}
-              </Link>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-gray-500">المتجر</p>
+                  <Link 
+                    to={`/store/${product.seller_id || ''}`}
+                    className="font-bold text-xs text-[#FF6B00] hover:underline flex items-center gap-1"
+                  >
+                    <Store size={12} />
+                    {product.business_name || 'متجر'}
+                  </Link>
+                </div>
+                
+                {/* زر الإبلاغ عن السعر */}
+                {user && (
+                  <button
+                    onClick={() => setShowPriceReportModal(true)}
+                    className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-red-500 transition-colors bg-gray-50 hover:bg-red-50 px-2 py-1 rounded-full"
+                    data-testid="report-price-btn"
+                  >
+                    <Flag size={10} />
+                    <span>سعر مرتفع؟</span>
+                  </button>
+                )}
+              </div>
               
               {/* معلومات البائع والموقع للمدير فقط */}
               {user?.user_type === 'admin' && (
@@ -1654,6 +1845,15 @@ const ProductDetailPage = () => {
         isOpen={showGiftModal}
         onClose={() => setShowGiftModal(false)}
         product={product}
+      />
+
+      {/* Price Report Modal */}
+      <ReportPriceModal
+        isOpen={showPriceReportModal}
+        onClose={() => setShowPriceReportModal(false)}
+        productId={product?.id}
+        productName={product?.name}
+        productType="product"
       />
     </div>
   );
