@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle } from 'lucide-react';
+import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuideModal';
 import ImageBackgroundSelector from './ImageBackgroundSelector';
+import ImageEditorModal from './ImageEditorModal';
+import CameraGuideModal from './CameraGuideModal';
+import ProductPreviewModal from './ProductPreviewModal';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { CATEGORIES } from '../../utils/constants';
 
@@ -43,6 +46,10 @@ const AddProductModal = ({
   const [imageWarnings, setImageWarnings] = useState([]);
   const [pendingImage, setPendingImage] = useState(null);
   const [showImageProcessor, setShowImageProcessor] = useState(false);
+  const [showCameraGuide, setShowCameraGuide] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
+  const [editingImageIndex, setEditingImageIndex] = useState(null);
+  const [showProductPreview, setShowProductPreview] = useState(false);
 
   if (!isOpen) return null;
 
@@ -546,7 +553,7 @@ const AddProductModal = ({
                 <div className="flex gap-2 mb-2">
                   <button
                     type="button"
-                    onClick={() => document.getElementById('product-camera').click()}
+                    onClick={() => setShowCameraGuide(true)}
                     disabled={uploadingImage}
                     className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E55A00] transition-colors disabled:opacity-50"
                     data-testid="camera-capture-btn"
@@ -579,12 +586,36 @@ const AddProductModal = ({
                 </div>
               )}
 
+              {/* زر معاينة المنتج */}
+              {newProduct.images.length > 0 && newProduct.name && (
+                <button
+                  type="button"
+                  onClick={() => setShowProductPreview(true)}
+                  className="w-full py-2 mb-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                >
+                  <Eye size={14} />
+                  معاينة كيف سيظهر المنتج للعملاء
+                </button>
+              )}
+
               {/* معاينة الصور المضافة */}
               {newProduct.images.length > 0 && (
                 <div className="grid grid-cols-5 gap-1.5 mb-1">
                   {newProduct.images.map((img, i) => (
                     <div key={i} className="relative aspect-square group">
                       <img src={img} alt="" className="w-full h-full object-cover rounded border border-gray-200" />
+                      {/* زر التعديل */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingImageIndex(i);
+                          setShowImageEditor(true);
+                        }}
+                        className="absolute bottom-1 left-1 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                      {/* زر الحذف */}
                       <button
                         type="button"
                         onClick={() => {
@@ -733,6 +764,64 @@ const AddProductModal = ({
         onProcessed={handleProcessedImage}
         onCancel={handleCancelImageProcess}
         isOpen={showImageProcessor}
+      />
+      
+      {/* كاميرا مع إطار توجيهي */}
+      <CameraGuideModal 
+        isOpen={showCameraGuide} 
+        onClose={() => setShowCameraGuide(false)}
+        onCapture={async (file, dataUrl) => {
+          setUploadingImage(true);
+          try {
+            // إضافة الصورة مباشرة
+            setNewProduct(prev => ({
+              ...prev,
+              images: [...prev.images, dataUrl].slice(0, 5)
+            }));
+            toast?.({
+              title: "تم التصوير",
+              description: "تم إضافة الصورة بنجاح"
+            });
+          } catch (error) {
+            toast?.({
+              title: "خطأ",
+              description: "فشل في إضافة الصورة",
+              variant: "destructive"
+            });
+          } finally {
+            setUploadingImage(false);
+          }
+        }}
+      />
+      
+      {/* محرر الصور */}
+      <ImageEditorModal
+        isOpen={showImageEditor}
+        onClose={() => {
+          setShowImageEditor(false);
+          setEditingImageIndex(null);
+        }}
+        imageUrl={editingImageIndex !== null ? newProduct.images[editingImageIndex] : null}
+        onSave={(file, dataUrl) => {
+          if (editingImageIndex !== null) {
+            const newImages = [...newProduct.images];
+            newImages[editingImageIndex] = dataUrl;
+            setNewProduct(prev => ({ ...prev, images: newImages }));
+            toast?.({
+              title: "تم الحفظ",
+              description: "تم حفظ التعديلات بنجاح"
+            });
+          }
+        }}
+      />
+      
+      {/* معاينة المنتج في المتجر */}
+      <ProductPreviewModal
+        isOpen={showProductPreview}
+        onClose={() => setShowProductPreview(false)}
+        images={newProduct.images}
+        productName={newProduct.name}
+        productPrice={newProduct.price}
       />
     </>
   );
