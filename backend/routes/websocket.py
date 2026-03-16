@@ -14,7 +14,7 @@ from core.database import db
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
+SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key-here")
 
 
 async def authenticate_websocket(token: str) -> Optional[dict]:
