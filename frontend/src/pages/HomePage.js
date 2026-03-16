@@ -138,21 +138,19 @@ const HomePage = () => {
         <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white overflow-hidden">
           <div className="ticker-wrapper">
             {tickerMessages.map((msg, i) => (
-              <motion.div 
+              <div 
                 key={i} 
-                className="ticker-item"
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ 
-                  y: currentTickerIndex === i ? 0 : '-100%',
-                  opacity: currentTickerIndex === i ? 1 : 0
-                }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className={`ticker-item transition-all duration-500 ease-in-out ${
+                  currentTickerIndex === i 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 -translate-y-full'
+                }`}
               >
                 <span className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-sm font-medium">
                   {msg.highlight && <span className="bg-white/20 px-1.5 md:px-2 py-0.5 rounded-full text-[9px] md:text-xs">حصري</span>}
                   {msg.text}
                 </span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -160,25 +158,25 @@ const HomePage = () => {
 
       {/* 🎁 بانر الشحن المجاني الشامل */}
       {globalFreeShipping && (
-        <section className="py-2">
-          <div className="max-w-7xl mx-auto px-4">
+        <section className="py-1">
+          <div className="max-w-7xl mx-auto px-3">
             <FreeShippingBanner promo={globalFreeShipping} />
           </div>
         </section>
       )}
 
       {/* Categories - Horizontal Scroll */}
-      <section className="py-2">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="section-title text-base font-bold text-gray-900">الأصناف</h2>
+      <section className="py-1.5">
+        <div className="max-w-7xl mx-auto px-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <h2 className="section-title text-sm font-bold text-gray-900">الأصناف</h2>
             <Link 
               to="/categories" 
-              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium" 
+              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium" 
               data-testid="view-all-categories"
             >
               عرض الكل
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </Link>
           </div>
           
@@ -221,8 +219,8 @@ const HomePage = () => {
 
       {/* Ads Banner Carousel */}
       {ads.length > 0 && (
-        <section className="py-2">
-          <div className="max-w-7xl mx-auto px-4">
+        <section className="py-1.5">
+          <div className="max-w-7xl mx-auto px-3">
             <div className="relative overflow-hidden rounded-2xl">
               <motion.div
                 key={currentAdIndex}
@@ -311,24 +309,23 @@ const HomePage = () => {
 
       {/* 1. Sponsored Products - المنتجات المُعلن عنها */}
       {sponsoredProducts.length > 0 && (
-        <section className="py-3">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-3">
+        <section className="py-1.5">
+          <div className="max-w-7xl mx-auto px-3">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                  <Star size={16} className="text-white" />
+                <div className="p-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                  <Star size={14} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">منتجات مُعلن عنها</h2>
-                  <p className="text-xs text-gray-500">إعلانات مميزة</p>
+                  <h2 className="text-sm font-bold text-gray-900">منتجات مُعلن عنها</h2>
                 </div>
               </div>
               <Link 
                 to="/products"
-                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium"
+                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
               >
                 عرض الكل
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
               </Link>
             </div>
             
@@ -388,17 +385,16 @@ const HomePage = () => {
 
       {/* 2. Flash Sale Products - عروض فلاش */}
       {shopFlashProducts.length > 0 && shopFlashSale && (
-        <section className="py-3">
-          <div className="max-w-7xl mx-auto px-4">
+        <section className="py-1.5">
+          <div className="max-w-7xl mx-auto px-3">
             {/* Flash Sale Header with Countdown */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                  <Zap size={16} className="text-white" />
+                <div className="p-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                  <Zap size={14} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">عروض فلاش</h2>
-                  <p className="text-xs text-gray-500">{shopFlashSale.name}</p>
+                  <h2 className="text-sm font-bold text-gray-900">عروض فلاش</h2>
                 </div>
               </div>
               <FlashCountdown endTime={shopFlashSale.end_time} color="orange" />
@@ -470,29 +466,29 @@ const HomePage = () => {
       )}
 
       {/* 3. قسم التوصيات الذكية */}
-      <section className="py-4 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-1.5 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">
           <RecommendedProducts />
         </div>
       </section>
 
       {/* 4. المنتجات الرائجة */}
-      <section className="py-2">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-2">
+      <section className="py-1.5">
+        <div className="max-w-7xl mx-auto px-3">
+          <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
               <div className="p-1 bg-[#FF6B00]/10 rounded-lg">
-                <TrendingUp size={16} className="text-[#FF6B00]" />
+                <TrendingUp size={14} className="text-[#FF6B00]" />
               </div>
-              <h2 className="text-base font-bold text-gray-900">المنتجات الرائجة</h2>
+              <h2 className="text-sm font-bold text-gray-900">المنتجات الرائجة</h2>
             </div>
             <Link 
               to="/products" 
-              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-sm font-medium" 
+              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium" 
               data-testid="view-all-products"
             >
               عرض الكل
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </Link>
           </div>
           
