@@ -816,6 +816,7 @@ const AddProductModal = ({
         onProcessed={handleProcessedImage}
         onCancel={handleCancelImageProcess}
         isOpen={showProProcessor}
+        isFoodSeller={isFoodSeller}
       />
       
       {/* كاميرا مع إطار توجيهي */}

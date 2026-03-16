@@ -1744,3 +1744,117 @@ async def toggle_ticker(data: dict, user: dict = Depends(get_current_user)):
     )
     
     return {"success": True, "is_enabled": is_enabled}
+
+
+
+# ============== إعدادات صور المنتجات ==============
+
+class ImageSettings(BaseModel):
+    max_images_per_product: int = 3
+    enable_pro_processing: bool = True
+    enable_food_enhancement: bool = True
+
+@router.get("/images")
+async def get_image_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات صور المنتجات"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.image_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        settings = {
+            "id": "main",
+            "max_images_per_product": 3,
+            "enable_pro_processing": True,
+            "enable_food_enhancement": True,
+            "pro_image_cost": 0,  # مجاني حالياً
+            "monthly_free_limit": 50,  # حد Remove.bg المجاني
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.image_settings.insert_one(settings)
+    
+    # جلب إحصائيات الاستخدام
+    current_month = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    usage_stats = await db.image_usage.find_one({
+        "month": current_month.strftime("%Y-%m")
+    }, {"_id": 0})
+    
+    if not usage_stats:
+        usage_stats = {
+            "month": current_month.strftime("%Y-%m"),
+            "pro_images_used": 0,
+            "food_images_used": 0,
+            "total_images": 0
+        }
+    
+    # حساب الأيام المتبقية لتجديد الحد
+    next_month = (current_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+    days_until_reset = (next_month - datetime.now(timezone.utc)).days
+    
+    return {
+        **settings,
+        "usage": {
+            **usage_stats,
+            "remaining_pro_images": max(0, settings.get("monthly_free_limit", 50) - usage_stats.get("pro_images_used", 0)),
+            "days_until_reset": days_until_reset
+        }
+    }
+
+
+@router.post("/images")
+async def update_image_settings(
+    settings: ImageSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات صور المنتجات"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    await db.image_settings.update_one(
+        {"id": "main"},
+        {"$set": {
+            "max_images_per_product": settings.max_images_per_product,
+            "enable_pro_processing": settings.enable_pro_processing,
+            "enable_food_enhancement": settings.enable_food_enhancement,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "تم تحديث إعدادات الصور"}
+
+
+@router.get("/images/public")
+async def get_public_image_settings():
+    """جلب إعدادات الصور العامة (للبائعين)"""
+    settings = await db.image_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "max_images_per_product": 3,
+            "enable_pro_processing": True,
+            "enable_food_enhancement": True
+        }
+    
+    return {
+        "max_images_per_product": settings.get("max_images_per_product", 3),
+        "enable_pro_processing": settings.get("enable_pro_processing", True),
+        "enable_food_enhancement": settings.get("enable_food_enhancement", True)
+    }
+
+
+async def track_image_usage(image_type: str = "pro"):
+    """تتبع استخدام الصور (للإحصائيات)"""
+    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+    
+    update_field = "pro_images_used" if image_type == "pro" else "food_images_used"
+    
+    await db.image_usage.update_one(
+        {"month": current_month},
+        {
+            "$inc": {update_field: 1, "total_images": 1},
+            "$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat()}
+        },
+        upsert=True
+    )

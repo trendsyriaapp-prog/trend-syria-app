@@ -48,6 +48,7 @@ import ActivityLogTab from '../components/admin/ActivityLogTab';
 import SupportTicketsAdmin from '../components/admin/SupportTicketsAdmin';
 import ProblemSolverTools from '../components/admin/ProblemSolverTools';
 import TickerMessagesTab from '../components/admin/TickerMessagesTab';
+import ImageSettingsTab from '../components/admin/ImageSettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -476,6 +477,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'ticker-messages' && user.user_type === 'admin' && (
               <TickerMessagesTab />
             )}
+            {activeTab === 'image-settings' && user.user_type === 'admin' && (
+              <ImageSettingsTab token={token} />
+            )}
           </>
         ) : (
           <>
@@ -733,6 +737,18 @@ const AdminDashboardPage = () => {
                       <Megaphone size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">شريط العروض</span>
+                  </button>
+
+                  {/* إعدادات الصور */}
+                  <button
+                    onClick={() => setActiveTab('image-settings')}
+                    className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-3 border border-purple-200 hover:border-purple-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="image-settings-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                      <Camera size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">إعدادات الصور</span>
                   </button>
 
                   {/* إعدادات المنصة - تفعيل/إيقاف الأقسام */}

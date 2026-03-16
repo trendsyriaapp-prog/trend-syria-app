@@ -1,5 +1,6 @@
 // /app/frontend/src/components/seller/ProImageProcessor.js
 // معالج الصور الاحترافي - مثل Trendyol
+// يدعم: المنتجات العادية (إزالة خلفية) + الطعام (تحسين ألوان)
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +9,7 @@ import {
   X, Loader2, Wand2, Check, Image as ImageIcon, 
   Palette, Focus, Move, Sun, Sparkles, Copy,
   Download, ChevronDown, ChevronUp, AlertCircle,
-  Smartphone, Monitor, Instagram
+  Smartphone, Monitor, Instagram, Utensils, Package
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -31,7 +32,8 @@ const ProImageProcessor = ({
   imageDataUrl, 
   onProcessed, 
   onCancel,
-  isOpen 
+  isOpen,
+  isFoodSeller = false  // هل البائع من قسم الطعام؟
 }) => {
   const [backgrounds, setBackgrounds] = useState([]);
   const [selectedBg, setSelectedBg] = useState('white');
@@ -42,6 +44,7 @@ const ProImageProcessor = ({
   const [qualityReport, setQualityReport] = useState(null);
   const [processingInfo, setProcessingInfo] = useState(null);
   const [multipleSizes, setMultipleSizes] = useState(null);
+  const [imageSettings, setImageSettings] = useState(null);
   
   // خيارات المعالجة الاحترافية
   const [options, setOptions] = useState({
@@ -56,6 +59,7 @@ const ProImageProcessor = ({
 
   useEffect(() => {
     fetchBackgrounds();
+    fetchImageSettings();
     if (imageDataUrl && isOpen) {
       analyzeImage();
     }
@@ -67,6 +71,15 @@ const ProImageProcessor = ({
       setBackgrounds(res.data.backgrounds);
     } catch (error) {
       console.error('Error fetching backgrounds:', error);
+    }
+  };
+
+  const fetchImageSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/image/settings`);
+      setImageSettings(res.data);
+    } catch (error) {
+      console.error('Error fetching image settings:', error);
     }
   };
 
@@ -105,18 +118,33 @@ const ProImageProcessor = ({
       
       const formData = new FormData();
       formData.append('file', blob, 'image.jpg');
-      formData.append('auto_color_correct', options.autoColorCorrect.toString());
-      formData.append('sharpen', options.sharpen.toString());
-      formData.append('smart_center', options.smartCenter.toString());
-      formData.append('add_shadow', options.addShadow.toString());
-      formData.append('add_reflection', options.addReflection.toString());
-      formData.append('background', selectedBg);
-      formData.append('generate_sizes', options.generateSizes.toString());
-      formData.append('output_format', options.outputFormat);
+      
+      let res;
+      
+      // معالجة مختلفة للطعام vs المنتجات
+      if (isFoodSeller) {
+        // معالجة الطعام - بدون إزالة خلفية
+        formData.append('enhance_colors', 'true');
+        formData.append('output_format', options.outputFormat);
+        
+        res = await axios.post(`${API}/image/process-food`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        // معالجة المنتجات العادية - مع إزالة خلفية
+        formData.append('auto_color_correct', options.autoColorCorrect.toString());
+        formData.append('sharpen', options.sharpen.toString());
+        formData.append('smart_center', options.smartCenter.toString());
+        formData.append('add_shadow', options.addShadow.toString());
+        formData.append('add_reflection', options.addReflection.toString());
+        formData.append('background', selectedBg);
+        formData.append('generate_sizes', options.generateSizes.toString());
+        formData.append('output_format', options.outputFormat);
 
-      const res = await axios.post(`${API}/image/process-pro`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+        res = await axios.post(`${API}/image/process-pro`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
 
       if (res.data.success) {
         setProcessedImage(res.data.image);
@@ -156,11 +184,19 @@ const ProImageProcessor = ({
         className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#FF6B00] to-orange-500 p-3 flex items-center justify-between rounded-t-2xl z-10">
+        <div className={`sticky top-0 p-3 flex items-center justify-between rounded-t-2xl z-10 ${
+          isFoodSeller 
+            ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+            : 'bg-gradient-to-r from-[#FF6B00] to-orange-500'
+        }`}>
           <div className="flex items-center gap-2 text-white">
-            <Sparkles size={20} />
-            <h2 className="font-bold text-sm">معالجة احترافية</h2>
-            <span className="bg-white/20 text-[9px] px-2 py-0.5 rounded-full">مثل Trendyol</span>
+            {isFoodSeller ? <Utensils size={20} /> : <Sparkles size={20} />}
+            <h2 className="font-bold text-sm">
+              {isFoodSeller ? 'تحسين صور الطعام' : 'معالجة احترافية'}
+            </h2>
+            <span className="bg-white/20 text-[9px] px-2 py-0.5 rounded-full">
+              {isFoodSeller ? 'مجاني 🍽️' : 'مثل Trendyol'}
+            </span>
           </div>
           <button onClick={onCancel} className="p-1 hover:bg-white/20 rounded-full text-white">
             <X size={20} />

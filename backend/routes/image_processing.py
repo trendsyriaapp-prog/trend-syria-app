@@ -990,3 +990,153 @@ async def get_processing_features():
         "available_sizes": IMAGE_SIZES,
         "quality_standards": QUALITY_STANDARDS
     }
+
+
+
+# ============== معالجة صور الطعام (بدون إزالة الخلفية) ==============
+
+def enhance_food_image(image: Image.Image) -> Image.Image:
+    """تحسين صور الطعام - تجعلها شهية وجذابة"""
+    if image.mode == 'RGBA':
+        # تحويل لـ RGB
+        rgb_image = Image.new('RGB', image.size, (255, 255, 255))
+        rgb_image.paste(image, mask=image.split()[3])
+        image = rgb_image
+    elif image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # 1. زيادة التشبع - يجعل الألوان أكثر حيوية (الطعام يبدو طازج)
+    enhancer = ImageEnhance.Color(image)
+    image = enhancer.enhance(1.25)  # زيادة 25%
+    
+    # 2. تحسين التباين - يبرز التفاصيل
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(1.1)  # زيادة 10%
+    
+    # 3. زيادة السطوع قليلاً - إضاءة أفضل
+    enhancer = ImageEnhance.Brightness(image)
+    image = enhancer.enhance(1.05)  # زيادة 5%
+    
+    # 4. تحسين الحدة - تفاصيل واضحة
+    enhancer = ImageEnhance.Sharpness(image)
+    image = enhancer.enhance(1.2)  # زيادة 20%
+    
+    # 5. إضافة دفء للصورة (يجعل الطعام يبدو شهي)
+    # نزيد قليلاً من الأحمر والأصفر
+    r, g, b = image.split()
+    r = r.point(lambda x: min(255, int(x * 1.02)))  # زيادة طفيفة في الأحمر
+    image = Image.merge('RGB', (r, g, b))
+    
+    return image
+
+
+@router.post("/process-food")
+async def process_food_image(
+    file: UploadFile = File(...),
+    enhance_colors: bool = Form(default=True),
+    auto_crop: bool = Form(default=False),
+    output_format: str = Form(default="jpeg")
+):
+    """
+    معالجة صور الطعام - تحسين بدون إزالة الخلفية
+    
+    الطعام يبدو أفضل مع خلفيته الطبيعية (طاولة، صحن، إلخ)
+    هذه المعالجة:
+    - تزيد تشبع الألوان (الطعام يبدو طازج)
+    - تحسن الإضاءة والتباين
+    - تضيف دفء للصورة (شهية أكثر)
+    - مجانية 100% (لا تستخدم Remove.bg)
+    """
+    
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    
+    image_data = await file.read()
+    
+    if len(image_data) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
+    
+    try:
+        # فتح الصورة
+        image = Image.open(io.BytesIO(image_data))
+        
+        # تحليل الجودة
+        quality_report = analyze_image_quality(image)
+        
+        # تطبيق تحسينات الطعام
+        if enhance_colors:
+            image = enhance_food_image(image)
+        
+        # قص تلقائي (اختياري)
+        if auto_crop:
+            # تغيير الحجم مع الحفاظ على النسبة
+            image.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+        
+        # تحويل للصيغة المطلوبة
+        if output_format.lower() == 'webp':
+            output_image = image_to_base64(image, format='WEBP', quality=90)
+        elif output_format.lower() == 'png':
+            output_image = image_to_base64(image, format='PNG')
+        else:
+            output_image = image_to_base64(image, format='JPEG', quality=95)
+        
+        # تتبع الاستخدام
+        try:
+            from routes.settings import track_image_usage
+            await track_image_usage("food")
+        except Exception:
+            pass
+        
+        return {
+            "success": True,
+            "image": output_image,
+            "quality_report": quality_report,
+            "processing": {
+                "type": "food_enhancement",
+                "enhanced_colors": enhance_colors,
+                "auto_cropped": auto_crop,
+                "background_removed": False,  # لا إزالة للخلفية
+                "output_format": output_format,
+                "cost": 0  # مجاني
+            },
+            "message": "تم تحسين صورة الطعام بنجاح 🍽️"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"فشل معالجة الصورة: {str(e)}")
+
+
+@router.get("/settings")
+async def get_image_processing_settings():
+    """
+    جلب إعدادات معالجة الصور للبائعين
+    """
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+        
+        MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+        DB_NAME = os.environ.get("DB_NAME", "trend_syria")
+        client = AsyncIOMotorClient(MONGO_URL)
+        database = client[DB_NAME]
+        
+        settings = await database.image_settings.find_one({"id": "main"}, {"_id": 0})
+        
+        if not settings:
+            return {
+                "max_images_per_product": 3,
+                "enable_pro_processing": True,
+                "enable_food_enhancement": True
+            }
+        
+        return {
+            "max_images_per_product": settings.get("max_images_per_product", 3),
+            "enable_pro_processing": settings.get("enable_pro_processing", True),
+            "enable_food_enhancement": settings.get("enable_food_enhancement", True)
+        }
+    except Exception:
+        return {
+            "max_images_per_product": 3,
+            "enable_pro_processing": True,
+            "enable_food_enhancement": True
+        }
