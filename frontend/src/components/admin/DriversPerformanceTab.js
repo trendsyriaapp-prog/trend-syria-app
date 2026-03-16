@@ -1,7 +1,7 @@
 // /app/frontend/src/components/admin/DriversPerformanceTab.js
 // إحصائيات أداء السائقين
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Users, Truck, Clock, Star, TrendingUp, TrendingDown,
@@ -291,9 +291,8 @@ const DriversPerformanceTab = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {drivers.map((driver, index) => (
-                  <>
+                  <React.Fragment key={driver.id}>
                     <tr 
-                      key={driver.id}
                       className={`hover:bg-gray-50 cursor-pointer transition-colors ${
                         selectedDriver?.id === driver.id ? 'bg-blue-50' : ''
                       }`}
@@ -451,7 +450,7 @@ const DriversPerformanceTab = () => {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
