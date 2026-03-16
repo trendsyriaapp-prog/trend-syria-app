@@ -356,10 +356,10 @@ const Header = () => {
             {!user && (
               <Link 
                 to="/login"
-                className="bg-[#FF6B00] text-white font-bold px-4 py-2 rounded-full hover:bg-[#E65000] transition-colors text-sm flex items-center gap-1"
+                className="bg-[#FF6B00] text-white font-bold px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full hover:bg-[#E65000] transition-colors text-xs sm:text-sm flex items-center gap-1"
                 data-testid="login-btn"
               >
-                <User size={16} />
+                <User size={14} className="sm:w-4 sm:h-4" />
                 <span>دخول</span>
               </Link>
             )}
