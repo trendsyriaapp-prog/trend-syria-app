@@ -138,6 +138,9 @@ class FoodOrderCreate(BaseModel):
     # رسوم التوصيل
     delivery_fee: Optional[float] = None
     delivery_distance_km: Optional[float] = None
+    # الجدولة
+    scheduled_for: Optional[str] = None  # ISO datetime string للطلبات المجدولة
+    is_scheduled: bool = False
 
 
 class BatchOrderItem(BaseModel):
@@ -636,16 +639,18 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "notes": order.notes,
         "payment_method": order.payment_method,
         "payment_status": "paid" if order.payment_method == "wallet" else "pending",
-        "status": "pending",
+        "status": "scheduled" if order.is_scheduled else "pending",
+        "is_scheduled": order.is_scheduled,
+        "scheduled_for": order.scheduled_for if order.is_scheduled else None,
         "delivery_code": delivery_code,
         "delivery_code_verified": False,
         "customer_not_responding": False,
         "customer_not_responding_since": None,
         "left_at_door": False,
         "status_history": [{
-            "status": "pending",
+            "status": "scheduled" if order.is_scheduled else "pending",
             "timestamp": now.isoformat(),
-            "note": "تم استلام الطلب - ينتظر انتهاء مهلة الإلغاء"
+            "note": f"طلب مجدول ليوم {order.scheduled_for}" if order.is_scheduled else "تم استلام الطلب - ينتظر انتهاء مهلة الإلغاء"
         }],
         "estimated_delivery_time": store.get("delivery_time", 30),
         "driver_id": None,
@@ -694,7 +699,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # لا نرسل إشعار للمتجر فوراً - سيُرسل بعد انتهاء مهلة الإلغاء (3 دقائق)
     # الإشعار سيُرسل عند جلب الطلبات من قبل المتجر أو السائق
     
-    return {
+    response_data = {
         "order_id": order_id,
         "order_number": order_number,
         "total": total,
@@ -702,6 +707,119 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
         "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال 3 دقائق."
     }
+    
+    if order.is_scheduled:
+        response_data["is_scheduled"] = True
+        response_data["scheduled_for"] = order.scheduled_for
+        response_data["message"] = f"تم جدولة الطلب بنجاح ليوم {order.scheduled_for}"
+    
+    return response_data
+
+
+# ============== الطلبات المجدولة ==============
+
+@router.get("/my-scheduled")
+async def get_my_scheduled_orders(user: dict = Depends(get_current_user)):
+    """جلب طلباتي المجدولة"""
+    orders = await db.food_orders.find(
+        {
+            "customer_id": user["id"],
+            "is_scheduled": True,
+            "status": "scheduled"
+        },
+        {"_id": 0}
+    ).sort("scheduled_for", 1).to_list(50)
+    
+    return {"orders": orders}
+
+
+@router.post("/{order_id}/activate-scheduled")
+async def activate_scheduled_order(order_id: str, user: dict = Depends(get_current_user)):
+    """تفعيل طلب مجدول (تحويله من مجدول إلى معلق)"""
+    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("is_scheduled"):
+        raise HTTPException(status_code=400, detail="هذا ليس طلباً مجدولاً")
+    
+    if order["status"] != "scheduled":
+        raise HTTPException(status_code=400, detail="الطلب تم تفعيله مسبقاً")
+    
+    now = datetime.now(timezone.utc)
+    
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "pending",
+                "activated_at": now.isoformat()
+            },
+            "$push": {
+                "status_history": {
+                    "status": "pending",
+                    "timestamp": now.isoformat(),
+                    "note": "تم تفعيل الطلب المجدول"
+                }
+            }
+        }
+    )
+    
+    return {"message": "تم تفعيل الطلب بنجاح"}
+
+
+@router.delete("/{order_id}/cancel-scheduled")
+async def cancel_scheduled_order(order_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء طلب مجدول (مع استرداد المبلغ)"""
+    order = await db.food_orders.find_one({"id": order_id, "customer_id": user["id"]})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("is_scheduled"):
+        raise HTTPException(status_code=400, detail="هذا ليس طلباً مجدولاً")
+    
+    if order["status"] != "scheduled":
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء طلب تم تفعيله")
+    
+    now = datetime.now(timezone.utc)
+    
+    # استرداد المبلغ إذا كان مدفوعاً بالمحفظة
+    if order.get("payment_method") == "wallet" and order.get("payment_status") == "paid":
+        await db.wallets.update_one(
+            {"user_id": user["id"]},
+            {"$inc": {"balance": order["total"]}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "type": "refund",
+            "amount": order["total"],
+            "description": f"استرداد طلب مجدول ملغي #{order['order_number']}",
+            "created_at": now.isoformat()
+        })
+    
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancelled_at": now.isoformat(),
+                "cancel_reason": "إلغاء طلب مجدول من قبل العميل"
+            },
+            "$push": {
+                "status_history": {
+                    "status": "cancelled",
+                    "timestamp": now.isoformat(),
+                    "note": "تم إلغاء الطلب المجدول"
+                }
+            }
+        }
+    )
+    
+    return {"message": "تم إلغاء الطلب واسترداد المبلغ"}
 
 
 @router.post("/batch")

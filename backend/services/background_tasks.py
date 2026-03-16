@@ -258,6 +258,74 @@ async def check_driver_shortage():
         logger.error(f"Error checking driver shortage: {e}")
 
 
+async def activate_scheduled_orders():
+    """
+    تفعيل الطلبات المجدولة التي حان وقتها
+    يتم تحويلها من حالة "scheduled" إلى "pending"
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat()
+        
+        # البحث عن الطلبات المجدولة التي حان وقتها
+        scheduled_orders = await db.food_orders.find({
+            "is_scheduled": True,
+            "status": "scheduled",
+            "scheduled_for": {"$lte": now_iso}
+        }).to_list(50)
+        
+        if not scheduled_orders:
+            return 0
+        
+        activated_count = 0
+        
+        for order in scheduled_orders:
+            try:
+                order_id = order["id"]
+                
+                # تفعيل الطلب
+                await db.food_orders.update_one(
+                    {"id": order_id},
+                    {
+                        "$set": {
+                            "status": "pending",
+                            "activated_at": now_iso
+                        },
+                        "$push": {
+                            "status_history": {
+                                "status": "pending",
+                                "timestamp": now_iso,
+                                "note": "تم تفعيل الطلب المجدول تلقائياً"
+                            }
+                        }
+                    }
+                )
+                
+                # إرسال إشعار للعميل
+                try:
+                    from core.database import create_notification_for_user
+                    await create_notification_for_user(
+                        user_id=order["customer_id"],
+                        title="🕐 طلبك المجدول بدأ الآن!",
+                        message=f"طلبك من {order.get('store_name', 'المتجر')} بدأ معالجته الآن",
+                        notification_type="order_update"
+                    )
+                except Exception as e:
+                    logger.error(f"Error sending scheduled order notification: {e}")
+                
+                activated_count += 1
+                logger.info(f"Activated scheduled order: {order_id}")
+                
+            except Exception as e:
+                logger.error(f"Error activating scheduled order {order['id']}: {e}")
+        
+        return activated_count
+        
+    except Exception as e:
+        logger.error(f"Error in activate_scheduled_orders: {e}")
+        return 0
+
+
 async def background_dispatch_loop():
     """
     الحلقة الرئيسية لمهام التوزيع
@@ -274,6 +342,8 @@ async def background_dispatch_loop():
     shortage_counter = 0
     # عداد لفحص الطقس (كل 30 دقيقة = 180 * 10 ثواني)
     weather_counter = 0
+    # عداد لتفعيل الطلبات المجدولة (كل دقيقة = 6 * 10 ثواني)
+    scheduled_counter = 0
     
     while task_running:
         try:
@@ -290,6 +360,12 @@ async def background_dispatch_loop():
             if shortage_counter >= 6:  # 6 * 10 = 60 ثانية = 1 دقيقة
                 shortage_counter = 0
                 await check_driver_shortage()
+            
+            # تفعيل الطلبات المجدولة كل دقيقة
+            scheduled_counter += 1
+            if scheduled_counter >= 6:  # 6 * 10 = 60 ثانية = 1 دقيقة
+                scheduled_counter = 0
+                await activate_scheduled_orders()
             
             # فحص الطقس وتحديث الرسوم تلقائياً
             weather_counter += 1

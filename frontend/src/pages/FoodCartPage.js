@@ -78,6 +78,11 @@ const FoodCartPage = () => {
     payment_method: 'wallet'
   });
   
+  // الجدولة
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+  
   // جلب البيانات الأولية (المتجر + العناوين + طرق الدفع)
   useEffect(() => {
     let isMounted = true;
@@ -473,7 +478,12 @@ const FoodCartPage = () => {
         payment_method: paymentMethod,
         // رسوم التوصيل
         delivery_fee: deliveryFee,
-        delivery_distance_km: deliveryDistance
+        delivery_distance_km: deliveryDistance,
+        // الجدولة
+        is_scheduled: isScheduled,
+        scheduled_for: isScheduled && scheduledDate && scheduledTime 
+          ? `${scheduledDate}T${scheduledTime}:00` 
+          : null
       };
 
       // التحقق من صحة البيانات قبل الإرسال
@@ -498,7 +508,12 @@ const FoodCartPage = () => {
       // Clear cart
       localStorage.removeItem(`food_cart_${storeId}`);
       
-      toast({ title: "تم الطلب بنجاح! 🎉", description: `رقم الطلب: ${res.data.order_number}` });
+      toast({ 
+        title: isScheduled ? "تم جدولة الطلب! 📅" : "تم الطلب بنجاح! 🎉", 
+        description: isScheduled 
+          ? `سيتم تجهيز طلبك ${res.data.order_number} في الوقت المحدد` 
+          : `رقم الطلب: ${res.data.order_number}` 
+      });
       navigate(`/food/order/${res.data.order_id}`);
     } catch (error) {
       console.error('Order error:', error.response?.data);
@@ -1023,6 +1038,59 @@ const FoodCartPage = () => {
                   <p className="text-sm text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Schedule Order Section */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h2 className="font-bold text-gray-900 flex items-center gap-2 mb-3">
+            <Clock size={18} className="text-blue-600" />
+            جدولة الطلب (اختياري)
+          </h2>
+          
+          <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 mb-3">
+            <input
+              type="checkbox"
+              checked={isScheduled}
+              onChange={(e) => setIsScheduled(e.target.checked)}
+              className="w-5 h-5 text-blue-600 rounded"
+            />
+            <div className="flex-1">
+              <p className="font-medium text-gray-900">جدولة الطلب لوقت لاحق</p>
+              <p className="text-xs text-gray-500">اختر التاريخ والوقت المناسب لاستلام طلبك</p>
+            </div>
+          </label>
+          
+          {isScheduled && (
+            <div className="space-y-3 pt-3 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">التاريخ</label>
+                  <input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    data-testid="schedule-date-input"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">الوقت</label>
+                  <input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                    data-testid="schedule-time-input"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <AlertCircle size={12} />
+                يمكنك إلغاء أو تعديل الطلب المجدول قبل وقت التجهيز
+              </p>
             </div>
           )}
         </div>

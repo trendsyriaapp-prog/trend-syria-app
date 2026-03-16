@@ -81,6 +81,9 @@ from routes.admin_settings import router as admin_settings_router
 from routes.delivery_time import router as delivery_time_router
 from routes.price_reports import router as price_reports_router
 from routes.websocket import router as websocket_router
+from routes.chat import router as chat_router
+from routes.support import router as support_router
+from routes.activity_log import router as activity_log_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -159,6 +162,9 @@ api_router.include_router(admin_settings_router)
 api_router.include_router(delivery_time_router)
 api_router.include_router(price_reports_router)
 api_router.include_router(websocket_router)
+api_router.include_router(chat_router)
+api_router.include_router(support_router)
+api_router.include_router(activity_log_router)
 
 # ============== Categories ==============
 

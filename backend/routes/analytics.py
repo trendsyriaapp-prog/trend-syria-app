@@ -721,3 +721,243 @@ async def get_single_driver_performance(
             for r in cancellation_reasons
         ]
     }
+
+
+
+# ============== تحليلات البائع ==============
+
+@router.get("/seller-dashboard")
+async def get_seller_analytics(
+    period: str = "week",  # today, week, month, all
+    user: dict = Depends(get_current_user)
+):
+    """تحليلات مفصلة للبائع"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # تحديد الفترة الزمنية
+    if period == "today":
+        period_start = today_start
+    elif period == "week":
+        period_start = today_start - timedelta(days=7)
+    elif period == "month":
+        period_start = today_start - timedelta(days=30)
+    else:
+        period_start = None
+    
+    # تحديد نوع البائع والحصول على المتجر
+    is_food_seller = user.get("user_type") == "food_seller"
+    seller_id = user["id"]
+    
+    if is_food_seller:
+        # بائع طعام - جلب بيانات المتجر
+        store = await db.food_stores.find_one({"owner_id": seller_id}, {"_id": 0})
+        if not store:
+            raise HTTPException(status_code=404, detail="لم يتم العثور على المتجر")
+        
+        store_id = store.get("id")
+        orders_collection = db.food_orders
+        order_match = {"store_id": store_id}
+        products_collection = db.food_items
+        products_match = {"store_id": store_id}
+    else:
+        # بائع منتجات
+        store = await db.stores.find_one({"owner_id": seller_id}, {"_id": 0})
+        orders_collection = db.orders
+        order_match = {"seller_id": seller_id}
+        products_collection = db.products
+        products_match = {"seller_id": seller_id}
+    
+    # إضافة فلتر الفترة
+    if period_start:
+        order_match["created_at"] = {"$gte": period_start.isoformat()}
+    
+    # إحصائيات الطلبات
+    total_orders = await orders_collection.count_documents(order_match)
+    
+    # حالات الطلبات
+    status_match = {**order_match}
+    if period_start:
+        del status_match["created_at"]
+        status_match["created_at"] = {"$gte": period_start.isoformat()}
+    
+    completed_match = {**order_match, "status": {"$in": ["delivered", "completed"]}}
+    cancelled_match = {**order_match, "status": "cancelled"}
+    pending_match = {**order_match, "status": {"$in": ["pending", "preparing", "ready"]}}
+    
+    completed_orders = await orders_collection.count_documents(completed_match)
+    cancelled_orders = await orders_collection.count_documents(cancelled_match)
+    pending_orders = await orders_collection.count_documents(pending_match)
+    
+    # حساب الإيرادات
+    revenue_field = "subtotal" if is_food_seller else "total_amount"
+    commission_field = "platform_commission" if is_food_seller else "commission_amount"
+    
+    revenue_pipeline = [
+        {"$match": {**order_match, "status": {"$in": ["delivered", "completed"]}}},
+        {"$group": {
+            "_id": None,
+            "total_revenue": {"$sum": f"${revenue_field}"},
+            "total_commission": {"$sum": {"$ifNull": [f"${commission_field}", 0]}},
+            "avg_order_value": {"$avg": f"${revenue_field}"}
+        }}
+    ]
+    revenue_result = await orders_collection.aggregate(revenue_pipeline).to_list(1)
+    
+    total_revenue = revenue_result[0]["total_revenue"] if revenue_result else 0
+    total_commission = revenue_result[0]["total_commission"] if revenue_result else 0
+    avg_order_value = revenue_result[0]["avg_order_value"] if revenue_result else 0
+    net_earnings = total_revenue - total_commission
+    
+    # إحصائيات المنتجات
+    total_products = await products_collection.count_documents(products_match)
+    
+    if is_food_seller:
+        active_products = await products_collection.count_documents({
+            **products_match,
+            "availability_status": {"$ne": "unavailable"}
+        })
+    else:
+        active_products = await products_collection.count_documents({
+            **products_match,
+            "is_active": True,
+            "is_approved": True
+        })
+    
+    # المنتجات الأكثر مبيعاً
+    top_products_pipeline = [
+        {"$match": {**order_match, "status": {"$in": ["delivered", "completed"]}}},
+        {"$unwind": "$items"},
+        {"$group": {
+            "_id": "$items.product_id" if is_food_seller else "$items.id",
+            "name": {"$first": "$items.name"},
+            "total_sold": {"$sum": "$items.quantity"},
+            "total_revenue": {"$sum": {"$multiply": ["$items.price", "$items.quantity"]}}
+        }},
+        {"$sort": {"total_sold": -1}},
+        {"$limit": 5}
+    ]
+    top_products = await orders_collection.aggregate(top_products_pipeline).to_list(5)
+    
+    # التقييمات
+    if is_food_seller:
+        reviews = await db.food_store_reviews.find(
+            {"store_id": store_id},
+            {"_id": 0, "rating": 1}
+        ).to_list(1000)
+    else:
+        reviews = await db.reviews.find(
+            {"seller_id": seller_id},
+            {"_id": 0, "rating": 1}
+        ).to_list(1000)
+    
+    avg_rating = round(sum(r["rating"] for r in reviews) / len(reviews), 1) if reviews else 0
+    total_reviews = len(reviews)
+    
+    # توزيع التقييمات
+    rating_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in reviews:
+        rating = int(r["rating"])
+        if rating in rating_distribution:
+            rating_distribution[rating] += 1
+    
+    # بيانات الرسم البياني (آخر 7 أيام)
+    chart_data = []
+    for i in range(6, -1, -1):
+        day = today_start - timedelta(days=i)
+        next_day = day + timedelta(days=1)
+        
+        day_match = {
+            **order_match,
+            "created_at": {
+                "$gte": day.isoformat(),
+                "$lt": next_day.isoformat()
+            },
+            "status": {"$in": ["delivered", "completed"]}
+        }
+        if period_start:
+            del day_match["created_at"]
+            day_match["created_at"] = {
+                "$gte": day.isoformat(),
+                "$lt": next_day.isoformat()
+            }
+        
+        day_revenue_pipeline = [
+            {"$match": day_match},
+            {"$group": {
+                "_id": None,
+                "revenue": {"$sum": f"${revenue_field}"},
+                "orders": {"$sum": 1}
+            }}
+        ]
+        day_result = await orders_collection.aggregate(day_revenue_pipeline).to_list(1)
+        
+        chart_data.append({
+            "date": day.strftime("%Y-%m-%d"),
+            "day_name": ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][day.weekday()],
+            "revenue": day_result[0]["revenue"] if day_result else 0,
+            "orders": day_result[0]["orders"] if day_result else 0
+        })
+    
+    # ساعات الذروة
+    peak_hours_pipeline = [
+        {"$match": {**order_match, "status": {"$in": ["delivered", "completed"]}}},
+        {"$project": {
+            "hour": {"$hour": {"$dateFromString": {"dateString": "$created_at"}}}
+        }},
+        {"$group": {
+            "_id": "$hour",
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    peak_hours = await orders_collection.aggregate(peak_hours_pipeline).to_list(5)
+    
+    return {
+        "store": {
+            "name": store.get("name") if store else user.get("store_name", user.get("full_name")),
+            "type": store.get("category_type") if store else "products",
+            "status": store.get("status") if store else "approved"
+        },
+        "period": period,
+        "orders": {
+            "total": total_orders,
+            "completed": completed_orders,
+            "cancelled": cancelled_orders,
+            "pending": pending_orders,
+            "completion_rate": round((completed_orders / total_orders * 100), 1) if total_orders > 0 else 0
+        },
+        "revenue": {
+            "total": total_revenue,
+            "commission": total_commission,
+            "net_earnings": net_earnings,
+            "avg_order_value": round(avg_order_value, 0)
+        },
+        "products": {
+            "total": total_products,
+            "active": active_products,
+            "top_selling": [
+                {
+                    "id": p["_id"],
+                    "name": p["name"],
+                    "sold": p["total_sold"],
+                    "revenue": p["total_revenue"]
+                }
+                for p in top_products
+            ]
+        },
+        "ratings": {
+            "average": avg_rating,
+            "total": total_reviews,
+            "distribution": rating_distribution
+        },
+        "chart": chart_data,
+        "peak_hours": [
+            {"hour": f"{h['_id']}:00", "orders": h["count"]}
+            for h in peak_hours
+        ]
+    }

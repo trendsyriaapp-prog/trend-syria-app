@@ -44,6 +44,8 @@ import ViolationsTab from '../components/admin/ViolationsTab';
 import PriceReportsTab from '../components/admin/PriceReportsTab';
 import DriversMapTab from '../components/admin/DriversMapTab';
 import DriversPerformanceTab from '../components/admin/DriversPerformanceTab';
+import ActivityLogTab from '../components/admin/ActivityLogTab';
+import SupportTicketsAdmin from '../components/admin/SupportTicketsAdmin';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -320,7 +322,9 @@ const AdminDashboardPage = () => {
     'platform-settings': 'تفعيل/إيقاف الأقسام',
     'analytics': 'التحليلات والإحصائيات',
     'drivers-map': 'خريطة السائقين',
-    'drivers-performance': 'أداء السائقين'
+    'drivers-performance': 'أداء السائقين',
+    'activity-log': 'سجل النشاط',
+    'support-management': 'إدارة الدعم'
   };
 
   return (
@@ -456,6 +460,12 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'drivers-performance' && user.user_type === 'admin' && (
               <DriversPerformanceTab />
+            )}
+            {activeTab === 'activity-log' && user.user_type === 'admin' && (
+              <ActivityLogTab />
+            )}
+            {activeTab === 'support-management' && (
+              <SupportTicketsAdmin />
             )}
           </>
         ) : (
@@ -750,6 +760,18 @@ const AdminDashboardPage = () => {
                       <BarChart2 size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">أداء السائقين</span>
+                  </button>
+
+                  {/* سجل النشاط */}
+                  <button
+                    onClick={() => setActiveTab('activity-log')}
+                    className="bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl p-3 border border-indigo-200 hover:border-indigo-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="activity-log-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 flex items-center justify-center">
+                      <Clock size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">سجل النشاط</span>
                   </button>
                 </>
               )}

@@ -9,11 +9,12 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation
+  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
+import SellerAnalytics from '../components/seller/SellerAnalytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -268,6 +269,7 @@ const FoodStoreDashboard = () => {
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
           {[
             { id: 'overview', label: 'نظرة عامة' },
+            { id: 'analytics', label: '📊 التحليلات' },
             { id: 'products', label: 'المنتجات' },
             { id: 'offers', label: 'العروض' },
             { id: 'flash', label: 'الفلاش' },
@@ -380,6 +382,11 @@ const FoodStoreDashboard = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <SellerAnalytics token={token} />
         )}
 
         {/* Products Tab */}
