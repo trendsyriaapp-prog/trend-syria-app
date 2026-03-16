@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -43,6 +43,7 @@ import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
 import ViolationsTab from '../components/admin/ViolationsTab';
 import PriceReportsTab from '../components/admin/PriceReportsTab';
 import DriversMapTab from '../components/admin/DriversMapTab';
+import DriversPerformanceTab from '../components/admin/DriversPerformanceTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -318,7 +319,8 @@ const AdminDashboardPage = () => {
     'daily-deals': 'صفقات اليوم',
     'platform-settings': 'تفعيل/إيقاف الأقسام',
     'analytics': 'التحليلات والإحصائيات',
-    'drivers-map': 'خريطة السائقين'
+    'drivers-map': 'خريطة السائقين',
+    'drivers-performance': 'أداء السائقين'
   };
 
   return (
@@ -451,6 +453,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'drivers-map' && user.user_type === 'admin' && (
               <DriversMapTab />
+            )}
+            {activeTab === 'drivers-performance' && user.user_type === 'admin' && (
+              <DriversPerformanceTab />
             )}
           </>
         ) : (
@@ -733,6 +738,18 @@ const AdminDashboardPage = () => {
                       <Map size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">خريطة السائقين</span>
+                  </button>
+
+                  {/* أداء السائقين */}
+                  <button
+                    onClick={() => setActiveTab('drivers-performance')}
+                    className="bg-gradient-to-r from-violet-100 to-purple-100 rounded-xl p-3 border border-violet-200 hover:border-violet-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="drivers-performance-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 flex items-center justify-center">
+                      <BarChart2 size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">أداء السائقين</span>
                   </button>
                 </>
               )}

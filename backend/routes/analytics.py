@@ -344,3 +344,380 @@ async def get_wallet_stats(user: dict = Depends(get_current_user)):
         "pending_withdrawals": pending_withdrawals,
         "total_withdrawn": total_withdrawn
     }
+
+
+# ============== إحصائيات أداء السائقين ==============
+
+@router.get("/drivers-performance")
+async def get_drivers_performance(
+    city: Optional[str] = None,
+    period: str = "week",  # day, week, month, all
+    sort_by: str = "orders_count",  # orders_count, avg_time, rating, acceptance_rate
+    user: dict = Depends(get_current_user)
+):
+    """إحصائيات أداء جميع السائقين"""
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    now = datetime.now(timezone.utc)
+    
+    # تحديد فترة البحث
+    if period == "day":
+        start_date = now - timedelta(days=1)
+    elif period == "week":
+        start_date = now - timedelta(days=7)
+    elif period == "month":
+        start_date = now - timedelta(days=30)
+    else:
+        start_date = None
+    
+    # جلب السائقين المعتمدين
+    driver_query = {"status": "approved"}
+    if city:
+        driver_query["city"] = city
+    
+    approved_docs = await db.delivery_documents.find(
+        driver_query,
+        {"_id": 0, "driver_id": 1, "delivery_id": 1, "city": 1, "is_available": 1, "created_at": 1}
+    ).to_list(500)
+    
+    driver_ids = []
+    driver_info = {}
+    
+    for doc in approved_docs:
+        did = doc.get("driver_id") or doc.get("delivery_id")
+        if did:
+            driver_ids.append(did)
+            driver_info[did] = {
+                "city": doc.get("city", ""),
+                "is_available": doc.get("is_available", False),
+                "joined_at": doc.get("created_at", "")
+            }
+    
+    if not driver_ids:
+        return {"drivers": [], "summary": {}}
+    
+    # جلب معلومات السائقين
+    users = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1}
+    ).to_list(500)
+    
+    users_dict = {u["id"]: u for u in users}
+    
+    # بناء إحصائيات كل سائق
+    results = []
+    
+    for driver_id in driver_ids:
+        user_data = users_dict.get(driver_id, {})
+        info = driver_info.get(driver_id, {})
+        
+        # فلتر الفترة الزمنية
+        date_filter = {}
+        if start_date:
+            date_filter["created_at"] = {"$gte": start_date.isoformat()}
+        
+        # === طلبات الطعام ===
+        food_query = {"driver_id": driver_id, **date_filter}
+        
+        # إجمالي الطلبات المسندة
+        total_food_assigned = await db.food_orders.count_documents(food_query)
+        
+        # الطلبات المكتملة
+        completed_food = await db.food_orders.count_documents({
+            **food_query,
+            "status": "delivered"
+        })
+        
+        # === طلبات المنتجات ===
+        product_query = {"delivery_driver_id": driver_id}
+        if start_date:
+            product_query["created_at"] = {"$gte": start_date.isoformat()}
+        
+        total_product_assigned = await db.orders.count_documents(product_query)
+        completed_product = await db.orders.count_documents({
+            **product_query,
+            "delivery_status": "delivered"
+        })
+        
+        # إجمالي الطلبات
+        total_orders = total_food_assigned + total_product_assigned
+        completed_orders = completed_food + completed_product
+        
+        # === حساب متوسط وقت التوصيل ===
+        avg_delivery_time = 0
+        time_pipeline = [
+            {"$match": {
+                "driver_id": driver_id,
+                "status": "delivered",
+                "picked_up_at": {"$exists": True},
+                "delivered_at": {"$exists": True},
+                **({"created_at": {"$gte": start_date.isoformat()}} if start_date else {})
+            }},
+            {"$project": {
+                "delivery_time": {
+                    "$divide": [
+                        {"$subtract": [
+                            {"$dateFromString": {"dateString": "$delivered_at"}},
+                            {"$dateFromString": {"dateString": "$picked_up_at"}}
+                        ]},
+                        60000  # تحويل إلى دقائق
+                    ]
+                }
+            }},
+            {"$group": {
+                "_id": None,
+                "avg_time": {"$avg": "$delivery_time"}
+            }}
+        ]
+        
+        try:
+            time_result = await db.food_orders.aggregate(time_pipeline).to_list(1)
+            if time_result:
+                avg_delivery_time = round(time_result[0].get("avg_time", 0), 1)
+        except:
+            pass
+        
+        # === معدل القبول ===
+        # الطلبات التي عُرضت على السائق
+        offered_orders = await db.food_orders.count_documents({
+            "offered_drivers": driver_id,
+            **({"created_at": {"$gte": start_date.isoformat()}} if start_date else {})
+        })
+        
+        # الطلبات المرفوضة
+        rejected_orders = await db.food_orders.count_documents({
+            "rejected_drivers": driver_id,
+            **({"created_at": {"$gte": start_date.isoformat()}} if start_date else {})
+        })
+        
+        acceptance_rate = 0
+        if offered_orders > 0:
+            accepted = offered_orders - rejected_orders
+            acceptance_rate = round((accepted / offered_orders) * 100, 1)
+        
+        # === معدل الإلغاء ===
+        cancellations = await db.driver_cancellations.count_documents({
+            "driver_id": driver_id,
+            **({"cancelled_at": {"$gte": start_date.isoformat()}} if start_date else {})
+        })
+        
+        cancellation_rate = 0
+        if total_orders > 0:
+            cancellation_rate = round((cancellations / total_orders) * 100, 1)
+        
+        # === التقييم ===
+        rating_pipeline = [
+            {"$match": {
+                "driver_id": driver_id,
+                "driver_rating": {"$exists": True, "$ne": None}
+            }},
+            {"$group": {
+                "_id": None,
+                "avg_rating": {"$avg": "$driver_rating"},
+                "rating_count": {"$sum": 1}
+            }}
+        ]
+        
+        rating_result = await db.food_orders.aggregate(rating_pipeline).to_list(1)
+        avg_rating = 0
+        rating_count = 0
+        if rating_result:
+            avg_rating = round(rating_result[0].get("avg_rating", 0), 1)
+            rating_count = rating_result[0].get("rating_count", 0)
+        
+        # === حساب الأرباح ===
+        earnings_pipeline = [
+            {"$match": {
+                "user_id": driver_id,
+                "type": {"$in": ["delivery_earning", "food_delivery_earning"]},
+                **({"created_at": {"$gte": start_date.isoformat()}} if start_date else {})
+            }},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": "$amount"}
+            }}
+        ]
+        
+        earnings_result = await db.transactions.aggregate(earnings_pipeline).to_list(1)
+        total_earnings = earnings_result[0]["total"] if earnings_result else 0
+        
+        # === آخر نشاط ===
+        last_location = await db.driver_locations.find_one(
+            {"driver_id": driver_id},
+            {"_id": 0, "updated_at": 1}
+        )
+        last_active = last_location.get("updated_at") if last_location else None
+        
+        # حساب حالة الاتصال
+        is_online = False
+        if last_active:
+            try:
+                last_time = datetime.fromisoformat(last_active.replace("Z", "+00:00"))
+                is_online = (now - last_time) < timedelta(minutes=5)
+            except:
+                pass
+        
+        results.append({
+            "id": driver_id,
+            "name": user_data.get("full_name") or user_data.get("name", "سائق"),
+            "phone": user_data.get("phone", ""),
+            "city": info.get("city", ""),
+            "is_available": info.get("is_available", False),
+            "is_online": is_online,
+            "joined_at": info.get("joined_at", ""),
+            "stats": {
+                "total_orders": total_orders,
+                "completed_orders": completed_orders,
+                "completion_rate": round((completed_orders / total_orders * 100), 1) if total_orders > 0 else 0,
+                "avg_delivery_time": avg_delivery_time,
+                "acceptance_rate": acceptance_rate,
+                "cancellation_rate": cancellation_rate,
+                "cancellations": cancellations,
+                "avg_rating": avg_rating,
+                "rating_count": rating_count,
+                "total_earnings": total_earnings
+            },
+            "last_active": last_active
+        })
+    
+    # ترتيب النتائج
+    sort_key_map = {
+        "orders_count": lambda x: -x["stats"]["completed_orders"],
+        "avg_time": lambda x: x["stats"]["avg_delivery_time"] if x["stats"]["avg_delivery_time"] > 0 else 999,
+        "rating": lambda x: -x["stats"]["avg_rating"],
+        "acceptance_rate": lambda x: -x["stats"]["acceptance_rate"],
+        "earnings": lambda x: -x["stats"]["total_earnings"]
+    }
+    
+    results.sort(key=sort_key_map.get(sort_by, sort_key_map["orders_count"]))
+    
+    # حساب الملخص
+    summary = {
+        "total_drivers": len(results),
+        "online_drivers": sum(1 for r in results if r["is_online"]),
+        "available_drivers": sum(1 for r in results if r["is_available"]),
+        "total_completed_orders": sum(r["stats"]["completed_orders"] for r in results),
+        "avg_completion_rate": round(sum(r["stats"]["completion_rate"] for r in results) / len(results), 1) if results else 0,
+        "avg_delivery_time": round(sum(r["stats"]["avg_delivery_time"] for r in results if r["stats"]["avg_delivery_time"] > 0) / max(1, sum(1 for r in results if r["stats"]["avg_delivery_time"] > 0)), 1),
+        "avg_acceptance_rate": round(sum(r["stats"]["acceptance_rate"] for r in results) / len(results), 1) if results else 0,
+        "avg_rating": round(sum(r["stats"]["avg_rating"] for r in results if r["stats"]["avg_rating"] > 0) / max(1, sum(1 for r in results if r["stats"]["avg_rating"] > 0)), 1),
+        "total_earnings": sum(r["stats"]["total_earnings"] for r in results)
+    }
+    
+    return {
+        "drivers": results,
+        "summary": summary,
+        "period": period,
+        "city": city
+    }
+
+
+@router.get("/driver-performance/{driver_id}")
+async def get_single_driver_performance(
+    driver_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """إحصائيات أداء سائق محدد"""
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    # جلب بيانات السائق
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0})
+    if not driver:
+        raise HTTPException(status_code=404, detail="السائق غير موجود")
+    
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+        {"_id": 0}
+    )
+    
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=404, detail="السائق غير معتمد")
+    
+    now = datetime.now(timezone.utc)
+    
+    # إحصائيات حسب الفترة
+    periods_data = []
+    for period_name, days in [("اليوم", 1), ("الأسبوع", 7), ("الشهر", 30), ("الكل", None)]:
+        start_date = now - timedelta(days=days) if days else None
+        date_filter = {"created_at": {"$gte": start_date.isoformat()}} if start_date else {}
+        
+        # طلبات الطعام
+        food_completed = await db.food_orders.count_documents({
+            "driver_id": driver_id,
+            "status": "delivered",
+            **date_filter
+        })
+        
+        # طلبات المنتجات
+        product_completed = await db.orders.count_documents({
+            "delivery_driver_id": driver_id,
+            "delivery_status": "delivered",
+            **({"created_at": {"$gte": start_date.isoformat()}} if start_date else {})
+        })
+        
+        # الأرباح
+        earnings_pipeline = [
+            {"$match": {
+                "user_id": driver_id,
+                "type": {"$in": ["delivery_earning", "food_delivery_earning"]},
+                **date_filter
+            }},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]
+        earnings_result = await db.transactions.aggregate(earnings_pipeline).to_list(1)
+        earnings = earnings_result[0]["total"] if earnings_result else 0
+        
+        periods_data.append({
+            "period": period_name,
+            "completed_orders": food_completed + product_completed,
+            "earnings": earnings
+        })
+    
+    # الرسم البياني - آخر 7 أيام
+    chart_data = []
+    for i in range(6, -1, -1):
+        day = now - timedelta(days=i)
+        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        
+        orders = await db.food_orders.count_documents({
+            "driver_id": driver_id,
+            "status": "delivered",
+            "created_at": {
+                "$gte": day_start.isoformat(),
+                "$lt": day_end.isoformat()
+            }
+        })
+        
+        chart_data.append({
+            "date": day_start.strftime("%m/%d"),
+            "day": ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][day_start.weekday()],
+            "orders": orders
+        })
+    
+    # أسباب الإلغاء
+    cancellation_reasons = await db.driver_cancellations.aggregate([
+        {"$match": {"driver_id": driver_id}},
+        {"$group": {"_id": "$reason", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]).to_list(5)
+    
+    return {
+        "driver": {
+            "id": driver_id,
+            "name": driver.get("full_name") or driver.get("name"),
+            "phone": driver.get("phone"),
+            "city": doc.get("city"),
+            "is_available": doc.get("is_available", False),
+            "joined_at": doc.get("created_at")
+        },
+        "periods": periods_data,
+        "chart": chart_data,
+        "cancellation_reasons": [
+            {"reason": r["_id"], "count": r["count"]}
+            for r in cancellation_reasons
+        ]
+    }
