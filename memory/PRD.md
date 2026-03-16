@@ -21,6 +21,62 @@
 
 ## What's Been Implemented
 
+### March 2026
+
+#### تحسينات شاملة (Comprehensive Updates) ✅ - 16 March 2026
+تم تنفيذ مجموعة من التحسينات والميزات الجديدة:
+
+##### 1. مكون FreeShippingBanner الموحد ✅
+- **الميزة:** توحيد مكون بانر الشحن المجاني في ملف واحد بدلاً من التكرار في 3 صفحات
+- **التفاصيل:**
+  - مكون جديد: `components/FreeShippingBanner.js`
+  - يدعم نوعين: `variant="food"` (أخضر) و `variant="products"` (أزرق)
+  - عداد تنازلي مدمج
+  - مستورد في: `FoodPage.js`, `ProductsPage.js`, `HomePage.js`
+- **Status:** TESTED ✅ (iteration_72)
+
+##### 2. بيانات الإعلانات وعروض الفلاش ✅
+- **الميزة:** إضافة بيانات تجريبية للإعلانات والعروض السريعة
+- **الملفات:**
+  - `backend/scripts/seed_ads_flash.py` - سكريبت إضافة البيانات
+- **البيانات المضافة:**
+  - 3 إعلانات: عروض رمضان، قسم الطعام، شحن مجاني
+  - عرض فلاش: خصم 25% لمدة 48 ساعة على 8 منتجات
+- **Status:** TESTED ✅ (iteration_72)
+
+##### 3. نظام التوجيه الذكي للسائقين (Smart Routing) ✅
+- **الميزة:** نظام يساعد السائق على قبول طلبات متعددة إذا كانت على نفس المسار
+- **المكونات:**
+  - خدمة جديدة: `services/smart_routing.py`
+    - `is_order_on_route()` - التحقق إذا كان الطلب على المسار
+    - `optimize_delivery_order()` - ترتيب الطلبات بشكل أمثل
+    - `evaluate_new_order()` - تقييم جدوى قبول طلب جديد
+  - يستخدم OSRM API للحصول على المسارات الفعلية
+- **APIs الجديدة:**
+  - `POST /api/food/orders/delivery/smart-route/evaluate` - تقييم الطلب قبل القبول
+  - `GET /api/food/orders/delivery/optimize-route` - الحصول على الترتيب الأمثل للتوصيل
+- **Status:** TESTED ✅ (iteration_72)
+
+##### 4. تقييمات الأسعار للمتاجر ✅
+- **الميزة:** عرض تقييم أسعار المتجر للعملاء بناءً على البلاغات
+- **الوظائف:**
+  - شارة تقييم الأسعار في صفحة المتجر ($ أسعار ممتازة/جيدة/متوسطة/مرتفعة)
+  - حساب التقييم بناءً على نسبة البلاغات المعتمدة
+  - تحذير للعملاء إذا كان المتجر يملك نقاط مخالفات عالية
+- **الملفات:**
+  - `routes/price_reports.py` - endpoints جديدة (lines 416-530)
+  - `pages/FoodStorePage.js` - عرض شارة التقييم
+- **APIs الجديدة:**
+  - `GET /api/price-reports/store/{store_id}/rating` - تقييم أسعار المتجر
+  - `GET /api/price-reports/seller/{seller_id}/price-stats` - إحصائيات البائع
+- **Status:** TESTED ✅ (iteration_72)
+
+##### 5. نظام الإحالات ✅
+- **الميزة:** نظام دعوة الأصدقاء والحصول على مكافآت (موجود مسبقاً)
+- **التحقق:** تم التحقق من عمله بشكل صحيح
+- **API:** `GET /api/referrals/my-code` - يعمل ✅
+- **Status:** VERIFIED ✅
+
 ### December 2025
 
 #### نظام التحكم في الأسعار (Price Control System) ✅ - 16 Dec 2025
@@ -654,14 +710,21 @@ All critical features are implemented and tested.
 ---
 
 ## Upcoming Tasks (P1)
+- [x] التحقق من خريطة اختيار الموقع - DONE ✅
+- [x] إعادة هيكلة مكون FreeShippingBanner - DONE ✅
+- [x] إضافة بيانات للإعلانات والعروض - DONE ✅
+- [x] نظام التوجيه الذكي للسائقين - DONE ✅
+- [x] تقييمات الأسعار للمتاجر - DONE ✅
 - [ ] اختبار المستخدم اليدوي للنظام الكامل
-- [ ] إضافة سائق تجريبي جديد للاختبار
 
-## Future Tasks (P2/P3)
+## Future Tasks (P2)
+- [ ] ربط API الطقس للرسوم الإضافية التلقائية
+- [ ] التسعير الديناميكي (Surge Pricing) للتوصيل
 - [ ] تكامل مزود دفع سوري
-- [ ] نظام العمولات والرسوم
-- [ ] التسعير الديناميكي (Surge Pricing)
 - [ ] نظام مكافآت السائقين (Quests)
+
+## Future Tasks (P3)
+- [ ] التسوق عبر المحافظات (Cross-governorate)
 - [ ] أرقام هاتف مقنّعة
 - [ ] دردشة داخلية
 - [ ] صفحة عرض جميع المتاجر (/food/stores)
@@ -669,6 +732,8 @@ All critical features are implemented and tested.
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_72.json` - Smart Routing, Price Rating, FreeShippingBanner ✅
+- `/app/test_reports/iteration_71.json` - Price Control System ✅
 - `/app/test_reports/iteration_70.json` - Store Closed Status Feature ✅
 - `/app/test_reports/iteration_69.json` - Food Delivery Priority System ✅
 - `/app/test_reports/iteration_67.json` - Commission Calculator for Sellers ✅
