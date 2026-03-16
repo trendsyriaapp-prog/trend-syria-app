@@ -115,52 +115,68 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
-      {/* Hero Section - Compact */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#FF6B00]/8 via-[#FF6B00]/5 to-transparent">
-        <div className="max-w-7xl mx-auto px-4 py-2 md:py-3">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-2"
-          >
-            <h1 className="text-2xl md:text-3xl font-extrabold mb-3 text-gray-900 tracking-tight">
-              ترند <span className="text-[#FF6B00] relative inline-block">
-                سورية
-                <svg className="absolute -bottom-1 left-0 right-0 w-full h-1" viewBox="0 0 100 8">
-                  <path d="M0 6 Q50 0 100 6" stroke="#FF6B00" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                </svg>
+      {/* Header - Modern & Compact */}
+      <header className="sticky top-0 z-40 bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#FF6B00] to-[#FF8533] rounded-xl flex items-center justify-center shadow-md">
+                <TrendingUp size={20} className="text-white" />
+              </div>
+              <span className="text-lg font-bold text-gray-900 hidden sm:block">
+                ترند<span className="text-[#FF6B00]">سورية</span>
               </span>
-            </h1>
-            <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto mt-1">
-              منصة التسوق الأولى في سورية - توصيل مجاني داخل المحافظات
-            </p>
-          </motion.div>
-          
-          {/* Features - Compact Cards */}
-          <div className="grid grid-cols-4 gap-1.5">
-            {[
-              { icon: Truck, text: 'توصيل مجاني', color: 'bg-emerald-50 text-emerald-600' },
-              { icon: Shield, text: 'ضمان الجودة', color: 'bg-blue-50 text-blue-600' },
-              { icon: CreditCard, text: 'دفع آمن', color: 'bg-purple-50 text-purple-600' },
-              { icon: Clock, text: 'دعم 24/7', color: 'bg-amber-50 text-amber-600' },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex flex-col items-center gap-1 p-1.5 bg-white rounded-lg border border-gray-100 shadow-sm"
+            </Link>
+            
+            {/* Search Bar */}
+            <div className="flex-1 relative">
+              <Link 
+                to="/search"
+                className="w-full flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
               >
-                <div className={`p-1.5 rounded-md ${feature.color}`}>
-                  <feature.icon size={12} />
-                </div>
-                <span className="font-medium text-[10px] text-gray-600 text-center leading-tight">{feature.text}</span>
-              </motion.div>
-            ))}
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="text-gray-400 text-sm">ابحث عن منتجات...</span>
+              </Link>
+            </div>
+            
+            {/* Cart Icon */}
+            <Link 
+              to="/cart" 
+              className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              data-testid="header-cart-btn"
+            >
+              <ShoppingBasket size={24} className="text-gray-700" />
+            </Link>
           </div>
         </div>
-      </section>
+      </header>
+
+      {/* Quick Features Banner - Minimal */}
+      <div className="bg-gradient-to-r from-[#FF6B00]/5 to-transparent py-2 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-6 text-xs text-gray-600">
+            <span className="flex items-center gap-1.5">
+              <Truck size={14} className="text-[#FF6B00]" />
+              توصيل مجاني
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Shield size={14} className="text-[#FF6B00]" />
+              ضمان الجودة
+            </span>
+            <span className="flex items-center gap-1.5 hidden sm:flex">
+              <CreditCard size={14} className="text-[#FF6B00]" />
+              دفع آمن
+            </span>
+            <span className="flex items-center gap-1.5 hidden sm:flex">
+              <Clock size={14} className="text-[#FF6B00]" />
+              دعم 24/7
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* 🎁 بانر الشحن المجاني الشامل */}
       {globalFreeShipping && (
