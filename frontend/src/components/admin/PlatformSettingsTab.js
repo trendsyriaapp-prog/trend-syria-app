@@ -608,6 +608,7 @@ const SurgePricingSettings = () => {
 // 🚫 مكون إعدادات إلغاء الطلب للسائق
 const DriverCancelSettings = () => {
   const { toast } = useToast();
+  console.log('DriverCancelSettings: Component mounted');
   const [settings, setSettings] = useState({
     enabled: true,
     cancel_window_seconds: 120,
@@ -622,44 +623,41 @@ const DriverCancelSettings = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const init = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('لم يتم العثور على token');
         setLoading(false);
         return;
       }
-      await fetchSettings(token);
-      await fetchStats(token);
+
+      // Fetch settings
+      try {
+        const res = await axios.get(`${API}/api/settings/driver-cancel`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSettings(res.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching driver cancel settings:', err);
+        setError('فشل تحميل الإعدادات: ' + (err.response?.data?.detail || err.message));
+      } finally {
+        setLoading(false);
+      }
+
+      // Fetch stats
+      try {
+        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(statsRes.data);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
     };
-    init();
+    
+    fetchData();
   }, []);
-
-  const fetchSettings = async (token) => {
-    try {
-      const res = await axios.get(`${API}/api/settings/driver-cancel`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSettings(res.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching driver cancel settings:', err);
-      setError('فشل تحميل الإعدادات');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async (token) => {
-    try {
-      const res = await axios.get(`${API}/api/settings/driver-cancel/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStats(res.data);
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -678,9 +676,10 @@ const DriverCancelSettings = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
+      <div className="bg-white rounded-xl p-6 border-4 border-blue-500 animate-pulse" data-testid="driver-cancel-loading">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-20 bg-gray-100 rounded"></div>
+        <p className="mt-2 text-gray-500 text-sm">جاري تحميل إعدادات إلغاء السائق...</p>
       </div>
     );
   }
@@ -697,7 +696,7 @@ const DriverCancelSettings = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200">
+    <div className="bg-white rounded-xl p-6 border-4 border-red-500" data-testid="driver-cancel-settings">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
           <AlertCircle className="text-red-600" size={24} />
@@ -1206,6 +1205,9 @@ const PlatformSettingsTab = () => {
         </p>
       </div>
 
+      {/* 🚫 إعدادات إلغاء السائق - في أعلى الصفحة */}
+      <DriverCancelSettings />
+
       {/* 🎁 عرض الشحن المجاني الشامل */}
       <GlobalFreeShippingPromo />
 
@@ -1214,9 +1216,6 @@ const PlatformSettingsTab = () => {
 
       {/* ⚡ التسعير الديناميكي */}
       <SurgePricingSettings />
-
-      {/* 🚫 إعدادات إلغاء السائق */}
-      <DriverCancelSettings />
 
       {/* إعدادات الشحن المجاني */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">

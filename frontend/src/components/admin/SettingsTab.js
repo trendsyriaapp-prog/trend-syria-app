@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Truck, Banknote, Package, Save, AlertTriangle } from 'lucide-react';
+import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -369,7 +369,231 @@ const SettingsTab = ({ user }) => {
         </div>
       </div>
       
+      {/* 🚫 إعدادات إلغاء الطلب للسائق */}
+      <DriverCancelSettingsSection toast={toast} />
+      
     </section>
+  );
+};
+
+// مكون إعدادات إلغاء السائق
+const DriverCancelSettingsSection = ({ toast }) => {
+  const [settings, setSettings] = useState({
+    enabled: true,
+    cancel_window_seconds: 120,
+    max_cancel_rate: 10,
+    lookback_orders: 50,
+    warning_threshold: 7,
+    suspension_threshold: 15
+  });
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('لم يتم العثور على token');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${API}/api/settings/driver-cancel`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSettings(res.data);
+        setError(null);
+      } catch (err) {
+        setError('فشل تحميل الإعدادات: ' + (err.response?.data?.detail || err.message));
+      } finally {
+        setLoading(false);
+      }
+
+      try {
+        const statsRes = await axios.get(`${API}/api/settings/driver-cancel/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(statsRes.data);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/driver-cancel`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "✅ تم الحفظ", description: "تم تحديث إعدادات إلغاء السائق" });
+    } catch (err) {
+      toast({ title: "خطأ", description: err.response?.data?.detail || "فشل الحفظ", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
+        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div className="h-20 bg-gray-100 rounded"></div>
+        <p className="mt-2 text-gray-500 text-sm">جاري تحميل إعدادات إلغاء السائق...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl p-6 border border-red-200">
+        <div className="flex items-center gap-3 text-red-600">
+          <AlertCircle size={24} />
+          <span>{error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl p-6 border border-gray-200" data-testid="driver-cancel-settings">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+          <XCircle className="text-red-600" size={24} />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">إعدادات إلغاء الطلب (السائق)</h3>
+          <p className="text-sm text-gray-500">التحكم في قدرة السائقين على إلغاء الطلبات</p>
+        </div>
+      </div>
+
+      {/* تفعيل/إيقاف */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+        <div>
+          <p className="font-bold text-gray-900">تفعيل إلغاء الطلب للسائقين</p>
+          <p className="text-sm text-gray-500">السماح للسائقين بإلغاء الطلبات ضمن شروط</p>
+        </div>
+        <button
+          onClick={() => setSettings(s => ({ ...s, enabled: !s.enabled }))}
+          className={`w-14 h-7 rounded-full transition-colors ${
+            settings.enabled ? 'bg-red-500' : 'bg-gray-300'
+          }`}
+        >
+          <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${
+            settings.enabled ? 'translate-x-7' : 'translate-x-0.5'
+          }`} />
+        </button>
+      </div>
+
+      {settings.enabled && (
+        <div className="space-y-4">
+          {/* مهلة الإلغاء */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              مهلة الإلغاء (بالثواني)
+            </label>
+            <input
+              type="number"
+              value={settings.cancel_window_seconds}
+              onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: parseInt(e.target.value) || 0 }))}
+              className="w-full p-3 border border-gray-200 rounded-xl"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              الوقت المسموح للسائق لإلغاء الطلب بعد قبوله ({Math.floor(settings.cancel_window_seconds / 60)} دقيقة و {settings.cancel_window_seconds % 60} ثانية)
+            </p>
+          </div>
+
+          {/* نسبة الإلغاء القصوى */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                نسبة الإلغاء القصوى (%)
+              </label>
+              <input
+                type="number"
+                value={settings.max_cancel_rate}
+                onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: parseInt(e.target.value) || 0 }))}
+                className="w-full p-3 border border-gray-200 rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                عدد الطلبات للحساب
+              </label>
+              <input
+                type="number"
+                value={settings.lookback_orders}
+                onChange={(e) => setSettings(s => ({ ...s, lookback_orders: parseInt(e.target.value) || 0 }))}
+                className="w-full p-3 border border-gray-200 rounded-xl"
+              />
+            </div>
+          </div>
+
+          {/* حدود التحذير والإيقاف */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ⚠️ نسبة التحذير (%)
+              </label>
+              <input
+                type="number"
+                value={settings.warning_threshold}
+                onChange={(e) => setSettings(s => ({ ...s, warning_threshold: parseInt(e.target.value) || 0 }))}
+                className="w-full p-3 border border-yellow-200 rounded-xl bg-yellow-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                🔴 نسبة الإيقاف (%)
+              </label>
+              <input
+                type="number"
+                value={settings.suspension_threshold}
+                onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: parseInt(e.target.value) || 0 }))}
+                className="w-full p-3 border border-red-200 rounded-xl bg-red-50"
+              />
+            </div>
+          </div>
+
+          {/* إحصائيات */}
+          {stats && (
+            <div className="bg-gray-50 rounded-xl p-4 mt-4">
+              <h4 className="font-bold text-gray-900 mb-3">📊 إحصائيات الإلغاءات</h4>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-white p-3 rounded-lg">
+                  <p className="text-2xl font-bold text-gray-900">{stats.total_cancellations}</p>
+                  <p className="text-xs text-gray-500">إجمالي</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">{stats.today_cancellations}</p>
+                  <p className="text-xs text-gray-500">اليوم</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-600">{stats.week_cancellations}</p>
+                  <p className="text-xs text-gray-500">الأسبوع</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* زر الحفظ */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400"
+      >
+        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+        حفظ الإعدادات
+      </button>
+    </div>
   );
 };
 
