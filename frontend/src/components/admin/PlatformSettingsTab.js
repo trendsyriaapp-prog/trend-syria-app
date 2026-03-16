@@ -314,6 +314,54 @@ const ReferralProgramSettings = () => {
             />
             <p className="text-xs text-gray-500 mt-1">الحد الأدنى لقيمة الطلب لاحتساب الإحالة كناجحة</p>
           </div>
+
+          {/* أزرار إرسال الإشعارات */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">📢 إرسال تذكير للمستخدمين</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.post(`${API}/api/referrals/admin/send-reminder`, {}, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    toast({ 
+                      title: "تم الإرسال!",
+                      description: `تم إرسال الإشعار لـ ${res.data.users_notified} مستخدم`
+                    });
+                  } catch (e) {
+                    toast({ title: "خطأ", description: "فشل إرسال الإشعارات", variant: "destructive" });
+                  }
+                }}
+                className="py-2 px-3 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-xs font-medium flex items-center justify-center gap-1"
+              >
+                <Bell size={14} />
+                للجميع
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.post(`${API}/api/referrals/admin/send-to-inactive`, {}, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    toast({ 
+                      title: "تم الإرسال!",
+                      description: `تم إرسال الإشعار لـ ${res.data.users_notified} مستخدم غير نشط`
+                    });
+                  } catch (e) {
+                    toast({ title: "خطأ", description: "فشل إرسال الإشعارات", variant: "destructive" });
+                  }
+                }}
+                className="py-2 px-3 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-xs font-medium flex items-center justify-center gap-1"
+              >
+                <Bell size={14} />
+                غير النشطين
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">غير النشطين = لم يطلبوا منذ أسبوع</p>
+          </div>
         </motion.div>
       )}
 

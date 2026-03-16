@@ -72,6 +72,22 @@ async def register(request: Request, user: UserRegister):
     }
     await db.users.insert_one(user_doc)
     
+    # 🎁 إرسال إشعار ترحيبي مع برنامج الإحالات
+    if user.user_type == "buyer":
+        referral_settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
+        if referral_settings and referral_settings.get("is_active", True):
+            reward = referral_settings.get("referrer_reward", 10000)
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "type": "welcome_referral",
+                "title": "🎉 مرحباً بك في تريند سوريا!",
+                "message": f"شارك تطبيقنا مع أصدقائك واكسب {reward:,} ل.س عن كل صديق يسجل ويطلب. افتح 'ادعُ صديقاً' من حسابك!",
+                "action_url": "/referrals",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    
     # 🔒 إنشاء توكنات آمنة
     access_token = create_access_token(user_id, user.user_type)
     refresh_token = create_refresh_token(user_id)

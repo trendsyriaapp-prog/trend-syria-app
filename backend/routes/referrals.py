@@ -432,3 +432,136 @@ async def get_referral_status():
         "referrer_reward": settings.get("referrer_reward", 10000),
         "referee_discount": settings.get("referee_discount", 20)
     }
+
+
+
+@router.post("/admin/send-reminder")
+async def send_referral_reminder(user: dict = Depends(get_current_user)):
+    """
+    إرسال إشعار تذكير ببرنامج الإحالات لجميع المستخدمين
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    # جلب إعدادات الإحالات
+    settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
+    referrer_reward = settings.get("referrer_reward", 10000) if settings else 10000
+    
+    # جلب جميع المستخدمين (العملاء فقط)
+    users = await db.users.find(
+        {"user_type": {"$in": ["customer", "buyer"]}},
+        {"_id": 0, "id": 1}
+    ).to_list(length=10000)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إنشاء الإشعارات
+    notifications = []
+    for u in users:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": u["id"],
+            "type": "referral_reminder",
+            "title": "🎁 اكسب مع كل صديق تدعوه!",
+            "message": f"شارك كود الإحالة الخاص بك واحصل على {referrer_reward:,} ل.س عن كل صديق يسجل ويطلب. افتح صفحة 'ادعُ صديقاً' الآن!",
+            "action_url": "/referrals",
+            "is_read": False,
+            "created_at": now
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    # إرسال push notifications إذا كان FCM مفعّل
+    try:
+        from routes.push_notifications import send_topic_notification
+        await send_topic_notification(
+            topic="all_customers",
+            title="🎁 اكسب مع كل صديق تدعوه!",
+            body=f"شارك كود الإحالة واحصل على {referrer_reward:,} ل.س!",
+            data={"action": "open_referrals"}
+        )
+    except Exception as e:
+        print(f"FCM notification failed: {e}")
+    
+    return {
+        "message": "تم إرسال الإشعارات",
+        "users_notified": len(notifications)
+    }
+
+
+@router.post("/admin/send-to-inactive")
+async def send_referral_to_inactive_users(user: dict = Depends(get_current_user)):
+    """
+    إرسال إشعار للمستخدمين غير النشطين (لم يطلبوا منذ أسبوع)
+    لتشجيعهم على العودة ودعوة أصدقائهم
+    """
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    from datetime import timedelta
+    
+    # جلب إعدادات الإحالات
+    settings = await db.platform_settings.find_one({"id": "referral"}, {"_id": 0})
+    referrer_reward = settings.get("referrer_reward", 10000) if settings else 10000
+    
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    
+    # جلب المستخدمين الذين لم يطلبوا منذ أسبوع
+    # نجلب آخر طلب لكل مستخدم
+    pipeline = [
+        {"$match": {"user_type": {"$in": ["customer", "buyer"]}}},
+        {"$lookup": {
+            "from": "food_orders",
+            "localField": "id",
+            "foreignField": "customer_id",
+            "as": "food_orders"
+        }},
+        {"$lookup": {
+            "from": "orders",
+            "localField": "id",
+            "foreignField": "user_id",
+            "as": "shop_orders"
+        }},
+        {"$project": {
+            "_id": 0,
+            "id": 1,
+            "name": 1,
+            "last_food_order": {"$max": "$food_orders.created_at"},
+            "last_shop_order": {"$max": "$shop_orders.created_at"}
+        }},
+        {"$match": {
+            "$or": [
+                {"last_food_order": {"$lt": week_ago}},
+                {"last_food_order": None},
+                {"last_shop_order": {"$lt": week_ago}},
+                {"last_shop_order": None}
+            ]
+        }}
+    ]
+    
+    inactive_users = await db.users.aggregate(pipeline).to_list(length=5000)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إنشاء الإشعارات
+    notifications = []
+    for u in inactive_users:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": u["id"],
+            "type": "referral_inactive_reminder",
+            "title": "🤗 اشتقنالك! عُد واكسب",
+            "message": f"مرحباً {u.get('name', 'صديقنا')}! ادعُ أصدقاءك للتطبيق واكسب {referrer_reward:,} ل.س عن كل صديق. نحن بانتظارك!",
+            "action_url": "/referrals",
+            "is_read": False,
+            "created_at": now
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return {
+        "message": "تم إرسال الإشعارات للمستخدمين غير النشطين",
+        "users_notified": len(notifications)
+    }
