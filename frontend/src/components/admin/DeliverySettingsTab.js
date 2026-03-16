@@ -121,10 +121,19 @@ const DeliverySettingsTab = () => {
   });
   const [holdSummary, setHoldSummary] = useState(null);
 
+  // إعدادات نظام الكيلومتر للسائقين
+  const [driverKmSettings, setDriverKmSettings] = useState({
+    enabled: true,
+    base_fee: 1000,
+    price_per_km: 300,
+    min_fee: 1500
+  });
+
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
     fetchDriverEarningsSettings();
+    fetchDriverKmSettings();
     fetchWaitTime();
     fetchSmartOrderLimits();
     fetchWaitCompensationSettings();
@@ -175,6 +184,33 @@ const DeliverySettingsTab = () => {
       setDriverEarningsSettings(res.data);
     } catch (error) {
       console.error('Error fetching driver earnings settings:', error);
+    }
+  };
+
+  const fetchDriverKmSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/settings/driver-km-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDriverKmSettings(res.data);
+    } catch (error) {
+      console.error('Error fetching driver km settings:', error);
+    }
+  };
+
+  const handleSaveDriverKmSettings = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/driver-km-settings`, driverKmSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم حفظ إعدادات نظام الكيلومتر بنجاح!');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'حدث خطأ');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -793,129 +829,160 @@ const DeliverySettingsTab = () => {
         </div>
       </div>
 
-      {/* Driver Earnings Settings - إعدادات أرباح السائق */}
+      {/* Driver Km Settings - إعدادات نظام الكيلومتر للسائقين */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-4 text-white">
           <div className="flex items-center gap-3">
-            <Truck size={24} />
+            <MapPin size={24} />
             <div>
-              <h2 className="font-bold text-lg">أرباح السائق</h2>
-              <p className="text-sm text-white/80">تحديد ربح السائق بناءً على المسافة الكلية</p>
+              <h2 className="font-bold text-lg">نظام الكيلومتر للسائقين</h2>
+              <p className="text-sm text-white/80">حساب أجرة السائق بناءً على المسافة بالكيلومتر</p>
             </div>
           </div>
         </div>
         
         <div className="p-4 space-y-4">
-          {/* توضيح المعادلة */}
-          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-            <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب ربح السائق:</h3>
-            <p className="text-amber-700 font-mono text-sm">
-              الربح = <span className="text-orange-600">{formatPrice(driverEarningsSettings.base_fee)}</span> + (المسافة الكلية × <span className="text-amber-600">{formatPrice(driverEarningsSettings.price_per_km)}</span>)
-            </p>
-            <p className="text-xs text-amber-600 mt-2">
-              المسافة الكلية = (السائق ← المتجر) + (المتجر ← العميل)
-            </p>
-            <p className="text-xs text-amber-600 mt-1">
-              مثال: 5 كم = {formatPrice(driverEarningsSettings.base_fee)} + (5 × {formatPrice(driverEarningsSettings.price_per_km)}) = <strong>{formatPrice(driverEarningsSettings.base_fee + (5 * driverEarningsSettings.price_per_km))}</strong>
-            </p>
+          {/* تفعيل/تعطيل النظام */}
+          <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${driverKmSettings.enabled ? 'bg-green-500' : 'bg-gray-400'}`}>
+                <span className="text-white text-2xl">{driverKmSettings.enabled ? '✅' : '❌'}</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">تفعيل نظام الكيلومتر</h3>
+                <p className="text-xs text-gray-500">
+                  {driverKmSettings.enabled 
+                    ? 'أجرة السائق تُحسب بناءً على المسافة' 
+                    : 'أجرة السائق ثابتة (من إعدادات المنصة)'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setDriverKmSettings({...driverKmSettings, enabled: !driverKmSettings.enabled})}
+              className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+                driverKmSettings.enabled 
+                  ? 'bg-green-500 text-white hover:bg-green-600' 
+                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+            >
+              {driverKmSettings.enabled ? 'مفعّل' : 'معطّل'}
+            </button>
           </div>
 
-          {/* الإعدادات */}
-          <div className="grid gap-4">
-            {/* الأجرة الأساسية للسائق */}
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">💰</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">الأجرة الأساسية للسائق</h3>
-                  <p className="text-xs text-gray-500">المبلغ الثابت لكل توصيلة</p>
-                </div>
+          {driverKmSettings.enabled && (
+            <>
+              {/* توضيح المعادلة */}
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب أجرة السائق:</h3>
+                <p className="text-amber-700 font-mono text-sm">
+                  الأجرة = <span className="text-orange-600">{formatPrice(driverKmSettings.base_fee)}</span> + (المسافة × <span className="text-amber-600">{formatPrice(driverKmSettings.price_per_km)}</span>)
+                </p>
+                <p className="text-xs text-amber-600 mt-2">
+                  المسافة = من المتجر إلى العميل (بالكيلومتر)
+                </p>
+                <p className="text-xs text-amber-600 mt-1">
+                  مثال: 5 كم = {formatPrice(driverKmSettings.base_fee)} + (5 × {formatPrice(driverKmSettings.price_per_km)}) = <strong>{formatPrice(driverKmSettings.base_fee + (5 * driverKmSettings.price_per_km))}</strong>
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={driverEarningsSettings.base_fee}
-                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, base_fee: parseInt(e.target.value) || 0})}
-                  className="flex-1 p-3 border-2 border-orange-300 rounded-lg text-center text-lg font-bold"
-                />
-                <span className="text-sm text-gray-500">ل.س</span>
-              </div>
-            </div>
 
-            {/* سعر الكيلومتر للسائق */}
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">🛣️</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">سعر الكيلومتر للسائق</h3>
-                  <p className="text-xs text-gray-500">المبلغ المضاف لكل كيلومتر</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={driverEarningsSettings.price_per_km}
-                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, price_per_km: parseInt(e.target.value) || 0})}
-                  className="flex-1 p-3 border-2 border-amber-300 rounded-lg text-center text-lg font-bold"
-                />
-                <span className="text-sm text-gray-500">ل.س/كم</span>
-              </div>
-            </div>
-
-            {/* الحد الأدنى لربح السائق */}
-            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">🛡️</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">الحد الأدنى لربح السائق</h3>
-                  <p className="text-xs text-gray-500">لا يقل ربح السائق عن هذا المبلغ</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={driverEarningsSettings.min_fee}
-                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, min_fee: parseInt(e.target.value) || 0})}
-                  className="flex-1 p-3 border-2 border-yellow-300 rounded-lg text-center text-lg font-bold"
-                />
-                <span className="text-sm text-gray-500">ل.س</span>
-              </div>
-            </div>
-          </div>
-
-          {/* مقارنة الأرباح */}
-          <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
-            <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على الأرباح:</h4>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {[2, 5, 10].map(km => {
-                const earnings = Math.max(
-                  driverEarningsSettings.base_fee + (km * driverEarningsSettings.price_per_km),
-                  driverEarningsSettings.min_fee
-                );
-                return (
-                  <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
-                    <div className="text-2xl">🏍️</div>
-                    <div className="text-sm text-gray-600">{km} كم</div>
-                    <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
+              {/* الإعدادات */}
+              <div className="grid gap-4">
+                {/* الأجرة الأساسية */}
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-lg">💰</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800">الأجرة الأساسية</h3>
+                      <p className="text-xs text-gray-500">المبلغ الثابت لكل توصيلة</p>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={driverKmSettings.base_fee}
+                      onChange={(e) => setDriverKmSettings({...driverKmSettings, base_fee: parseInt(e.target.value) || 0})}
+                      className="flex-1 p-3 border-2 border-orange-300 rounded-lg text-center text-lg font-bold"
+                    />
+                    <span className="text-sm text-gray-500">ل.س</span>
+                  </div>
+                </div>
+
+                {/* سعر الكيلومتر */}
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-lg">🛣️</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800">سعر الكيلومتر</h3>
+                      <p className="text-xs text-gray-500">المبلغ المضاف لكل كيلومتر</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={driverKmSettings.price_per_km}
+                      onChange={(e) => setDriverKmSettings({...driverKmSettings, price_per_km: parseInt(e.target.value) || 0})}
+                      className="flex-1 p-3 border-2 border-amber-300 rounded-lg text-center text-lg font-bold"
+                    />
+                    <span className="text-sm text-gray-500">ل.س/كم</span>
+                  </div>
+                </div>
+
+                {/* الحد الأدنى للأجرة */}
+                <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-lg">🛡️</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800">الحد الأدنى للأجرة</h3>
+                      <p className="text-xs text-gray-500">لا تقل أجرة السائق عن هذا المبلغ</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={driverKmSettings.min_fee}
+                      onChange={(e) => setDriverKmSettings({...driverKmSettings, min_fee: parseInt(e.target.value) || 0})}
+                      className="flex-1 p-3 border-2 border-yellow-300 rounded-lg text-center text-lg font-bold"
+                    />
+                    <span className="text-sm text-gray-500">ل.س</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* مقارنة الأجور */}
+              <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
+                <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على أجرة السائق:</h4>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  {[1, 3, 5, 10].map(km => {
+                    const earnings = Math.max(
+                      driverKmSettings.base_fee + (km * driverKmSettings.price_per_km),
+                      driverKmSettings.min_fee
+                    );
+                    return (
+                      <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
+                        <div className="text-2xl">🏍️</div>
+                        <div className="text-sm text-gray-600">{km} كم</div>
+                        <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
 
           <button
-            onClick={handleSaveDriverEarningsSettings}
+            onClick={handleSaveDriverKmSettings}
             disabled={saving}
             className="mt-4 w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            حفظ إعدادات أرباح السائق
+            حفظ إعدادات نظام الكيلومتر
           </button>
         </div>
       </div>

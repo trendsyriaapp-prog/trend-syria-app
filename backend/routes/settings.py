@@ -335,6 +335,68 @@ class DriverEarningsSettings(BaseModel):
     price_per_km: int = 300  # سعر الكيلومتر للسائق
     min_fee: int = 1500  # الحد الأدنى لربح السائق
 
+class DriverKmSettings(BaseModel):
+    enabled: bool = True  # تفعيل نظام الكيلومتر
+    base_fee: int = 1000  # الأجرة الأساسية
+    price_per_km: int = 300  # سعر الكيلومتر
+    min_fee: int = 1500  # الحد الأدنى للأجرة
+
+@router.get("/driver-km-settings")
+async def get_driver_km_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات نظام الكيلومتر للسائقين"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": True,
+        "base_fee": 1000,
+        "price_per_km": 300,
+        "min_fee": 1500
+    }
+    
+    if not settings or "driver_km_settings" not in settings:
+        return default_settings
+    
+    return {**default_settings, **settings.get("driver_km_settings", {})}
+
+@router.put("/driver-km-settings")
+async def update_driver_km_settings(
+    settings: DriverKmSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات نظام الكيلومتر للسائقين"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "driver_km_settings": {
+                    "enabled": settings.enabled,
+                    "base_fee": settings.base_fee,
+                    "price_per_km": settings.price_per_km,
+                    "min_fee": settings.min_fee
+                },
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات نظام الكيلومتر",
+        "driver_km_settings": {
+            "enabled": settings.enabled,
+            "base_fee": settings.base_fee,
+            "price_per_km": settings.price_per_km,
+            "min_fee": settings.min_fee
+        }
+    }
+
 @router.get("/driver-earnings")
 async def get_driver_earnings_settings():
     """جلب إعدادات أرباح السائق"""

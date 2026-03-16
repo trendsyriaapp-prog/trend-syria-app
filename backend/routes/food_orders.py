@@ -6,10 +6,82 @@ from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import uuid
+import math
 
 from core.database import db, get_current_user
 
 router = APIRouter(prefix="/food/orders", tags=["Food Orders"])
+
+# ============== حساب المسافة والأجرة بالكيلومتر ==============
+
+async def get_driver_km_settings():
+    """جلب إعدادات أجرة السائق بالكيلومتر"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": True,
+        "base_fee": 1000,       # رسوم أساسية
+        "price_per_km": 300,   # سعر الكيلومتر
+        "min_fee": 1500        # الحد الأدنى
+    }
+    
+    if settings and "driver_km_settings" in settings:
+        return {**default_settings, **settings["driver_km_settings"]}
+    
+    return default_settings
+
+def calculate_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """حساب المسافة بين نقطتين بالكيلومتر (Haversine)"""
+    if not all([lat1, lon1, lat2, lon2]):
+        return 0
+    
+    R = 6371  # نصف قطر الأرض بالكيلومتر
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_lat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    
+    return R * c
+
+async def calculate_driver_fee_by_km(distance_km: float) -> dict:
+    """حساب أجرة السائق بناءً على المسافة"""
+    settings = await get_driver_km_settings()
+    
+    if not settings.get("enabled", True):
+        # إذا النظام معطل، استخدم الرسوم الثابتة
+        platform_settings = await db.platform_settings.find_one({"id": "main"})
+        fixed_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
+        return {
+            "driver_fee": fixed_fee,
+            "distance_km": distance_km,
+            "calculation_method": "fixed",
+            "details": None
+        }
+    
+    base_fee = settings.get("base_fee", 1000)
+    price_per_km = settings.get("price_per_km", 300)
+    min_fee = settings.get("min_fee", 1500)
+    
+    # الحساب: رسوم أساسية + (المسافة × سعر الكيلومتر)
+    calculated_fee = base_fee + (distance_km * price_per_km)
+    final_fee = max(calculated_fee, min_fee)
+    final_fee = round(final_fee)
+    
+    return {
+        "driver_fee": final_fee,
+        "distance_km": round(distance_km, 2),
+        "calculation_method": "per_km",
+        "details": {
+            "base_fee": base_fee,
+            "price_per_km": price_per_km,
+            "min_fee": min_fee,
+            "calculated": round(calculated_fee)
+        }
+    }
 
 # ============== تصنيفات أنواع المتاجر للتوصيل ==============
 # ساخن/طازج: يحتاج توصيل سريع (حد أقصى 2 طلبات)
@@ -370,20 +442,39 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # التحقق من الحد المجاني للتوصيل (لكل متجر على حدة) أو العرض الشامل
     is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold)
     
-    # أجرة التوصيل الأصلية للسائق (يحصل عليها دائماً)
-    driver_delivery_fee = food_delivery_fee
+    # ========== حساب أجرة السائق بنظام الكيلومتر ==========
+    delivery_distance_km = order.delivery_distance_km
     
-    if order.delivery_fee is not None:
-        driver_delivery_fee = order.delivery_fee  # الأجرة المحسوبة للسائق
-        delivery_fee = order.delivery_fee if not is_free_delivery else 0  # ما يدفعه العميل
-        delivery_distance_km = order.delivery_distance_km
+    # حساب المسافة إذا لم تُرسل من Frontend
+    if delivery_distance_km is None and order.delivery_address:
+        customer_lat = order.delivery_address.get("lat") or order.delivery_address.get("latitude")
+        customer_lon = order.delivery_address.get("lng") or order.delivery_address.get("lon") or order.delivery_address.get("longitude")
+        store_lat = first_store.get("latitude") or first_store.get("location", {}).get("lat")
+        store_lon = first_store.get("longitude") or first_store.get("location", {}).get("lng")
+        
+        if all([customer_lat, customer_lon, store_lat, store_lon]):
+            delivery_distance_km = calculate_distance_km(
+                float(store_lat), float(store_lon),
+                float(customer_lat), float(customer_lon)
+            )
+    
+    # حساب أجرة السائق بالكيلومتر
+    if delivery_distance_km and delivery_distance_km > 0:
+        km_calculation = await calculate_driver_fee_by_km(delivery_distance_km)
+        driver_delivery_fee = km_calculation["driver_fee"]
+        delivery_calculation_method = km_calculation["calculation_method"]
+        delivery_calculation_details = km_calculation["details"]
     else:
-        # توصيل مجاني إذا تجاوز المجموع الحد الموحد (بعد الخصم)
-        if is_free_delivery:
-            delivery_fee = 0  # العميل لا يدفع
-        else:
-            delivery_fee = food_delivery_fee  # العميل يدفع
-        delivery_distance_km = None
+        # استخدام الرسوم الثابتة إذا لم تتوفر المسافة
+        driver_delivery_fee = food_delivery_fee
+        delivery_calculation_method = "fixed"
+        delivery_calculation_details = None
+    
+    # ما يدفعه العميل (صفر إذا توصيل مجاني)
+    if is_free_delivery:
+        delivery_fee = 0  # العميل لا يدفع
+    else:
+        delivery_fee = driver_delivery_fee  # العميل يدفع نفس أجرة السائق
     
     # إضافة رسوم الطقس الصعب (فقط إذا لم يكن التوصيل مجاني)
     applied_weather_surcharge = 0
@@ -456,7 +547,9 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "delivery_fee": delivery_fee,
         "driver_delivery_fee": driver_delivery_fee,  # أجرة السائق (تُدفع دائماً)
         "is_platform_paid_delivery": is_free_delivery,  # هل المنصة تدفع أجرة التوصيل؟
-        "delivery_distance_km": delivery_distance_km,
+        "delivery_distance_km": round(delivery_distance_km, 2) if delivery_distance_km else None,
+        "delivery_calculation_method": delivery_calculation_method,  # fixed أو per_km
+        "delivery_calculation_details": delivery_calculation_details,  # تفاصيل الحساب
         "weather_surcharge": applied_weather_surcharge,
         "weather_surcharge_reason": weather_surcharge_reason if applied_weather_surcharge > 0 else None,
         "total": total,
