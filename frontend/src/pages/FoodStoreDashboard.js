@@ -9,10 +9,11 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell
+  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -1750,12 +1751,26 @@ const StoreOrdersTab = ({ token }) => {
                   )}
 
                   {order.status === 'out_for_delivery' && (
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                      <p className="text-purple-700 text-sm font-medium">🏍️ جاري التوصيل</p>
-                      {order.driver_name && (
-                        <p className="text-xs text-purple-600 mt-1">
-                          بواسطة: {order.driver_name}
+                    <div className="space-y-2">
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                        <p className="text-purple-700 text-sm font-medium flex items-center justify-center gap-2">
+                          <Navigation size={16} className="animate-pulse" />
+                          جاري التوصيل للعميل
                         </p>
+                        {order.driver_name && (
+                          <p className="text-xs text-purple-600 mt-1">
+                            🏍️ بواسطة: {order.driver_name}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* خريطة تتبع السائق للبائع */}
+                      {order.driver_id && (
+                        <SellerDriverTrackingMap 
+                          orderId={order.id} 
+                          token={token}
+                          driverName={order.driver_name || 'السائق'}
+                        />
                       )}
                     </div>
                   )}

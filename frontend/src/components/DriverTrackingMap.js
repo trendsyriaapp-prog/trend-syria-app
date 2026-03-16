@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import axios from 'axios';
-import { Loader2, Navigation, MapPin, Clock, RefreshCw } from 'lucide-react';
+import { Loader2, Navigation, MapPin, Clock, RefreshCw, Route } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -26,29 +27,84 @@ const createIcon = (emoji, color) => {
 const driverIcon = createIcon('🏍️', '#f97316');
 const customerIcon = createIcon('🏠', '#22c55e');
 
+// مكون لتعديل حدود الخريطة
+const FitBoundsComponent = ({ driverPos, customerPos }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (driverPos && customerPos) {
+      const bounds = [driverPos, customerPos];
+      map.fitBounds(bounds, { padding: [30, 30] });
+    }
+  }, [map, driverPos, customerPos]);
+  
+  return null;
+};
+
 /**
  * مكون خريطة تتبع السائق للعميل
  */
 const DriverTrackingMap = ({ orderId, orderStatus }) => {
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [locationData, setLocationData] = useState(null);
   const [error, setError] = useState(null);
   const [soundPlayed, setSoundPlayed] = useState(false);
   const audioRef = useRef(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [routeData, setRouteData] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
 
   // جلب موقع السائق
   const fetchDriverLocation = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await axios.get(`${API}/delivery/location/${orderId}`);
+      const res = await axios.get(`${API}/delivery/location/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setLocationData(res.data);
       setLastUpdate(new Date());
       setError(null);
+      
+      // جلب المسار الفعلي إذا كان هناك موقع للسائق والعميل
+      if (res.data.driver_latitude && res.data.customer_latitude) {
+        await fetchRoute(
+          res.data.driver_latitude, 
+          res.data.driver_longitude,
+          res.data.customer_latitude,
+          res.data.customer_longitude
+        );
+      }
     } catch (err) {
       console.error('Error fetching driver location:', err);
       setError('فشل في جلب موقع السائق');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // جلب المسار من OSRM
+  const fetchRoute = async (driverLat, driverLon, customerLat, customerLon) => {
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${driverLon},${driverLat};${customerLon},${customerLat}?overview=full&geometries=geojson`;
+      const res = await axios.get(osrmUrl);
+      
+      if (res.data.routes && res.data.routes.length > 0) {
+        const route = res.data.routes[0];
+        // تحويل الإحداثيات من [lon, lat] إلى [lat, lon] لـ Leaflet
+        const coords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+        setRouteCoordinates(coords);
+        setRouteData({
+          distance: (route.distance / 1000).toFixed(1), // km
+          duration: Math.ceil(route.duration / 60) // minutes
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching route:', err);
+      // في حالة الفشل، نستخدم الحساب البسيط
     }
   };
 
@@ -147,15 +203,19 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
     ? [locationData.customer_latitude, locationData.customer_longitude]
     : null;
 
-  // حساب المسافة والوقت
-  let distance = null;
-  let estimatedTime = null;
-  if (customerPos) {
-    distance = calculateDistance(
+  // استخدام بيانات المسار الفعلي إذا كانت متاحة، أو الحساب البسيط
+  let displayDistance = null;
+  let displayTime = null;
+  
+  if (routeData) {
+    displayDistance = parseFloat(routeData.distance);
+    displayTime = routeData.duration;
+  } else if (customerPos) {
+    displayDistance = calculateDistance(
       locationData.driver_latitude, locationData.driver_longitude,
       locationData.customer_latitude, locationData.customer_longitude
     );
-    estimatedTime = estimateArrivalTime(distance);
+    displayTime = estimateArrivalTime(displayDistance);
   }
 
   // مركز الخريطة
@@ -164,45 +224,52 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
     : driverPos;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden" data-testid="driver-tracking-map">
       {/* إشعار اقتراب السائق */}
-      {distance && distance < 0.5 && (
+      {displayDistance && displayDistance < 0.5 && (
         <div className="bg-green-500 text-white p-3 flex items-center gap-2 animate-pulse">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
             🏍️
           </div>
           <div>
             <p className="font-bold text-sm">السائق وصل!</p>
-            <p className="text-xs text-white/90">على بعد {Math.round(distance * 1000)} متر منك</p>
+            <p className="text-xs text-white/90">على بعد {Math.round(displayDistance * 1000)} متر منك</p>
           </div>
         </div>
       )}
       
       {/* معلومات التتبع */}
-      <div className={`p-3 ${distance && distance < 0.5 ? 'bg-green-600' : 'bg-gradient-to-l from-orange-500 to-orange-600'} text-white`}>
+      <div className={`p-3 ${displayDistance && displayDistance < 0.5 ? 'bg-green-600' : 'bg-gradient-to-l from-orange-500 to-orange-600'} text-white`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Navigation size={18} />
             <span className="font-bold text-sm">تتبع السائق</span>
+            {routeData && (
+              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                <Route size={10} />
+                مسار فعلي
+              </span>
+            )}
           </div>
           <button
             onClick={fetchDriverLocation}
             className="p-1.5 bg-white/20 rounded-full hover:bg-white/30"
             title="تحديث الموقع"
+            data-testid="refresh-tracking"
           >
             <RefreshCw size={14} />
           </button>
         </div>
         
-        {distance !== null && (
+        {displayDistance !== null && (
           <div className="flex items-center gap-4 mt-2 text-sm">
             <div className="flex items-center gap-1">
               <MapPin size={14} />
-              <span>{distance < 1 ? `${Math.round(distance * 1000)} متر` : `${distance.toFixed(1)} كم`}</span>
+              <span>{displayDistance < 1 ? `${Math.round(displayDistance * 1000)} متر` : `${displayDistance.toFixed(1)} كم`}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock size={14} />
-              <span>~{estimatedTime} دقيقة</span>
+              <span>~{displayTime} دقيقة</span>
             </div>
           </div>
         )}
@@ -220,6 +287,9 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; OpenStreetMap'
           />
+          
+          {/* تعديل حدود الخريطة لتشمل السائق والعميل */}
+          {customerPos && <FitBoundsComponent driverPos={driverPos} customerPos={customerPos} />}
           
           {/* موقع السائق */}
           <Marker position={driverPos} icon={driverIcon}>
@@ -243,8 +313,15 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
             </Marker>
           )}
           
-          {/* خط بين السائق والعميل */}
-          {customerPos && (
+          {/* المسار الفعلي أو خط مستقيم */}
+          {routeCoordinates.length > 0 ? (
+            <Polyline
+              positions={routeCoordinates}
+              color="#f97316"
+              weight={4}
+              opacity={0.8}
+            />
+          ) : customerPos && (
             <Polyline
               positions={[driverPos, customerPos]}
               color="#f97316"
