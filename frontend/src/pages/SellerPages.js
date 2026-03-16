@@ -454,6 +454,7 @@ const SellerDashboardPage = () => {
   const [foodOrders, setFoodOrders] = useState([]); // طلبات الطعام
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
   // قراءة التبويب من URL أو استخدام 'products' كافتراضي
   const defaultTab = isFoodSeller ? 'menu' : 'products';
@@ -629,6 +630,34 @@ const SellerDashboardPage = () => {
     setEditingProduct(product);
     setEditPrice(product.price.toString());
     setEditStock(product.stock.toString());
+  };
+
+  // نسخ منتج - يفتح نموذج إضافة منتج جديد مع البيانات المنسوخة
+  const handleDuplicateProduct = (product) => {
+    // إنشاء نسخة من المنتج بدون الـ ID والحالة
+    const duplicatedData = {
+      name: `${product.name} (نسخة)`,
+      description: product.description || '',
+      price: product.price,
+      original_price: product.original_price || product.price,
+      stock: product.stock || 10,
+      category: product.category || '',
+      subcategory: product.subcategory || '',
+      images: product.images || [],
+      specifications: product.specifications || {},
+      tags: product.tags || [],
+      colors: product.colors || [],
+      sizes: product.sizes || [],
+      discount_percentage: product.discount_percentage || 0,
+    };
+    
+    setDuplicatingProduct(duplicatedData);
+    setShowAddProduct(true);
+    
+    toast({
+      title: "نسخ المنتج",
+      description: "تم نسخ بيانات المنتج - عدّل الاسم والتفاصيل ثم احفظ"
+    });
   };
 
   const handleSaveEdit = async () => {
@@ -960,7 +989,8 @@ const SellerDashboardPage = () => {
                 <SellerProductsGrid 
                   products={products} 
                   onEdit={handleEditProduct} 
-                  onDelete={handleDeleteProduct} 
+                  onDelete={handleDeleteProduct}
+                  onDuplicate={handleDuplicateProduct}
                 />
               )}
             </section>
@@ -990,12 +1020,16 @@ const SellerDashboardPage = () => {
       {/* Add Product Modal */}
       <AddProductModal
         isOpen={showAddProduct}
-        onClose={() => setShowAddProduct(false)}
+        onClose={() => {
+          setShowAddProduct(false);
+          setDuplicatingProduct(null); // مسح بيانات النسخ عند الإغلاق
+        }}
         onSave={handleAddProduct}
         saving={saving}
         toast={toast}
         isFoodSeller={isFoodSeller}
         commissionInfo={commissionInfo}
+        initialData={duplicatingProduct} // تمرير بيانات المنتج المنسوخ
       />
 
       {/* Edit Product Modal */}

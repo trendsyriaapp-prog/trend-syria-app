@@ -1,7 +1,7 @@
-import { Package, Edit, Trash2, Check, X, Clock } from 'lucide-react';
+import { Package, Edit, Trash2, Check, X, Clock, Copy } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 
-const SellerProductsGrid = ({ products, onEdit, onDelete }) => {
+const SellerProductsGrid = ({ products, onEdit, onDelete, onDuplicate }) => {
   if (products.length === 0) {
     return (
       <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
@@ -56,12 +56,19 @@ const SellerProductsGrid = ({ products, onEdit, onDelete }) => {
                 تعديل
               </button>
               <button
+                onClick={() => onDuplicate(product)}
+                className="flex-1 p-1 text-green-600 bg-green-50 rounded text-[9px] flex items-center justify-center gap-0.5"
+                data-testid={`duplicate-product-${product.id}`}
+              >
+                <Copy size={10} />
+                نسخ
+              </button>
+              <button
                 onClick={() => onDelete(product.id)}
-                className="flex-1 p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center gap-0.5"
+                className="p-1 text-red-500 bg-red-50 rounded text-[9px] flex items-center justify-center"
                 data-testid={`delete-product-${product.id}`}
               >
                 <Trash2 size={10} />
-                حذف
               </button>
             </div>
           </div>

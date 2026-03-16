@@ -1,14 +1,20 @@
 # /app/backend/routes/image_processing.py
 # معالجة صور المنتجات - إزالة الخلفية وتحسين الصور
+# يدعم Remove.bg API للجودة الاحترافية مع fallback للمعالجة المحلية
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from PIL import Image, ImageFilter, ImageDraw
+from PIL import Image, ImageFilter, ImageDraw, ImageEnhance
 import io
 import base64
-from rembg import remove
+import os
 import httpx
+from rembg import remove
 
 router = APIRouter(prefix="/image", tags=["Image Processing"])
+
+# Remove.bg API Configuration
+REMOVE_BG_API_KEY = os.environ.get("REMOVE_BG_API_KEY")
+REMOVE_BG_API_URL = "https://api.remove.bg/v1.0/removebg"
 
 # خلفيات متدرجة جاهزة (مثل Trendyol)
 GRADIENT_PRESETS = {
@@ -67,7 +73,60 @@ def create_gradient_background(width: int, height: int, preset_name: str) -> Ima
     
     return background
 
-def add_shadow(image: Image.Image, offset: tuple = (5, 5), blur: int = 10, opacity: float = 0.3) -> Image.Image:
+
+async def remove_background_removebg(image_data: bytes) -> bytes:
+    """إزالة الخلفية باستخدام Remove.bg API - جودة احترافية"""
+    if not REMOVE_BG_API_KEY:
+        raise Exception("Remove.bg API key not configured")
+    
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            REMOVE_BG_API_URL,
+            files={"image_file": ("image.png", image_data, "image/png")},
+            data={"size": "auto", "format": "png"},
+            headers={"X-Api-Key": REMOVE_BG_API_KEY}
+        )
+        
+        if response.status_code == 200:
+            return response.content
+        elif response.status_code == 402:
+            raise Exception("Remove.bg credits exhausted - الرصيد المجاني انتهى")
+        else:
+            error_msg = response.json().get("errors", [{}])[0].get("title", "Unknown error")
+            raise Exception(f"Remove.bg API error: {error_msg}")
+
+
+def remove_background_local(image_data: bytes) -> bytes:
+    """إزالة الخلفية محلياً باستخدام rembg - fallback"""
+    input_image = Image.open(io.BytesIO(image_data))
+    output_image = remove(input_image)
+    
+    # تحسين الحواف
+    if output_image.mode == 'RGBA':
+        # تنعيم الحواف
+        alpha = output_image.split()[3]
+        alpha = alpha.filter(ImageFilter.GaussianBlur(0.5))
+        output_image.putalpha(alpha)
+    
+    output_buffer = io.BytesIO()
+    output_image.save(output_buffer, format='PNG')
+    output_buffer.seek(0)
+    return output_buffer.getvalue()
+
+
+def enhance_image(image: Image.Image) -> Image.Image:
+    """تحسين جودة الصورة"""
+    # زيادة الحدة قليلاً
+    enhancer = ImageEnhance.Sharpness(image)
+    image = enhancer.enhance(1.1)
+    
+    # تحسين التباين قليلاً
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(1.05)
+    
+    return image
+
+def add_shadow_to_image(image: Image.Image, offset: tuple = (5, 5), blur: int = 10, opacity: float = 0.3) -> Image.Image:
     """إضافة ظل خفيف للمنتج"""
     if image.mode != 'RGBA':
         image = image.convert('RGBA')
@@ -122,7 +181,7 @@ def process_product_image(
     
     # إضافة الظل إذا مطلوب
     if add_product_shadow and background_type != "premium_dark":
-        shadow = add_shadow(output_image, offset=(8, 8), blur=15, opacity=0.2)
+        shadow = add_shadow_to_image(output_image, offset=(8, 8), blur=15, opacity=0.2)
         background.paste(shadow, (x, y), shadow)
     
     # لصق المنتج فوق الخلفية
@@ -143,14 +202,16 @@ def process_product_image(
 async def process_image(
     file: UploadFile = File(...),
     background: str = Form(default="white"),
-    add_shadow: bool = Form(default=True)
+    add_shadow: bool = Form(default=True),
+    use_premium: bool = Form(default=True)
 ):
     """
-    معالجة صورة المنتج
+    معالجة صورة المنتج - Remove.bg للجودة الاحترافية
     
     - **file**: ملف الصورة
-    - **background**: نوع الخلفية (white, light_gray, soft_blue, soft_pink, soft_gold, elegant_gray, premium_dark, fashion_beige, tech_silver, nature_green)
+    - **background**: نوع الخلفية
     - **add_shadow**: إضافة ظل خفيف (true/false)
+    - **use_premium**: استخدام Remove.bg API (true) أو المعالجة المحلية (false)
     """
     
     if not file.content_type.startswith('image/'):
@@ -162,22 +223,70 @@ async def process_image(
     if len(image_data) > 10 * 1024 * 1024:  # 10 MB
         raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
     
+    processing_method = "local"
+    
     try:
-        # معالجة الصورة
-        processed_image = process_product_image(
-            image_data=image_data,
-            background_type=background,
-            add_product_shadow=add_shadow
-        )
+        # محاولة استخدام Remove.bg أولاً
+        if use_premium and REMOVE_BG_API_KEY:
+            try:
+                no_bg_image_data = await remove_background_removebg(image_data)
+                processing_method = "removebg"
+            except Exception as api_error:
+                print(f"Remove.bg API failed, falling back to local: {api_error}")
+                no_bg_image_data = remove_background_local(image_data)
+                processing_method = "local_fallback"
+        else:
+            no_bg_image_data = remove_background_local(image_data)
+        
+        # فتح الصورة بدون خلفية
+        no_bg_image = Image.open(io.BytesIO(no_bg_image_data))
+        
+        # تحويل إلى RGBA
+        if no_bg_image.mode != 'RGBA':
+            no_bg_image = no_bg_image.convert('RGBA')
+        
+        # تحسين الصورة
+        no_bg_image = enhance_image(no_bg_image)
+        
+        # تغيير الحجم مع الحفاظ على النسبة
+        output_size = (1200, 1200)
+        no_bg_image.thumbnail(output_size, Image.Resampling.LANCZOS)
+        
+        # إنشاء الخلفية الجديدة
+        bg_width, bg_height = output_size
+        final_background = create_gradient_background(bg_width, bg_height, background)
+        final_background = final_background.convert('RGBA')
+        
+        # حساب موضع المنتج في المنتصف
+        img_width, img_height = no_bg_image.size
+        x = (bg_width - img_width) // 2
+        y = (bg_height - img_height) // 2
+        
+        # إضافة الظل إذا مطلوب
+        if add_shadow and background != "premium_dark":
+            shadow_layer = add_shadow_to_image(no_bg_image, offset=(8, 8), blur=15, opacity=0.2)
+            final_background.paste(shadow_layer, (x, y), shadow_layer)
+        
+        # لصق المنتج فوق الخلفية
+        final_background.paste(no_bg_image, (x, y), no_bg_image)
+        
+        # تحويل إلى RGB للحفظ كـ JPEG
+        final_image = final_background.convert('RGB')
+        
+        # حفظ الصورة بجودة عالية
+        output_buffer = io.BytesIO()
+        final_image.save(output_buffer, format='JPEG', quality=95)
+        output_buffer.seek(0)
         
         # تحويل إلى base64
-        image_base64 = base64.b64encode(processed_image).decode('utf-8')
+        image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
         
         return {
             "success": True,
             "image": f"data:image/jpeg;base64,{image_base64}",
             "background_used": background,
-            "message": "تمت معالجة الصورة بنجاح"
+            "processing_method": processing_method,
+            "message": "تمت معالجة الصورة بنجاح" + (" (جودة احترافية)" if processing_method == "removebg" else "")
         }
         
     except Exception as e:
@@ -252,4 +361,38 @@ async def get_available_backgrounds():
             "tech": "تقنية",
             "nature": "طبيعة"
         }
+    }
+
+
+@router.get("/status")
+async def get_image_processing_status():
+    """
+    الحصول على حالة خدمة معالجة الصور
+    """
+    has_premium = bool(REMOVE_BG_API_KEY)
+    
+    # محاولة التحقق من رصيد Remove.bg
+    credits_info = None
+    if has_premium:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    "https://api.remove.bg/v1.0/account",
+                    headers={"X-Api-Key": REMOVE_BG_API_KEY}
+                )
+                if response.status_code == 200:
+                    data = response.json().get("data", {}).get("attributes", {})
+                    credits_info = {
+                        "free_calls": data.get("api", {}).get("free_calls", 0),
+                        "total_calls": data.get("api", {}).get("total_calls", 0)
+                    }
+        except Exception:
+            pass
+    
+    return {
+        "premium_available": has_premium,
+        "premium_service": "Remove.bg" if has_premium else None,
+        "credits": credits_info,
+        "fallback_available": True,
+        "fallback_service": "rembg (local)"
     }

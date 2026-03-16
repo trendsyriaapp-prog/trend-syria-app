@@ -6,7 +6,7 @@ import axios from 'axios';
 import {
   TrendingUp, TrendingDown, DollarSign, ShoppingBag,
   Star, Clock, Package, RefreshCw, BarChart3,
-  ArrowUp, ArrowDown, Calendar, Users
+  ArrowUp, ArrowDown, Calendar, Users, Download, FileSpreadsheet, FileText
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -19,6 +19,7 @@ const SellerAnalytics = ({ token }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [period, setPeriod] = useState('week');
+  const [exporting, setExporting] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -35,6 +36,45 @@ const SellerAnalytics = ({ token }) => {
       console.error('Error fetching analytics:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // تصدير التقارير
+  const handleExport = async (type, format) => {
+    setExporting(`${type}-${format}`);
+    try {
+      const daysMap = { today: 1, week: 7, month: 30, all: 365 };
+      const days = daysMap[period] || 30;
+      
+      let endpoint = '';
+      if (type === 'sales') {
+        endpoint = format === 'excel' ? `/api/reports/sales/excel?days=${days}` : `/api/reports/sales/pdf?days=${days}`;
+      } else if (type === 'products') {
+        endpoint = `/api/reports/products/excel`;
+      } else if (type === 'analytics') {
+        endpoint = `/api/reports/analytics/excel?days=${days}`;
+      }
+      
+      const response = await axios.get(`${API}${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // تحميل الملف
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}_report_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('فشل تصدير التقرير');
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -79,6 +119,52 @@ const SellerAnalytics = ({ token }) => {
             {p.label}
           </button>
         ))}
+      </div>
+
+      {/* أزرار تصدير التقارير */}
+      <div className="bg-white rounded-xl p-3 border border-gray-100">
+        <div className="flex items-center gap-2 mb-2">
+          <Download size={16} className="text-gray-600" />
+          <span className="text-xs font-bold text-gray-700">تصدير التقارير</span>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => handleExport('sales', 'excel')}
+            disabled={exporting}
+            className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-100 disabled:opacity-50"
+            data-testid="export-sales-excel"
+          >
+            <FileSpreadsheet size={14} />
+            {exporting === 'sales-excel' ? 'جاري...' : 'مبيعات Excel'}
+          </button>
+          <button
+            onClick={() => handleExport('sales', 'pdf')}
+            disabled={exporting}
+            className="flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50"
+            data-testid="export-sales-pdf"
+          >
+            <FileText size={14} />
+            {exporting === 'sales-pdf' ? 'جاري...' : 'مبيعات PDF'}
+          </button>
+          <button
+            onClick={() => handleExport('products', 'excel')}
+            disabled={exporting}
+            className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-50"
+            data-testid="export-products-excel"
+          >
+            <Package size={14} />
+            {exporting === 'products-excel' ? 'جاري...' : 'المنتجات'}
+          </button>
+          <button
+            onClick={() => handleExport('analytics', 'excel')}
+            disabled={exporting}
+            className="flex items-center gap-1.5 bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-purple-100 disabled:opacity-50"
+            data-testid="export-analytics-excel"
+          >
+            <BarChart3 size={14} />
+            {exporting === 'analytics-excel' ? 'جاري...' : 'تقرير شامل'}
+          </button>
+        </div>
       </div>
 
       {/* إحصائيات رئيسية */}

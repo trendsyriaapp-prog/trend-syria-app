@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye } from 'lucide-react';
+import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuideModal';
 import ImageBackgroundSelector from './ImageBackgroundSelector';
 import ImageEditorModal from './ImageEditorModal';
@@ -16,9 +16,10 @@ const AddProductModal = ({
   saving,
   toast,
   isFoodSeller = false,
-  commissionInfo = null
+  commissionInfo = null,
+  initialData = null // بيانات المنتج المنسوخ
 }) => {
-  const [newProduct, setNewProduct] = useState({
+  const getDefaultProduct = () => ({
     name: '',
     description: '',
     price: '',
@@ -38,7 +39,37 @@ const AddProductModal = ({
     preparation_time: '15',
     is_available: true
   });
+
+  const [newProduct, setNewProduct] = useState(getDefaultProduct());
+  const [isDuplicate, setIsDuplicate] = useState(false);
   
+  // تحميل بيانات المنتج المنسوخ عند فتح الـ Modal
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setNewProduct({
+        ...getDefaultProduct(),
+        name: initialData.name || '',
+        description: initialData.description || '',
+        price: initialData.price?.toString() || '',
+        category: initialData.category || (isFoodSeller ? 'main' : 'electronics'),
+        stock: initialData.stock?.toString() || '',
+        images: initialData.images || [],
+        length_cm: initialData.length_cm?.toString() || '',
+        width_cm: initialData.width_cm?.toString() || '',
+        height_cm: initialData.height_cm?.toString() || '',
+        weight_kg: initialData.weight_kg?.toString() || '',
+        size_type: initialData.size_type || 'none',
+        available_sizes: initialData.available_sizes || [],
+        max_per_customer: initialData.max_per_customer?.toString() || '',
+        weight_variants: initialData.weight_variants || [],
+      });
+      setIsDuplicate(true);
+    } else if (isOpen && !initialData) {
+      setNewProduct(getDefaultProduct());
+      setIsDuplicate(false);
+    }
+  }, [isOpen, initialData, isFoodSeller]);
+
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
@@ -214,25 +245,25 @@ const AddProductModal = ({
     });
   };
 
-  // التسميات حسب نوع البائع
+  // التسميات حسب نوع البائع وحالة النسخ
   const labels = isFoodSeller ? {
-    title: 'إضافة طبق جديد',
+    title: isDuplicate ? 'نسخ طبق' : 'إضافة طبق جديد',
     nameLabel: 'اسم الطبق',
     namePlaceholder: 'مثال: شاورما دجاج',
     descLabel: 'وصف الطبق',
     descPlaceholder: 'وصف قصير للطبق ومكوناته',
     priceLabel: 'السعر (ل.س)',
     categoryLabel: 'تصنيف الطبق',
-    submitButton: 'إضافة الطبق'
+    submitButton: isDuplicate ? 'حفظ النسخة' : 'إضافة الطبق'
   } : {
-    title: 'إضافة منتج جديد',
+    title: isDuplicate ? 'نسخ منتج' : 'إضافة منتج جديد',
     nameLabel: 'اسم المنتج',
     namePlaceholder: '',
     descLabel: 'الوصف',
     descPlaceholder: '',
     priceLabel: 'السعر (ل.س)',
     categoryLabel: 'الفئة',
-    submitButton: 'إضافة المنتج'
+    submitButton: isDuplicate ? 'حفظ النسخة' : 'إضافة المنتج'
   };
 
   // أصناف الطعام
@@ -260,7 +291,15 @@ const AddProductModal = ({
           className="bg-white rounded-xl p-4 w-full max-w-md max-h-[85vh] overflow-y-auto"
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-gray-900">{labels.title}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-gray-900">{labels.title}</h2>
+              {isDuplicate && (
+                <span className="bg-green-100 text-green-700 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Copy size={10} />
+                  نسخة
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={onClose}
