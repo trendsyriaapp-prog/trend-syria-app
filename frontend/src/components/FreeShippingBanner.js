@@ -54,17 +54,17 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
     <motion.div
       initial={{ opacity: 0, y: -5 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`mb-3 bg-gradient-to-r ${gradientClass} rounded-xl p-2.5 text-white shadow-md`}
+      className={`bg-gradient-to-r ${gradientClass} py-2 px-3 text-white`}
       data-testid="free-shipping-banner"
     >
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Truck size={16} />
+      <div className="flex items-center gap-2 max-w-7xl mx-auto">
+        <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Truck size={14} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-sm">🎁 توصيل مجاني!</h3>
-          <p className="text-white/90 text-xs truncate">
-            {promo.message || 'عرض خاص - توصيل مجاني لجميع الطلبات!'}
+          <h3 className="font-bold text-xs">🎁 توصيل مجاني!</h3>
+          <p className="text-white/90 text-[10px] truncate">
+            {promo.message || 'توصيل مجاني لجميع الطلبات!'}
           </p>
         </div>
         {/* العداد التنازلي مدمج */}
@@ -72,11 +72,11 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
           <div className="flex gap-1 flex-shrink-0">
             {timeLeft.days > 0 && (
               <div className="bg-white/20 rounded px-1.5 py-0.5 text-center">
-                <div className="text-xs font-bold">{timeLeft.days}d</div>
+                <div className="text-[10px] font-bold">{timeLeft.days}d</div>
               </div>
             )}
             <div className="bg-white/20 rounded px-1.5 py-0.5 text-center">
-              <div className="text-xs font-bold">
+              <div className="text-[10px] font-bold">
                 {timeLeft.hours.toString().padStart(2, '0')}:
                 {timeLeft.minutes.toString().padStart(2, '0')}:
                 {timeLeft.seconds.toString().padStart(2, '0')}
@@ -84,7 +84,7 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
             </div>
           </div>
         )}
-        <Sparkles size={16} className="text-yellow-300 animate-pulse flex-shrink-0" />
+        <Sparkles size={14} className="text-yellow-300 animate-pulse flex-shrink-0" />
       </div>
     </motion.div>
   );
