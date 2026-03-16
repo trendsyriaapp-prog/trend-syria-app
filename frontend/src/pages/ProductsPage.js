@@ -321,6 +321,10 @@ const ProductsPage = () => {
 
   const getCategoryName = (id) => {
     const cat = categories.find(c => c.id === id);
+    // إذا لم يتم تحميل التصنيفات بعد، نعرض نص انتظار بدلاً من ID
+    if (!cat && categories.length === 0) {
+      return '...';
+    }
     return cat?.name || id;
   };
 
