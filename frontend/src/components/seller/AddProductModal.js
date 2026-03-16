@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy } from 'lucide-react';
+import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy, Sparkles } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuideModal';
 import ImageBackgroundSelector from './ImageBackgroundSelector';
+import ProImageProcessor from './ProImageProcessor';
 import ImageEditorModal from './ImageEditorModal';
 import CameraGuideModal from './CameraGuideModal';
 import ProductPreviewModal from './ProductPreviewModal';
@@ -77,6 +78,7 @@ const AddProductModal = ({
   const [imageWarnings, setImageWarnings] = useState([]);
   const [pendingImage, setPendingImage] = useState(null);
   const [showImageProcessor, setShowImageProcessor] = useState(false);
+  const [showProProcessor, setShowProProcessor] = useState(false); // المعالج الاحترافي الجديد
   const [showCameraGuide, setShowCameraGuide] = useState(false);
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [editingImageIndex, setEditingImageIndex] = useState(null);
@@ -105,7 +107,8 @@ const AddProductModal = ({
         }
         
         setPendingImage(result.dataUrl);
-        setShowImageProcessor(true);
+        // استخدام المعالج الاحترافي الجديد
+        setShowProProcessor(true);
         
         if (result.warnings.length > 0) {
           setImageWarnings(prev => [...prev, ...result.warnings]);
@@ -129,15 +132,17 @@ const AddProductModal = ({
       images: [...prev.images, processedImageUrl]
     }));
     setShowImageProcessor(false);
+    setShowProProcessor(false);
     setPendingImage(null);
     toast({
       title: "تم إضافة الصورة",
-      description: "تمت إضافة الصورة بنجاح"
+      description: "تمت معالجة الصورة بنجاح ✨"
     });
   };
 
   const handleCancelImageProcess = () => {
     setShowImageProcessor(false);
+    setShowProProcessor(false);
     setPendingImage(null);
   };
 
@@ -803,6 +808,14 @@ const AddProductModal = ({
         onProcessed={handleProcessedImage}
         onCancel={handleCancelImageProcess}
         isOpen={showImageProcessor}
+      />
+      
+      {/* المعالج الاحترافي الجديد - مثل Trendyol */}
+      <ProImageProcessor
+        imageDataUrl={pendingImage}
+        onProcessed={handleProcessedImage}
+        onCancel={handleCancelImageProcess}
+        isOpen={showProProcessor}
       />
       
       {/* كاميرا مع إطار توجيهي */}
