@@ -446,17 +446,36 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     delivery_distance_km = order.delivery_distance_km
     
     # حساب المسافة إذا لم تُرسل من Frontend
-    if delivery_distance_km is None and order.delivery_address:
-        customer_lat = order.delivery_address.get("lat") or order.delivery_address.get("latitude")
-        customer_lon = order.delivery_address.get("lng") or order.delivery_address.get("lon") or order.delivery_address.get("longitude")
+    if delivery_distance_km is None:
+        # محاولة الحصول على إحداثيات العميل
+        customer_lat = None
+        customer_lon = None
+        
+        # 1. من الطلب مباشرة (delivery_latitude, delivery_longitude)
+        if order.delivery_latitude and order.delivery_longitude:
+            customer_lat = order.delivery_latitude
+            customer_lon = order.delivery_longitude
+        # 2. من latitude/longitude في الطلب
+        elif order.latitude and order.longitude:
+            customer_lat = order.latitude
+            customer_lon = order.longitude
+        # 3. من delivery_address إذا كان كائن
+        elif isinstance(order.delivery_address, dict):
+            customer_lat = order.delivery_address.get("lat") or order.delivery_address.get("latitude")
+            customer_lon = order.delivery_address.get("lng") or order.delivery_address.get("lon") or order.delivery_address.get("longitude")
+        
+        # إحداثيات المتجر
         store_lat = first_store.get("latitude") or first_store.get("location", {}).get("lat")
         store_lon = first_store.get("longitude") or first_store.get("location", {}).get("lng")
         
         if all([customer_lat, customer_lon, store_lat, store_lon]):
-            delivery_distance_km = calculate_distance_km(
-                float(store_lat), float(store_lon),
-                float(customer_lat), float(customer_lon)
-            )
+            try:
+                delivery_distance_km = calculate_distance_km(
+                    float(store_lat), float(store_lon),
+                    float(customer_lat), float(customer_lon)
+                )
+            except (ValueError, TypeError):
+                delivery_distance_km = None
     
     # حساب أجرة السائق بالكيلومتر
     if delivery_distance_km and delivery_distance_km > 0:

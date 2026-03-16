@@ -222,7 +222,9 @@ const FoodBatchCheckoutPage = () => {
       addressData = {
         address: fullAddress,
         city: addr.city,
-        phone: addr.phone
+        phone: addr.phone,
+        latitude: addr.latitude || null,
+        longitude: addr.longitude || null
       };
     }
     
@@ -272,6 +274,8 @@ const FoodBatchCheckoutPage = () => {
         delivery_address: addressData.address,
         delivery_city: addressData.city,
         delivery_phone: addressData.phone,
+        delivery_latitude: addressData.latitude || null,
+        delivery_longitude: addressData.longitude || null,
         payment_method: paymentMethod
       }, {
         headers: { Authorization: `Bearer ${token}` }
