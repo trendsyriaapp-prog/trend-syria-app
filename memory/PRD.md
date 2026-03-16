@@ -54,6 +54,28 @@
   - ⚪ غير متصل
 - **Status:** VERIFIED ✅
 
+##### 3. نظام إشعارات نقص السائقين ✅
+- **الميزة:** إشعار تلقائي للمدراء عندما ينخفض عدد السائقين المتصلين عن حد معين
+- **المكونات:**
+  - **Backend:**
+    - `services/background_tasks.py` - فحص دوري كل دقيقة
+    - `routes/settings.py` - APIs للإعدادات:
+      - `GET /api/settings/driver-shortage-alert`
+      - `PUT /api/settings/driver-shortage-alert`
+      - `GET /api/settings/driver-shortage-alert/cities`
+  - **Frontend:** `DriverShortageAlertSettings` component in `SettingsTab.js`
+- **الإعدادات المتاحة:**
+  - تفعيل/تعطيل الإشعارات
+  - الحد الأدنى للسائقين المتصلين
+  - فترة الانتظار بين الإشعارات (دقائق)
+  - المدن المراقبة (مع إحصائيات)
+- **آلية العمل:**
+  - فحص دوري كل دقيقة
+  - إرسال إشعار لجميع المدراء عند النقص
+  - فترة انتظار (cooldown) لمنع الإشعارات المتكررة
+- **الوصول:** لوحة المدير ← الإعدادات ← إشعارات نقص السائقين
+- **Status:** VERIFIED ✅
+
 #### تحسينات شاملة (Comprehensive Updates) ✅ - 16 March 2026
 تم تنفيذ مجموعة من التحسينات والميزات الجديدة:
 

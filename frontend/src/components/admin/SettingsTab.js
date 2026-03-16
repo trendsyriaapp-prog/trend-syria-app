@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
+import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -372,6 +372,9 @@ const SettingsTab = ({ user }) => {
       {/* 🚫 إعدادات إلغاء الطلب للسائق */}
       <DriverCancelSettingsSection toast={toast} />
       
+      {/* 🔔 إشعارات نقص السائقين */}
+      <DriverShortageAlertSettings toast={toast} />
+      
     </section>
   );
 };
@@ -583,16 +586,189 @@ const DriverCancelSettingsSection = ({ toast }) => {
           )}
         </div>
       )}
+    </div>
+  );
+};
 
-      {/* زر الحفظ */}
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400"
-      >
-        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-        حفظ الإعدادات
-      </button>
+// مكون إعدادات إشعارات نقص السائقين
+const DriverShortageAlertSettings = ({ toast }) => {
+  const [shortageAlert, setShortageAlert] = useState({
+    enabled: false,
+    min_available_drivers: 3,
+    monitored_cities: [],
+    cooldown_minutes: 30
+  });
+  const [availableCities, setAvailableCities] = useState([]);
+  const [saving, setSaving] = useState(false);
+  
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+  
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const [settingsRes, citiesRes] = await Promise.all([
+        axios.get(`${API}/api/settings/driver-shortage-alert`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/api/settings/driver-shortage-alert/cities`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      
+      setShortageAlert(settingsRes.data);
+      setAvailableCities(citiesRes.data.cities || []);
+    } catch (error) {
+      console.error('Error fetching shortage alert settings:', error);
+    }
+  };
+  
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/settings/driver-shortage-alert`, shortageAlert, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات إشعارات نقص السائقين" });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل الحفظ",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const toggleCity = (city) => {
+    setShortageAlert(prev => {
+      const cities = prev.monitored_cities || [];
+      if (cities.includes(city)) {
+        return { ...prev, monitored_cities: cities.filter(c => c !== city) };
+      } else {
+        return { ...prev, monitored_cities: [...cities, city] };
+      }
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl">
+          <Bell size={20} className="text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">إشعارات نقص السائقين</h3>
+          <p className="text-xs text-gray-500">إشعار تلقائي عند انخفاض عدد السائقين المتاحين</p>
+        </div>
+      </div>
+
+      {/* تفعيل/تعطيل */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-4">
+        <div>
+          <p className="font-medium text-gray-900">تفعيل الإشعارات التلقائية</p>
+          <p className="text-xs text-gray-500">إرسال إشعار للمدراء عند نقص السائقين</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={shortageAlert.enabled}
+            onChange={(e) => setShortageAlert(s => ({ ...s, enabled: e.target.checked }))}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+        </label>
+      </div>
+
+      {shortageAlert.enabled && (
+        <div className="space-y-4">
+          {/* الحد الأدنى للسائقين */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <Users size={16} className="text-amber-500" />
+              الحد الأدنى للسائقين المتصلين
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={shortageAlert.min_available_drivers}
+              onChange={(e) => setShortageAlert(s => ({ ...s, min_available_drivers: parseInt(e.target.value) || 3 }))}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">سيتم إرسال إشعار إذا انخفض العدد عن هذا الحد</p>
+          </div>
+
+          {/* فترة الانتظار */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              فترة الانتظار بين الإشعارات (بالدقائق)
+            </label>
+            <input
+              type="number"
+              min="5"
+              max="180"
+              value={shortageAlert.cooldown_minutes}
+              onChange={(e) => setShortageAlert(s => ({ ...s, cooldown_minutes: parseInt(e.target.value) || 30 }))}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">لن يتم إرسال إشعار جديد لنفس المدينة خلال هذه الفترة</p>
+          </div>
+
+          {/* المدن المراقبة */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <MapPin size={16} className="text-amber-500" />
+              المدن المراقبة
+            </label>
+            <p className="text-xs text-gray-500 mb-3">اختر المدن التي تريد مراقبتها (اتركها فارغة لمراقبة جميع المدن)</p>
+            
+            {availableCities.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">لا توجد مدن بها سائقين</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {availableCities.map(cityData => (
+                  <label 
+                    key={cityData.city}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      shortageAlert.monitored_cities?.includes(cityData.city)
+                        ? 'border-amber-500 bg-amber-50'
+                        : 'border-gray-200 hover:border-amber-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={shortageAlert.monitored_cities?.includes(cityData.city)}
+                        onChange={() => toggleCity(cityData.city)}
+                        className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500"
+                      />
+                      <span className="font-medium text-gray-900">{cityData.city}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">{cityData.total_drivers} سائق</p>
+                      <p className="text-xs text-green-600">{cityData.available_drivers} متاح</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* زر حفظ إعدادات النقص */}
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+            حفظ إعدادات الإشعارات
+          </button>
+        </div>
+      )}
     </div>
   );
 };

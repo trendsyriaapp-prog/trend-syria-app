@@ -162,6 +162,102 @@ async def check_expired_driver_assignments():
             logger.error(f"Error handling expired assignment: {e}")
 
 
+async def check_driver_shortage():
+    """
+    فحص نقص السائقين في كل مدينة وإرسال إشعار للمدير
+    """
+    import uuid
+    
+    try:
+        # جلب إعدادات إشعارات نقص السائقين
+        settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+        if not settings:
+            return
+        
+        driver_alert = settings.get("driver_shortage_alert", {})
+        
+        # التحقق من تفعيل الميزة
+        if not driver_alert.get("enabled", False):
+            return
+        
+        min_drivers = driver_alert.get("min_available_drivers", 3)
+        monitored_cities = driver_alert.get("monitored_cities", [])  # فارغ = كل المدن
+        cooldown_minutes = driver_alert.get("cooldown_minutes", 30)  # فترة الانتظار بين الإشعارات
+        
+        now = datetime.now(timezone.utc)
+        
+        # جلب المدن إذا لم تكن محددة
+        if not monitored_cities:
+            cities_result = await db.delivery_documents.distinct("city", {"status": "approved"})
+            monitored_cities = [c for c in cities_result if c]
+        
+        # فحص كل مدينة
+        for city in monitored_cities:
+            # عدد السائقين المتاحين والمتصلين في المدينة
+            # السائق متصل إذا حدّث موقعه خلال آخر دقيقتين
+            two_min_ago = (now - timedelta(minutes=2)).isoformat()
+            
+            # جلب السائقين المعتمدين في المدينة
+            approved_docs = await db.delivery_documents.find(
+                {"status": "approved", "city": city, "is_available": True},
+                {"_id": 0, "driver_id": 1, "delivery_id": 1}
+            ).to_list(100)
+            
+            driver_ids = [doc.get("driver_id") or doc.get("delivery_id") for doc in approved_docs]
+            
+            if not driver_ids:
+                continue
+            
+            # عدد المتصلين (لديهم موقع حديث)
+            online_count = await db.driver_locations.count_documents({
+                "driver_id": {"$in": driver_ids},
+                "updated_at": {"$gte": two_min_ago}
+            })
+            
+            # التحقق من النقص
+            if online_count < min_drivers:
+                # التحقق من فترة الانتظار (عدم إرسال إشعارات متكررة)
+                last_alert_key = f"driver_shortage_alert_{city}"
+                last_alert = await db.system_cache.find_one({"key": last_alert_key}, {"_id": 0})
+                
+                if last_alert:
+                    last_alert_time = datetime.fromisoformat(last_alert["value"].replace("Z", "+00:00"))
+                    if (now - last_alert_time) < timedelta(minutes=cooldown_minutes):
+                        continue  # لم تنتهِ فترة الانتظار
+                
+                # إرسال إشعار للمدراء
+                admins = await db.users.find(
+                    {"user_type": {"$in": ["admin", "sub_admin"]}},
+                    {"_id": 0, "id": 1}
+                ).to_list(10)
+                
+                for admin in admins:
+                    notification = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": admin["id"],
+                        "title": "⚠️ نقص في السائقين!",
+                        "message": f"عدد السائقين المتصلين في {city} ({online_count}) أقل من الحد الأدنى ({min_drivers})",
+                        "type": "driver_shortage",
+                        "city": city,
+                        "is_read": False,
+                        "play_sound": True,
+                        "created_at": now.isoformat()
+                    }
+                    await db.notifications.insert_one(notification)
+                
+                # تحديث وقت آخر إشعار
+                await db.system_cache.update_one(
+                    {"key": last_alert_key},
+                    {"$set": {"key": last_alert_key, "value": now.isoformat()}},
+                    upsert=True
+                )
+                
+                logger.warning(f"Driver shortage alert: {city} has only {online_count} online drivers (min: {min_drivers})")
+    
+    except Exception as e:
+        logger.error(f"Error checking driver shortage: {e}")
+
+
 async def background_dispatch_loop():
     """
     الحلقة الرئيسية لمهام التوزيع
@@ -174,6 +270,8 @@ async def background_dispatch_loop():
     
     # عداد لإطلاق الأرباح المعلقة (كل 5 دقائق = 30 * 10 ثواني)
     release_counter = 0
+    # عداد لفحص نقص السائقين (كل دقيقة = 6 * 10 ثواني)
+    shortage_counter = 0
     
     while task_running:
         try:
@@ -184,6 +282,12 @@ async def background_dispatch_loop():
             
             # فحص التعيينات المنتهية
             await check_expired_driver_assignments()
+            
+            # فحص نقص السائقين كل دقيقة
+            shortage_counter += 1
+            if shortage_counter >= 6:  # 6 * 10 = 60 ثانية = 1 دقيقة
+                shortage_counter = 0
+                await check_driver_shortage()
             
             # إطلاق الأرباح المعلقة كل 5 دقائق
             release_counter += 1

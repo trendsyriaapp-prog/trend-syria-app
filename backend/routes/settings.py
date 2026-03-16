@@ -1410,3 +1410,91 @@ async def get_driver_cancel_stats(user: dict = Depends(get_current_user)):
             for r in top_reasons
         ]
     }
+
+
+# ============== إعدادات إشعارات نقص السائقين ==============
+
+class DriverShortageAlertSettings(BaseModel):
+    enabled: bool = False
+    min_available_drivers: int = 3
+    monitored_cities: list = []  # فارغ = كل المدن
+    cooldown_minutes: int = 30  # فترة الانتظار بين الإشعارات
+
+@router.get("/driver-shortage-alert")
+async def get_driver_shortage_alert_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات إشعارات نقص السائقين"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": False,
+        "min_available_drivers": 3,
+        "monitored_cities": [],
+        "cooldown_minutes": 30
+    }
+    
+    if settings and "driver_shortage_alert" in settings:
+        return {**default_settings, **settings["driver_shortage_alert"]}
+    
+    return default_settings
+
+@router.put("/driver-shortage-alert")
+async def update_driver_shortage_alert_settings(
+    data: DriverShortageAlertSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات إشعارات نقص السائقين"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "driver_shortage_alert": {
+                    "enabled": data.enabled,
+                    "min_available_drivers": data.min_available_drivers,
+                    "monitored_cities": data.monitored_cities,
+                    "cooldown_minutes": data.cooldown_minutes
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": "تم تحديث إعدادات إشعارات نقص السائقين"}
+
+@router.get("/driver-shortage-alert/cities")
+async def get_available_cities_for_monitoring(user: dict = Depends(get_current_user)):
+    """جلب قائمة المدن المتاحة للمراقبة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # جلب المدن التي يوجد بها سائقين معتمدين
+    cities = await db.delivery_documents.distinct("city", {"status": "approved"})
+    
+    # إحصائيات كل مدينة
+    city_stats = []
+    for city in cities:
+        if not city:
+            continue
+        
+        # عدد السائقين المعتمدين
+        total = await db.delivery_documents.count_documents({"status": "approved", "city": city})
+        
+        # عدد المتاحين
+        available = await db.delivery_documents.count_documents({
+            "status": "approved", 
+            "city": city,
+            "is_available": True
+        })
+        
+        city_stats.append({
+            "city": city,
+            "total_drivers": total,
+            "available_drivers": available
+        })
+    
+    return {"cities": city_stats}
