@@ -2065,6 +2065,166 @@ async def get_driver_location(driver_id: str, user: dict = Depends(get_current_u
         "is_stale": is_stale  # موقع قديم
     }
 
+
+# ============== خريطة مراقبة جميع السائقين للمدير ==============
+
+@router.get("/admin/all-drivers-locations")
+async def get_all_drivers_locations(
+    city: Optional[str] = None,
+    available_only: bool = False,
+    user: dict = Depends(get_current_user)
+):
+    """جلب مواقع جميع السائقين - للمدير فقط"""
+    
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    from datetime import timedelta
+    
+    # جلب جميع السائقين المعتمدين
+    driver_query = {"status": "approved"}
+    if city:
+        driver_query["city"] = city
+    
+    approved_docs = await db.delivery_documents.find(
+        driver_query,
+        {"_id": 0, "driver_id": 1, "delivery_id": 1, "city": 1, "is_available": 1}
+    ).to_list(500)
+    
+    # جلب IDs السائقين
+    driver_ids = []
+    driver_availability = {}
+    driver_cities = {}
+    
+    for doc in approved_docs:
+        did = doc.get("driver_id") or doc.get("delivery_id")
+        if did:
+            driver_ids.append(did)
+            driver_availability[did] = doc.get("is_available", False)
+            driver_cities[did] = doc.get("city", "")
+    
+    # فلترة حسب التوفر
+    if available_only:
+        driver_ids = [did for did in driver_ids if driver_availability.get(did, False)]
+    
+    if not driver_ids:
+        return {"drivers": [], "total": 0}
+    
+    # جلب معلومات السائقين
+    drivers = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1, "city": 1}
+    ).to_list(500)
+    
+    drivers_dict = {d["id"]: d for d in drivers}
+    
+    # جلب مواقع السائقين
+    locations = await db.driver_locations.find(
+        {"driver_id": {"$in": driver_ids}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    locations_dict = {loc["driver_id"]: loc for loc in locations}
+    
+    # جلب الطلبات النشطة لكل سائق
+    active_food_orders = await db.food_orders.find(
+        {
+            "driver_id": {"$in": driver_ids},
+            "status": {"$in": ["accepted", "picked_up", "out_for_delivery", "on_the_way"]}
+        },
+        {"_id": 0, "driver_id": 1, "order_code": 1, "status": 1, "store_name": 1}
+    ).to_list(500)
+    
+    active_product_orders = await db.orders.find(
+        {
+            "delivery_driver_id": {"$in": driver_ids},
+            "delivery_status": {"$in": ["out_for_delivery", "on_the_way", "picked_up"]}
+        },
+        {"_id": 0, "delivery_driver_id": 1, "order_number": 1, "delivery_status": 1}
+    ).to_list(500)
+    
+    # تجميع الطلبات لكل سائق
+    driver_orders = {}
+    for order in active_food_orders:
+        did = order["driver_id"]
+        if did not in driver_orders:
+            driver_orders[did] = []
+        driver_orders[did].append({
+            "type": "food",
+            "code": order.get("order_code", ""),
+            "status": order.get("status", ""),
+            "store": order.get("store_name", "")
+        })
+    
+    for order in active_product_orders:
+        did = order["delivery_driver_id"]
+        if did not in driver_orders:
+            driver_orders[did] = []
+        driver_orders[did].append({
+            "type": "product",
+            "code": order.get("order_number", ""),
+            "status": order.get("delivery_status", "")
+        })
+    
+    # بناء النتيجة
+    now = datetime.now(timezone.utc)
+    result = []
+    
+    for driver_id in driver_ids:
+        driver = drivers_dict.get(driver_id, {})
+        location = locations_dict.get(driver_id)
+        is_available = driver_availability.get(driver_id, False)
+        orders = driver_orders.get(driver_id, [])
+        
+        # تحديد حالة الموقع
+        is_online = False
+        is_stale = True
+        
+        if location:
+            try:
+                location_time = datetime.fromisoformat(location["updated_at"].replace("Z", "+00:00"))
+                time_diff = now - location_time
+                is_stale = time_diff > timedelta(minutes=5)
+                is_online = time_diff < timedelta(minutes=2)
+            except:
+                pass
+        
+        result.append({
+            "id": driver_id,
+            "name": driver.get("full_name") or driver.get("name", "سائق"),
+            "phone": driver.get("phone", ""),
+            "city": driver_cities.get(driver_id) or driver.get("city", ""),
+            "is_available": is_available,
+            "is_online": is_online,
+            "latitude": location.get("latitude") if location else None,
+            "longitude": location.get("longitude") if location else None,
+            "heading": location.get("heading") if location else None,
+            "speed": location.get("speed") if location else None,
+            "location_updated_at": location.get("updated_at") if location else None,
+            "is_stale": is_stale,
+            "active_orders": orders,
+            "active_orders_count": len(orders)
+        })
+    
+    # ترتيب: المتصلين أولاً، ثم المتاحين
+    result.sort(key=lambda x: (-x["is_online"], -x["is_available"], -x["active_orders_count"]))
+    
+    # إحصائيات
+    stats = {
+        "total": len(result),
+        "online": sum(1 for d in result if d["is_online"]),
+        "available": sum(1 for d in result if d["is_available"]),
+        "with_orders": sum(1 for d in result if d["active_orders_count"] > 0),
+        "with_location": sum(1 for d in result if d["latitude"] is not None)
+    }
+    
+    return {
+        "drivers": result,
+        "stats": stats
+    }
+
+
+
 @router.get("/order-tracking/{order_id}/live")
 async def get_order_live_tracking(order_id: str, user: dict = Depends(get_current_user)):
     """جلب بيانات التتبع الحي للطلب"""

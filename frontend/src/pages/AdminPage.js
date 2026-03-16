@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -42,6 +42,7 @@ import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
 import AnalyticsDashboard from '../components/admin/AnalyticsDashboard';
 import ViolationsTab from '../components/admin/ViolationsTab';
 import PriceReportsTab from '../components/admin/PriceReportsTab';
+import DriversMapTab from '../components/admin/DriversMapTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -316,7 +317,8 @@ const AdminDashboardPage = () => {
     'coupons': 'كوبونات الخصم',
     'daily-deals': 'صفقات اليوم',
     'platform-settings': 'تفعيل/إيقاف الأقسام',
-    'analytics': 'التحليلات والإحصائيات'
+    'analytics': 'التحليلات والإحصائيات',
+    'drivers-map': 'خريطة السائقين'
   };
 
   return (
@@ -446,6 +448,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'analytics' && user.user_type === 'admin' && (
               <AnalyticsDashboard />
+            )}
+            {activeTab === 'drivers-map' && user.user_type === 'admin' && (
+              <DriversMapTab />
             )}
           </>
         ) : (
@@ -716,6 +721,18 @@ const AdminDashboardPage = () => {
                       <TrendingUp size={16} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">التحليلات</span>
+                  </button>
+
+                  {/* خريطة السائقين */}
+                  <button
+                    onClick={() => setActiveTab('drivers-map')}
+                    className="bg-gradient-to-r from-emerald-100 to-teal-100 rounded-xl p-3 border border-emerald-200 hover:border-emerald-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="drivers-map-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
+                      <Map size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-700">خريطة السائقين</span>
                   </button>
                 </>
               )}
