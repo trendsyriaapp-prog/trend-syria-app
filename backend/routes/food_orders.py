@@ -370,15 +370,19 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # التحقق من الحد المجاني للتوصيل (لكل متجر على حدة) أو العرض الشامل
     is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and final_subtotal >= food_free_delivery_threshold)
     
+    # أجرة التوصيل الأصلية للسائق (يحصل عليها دائماً)
+    driver_delivery_fee = food_delivery_fee
+    
     if order.delivery_fee is not None:
-        delivery_fee = order.delivery_fee if not is_free_delivery else 0
+        driver_delivery_fee = order.delivery_fee  # الأجرة المحسوبة للسائق
+        delivery_fee = order.delivery_fee if not is_free_delivery else 0  # ما يدفعه العميل
         delivery_distance_km = order.delivery_distance_km
     else:
         # توصيل مجاني إذا تجاوز المجموع الحد الموحد (بعد الخصم)
         if is_free_delivery:
-            delivery_fee = 0
+            delivery_fee = 0  # العميل لا يدفع
         else:
-            delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
+            delivery_fee = food_delivery_fee  # العميل يدفع
         delivery_distance_km = None
     
     # إضافة رسوم الطقس الصعب (فقط إذا لم يكن التوصيل مجاني)
@@ -450,6 +454,8 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "total_discount": total_discount,
         "free_items": free_items,
         "delivery_fee": delivery_fee,
+        "driver_delivery_fee": driver_delivery_fee,  # أجرة السائق (تُدفع دائماً)
+        "is_platform_paid_delivery": is_free_delivery,  # هل المنصة تدفع أجرة التوصيل؟
         "delivery_distance_km": delivery_distance_km,
         "weather_surcharge": applied_weather_surcharge,
         "weather_surcharge_reason": weather_surcharge_reason if applied_weather_surcharge > 0 else None,
@@ -641,7 +647,10 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         notes = info["notes"]
         
         # حساب رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
-        if is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold):
+        is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold)
+        driver_delivery_fee = food_delivery_fee  # أجرة السائق (دائماً)
+        
+        if is_free_delivery:
             delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
             delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
@@ -681,6 +690,8 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "items": order_items,
             "subtotal": subtotal,
             "delivery_fee": delivery_fee,
+            "driver_delivery_fee": driver_delivery_fee,  # أجرة السائق (تُدفع دائماً)
+            "is_platform_paid_delivery": is_free_delivery,  # هل المنصة تدفع أجرة التوصيل؟
             "total": order_total,
             "delivery_address": batch.delivery_address,
             "delivery_city": batch.delivery_city,
@@ -2215,8 +2226,9 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
     )
     
     # حساب أرباح السائق من إعدادات المنصة
-    # رسوم التوصيل التي دفعها العميل = رسوم التوصيل التي يأخذها السائق
+    # إذا كان التوصيل مجاني للعميل (عرض شامل)، السائق يحصل على أجرته من المنصة
     delivery_fee = order.get("delivery_fee", 0)
+    driver_delivery_fee = order.get("driver_delivery_fee", delivery_fee)  # الأجرة الأصلية للسائق
     
     # جلب إعدادات المنصة
     platform_settings = await db.platform_settings.find_one({"id": "main"})
@@ -2225,8 +2237,8 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
     driver_settings = platform_settings.get("driver_earnings", {}) if platform_settings else {}
     base_fee = driver_settings.get("base_fee", 1000)  # الربح الأساسي من إعدادات الأدمن
     
-    # ربح السائق = الربح الأساسي + رسوم التوصيل (إذا دفعها العميل)
-    driver_earning = base_fee + delivery_fee
+    # ربح السائق = الربح الأساسي + أجرة التوصيل (دائماً، حتى لو العرض مجاني)
+    driver_earning = base_fee + driver_delivery_fee
     
     # جلب المتجر لحساب العمولة
     store = await db.food_stores.find_one({"id": order.get("store_id")})

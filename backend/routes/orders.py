@@ -153,14 +153,19 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # التحقق من الشحن المجاني: عرض شامل أو وصول للحد الأدنى
     is_free_shipping = is_global_free_shipping or (products_free_shipping_threshold > 0 and total >= products_free_shipping_threshold)
     
+    # رسوم توصيل افتراضية من الإعدادات
+    delivery_fees = platform_settings.get("delivery_fees", {}) if platform_settings else {}
+    default_delivery_fee = delivery_fees.get("same_city", 5000)
+    
+    # أجرة السائق (يحصل عليها دائماً)
+    driver_delivery_fee = order.delivery_fee if order.delivery_fee is not None else default_delivery_fee
+    
     if is_free_shipping:
-        delivery_fee = 0
+        delivery_fee = 0  # العميل لا يدفع
     elif order.delivery_fee is not None:
         delivery_fee = order.delivery_fee
     else:
-        # رسوم توصيل افتراضية من الإعدادات
-        delivery_fees = platform_settings.get("delivery_fees", {}) if platform_settings else {}
-        delivery_fee = delivery_fees.get("same_city", 5000)
+        delivery_fee = default_delivery_fee
     
     delivery_distance_km = order.delivery_distance_km
     final_total = total + delivery_fee
@@ -172,6 +177,8 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "items": items_details,
         "subtotal": total,
         "delivery_fee": delivery_fee,
+        "driver_delivery_fee": driver_delivery_fee,  # أجرة السائق (تُدفع دائماً)
+        "is_platform_paid_delivery": is_free_shipping,  # هل المنصة تدفع أجرة التوصيل؟
         "delivery_distance_km": delivery_distance_km,
         "total": final_total,
         "total_commission": total_commission,
