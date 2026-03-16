@@ -343,65 +343,68 @@ const ProductsPage = () => {
         {/* 📢 شريط الإعلانات */}
         {ads.length > 0 && (
           <div className="mb-3">
-            <div className="relative overflow-hidden rounded-2xl">
-              <motion.div
-                key={currentAdIndex}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Link to={ads[currentAdIndex]?.link || '#'}>
-                  {ads[currentAdIndex]?.link === '/food' ? (
-                    <div className="relative h-16 md:h-20 rounded-xl overflow-hidden bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
-                      <div className="absolute inset-0 opacity-15">
-                        <div className="absolute top-1 right-3 text-3xl">🍕</div>
-                        <div className="absolute bottom-1 left-6 text-2xl">🍔</div>
-                        <div className="absolute top-2 left-1/4 text-xl">🌮</div>
-                      </div>
-                      <div className="relative h-full flex items-center justify-between px-3 md:px-4">
-                        <div className="text-white">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
-                              جديد ✨
-                            </span>
+            <div className="relative overflow-hidden h-16 md:h-20">
+              {ads.map((ad, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+                    index === currentAdIndex 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 -translate-y-full'
+                  }`}
+                >
+                  <Link to={ad?.link || '#'} className="block h-full">
+                    {ad?.link === '/food' ? (
+                      <div className="relative h-full bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+                        <div className="absolute inset-0 opacity-15">
+                          <div className="absolute top-1 right-3 text-3xl">🍕</div>
+                          <div className="absolute bottom-1 left-6 text-2xl">🍔</div>
+                          <div className="absolute top-2 left-1/4 text-xl">🌮</div>
+                        </div>
+                        <div className="relative h-full flex items-center justify-between px-3 md:px-4">
+                          <div className="text-white">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
+                                جديد ✨
+                              </span>
+                            </div>
+                            <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
+                            <p className="text-white/90 text-[10px] md:text-xs">توصيل سريع من أفضل المطاعم</p>
                           </div>
-                          <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
-                          <p className="text-white/90 text-[10px] md:text-xs">توصيل سريع من أفضل المطاعم</p>
-                        </div>
-                        <div className="bg-white text-[#FF6B00] px-3 py-1.5 rounded-full font-bold text-xs shadow-md">
-                          اطلب الآن
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      className="relative h-16 md:h-20 rounded-2xl overflow-hidden"
-                      style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
-                    >
-                      {ads[currentAdIndex]?.image ? (
-                        <img 
-                          src={ads[currentAdIndex].image} 
-                          alt={ads[currentAdIndex].title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center px-4">
-                          <div className="text-center text-white">
-                            <h3 className="text-sm md:text-base font-bold">{ads[currentAdIndex]?.title}</h3>
-                            {ads[currentAdIndex]?.description && (
-                              <p className="text-xs opacity-90 mt-0.5">{ads[currentAdIndex].description}</p>
-                            )}
+                          <div className="bg-white text-[#FF6B00] px-3 py-1.5 rounded-full font-bold text-xs shadow-md">
+                            اطلب الآن
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              </motion.div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="relative h-full"
+                        style={{ backgroundColor: ad?.background_color || '#FF6B00' }}
+                      >
+                        {ad?.image ? (
+                          <img 
+                            src={ad.image} 
+                            alt={ad.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center px-4">
+                            <div className="text-center text-white">
+                              <h3 className="text-sm md:text-base font-bold">{ad?.title}</h3>
+                              {ad?.description && (
+                                <p className="text-xs opacity-90 mt-0.5">{ad.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                </div>
+              ))}
               
               {ads.length > 1 && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                   {ads.map((_, i) => (
                     <button
                       key={i}

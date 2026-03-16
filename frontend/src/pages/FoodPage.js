@@ -660,12 +660,12 @@ const FlashSaleBanner = ({ flash }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl overflow-hidden shadow-md"
+      className="overflow-hidden -mx-4"
       style={{ backgroundColor: flash.banner_color || '#FF4500' }}
     >
-      <div className="px-3 py-2 text-white">
+      <div className="px-3 py-2 text-white max-w-7xl mx-auto">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="text-lg animate-pulse">⚡</span>

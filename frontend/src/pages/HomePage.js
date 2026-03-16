@@ -215,69 +215,74 @@ const HomePage = () => {
 
       {/* Ads Banner Carousel */}
       {ads.length > 0 && (
-        <div className="relative overflow-hidden">
-          <motion.div
-            key={currentAdIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Link to={ads[currentAdIndex]?.link || '#'}>
-              {/* تصميم بانر الطعام الجديد */}
-              {ads[currentAdIndex]?.link === '/food' ? (
-                <div className="relative h-14 md:h-16 bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
-                  {/* خلفية مزخرفة */}
-                  <div className="absolute inset-0 opacity-15">
-                    <div className="absolute top-1 right-8 text-2xl">🍕</div>
-                    <div className="absolute bottom-1 left-10 text-xl">🍔</div>
-                    <div className="absolute top-2 left-1/4 text-lg">🌮</div>
-                  </div>
-                  
-                  {/* المحتوى */}
-                  <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
-                    <div className="text-white">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
-                          جديد ✨
-                        </span>
-                      </div>
-                      <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
-                      <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
+        <div className="relative overflow-hidden h-14 md:h-16">
+          {ads.map((ad, index) => (
+            <motion.div
+              key={index}
+              className="absolute inset-0"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ 
+                y: currentAdIndex === index ? 0 : '-100%',
+                opacity: currentAdIndex === index ? 1 : 0
+              }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+            >
+              <Link to={ad?.link || '#'} className="block h-full">
+                {/* تصميم بانر الطعام الجديد */}
+                {ad?.link === '/food' ? (
+                  <div className="relative h-full bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+                    {/* خلفية مزخرفة */}
+                    <div className="absolute inset-0 opacity-15">
+                      <div className="absolute top-1 right-8 text-2xl">🍕</div>
+                      <div className="absolute bottom-1 left-10 text-xl">🍔</div>
+                      <div className="absolute top-2 left-1/4 text-lg">🌮</div>
                     </div>
                     
-                    {/* زر الطلب */}
-                    <div className="bg-white text-[#FF6B00] px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md">
-                      اطلب الآن
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* البانرات الأخرى */
-                <div 
-                  className="relative h-14 md:h-16"
-                  style={{ backgroundColor: ads[currentAdIndex]?.background_color || '#FF6B00' }}
-                >
-                  {ads[currentAdIndex]?.image ? (
-                    <img 
-                      src={ads[currentAdIndex].image} 
-                      alt={ads[currentAdIndex].title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center px-4">
-                      <div className="text-center text-white">
-                        <h3 className="text-xs md:text-sm font-bold">{ads[currentAdIndex]?.title}</h3>
-                        {ads[currentAdIndex]?.description && (
-                          <p className="text-[10px] opacity-90 mt-0.5">{ads[currentAdIndex].description}</p>
-                        )}
+                    {/* المحتوى */}
+                    <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
+                      <div className="text-white">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
+                            جديد ✨
+                          </span>
+                        </div>
+                        <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
+                        <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
+                      </div>
+                      
+                      {/* زر الطلب */}
+                      <div className="bg-white text-[#FF6B00] px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md">
+                        اطلب الآن
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-                </Link>
-              </motion.div>
+                  </div>
+                ) : (
+                  /* البانرات الأخرى */
+                  <div 
+                    className="relative h-full"
+                    style={{ backgroundColor: ad?.background_color || '#FF6B00' }}
+                  >
+                    {ad?.image ? (
+                      <img 
+                        src={ad.image} 
+                        alt={ad.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center px-4">
+                        <div className="text-center text-white">
+                          <h3 className="text-xs md:text-sm font-bold">{ad?.title}</h3>
+                          {ad?.description && (
+                            <p className="text-[10px] opacity-90 mt-0.5">{ad.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Link>
+            </motion.div>
+          ))}
               
               {/* Dots indicator */}
               {ads.length > 1 && (

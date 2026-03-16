@@ -138,64 +138,71 @@ const DailyDeal = ({ onAddToCart }) => {
             <CountdownTimer endTime={deal.end_time} />
           </div>
 
-          {/* عرض المنتج الحالي */}
-          {currentItem && (
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-              <div className="relative">
-                <img
-                  src={currentItem.images?.[0] || currentItem.image || 'https://via.placeholder.com/80'}
-                  alt={currentItem.name}
-                  className="w-16 h-16 object-cover rounded-lg bg-white"
-                />
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                  -{deal.discount_percentage}%
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <h4 className="text-white font-bold text-xs line-clamp-1">{currentItem.name}</h4>
-                {currentItem.city && (
-                  <div className="flex items-center gap-1 text-white/70 mt-0.5">
-                    <MapPin size={10} />
-                    <span className="text-[9px]">{currentItem.city}</span>
+          {/* عرض المنتج الحالي - حركة عمودية */}
+          <div className="relative h-24 overflow-hidden">
+            {allItems.map((item, idx) => (
+              <div 
+                key={idx}
+                className={`absolute inset-0 flex items-center gap-2 bg-white/10 rounded-lg p-2 backdrop-blur-sm transition-all duration-500 ease-in-out ${
+                  idx === currentIndex 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 -translate-y-full'
+                }`}
+              >
+                <div className="relative">
+                  <img
+                    src={item.images?.[0] || item.image || 'https://via.placeholder.com/80'}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded-lg bg-white"
+                  />
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    -{deal.discount_percentage}%
                   </div>
-                )}
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-white/60 text-[10px] line-through">
-                    {formatPrice(currentItem.original_price)}
-                  </span>
-                  <span className="text-yellow-300 font-bold text-xs">
-                    {formatPrice(currentItem.deal_price)}
-                  </span>
                 </div>
-                
-                {/* أزرار */}
-                <div className="flex gap-2 mt-1.5">
-                  <button
-                    onClick={() => {
-                      if (currentItem.images) {
-                        navigate(`/product/${currentItem.id}`);
-                      } else {
-                        // Food item - navigate to store
-                      }
-                    }}
-                    className="flex-1 bg-white text-gray-800 text-[10px] font-bold py-1.5 px-2 rounded-lg flex items-center justify-center gap-1"
-                    data-testid="daily-deal-view"
-                  >
-                    عرض
-                    <ChevronLeft size={12} />
-                  </button>
-                  <button
-                    onClick={() => onAddToCart && onAddToCart(currentItem)}
-                    className="bg-yellow-400 text-gray-800 p-1.5 rounded-lg"
-                    data-testid="daily-deal-add-cart"
-                  >
-                    <ShoppingCart size={14} />
-                  </button>
+
+                <div className="flex-1">
+                  <h4 className="text-white font-bold text-xs line-clamp-1">{item.name}</h4>
+                  {item.city && (
+                    <div className="flex items-center gap-1 text-white/70 mt-0.5">
+                      <MapPin size={10} />
+                      <span className="text-[9px]">{item.city}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-white/60 text-[10px] line-through">
+                      {formatPrice(item.original_price)}
+                    </span>
+                    <span className="text-yellow-300 font-bold text-xs">
+                      {formatPrice(item.deal_price)}
+                    </span>
+                  </div>
+                  
+                  {/* أزرار */}
+                  <div className="flex gap-2 mt-1.5">
+                    <button
+                      onClick={() => {
+                        if (item.images) {
+                          navigate(`/product/${item.id}`);
+                        }
+                      }}
+                      className="flex-1 bg-white text-gray-800 text-[10px] font-bold py-1.5 px-2 rounded-lg flex items-center justify-center gap-1"
+                      data-testid="daily-deal-view"
+                    >
+                      عرض
+                      <ChevronLeft size={12} />
+                    </button>
+                    <button
+                      onClick={() => onAddToCart && onAddToCart(item)}
+                      className="bg-yellow-400 text-gray-800 p-1.5 rounded-lg"
+                      data-testid="daily-deal-add-cart"
+                    >
+                      <ShoppingCart size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
           {/* نقاط التنقل */}
           {allItems.length > 1 && (
