@@ -23,6 +23,42 @@
 
 ### December 2025
 
+#### نظام التحكم في الأسعار (Price Control System) ✅ - 16 Dec 2025
+- **الميزة:** نظام شامل لمراقبة أسعار البائعين ومنع التضخم السعري
+- **المكونات:**
+  1. **شريط الأكثر مبيعاً:** يعرض المنتجات الأكثر مبيعاً مع عدد المبيعات
+  2. **شريط أقل الأسعار:** يعرض المنتجات الأرخص لتشجيع المنافسة السعرية
+  3. **نظام الإبلاغ عن الأسعار:**
+     - زر "سعر مرتفع؟" في صفحة تفاصيل المنتج
+     - نموذج إبلاغ مع 5 أسباب + سعر مقترح + ملاحظات
+     - حماية خصوصية المُبلّغ (معلوماته لا تُشارك مع البائع)
+  4. **نقاط المخالفات:**
+     - تراكم نقاط على البائع المخالف
+     - 5 نقاط = تحذير
+     - 10 نقاط = تعليق تلقائي
+  5. **لوحة تحكم الأدمن:**
+     - إحصائيات البلاغات (قيد المراجعة، مؤكدة، تحذيرات، مرفوضة)
+     - مراجعة البلاغات واتخاذ إجراء
+     - قائمة البائعين المخالفين
+     - تعليق/إلغاء تعليق الحسابات
+- **الملفات:**
+  - `routes/price_reports.py` - جميع APIs البلاغات والمخالفات (جديد)
+  - `routes/products.py` - endpoints: `/best-sellers`, `/lowest-price`
+  - `pages/ProductsPage.js` - شريط الأكثر مبيعاً وأقل الأسعار
+  - `pages/ProductDetailPage.js` - مكون ReportPriceModal
+  - `components/admin/PriceReportsTab.js` - لوحة تحكم البلاغات (جديد)
+- **APIs:**
+  - `GET /api/products/best-sellers` - المنتجات الأكثر مبيعاً
+  - `GET /api/products/lowest-price` - المنتجات الأقل سعراً
+  - `POST /api/price-reports` - إنشاء بلاغ (للعملاء)
+  - `GET /api/price-reports/admin/stats` - إحصائيات (للأدمن)
+  - `GET /api/price-reports/admin/all` - جميع البلاغات (للأدمن)
+  - `PUT /api/price-reports/admin/{id}/resolve` - حل البلاغ
+  - `GET /api/price-reports/admin/sellers-with-violations` - البائعون المخالفون
+  - `PUT /api/price-reports/admin/seller/{id}/suspend` - تعليق البائع
+  - `PUT /api/price-reports/admin/seller/{id}/unsuspend` - إلغاء التعليق
+- **Status:** TESTED ✅ (iteration_71)
+
 #### ميزة عرض الشحن المجاني الشامل (Global Free Shipping Promo) ✅ - 15 Dec 2025
 - **الميزة:** تفعيل توصيل مجاني شامل من لوحة الأدمن (للافتتاح أو العروض الترويجية)
 - **الوظائف:**
