@@ -39,6 +39,7 @@ const HomePage = () => {
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [tickerMessages, setTickerMessages] = useState([]);
   const [tickerEnabled, setTickerEnabled] = useState(true);
+  const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -70,6 +71,16 @@ const HomePage = () => {
       return () => clearInterval(timer);
     }
   }, [ads.length]);
+
+  // Auto-rotate ticker messages
+  useEffect(() => {
+    if (tickerMessages.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentTickerIndex((prev) => (prev + 1) % tickerMessages.length);
+      }, 3000);
+      return () => clearInterval(timer);
+    }
+  }, [tickerMessages.length]);
 
   const fetchData = async () => {
     try {
@@ -122,19 +133,27 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
-      {/* 🎯 شريط العروض المتحرك - Offers Ticker */}
+      {/* 🎯 شريط العروض المتحرك - Offers Ticker (عمودي) */}
       {tickerEnabled && tickerMessages.length > 0 && (
-        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-1 md:py-1.5 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white overflow-hidden">
           <div className="ticker-wrapper">
-            <div className="ticker-content animate-ticker flex items-center gap-4 md:gap-8 whitespace-nowrap">
-              {[...tickerMessages, ...tickerMessages].map((msg, i) => (
-                <span key={i} className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-sm font-medium">
+            {tickerMessages.map((msg, i) => (
+              <motion.div 
+                key={i} 
+                className="ticker-item"
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ 
+                  y: currentTickerIndex === i ? 0 : '-100%',
+                  opacity: currentTickerIndex === i ? 1 : 0
+                }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+              >
+                <span className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-sm font-medium">
                   {msg.highlight && <span className="bg-white/20 px-1.5 md:px-2 py-0.5 rounded-full text-[9px] md:text-xs">حصري</span>}
                   {msg.text}
-                  <span className="text-white/50">|</span>
                 </span>
-              ))}
-            </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       )}

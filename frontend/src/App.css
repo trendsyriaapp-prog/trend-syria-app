@@ -3,28 +3,40 @@
   background-color: #FFFFFF;
 }
 
-/* 🎯 Ticker Animation - شريط العروض المتحرك */
+/* 🎯 Ticker Animation - شريط العروض المتحرك (عمودي) */
 .ticker-wrapper {
   width: 100%;
   overflow: hidden;
+  height: 28px;
+  position: relative;
 }
 
-.ticker-content {
-  display: inline-flex;
-  animation: ticker 30s linear infinite;
+.ticker-item {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 
-@keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+.ticker-item-enter {
+  transform: translateY(100%);
+  opacity: 0;
 }
 
-.ticker-wrapper:hover .ticker-content {
-  animation-play-state: paused;
+.ticker-item-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 0.5s ease-in-out;
+}
+
+.ticker-item-exit {
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: all 0.5s ease-in-out;
 }
 
 /* Shimmer Effect for Lazy Loading */
