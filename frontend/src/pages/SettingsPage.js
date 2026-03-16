@@ -6,13 +6,14 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoyaltyCard from '../components/LoyaltyCard';
+import SupportTickets from '../components/support/SupportTickets';
 // مكونات السائق
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
@@ -295,6 +296,16 @@ const SettingsPage = () => {
             <CreditCard size={12} />
             طرق الدفع
           </button>
+          <button
+            onClick={() => setActiveTab('support')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'support' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+            data-testid="support-tab-btn"
+          >
+            <HelpCircle size={12} />
+            الدعم
+          </button>
         </div>
 
         {/* Driver Tab - تبويب السائق */}
@@ -545,6 +556,13 @@ const SettingsPage = () => {
                 })}
               </div>
             )}
+          </section>
+        )}
+
+        {/* Support Tab */}
+        {activeTab === 'support' && (
+          <section>
+            <SupportTickets token={localStorage.getItem('token')} />
           </section>
         )}
 
