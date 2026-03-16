@@ -212,7 +212,7 @@ async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_
         {"id": order_id},
         {"_id": 0, "customer_id": 1, "driver_id": 1, "driver_latitude": 1, "driver_longitude": 1, 
          "driver_location_updated_at": 1, "status": 1, "latitude": 1, "longitude": 1,
-         "delivery_address": 1}
+         "delivery_address": 1, "store_id": 1}
     )
     
     # البحث في طلبات المنتجات
@@ -221,7 +221,7 @@ async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_
             {"id": order_id},
             {"_id": 0, "user_id": 1, "driver_id": 1, "driver_latitude": 1, "driver_longitude": 1,
              "driver_location_updated_at": 1, "status": 1, "delivery_status": 1, 
-             "latitude": 1, "longitude": 1, "address": 1}
+             "latitude": 1, "longitude": 1, "address": 1, "store_id": 1}
         )
         if order:
             order["customer_id"] = order.get("user_id")
@@ -230,10 +230,17 @@ async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    # التحقق من أن المستخدم هو صاحب الطلب أو السائق أو الأدمن
+    # التحقق من أن المستخدم هو صاحب الطلب أو السائق أو الأدمن أو البائع (صاحب المتجر)
+    is_store_owner = False
+    if order.get("store_id"):
+        store = await db.food_stores.find_one({"id": order["store_id"]})
+        if store and store.get("owner_id") == user["id"]:
+            is_store_owner = True
+    
     if (user["id"] != order.get("customer_id") and 
         user["id"] != order.get("driver_id") and 
-        user["user_type"] != "admin"):
+        user["user_type"] != "admin" and
+        not is_store_owner):
         raise HTTPException(status_code=403, detail="غير مصرح")
     
     # إذا لم يكن هناك سائق معين
