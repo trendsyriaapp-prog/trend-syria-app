@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall, Route, Layers, Lock } from 'lucide-react';
+import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall, Route, Layers, Lock, XCircle } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import RouteSelector from './RouteSelector';
 import { useToast } from '../../hooks/use-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -110,9 +111,12 @@ const MyOrdersList = ({
   onShowDeliveryChecklist,
   onOpenETAModal,
   orderTypeFilter = 'all',
-  theme = 'dark' // إضافة خاصية الثيم
+  theme = 'dark', // إضافة خاصية الثيم
+  onOrderCancelled // callback بعد إلغاء الطلب
 }) => {
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const { toast } = useToast();
   const [showOrderCode, setShowOrderCode] = useState(null);
   const [supportPhone, setSupportPhone] = useState('0911111111');
   
@@ -133,6 +137,12 @@ const MyOrdersList = ({
   
   // نظام تخطيط المسار الذكي
   const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
+  
+  // نظام إلغاء الطلب من السائق
+  const [showCancelModal, setShowCancelModal] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelSettings, setCancelSettings] = useState(null);
   
   // ساعات التوصيل المسموحة
   const [deliveryHours, setDeliveryHours] = useState({
@@ -167,6 +177,86 @@ const MyOrdersList = ({
       .then(res => setSupportPhone(res.data.phone))
       .catch(() => {});
   }, []);
+
+  // جلب إعدادات إلغاء السائق
+  useEffect(() => {
+    const fetchCancelSettings = async () => {
+      try {
+        const res = await axios.get(`${API}/food/orders/delivery/my-cancel-rate`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCancelSettings(res.data);
+      } catch (err) {
+        console.error('Error fetching cancel settings:', err);
+      }
+    };
+    if (token) fetchCancelSettings();
+  }, [token]);
+
+  // حساب الوقت المتبقي للإلغاء
+  const getCancelTimeRemaining = (order) => {
+    if (!order.picked_up_at || !cancelSettings) return null;
+    
+    const pickedUpAt = new Date(order.picked_up_at);
+    const now = new Date();
+    const elapsedSeconds = (now - pickedUpAt) / 1000;
+    const windowSeconds = cancelSettings.cancel_window_seconds || 120;
+    const remaining = windowSeconds - elapsedSeconds;
+    
+    return remaining > 0 ? Math.ceil(remaining) : 0;
+  };
+
+  // إلغاء الطلب
+  const handleCancelOrder = async () => {
+    if (!showCancelModal || !cancelReason) {
+      toast({ title: "خطأ", description: "يرجى اختيار سبب الإلغاء", variant: "destructive" });
+      return;
+    }
+    
+    setCancelLoading(true);
+    try {
+      const res = await axios.post(
+        `${API}/food/orders/delivery/${showCancelModal.id}/cancel`,
+        { reason: cancelReason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({ 
+        title: "✅ تم إلغاء الطلب", 
+        description: res.data.warning || "تم إعادة الطلب لقائمة الطلبات المتاحة"
+      });
+      
+      // تحديث إعدادات الإلغاء
+      if (res.data.cancel_rate) {
+        setCancelSettings(prev => ({ ...prev, ...res.data.cancel_rate }));
+      }
+      
+      setShowCancelModal(null);
+      setCancelReason('');
+      
+      // إعادة تحميل الطلبات
+      if (onOrderCancelled) onOrderCancelled();
+      
+    } catch (err) {
+      toast({ 
+        title: "خطأ", 
+        description: err.response?.data?.detail || "فشل إلغاء الطلب", 
+        variant: "destructive" 
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  // أسباب الإلغاء المتاحة
+  const cancelReasons = [
+    { id: 'vehicle_issue', label: '🚗 عطل في المركبة' },
+    { id: 'emergency', label: '🏥 طارئ شخصي' },
+    { id: 'wrong_accept', label: '📍 قبلت بالخطأ' },
+    { id: 'long_wait', label: '⏰ وقت الانتظار طويل جداً' },
+    { id: 'store_closed', label: '🚫 المطعم مغلق' },
+    { id: 'other', label: '❓ سبب آخر' }
+  ];
 
   // تحديث حالة الانتظار لجميع الطلبات
   useEffect(() => {
@@ -845,6 +935,25 @@ const MyOrdersList = ({
                 </button>
               </div>
 
+              {/* زر إلغاء الطلب - يظهر فقط خلال فترة السماح */}
+              {order.status === 'out_for_delivery' && getCancelTimeRemaining(order) > 0 && (
+                <button
+                  onClick={() => {
+                    setShowCancelModal(order);
+                    setCancelReason('');
+                  }}
+                  data-testid={`cancel-btn-${order.id}`}
+                  className={`w-full py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 mb-3 ${
+                    isDark 
+                      ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800' 
+                      : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+                  }`}
+                >
+                  <XCircle size={14} />
+                  إلغاء الطلب ({getCancelTimeRemaining(order)} ث)
+                </button>
+              )}
+
               {/* زر وصلت للمطعم + عداد الانتظار */}
               {canMarkArrived && !order.driver_arrived_at && (
                 <button
@@ -1145,6 +1254,98 @@ const MyOrdersList = ({
               >
                 {pickupSubmitting ? '⏳ جاري التحقق...' : '✓ تأكيد الاستلام'}
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal إلغاء الطلب */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-sm rounded-2xl overflow-hidden ${
+              isDark ? 'bg-[#1a1a1a]' : 'bg-white'
+            }`}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white text-center">
+              <XCircle className="mx-auto mb-2" size={32} />
+              <h3 className="font-bold text-lg">إلغاء الطلب</h3>
+              <p className="text-red-200 text-xs mt-1">
+                #{showCancelModal.order_number || showCancelModal.id?.slice(0, 8)}
+              </p>
+            </div>
+
+            <div className="p-4">
+              {/* تحذير نسبة الإلغاء */}
+              {cancelSettings && (
+                <div className={`rounded-lg p-3 mb-4 ${
+                  cancelSettings.rate >= cancelSettings.warning_threshold
+                    ? 'bg-red-900/30 border border-red-700'
+                    : 'bg-gray-800 border border-gray-700'
+                }`}>
+                  <p className={`text-xs ${
+                    cancelSettings.rate >= cancelSettings.warning_threshold 
+                      ? 'text-red-400' 
+                      : 'text-gray-400'
+                  }`}>
+                    نسبة الإلغاء: <span className="font-bold">{cancelSettings.rate}%</span> 
+                    (الحد: {cancelSettings.max_allowed}%)
+                  </p>
+                </div>
+              )}
+
+              {/* أسباب الإلغاء */}
+              <p className={`text-sm font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                اختر سبب الإلغاء:
+              </p>
+              <div className="space-y-2 mb-4">
+                {cancelReasons.map((reason) => (
+                  <button
+                    key={reason.id}
+                    onClick={() => setCancelReason(reason.label)}
+                    className={`w-full p-3 rounded-xl text-right text-sm transition-all ${
+                      cancelReason === reason.label
+                        ? 'bg-red-600 text-white'
+                        : isDark
+                          ? 'bg-[#252525] text-gray-300 hover:bg-[#333] border border-[#333]'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {reason.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* أزرار */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowCancelModal(null);
+                    setCancelReason('');
+                  }}
+                  className={`flex-1 py-3 rounded-xl font-bold ${
+                    isDark 
+                      ? 'bg-[#252525] text-white' 
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  رجوع
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={!cancelReason || cancelLoading}
+                  className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                    cancelReason && !cancelLoading
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  {cancelLoading ? '⏳ جاري...' : '❌ تأكيد الإلغاء'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

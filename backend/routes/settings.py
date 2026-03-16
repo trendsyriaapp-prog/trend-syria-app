@@ -2,7 +2,7 @@
 # إعدادات المنصة (للمدير)
 
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from typing import Optional
 import uuid
@@ -1285,4 +1285,128 @@ async def calculate_surge_fee(base_fee: int = 5000):
         "surge_reason": settings.get("reason", "زيادة الطلب"),
         "increase_amount": surge_fee - base_fee,
         "increase_percentage": round((surge_fee - base_fee) / base_fee * 100, 1)
+    }
+
+
+
+# ============== إعدادات إلغاء الطلب للسائق ==============
+
+class DriverCancelSettings(BaseModel):
+    enabled: bool = True
+    cancel_window_seconds: int = 120  # دقيقتين
+    max_cancel_rate: int = 10  # 10%
+    lookback_orders: int = 50  # آخر 50 طلب
+    warning_threshold: int = 7  # تحذير عند 7%
+    suspension_threshold: int = 15  # إيقاف عند 15%
+
+@router.get("/driver-cancel")
+async def get_driver_cancel_settings(user: dict = Depends(get_current_user)):
+    """
+    جلب إعدادات إلغاء الطلب للسائق (للمدير)
+    """
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": True,
+        "cancel_window_seconds": 120,
+        "max_cancel_rate": 10,
+        "lookback_orders": 50,
+        "warning_threshold": 7,
+        "suspension_threshold": 15
+    }
+    
+    if settings and "driver_cancel_settings" in settings:
+        return {**default_settings, **settings["driver_cancel_settings"]}
+    
+    return default_settings
+
+@router.put("/driver-cancel")
+async def update_driver_cancel_settings(
+    data: DriverCancelSettings,
+    user: dict = Depends(get_current_user)
+):
+    """
+    تحديث إعدادات إلغاء الطلب للسائق (للمدير فقط)
+    """
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "driver_cancel_settings": {
+                    "enabled": data.enabled,
+                    "cancel_window_seconds": data.cancel_window_seconds,
+                    "max_cancel_rate": data.max_cancel_rate,
+                    "lookback_orders": data.lookback_orders,
+                    "warning_threshold": data.warning_threshold,
+                    "suspension_threshold": data.suspension_threshold,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_by": user["id"]
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات إلغاء السائق",
+        "settings": data.model_dump()
+    }
+
+@router.get("/driver-cancel/stats")
+async def get_driver_cancel_stats(user: dict = Depends(get_current_user)):
+    """
+    إحصائيات إلغاءات السائقين (للمدير)
+    """
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # إجمالي الإلغاءات
+    total_cancellations = await db.driver_cancellations.count_documents({})
+    
+    # إلغاءات اليوم
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_cancellations = await db.driver_cancellations.count_documents({
+        "cancelled_at": {"$gte": today_start.isoformat()}
+    })
+    
+    # إلغاءات هذا الأسبوع
+    week_start = today_start - timedelta(days=today_start.weekday())
+    week_cancellations = await db.driver_cancellations.count_documents({
+        "cancelled_at": {"$gte": week_start.isoformat()}
+    })
+    
+    # أكثر السائقين إلغاءً
+    pipeline = [
+        {"$group": {"_id": "$driver_id", "count": {"$sum": 1}, "driver_name": {"$first": "$driver_name"}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    top_cancellers = await db.driver_cancellations.aggregate(pipeline).to_list(length=10)
+    
+    # أكثر أسباب الإلغاء
+    reasons_pipeline = [
+        {"$group": {"_id": "$reason", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    top_reasons = await db.driver_cancellations.aggregate(reasons_pipeline).to_list(length=10)
+    
+    return {
+        "total_cancellations": total_cancellations,
+        "today_cancellations": today_cancellations,
+        "week_cancellations": week_cancellations,
+        "top_cancellers": [
+            {"driver_id": c["_id"], "driver_name": c.get("driver_name", "غير معروف"), "count": c["count"]}
+            for c in top_cancellers
+        ],
+        "top_reasons": [
+            {"reason": r["_id"] or "بدون سبب", "count": r["count"]}
+            for r in top_reasons
+        ]
     }

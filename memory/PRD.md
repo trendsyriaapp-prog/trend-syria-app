@@ -781,7 +781,9 @@ All critical features are implemented and tested.
 - [x] نظام الإحالات مع إشعارات Push - DONE ✅
 - [x] التسعير الديناميكي (Surge Pricing) - DONE ✅
 - [x] نظام تتبع السائق للعميل والبائع - DONE ✅ (16 March 2026)
-- [ ] تحسين واجهة الخريطة (رسم وقت الوصول ETA)
+- [x] ربط Smart Routing بواجهة السائق - DONE ✅ (16 March 2026)
+- [x] نظام إلغاء الطلب للسائق - Backend DONE ✅ (16 March 2026)
+- [ ] إصلاح واجهة إعدادات إلغاء السائق في لوحة الأدمن
 - [ ] اختبار المستخدم اليدوي للنظام الكامل
 
 ## Future Tasks (P2)

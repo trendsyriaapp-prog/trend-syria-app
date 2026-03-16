@@ -2033,6 +2033,209 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
     }
 
 
+# ============== إلغاء الطلب من السائق ==============
+
+class DriverCancelRequest(BaseModel):
+    reason: str  # سبب الإلغاء (إجباري)
+
+async def get_driver_cancel_settings():
+    """جلب إعدادات إلغاء الطلب للسائق"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    default_settings = {
+        "enabled": True,
+        "cancel_window_seconds": 120,  # دقيقتين
+        "max_cancel_rate": 10,  # 10%
+        "lookback_orders": 50,  # آخر 50 طلب
+        "warning_threshold": 7,  # تحذير عند 7%
+        "suspension_threshold": 15  # إيقاف عند 15%
+    }
+    
+    if settings and "driver_cancel_settings" in settings:
+        return {**default_settings, **settings["driver_cancel_settings"]}
+    
+    return default_settings
+
+async def calculate_driver_cancel_rate(driver_id: str, lookback: int = 50):
+    """حساب نسبة إلغاء السائق"""
+    # جلب آخر X طلب تم قبولها
+    recent_orders = await db.food_orders.find(
+        {"driver_id": driver_id},
+        {"_id": 0, "id": 1, "driver_cancelled": 1}
+    ).sort("picked_up_at", -1).limit(lookback).to_list(length=lookback)
+    
+    if len(recent_orders) < 5:
+        return {"rate": 0, "cancelled": 0, "total": len(recent_orders), "enough_data": False}
+    
+    cancelled_count = sum(1 for o in recent_orders if o.get("driver_cancelled"))
+    cancel_rate = (cancelled_count / len(recent_orders)) * 100
+    
+    return {
+        "rate": round(cancel_rate, 1),
+        "cancelled": cancelled_count,
+        "total": len(recent_orders),
+        "enough_data": True
+    }
+
+@router.post("/delivery/{order_id}/cancel")
+async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: dict = Depends(get_current_user)):
+    """
+    إلغاء طلب من السائق
+    - مسموح فقط خلال فترة زمنية محددة
+    - يتطلب سبب
+    - يؤثر على نسبة الإلغاء
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # جلب إعدادات الإلغاء
+    cancel_settings = await get_driver_cancel_settings()
+    
+    if not cancel_settings.get("enabled", True):
+        raise HTTPException(status_code=403, detail="ميزة إلغاء الطلب معطلة حالياً")
+    
+    # جلب الطلب
+    order = await db.food_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن السائق هو من قبل الطلب
+    if order.get("driver_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="لا يمكنك إلغاء طلب لم تقبله")
+    
+    # التحقق من حالة الطلب
+    if order["status"] != "out_for_delivery":
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء طلب في هذه الحالة")
+    
+    # التحقق من الوقت المسموح للإلغاء
+    picked_up_at = order.get("picked_up_at")
+    if picked_up_at:
+        if isinstance(picked_up_at, str):
+            picked_up_at = datetime.fromisoformat(picked_up_at.replace("Z", "+00:00"))
+        
+        now = datetime.now(timezone.utc)
+        elapsed_seconds = (now - picked_up_at).total_seconds()
+        cancel_window = cancel_settings.get("cancel_window_seconds", 120)
+        
+        if elapsed_seconds > cancel_window:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"انتهت مهلة الإلغاء ({cancel_window // 60} دقيقة). تواصل مع الدعم إذا كان هناك مشكلة."
+            )
+    
+    # التحقق من نسبة الإلغاء
+    lookback = cancel_settings.get("lookback_orders", 50)
+    cancel_rate_data = await calculate_driver_cancel_rate(user["id"], lookback)
+    max_rate = cancel_settings.get("max_cancel_rate", 10)
+    
+    if cancel_rate_data["enough_data"] and cancel_rate_data["rate"] >= max_rate:
+        raise HTTPException(
+            status_code=400,
+            detail=f"نسبة الإلغاء لديك مرتفعة ({cancel_rate_data['rate']}%). لا يمكنك إلغاء المزيد من الطلبات حالياً."
+        )
+    
+    # إعادة الطلب لحالة "جاهز"
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_id": None,
+                "driver_name": None,
+                "driver_phone": None,
+                "status": "ready",
+                "driver_cancelled": True,
+                "driver_cancel_reason": data.reason,
+                "driver_cancel_at": datetime.now(timezone.utc).isoformat(),
+                "driver_cancel_by": user["id"]
+            },
+            "$unset": {
+                "picked_up_at": "",
+                "driver_latitude": "",
+                "driver_longitude": "",
+                "driver_location_updated_at": ""
+            },
+            "$push": {
+                "status_history": {
+                    "status": "driver_cancelled",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "note": f"تم إلغاء الاستلام بواسطة السائق: {data.reason}",
+                    "driver_id": user["id"],
+                    "driver_name": user["name"]
+                }
+            }
+        }
+    )
+    
+    # تسجيل الإلغاء
+    await db.driver_cancellations.insert_one({
+        "id": str(uuid.uuid4()),
+        "driver_id": user["id"],
+        "driver_name": user["name"],
+        "order_id": order_id,
+        "order_number": order.get("order_number"),
+        "reason": data.reason,
+        "cancelled_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # إشعار للعميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["customer_id"],
+        "title": "⚠️ تغيير في طلبك",
+        "message": "يتم البحث عن موظف توصيل آخر لطلبك",
+        "type": "driver_changed",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # إشعار للمتجر
+    store = await db.food_stores.find_one({"id": order.get("store_id")})
+    if store:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": store.get("owner_id"),
+            "title": "⚠️ السائق ألغى الاستلام",
+            "message": f"الطلب #{order.get('order_number')} - يتم البحث عن سائق آخر",
+            "type": "driver_cancelled",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # حساب نسبة الإلغاء الجديدة
+    new_cancel_rate = await calculate_driver_cancel_rate(user["id"], lookback)
+    
+    # تحذير إذا اقتربت النسبة من الحد
+    warning_threshold = cancel_settings.get("warning_threshold", 7)
+    warning_message = None
+    if new_cancel_rate["rate"] >= warning_threshold:
+        warning_message = f"⚠️ تحذير: نسبة الإلغاء لديك {new_cancel_rate['rate']}%. الحد المسموح {max_rate}%."
+    
+    return {
+        "message": "تم إلغاء الطلب",
+        "order_id": order_id,
+        "cancel_rate": new_cancel_rate,
+        "warning": warning_message
+    }
+
+@router.get("/delivery/my-cancel-rate")
+async def get_my_cancel_rate(user: dict = Depends(get_current_user)):
+    """جلب نسبة الإلغاء للسائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    cancel_settings = await get_driver_cancel_settings()
+    lookback = cancel_settings.get("lookback_orders", 50)
+    
+    cancel_rate = await calculate_driver_cancel_rate(user["id"], lookback)
+    
+    return {
+        **cancel_rate,
+        "max_allowed": cancel_settings.get("max_cancel_rate", 10),
+        "warning_threshold": cancel_settings.get("warning_threshold", 7),
+        "cancel_window_seconds": cancel_settings.get("cancel_window_seconds", 120)
+    }
+
+
 # ============== التوجيه الذكي ==============
 
 class SmartRouteEvaluateRequest(BaseModel):
