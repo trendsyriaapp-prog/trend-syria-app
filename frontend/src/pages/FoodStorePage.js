@@ -242,17 +242,17 @@ const FoodStorePage = () => {
 
       {/* Active Offers Banner */}
       {offers.length > 0 && (
-        <div className="px-4 mb-4">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🎁</span>
-              <h3 className="font-bold">عروض المتجر</h3>
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white mb-2">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-lg">🎁</span>
+              <h3 className="font-bold text-sm">عروض المتجر</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {offers.slice(0, 2).map((offer) => (
                 <div 
                   key={offer.id}
-                  className="bg-white/20 rounded-lg px-3 py-2 text-sm"
+                  className="bg-white/20 rounded-lg px-2.5 py-1.5 text-xs"
                 >
                   <span className="font-bold">{offer.name}</span>
                   {offer.offer_type === 'buy_x_get_y' && (

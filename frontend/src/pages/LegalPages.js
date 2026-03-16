@@ -98,22 +98,24 @@ export const PrivacyPolicyPage = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4">
+      <div className="max-w-2xl mx-auto">
         {/* Intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white rounded-2xl p-4 mb-4"
+          className="bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white p-4 mb-4"
         >
-          <h2 className="font-bold text-lg mb-2">خصوصيتك تهمنا</h2>
-          <p className="text-sm opacity-90">
-            نلتزم بحماية خصوصيتك وبياناتك الشخصية. تشرح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.
-          </p>
-          <p className="text-xs mt-2 opacity-75">آخر تحديث: ديسمبر 2025</p>
+          <div className="max-w-2xl mx-auto">
+            <h2 className="font-bold text-base mb-1">خصوصيتك تهمنا</h2>
+            <p className="text-xs opacity-90">
+              نلتزم بحماية خصوصيتك وبياناتك الشخصية.
+            </p>
+            <p className="text-[10px] mt-1 opacity-75">آخر تحديث: ديسمبر 2025</p>
+          </div>
         </motion.div>
 
         {/* Sections */}
-        <div className="space-y-3">
+        <div className="space-y-3 px-4">
           {sections.map((section, index) => (
             <motion.div
               key={section.key}
@@ -312,22 +314,24 @@ export const TermsOfServicePage = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4">
+      <div className="max-w-2xl mx-auto">
         {/* Intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl p-4 mb-4"
+          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 mb-4"
         >
-          <h2 className="font-bold text-lg mb-2">شروط وأحكام الاستخدام</h2>
-          <p className="text-sm opacity-90">
-            تحكم هذه الشروط استخدامك لمنصة "ترند سورية". يرجى قراءتها بعناية قبل استخدام المنصة.
-          </p>
-          <p className="text-xs mt-2 opacity-75">آخر تحديث: ديسمبر 2025</p>
+          <div className="max-w-2xl mx-auto">
+            <h2 className="font-bold text-base mb-1">شروط وأحكام الاستخدام</h2>
+            <p className="text-xs opacity-90">
+              تحكم هذه الشروط استخدامك لمنصة "ترند سورية".
+            </p>
+            <p className="text-[10px] mt-1 opacity-75">آخر تحديث: ديسمبر 2025</p>
+          </div>
         </motion.div>
 
         {/* Sections */}
-        <div className="space-y-3">
+        <div className="space-y-3 px-4">
           {sections.map((section, index) => (
             <motion.div
               key={section.key}
@@ -381,17 +385,19 @@ export const ReturnPolicyPage = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         {/* Intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-green-500 text-white rounded-2xl p-4"
+          className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4"
         >
-          <h2 className="font-bold text-lg mb-2">الإرجاع عند التسليم فقط</h2>
-          <p className="text-sm opacity-90">
-            يجب فحص المنتج أمام موظف التوصيل عند الاستلام. الإرجاع متاح فقط في لحظة التسليم.
-          </p>
+          <div className="max-w-2xl mx-auto">
+            <h2 className="font-bold text-base mb-1">الإرجاع عند التسليم فقط</h2>
+            <p className="text-xs opacity-90">
+              يجب فحص المنتج أمام موظف التوصيل عند الاستلام.
+            </p>
+          </div>
         </motion.div>
 
         {/* Important Notice */}
@@ -399,7 +405,7 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-red-50 border-2 border-red-300 rounded-xl p-4"
+          className="bg-red-50 border-2 border-red-300 p-4 mx-4"
         >
           <h3 className="font-bold text-red-800 mb-2 flex items-center gap-2">
             <span className="text-xl">⚠️</span>

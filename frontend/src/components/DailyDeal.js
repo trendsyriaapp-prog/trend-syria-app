@@ -95,7 +95,7 @@ const DailyDeal = ({ onAddToCart }) => {
 
   if (loading) {
     return (
-      <div className="mx-4 h-40 bg-gradient-to-r from-orange-400 to-red-500 rounded-2xl animate-pulse" />
+      <div className="h-32 bg-gradient-to-r from-orange-400 to-red-500 animate-pulse" />
     );
   }
 
@@ -111,10 +111,9 @@ const DailyDeal = ({ onAddToCart }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-4 mb-4"
     >
       <div
-        className="relative rounded-2xl overflow-hidden shadow-lg"
+        className="relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)` }}
       >
         {/* خلفية متحركة */}
@@ -124,16 +123,16 @@ const DailyDeal = ({ onAddToCart }) => {
         </div>
 
         {/* المحتوى */}
-        <div className="relative p-4">
+        <div className="relative p-3 max-w-7xl mx-auto">
           {/* العنوان والعداد */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="bg-white/20 p-1.5 rounded-lg">
-                <Flame size={18} className="text-white" />
+              <div className="bg-white/20 p-1 rounded-lg">
+                <Flame size={16} className="text-white" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-sm">{deal.title}</h3>
-                <p className="text-white/70 text-xs">{deal.description}</p>
+                <h3 className="text-white font-bold text-xs">{deal.title}</h3>
+                <p className="text-white/70 text-[10px]">{deal.description}</p>
               </div>
             </div>
             <CountdownTimer endTime={deal.end_time} />
@@ -141,37 +140,37 @@ const DailyDeal = ({ onAddToCart }) => {
 
           {/* عرض المنتج الحالي */}
           {currentItem && (
-            <div className="flex items-center gap-3 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-2 backdrop-blur-sm">
               <div className="relative">
                 <img
                   src={currentItem.images?.[0] || currentItem.image || 'https://via.placeholder.com/80'}
                   alt={currentItem.name}
-                  className="w-20 h-20 object-cover rounded-xl bg-white"
+                  className="w-16 h-16 object-cover rounded-lg bg-white"
                 />
-                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                   -{deal.discount_percentage}%
                 </div>
               </div>
 
               <div className="flex-1">
-                <h4 className="text-white font-bold text-sm line-clamp-1">{currentItem.name}</h4>
+                <h4 className="text-white font-bold text-xs line-clamp-1">{currentItem.name}</h4>
                 {currentItem.city && (
                   <div className="flex items-center gap-1 text-white/70 mt-0.5">
                     <MapPin size={10} />
-                    <span className="text-[10px]">{currentItem.city}</span>
+                    <span className="text-[9px]">{currentItem.city}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-white/60 text-xs line-through">
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-white/60 text-[10px] line-through">
                     {formatPrice(currentItem.original_price)}
                   </span>
-                  <span className="text-yellow-300 font-bold">
+                  <span className="text-yellow-300 font-bold text-xs">
                     {formatPrice(currentItem.deal_price)}
                   </span>
                 </div>
                 
                 {/* أزرار */}
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-1.5">
                   <button
                     onClick={() => {
                       if (currentItem.images) {
@@ -180,18 +179,18 @@ const DailyDeal = ({ onAddToCart }) => {
                         // Food item - navigate to store
                       }
                     }}
-                    className="flex-1 bg-white text-gray-800 text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1"
+                    className="flex-1 bg-white text-gray-800 text-[10px] font-bold py-1.5 px-2 rounded-lg flex items-center justify-center gap-1"
                     data-testid="daily-deal-view"
                   >
                     عرض
-                    <ChevronLeft size={14} />
+                    <ChevronLeft size={12} />
                   </button>
                   <button
                     onClick={() => onAddToCart && onAddToCart(currentItem)}
-                    className="bg-yellow-400 text-gray-800 p-2 rounded-lg"
+                    className="bg-yellow-400 text-gray-800 p-1.5 rounded-lg"
                     data-testid="daily-deal-add-cart"
                   >
-                    <ShoppingCart size={16} />
+                    <ShoppingCart size={14} />
                   </button>
                 </div>
               </div>

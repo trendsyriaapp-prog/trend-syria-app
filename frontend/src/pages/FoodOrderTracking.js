@@ -251,14 +251,14 @@ const FoodOrderTracking = () => {
 
         {/* كود التسليم */}
         {order.delivery_code && !isCancelled && !isDelivered && order.status === 'out_for_delivery' && (
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 text-white">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 text-white">
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
               <div>
-                <p className="font-bold text-lg">🔐 كود التسليم</p>
-                <p className="text-sm text-white/80">أعطِ هذا الكود للسائق عند الاستلام</p>
+                <p className="font-bold text-sm">🔐 كود التسليم</p>
+                <p className="text-xs text-white/80">أعطِ هذا الكود للسائق</p>
               </div>
-              <div className="bg-white text-purple-600 px-4 py-2 rounded-xl">
-                <span className="text-2xl font-bold tracking-widest">{order.delivery_code}</span>
+              <div className="bg-white text-purple-600 px-3 py-1.5 rounded-lg">
+                <span className="text-xl font-bold tracking-widest">{order.delivery_code}</span>
               </div>
             </div>
           </div>
@@ -266,8 +266,8 @@ const FoodOrderTracking = () => {
 
         {/* تحذير ترك الطلب عند الباب */}
         {order.customer_not_responding && !isCancelled && !isDelivered && (
-          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
-            <div className="flex items-start gap-3">
+          <div className="bg-red-50 border-y-2 border-red-300 p-3">
+            <div className="flex items-start gap-2 max-w-7xl mx-auto">
               <AlertTriangle size={24} className="text-red-500 flex-shrink-0" />
               <div>
                 <p className="font-bold text-red-800">⚠️ السائق ينتظرك!</p>
