@@ -154,6 +154,8 @@ class BatchOrderCreate(BaseModel):
     payment_method: str = "wallet"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    delivery_latitude: Optional[float] = None
+    delivery_longitude: Optional[float] = None
 
 
 # ===============================
@@ -279,31 +281,45 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     if settings:
         max_delivery_distance = settings.get("max_store_customer_distance_km", 5.0)
     
-    # حساب المسافة إذا كانت الإحداثيات متوفرة
+    # إحداثيات المتجر (مطلوبة)
     store_lat = store.get("latitude")
     store_lng = store.get("longitude")
+    
+    if not store_lat or not store_lng:
+        raise HTTPException(
+            status_code=400,
+            detail="المتجر لا يملك موقع محدد. يرجى التواصل مع المتجر لتحديث موقعه."
+        )
+    
+    # إحداثيات العميل (مطلوبة)
     customer_lat = order.latitude or order.delivery_latitude
     customer_lng = order.longitude or order.delivery_longitude
     
-    if store_lat and store_lng and customer_lat and customer_lng:
-        import math
-        R = 6371  # نصف قطر الأرض بالكيلومتر
-        
-        lat1, lon1 = math.radians(store_lat), math.radians(store_lng)
-        lat2, lon2 = math.radians(customer_lat), math.radians(customer_lng)
-        
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-        c = 2 * math.asin(math.sqrt(a))
-        distance = R * c
-        
-        if distance > max_delivery_distance:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"📍 المتجر بعيد عنك ({distance:.1f} كم). الحد الأقصى للتوصيل: {max_delivery_distance:.0f} كم. جرّب متجراً أقرب!"
-            )
+    if not customer_lat or not customer_lng:
+        raise HTTPException(
+            status_code=400,
+            detail="يرجى تحديد موقعك على الخريطة لحساب أجرة التوصيل بدقة."
+        )
+    
+    # حساب المسافة
+    import math
+    R = 6371  # نصف قطر الأرض بالكيلومتر
+    
+    lat1, lon1 = math.radians(store_lat), math.radians(store_lng)
+    lat2, lon2 = math.radians(customer_lat), math.radians(customer_lng)
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    distance = R * c
+    
+    if distance > max_delivery_distance:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"المتجر بعيد عنك ({distance:.1f} كم). الحد الأقصى للتوصيل: {max_delivery_distance:.0f} كم. جرّب متجراً أقرب!"
+        )
     
     # حساب المجموع
     subtotal = 0
@@ -445,6 +461,16 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # ========== حساب أجرة السائق بنظام الكيلومتر ==========
     delivery_distance_km = order.delivery_distance_km
     
+    # إحداثيات المتجر (مطلوبة)
+    store_lat = first_store.get("latitude") or first_store.get("location", {}).get("lat")
+    store_lon = first_store.get("longitude") or first_store.get("location", {}).get("lng")
+    
+    if not store_lat or not store_lon:
+        raise HTTPException(
+            status_code=400, 
+            detail="المتجر لا يملك موقع محدد. يرجى التواصل مع المتجر لتحديث موقعه."
+        )
+    
     # حساب المسافة إذا لم تُرسل من Frontend
     if delivery_distance_km is None:
         # محاولة الحصول على إحداثيات العميل
@@ -464,30 +490,29 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             customer_lat = order.delivery_address.get("lat") or order.delivery_address.get("latitude")
             customer_lon = order.delivery_address.get("lng") or order.delivery_address.get("lon") or order.delivery_address.get("longitude")
         
-        # إحداثيات المتجر
-        store_lat = first_store.get("latitude") or first_store.get("location", {}).get("lat")
-        store_lon = first_store.get("longitude") or first_store.get("location", {}).get("lng")
+        # التحقق من وجود إحداثيات العميل (مطلوبة)
+        if not customer_lat or not customer_lon:
+            raise HTTPException(
+                status_code=400,
+                detail="يرجى تحديد موقعك على الخريطة لحساب أجرة التوصيل بدقة."
+            )
         
-        if all([customer_lat, customer_lon, store_lat, store_lon]):
-            try:
-                delivery_distance_km = calculate_distance_km(
-                    float(store_lat), float(store_lon),
-                    float(customer_lat), float(customer_lon)
-                )
-            except (ValueError, TypeError):
-                delivery_distance_km = None
+        try:
+            delivery_distance_km = calculate_distance_km(
+                float(store_lat), float(store_lon),
+                float(customer_lat), float(customer_lon)
+            )
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=400,
+                detail="خطأ في حساب المسافة. يرجى التأكد من صحة الموقع."
+            )
     
-    # حساب أجرة السائق بالكيلومتر
-    if delivery_distance_km and delivery_distance_km > 0:
-        km_calculation = await calculate_driver_fee_by_km(delivery_distance_km)
-        driver_delivery_fee = km_calculation["driver_fee"]
-        delivery_calculation_method = km_calculation["calculation_method"]
-        delivery_calculation_details = km_calculation["details"]
-    else:
-        # استخدام الرسوم الثابتة إذا لم تتوفر المسافة
-        driver_delivery_fee = food_delivery_fee
-        delivery_calculation_method = "fixed"
-        delivery_calculation_details = None
+    # حساب أجرة السائق بالكيلومتر (دائماً)
+    km_calculation = await calculate_driver_fee_by_km(delivery_distance_km)
+    driver_delivery_fee = km_calculation["driver_fee"]
+    delivery_calculation_method = km_calculation["calculation_method"]
+    delivery_calculation_details = km_calculation["details"]
     
     # ما يدفعه العميل (صفر إذا توصيل مجاني)
     if is_free_delivery:
@@ -655,6 +680,16 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
     if len(batch.orders) == 0:
         raise HTTPException(status_code=400, detail="لا توجد طلبات")
     
+    # ===== التحقق من إحداثيات العميل (مطلوبة) =====
+    customer_lat = batch.delivery_latitude or batch.latitude
+    customer_lng = batch.delivery_longitude or batch.longitude
+    
+    if not customer_lat or not customer_lng:
+        raise HTTPException(
+            status_code=400,
+            detail="يرجى تحديد موقعك على الخريطة لحساب أجرة التوصيل بدقة."
+        )
+    
     # إنشاء معرف دفعة فريد
     batch_id = f"BATCH{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:6].upper()}"
     
@@ -668,6 +703,13 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         store = await db.food_stores.find_one({"id": order_item.store_id, "is_approved": True, "is_active": True})
         if not store:
             raise HTTPException(status_code=404, detail="المتجر غير متاح")
+        
+        # التحقق من إحداثيات المتجر (مطلوبة)
+        if not store.get("latitude") or not store.get("longitude"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"المتجر '{store.get('name', '')}' لا يملك موقع محدد. يرجى التواصل مع المتجر."
+            )
         
         # حساب مجموع كل متجر
         store_subtotal = 0
@@ -716,11 +758,23 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         store = info["store"]
         subtotal = info["subtotal"]
         
+        # حساب المسافة وأجرة التوصيل بالكيلومتر
+        store_lat = store.get("latitude")
+        store_lng = store.get("longitude")
+        
+        delivery_distance_km = calculate_distance_km(
+            float(store_lat), float(store_lng),
+            float(customer_lat), float(customer_lng)
+        )
+        
+        km_calculation = await calculate_driver_fee_by_km(delivery_distance_km)
+        driver_fee = km_calculation["driver_fee"]
+        
         # رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
         if is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold):
             delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
-            delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
+            delivery_fee = driver_fee  # العميل يدفع أجرة السائق بالكيلومتر
         
         total_amount += subtotal + delivery_fee
         total_delivery_fee += delivery_fee
@@ -758,14 +812,28 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         items_list = info["items"]
         notes = info["notes"]
         
+        # ===== حساب المسافة وأجرة السائق بالكيلومتر =====
+        store_lat = store.get("latitude")
+        store_lng = store.get("longitude")
+        
+        delivery_distance_km = calculate_distance_km(
+            float(store_lat), float(store_lng),
+            float(customer_lat), float(customer_lng)
+        )
+        
+        # حساب أجرة السائق بالكيلومتر
+        km_calculation = await calculate_driver_fee_by_km(delivery_distance_km)
+        driver_delivery_fee = km_calculation["driver_fee"]
+        delivery_calculation_method = km_calculation["calculation_method"]
+        delivery_calculation_details = km_calculation["details"]
+        
         # حساب رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
         is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold)
-        driver_delivery_fee = food_delivery_fee  # أجرة السائق (دائماً)
         
         if is_free_delivery:
             delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
-            delivery_fee = food_delivery_fee  # الرسوم الموحدة من إعدادات الأدمن
+            delivery_fee = driver_delivery_fee  # العميل يدفع أجرة السائق بالكيلومتر
         
         order_total = subtotal + delivery_fee
         
@@ -804,12 +872,15 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "delivery_fee": delivery_fee,
             "driver_delivery_fee": driver_delivery_fee,  # أجرة السائق (تُدفع دائماً)
             "is_platform_paid_delivery": is_free_delivery,  # هل المنصة تدفع أجرة التوصيل؟
+            "delivery_distance_km": round(delivery_distance_km, 2),
+            "delivery_calculation_method": delivery_calculation_method,
+            "delivery_calculation_details": delivery_calculation_details,
             "total": order_total,
             "delivery_address": batch.delivery_address,
             "delivery_city": batch.delivery_city,
             "delivery_phone": batch.delivery_phone,
-            "latitude": batch.latitude,
-            "longitude": batch.longitude,
+            "latitude": customer_lat,
+            "longitude": customer_lng,
             "notes": notes,
             "payment_method": batch.payment_method,
             "payment_status": "paid" if batch.payment_method == "wallet" else "pending",

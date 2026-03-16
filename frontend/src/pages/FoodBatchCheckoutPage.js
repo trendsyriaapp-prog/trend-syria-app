@@ -5,11 +5,12 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   ArrowRight, Store, MapPin, Phone, CreditCard, Wallet, 
-  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle
+  Clock, Loader2, Check, Package, Bike, Plus, Home, AlertCircle, Navigation
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useFoodCart } from '../context/FoodCartContext';
 import { useToast } from '../hooks/use-toast';
+import LocationPickerMap from '../components/LocationPickerMap';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -44,8 +45,13 @@ const FoodBatchCheckoutPage = () => {
     building_number: '',
     apartment_number: '',
     phone: '',
-    is_default: false
+    is_default: false,
+    latitude: null,
+    longitude: null
   });
+  
+  // خريطة اختيار الموقع
+  const [showMapPicker, setShowMapPicker] = useState(false);
   
   // طرق الدفع
   const [savedPayments, setSavedPayments] = useState([]);
@@ -195,11 +201,25 @@ const FoodBatchCheckoutPage = () => {
         });
         return;
       }
+      
+      // التحقق من وجود الموقع على الخريطة
+      if (!newAddress.latitude || !newAddress.longitude) {
+        toast({
+          title: "تنبيه",
+          description: "يرجى تحديد موقعك على الخريطة لحساب أجرة التوصيل",
+          variant: "destructive"
+        });
+        setShowMapPicker(true);
+        return;
+      }
+      
       const fullAddress = `${newAddress.area}${newAddress.street_number ? ' - شارع ' + newAddress.street_number : ''}${newAddress.building_number ? ' - بناء ' + newAddress.building_number : ''}${newAddress.apartment_number ? ' - شقة ' + newAddress.apartment_number : ''}`;
       addressData = {
         address: fullAddress,
         city: newAddress.city,
-        phone: newAddress.phone
+        phone: newAddress.phone,
+        latitude: newAddress.latitude,
+        longitude: newAddress.longitude
       };
       
       // حفظ العنوان الجديد
@@ -218,13 +238,25 @@ const FoodBatchCheckoutPage = () => {
         });
         return;
       }
+      
+      // التحقق من وجود الموقع في العنوان المحفوظ
+      if (!addr.latitude || !addr.longitude) {
+        toast({
+          title: "تنبيه",
+          description: "العنوان المحفوظ لا يحتوي على موقع. يرجى إضافة عنوان جديد مع تحديد الموقع.",
+          variant: "destructive"
+        });
+        setUseNewAddress(true);
+        return;
+      }
+      
       const fullAddress = `${addr.area}${addr.street_number ? ' - شارع ' + addr.street_number : ''}${addr.building_number ? ' - بناء ' + addr.building_number : ''}${addr.apartment_number ? ' - شقة ' + addr.apartment_number : ''}`;
       addressData = {
         address: fullAddress,
         city: addr.city,
         phone: addr.phone,
-        latitude: addr.latitude || null,
-        longitude: addr.longitude || null
+        latitude: addr.latitude,
+        longitude: addr.longitude
       };
     }
     
@@ -540,6 +572,40 @@ const FoodBatchCheckoutPage = () => {
                 />
               </div>
               
+              {/* زر تحديد الموقع على الخريطة */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  الموقع على الخريطة * 
+                  <span className="text-red-500 text-xs mr-1">(مطلوب لحساب أجرة التوصيل)</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowMapPicker(true)}
+                  className={`w-full border-2 border-dashed rounded-xl px-3 py-3 text-sm flex items-center justify-center gap-2 transition-all ${
+                    newAddress.latitude && newAddress.longitude
+                      ? 'border-green-400 bg-green-50 text-green-700'
+                      : 'border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100'
+                  }`}
+                >
+                  {newAddress.latitude && newAddress.longitude ? (
+                    <>
+                      <Check size={18} className="text-green-600" />
+                      <span>تم تحديد الموقع ✓</span>
+                    </>
+                  ) : (
+                    <>
+                      <Navigation size={18} />
+                      <span>حدد موقعك على الخريطة</span>
+                    </>
+                  )}
+                </button>
+                {newAddress.latitude && newAddress.longitude && (
+                  <p className="text-[10px] text-gray-400 mt-1 text-center font-mono">
+                    {newAddress.latitude.toFixed(6)}, {newAddress.longitude.toFixed(6)}
+                  </p>
+                )}
+              </div>
+              
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <input
                   type="checkbox"
@@ -794,6 +860,22 @@ const FoodBatchCheckoutPage = () => {
           )}
         </button>
       </div>
+      
+      {/* Map Picker Modal */}
+      <LocationPickerMap
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        onConfirm={(lat, lng, address) => {
+          setNewAddress(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng
+          }));
+        }}
+        initialLat={newAddress.latitude}
+        initialLng={newAddress.longitude}
+        title="حدد موقع التوصيل"
+      />
     </div>
   );
 };
