@@ -130,13 +130,13 @@ const ProductsPage = () => {
   const [showSort, setShowSort] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   
-  // New states for ads, flash, best sellers, lowest price
+  // New states for ads, flash, best sellers, newly added
   const [ads, setAds] = useState([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [flashProducts, setFlashProducts] = useState([]);
   const [flashSale, setFlashSale] = useState(null);
   const [bestSellers, setBestSellers] = useState([]);
-  const [lowestPriceProducts, setLowestPriceProducts] = useState([]);
+  const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
   
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
@@ -146,16 +146,16 @@ const ProductsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
 
-  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + الأقل سعراً
+  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً
   useEffect(() => {
     const fetchExtras = async () => {
       try {
-        const [promoRes, adsRes, flashRes, bestSellersRes, lowestPriceRes] = await Promise.all([
+        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes] = await Promise.all([
           axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
           axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
-          axios.get(`${API}/products/lowest-price`).catch(() => ({ data: [] }))
+          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] }))
         ]);
         
         const promo = promoRes.data;
@@ -169,7 +169,7 @@ const ProductsPage = () => {
         setFlashProducts(flashRes.data?.products || []);
         setFlashSale(flashRes.data?.flash_sale || null);
         setBestSellers(bestSellersRes.data || []);
-        setLowestPriceProducts(lowestPriceRes.data || []);
+        setNewlyAddedProducts(newlyAddedRes.data || []);
       } catch (error) {
         console.error('Error fetching extras:', error);
       }
@@ -625,22 +625,22 @@ const ProductsPage = () => {
           </section>
         )}
 
-        {/* 💰 شريط الأقل سعراً */}
-        {lowestPriceProducts.length > 0 && (
+        {/* 🆕 شريط وصل حديثاً */}
+        {newlyAddedProducts.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                  <Tag size={16} className="text-white" />
+                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg">
+                  <Sparkles size={16} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-gray-900">أقل الأسعار</h2>
-                  <p className="text-[10px] text-gray-500">أفضل العروض بأقل الأسعار</p>
+                  <h2 className="text-sm font-bold text-gray-900">وصل حديثاً</h2>
+                  <p className="text-[10px] text-gray-500">أحدث المنتجات المضافة</p>
                 </div>
               </div>
               <Link 
-                to="/products?sort=price_low"
-                className="text-green-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+                to="/products?sort=newest"
+                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
               >
                 عرض الكل
                 <ChevronLeft size={14} />
@@ -649,7 +649,7 @@ const ProductsPage = () => {
             
             <div className="relative">
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {lowestPriceProducts.map((product, i) => (
+                {newlyAddedProducts.map((product, i) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -658,7 +658,7 @@ const ProductsPage = () => {
                     className="flex-shrink-0 w-36"
                   >
                     <Link to={`/products/${product.id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
                             <img 
@@ -671,20 +671,21 @@ const ProductsPage = () => {
                               <Package size={32} className="text-gray-300" />
                             </div>
                           )}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
-                            💰 سعر مميز
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Sparkles size={10} />
+                            جديد
                           </div>
                         </div>
                         <div className="p-2">
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
                           {product.city && (
                             <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-                              <MapPin size={10} className="text-green-500" />
+                              <MapPin size={10} className="text-purple-500" />
                               <span className="text-[10px]">{product.city}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-green-600 font-bold text-sm">
+                            <span className="text-purple-600 font-bold text-sm">
                               {product.price?.toLocaleString()} ل.س
                             </span>
                           </div>

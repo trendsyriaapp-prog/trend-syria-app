@@ -366,7 +366,7 @@ async def get_best_selling_products(limit: int = Query(default=10, le=20)):
 
 @router.get("/lowest-price")
 async def get_lowest_price_products(limit: int = Query(default=10, le=20)):
-    """جلب المنتجات الأقل سعراً"""
+    """جلب المنتجات الأقل سعراً - DEPRECATED: استخدم /newly-added بدلاً منه"""
     # التحقق من الكاش
     cache_key = f"lowest_price_{limit}"
     cached_data = cache.get(cache_key)
@@ -393,6 +393,39 @@ async def get_lowest_price_products(limit: int = Query(default=10, le=20)):
     
     # حفظ في الكاش لمدة 10 دقائق
     cache.set(cache_key, products, ttl_seconds=600)
+    
+    return products
+
+@router.get("/newly-added")
+async def get_newly_added_products(limit: int = Query(default=10, le=20)):
+    """جلب المنتجات المضافة حديثاً"""
+    # التحقق من الكاش
+    cache_key = f"newly_added_{limit}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+    
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},
+        "rating": 1,
+        "reviews_count": 1,
+        "sales_count": 1,
+        "stock": 1,
+        "city": 1,
+        "created_at": 1
+    }
+    
+    products = await db.products.find(
+        {"is_active": True, "is_approved": True, "stock": {"$gt": 0}},
+        projection
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # حفظ في الكاش لمدة 5 دقائق
+    cache.set(cache_key, products, ttl_seconds=300)
     
     return products
 
