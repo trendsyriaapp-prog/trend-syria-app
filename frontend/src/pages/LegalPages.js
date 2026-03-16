@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowRight, Shield, FileText, RefreshCcw, 
   ChevronDown, ChevronUp, Phone, Mail, MapPin,
-  Lock, Eye, Database, Users, Truck, CreditCard
+  Lock, Eye, Database, Users, Truck, CreditCard, Clock
 } from 'lucide-react';
 
 // ============== Privacy Policy Page ==============
@@ -103,14 +103,32 @@ export const PrivacyPolicyPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white p-4 mb-4"
+          className="relative bg-gradient-to-r from-[#FF6B00] via-orange-500 to-amber-500 text-white p-5 mb-4 overflow-hidden"
         >
-          <div className="max-w-2xl mx-auto">
-            <h2 className="font-bold text-base mb-1">خصوصيتك تهمنا</h2>
-            <p className="text-xs opacity-90">
-              نلتزم بحماية خصوصيتك وبياناتك الشخصية.
+          {/* خلفية مزخرفة */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-2 right-8 text-5xl">🔒</div>
+            <div className="absolute bottom-2 left-10 text-4xl">🛡️</div>
+            <div className="absolute top-1/2 left-1/3 text-3xl">✨</div>
+          </div>
+          
+          <div className="relative max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">خصوصيتك تهمنا</h2>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">محمية 100%</span>
+              </div>
+            </div>
+            <p className="text-sm opacity-90 mb-2">
+              نلتزم بحماية خصوصيتك وبياناتك الشخصية بأعلى معايير الأمان العالمية.
             </p>
-            <p className="text-[10px] mt-1 opacity-75">آخر تحديث: ديسمبر 2025</p>
+            <div className="flex items-center gap-2 text-xs opacity-75">
+              <Clock size={12} />
+              <span>آخر تحديث: ديسمبر 2025</span>
+            </div>
           </div>
         </motion.div>
 
@@ -319,14 +337,32 @@ export const TermsOfServicePage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 mb-4"
+          className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 text-white p-5 mb-4 overflow-hidden"
         >
-          <div className="max-w-2xl mx-auto">
-            <h2 className="font-bold text-base mb-1">شروط وأحكام الاستخدام</h2>
-            <p className="text-xs opacity-90">
-              تحكم هذه الشروط استخدامك لمنصة "ترند سورية".
+          {/* خلفية مزخرفة */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-2 right-8 text-5xl">📋</div>
+            <div className="absolute bottom-2 left-10 text-4xl">⚖️</div>
+            <div className="absolute top-1/2 left-1/4 text-3xl">📜</div>
+          </div>
+          
+          <div className="relative max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">شروط وأحكام الاستخدام</h2>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">اقرأ بعناية</span>
+              </div>
+            </div>
+            <p className="text-sm opacity-90 mb-2">
+              تحكم هذه الشروط استخدامك لمنصة "ترند سورية" وتحدد حقوقك وواجباتك.
             </p>
-            <p className="text-[10px] mt-1 opacity-75">آخر تحديث: ديسمبر 2025</p>
+            <div className="flex items-center gap-2 text-xs opacity-75">
+              <Clock size={12} />
+              <span>آخر تحديث: ديسمبر 2025</span>
+            </div>
           </div>
         </motion.div>
 
@@ -390,12 +426,27 @@ export const ReturnPolicyPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4"
+          className="relative bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white p-5 overflow-hidden"
         >
-          <div className="max-w-2xl mx-auto">
-            <h2 className="font-bold text-base mb-1">الإرجاع عند التسليم فقط</h2>
-            <p className="text-xs opacity-90">
-              يجب فحص المنتج أمام موظف التوصيل عند الاستلام.
+          {/* خلفية مزخرفة */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-2 right-8 text-5xl">↩️</div>
+            <div className="absolute bottom-2 left-10 text-4xl">📦</div>
+            <div className="absolute top-1/2 left-1/3 text-3xl">✅</div>
+          </div>
+          
+          <div className="relative max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <RefreshCcw size={24} />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">الإرجاع عند التسليم فقط</h2>
+                <span className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-[10px] font-bold">مهم جداً</span>
+              </div>
+            </div>
+            <p className="text-sm opacity-90">
+              يجب فحص المنتج أمام موظف التوصيل عند الاستلام. لا يمكن الإرجاع بعد التوقيع!
             </p>
           </div>
         </motion.div>
@@ -405,8 +456,9 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-red-50 border-2 border-red-300 p-4 mx-4"
+          className="relative bg-red-50 border-2 border-red-300 p-4 mx-4 overflow-hidden"
         >
+          <div className="absolute top-2 left-2 text-4xl opacity-10">⚠️</div>
           <h3 className="font-bold text-red-800 mb-2 flex items-center gap-2">
             <span className="text-xl">⚠️</span>
             تنبيه هام

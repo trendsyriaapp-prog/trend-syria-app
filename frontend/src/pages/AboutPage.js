@@ -137,39 +137,59 @@ const AboutPage = () => {
         </motion.div>
 
         {/* Vision & Mission */}
-        <div className="grid md:grid-cols-2 gap-4 mb-4 px-4">
+        <div className="grid md:grid-cols-2 gap-0 mb-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-orange-500 to-red-500 p-4 text-white"
+            className="relative bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 p-5 text-white overflow-hidden"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Eye size={20} />
-              </div>
-              <h3 className="text-base font-bold">رؤيتنا</h3>
+            {/* خلفية مزخرفة */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-2 right-4 text-5xl">👁️</div>
+              <div className="absolute bottom-2 left-4 text-4xl">🎯</div>
             </div>
-            <p className="text-white/90 leading-relaxed text-sm">
-              أن نكون المنصة الرائدة للتجارة الإلكترونية في سوريا.
-            </p>
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Eye size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">رؤيتنا</h3>
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">2025-2030</span>
+                </div>
+              </div>
+              <p className="text-white/90 leading-relaxed text-sm">
+                أن نكون المنصة الرائدة للتجارة الإلكترونية في سوريا، ونساهم في تطوير الاقتصاد الرقمي السوري.
+              </p>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-blue-500 to-indigo-500 p-4 text-white"
+            className="relative bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 p-5 text-white overflow-hidden"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Target size={20} />
-              </div>
-              <h3 className="text-base font-bold">مهمتنا</h3>
+            {/* خلفية مزخرفة */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-2 right-4 text-5xl">🚀</div>
+              <div className="absolute bottom-2 left-4 text-4xl">💡</div>
             </div>
-            <p className="text-white/90 leading-relaxed text-sm">
-              توفير تجربة تسوق سهلة وآمنة لكل سوري.
-            </p>
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Target size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">مهمتنا</h3>
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">كل يوم</span>
+                </div>
+              </div>
+              <p className="text-white/90 leading-relaxed text-sm">
+                توفير تجربة تسوق وتوصيل سهلة وآمنة وسريعة لكل سوري، مع دعم التجار المحليين.
+              </p>
+            </div>
           </motion.div>
         </div>
 
