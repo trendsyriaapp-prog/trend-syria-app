@@ -195,7 +195,7 @@ const Header = () => {
   if (isSellerPage || isDeliveryPage) return null;
 
   return (
-198|    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 py-2">
         {/* الصف الأول: البحث + الأيقونات */}
         <div className="flex items-center gap-2">
