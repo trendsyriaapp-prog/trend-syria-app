@@ -49,6 +49,7 @@ import SupportTicketsAdmin from '../components/admin/SupportTicketsAdmin';
 import ProblemSolverTools from '../components/admin/ProblemSolverTools';
 import TickerMessagesTab from '../components/admin/TickerMessagesTab';
 import ImageSettingsTab from '../components/admin/ImageSettingsTab';
+import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -316,6 +317,7 @@ const AdminDashboardPage = () => {
     'violations': 'مخالفات السائقين',
     'price-reports': 'بلاغات الأسعار',
     'support-tickets': 'تذاكر الدعم الفني',
+    'emergency-help': 'طلبات المساعدة الطارئة',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
     'food-offers': 'عروض الفلاش',
@@ -434,6 +436,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'support-tickets' && (
               <SupportTicketsTab />
+            )}
+            {activeTab === 'emergency-help' && (
+              <EmergencyHelpTab token={localStorage.getItem('token')} />
             )}
             {activeTab === 'driver-reports' && (
               <DriverReportsTab />
@@ -653,6 +658,18 @@ const AdminDashboardPage = () => {
                       <Users size={16} className="text-rose-600" />
                     </div>
                     <span className="text-xs font-bold text-gray-700">تذاكر الدعم</span>
+                  </button>
+
+                  {/* طلبات المساعدة الطارئة */}
+                  <button
+                    onClick={() => setActiveTab('emergency-help')}
+                    className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-3 border-2 border-red-300 hover:border-red-500 hover:shadow-lg transition-all flex items-center gap-2.5"
+                    data-testid="emergency-help-tab-btn"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center animate-pulse">
+                      <AlertTriangle size={16} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold text-red-700">طلبات طارئة</span>
                   </button>
 
                   {/* البلاغات الأخلاقية */}

@@ -339,3 +339,194 @@ async def assign_ticket(
     )
     
     return {"message": "تم تعيين التذكرة"}
+
+
+# ============== طلبات المساعدة الطارئة للسائقين ==============
+
+class EmergencyHelpRequest(BaseModel):
+    order_id: str
+    reason: str  # customer_not_responding, wrong_address, customer_refused, other
+    message: Optional[str] = None
+
+
+@router.post("/emergency-help")
+async def request_emergency_help(
+    req: EmergencyHelpRequest,
+    user: dict = Depends(get_current_user)
+):
+    """طلب مساعدة طارئة من السائق - الدعم سيتواصل مع العميل"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="للسائقين فقط")
+    
+    # جلب بيانات الطلب
+    order = await db.orders.find_one({"id": req.order_id}, {"_id": 0})
+    if not order:
+        order = await db.food_orders.find_one({"id": req.order_id}, {"_id": 0})
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق أن السائق مسؤول عن هذا الطلب
+    if order.get("delivery_id") != user["id"] and order.get("driver_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="أنت لست مسؤولاً عن هذا الطلب")
+    
+    now = datetime.now(timezone.utc)
+    
+    # أسباب الطلب بالعربية
+    reason_names = {
+        "customer_not_responding": "العميل لا يرد على الرسائل",
+        "wrong_address": "العنوان غير صحيح أو غير واضح",
+        "customer_refused": "العميل رفض استلام الطلب",
+        "payment_issue": "مشكلة في الدفع",
+        "other": "سبب آخر"
+    }
+    
+    reason_text = reason_names.get(req.reason, req.reason)
+    
+    # إنشاء طلب مساعدة طارئة
+    help_request = {
+        "id": str(uuid.uuid4()),
+        "type": "emergency_help",
+        "driver_id": user["id"],
+        "driver_name": user.get("full_name") or user.get("name", "سائق"),
+        "driver_phone": user.get("phone"),
+        "order_id": req.order_id,
+        "order_number": order.get("order_number", req.order_id[:8]),
+        "customer_name": order.get("customer_name") or order.get("user_name", "عميل"),
+        "customer_phone": order.get("phone") or order.get("customer_phone"),
+        "customer_address": order.get("address") or order.get("delivery_address", {}).get("address", ""),
+        "reason": req.reason,
+        "reason_text": reason_text,
+        "message": req.message,
+        "status": "pending",  # pending, in_progress, resolved
+        "created_at": now.isoformat(),
+        "resolved_at": None,
+        "resolved_by": None,
+        "resolution_notes": None
+    }
+    
+    await db.emergency_help_requests.insert_one(help_request)
+    
+    # إرسال إشعار للمدراء
+    admins = await db.users.find(
+        {"user_type": {"$in": ["admin", "sub_admin"]}},
+        {"_id": 0, "id": 1}
+    ).to_list(100)
+    
+    for admin in admins:
+        try:
+            await create_notification_for_user(
+                user_id=admin["id"],
+                title="🚨 طلب مساعدة طارئ!",
+                message=f"السائق {help_request['driver_name']} يحتاج مساعدة - {reason_text}",
+                notification_type="emergency_help"
+            )
+        except Exception:
+            pass
+    
+    # إشعار للعميل (اختياري - لإعلامه أن الدعم سيتواصل معه)
+    customer = await db.users.find_one(
+        {"phone": help_request["customer_phone"]},
+        {"_id": 0, "id": 1}
+    )
+    if customer:
+        try:
+            await create_notification_for_user(
+                user_id=customer["id"],
+                title="📞 فريق الدعم سيتواصل معك",
+                message=f"بخصوص طلبك #{help_request['order_number']} - يرجى التحقق من هاتفك",
+                notification_type="support_contact"
+            )
+        except Exception:
+            pass
+    
+    return {
+        "success": True,
+        "help_request_id": help_request["id"],
+        "message": "تم إرسال طلب المساعدة - فريق الدعم سيتواصل مع العميل"
+    }
+
+
+@router.get("/emergency-help/my-requests")
+async def get_my_emergency_requests(user: dict = Depends(get_current_user)):
+    """جلب طلبات المساعدة الطارئة للسائق"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="للسائقين فقط")
+    
+    requests = await db.emergency_help_requests.find(
+        {"driver_id": user["id"]},
+        {"_id": 0, "customer_phone": 0}  # إخفاء رقم العميل
+    ).sort("created_at", -1).limit(20).to_list(20)
+    
+    return {"requests": requests}
+
+
+@router.get("/admin/emergency-help")
+async def get_all_emergency_requests(
+    status: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع طلبات المساعدة الطارئة (للمدراء)"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    requests = await db.emergency_help_requests.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    # إحصائيات
+    pending_count = await db.emergency_help_requests.count_documents({"status": "pending"})
+    
+    return {
+        "requests": requests,
+        "pending_count": pending_count
+    }
+
+
+@router.put("/admin/emergency-help/{request_id}/resolve")
+async def resolve_emergency_request(
+    request_id: str,
+    notes: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """حل طلب مساعدة طارئ (للمدراء)"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    help_req = await db.emergency_help_requests.find_one({"id": request_id}, {"_id": 0})
+    
+    if not help_req:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    now = datetime.now(timezone.utc)
+    
+    await db.emergency_help_requests.update_one(
+        {"id": request_id},
+        {
+            "$set": {
+                "status": "resolved",
+                "resolved_at": now.isoformat(),
+                "resolved_by": user["id"],
+                "resolution_notes": notes
+            }
+        }
+    )
+    
+    # إشعار للسائق
+    await create_notification_for_user(
+        user_id=help_req["driver_id"],
+        title="✅ تم حل المشكلة",
+        message=f"طلب المساعدة للطلب #{help_req['order_number']} تم حله",
+        notification_type="emergency_resolved"
+    )
+    
+    return {"message": "تم حل طلب المساعدة"}

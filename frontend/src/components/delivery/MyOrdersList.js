@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Phone, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, PhoneCall, Route, Layers, Lock, XCircle } from 'lucide-react';
+import { Truck, User, MapPin, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, MessageCircle, Route, Layers, Lock, XCircle, HelpCircle, Loader2, PhoneCall } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
@@ -143,6 +143,12 @@ const MyOrdersList = ({
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelSettings, setCancelSettings] = useState(null);
+  
+  // نظام طلب المساعدة الطارئة
+  const [showHelpModal, setShowHelpModal] = useState(null);
+  const [helpReason, setHelpReason] = useState('');
+  const [helpMessage, setHelpMessage] = useState('');
+  const [helpLoading, setHelpLoading] = useState(false);
   
   // ساعات التوصيل المسموحة
   const [deliveryHours, setDeliveryHours] = useState({
@@ -485,6 +491,46 @@ const MyOrdersList = ({
     window.location.href = `tel:${supportPhone}`;
   };
 
+  // طلب مساعدة طارئة
+  const requestEmergencyHelp = async (orderId) => {
+    if (!helpReason) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار سبب طلب المساعدة",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setHelpLoading(true);
+    try {
+      await axios.post(`${API}/support/emergency-help`, {
+        order_id: orderId,
+        reason: helpReason,
+        message: helpMessage || null
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: "✅ تم إرسال الطلب",
+        description: "فريق الدعم سيتواصل مع العميل"
+      });
+      
+      setShowHelpModal(null);
+      setHelpReason('');
+      setHelpMessage('');
+    } catch (err) {
+      toast({
+        title: "خطأ",
+        description: err.response?.data?.detail || "فشل إرسال طلب المساعدة",
+        variant: "destructive"
+      });
+    } finally {
+      setHelpLoading(false);
+    }
+  };
+
   // حساب عدد طلبات المنتجات غير المسلمة
   const undeliveredProductOrders = orders.filter(o => 
     (!o.order_type || o.order_type !== 'food') && 
@@ -689,12 +735,6 @@ const MyOrdersList = ({
                   <MapPin size={12} className="inline ml-1" />
                   {order.address || order.delivery_address}, {order.city || order.delivery_city}
                 </p>
-                <a href={`tel:${order.phone}`} className={`text-xs flex items-center gap-1 mt-1 font-bold ${
-                  isDark ? 'text-green-400' : 'text-yellow-600'
-                }`}>
-                  <Phone size={12} />
-                  اتصال: {order.phone}
-                </a>
                 
                 {/* أزرار الخرائط */}
                 <div className="grid grid-cols-2 gap-2 mt-2">
@@ -745,7 +785,7 @@ const MyOrdersList = ({
               </div>
 
               {/* معلومات البائع */}
-              {order.seller_phone && (
+              {order.seller_name && (
                 <div className={`rounded-lg p-2 mb-3 ${
                   isDark ? 'bg-blue-900/20 border border-blue-800' : 'bg-amber-100'
                 }`}>
@@ -754,12 +794,6 @@ const MyOrdersList = ({
                     <User size={12} className="inline ml-1" />
                     {order.seller_name || 'البائع'}
                   </p>
-                  <a href={`tel:${order.seller_phone}`} className={`text-xs flex items-center gap-1 mt-1 font-bold ${
-                    isDark ? 'text-blue-400' : 'text-amber-700'
-                  }`}>
-                    <Phone size={12} />
-                    اتصال: {order.seller_phone}
-                  </a>
                 </div>
               )}
 
@@ -804,26 +838,26 @@ const MyOrdersList = ({
                 )}
                 {!isDelivered && (
                   <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href={`tel:${order.phone}`}
+                    <button
+                      onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
                       className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
                         isLocked ? 'bg-gray-400 text-white' : 'bg-green-600 text-white'
                       }`}
+                      data-testid={`chat-customer-btn-${order.id}`}
                     >
-                      <Phone size={14} />
-                      العميل
-                    </a>
-                    {order.seller_phone && (
-                      <a
-                        href={`tel:${order.seller_phone}`}
-                        className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
-                          isLocked ? 'bg-gray-400 text-white' : 'bg-blue-600 text-white'
-                        }`}
-                      >
-                        <Phone size={14} />
-                        البائع
-                      </a>
-                    )}
+                      <MessageCircle size={14} />
+                      محادثة العميل
+                    </button>
+                    <button
+                      onClick={() => setShowHelpModal(order.id)}
+                      className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
+                        isLocked ? 'bg-gray-400 text-white' : 'bg-orange-500 text-white'
+                      }`}
+                      data-testid={`help-btn-${order.id}`}
+                    >
+                      <HelpCircle size={14} />
+                      طلب مساعدة
+                    </button>
                   </div>
                 )}
                 {/* رابط للتتبع */}
@@ -880,14 +914,6 @@ const MyOrdersList = ({
                 isDark ? 'bg-orange-900/20 border border-orange-800' : 'bg-amber-100'
               }`}>
                 <p className={`text-xs font-bold mb-1 ${isDark ? 'text-orange-400' : 'text-amber-800'}`}>📍 من: {order.store_name}</p>
-                {order.seller_phone && (
-                  <a href={`tel:${order.seller_phone}`} className={`text-xs flex items-center gap-1 ${
-                    isDark ? 'text-orange-300' : 'text-amber-700'
-                  }`}>
-                    <Phone size={12} />
-                    {order.seller_phone}
-                  </a>
-                )}
               </div>
 
               {/* معلومات العميل */}
@@ -896,12 +922,6 @@ const MyOrdersList = ({
               }`}>
                 <p className={`text-xs font-bold mb-1 ${isDark ? 'text-green-400' : 'text-yellow-700'}`}>🏠 إلى: {order.customer_name}</p>
                 <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{order.delivery_address}</p>
-                <a href={`tel:${order.customer_phone}`} className={`text-xs flex items-center gap-1 mt-1 ${
-                  isDark ? 'text-green-400' : 'text-yellow-600'
-                }`}>
-                  <Phone size={12} />
-                  {order.customer_phone}
-                </a>
               </div>
 
               {/* المنتجات */}
@@ -1054,13 +1074,14 @@ const MyOrdersList = ({
                     
                     {!waitingOrders[order.id]?.is_waiting && (
                       <button
-                        onClick={() => handleCustomerNotResponding(order.id)}
+                        onClick={() => setShowHelpModal(order.id)}
                         className={`w-full py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 ${
                           isDark ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-red-100 text-red-600'
                         }`}
+                        data-testid={`customer-not-responding-${order.id}`}
                       >
-                        <PhoneCall size={14} />
-                        العميل لا يرد
+                        <HelpCircle size={14} />
+                        العميل لا يرد - طلب مساعدة
                       </button>
                     )}
                   </>
@@ -1094,20 +1115,22 @@ const MyOrdersList = ({
                 
                 {!isDelivered && (
                   <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href={`tel:${order.customer_phone}`}
+                    <button
+                      onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
                       className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      data-testid={`food-chat-btn-${order.id}`}
                     >
-                      <Phone size={14} />
-                      العميل
-                    </a>
-                    <a
-                      href={`tel:${order.seller_phone}`}
-                      className="bg-orange-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      <MessageCircle size={14} />
+                      محادثة العميل
+                    </button>
+                    <button
+                      onClick={() => setShowHelpModal(order.id)}
+                      className="bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                      data-testid={`food-help-btn-${order.id}`}
                     >
-                      <Phone size={14} />
-                      المتجر
-                    </a>
+                      <HelpCircle size={14} />
+                      طلب مساعدة
+                    </button>
                   </div>
                 )}
                 {isDelivered && (
@@ -1346,6 +1369,124 @@ const MyOrdersList = ({
                   {cancelLoading ? '⏳ جاري...' : '❌ تأكيد الإلغاء'}
                 </button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal طلب المساعدة الطارئة */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-sm rounded-2xl p-4 ${
+              isDark ? 'bg-[#1a1a1a]' : 'bg-white'
+            }`}
+          >
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 mx-auto rounded-full bg-orange-100 flex items-center justify-center mb-3">
+                <HelpCircle size={28} className="text-orange-600" />
+              </div>
+              <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                طلب مساعدة طارئة
+              </h3>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                فريق الدعم سيتواصل مع العميل نيابة عنك
+              </p>
+            </div>
+
+            {/* أسباب طلب المساعدة */}
+            <div className="space-y-2 mb-4">
+              <p className={`text-xs font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                اختر سبب المشكلة:
+              </p>
+              {[
+                { id: 'customer_not_responding', label: '📵 العميل لا يرد على الرسائل' },
+                { id: 'wrong_address', label: '📍 العنوان غير صحيح أو غير واضح' },
+                { id: 'customer_refused', label: '🚫 العميل رفض استلام الطلب' },
+                { id: 'payment_issue', label: '💰 مشكلة في الدفع' },
+                { id: 'other', label: '❓ سبب آخر' }
+              ].map((reason) => (
+                <button
+                  key={reason.id}
+                  onClick={() => setHelpReason(reason.id)}
+                  className={`w-full p-3 rounded-xl text-right text-sm transition-all ${
+                    helpReason === reason.id
+                      ? 'bg-orange-600 text-white'
+                      : isDark
+                        ? 'bg-[#252525] text-gray-300 hover:bg-[#333] border border-[#333]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {reason.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ملاحظة إضافية */}
+            {helpReason === 'other' && (
+              <div className="mb-4">
+                <textarea
+                  value={helpMessage}
+                  onChange={(e) => setHelpMessage(e.target.value)}
+                  placeholder="اكتب تفاصيل المشكلة..."
+                  className={`w-full p-3 rounded-xl text-sm resize-none ${
+                    isDark 
+                      ? 'bg-[#252525] text-white border border-[#333]' 
+                      : 'bg-gray-100 text-gray-900'
+                  }`}
+                  rows={3}
+                />
+              </div>
+            )}
+
+            {/* رسالة توضيحية */}
+            <div className={`p-3 rounded-xl mb-4 ${
+              isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-200'
+            }`}>
+              <p className={`text-xs ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                ✅ سيتصل فريق الدعم بالعميل مباشرة ويحل المشكلة
+              </p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+                🔒 رقم العميل لن يظهر لك (حماية الخصوصية)
+              </p>
+            </div>
+
+            {/* أزرار */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowHelpModal(null);
+                  setHelpReason('');
+                  setHelpMessage('');
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold ${
+                  isDark 
+                    ? 'bg-[#252525] text-white' 
+                    : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => requestEmergencyHelp(showHelpModal)}
+                disabled={!helpReason || helpLoading}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  helpReason && !helpLoading
+                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                }`}
+              >
+                {helpLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  '📞 طلب المساعدة'
+                )}
+              </button>
             </div>
           </motion.div>
         </div>

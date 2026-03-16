@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, CheckCircle, AlertTriangle, Camera, Package, User, MapPin, Phone } from 'lucide-react';
+import { X, CheckCircle, AlertTriangle, Camera, Package, User, MapPin, MessageCircle } from 'lucide-react';
 
 // Checklist للاستلام من البائع
 export const PickupChecklist = ({ order, onComplete, onClose }) => {
@@ -160,8 +160,8 @@ export const DeliveryChecklist = ({ order, onComplete, onClose }) => {
               <span className="text-gray-900 font-medium">{order?.user_name}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Phone size={14} className="text-gray-400" />
-              <a href={`tel:${order?.phone}`} className="text-[#FF6B00]">{order?.phone}</a>
+              <MessageCircle size={14} className="text-gray-400" />
+              <span className="text-[#FF6B00]">استخدم الدردشة للتواصل</span>
             </div>
             <div className="flex items-start gap-2 text-sm">
               <MapPin size={14} className="text-gray-400 mt-0.5" />
