@@ -83,6 +83,24 @@ const AddProductModal = ({
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [editingImageIndex, setEditingImageIndex] = useState(null);
   const [showProductPreview, setShowProductPreview] = useState(false);
+  const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3); // الحد الأقصى من الإعدادات
+
+  // جلب إعدادات الصور من السيرفر
+  useEffect(() => {
+    const fetchImageSettings = async () => {
+      try {
+        const API = process.env.REACT_APP_BACKEND_URL;
+        const res = await fetch(`${API}/api/image/settings`);
+        const data = await res.json();
+        if (data.max_images_per_product) {
+          setMaxImagesPerProduct(data.max_images_per_product);
+        }
+      } catch (error) {
+        console.error('Error fetching image settings:', error);
+      }
+    };
+    fetchImageSettings();
+  }, []);
 
   if (!isOpen) return null;
 
@@ -569,7 +587,7 @@ const AddProductModal = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[10px] font-medium text-gray-700">
-                  صور المنتج ({newProduct.images.length}/5)
+                  صور المنتج ({newProduct.images.length}/{maxImagesPerProduct})
                 </label>
                 <button
                   type="button"
@@ -593,7 +611,7 @@ const AddProductModal = ({
               )}
               
               {/* أزرار إضافة الصور - كاميرا ومعرض */}
-              {newProduct.images.length < 5 && (
+              {newProduct.images.length < maxImagesPerProduct && (
                 <div className="flex gap-2 mb-2">
                   <button
                     type="button"
@@ -680,7 +698,7 @@ const AddProductModal = ({
                       )}
                     </div>
                   ))}
-                  {newProduct.images.length < 5 && (
+                  {newProduct.images.length < maxImagesPerProduct && (
                     <button
                       type="button"
                       onClick={() => document.getElementById('product-images').click()}
@@ -829,7 +847,7 @@ const AddProductModal = ({
             // إضافة الصورة مباشرة
             setNewProduct(prev => ({
               ...prev,
-              images: [...prev.images, dataUrl].slice(0, 5)
+              images: [...prev.images, dataUrl].slice(0, maxImagesPerProduct)
             }));
             toast?.({
               title: "تم التصوير",
