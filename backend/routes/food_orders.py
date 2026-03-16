@@ -446,9 +446,14 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             # التحقق من تاريخ الانتهاء
             end_date = global_free_shipping.get("end_date")
             if end_date:
-                end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) <= end_datetime:
-                    is_global_free_shipping = True
+                try:
+                    end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                    if end_datetime.tzinfo is None:
+                        end_datetime = end_datetime.replace(tzinfo=timezone.utc)
+                    if datetime.now(timezone.utc) <= end_datetime:
+                        is_global_free_shipping = True
+                except:
+                    pass
             else:
                 is_global_free_shipping = True
     
@@ -747,9 +752,15 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         if applies_to in ["all", "food"]:
             end_date = global_free_shipping.get("end_date")
             if end_date:
-                end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) <= end_datetime:
-                    is_global_free_shipping = True
+                try:
+                    end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                    # تأكد من أن end_datetime له timezone
+                    if end_datetime.tzinfo is None:
+                        end_datetime = end_datetime.replace(tzinfo=timezone.utc)
+                    if datetime.now(timezone.utc) <= end_datetime:
+                        is_global_free_shipping = True
+                except:
+                    pass
             else:
                 is_global_free_shipping = True
     
