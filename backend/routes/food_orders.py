@@ -466,15 +466,8 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # ========== حساب أجرة السائق بنظام الكيلومتر ==========
     delivery_distance_km = order.delivery_distance_km
     
-    # إحداثيات المتجر (مطلوبة)
-    store_lat = first_store.get("latitude") or first_store.get("location", {}).get("lat")
-    store_lon = first_store.get("longitude") or first_store.get("location", {}).get("lng")
-    
-    if not store_lat or not store_lon:
-        raise HTTPException(
-            status_code=400, 
-            detail="المتجر لا يملك موقع محدد. يرجى التواصل مع المتجر لتحديث موقعه."
-        )
+    # إحداثيات المتجر (تم التحقق منها مسبقاً)
+    # store_lat و store_lng معرّفة مسبقاً في السطر 285-286
     
     # حساب المسافة إذا لم تُرسل من Frontend
     if delivery_distance_km is None:
@@ -504,7 +497,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         
         try:
             delivery_distance_km = calculate_distance_km(
-                float(store_lat), float(store_lon),
+                float(store_lat), float(store_lng),
                 float(customer_lat), float(customer_lon)
             )
         except (ValueError, TypeError):
