@@ -512,11 +512,34 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     delivery_calculation_method = km_calculation["calculation_method"]
     delivery_calculation_details = km_calculation["details"]
     
+    # 🔥 تطبيق التسعير الديناميكي (Surge Pricing)
+    surge_settings = await db.platform_settings.find_one({"id": "surge_pricing"}, {"_id": 0})
+    surge_applied = False
+    surge_reason = ""
+    original_delivery_fee = driver_delivery_fee
+    
+    if surge_settings and surge_settings.get("is_active", False):
+        applies_to = surge_settings.get("applies_to", "all")
+        if applies_to in ["all", "food_only"]:
+            surge_applied = True
+            surge_reason = surge_settings.get("reason", "زيادة الطلب")
+            
+            # حساب الزيادة
+            if surge_settings.get("fixed_amount", 0) > 0:
+                driver_delivery_fee = driver_delivery_fee + surge_settings["fixed_amount"]
+            else:
+                driver_delivery_fee = int(driver_delivery_fee * surge_settings.get("multiplier", 1.0))
+            
+            # تطبيق الحد الأقصى
+            max_surge = surge_settings.get("max_surge_amount", 0)
+            if max_surge > 0:
+                driver_delivery_fee = min(driver_delivery_fee, original_delivery_fee + max_surge)
+    
     # ما يدفعه العميل (صفر إذا توصيل مجاني)
     if is_free_delivery:
         delivery_fee = 0  # العميل لا يدفع
     else:
-        delivery_fee = driver_delivery_fee  # العميل يدفع نفس أجرة السائق
+        delivery_fee = driver_delivery_fee  # العميل يدفع (مع الزيادة إذا مفعّلة)
     
     # إضافة رسوم الطقس الصعب (فقط إذا لم يكن التوصيل مجاني)
     applied_weather_surcharge = 0
@@ -594,6 +617,9 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "delivery_calculation_details": delivery_calculation_details,  # تفاصيل الحساب
         "weather_surcharge": applied_weather_surcharge,
         "weather_surcharge_reason": weather_surcharge_reason if applied_weather_surcharge > 0 else None,
+        "surge_pricing_applied": surge_applied,
+        "surge_pricing_reason": surge_reason if surge_applied else None,
+        "surge_pricing_increase": (driver_delivery_fee - original_delivery_fee) if surge_applied else 0,
         "total": total,
         "delivery_address": order.delivery_address,
         "delivery_city": order.delivery_city,
@@ -831,13 +857,34 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         delivery_calculation_method = km_calculation["calculation_method"]
         delivery_calculation_details = km_calculation["details"]
         
+        # 🔥 تطبيق التسعير الديناميكي (Surge Pricing)
+        surge_settings = await db.platform_settings.find_one({"id": "surge_pricing"}, {"_id": 0})
+        surge_applied = False
+        surge_reason = ""
+        original_driver_fee = driver_delivery_fee
+        
+        if surge_settings and surge_settings.get("is_active", False):
+            applies_to = surge_settings.get("applies_to", "all")
+            if applies_to in ["all", "food_only"]:
+                surge_applied = True
+                surge_reason = surge_settings.get("reason", "زيادة الطلب")
+                
+                if surge_settings.get("fixed_amount", 0) > 0:
+                    driver_delivery_fee = driver_delivery_fee + surge_settings["fixed_amount"]
+                else:
+                    driver_delivery_fee = int(driver_delivery_fee * surge_settings.get("multiplier", 1.0))
+                
+                max_surge = surge_settings.get("max_surge_amount", 0)
+                if max_surge > 0:
+                    driver_delivery_fee = min(driver_delivery_fee, original_driver_fee + max_surge)
+        
         # حساب رسوم التوصيل - استخدام الحد الموحد والرسوم الموحدة أو العرض الشامل
         is_free_delivery = is_global_free_shipping or (food_free_delivery_threshold > 0 and subtotal >= food_free_delivery_threshold)
         
         if is_free_delivery:
             delivery_fee = 0  # مجاني - عرض شامل أو العميل وصل للحد
         else:
-            delivery_fee = driver_delivery_fee  # العميل يدفع أجرة السائق بالكيلومتر
+            delivery_fee = driver_delivery_fee  # العميل يدفع (مع الزيادة إذا مفعّلة)
         
         order_total = subtotal + delivery_fee
         
@@ -879,6 +926,9 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "delivery_distance_km": round(delivery_distance_km, 2),
             "delivery_calculation_method": delivery_calculation_method,
             "delivery_calculation_details": delivery_calculation_details,
+            "surge_pricing_applied": surge_applied,
+            "surge_pricing_reason": surge_reason if surge_applied else None,
+            "surge_pricing_increase": (driver_delivery_fee - original_driver_fee) if surge_applied else 0,
             "total": order_total,
             "delivery_address": batch.delivery_address,
             "delivery_city": batch.delivery_city,

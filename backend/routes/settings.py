@@ -1175,7 +1175,9 @@ async def update_surge_pricing(
         upsert=True
     )
     
-    # إرسال إشعارات للعملاء إذا تم التفعيل
+    # إرسال إشعارات للعملاء والسائقين عند تغيير التسعير
+    notifications = []
+    
     if data.is_active:
         # جلب العملاء النشطين
         active_customers = await db.users.find(
@@ -1183,7 +1185,6 @@ async def update_surge_pricing(
             {"_id": 0, "id": 1}
         ).limit(1000).to_list(1000)
         
-        notifications = []
         for customer in active_customers:
             notifications.append({
                 "id": str(uuid.uuid4()),
@@ -1195,8 +1196,42 @@ async def update_surge_pricing(
                 "created_at": now
             })
         
-        if notifications:
-            await db.notifications.insert_many(notifications)
+        # إشعار السائقين بالزيادة (أرباح أكثر!)
+        active_drivers = await db.users.find(
+            {"user_type": "delivery"},
+            {"_id": 0, "id": 1, "name": 1}
+        ).to_list(500)
+        
+        for driver in active_drivers:
+            notifications.append({
+                "id": str(uuid.uuid4()),
+                "user_id": driver["id"],
+                "type": "surge_pricing_driver",
+                "title": "💰 فرصة للكسب: التسعير الديناميكي مفعّل!",
+                "message": f"أرباح التوصيل زادت بنسبة {int((data.multiplier - 1) * 100)}% بسبب {data.reason}. اغتنم الفرصة!",
+                "is_read": False,
+                "created_at": now
+            })
+    else:
+        # إشعار السائقين بإيقاف التسعير الديناميكي
+        active_drivers = await db.users.find(
+            {"user_type": "delivery"},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        
+        for driver in active_drivers:
+            notifications.append({
+                "id": str(uuid.uuid4()),
+                "user_id": driver["id"],
+                "type": "surge_pricing_driver",
+                "title": "📢 تنبيه: عودة الأسعار للطبيعي",
+                "message": "تم إيقاف التسعير الديناميكي. أسعار التوصيل عادت للوضع الطبيعي.",
+                "is_read": False,
+                "created_at": now
+            })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
     
     # حساب مثال على الزيادة
     example_fee = 5000
