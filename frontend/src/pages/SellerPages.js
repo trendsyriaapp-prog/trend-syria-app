@@ -1030,6 +1030,7 @@ const SellerDashboardPage = () => {
         isFoodSeller={isFoodSeller}
         commissionInfo={commissionInfo}
         initialData={duplicatingProduct} // تمرير بيانات المنتج المنسوخ
+        token={token} // تمرير التوكن لقوالب 3D
       />
 
       {/* Edit Product Modal */}

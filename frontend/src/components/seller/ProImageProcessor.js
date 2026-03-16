@@ -33,11 +33,14 @@ const ProImageProcessor = ({
   onProcessed, 
   onCancel,
   isOpen,
-  isFoodSeller = false  // هل البائع من قسم الطعام؟
+  isFoodSeller = false,  // هل البائع من قسم الطعام؟
+  token = null,  // توكن البائع للميزات المدفوعة
+  onOpenTemplates = null  // فتح قوالب 3D
 }) => {
   const [backgrounds, setBackgrounds] = useState([]);
   const [selectedBg, setSelectedBg] = useState('white');
   const [processing, setProcessing] = useState(false);
+  const [processMode, setProcessMode] = useState('standard'); // standard, template
   const [processedImage, setProcessedImage] = useState(null);
   const [keepOriginal, setKeepOriginal] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -204,8 +207,36 @@ const ProImageProcessor = ({
         </div>
 
         <div className="p-4 space-y-4">
+          {/* اختيار نوع المعالجة - للمنتجات فقط */}
+          {!isFoodSeller && (
+            <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+              <button
+                onClick={() => setProcessMode('standard')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  processMode === 'standard'
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'text-gray-600'
+                }`}
+              >
+                <Sparkles size={14} />
+                معالجة عادية
+              </button>
+              <button
+                onClick={() => setProcessMode('template')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  processMode === 'template'
+                    ? 'bg-white text-purple-600 shadow-sm'
+                    : 'text-gray-600'
+                }`}
+              >
+                <span>🎨</span>
+                قوالب 3D
+              </button>
+            </div>
+          )}
+
           {/* تقرير الجودة */}
-          {qualityReport && (
+          {qualityReport && processMode === 'standard' && (
             <div className={`p-3 rounded-xl border ${
               qualityReport.quality_score >= 70 ? 'bg-green-50 border-green-200' :
               qualityReport.quality_score >= 50 ? 'bg-yellow-50 border-yellow-200' :
@@ -238,7 +269,45 @@ const ProImageProcessor = ({
             </div>
           )}
 
-          {/* معاينة الصور */}
+          {/* عرض قوالب 3D عند اختيارها */}
+          {processMode === 'template' && !isFoodSeller && (
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+              <div className="text-center mb-3">
+                <span className="text-3xl">🎨</span>
+                <h3 className="font-bold text-purple-800 mt-1">قوالب 3D احترافية</h3>
+                <p className="text-xs text-purple-600">12 قالب متنوع للمناسبات والفئات</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-white rounded-lg p-2 text-center">
+                  <span className="text-lg">🆓</span>
+                  <p className="text-[10px] font-bold text-gray-700">مجاني</p>
+                  <p className="text-[9px] text-gray-500">دمج على قالب</p>
+                </div>
+                <div className="bg-white rounded-lg p-2 text-center">
+                  <span className="text-lg">👑</span>
+                  <p className="text-[10px] font-bold text-purple-700">AI مدفوع</p>
+                  <p className="text-[9px] text-gray-500">3,000 ل.س</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  // فتح نافذة القوالب
+                  if (onOpenTemplates) {
+                    onOpenTemplates();
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+              >
+                <Sparkles size={16} />
+                اختيار قالب 3D
+              </button>
+            </div>
+          )}
+
+          {/* معاينة الصور - للمعالجة العادية */}
+          {processMode === 'standard' && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-gray-500 text-center">الأصلية</p>
@@ -276,8 +345,10 @@ const ProImageProcessor = ({
               </div>
             </div>
           </div>
+          )}
 
           {/* خيار إبقاء الأصلية */}
+          {processMode === 'standard' && (
           <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer border border-gray-200 hover:border-gray-300">
             <input
               type="checkbox"
@@ -293,8 +364,9 @@ const ProImageProcessor = ({
               <p className="text-xs text-gray-500">بدون أي معالجة</p>
             </div>
           </label>
+          )}
 
-          {!keepOriginal && (
+          {processMode === 'standard' && !keepOriginal && (
             <>
               {/* خيارات المعالجة */}
               <div className="space-y-2">

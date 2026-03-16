@@ -4,6 +4,7 @@ import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy
 import PhotoGuideModal from './PhotoGuideModal';
 import ImageBackgroundSelector from './ImageBackgroundSelector';
 import ProImageProcessor from './ProImageProcessor';
+import TemplateSelector from './TemplateSelector';
 import ImageEditorModal from './ImageEditorModal';
 import CameraGuideModal from './CameraGuideModal';
 import ProductPreviewModal from './ProductPreviewModal';
@@ -18,7 +19,8 @@ const AddProductModal = ({
   toast,
   isFoodSeller = false,
   commissionInfo = null,
-  initialData = null // بيانات المنتج المنسوخ
+  initialData = null, // بيانات المنتج المنسوخ
+  token = null // توكن البائع
 }) => {
   const getDefaultProduct = () => ({
     name: '',
@@ -84,6 +86,7 @@ const AddProductModal = ({
   const [editingImageIndex, setEditingImageIndex] = useState(null);
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3); // الحد الأقصى من الإعدادات
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false); // قوالب 3D
 
   // جلب إعدادات الصور من السيرفر
   useEffect(() => {
@@ -835,6 +838,23 @@ const AddProductModal = ({
         onCancel={handleCancelImageProcess}
         isOpen={showProProcessor}
         isFoodSeller={isFoodSeller}
+        token={token}
+        onOpenTemplates={() => {
+          setShowProProcessor(false);
+          setShowTemplateSelector(true);
+        }}
+      />
+      
+      {/* قوالب 3D */}
+      <TemplateSelector
+        imageDataUrl={pendingImage}
+        onProcessed={handleProcessedImage}
+        onCancel={() => {
+          setShowTemplateSelector(false);
+          setPendingImage(null);
+        }}
+        isOpen={showTemplateSelector}
+        token={token}
       />
       
       {/* كاميرا مع إطار توجيهي */}
