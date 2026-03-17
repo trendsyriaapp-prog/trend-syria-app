@@ -132,6 +132,7 @@ const FoodPage = () => {
   const [userCity, setUserCity] = useState(null);
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
+  const [badgeSettings, setBadgeSettings] = useState(null);
 
   // تحديث searchQuery عند تغير searchParam
   useEffect(() => {
@@ -204,7 +205,7 @@ const FoodPage = () => {
     setLoading(true);
     try {
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
-      const [storesRes, productsRes, flashRes, bannersRes, promoRes] = await Promise.all([
+      const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
@@ -217,12 +218,14 @@ const FoodPage = () => {
         }}),
         axios.get(`${API}/food/flash-sales/active`),
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
-        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null }))
+        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
+        axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
       setFlashSales(flashRes.data || []);
       setFoodBanners(bannersRes.data || []);
+      setBadgeSettings(badgeRes.data || null);
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل الطعام
       const promo = promoRes.data;
@@ -381,7 +384,7 @@ const FoodPage = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {products.map((product) => (
-                    <FoodProductCard key={product.id} product={product} />
+                    <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} />
                   ))}
                 </div>
               </section>
@@ -489,13 +492,66 @@ const StoreCard = ({ store }) => {
 };
 
 // بطاقة منتج الطعام - توجه للمتجر وليس لصفحة المنتج
-const FoodProductCard = ({ product }) => {
+const FoodProductCard = ({ product, badgeSettings }) => {
   // جلب إعدادات القسم حسب نوع المتجر
   const categoryConfig = CATEGORY_CONFIG[product.store_type] || CATEGORY_CONFIG.restaurants;
   const UnitIcon = categoryConfig.unitIcon;
   
+  const [badgeIndex, setBadgeIndex] = useState(0);
+  const [activeBadge, setActiveBadge] = useState(null);
+  
   const isNew = product.created_at && 
     (new Date() - new Date(product.created_at)) < 7 * 24 * 60 * 60 * 1000;
+
+  // تحديد الشارة المناسبة
+  useEffect(() => {
+    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
+      setActiveBadge(null);
+      return;
+    }
+    const { badge_types } = badgeSettings;
+    // الأولوية: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
+    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
+      setActiveBadge({ messages: badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً'], type: 'best_seller' });
+    } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
+      setActiveBadge({ messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة'], type: 'most_viewed' });
+    } else if (badge_types.free_shipping?.enabled) {
+      const threshold = product.free_delivery_minimum || badge_types.free_shipping.threshold || 30000;
+      const price = product.price || 0;
+      
+      if (price >= threshold) {
+        setActiveBadge({ messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني'], type: 'free_shipping' });
+      } else {
+        const unitsNeeded = Math.ceil(threshold / price);
+        if (unitsNeeded >= 2 && unitsNeeded <= 3) {
+          setActiveBadge({
+            messages: [`✨ ${unitsNeeded} قطع = توصيل مجاني`],
+            type: 'buy_x'
+          });
+        } else {
+          setActiveBadge(null);
+        }
+      }
+    } else {
+      setActiveBadge(null);
+    }
+  }, [product, badgeSettings]);
+
+  // دوران الشارة
+  useEffect(() => {
+    if (!activeBadge || activeBadge.messages.length <= 1) return;
+    const interval = setInterval(() => {
+      setBadgeIndex((prev) => (prev + 1) % activeBadge.messages.length);
+    }, badgeSettings?.rotation_speed || 3000);
+    return () => clearInterval(interval);
+  }, [activeBadge, badgeSettings?.rotation_speed]);
+
+  const bgColors = [
+    'from-blue-500 via-blue-600 to-blue-500',
+    'from-emerald-500 via-emerald-600 to-emerald-500',
+    'from-violet-500 via-violet-600 to-violet-500',
+    'from-rose-800 via-rose-900 to-rose-800'
+  ];
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
@@ -540,6 +596,18 @@ const FoodProductCard = ({ product }) => {
             <UnitIcon size={10} />
             <span>/{categoryConfig.unit}</span>
           </div>
+          
+          {/* شارة التوصيل/المبيعات */}
+          {activeBadge && (
+            <motion.div
+              key={badgeIndex}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`absolute bottom-2 left-2 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
+            >
+              {activeBadge.messages[badgeIndex]}
+            </motion.div>
+          )}
           
           {/* Favorite */}
           <button 
