@@ -61,6 +61,7 @@ const ProductsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
+  const [badgeSettings, setBadgeSettings] = useState(null);
   
   // New states for ads, flash, best sellers, newly added
   const [ads, setAds] = useState([]);
@@ -82,12 +83,13 @@ const ProductsPage = () => {
   useEffect(() => {
     const fetchExtras = async () => {
       try {
-        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes] = await Promise.all([
+        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes] = await Promise.all([
           axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
           axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
-          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] }))
+          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
+          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         const promo = promoRes.data;
@@ -98,6 +100,7 @@ const ProductsPage = () => {
         }
         
         setAds(adsRes.data || []);
+        setBadgeSettings(badgeRes.data);
         setFlashProducts(flashRes.data?.products || []);
         setFlashSale(flashRes.data?.flash_sale || null);
         setBestSellers(bestSellersRes.data || []);
@@ -810,7 +813,7 @@ const ProductsPage = () => {
                         animation: index < 12 ? 'fadeInUp 0.4s ease-out forwards' : 'none'
                       }}
                     >
-                      <ProductCard product={product} />
+                      <ProductCard product={product} badgeSettings={badgeSettings} />
                     </div>
                   ))}
                 </div>
