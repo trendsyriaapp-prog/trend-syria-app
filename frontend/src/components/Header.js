@@ -202,7 +202,7 @@ const Header = () => {
           {/* Logo - الشعار */}
           <Link to="/" className="flex-shrink-0 flex items-center">
             <span className="text-base sm:text-lg font-bold text-gray-900">
-              ترند<span className="text-[#FF6B00]">⚡</span><span className="text-[#FF6B00] border-b-[3px] border-[#FF6B00] pb-[1px]">سورية</span>
+              ترند<span className="text-[#FF6B00]">⚡</span><span className="text-[#FF6B00] underline decoration-wavy decoration-[#FF6B00] decoration-2 underline-offset-4">سورية</span>
             </span>
           </Link>
 
