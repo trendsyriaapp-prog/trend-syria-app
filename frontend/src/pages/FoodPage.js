@@ -573,7 +573,11 @@ const FoodProductCard = ({ product, badgeSettings }) => {
         const unitsNeeded = Math.ceil(threshold / price);
         if (unitsNeeded >= 2 && unitsNeeded <= 3) {
           setActiveBadge({
-            messages: [`✨ ${unitsNeeded} قطع = توصيل مجاني`],
+            messages: [
+              `🛒 اشترِ ${unitsNeeded} = شحن مجاني`,
+              `📦 ${unitsNeeded} قطع = توصيل مجاني`,
+              `✨ وفّر التوصيل بـ ${unitsNeeded} قطع`
+            ],
             type: 'buy_x'
           });
         } else {
