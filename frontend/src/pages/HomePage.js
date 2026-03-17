@@ -135,7 +135,13 @@ const HomePage = () => {
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">
       {/* 🎯 شريط العروض المتحرك - Offers Ticker (عمودي) */}
       {tickerEnabled && tickerMessages.length > 0 && (
-        <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white overflow-hidden">
+        <div className={`text-white overflow-hidden transition-all duration-500 ${
+          ['bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500',
+           'bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500',
+           'bg-gradient-to-r from-violet-500 via-violet-600 to-violet-500',
+           'bg-gradient-to-r from-rose-800 via-rose-900 to-rose-800'
+          ][currentTickerIndex % 4]
+        }`}>
           <div className="ticker-wrapper">
             {tickerMessages.map((msg, i) => (
               <div 
