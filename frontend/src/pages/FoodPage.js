@@ -353,17 +353,17 @@ const FoodPage = () => {
       {/* الفئات */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+          <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
             <button
               onClick={() => handleCategoryChange('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
                 activeCategory === 'all'
                   ? 'bg-[#FF6B00] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <Store size={16} />
-              <span className="text-sm font-medium">الكل</span>
+              <Store size={12} />
+              <span className="text-xs font-medium">الكل</span>
             </button>
             {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories).map((cat) => {
               const IconComp = typeof cat.icon === 'string' ? getIcon(cat.icon) : cat.icon;
@@ -371,14 +371,14 @@ const FoodPage = () => {
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
                     activeCategory === cat.id
                       ? 'bg-[#FF6B00] text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <IconComp size={16} />
-                  <span className="text-sm font-medium">{cat.name}</span>
+                  <IconComp size={12} />
+                  <span className="text-xs font-medium">{cat.name}</span>
                 </button>
               );
             })}
