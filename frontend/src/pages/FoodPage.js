@@ -398,15 +398,6 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
-            {/* Flash Sales Banner */}
-            {flashSales.length > 0 && (
-              <section className="mb-4">
-                {flashSales.slice(0, 1).map((flash) => (
-                  <FlashSaleBanner key={flash.id} flash={flash} />
-                ))}
-              </section>
-            )}
-
             {/* Stores Section */}
             {stores.length > 0 && (
               <section className="mb-6">
@@ -421,6 +412,15 @@ const FoodPage = () => {
                     <StoreCard key={store.id} store={store} />
                   ))}
                 </div>
+              </section>
+            )}
+
+            {/* Flash Sales Banner */}
+            {flashSales.length > 0 && (
+              <section className="mb-4">
+                {flashSales.slice(0, 1).map((flash) => (
+                  <FlashSaleBanner key={flash.id} flash={flash} />
+                ))}
               </section>
             )}
 
