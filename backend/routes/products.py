@@ -182,7 +182,28 @@ async def get_products(
             {"discount_percentage": {"$exists": True, "$gt": 0}}
         ]
     elif sort == "flash":
-        query["is_flash_sale"] = True  # منتجات الفلاش فقط
+        # جلب منتجات الفلاش من جدول flash_sales النشط
+        now = datetime.now(timezone.utc).isoformat()
+        flash_sales = await db.flash_sales.find({
+            "is_active": True,
+            "start_time": {"$lte": now},
+            "end_time": {"$gte": now}
+        }).to_list(10)
+        
+        if flash_sales:
+            flash_product_ids = []
+            for fs in flash_sales:
+                # جمع IDs من جميع المصادر الممكنة
+                flash_product_ids.extend(fs.get("product_ids", []))
+                flash_product_ids.extend(fs.get("applicable_shop_products", []))
+            
+            if flash_product_ids:
+                query["id"] = {"$in": list(set(flash_product_ids))}  # إزالة التكرار
+            else:
+                # إذا لا يوجد IDs محددة، يعني الفلاش على جميع المنتجات
+                pass  # لا نضيف فلتر
+        else:
+            query["id"] = {"$in": []}  # لا يوجد فلاش نشط
     elif sort == "popular":
         query["sales_count"] = {"$gte": 1}  # المنتجات الأكثر مبيعاً
     
