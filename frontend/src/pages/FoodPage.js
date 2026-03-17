@@ -330,7 +330,7 @@ const FoodPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-gray-50 pt-10">
+    <div className="min-h-screen pb-20 bg-gray-50">
       {/* شريط قسم الطعام مع المدينة */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto">
