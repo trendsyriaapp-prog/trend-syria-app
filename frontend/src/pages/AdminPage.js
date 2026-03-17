@@ -53,6 +53,7 @@ import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
 import ProductBadgesTab from '../components/admin/ProductBadgesTab';
 import CategoriesTab from '../components/admin/CategoriesTab';
 import CallRequestsTab from '../components/admin/CallRequestsTab';
+import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -338,7 +339,8 @@ const AdminDashboardPage = () => {
     'image-settings': 'إعدادات الصور',
     'product-badges': 'شارات المنتجات',
     'categories': 'إدارة الفئات',
-    'call-requests': 'طلبات الاتصال'
+    'call-requests': 'طلبات الاتصال',
+    'recorded-calls': 'المكالمات المسجلة'
   };
 
   return (
@@ -502,6 +504,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'call-requests' && (
               <CallRequestsTab />
             )}
+            {activeTab === 'recorded-calls' && user.user_type === 'admin' && (
+              <RecordedCallsTab />
+            )}
           </>
         ) : (
           <>
@@ -598,6 +603,7 @@ const AdminDashboardPage = () => {
                     { icon: DollarSign, label: 'التحديات', tab: 'challenges' },
                     { icon: AlertTriangle, label: 'طوارئ', tab: 'emergency-help', urgent: true },
                     { icon: Phone, label: 'طلبات اتصال', tab: 'call-requests', urgent: true },
+                    { icon: Phone, label: 'المكالمات المسجلة', tab: 'recorded-calls' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors ${item.urgent ? 'bg-red-50' : ''}`}>
                       <item.icon size={16} className={item.urgent ? 'text-red-500' : 'text-cyan-600'} />

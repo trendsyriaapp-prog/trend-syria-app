@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Phone, PhoneOff, PhoneIncoming, PhoneMissed, 
-  Mic, MicOff, Volume2, VolumeX, User, X 
+  Mic, MicOff, Volume2, VolumeX, User, X, Circle 
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -30,6 +30,9 @@ const CALL_STATUS = {
   ERROR: 'error'
 };
 
+// رسالة التسجيل الصوتية (TTS)
+const RECORDING_NOTICE = "هذه المكالمة مسجلة لأغراض الجودة";
+
 // مكون المكالمة الصادرة
 export const OutgoingCallModal = ({ 
   orderId, 
@@ -45,6 +48,7 @@ export const OutgoingCallModal = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [error, setError] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
 
   // WebRTC refs
   const peerConnectionRef = useRef(null);
@@ -52,6 +56,68 @@ export const OutgoingCallModal = ({
   const remoteAudioRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const durationIntervalRef = useRef(null);
+  
+  // Recording refs
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+
+  // تشغيل رسالة التسجيل
+  const playRecordingNotice = useCallback(() => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(RECORDING_NOTICE);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
+  // بدء التسجيل
+  const startRecording = useCallback((stream) => {
+    try {
+      recordedChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.start(1000); // تسجيل كل ثانية
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error starting recording:', err);
+    }
+  }, []);
+
+  // إيقاف التسجيل ورفعه
+  const stopAndUploadRecording = useCallback(async (cId) => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // انتظار قليل للتأكد من اكتمال التسجيل
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (recordedChunksRef.current.length > 0 && cId) {
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('recording', blob, `call_${cId}.webm`);
+        
+        try {
+          await axios.post(`${API}/voip/call/${cId}/upload-recording`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          console.log('Recording uploaded successfully');
+        } catch (err) {
+          console.error('Error uploading recording:', err);
+        }
+      }
+    }
+  }, []);
 
   // بدء المكالمة
   const initiateCall = useCallback(async () => {
@@ -132,8 +198,14 @@ export const OutgoingCallModal = ({
         if (response.data.call_status === 'connected' && callStatus !== CALL_STATUS.CONNECTED) {
           setCallStatus(CALL_STATUS.CONNECTED);
           startDurationTimer();
+          // تشغيل رسالة التسجيل وبدء التسجيل
+          playRecordingNotice();
+          if (localStreamRef.current) {
+            startRecording(localStreamRef.current);
+          }
         } else if (['ended', 'rejected', 'missed'].includes(response.data.call_status)) {
           setCallStatus(CALL_STATUS.ENDED);
+          await stopAndUploadRecording(cId);
           cleanup();
         }
 
@@ -198,6 +270,9 @@ export const OutgoingCallModal = ({
   // إنهاء المكالمة
   const endCall = async () => {
     try {
+      // رفع التسجيل قبل إنهاء المكالمة
+      await stopAndUploadRecording(callId);
+      
       if (callId) {
         await axios.post(`${API}/voip/call/action`, {
           call_id: callId,
@@ -224,6 +299,10 @@ export const OutgoingCallModal = ({
     }
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
+    }
+    // إيقاف التسجيل
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
   };
 
@@ -278,7 +357,20 @@ export const OutgoingCallModal = ({
             </motion.p>
           )}
           {callStatus === CALL_STATUS.CONNECTED && (
-            <p className="text-green-400 text-2xl font-mono">{formatDuration(callDuration)}</p>
+            <div className="space-y-2">
+              <p className="text-green-400 text-2xl font-mono">{formatDuration(callDuration)}</p>
+              {isRecording && (
+                <div className="flex items-center justify-center gap-2 text-red-400 text-sm">
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                  >
+                    <Circle size={10} fill="currentColor" />
+                  </motion.div>
+                  <span>جاري التسجيل</span>
+                </div>
+              )}
+            </div>
           )}
           {callStatus === CALL_STATUS.ERROR && (
             <p className="text-red-400">{error}</p>
@@ -413,6 +505,7 @@ export const ActiveCallModal = ({
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
 
   // WebRTC refs
   const peerConnectionRef = useRef(null);
@@ -420,6 +513,66 @@ export const ActiveCallModal = ({
   const remoteAudioRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const durationIntervalRef = useRef(null);
+  
+  // Recording refs
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+
+  // تشغيل رسالة التسجيل
+  const playRecordingNotice = useCallback(() => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(RECORDING_NOTICE);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
+  // بدء التسجيل
+  const startRecording = useCallback((stream) => {
+    try {
+      recordedChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.start(1000);
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error starting recording:', err);
+    }
+  }, []);
+
+  // إيقاف التسجيل ورفعه
+  const stopAndUploadRecording = useCallback(async () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (recordedChunksRef.current.length > 0 && callId) {
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('recording', blob, `call_${callId}.webm`);
+        
+        try {
+          await axios.post(`${API}/voip/call/${callId}/upload-recording`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } catch (err) {
+          console.error('Error uploading recording:', err);
+        }
+      }
+    }
+  }, [callId]);
 
   // إعداد المكالمة
   const setupCall = useCallback(async () => {
@@ -459,11 +612,15 @@ export const ActiveCallModal = ({
       // بدء polling للإشارات
       startSignalPolling();
       startDurationTimer();
+      
+      // تشغيل رسالة التسجيل وبدء التسجيل
+      playRecordingNotice();
+      startRecording(stream);
 
     } catch (err) {
       console.error('Error setting up call:', err);
     }
-  }, [callId]);
+  }, [callId, playRecordingNotice, startRecording]);
 
   // Polling للإشارات
   const startSignalPolling = () => {
@@ -547,6 +704,9 @@ export const ActiveCallModal = ({
   // إنهاء المكالمة
   const endCall = async () => {
     try {
+      // رفع التسجيل
+      await stopAndUploadRecording();
+      
       await axios.post(`${API}/voip/call/action`, {
         call_id: callId,
         action: 'end'
@@ -571,6 +731,10 @@ export const ActiveCallModal = ({
     }
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
+    }
+    // إيقاف التسجيل
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
   };
 
@@ -600,7 +764,18 @@ export const ActiveCallModal = ({
         {/* Duration */}
         <div className="p-6 text-center">
           <p className="text-green-400 text-3xl font-mono">{formatDuration(callDuration)}</p>
-          <p className="text-gray-500 text-sm mt-2">المكالمة متصلة</p>
+          {isRecording && (
+            <div className="flex items-center justify-center gap-2 text-red-400 text-sm mt-2">
+              <motion.div
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ repeat: Infinity, duration: 1 }}
+              >
+                <Circle size={10} fill="currentColor" />
+              </motion.div>
+              <span>جاري التسجيل</span>
+            </div>
+          )}
+          {!isRecording && <p className="text-gray-500 text-sm mt-2">المكالمة متصلة</p>}
         </div>
 
         {/* Controls */}

@@ -1,13 +1,23 @@
 # /app/backend/routes/voip.py
 # نظام مكالمات VoIP - للاتصال بين السائق والعميل
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
+import os
+import asyncio
 
 from core.database import db, get_current_user
+
+# مجلد حفظ التسجيلات
+RECORDINGS_DIR = "/app/backend/uploads/recordings"
+os.makedirs(RECORDINGS_DIR, exist_ok=True)
+
+# مدة الاحتفاظ بالتسجيلات (7 أيام)
+RECORDING_RETENTION_DAYS = 7
 
 router = APIRouter(prefix="/voip", tags=["VoIP"])
 
@@ -316,3 +326,196 @@ async def check_incoming_call(user: dict = Depends(get_current_user)):
     if call:
         return {"has_incoming_call": True, "call": call}
     return {"has_incoming_call": False, "call": None}
+
+
+
+# ==================== تسجيل المكالمات ====================
+
+# رفع تسجيل المكالمة
+@router.post("/call/{call_id}/upload-recording")
+async def upload_recording(
+    call_id: str,
+    recording: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """رفع تسجيل المكالمة بعد انتهائها"""
+    
+    call = await db.voip_calls.find_one({"id": call_id})
+    if not call:
+        raise HTTPException(status_code=404, detail="المكالمة غير موجودة")
+    
+    # التحقق من أن المستخدم طرف في المكالمة
+    if user["id"] not in [call["caller_id"], call["callee_id"]]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    # التحقق من نوع الملف
+    if not recording.content_type.startswith("audio/"):
+        raise HTTPException(status_code=400, detail="يجب أن يكون الملف صوتياً")
+    
+    # إنشاء اسم فريد للملف
+    file_ext = recording.filename.split(".")[-1] if "." in recording.filename else "webm"
+    filename = f"{call_id}_{user['id']}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}.{file_ext}"
+    filepath = os.path.join(RECORDINGS_DIR, filename)
+    
+    # حفظ الملف
+    content = await recording.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    
+    # تحديث المكالمة بمعلومات التسجيل
+    recording_info = {
+        "id": str(uuid.uuid4()),
+        "filename": filename,
+        "filepath": filepath,
+        "uploader_id": user["id"],
+        "uploader_type": "caller" if user["id"] == call["caller_id"] else "callee",
+        "size_bytes": len(content),
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=RECORDING_RETENTION_DAYS)).isoformat()
+    }
+    
+    await db.voip_calls.update_one(
+        {"id": call_id},
+        {
+            "$set": {"has_recording": True},
+            "$push": {"recordings": recording_info}
+        }
+    )
+    
+    return {
+        "status": "success",
+        "message": "تم رفع التسجيل بنجاح",
+        "recording_id": recording_info["id"],
+        "expires_at": recording_info["expires_at"]
+    }
+
+# جلب تسجيلات المكالمة (للمدير فقط)
+@router.get("/call/{call_id}/recordings")
+async def get_call_recordings(call_id: str, user: dict = Depends(get_current_user)):
+    """جلب تسجيلات المكالمة - للمدير فقط"""
+    
+    # التحقق من صلاحيات المدير
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="هذه الميزة متاحة للمدير فقط")
+    
+    call = await db.voip_calls.find_one({"id": call_id}, {"_id": 0})
+    if not call:
+        raise HTTPException(status_code=404, detail="المكالمة غير موجودة")
+    
+    recordings = call.get("recordings", [])
+    
+    return {
+        "call_id": call_id,
+        "caller_name": call.get("caller_name"),
+        "callee_name": call.get("callee_name"),
+        "duration_seconds": call.get("duration_seconds", 0),
+        "recordings": recordings
+    }
+
+# تشغيل/تحميل تسجيل (للمدير فقط)
+@router.get("/recording/{recording_id}/play")
+async def play_recording(recording_id: str, user: dict = Depends(get_current_user)):
+    """تشغيل أو تحميل تسجيل المكالمة - للمدير فقط"""
+    
+    # التحقق من صلاحيات المدير
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="هذه الميزة متاحة للمدير فقط")
+    
+    # البحث عن التسجيل
+    call = await db.voip_calls.find_one(
+        {"recordings.id": recording_id},
+        {"_id": 0, "recordings": 1}
+    )
+    
+    if not call:
+        raise HTTPException(status_code=404, detail="التسجيل غير موجود")
+    
+    recording = None
+    for rec in call.get("recordings", []):
+        if rec["id"] == recording_id:
+            recording = rec
+            break
+    
+    if not recording:
+        raise HTTPException(status_code=404, detail="التسجيل غير موجود")
+    
+    filepath = recording.get("filepath")
+    if not filepath or not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="ملف التسجيل غير موجود")
+    
+    return FileResponse(
+        filepath,
+        media_type="audio/webm",
+        filename=recording.get("filename", "recording.webm")
+    )
+
+# جلب جميع المكالمات المسجلة (للمدير)
+@router.get("/admin/recorded-calls")
+async def get_recorded_calls(
+    page: int = 1,
+    limit: int = 20,
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع المكالمات التي تحتوي على تسجيلات - للمدير فقط"""
+    
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="هذه الميزة متاحة للمدير فقط")
+    
+    skip = (page - 1) * limit
+    
+    # جلب المكالمات المسجلة
+    calls = await db.voip_calls.find(
+        {"has_recording": True},
+        {"_id": 0}
+    ).sort("started_at", -1).skip(skip).limit(limit).to_list(None)
+    
+    total = await db.voip_calls.count_documents({"has_recording": True})
+    
+    return {
+        "calls": calls,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit
+    }
+
+# حذف التسجيلات المنتهية (مهمة خلفية)
+async def cleanup_expired_recordings():
+    """حذف التسجيلات التي انتهت صلاحيتها"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # البحث عن المكالمات مع تسجيلات منتهية
+    calls = await db.voip_calls.find(
+        {"recordings.expires_at": {"$lt": now}},
+        {"_id": 0, "id": 1, "recordings": 1}
+    ).to_list(None)
+    
+    for call in calls:
+        valid_recordings = []
+        for rec in call.get("recordings", []):
+            if rec.get("expires_at", "") < now:
+                # حذف الملف
+                filepath = rec.get("filepath")
+                if filepath and os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except:
+                        pass
+            else:
+                valid_recordings.append(rec)
+        
+        # تحديث المكالمة
+        await db.voip_calls.update_one(
+            {"id": call["id"]},
+            {
+                "$set": {
+                    "recordings": valid_recordings,
+                    "has_recording": len(valid_recordings) > 0
+                }
+            }
+        )
+
+# تشغيل التنظيف كل 24 ساعة
+async def start_cleanup_task():
+    while True:
+        await asyncio.sleep(86400)  # 24 ساعة
+        await cleanup_expired_recordings()

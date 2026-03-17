@@ -1491,7 +1491,7 @@ All critical features are implemented and tested.
 
 ### P1 (High Priority - Next):
 - 🔄 تحسين نظام VoIP مع fallback للدعم البشري
-- 🔄 إضافة تسجيل المكالمات (اختياري)
+- ✅ إضافة تسجيل المكالمات (تم)
 
 ### P2 (Medium Priority):
 - ⏳ دمج مزود دفع سوري للمحفظة
@@ -1502,3 +1502,38 @@ All critical features are implemented and tested.
 - ⏳ إشعارات Push حقيقية
 - ⏳ نظام مكافآت متقدم
 - ⏳ تحليلات وإحصائيات متقدمة
+
+---
+
+## تحديثات 17 مارس 2026 (الجزء الثالث) - تسجيل المكالمات ✅
+
+### نظام تسجيل المكالمات 🎙️
+
+#### الوصف:
+نظام لتسجيل جميع مكالمات VoIP بين السائقين والعملاء للمراجعة وحل النزاعات.
+
+#### المميزات:
+- ✅ تسجيل تلقائي عند بدء المكالمة
+- ✅ رسالة صوتية تنبيهية: "هذه المكالمة مسجلة لأغراض الجودة"
+- ✅ مؤشر تسجيل أحمر وامض أثناء المكالمة
+- ✅ رفع التسجيل تلقائياً بعد انتهاء المكالمة
+- ✅ حذف تلقائي بعد 7 أيام
+- ✅ لوحة تحكم للمدير لسماع التسجيلات
+
+#### الملفات المعدّلة:
+- `/app/backend/routes/voip.py` - إضافة APIs التسجيل
+- `/app/frontend/src/components/voip/VoIPCallModal.js` - إضافة منطق التسجيل
+- `/app/frontend/src/components/admin/RecordedCallsTab.js` - تبويب جديد للمدير
+- `/app/frontend/src/pages/AdminPage.js` - إضافة تبويب المكالمات المسجلة
+
+#### APIs الجديدة:
+- `POST /api/voip/call/{call_id}/upload-recording` - رفع تسجيل
+- `GET /api/voip/call/{call_id}/recordings` - جلب تسجيلات مكالمة
+- `GET /api/voip/recording/{recording_id}/play` - تشغيل تسجيل
+- `GET /api/voip/admin/recorded-calls` - جلب كل المكالمات المسجلة (للمدير)
+
+#### الإعدادات:
+- مجلد التخزين: `/app/backend/uploads/recordings/`
+- مدة الاحتفاظ: 7 أيام
+- صيغة التسجيل: WebM (Opus codec)
+- الوصول: المدير فقط
