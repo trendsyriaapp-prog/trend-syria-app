@@ -208,10 +208,10 @@ const FeaturedProducts = () => {
 
 export default FeaturedProducts;
 
-// مكون الشارة الصغيرة
+// مكون الشارة الصغيرة مع الدوران
 const SmallBadge = ({ product, badgeSettings }) => {
-  const [badgeText, setBadgeText] = useState(null);
-  const [colorIndex, setColorIndex] = useState(0);
+  const [activeBadge, setActiveBadge] = useState(null);
+  const [badgeIndex, setBadgeIndex] = useState(0);
   
   const bgColors = [
     'from-blue-500 to-blue-600',
@@ -222,7 +222,7 @@ const SmallBadge = ({ product, badgeSettings }) => {
 
   useEffect(() => {
     if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
-      setBadgeText(null);
+      setActiveBadge(null);
       return;
     }
     
@@ -230,36 +230,47 @@ const SmallBadge = ({ product, badgeSettings }) => {
     const price = product.price || 0;
     
     if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
-      setBadgeText('🔥 الأكثر مبيعاً');
-      setColorIndex(3);
+      setActiveBadge({ messages: badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً'] });
     } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
-      setBadgeText('👁️ رائج');
-      setColorIndex(2);
+      setActiveBadge({ messages: badge_types.most_viewed.messages || ['👁️ رائج'] });
     } else if (badge_types.free_shipping?.enabled) {
       const threshold = badge_types.free_shipping.threshold || 30000;
       
       if (price >= threshold) {
-        setBadgeText('🚚 شحن مجاني');
-        setColorIndex(1);
+        setActiveBadge({ messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني'] });
       } else {
         const unitsNeeded = Math.ceil(threshold / price);
         if (unitsNeeded >= 2 && unitsNeeded <= 3) {
-          setBadgeText(`✨ ${unitsNeeded} = شحن مجاني`);
-          setColorIndex(0);
+          setActiveBadge({
+            messages: [
+              `🛒 اشترِ ${unitsNeeded} = شحن مجاني`,
+              `📦 ${unitsNeeded} قطع = توصيل مجاني`,
+              `✨ وفّر التوصيل بـ ${unitsNeeded} قطع`
+            ]
+          });
         } else {
-          setBadgeText(null);
+          setActiveBadge(null);
         }
       }
     } else {
-      setBadgeText(null);
+      setActiveBadge(null);
     }
   }, [product, badgeSettings]);
 
-  if (!badgeText) return null;
+  // دوران الشارة
+  useEffect(() => {
+    if (!activeBadge || activeBadge.messages.length <= 1) return;
+    const interval = setInterval(() => {
+      setBadgeIndex((prev) => (prev + 1) % activeBadge.messages.length);
+    }, badgeSettings?.rotation_speed || 3000);
+    return () => clearInterval(interval);
+  }, [activeBadge, badgeSettings?.rotation_speed]);
+
+  if (!activeBadge) return null;
 
   return (
-    <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[colorIndex]} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
-      {badgeText}
+    <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[badgeIndex % bgColors.length]} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md transition-all duration-300`}>
+      {activeBadge.messages[badgeIndex]}
     </div>
   );
 };
