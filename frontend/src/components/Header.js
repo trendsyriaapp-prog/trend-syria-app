@@ -201,10 +201,12 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {/* Logo - الشعار */}
           <Link to="/" className="flex-shrink-0 flex items-center gap-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8533] flex items-center justify-center shadow-sm">
-              <Home size={14} className="text-white sm:w-4 sm:h-4" />
-            </div>
-            <span className="text-xs sm:text-sm font-bold text-gray-900">
+            <img 
+              src="/images/logo.png" 
+              alt="ترند سورية" 
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain"
+            />
+            <span className="text-xs sm:text-sm font-bold text-gray-900 hidden sm:block">
               ترند<span className="text-[#FF6B00]">سورية</span>
             </span>
           </Link>

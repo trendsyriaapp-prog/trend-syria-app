@@ -1,4 +1,5 @@
 import "@/App.css";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -15,6 +16,7 @@ import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
 import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner";
+import SplashScreen from "./components/SplashScreen";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -75,6 +77,8 @@ const FoodRoute = ({ children }) => {
 };
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <ThemeProvider>
       <LanguageProvider>
@@ -83,6 +87,10 @@ function App() {
             <CartProvider>
               <FoodCartProvider>
               <WebSocketProvider>
+              {/* شاشة البداية */}
+              {showSplash && (
+                <SplashScreen onComplete={() => setShowSplash(false)} />
+              )}
               <BrowserRouter>
                 <ScrollProvider>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
