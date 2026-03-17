@@ -293,6 +293,8 @@ const ProductsPage = () => {
   const sortOptions = [
     { value: 'newest', label: 'الأحدث' },
     { value: 'popular', label: 'الأكثر مبيعاً' },
+    { value: 'trending', label: 'رائج الآن' },
+    { value: 'deals', label: 'عروض وخصومات' },
     { value: 'price_low', label: 'السعر: من الأقل' },
     { value: 'price_high', label: 'السعر: من الأعلى' }
   ];
@@ -645,7 +647,13 @@ const ProductsPage = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              {search ? `نتائج البحث: "${search}"` : category ? getCategoryName(category) : 'جميع المنتجات'}
+              {search ? `نتائج البحث: "${search}"` 
+                : category ? getCategoryName(category) 
+                : sort === 'trending' ? 'رائج الآن 🔥'
+                : sort === 'deals' ? 'عروض وخصومات 🏷️'
+                : sort === 'newest' ? 'منتجات جديدة ✨'
+                : sort === 'popular' ? 'الأكثر مبيعاً 🛒'
+                : 'جميع المنتجات'}
             </h1>
             <p className="text-gray-500 text-sm">
               {products.length} منتج

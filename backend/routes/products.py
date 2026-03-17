@@ -166,9 +166,20 @@ async def get_products(
         "newest": [("created_at", -1)],
         "price_low": [("price", 1)],
         "price_high": [("price", -1)],
-        "popular": [("sales_count", -1), ("rating", -1)]
+        "popular": [("sales_count", -1), ("rating", -1)],
+        "trending": [("views", -1), ("sales_count", -1)],
+        "deals": [("discount_percentage", -1), ("price", 1)]
     }
     sort_query = sort_options.get(sort, [("created_at", -1)])
+    
+    # فلترة إضافية حسب نوع الفرز
+    if sort == "trending":
+        query["views"] = {"$gte": 10}  # المنتجات الرائجة (أكثر من 10 مشاهدات)
+    elif sort == "deals":
+        query["$or"] = [
+            {"original_price": {"$exists": True, "$gt": 0}},
+            {"discount_percentage": {"$exists": True, "$gt": 0}}
+        ]
     
     # Projection - only essential fields for listing
     projection = {
@@ -176,6 +187,8 @@ async def get_products(
         "id": 1,
         "name": 1,
         "price": 1,
+        "original_price": 1,
+        "discount_percentage": 1,
         "images": {"$slice": 1},  # Only first image
         "rating": 1,
         "reviews_count": 1,
@@ -184,7 +197,9 @@ async def get_products(
         "category": 1,
         "city": 1,
         "available_sizes": 1,
-        "video": 1
+        "video": 1,
+        "views": 1,
+        "sales_count": 1
     }
     
     skip = (page - 1) * limit
