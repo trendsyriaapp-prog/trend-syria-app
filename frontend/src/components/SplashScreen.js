@@ -8,13 +8,13 @@ const SplashScreen = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // إخفاء شاشة البداية بعد 2.5 ثانية
+    // إخفاء شاشة البداية بعد 3.5 ثانية
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => {
         onComplete();
       }, 500); // انتظار انتهاء الـ animation
-    }, 2500);
+    }, 3500);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -34,9 +34,9 @@ const SplashScreen = ({ onComplete }) => {
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.2, opacity: 0 }}
+            exit={{ scale: 1.1, opacity: 0 }}
             transition={{ 
-              duration: 0.6,
+              duration: 0.8,
               ease: "easeOut"
             }}
             className="flex flex-col items-center"
@@ -46,27 +46,13 @@ const SplashScreen = ({ onComplete }) => {
               src="/images/logo.png"
               alt="ترند سورية"
               className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-2xl"
-              animate={{ 
-                scale: [1, 1.05, 1],
-              }}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
               transition={{ 
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut"
+                duration: 1,
+                ease: "easeOut"
               }}
             />
-            
-            {/* شريط التحميل */}
-            <motion.div 
-              className="mt-8 w-48 h-1 bg-white/30 rounded-full overflow-hidden"
-            >
-              <motion.div
-                className="h-full bg-white rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 2.3, ease: "easeInOut" }}
-              />
-            </motion.div>
           </motion.div>
         </motion.div>
       )}
