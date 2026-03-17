@@ -138,6 +138,9 @@ const ProductsPage = () => {
   const priceMax = searchParams.get('price_max') || '';
   const cityFilter = searchParams.get('city') || '';
   const sort = searchParams.get('sort') || 'newest';
+  
+  // التحقق إذا كانت صفحة قسم مخصص (بدون بانرات وأقسام إضافية)
+  const isSpecialSection = ['trending', 'deals'].includes(sort);
 
   // Reset when filters change
   useEffect(() => {
@@ -341,12 +344,12 @@ const ProductsPage = () => {
     <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* 🎁 بانر الشحن المجاني الشامل */}
-        {globalFreeShipping && (
+        {!isSpecialSection && globalFreeShipping && (
           <FreeShippingBanner promo={globalFreeShipping} />
         )}
 
         {/* 📢 شريط الإعلانات */}
-        {ads.length > 0 && (
+        {!isSpecialSection && ads.length > 0 && (
           <div className="mb-3">
             <div className="relative overflow-hidden h-16 md:h-20">
               {ads.map((ad, index) => (
@@ -426,7 +429,7 @@ const ProductsPage = () => {
         )}
 
         {/* ⚡ شريط فلاش */}
-        {flashProducts.length > 0 && flashSale && (
+        {!isSpecialSection && flashProducts.length > 0 && flashSale && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -496,7 +499,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🔥 شريط الأكثر مبيعاً */}
-        {bestSellers.length > 0 && (
+        {!isSpecialSection && bestSellers.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -570,7 +573,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🆕 شريط وصل حديثاً */}
-        {newlyAddedProducts.length > 0 && (
+        {!isSpecialSection && newlyAddedProducts.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
