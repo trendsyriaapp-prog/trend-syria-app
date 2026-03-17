@@ -13,12 +13,11 @@ const RecommendedProducts = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [dealsProducts, setDealsProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [badgeSettings, setBadgeSettings] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const fetchAllData = async () => {
-      setLoading(true);
       try {
         const [trendingRes, dealsRes, newRes, badgeRes] = await Promise.all([
           axios.get(`${API}/api/recommendations/trending?limit=8`).catch(() => ({ data: [] })),
@@ -31,10 +30,10 @@ const RecommendedProducts = () => {
         setDealsProducts(dealsRes.data || []);
         setNewProducts(newRes.data || []);
         setBadgeSettings(badgeRes.data);
+        setLoaded(true);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
-      } finally {
-        setLoading(false);
+        setLoaded(true);
       }
     };
     
@@ -46,7 +45,7 @@ const RecommendedProducts = () => {
   };
 
   // مكون بطاقة المنتج الصغيرة
-  const ProductCard = ({ product, color = 'purple' }) => {
+  const ProductCard = ({ product, color = 'purple', index = 0 }) => {
     const colorClasses = {
       purple: { border: 'border-purple-100 hover:border-purple-300', text: 'text-purple-600', icon: 'text-purple-500', badge: 'bg-purple-500/90' },
       green: { border: 'border-green-100 hover:border-green-300', text: 'text-green-600', icon: 'text-green-500', badge: 'bg-green-500/90' },
@@ -56,8 +55,9 @@ const RecommendedProducts = () => {
 
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
         className="flex-shrink-0 w-36"
       >
         <Link
@@ -107,12 +107,16 @@ const RecommendedProducts = () => {
     );
   };
 
-  // مكون القسم
-  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color }) => {
-    if (products.length === 0) return null;
+  // مكون القسم مع تأثير ظهور متتالي
+  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color, delay = 0 }) => {
+    if (!loaded || products.length === 0) return null;
 
     return (
-      <section>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: delay }}
+      >
         <div className="px-3 flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className={`p-1 bg-gradient-to-r ${iconGradient} rounded-lg`}>
@@ -128,16 +132,17 @@ const RecommendedProducts = () => {
 
         <div className="px-3">
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} color={color} />
+            {products.map((product, index) => (
+              <ProductCard key={product.id} product={product} color={color} index={index} />
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
     );
   };
 
-  if (loading) {
+  // عرض skeleton أثناء التحميل الأولي فقط
+  if (!loaded) {
     return (
       <div className="py-2 space-y-4">
         {[1, 2, 3].map(i => (
@@ -165,6 +170,7 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=trending"
         products={trendingProducts}
         color="purple"
+        delay={0}
       />
 
       {/* 2. قسم عروض وخصومات */}
@@ -176,6 +182,7 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=deals"
         products={dealsProducts}
         color="green"
+        delay={0.1}
       />
 
       {/* 3. قسم منتجات جديدة */}
@@ -187,6 +194,7 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=newest"
         products={newProducts}
         color="cyan"
+        delay={0.2}
       />
     </div>
   );
