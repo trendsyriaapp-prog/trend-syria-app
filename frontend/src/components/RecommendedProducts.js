@@ -1,7 +1,7 @@
 // /app/frontend/src/components/RecommendedProducts.js
 // أقسام التوصيات - رائج الآن + عروض وخصومات + منتجات جديدة
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -15,6 +15,7 @@ const RecommendedProducts = () => {
   const [newProducts, setNewProducts] = useState([]);
   const [badgeSettings, setBadgeSettings] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const [globalBadgeIndex, setGlobalBadgeIndex] = useState(0);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -40,9 +41,66 @@ const RecommendedProducts = () => {
     fetchAllData();
   }, []);
 
+  // دوران الشارات العام - مرة واحدة فقط
+  useEffect(() => {
+    if (!loaded) return;
+    const interval = setInterval(() => {
+      setGlobalBadgeIndex((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [loaded]);
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price);
   };
+
+  // حساب نص الشارة
+  const getBadgeInfo = (product) => {
+    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) return null;
+    
+    const { badge_types } = badgeSettings;
+    const price = product.price || 0;
+    
+    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
+      const messages = badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً'];
+      return { messages, colorIndex: 3 };
+    }
+    
+    if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
+      const messages = badge_types.most_viewed.messages || ['👁️ رائج'];
+      return { messages, colorIndex: 2 };
+    }
+    
+    if (badge_types.free_shipping?.enabled) {
+      const threshold = badge_types.free_shipping.threshold || 30000;
+      
+      if (price >= threshold) {
+        const messages = badge_types.free_shipping.messages || ['🚚 شحن مجاني'];
+        return { messages, colorIndex: 1 };
+      }
+      
+      const unitsNeeded = Math.ceil(threshold / price);
+      if (unitsNeeded >= 2 && unitsNeeded <= 3) {
+        return {
+          messages: [
+            `🛒 ${unitsNeeded} = شحن مجاني`,
+            `📦 ${unitsNeeded} قطع = توصيل`,
+            `✨ وفّر بـ ${unitsNeeded} قطع`
+          ],
+          colorIndex: 0
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  const bgColors = [
+    'from-blue-500 to-blue-600',
+    'from-emerald-500 to-emerald-600',
+    'from-violet-500 to-violet-600',
+    'from-rose-600 to-rose-700'
+  ];
 
   // مكون بطاقة المنتج الصغيرة
   const ProductCard = ({ product, color = 'purple', index = 0 }) => {
@@ -52,14 +110,10 @@ const RecommendedProducts = () => {
       cyan: { border: 'border-cyan-100 hover:border-cyan-300', text: 'text-cyan-600', icon: 'text-cyan-500', badge: 'bg-cyan-500/90' },
     };
     const colors = colorClasses[color] || colorClasses.purple;
+    const badgeInfo = getBadgeInfo(product);
 
     return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.05 }}
-        className="flex-shrink-0 w-36"
-      >
+      <div className="flex-shrink-0 w-36">
         <Link
           to={`/products/${product.id}`}
           className={`block bg-white rounded-xl border-2 ${colors.border} overflow-hidden hover:shadow-lg transition-all`}
@@ -83,7 +137,12 @@ const RecommendedProducts = () => {
               </span>
             )}
             
-            <SmallBadge product={product} badgeSettings={badgeSettings} />
+            {/* شارة التوصيل - مع دوران */}
+            {badgeInfo && (
+              <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[badgeInfo.colorIndex]} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
+                {badgeInfo.messages[globalBadgeIndex % badgeInfo.messages.length]}
+              </div>
+            )}
             
             <button className="absolute top-2 left-2 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center">
               <Heart size={12} className="text-gray-400" />
@@ -103,20 +162,16 @@ const RecommendedProducts = () => {
             </p>
           </div>
         </Link>
-      </motion.div>
+      </div>
     );
   };
 
-  // مكون القسم مع تأثير ظهور متتالي
-  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color, delay = 0 }) => {
-    if (!loaded || products.length === 0) return null;
+  // مكون القسم
+  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color }) => {
+    if (products.length === 0) return null;
 
     return (
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: delay }}
-      >
+      <section className="mb-4">
         <div className="px-3 flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className={`p-1 bg-gradient-to-r ${iconGradient} rounded-lg`}>
@@ -137,16 +192,16 @@ const RecommendedProducts = () => {
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
     );
   };
 
-  // عرض skeleton أثناء التحميل الأولي فقط
+  // عرض skeleton أثناء التحميل الأولي
   if (!loaded) {
     return (
       <div className="py-2 space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="px-3">
+          <div key={i} className="px-3 mb-4">
             <div className="h-6 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {[1, 2, 3, 4].map(j => (
@@ -160,7 +215,7 @@ const RecommendedProducts = () => {
   }
 
   return (
-    <div className="py-2 space-y-4">
+    <div className="py-2">
       {/* 1. قسم رائج الآن */}
       <Section
         title="رائج الآن"
@@ -170,7 +225,6 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=trending"
         products={trendingProducts}
         color="purple"
-        delay={0}
       />
 
       {/* 2. قسم عروض وخصومات */}
@@ -182,7 +236,6 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=deals"
         products={dealsProducts}
         color="green"
-        delay={0.1}
       />
 
       {/* 3. قسم منتجات جديدة */}
@@ -194,64 +247,7 @@ const RecommendedProducts = () => {
         linkTo="/products?sort=newest"
         products={newProducts}
         color="cyan"
-        delay={0.2}
       />
-    </div>
-  );
-};
-
-// مكون الشارة الصغيرة
-const SmallBadge = ({ product, badgeSettings }) => {
-  const [badgeText, setBadgeText] = useState(null);
-  const [colorIndex, setColorIndex] = useState(0);
-  
-  const bgColors = [
-    'from-blue-500 to-blue-600',
-    'from-emerald-500 to-emerald-600',
-    'from-violet-500 to-violet-600',
-    'from-rose-600 to-rose-700'
-  ];
-
-  useEffect(() => {
-    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
-      setBadgeText(null);
-      return;
-    }
-    
-    const { badge_types } = badgeSettings;
-    const price = product.price || 0;
-    
-    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
-      setBadgeText('الأكثر مبيعاً');
-      setColorIndex(3);
-    } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
-      setBadgeText('رائج');
-      setColorIndex(2);
-    } else if (badge_types.free_shipping?.enabled) {
-      const threshold = badge_types.free_shipping.threshold || 30000;
-      
-      if (price >= threshold) {
-        setBadgeText('شحن مجاني');
-        setColorIndex(1);
-      } else {
-        const unitsNeeded = Math.ceil(threshold / price);
-        if (unitsNeeded >= 2 && unitsNeeded <= 3) {
-          setBadgeText(`${unitsNeeded} = شحن مجاني`);
-          setColorIndex(0);
-        } else {
-          setBadgeText(null);
-        }
-      }
-    } else {
-      setBadgeText(null);
-    }
-  }, [product, badgeSettings]);
-
-  if (!badgeText) return null;
-
-  return (
-    <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[colorIndex]} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
-      {badgeText}
     </div>
   );
 };
