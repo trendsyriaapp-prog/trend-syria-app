@@ -23,6 +23,83 @@
 
 ### March 2026
 
+#### تحديثات 17 مارس 2026 (تحسينات الأمان والأداء) ✅
+
+##### 1. تحسينات الأمان 🔐
+
+###### تقوية كلمات المرور ✅
+- **متطلبات جديدة للحسابات الجديدة:**
+  - 8 أحرف على الأقل
+  - رقم واحد على الأقل
+  - حرف واحد على الأقل (عربي أو إنجليزي)
+- **كلمات المرور الضعيفة المحظورة:** `123456`, `password`, `admin123`, etc.
+- **الملف:** `/app/backend/core/security.py` - `validate_password_strength()`
+
+###### إجبار تغيير كلمة المرور الافتراضية ✅
+- **التفعيل:** عند تسجيل دخول حساب تجريبي بكلمة المرور الافتراضية
+- **الاستجابة:** `force_password_change: true` في response تسجيل الدخول
+- **الـ Frontend:** نافذة `ChangePasswordModal` تظهر تلقائياً
+- **API جديد:** `POST /api/auth/change-password`
+- **الملفات:**
+  - `/app/backend/core/security.py` - `is_default_account()`, `check_password_change_required()`
+  - `/app/backend/routes/auth.py` - login endpoint معدل + change-password جديد
+  - `/app/frontend/src/components/ChangePasswordModal.js` - مكون جديد
+  - `/app/frontend/src/context/AuthContext.js` - `changePassword()`, `forcePasswordChange`
+  - `/app/frontend/src/App.js` - `ForcePasswordChangeWrapper`
+
+###### مراجعة الصلاحيات ✅
+- Security headers موجودة ومفعلة
+- Rate limiting على login (5/minute)
+- Brute force protection مفعل
+
+##### 2. تحسينات الأداء ⚡
+
+###### Database Indexes المحسنة ✅
+- إضافة indexes جديدة لـ: `is_approved`, `city`, `category`, `order_type`, `is_read`, `ticket_type`
+- Indexes مركبة للاستعلامات الشائعة
+- تغطية جميع الـ collections الرئيسية (20+ collection)
+- **الملف:** `/app/backend/core/performance.py` - `create_database_indexes()`
+
+###### Cache Headers ✅
+- صور: 30 يوم (`Cache-Control: public, max-age=2592000, immutable`)
+- ملفات ثابتة (CSS, JS): 7 أيام
+- API responses: no-cache للبيانات الحساسة
+- **الملف:** `/app/backend/server.py` - `cache_headers_middleware`
+
+###### ضغط الصور ✅
+- وظيفة `compress_image()` لضغط الصور تلقائياً
+- وظيفة `generate_thumbnail()` لإنشاء صور مصغرة
+- الحد الأقصى: 500KB للصورة المضغوطة
+- **الملف:** `/app/backend/core/performance.py`
+
+##### 3. الاختبار 🧪
+
+###### اختبار الأداء ✅
+- **ملف اختبار:** `/app/backend/tests/performance_test.py`
+- **النتائج:**
+  - Categories: 3.26ms متوسط ✅
+  - Products: 9.63ms متوسط ✅
+  - 50 طلب متزامن: 100% نجاح ✅
+
+###### Load Testing ✅
+- **ملف Locust:** `/app/backend/tests/load_test.py`
+- محاكاة 3 أنواع مستخدمين (عميل، بائع، سائق)
+
+###### نتائج اختبار الأمان ✅
+- **Test Report:** `/app/test_reports/iteration_80.json`
+- جميع الميزات الأمنية تعمل (15/19 اختبار ناجح)
+
+##### بيانات الدخول المحدثة 📝
+| الدور | رقم الهاتف | كلمة المرور |
+|-------|-----------|------------|
+| مدير | 0911111111 | Admin@123 |
+| مشتري | 0933333333 | buyer123 |
+| بائع | 0922222222 | seller123 |
+| سائق | 0900000000 | delivery123 |
+| مطعم | 0966666666 | seller123 |
+
+---
+
 #### تحديثات 16 مارس 2026 (الجلسة السادسة - الاختبار الشامل) ✅
 
 ##### نظام حماية خصوصية أرقام الهواتف ✅ (NEW!)
