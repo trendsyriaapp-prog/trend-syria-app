@@ -228,7 +228,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* بانر الطعام الثابت مع تأثير النبض */}
+      {/* بانر الطعام الثابت مع تأثير النبض بألوان مختلفة */}
       {foodEnabled && (
         <div className="h-14 md:h-16">
           <Link to="/food" className="block h-full">
@@ -237,13 +237,16 @@ const HomePage = () => {
               animate={{
                 background: [
                   'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
-                  'linear-gradient(to right, #FF4500, #FF6B00, #FF8C00)',
-                  'linear-gradient(to right, #E65000, #FF4500, #FF6B00)',
+                  'linear-gradient(to right, #E91E63, #F06292, #FF80AB)',
+                  'linear-gradient(to right, #9C27B0, #BA68C8, #CE93D8)',
+                  'linear-gradient(to right, #2196F3, #64B5F6, #90CAF9)',
+                  'linear-gradient(to right, #4CAF50, #81C784, #A5D6A7)',
+                  'linear-gradient(to right, #FF5722, #FF8A65, #FFAB91)',
                   'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
                 ]
               }}
               transition={{
-                duration: 3,
+                duration: 6,
                 repeat: Infinity,
                 ease: 'easeInOut'
               }}
@@ -273,9 +276,12 @@ const HomePage = () => {
                 
                 {/* زر الطلب مع نبض */}
                 <motion.div 
-                  className="bg-white text-[#FF6B00] px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
+                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md"
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    color: ['#FF6B00', '#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FF5722', '#FF6B00']
+                  }}
+                  transition={{ duration: 6, repeat: Infinity }}
                 >
                   اطلب الآن
                 </motion.div>
