@@ -1,81 +1,118 @@
 # ترند سورية - PRD (Product Requirements Document)
 
-## الوصف العام
-منصة تجارة إلكترونية متكاملة للتسوق والتوصيل في سوريا، تشمل:
-- متجر إلكتروني للمنتجات المتنوعة
-- منصة توصيل الطعام (مطاعم، ماركت، خضار، حلويات، مقاهي، مخابز، مشروبات)
-- نظام إدارة المتاجر والبائعين
-- نظام التوصيل والسائقين
-- لوحة تحكم المسؤول
+## Original Problem Statement
+تطبيق تجارة إلكترونية متكامل للسوق السوري يتضمن:
+- منصة تسوق للمنتجات العامة
+- منصة توصيل طعام
+- نظام محافظ إلكترونية
+- نظام توصيل متكامل
+- لوحة تحكم للبائعين والإدارة
 
-## المستخدمون
-1. **العملاء (Customers)**: تصفح وشراء المنتجات، طلب الطعام
-2. **البائعون (Sellers)**: إدارة المنتجات والمتاجر
-3. **السائقون (Drivers)**: توصيل الطلبات
-4. **المسؤولون (Admins)**: إدارة المنصة
+## User Personas
+1. **المشتري**: يتصفح المنتجات، يضيفها للسلة، يشتري، يتتبع الطلبات
+2. **البائع**: يدير منتجاته، يتابع المبيعات، يتواصل مع العملاء
+3. **السائق**: يستلم الطلبات، يوصلها، يتتبع أرباحه
+4. **الإدارة**: تدير المستخدمين، تراقب النظام، تضبط الإعدادات
 
-## الميزات الأساسية المنجزة
+## Core Requirements
+- تصفح المنتجات مع فلاتر متعددة (السعر، المحافظة، التصنيف)
+- نظام سلة تسوق ودفع
+- تتبع الطلبات في الوقت الحقيقي
+- نظام رسائل بين المشتري والبائع
+- محفظة إلكترونية للدفع
 
-### الصفحة الرئيسية (HomePage)
-- ✅ شريط العروض المتحرك (Ticker)
-- ✅ بانر الشحن المجاني
-- ✅ فئات المنتجات
-- ✅ بانر الطعام المتحرك (ألوان نابضة)
-- ✅ صفقة اليوم
-- ✅ قسم المنتجات المُعلن عنها (Sponsored)
-- ✅ عروض فلاش مع عداد تنازلي
-- ✅ أقسام التوصيات (رائج الآن، عروض وخصومات، منتجات جديدة)
+---
 
-### نظام الشارات (Badges) - محدث 2025-03-17
-- ✅ شارة سبب التوصية: أعلى يمين صورة المنتج (بلون القسم)
-- ✅ شارة عرض الشحن: أسفل يسار صورة المنتج (ألوان متقلبة)
-- ✅ حركة "slide-up" للشارات المتغيرة (framer-motion)
-- ✅ منطق الشارات: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
-- ✅ حد أقصى شارتين لكل منتج
+## What's Been Implemented (Latest Session - Dec 2025)
 
-### صفحة الطعام (FoodPage)
-- ✅ اختيار المدينة
-- ✅ فئات الطعام الديناميكية
-- ✅ بطاقات المتاجر (مع حالة فتح/إغلاق)
-- ✅ بطاقات المنتجات الغذائية
-- ✅ عروض فلاش للطعام
-- ✅ نظام الشارات (slide-up animation)
+### ✅ Session Completed Tasks
 
-### صفحة متجر الطعام (FoodStorePage)
-- ✅ معلومات المتجر
-- ✅ منتجات المتجر حسب الفئات
-- ✅ سلة الطعام المحلية
-- ✅ نظام التقييمات
-- ✅ تقييم الأسعار
+#### 1. إصلاح مشكلة Carousels (الصفحة الرئيسية)
+- المشكلة: الـ Carousels كانت تعيد التعيين كل بضع ثوان
+- الحل: نقل تعريفات المكونات خارج دالة الـ render واستخدام `React.memo`
+- الملف: `/app/frontend/src/components/RecommendedProducts.js`
 
-### الملفات المعدلة في هذه الجلسة
-1. `/app/frontend/src/components/ProductCard.js` - إصلاح موقع شارة التوصيل (أسفل يسار) + حركة slide-up
-2. `/app/frontend/src/pages/HomePage.js` - SmallProductBadge مع حركة slide-up وألوان متقلبة
-3. `/app/frontend/src/pages/FoodPage.js` - FoodProductCard مع حركة slide-up
+#### 2. صفحات "عرض الكل" المخصصة
+- تم إضافة filtering في الـ backend لـ `trending`, `deals`, `flash`, `popular`, `sponsored`
+- الملفات:
+  - `/app/backend/routes/products.py`
+  - `/app/frontend/src/pages/ProductsPage.js`
+  - `/app/frontend/src/pages/HomePage.js`
 
-## المهام القادمة
+#### 3. أنيميشن بانر قسم الطعام
+- تم إضافة gradient pulsating animation للبانر
+- الملف: `/app/frontend/src/pages/FoodPage.js`
 
-### P1 - أولوية عالية
-- [ ] تكامل مزود دفع سوري (لشحن المحفظة)
+#### 4. ✅ إصلاح استعادة موقع التمرير (Scroll Restoration)
+- **المشكلة**: عند الضغط على "رجوع"، الصفحة كانت تبقى في الأعلى
+- **الحل النهائي**: 
+  - حفظ مستمر لموقع التمرير كل 100ms
+  - قفل الحفظ عند النقر على الروابط
+  - محاولات استعادة متكررة للتعامل مع المحتوى الديناميكي
+- **الملفات**:
+  - `/app/frontend/src/components/ScrollToTop.js` (أُعيد كتابته بالكامل)
+  - `/app/frontend/src/context/ScrollContext.js` (مُبسّط)
+- **نتائج الاختبار**: الفرق < 50px في جميع الحالات ✅
 
-### P2 - أولوية متوسطة
-- [ ] التسوق عبر المحافظات
+---
 
-### P3 - أولوية منخفضة
-- [ ] تحسين إشعارات PWA (دليل "إضافة للشاشة الرئيسية")
-- [ ] زر اتصال العميل بالسائق
-- [ ] نظام تقييم المكالمات (1-5 نجوم)
+## Prioritized Backlog
 
-## بيانات الاختبار
-- **مسؤول**: هاتف `0911111111`، كلمة السر `Admin@123`
-- **عميل**: هاتف `0933333333`، كلمة السر `buyer123`
-- **سائق**: هاتف `0900000000`، كلمة السر `Delivery@123`
-- **بائع طعام**: هاتف `0966666666`، كلمة السر `seller123`
-- **بائع عادي**: هاتف `0922222222`، كلمة السر `seller456`
+### P0 - Critical (Resolved)
+- ~~استعادة موقع التمرير على الموبايل~~ ✅
 
-## التقنيات المستخدمة
-- **Frontend**: React, Tailwind CSS, Framer Motion, Lucide Icons
-- **Backend**: FastAPI, MongoDB
-- **خرائط**: Leaflet, OpenStreetMap, OSRM
-- **صور**: Remove.bg API, Gemini Imagen
-- **إشعارات**: Firebase (Admin SDK & JS SDK)
+### P1 - High Priority
+- **تكامل بوابة الدفع السورية**: تفعيل شحن المحفظة الإلكترونية
+- **التسوق عبر المحافظات**: السماح بالشراء من متاجر في محافظات أخرى
+
+### P2 - Medium Priority
+- تحسينات إشعارات PWA (شرح كيفية تفعيلها)
+- زر اتصال العميل بالسائق
+- نظام تقييم المكالمات (1-5 نجوم)
+
+### P3 - Low Priority
+- تحسين أداء تحميل الصور
+- إضافة مزيد من اللغات
+
+---
+
+## Technical Architecture
+
+### Frontend
+- React.js with Tailwind CSS
+- Shadcn/UI components
+- Framer Motion for animations
+- React Router for navigation
+
+### Backend
+- FastAPI (Python)
+- MongoDB database
+- WebSocket for real-time features
+
+### Key Files
+```
+/app/
+├── backend/
+│   └── routes/products.py    # Product filtering & sorting
+├── frontend/src/
+│   ├── components/
+│   │   ├── ScrollToTop.js    # Scroll restoration (REWRITTEN)
+│   │   └── RecommendedProducts.js
+│   ├── context/
+│   │   └── ScrollContext.js  # Simplified context
+│   └── pages/
+│       ├── HomePage.js
+│       ├── ProductsPage.js
+│       └── FoodPage.js
+```
+
+---
+
+## Test Credentials
+- **Admin**: Phone: `0911111111`, Password: `Admin@123`
+- **Customer**: Phone: `0933333333`, Password: `buyer123`
+- **Driver**: Phone: `0900000000`, Password: `Delivery@123`
+
+---
+
+*Last Updated: December 2025*

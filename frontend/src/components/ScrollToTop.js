@@ -1,90 +1,99 @@
-// مكون لإدارة موقع التمرير - يستخدم ScrollContext للحفظ
-import { useLayoutEffect, useEffect, useRef } from 'react';
+// استعادة موقع التمرير - الحل النهائي
+// يحفظ الموقع بشكل مستمر ويستعيده عند الرجوع
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
-// تعطيل استعادة التمرير الافتراضية
+// تعطيل استعادة التمرير الافتراضية للمتصفح
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
 }
 
-let isRestoring = false;
+// تخزين المواقع
+const positions = {};
+let currentUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+let navigationPending = false;
 
+function savePosition(url, pos) {
+  if (!url || pos === undefined || navigationPending) return;
+  positions[url] = pos;
+  try { sessionStorage.setItem(`_s_${url}`, String(pos)); } catch(e) {}
+}
+
+function getPosition(url) {
+  if (positions[url] !== undefined) return positions[url];
+  try {
+    const val = sessionStorage.getItem(`_s_${url}`);
+    if (val) {
+      const num = parseInt(val, 10);
+      positions[url] = num;
+      return num;
+    }
+  } catch(e) {}
+  return 0;
+}
+
+// Event Listeners العالمية
 if (typeof window !== 'undefined') {
-  // CSS للإخفاء السريع
-  const style = document.createElement('style');
-  style.textContent = '#root.h{visibility:hidden!important}';
-  document.head.appendChild(style);
+  // حفظ متواصل كل 100ms - يضمن الحفظ قبل أي تنقل
+  setInterval(() => {
+    if (!navigationPending) {
+      savePosition(currentUrl, window.scrollY);
+    }
+  }, 100);
+
+  // قفل الحفظ عند النقر على الروابط
+  const lockNavigation = () => {
+    navigationPending = true;
+    setTimeout(() => { navigationPending = false; }, 3000);
+  };
+  
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a[href]')) lockNavigation();
+  }, { capture: true });
+  
+  document.addEventListener('touchend', (e) => {
+    if (e.target.closest('a[href]')) lockNavigation();
+  }, { capture: true, passive: true });
 }
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
   const navigationType = useNavigationType();
-  const targetPos = useRef(0);
+  const urlKey = location.pathname + location.search;
+  const isFirstRender = useRef(true);
 
-  // الحفاظ على الموقع أثناء تحميل المحتوى
+  // تحديث URL الحالي
   useEffect(() => {
-    if (!isRestoring || targetPos.current === 0) return;
+    currentUrl = urlKey;
+    navigationPending = false;
+  }, [urlKey]);
 
-    let frameId;
-    let attempts = 0;
-    
-    const maintain = () => {
-      if (attempts >= 30 || !isRestoring) return;
-      
-      if (Math.abs(window.scrollY - targetPos.current) > 20) {
-        window.scrollTo(0, targetPos.current);
-      }
-      
-      attempts++;
-      frameId = requestAnimationFrame(maintain);
-    };
-    
-    frameId = requestAnimationFrame(maintain);
-    
-    const timeout = setTimeout(() => {
-      isRestoring = false;
-      cancelAnimationFrame(frameId);
-      document.getElementById('root')?.classList.remove('h');
-    }, 500);
-    
-    return () => {
-      clearTimeout(timeout);
-      cancelAnimationFrame(frameId);
-    };
-  }, [pathname, navigationType]);
-
+  // استعادة أو تصفير الموقع
   useLayoutEffect(() => {
-    const root = document.getElementById('root');
-    
-    if (navigationType === 'POP') {
-      // استخدام scroll_/ كما يحفظ ScrollContext
-      const saved = sessionStorage.getItem(`scroll_${pathname}`);
-      if (saved) {
-        const pos = parseInt(saved, 10);
-        if (pos > 0) {
-          isRestoring = true;
-          root?.classList.add('h');
-          targetPos.current = pos;
-          
-          window.scrollTo(0, pos);
-          
-          requestAnimationFrame(() => {
-            window.scrollTo(0, pos);
-            setTimeout(() => {
-              root?.classList.remove('h');
-              setTimeout(() => { isRestoring = false; }, 100);
-            }, 50);
-          });
-          return;
-        }
-      }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-    
-    window.scrollTo(0, 0);
-    targetPos.current = 0;
-    isRestoring = false;
-    root?.classList.remove('h');
-  }, [pathname, navigationType]);
+
+    if (navigationType === 'POP') {
+      const pos = getPosition(urlKey);
+      
+      if (pos > 0) {
+        window.scrollTo(0, pos);
+        
+        // محاولات متكررة للتعامل مع المحتوى الديناميكي
+        [0, 50, 100, 200, 400, 600, 1000].forEach(t => {
+          setTimeout(() => {
+            if (Math.abs(window.scrollY - pos) > 50) {
+              window.scrollTo(0, pos);
+            }
+          }, t);
+        });
+      }
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [urlKey, navigationType]);
 
   return null;
 };
