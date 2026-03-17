@@ -50,6 +50,7 @@ import ProblemSolverTools from '../components/admin/ProblemSolverTools';
 import TickerMessagesTab from '../components/admin/TickerMessagesTab';
 import ImageSettingsTab from '../components/admin/ImageSettingsTab';
 import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
+import ProductBadgesTab from '../components/admin/ProductBadgesTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -330,7 +331,10 @@ const AdminDashboardPage = () => {
     'drivers-performance': 'أداء السائقين',
     'activity-log': 'سجل النشاط',
     'support-management': 'إدارة الدعم',
-    'problem-solver': 'حل المشاكل'
+    'problem-solver': 'حل المشاكل',
+    'ticker-messages': 'شريط العروض المتحرك',
+    'image-settings': 'إعدادات الصور',
+    'product-badges': 'شارات المنتجات'
   };
 
   return (
@@ -485,6 +489,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'image-settings' && user.user_type === 'admin' && (
               <ImageSettingsTab token={token} />
             )}
+            {activeTab === 'product-badges' && user.user_type === 'admin' && (
+              <ProductBadgesTab />
+            )}
           </>
         ) : (
           <>
@@ -630,6 +637,7 @@ const AdminDashboardPage = () => {
                     { icon: Megaphone, label: 'البانرات', tab: 'banners' },
                     { icon: Megaphone, label: 'الإعلانات', tab: 'ads' },
                     { icon: Megaphone, label: 'شريط العروض', tab: 'ticker-messages' },
+                    { icon: Flame, label: 'شارات المنتجات', tab: 'product-badges' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-orange-50 transition-colors">
                       <item.icon size={16} className="text-orange-600" />

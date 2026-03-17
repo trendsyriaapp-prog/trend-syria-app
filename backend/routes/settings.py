@@ -197,6 +197,84 @@ async def update_food_free_delivery_threshold(
     }
 
 
+# ============== إعدادات شارات المنتجات ==============
+
+class ProductBadgeSettings(BaseModel):
+    enabled: bool = True
+    badge_type: str = "free_shipping"  # free_shipping, best_seller, most_viewed
+    messages: list = ["🚚 شحن مجاني", "💰 وفّرت التوصيل", "⚡ توصيل مجاني"]
+    free_shipping_threshold: int = 50000
+    best_seller_min_sales: int = 10
+    most_viewed_min_views: int = 100
+    rotation_speed: int = 3000  # milliseconds
+
+@router.get("/product-badges")
+async def get_product_badge_settings():
+    """جلب إعدادات شارات المنتجات (للجميع)"""
+    settings = await db.product_badge_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        # إعدادات افتراضية
+        settings = {
+            "id": "main",
+            "enabled": True,
+            "badge_types": {
+                "free_shipping": {
+                    "enabled": True,
+                    "messages": ["🚚 شحن مجاني", "💰 وفّرت التوصيل", "⚡ توصيل مجاني"],
+                    "threshold": 50000
+                },
+                "best_seller": {
+                    "enabled": True,
+                    "messages": ["🔥 الأكثر مبيعاً", "⭐ منتج مميز", "💎 الأعلى طلباً"],
+                    "min_sales": 10
+                },
+                "most_viewed": {
+                    "enabled": True,
+                    "messages": ["👁️ الأكثر زيارة", "🌟 رائج الآن", "📈 شائع"],
+                    "min_views": 100
+                }
+            },
+            "rotation_speed": 3000,
+            "colors": ["#3B82F6", "#10B981", "#8B5CF6", "#991B1B"]
+        }
+        await db.product_badge_settings.insert_one(settings)
+        settings.pop("_id", None)
+    
+    return settings
+
+@router.put("/product-badges")
+async def update_product_badge_settings(
+    settings: dict,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات شارات المنتجات"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    update_data = {
+        "enabled": settings.get("enabled", True),
+        "badge_types": settings.get("badge_types", {}),
+        "rotation_speed": settings.get("rotation_speed", 3000),
+        "colors": settings.get("colors", ["#3B82F6", "#10B981", "#8B5CF6", "#991B1B"]),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": user["id"]
+    }
+    
+    await db.product_badge_settings.update_one(
+        {"id": "main"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات الشارات بنجاح",
+        **update_data
+    }
+
+
+
+
 # ============== عرض الشحن المجاني الشامل ==============
 
 class GlobalFreeShippingPromo(BaseModel):

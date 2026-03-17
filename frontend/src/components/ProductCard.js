@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Heart, Play, Flame, Sparkles, ShoppingCart, Truck, MapPin } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,7 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-const ProductCard = ({ product, variant = 'default' }) => {
+const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -24,10 +24,53 @@ const ProductCard = ({ product, variant = 'default' }) => {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [badgeIndex, setBadgeIndex] = useState(0);
+  const [activeBadge, setActiveBadge] = useState(null);
 
   // حد الشحن المجاني
   const freeShippingThreshold = settings?.free_shipping_threshold || 150000;
   const hasFreeShipping = product.price >= freeShippingThreshold;
+
+  // تحديد نوع الشارة المناسب للمنتج
+  useEffect(() => {
+    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
+      setActiveBadge(null);
+      return;
+    }
+
+    const { badge_types } = badgeSettings;
+    
+    // أولوية الشارات: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
+    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
+      setActiveBadge({
+        type: 'best_seller',
+        messages: badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً']
+      });
+    } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
+      setActiveBadge({
+        type: 'most_viewed',
+        messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة']
+      });
+    } else if (badge_types.free_shipping?.enabled && product.price >= (badge_types.free_shipping.threshold || 50000)) {
+      setActiveBadge({
+        type: 'free_shipping',
+        messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني']
+      });
+    } else {
+      setActiveBadge(null);
+    }
+  }, [product, badgeSettings]);
+
+  // دوران الشارة
+  useEffect(() => {
+    if (!activeBadge || activeBadge.messages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setBadgeIndex((prev) => (prev + 1) % activeBadge.messages.length);
+    }, badgeSettings?.rotation_speed || 3000);
+
+    return () => clearInterval(interval);
+  }, [activeBadge, badgeSettings?.rotation_speed]);
 
   useEffect(() => {
     if (user && token) {
@@ -243,6 +286,30 @@ const ProductCard = ({ product, variant = 'default' }) => {
               <Play size={12} className="fill-current" />
               <span className="text-[10px] font-medium">فيديو</span>
             </motion.div>
+          )}
+
+          {/* شارة المنتج المتغيرة الألوان */}
+          {activeBadge && (
+            <div className="absolute bottom-2 right-2 z-20">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={badgeIndex}
+                  initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                  className={`text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${
+                    ['from-blue-500 via-blue-600 to-blue-500',
+                     'from-emerald-500 via-emerald-600 to-emerald-500',
+                     'from-violet-500 via-violet-600 to-violet-500',
+                     'from-rose-800 via-rose-900 to-rose-800'
+                    ][badgeIndex % 4]
+                  }`}
+                >
+                  {activeBadge.messages[badgeIndex]}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           )}
         </div>
 

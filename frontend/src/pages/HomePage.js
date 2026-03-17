@@ -40,6 +40,7 @@ const HomePage = () => {
   const [tickerMessages, setTickerMessages] = useState([]);
   const [tickerEnabled, setTickerEnabled] = useState(true);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
+  const [badgeSettings, setBadgeSettings] = useState(null);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -103,6 +104,14 @@ const HomePage = () => {
       // شريط العروض
       setTickerMessages(tickerRes.data?.messages || []);
       setTickerEnabled(tickerRes.data?.is_enabled !== false);
+      
+      // جلب إعدادات الشارات
+      try {
+        const badgeRes = await axios.get(`${API}/settings/product-badges`);
+        setBadgeSettings(badgeRes.data);
+      } catch (err) {
+        console.log('Badge settings not available');
+      }
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
       const promo = promoRes.data;
@@ -517,7 +526,7 @@ const HomePage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard product={product} badgeSettings={badgeSettings} />
                 </motion.div>
               ))}
             </div>

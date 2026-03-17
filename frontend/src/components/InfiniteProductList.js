@@ -15,7 +15,8 @@ const InfiniteProductList = ({
   priceMin = '',
   priceMax = '',
   initialProducts = [],
-  limit = 12
+  limit = 12,
+  badgeSettings = null
 }) => {
   const [products, setProducts] = useState(initialProducts);
   const [page, setPage] = useState(1);
@@ -144,7 +145,7 @@ const InfiniteProductList = ({
               animation: 'fadeInUp 0.4s ease-out forwards'
             }}
           >
-            <ProductCard product={product} />
+            <ProductCard product={product} badgeSettings={badgeSettings} />
           </div>
         ))}
       </div>
