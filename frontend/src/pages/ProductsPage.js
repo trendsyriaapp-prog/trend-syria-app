@@ -5,7 +5,6 @@ import axios from 'axios';
 import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
-import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -50,7 +49,6 @@ const FlashCountdown = ({ endTime }) => {
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const { restoreScrollPosition } = useScroll();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
@@ -122,15 +120,7 @@ const ProductsPage = () => {
     }
   }, [ads.length]);
 
-  // استعادة موقع التمرير بعد تحميل البيانات
-  useEffect(() => {
-    if (!loading && products.length > 0) {
-      const timer = setTimeout(() => {
-        restoreScrollPosition(location.pathname + location.search);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, products.length]);
+  // ملاحظة: استعادة التمرير يتم التعامل معها في ScrollToTop.js
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';

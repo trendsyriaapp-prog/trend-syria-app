@@ -12,27 +12,13 @@ export const ScrollProvider = ({ children }) => {
     sessionStorage.setItem(key, window.scrollY.toString());
   }, []);
 
-  // استعادة موقع التمرير للصفحة
+  // استعادة موقع التمرير للصفحة - معطل لأن ScrollToTop يتعامل مع هذا
   const restoreScrollPosition = useCallback((pathname) => {
-    const key = `scroll_${pathname}`;
-    const savedPosition = sessionStorage.getItem(key);
-    if (savedPosition !== null) {
-      const position = parseInt(savedPosition, 10);
-      // استخدام requestAnimationFrame لضمان أن المحتوى قد تم تحميله
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.scrollTo({
-            top: position,
-            behavior: 'instant'
-          });
-        }, 100);
-      });
-      return true;
-    }
+    // معطل - ScrollToTop.js يتعامل مع استعادة التمرير
     return false;
   }, []);
 
-  // مسح موقع التمرير لصفحة معينة
+  // مسح موقع التمرير لصففحة معينة
   const clearScrollPosition = useCallback((pathname) => {
     const key = `scroll_${pathname}`;
     sessionStorage.removeItem(key);
