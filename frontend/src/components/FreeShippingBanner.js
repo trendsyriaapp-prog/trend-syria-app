@@ -45,16 +45,37 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
 
   if (!promo) return null;
 
-  // تحديد الألوان حسب النوع
-  const gradientClass = variant === 'food' 
-    ? 'from-green-500 via-emerald-500 to-teal-500' 
-    : 'from-amber-400 via-orange-500 to-red-500';
+  // ألوان النبض حسب النوع
+  const pulseColors = variant === 'food' 
+    ? [
+        'linear-gradient(to right, #22c55e, #10b981, #14b8a6)',
+        'linear-gradient(to right, #16a34a, #059669, #0d9488)',
+        'linear-gradient(to right, #15803d, #047857, #0f766e)',
+        'linear-gradient(to right, #16a34a, #059669, #0d9488)',
+        'linear-gradient(to right, #22c55e, #10b981, #14b8a6)',
+      ]
+    : [
+        'linear-gradient(to right, #FFB347, #FF8C00, #FF6B00)',
+        'linear-gradient(to right, #FF8C00, #FF6B00, #E65000)',
+        'linear-gradient(to right, #FF6B00, #E65000, #CC4400)',
+        'linear-gradient(to right, #FF8C00, #FF6B00, #E65000)',
+        'linear-gradient(to right, #FFB347, #FF8C00, #FF6B00)',
+      ];
   
   return (
     <motion.div
       initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`relative bg-gradient-to-r ${gradientClass} py-1.5 text-white overflow-hidden`}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        background: pulseColors
+      }}
+      transition={{
+        opacity: { duration: 0.3 },
+        y: { duration: 0.3 },
+        background: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+      }}
+      className="relative py-1.5 text-white overflow-hidden"
       data-testid="free-shipping-banner"
     >
       {/* خلفية مزخرفة */}
