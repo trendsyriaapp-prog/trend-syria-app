@@ -135,8 +135,6 @@ async def create_category(category: CategoryCreate, user: dict = Depends(get_cur
     await db.categories.insert_one(new_category)
     
     # حذف الكاش
-    from core.cache import cache
-    cache.delete("categories_list")
     
     return {"message": "تم إنشاء الفئة بنجاح", "category": {k: v for k, v in new_category.items() if k != "_id"}}
 
@@ -157,8 +155,6 @@ async def update_category(category_id: str, category: CategoryUpdate, user: dict
     await db.categories.update_one({"id": category_id}, {"$set": update_data})
     
     # حذف الكاش
-    from core.cache import cache
-    cache.delete("categories_list")
     
     updated = await db.categories.find_one({"id": category_id}, {"_id": 0})
     return {"message": "تم تحديث الفئة بنجاح", "category": updated}
@@ -181,8 +177,6 @@ async def delete_category(category_id: str, user: dict = Depends(get_current_use
     await db.categories.delete_one({"id": category_id})
     
     # حذف الكاش
-    from core.cache import cache
-    cache.delete("categories_list")
     
     return {"message": "تم حذف الفئة بنجاح"}
 
@@ -203,8 +197,6 @@ async def toggle_category(category_id: str, user: dict = Depends(get_current_use
     )
     
     # حذف الكاش
-    from core.cache import cache
-    cache.delete("categories_list")
     
     return {"message": f"تم {'تفعيل' if new_status else 'تعطيل'} الفئة", "is_active": new_status}
 
@@ -221,7 +213,5 @@ async def reorder_categories(orders: List[dict], user: dict = Depends(get_curren
         )
     
     # حذف الكاش
-    from core.cache import cache
-    cache.delete("categories_list")
     
     return {"message": "تم إعادة ترتيب الفئات بنجاح"}
