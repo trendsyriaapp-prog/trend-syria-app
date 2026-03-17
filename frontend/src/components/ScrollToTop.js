@@ -1,5 +1,5 @@
-// مكون لإدارة موقع التمرير عند التنقل
-import { useEffect, useLayoutEffect } from 'react';
+// مكون لإدارة موقع التمرير عند التنقل - بدون قفزة
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 // تعطيل استعادة التمرير الافتراضية للمتصفح
@@ -8,50 +8,51 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
 }
 
 const ScrollToTop = () => {
-  const { pathname, search, key } = useLocation();
+  const { pathname, search } = useLocation();
   const navigationType = useNavigationType();
+  const fullPath = pathname + search;
+  const [isReady, setIsReady] = useState(true);
 
   // حفظ موقع التمرير باستمرار
-  useEffect(() => {
-    const saveScroll = () => {
-      if (key) {
-        sessionStorage.setItem(`scroll_${key}`, String(window.scrollY));
-      }
+  useLayoutEffect(() => {
+    const savePosition = () => {
+      sessionStorage.setItem(`scrollY_${fullPath}`, String(window.scrollY));
     };
 
-    // حفظ عند كل تمرير
-    let timeout;
+    let ticking = false;
     const handleScroll = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(saveScroll, 50);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          savePosition();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener('scroll', handleScroll);
-      saveScroll(); // حفظ أخير قبل المغادرة
-    };
-  }, [key]);
+    savePosition();
 
-  // استعادة أو إعادة التعيين عند التنقل
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      savePosition();
+    };
+  }, [fullPath]);
+
+  // التعامل مع التنقل
   useLayoutEffect(() => {
-    if (navigationType === 'POP' && key) {
-      // الرجوع للخلف - استعادة الموقع
-      const saved = sessionStorage.getItem(`scroll_${key}`);
+    if (navigationType === 'POP') {
+      // الرجوع - استعادة الموقع فوراً
+      const saved = sessionStorage.getItem(`scrollY_${fullPath}`);
       if (saved) {
         const pos = parseInt(saved, 10);
-        requestAnimationFrame(() => {
-          window.scrollTo(0, pos);
-        });
-        return;
+        window.scrollTo(0, pos);
       }
+    } else {
+      // صفحة جديدة
+      window.scrollTo(0, 0);
     }
-    
-    // صفحة جديدة - الذهاب للأعلى
-    window.scrollTo(0, 0);
-  }, [pathname, search, key, navigationType]);
+  }, [fullPath, navigationType]);
 
   return null;
 };
