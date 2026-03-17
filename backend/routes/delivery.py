@@ -166,27 +166,50 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                             
                             print(f"🏪 إشعار للبائع: السائق {driver_name} على بعد {distance_to_store*1000:.0f}م من المتجر")
     
-    # ========== 2. إشعار العميل (عند اقتراب السائق من موقع التسليم) ==========
+    # ========== 2. إشعارات العميل (عند اقتراب السائق من موقع التسليم) ==========
     if order.get("status") in ["picked_up", "on_the_way", "out_for_delivery"]:
         customer_lat = order.get("latitude") or order.get("delivery_latitude")
         customer_lon = order.get("longitude") or order.get("delivery_longitude")
         
         if customer_lat and customer_lon:
             distance_to_customer = calculate_distance(driver_lat, driver_lon, customer_lat, customer_lon)
+            customer_id = order.get("customer_id") or order.get("user_id")
             
-            # إذا كان السائق قريباً من العميل (أقل من 500 متر)
-            if distance_to_customer < 0.5:
+            # ========== إشعار 1: السائق على بعد 5 دقائق (~2 كم) ==========
+            if distance_to_customer < 2.0 and distance_to_customer >= 0.5:
+                five_min_notified = order.get("five_min_notification_sent", False)
+                
+                if not five_min_notified and customer_id:
+                    notification = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": customer_id,
+                        "title": "🚗 السائق على بعد 5 دقائق!",
+                        "message": f"{driver_name} في طريقه إليك. طلبك #{order_number} سيصل قريباً. جهّز نفسك!",
+                        "type": "driver_5_minutes_away",
+                        "order_id": order_id,
+                        "is_read": False,
+                        "play_sound": True,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    await db.notifications.insert_one(notification)
+                    
+                    await db[collection].update_one(
+                        {"id": order_id},
+                        {"$set": {"five_min_notification_sent": True}}
+                    )
+                    
+                    print(f"⏱️ إشعار للعميل: السائق {driver_name} على بعد 5 دقائق ({distance_to_customer*1000:.0f}م)")
+            
+            # ========== إشعار 2: السائق قريب (500 متر) ==========
+            if distance_to_customer < 0.5 and distance_to_customer >= 0.1:
                 customer_notified = order.get("nearby_notification_sent", False)
                 
-                if not customer_notified:
-                    customer_id = order.get("customer_id") or order.get("user_id")
-                    
-                    # إرسال إشعار للعميل
+                if not customer_notified and customer_id:
                     notification = {
                         "id": str(uuid.uuid4()),
                         "user_id": customer_id,
                         "title": "🏍️ طلبك على وشك الوصول!",
-                        "message": f"{driver_name} أصبح قريباً منك. طلبك #{order_number} سيصل خلال دقائق!",
+                        "message": f"{driver_name} أصبح قريباً جداً منك. طلبك #{order_number} سيصل خلال دقيقة!",
                         "type": "driver_nearby",
                         "order_id": order_id,
                         "is_read": False,
@@ -195,13 +218,38 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
                     }
                     await db.notifications.insert_one(notification)
                     
-                    # تحديث الطلب لمنع إرسال إشعار مكرر
                     await db[collection].update_one(
                         {"id": order_id},
                         {"$set": {"nearby_notification_sent": True}}
                     )
                     
                     print(f"📍 إشعار للعميل: السائق {driver_name} على بعد {distance_to_customer*1000:.0f}م")
+            
+            # ========== إشعار 3: السائق وصل (أقل من 100 متر) ==========
+            if distance_to_customer < 0.1:
+                arrived_notified = order.get("arrived_notification_sent", False)
+                
+                if not arrived_notified and customer_id:
+                    notification = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": customer_id,
+                        "title": "📍 السائق وصل!",
+                        "message": f"{driver_name} وصل لموقعك الآن! انزل لاستلام طلبك #{order_number}",
+                        "type": "driver_arrived",
+                        "order_id": order_id,
+                        "is_read": False,
+                        "play_sound": True,
+                        "vibrate": True,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    await db.notifications.insert_one(notification)
+                    
+                    await db[collection].update_one(
+                        {"id": order_id},
+                        {"$set": {"arrived_notification_sent": True}}
+                    )
+                    
+                    print(f"🎯 إشعار للعميل: السائق {driver_name} وصل للموقع!")
 
 @router.get("/location/{order_id}")
 async def get_driver_location_for_order(order_id: str, user: dict = Depends(get_current_user)):
