@@ -1,110 +1,90 @@
-// مكون لإدارة موقع التمرير عند التنقل - بدون قفزة
+// مكون لإدارة موقع التمرير - يستخدم ScrollContext للحفظ
 import { useLayoutEffect, useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
-// تعطيل استعادة التمرير الافتراضية للمتصفح
+// تعطيل استعادة التمرير الافتراضية
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
 }
 
-// حفظ موقع التمرير قبل أي click على رابط
-let currentScrollY = 0;
-let currentPath = '/';
-let documentHeight = 0;
+let isRestoring = false;
 
 if (typeof window !== 'undefined') {
-  // تتبع موقع التمرير وارتفاع المستند
-  const updateScrollInfo = () => {
-    currentScrollY = window.scrollY;
-    documentHeight = document.documentElement.scrollHeight;
-  };
-  
-  window.addEventListener('scroll', updateScrollInfo, { passive: true });
-  
-  // تحديث الارتفاع عند تغيير حجم النافذة
-  window.addEventListener('resize', updateScrollInfo, { passive: true });
-
-  // حفظ الموقع والنسبة عند الضغط على أي رابط
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a[href]');
-    if (link && !link.href.startsWith('javascript:')) {
-      const scrollRatio = documentHeight > 0 ? currentScrollY / documentHeight : 0;
-      sessionStorage.setItem(`scrollPos_${currentPath}`, String(currentScrollY));
-      sessionStorage.setItem(`scrollRatio_${currentPath}`, String(scrollRatio));
-      sessionStorage.setItem(`scrollHeight_${currentPath}`, String(documentHeight));
-    }
-  }, true);
-  
-  // إضافة CSS للإخفاء السريع
+  // CSS للإخفاء السريع
   const style = document.createElement('style');
-  style.textContent = `
-    #root.hide-scroll {
-      visibility: hidden !important;
-    }
-  `;
+  style.textContent = '#root.h{visibility:hidden!important}';
   document.head.appendChild(style);
 }
 
 const ScrollToTop = () => {
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const navigationType = useNavigationType();
-  const fullPath = pathname + search;
-  const hasRestored = useRef(false);
+  const targetPos = useRef(0);
 
-  // تحديث المسار الحالي
+  // الحفاظ على الموقع أثناء تحميل المحتوى
   useEffect(() => {
-    currentPath = fullPath;
-    currentScrollY = window.scrollY;
-    documentHeight = document.documentElement.scrollHeight;
-    hasRestored.current = false;
-  }, [fullPath]);
+    if (!isRestoring || targetPos.current === 0) return;
 
-  // التعامل مع التنقل
+    let frameId;
+    let attempts = 0;
+    
+    const maintain = () => {
+      if (attempts >= 30 || !isRestoring) return;
+      
+      if (Math.abs(window.scrollY - targetPos.current) > 20) {
+        window.scrollTo(0, targetPos.current);
+      }
+      
+      attempts++;
+      frameId = requestAnimationFrame(maintain);
+    };
+    
+    frameId = requestAnimationFrame(maintain);
+    
+    const timeout = setTimeout(() => {
+      isRestoring = false;
+      cancelAnimationFrame(frameId);
+      document.getElementById('root')?.classList.remove('h');
+    }, 500);
+    
+    return () => {
+      clearTimeout(timeout);
+      cancelAnimationFrame(frameId);
+    };
+  }, [pathname, navigationType]);
+
   useLayoutEffect(() => {
     const root = document.getElementById('root');
     
-    if (navigationType === 'POP' && !hasRestored.current) {
-      const savedPos = sessionStorage.getItem(`scrollPos_${fullPath}`);
-      const savedRatio = sessionStorage.getItem(`scrollRatio_${fullPath}`);
-      
-      if (savedPos && savedRatio) {
-        const pos = parseInt(savedPos, 10);
-        const ratio = parseFloat(savedRatio);
-        
-        if (pos > 50) {
-          // إخفاء فوري
-          if (root) root.classList.add('hide-scroll');
+    if (navigationType === 'POP') {
+      // استخدام scroll_/ كما يحفظ ScrollContext
+      const saved = sessionStorage.getItem(`scroll_${pathname}`);
+      if (saved) {
+        const pos = parseInt(saved, 10);
+        if (pos > 0) {
+          isRestoring = true;
+          root?.classList.add('h');
+          targetPos.current = pos;
           
-          // محاولة التمرير للموقع المحفوظ
           window.scrollTo(0, pos);
           
-          // إعادة المحاولة بعد تحميل المحتوى باستخدام النسبة
-          const restoreWithRatio = () => {
-            const newHeight = document.documentElement.scrollHeight;
-            const calculatedPos = Math.round(ratio * newHeight);
-            
-            // استخدام الموقع المحسوب إذا كان أقرب للنسبة الأصلية
-            if (Math.abs(calculatedPos - pos) > 200) {
-              window.scrollTo(0, calculatedPos);
-            } else {
-              window.scrollTo(0, pos);
-            }
-            
-            if (root) root.classList.remove('hide-scroll');
-            hasRestored.current = true;
-          };
-          
-          // انتظار تحميل المحتوى
-          setTimeout(restoreWithRatio, 200);
+          requestAnimationFrame(() => {
+            window.scrollTo(0, pos);
+            setTimeout(() => {
+              root?.classList.remove('h');
+              setTimeout(() => { isRestoring = false; }, 100);
+            }, 50);
+          });
           return;
         }
       }
     }
     
-    // صفحة جديدة
     window.scrollTo(0, 0);
-    if (root) root.classList.remove('hide-scroll');
-  }, [fullPath, navigationType]);
+    targetPos.current = 0;
+    isRestoring = false;
+    root?.classList.remove('h');
+  }, [pathname, navigationType]);
 
   return null;
 };
