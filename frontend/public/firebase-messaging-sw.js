@@ -1,48 +1,128 @@
-// Firebase Messaging Service Worker
-// هذا الملف مطلوب لاستقبال الإشعارات في الخلفية
+// Firebase Cloud Messaging Service Worker
+// هذا الملف يعالج الإشعارات في الخلفية
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js');
 
+// Firebase configuration
 firebase.initializeApp({
   apiKey: "AIzaSyA7ml-NqGBoOjjGGQ7MIt_-EPElvQBiKwY",
-  authDomain: "trend-syria-90b5a.firebaseapp.com",
-  projectId: "trend-syria-90b5a",
-  storageBucket: "trend-syria-90b5a.appspot.com",
+  authDomain: "trend-syria.firebaseapp.com",
+  projectId: "trend-syria",
+  storageBucket: "trend-syria.firebasestorage.app",
   messagingSenderId: "154439677377",
-  appId: "1:154439677377:web:1aab558c5a5fceaa82ab40"
+  appId: "1:154439677377:web:1aab558c5a5fceaa82ab40",
+  measurementId: "G-9YDVDL56GX"
 });
 
+// Get messaging instance
 const messaging = firebase.messaging();
 
-// معالجة الإشعارات في الخلفية
+// Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('📬 Received background message:', payload);
-  
-  const notificationTitle = payload.notification?.title || 'ترند سورية';
+  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+
+  const notificationTitle = payload.notification?.title || 'تريند سوريا';
   const notificationOptions = {
     body: payload.notification?.body || 'لديك إشعار جديد',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-72.png',
-    vibrate: [100, 50, 100],
-    data: payload.data || {},
+    icon: payload.notification?.icon || '/images/logo.png',
+    image: payload.notification?.image,
+    badge: '/images/badge.png',
+    tag: payload.data?.tag || 'trend-syria-notification',
+    data: payload.data,
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
     actions: [
-      { action: 'open', title: 'فتح' },
-      { action: 'close', title: 'إغلاق' }
+      {
+        action: 'open',
+        title: 'فتح'
+      },
+      {
+        action: 'close',
+        title: 'إغلاق'
+      }
     ]
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// معالجة النقر على الإشعار
+// Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
+  console.log('[firebase-messaging-sw.js] Notification clicked:', event);
+
   event.notification.close();
-  
-  if (event.action === 'open' || !event.action) {
-    const urlToOpen = event.notification.data?.url || '/';
-    event.waitUntil(
-      clients.openWindow(urlToOpen)
-    );
+
+  // Handle action buttons
+  if (event.action === 'close') {
+    return;
   }
+
+  // Get the URL to open
+  let urlToOpen = '/';
+  
+  if (event.notification.data) {
+    const data = event.notification.data;
+    
+    // Determine URL based on notification type
+    if (data.type === 'order') {
+      urlToOpen = `/orders/${data.order_id}`;
+    } else if (data.type === 'chat') {
+      urlToOpen = `/chat/${data.chat_id}`;
+    } else if (data.type === 'delivery') {
+      urlToOpen = '/delivery';
+    } else if (data.url) {
+      urlToOpen = data.url;
+    }
+  }
+
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // Check if there's already a window open
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          if (client.navigate) {
+            return client.navigate(urlToOpen);
+          }
+          return client;
+        }
+      }
+      
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Handle push events directly
+self.addEventListener('push', (event) => {
+  console.log('[firebase-messaging-sw.js] Push event received');
+  
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      console.log('[firebase-messaging-sw.js] Push data:', data);
+    } catch (e) {
+      console.log('[firebase-messaging-sw.js] Push data (text):', event.data.text());
+    }
+  }
+});
+
+// Service worker install event
+self.addEventListener('install', (event) => {
+  console.log('[firebase-messaging-sw.js] Service Worker installed');
+  self.skipWaiting();
+});
+
+// Service worker activate event
+self.addEventListener('activate', (event) => {
+  console.log('[firebase-messaging-sw.js] Service Worker activated');
+  event.waitUntil(clients.claim());
 });

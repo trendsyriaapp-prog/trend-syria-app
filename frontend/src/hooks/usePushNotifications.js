@@ -1,187 +1,148 @@
+// /app/frontend/src/hooks/usePushNotifications.js
+// Hook لإدارة إشعارات Push
+
 import { useState, useEffect, useCallback } from 'react';
+import { getFCMToken, setupForegroundHandler } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
-/**
- * Hook لإدارة إشعارات Push
- * يسمح بالاشتراك وإلغاء الاشتراك من الإشعارات
- */
-export const usePushNotifications = (userType = null) => {
-  const [isSupported, setIsSupported] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const usePushNotifications = () => {
+  const { token: authToken, user } = useAuth();
+  const [fcmToken, setFcmToken] = useState(null);
   const [permission, setPermission] = useState('default');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSupported, setIsSupported] = useState(true);
 
-  // التحقق من دعم المتصفح
+  // التحقق من دعم الإشعارات
   useEffect(() => {
     const checkSupport = () => {
-      const supported = 'serviceWorker' in navigator && 
-                       'PushManager' in window && 
-                       'Notification' in window;
-      setIsSupported(supported);
-      
-      if (supported) {
-        setPermission(Notification.permission);
-        checkSubscription();
+      if (!('Notification' in window)) {
+        setIsSupported(false);
+        setError('المتصفح لا يدعم الإشعارات');
+        return false;
       }
+      if (!('serviceWorker' in navigator)) {
+        setIsSupported(false);
+        setError('المتصفح لا يدعم Service Workers');
+        return false;
+      }
+      return true;
     };
-    
-    checkSupport();
+
+    if (checkSupport()) {
+      setPermission(Notification.permission);
+    }
   }, []);
 
-  // التحقق من وجود اشتراك حالي
-  const checkSubscription = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-    } catch (err) {
-      console.error('Error checking subscription:', err);
-    }
-  };
-
   // تسجيل Service Worker
-  const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw-push.js', {
-        scope: '/'
-      });
-      console.log('Service Worker registered:', registration.scope);
-      return registration;
-    } catch (err) {
-      console.error('Service Worker registration failed:', err);
-      throw err;
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Firebase SW registered:', registration.scope);
+        })
+        .catch((err) => {
+          console.error('Firebase SW registration failed:', err);
+        });
     }
-  };
+  }, []);
 
-  // تحويل المفتاح العام من Base64 URL Safe
-  const urlBase64ToUint8Array = (base64String) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+  // طلب الإذن والحصول على Token
+  const requestPermission = useCallback(async () => {
+    if (!isSupported) return null;
     
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  // الاشتراك في الإشعارات
-  const subscribe = useCallback(async () => {
-    if (!isSupported) {
-      setError('المتصفح لا يدعم إشعارات Push');
-      return false;
-    }
-
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
     try {
-      // طلب إذن الإشعارات
+      // طلب الإذن
       const permissionResult = await Notification.requestPermission();
       setPermission(permissionResult);
 
       if (permissionResult !== 'granted') {
         setError('تم رفض إذن الإشعارات');
-        setIsLoading(false);
-        return false;
+        setLoading(false);
+        return null;
       }
 
-      // تسجيل Service Worker
-      const registration = await registerServiceWorker();
-      await navigator.serviceWorker.ready;
+      // الحصول على FCM Token
+      const token = await getFCMToken();
+      
+      if (token) {
+        setFcmToken(token);
+        
+        // تسجيل Token في الخادم
+        if (authToken) {
+          try {
+            await axios.post(`${API}/api/push/register-token`, {
+              token: token,
+              device_type: 'web'
+            }, {
+              headers: { Authorization: `Bearer ${authToken}` }
+            });
+            console.log('FCM Token registered with server');
+          } catch (err) {
+            console.error('Failed to register token with server:', err);
+          }
+        }
+      }
 
-      // الحصول على المفتاح العام من الخادم
-      const keyResponse = await axios.get(`${API}/push/vapid-public-key`);
-      const vapidPublicKey = keyResponse.data.publicKey;
-
-      // إنشاء الاشتراك
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-      });
-
-      // إرسال الاشتراك للخادم
-      const subscriptionJSON = subscription.toJSON();
-      await axios.post(`${API}/push/subscribe`, {
-        subscription: {
-          endpoint: subscriptionJSON.endpoint,
-          keys: subscriptionJSON.keys
-        },
-        user_type: userType
-      });
-
-      setIsSubscribed(true);
-      console.log('Push notification subscribed successfully');
-      return true;
+      setLoading(false);
+      return token;
     } catch (err) {
-      console.error('Subscription error:', err);
-      setError(err.message || 'فشل في الاشتراك');
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error('Error requesting notification permission:', err);
+      setError(err.message);
+      setLoading(false);
+      return null;
     }
-  }, [isSupported, userType]);
+  }, [isSupported, authToken]);
 
-  // إلغاء الاشتراك
-  const unsubscribe = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  // تسجيل Token عند تسجيل الدخول
+  useEffect(() => {
+    if (authToken && user && permission === 'granted' && !fcmToken) {
+      requestPermission();
+    }
+  }, [authToken, user, permission, fcmToken, requestPermission]);
+
+  // إعداد معالج الإشعارات في الواجهة
+  useEffect(() => {
+    if (permission !== 'granted') return;
+
+    const handleForegroundMessage = (payload) => {
+      console.log('Foreground notification:', payload);
+      // يمكن إضافة toast أو تحديث UI هنا
+    };
+
+    setupForegroundHandler(handleForegroundMessage);
+  }, [permission]);
+
+  // إلغاء تسجيل Token
+  const unregisterToken = useCallback(async () => {
+    if (!fcmToken || !authToken) return;
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-
-      if (subscription) {
-        // إلغاء الاشتراك محلياً
-        await subscription.unsubscribe();
-
-        // إلغاء الاشتراك من الخادم
-        const subscriptionJSON = subscription.toJSON();
-        await axios.post(`${API}/push/unsubscribe`, {
-          subscription: {
-            endpoint: subscriptionJSON.endpoint,
-            keys: subscriptionJSON.keys
-          }
-        });
-      }
-
-      setIsSubscribed(false);
-      console.log('Push notification unsubscribed');
-      return true;
+      await axios.delete(`${API}/api/push/unregister-token`, {
+        params: { token: fcmToken },
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      setFcmToken(null);
+      console.log('FCM Token unregistered');
     } catch (err) {
-      console.error('Unsubscribe error:', err);
-      setError(err.message || 'فشل في إلغاء الاشتراك');
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to unregister token:', err);
     }
-  }, []);
-
-  // تبديل حالة الاشتراك
-  const toggleSubscription = useCallback(async () => {
-    if (isSubscribed) {
-      return await unsubscribe();
-    } else {
-      return await subscribe();
-    }
-  }, [isSubscribed, subscribe, unsubscribe]);
+  }, [fcmToken, authToken]);
 
   return {
-    isSupported,
-    isSubscribed,
-    isLoading,
+    fcmToken,
     permission,
+    loading,
     error,
-    subscribe,
-    unsubscribe,
-    toggleSubscription
+    isSupported,
+    requestPermission,
+    unregisterToken
   };
 };
 

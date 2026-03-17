@@ -1,229 +1,281 @@
-"""
-Push Notifications API
-إشعارات Push للتطبيق - تعمل حتى عندما يكون التطبيق مغلقاً
-"""
+# /app/backend/routes/push_notifications.py
+# API لإدارة إشعارات Push
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
-from pywebpush import webpush, WebPushException
-import os
-import json
-from bson import ObjectId
+from datetime import datetime, timezone
+import uuid
+
+from core.database import db, get_current_user
+from services.firebase_push import (
+    send_push_notification,
+    send_push_to_multiple,
+    send_push_to_topic,
+    subscribe_to_topic,
+    unsubscribe_from_topic
+)
 
 router = APIRouter(prefix="/push", tags=["Push Notifications"])
 
-# الحصول على قاعدة البيانات
-def get_db():
-    from server import db
-    return db
+class TokenRegistration(BaseModel):
+    token: str
+    device_type: str = "web"  # web, android, ios
 
-# نموذج الاشتراك
-class PushSubscription(BaseModel):
-    endpoint: str
-    keys: dict  # p256dh و auth
-
-class SubscriptionRequest(BaseModel):
-    subscription: PushSubscription
-    user_type: Optional[str] = None  # seller, food_seller, delivery, buyer
-
-# نموذج الإشعار
-class NotificationPayload(BaseModel):
+class SendNotificationRequest(BaseModel):
+    user_id: Optional[str] = None
     title: str
     body: str
-    icon: Optional[str] = "/logo192.png"
-    badge: Optional[str] = "/badge.png"
-    url: Optional[str] = "/"
-    tag: Optional[str] = None
     data: Optional[dict] = None
+    image: Optional[str] = None
 
-# الحصول على المستخدم الحالي
-async def get_current_user_from_token(token: str = None):
-    """استخراج المستخدم من التوكن"""
-    if not token:
-        return None
+class TopicSubscription(BaseModel):
+    topic: str
+
+# ==================== تسجيل Token ====================
+
+@router.post("/register-token")
+async def register_push_token(
+    data: TokenRegistration,
+    user: dict = Depends(get_current_user)
+):
+    """تسجيل FCM token للمستخدم"""
+    
     try:
-        import jwt
-        payload = jwt.decode(token, os.environ.get("JWT_SECRET"), algorithms=["HS256"])
-        return payload
-    except:
-        return None
+        # التحقق من وجود token مسبق
+        existing = await db.push_tokens.find_one({
+            "user_id": user["id"],
+            "token": data.token
+        })
+        
+        if existing:
+            # تحديث آخر استخدام
+            await db.push_tokens.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {"last_used": datetime.now(timezone.utc).isoformat()}}
+            )
+            return {"success": True, "message": "Token already registered"}
+        
+        # حذف tokens قديمة للمستخدم (احتفظ بآخر 5 فقط)
+        old_tokens = await db.push_tokens.find(
+            {"user_id": user["id"]}
+        ).sort("created_at", -1).skip(4).to_list(100)
+        
+        if old_tokens:
+            old_ids = [t["_id"] for t in old_tokens]
+            await db.push_tokens.delete_many({"_id": {"$in": old_ids}})
+        
+        # تسجيل token جديد
+        token_doc = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_type": user.get("user_type", "customer"),
+            "token": data.token,
+            "device_type": data.device_type,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_used": datetime.now(timezone.utc).isoformat(),
+            "is_active": True
+        }
+        
+        await db.push_tokens.insert_one(token_doc)
+        
+        # اشتراك تلقائي في المواضيع حسب نوع المستخدم
+        topics = ["all_users"]
+        user_type = user.get("user_type", "customer")
+        
+        if user_type == "driver":
+            topics.append("drivers")
+        elif user_type == "seller":
+            topics.append("sellers")
+        elif user_type == "food_seller":
+            topics.append("food_sellers")
+        elif user_type == "admin":
+            topics.append("admins")
+        else:
+            topics.append("customers")
+        
+        for topic in topics:
+            await subscribe_to_topic([data.token], topic)
+        
+        return {
+            "success": True,
+            "message": "Token registered successfully",
+            "subscribed_topics": topics
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/vapid-public-key")
-async def get_vapid_public_key():
-    """الحصول على المفتاح العام للاشتراك في الإشعارات"""
-    public_key = os.environ.get("VAPID_PUBLIC_KEY")
-    if not public_key:
-        raise HTTPException(status_code=500, detail="VAPID key not configured")
-    return {"publicKey": public_key}
+@router.delete("/unregister-token")
+async def unregister_push_token(
+    token: str,
+    user: dict = Depends(get_current_user)
+):
+    """إلغاء تسجيل FCM token"""
+    
+    try:
+        result = await db.push_tokens.delete_one({
+            "user_id": user["id"],
+            "token": token
+        })
+        
+        if result.deleted_count > 0:
+            # إلغاء الاشتراك من المواضيع
+            await unsubscribe_from_topic([token], "all_users")
+            return {"success": True, "message": "Token unregistered"}
+        
+        return {"success": False, "message": "Token not found"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== إرسال الإشعارات ====================
+
+@router.post("/send-to-user")
+async def send_notification_to_user(
+    data: SendNotificationRequest,
+    user: dict = Depends(get_current_user)
+):
+    """إرسال إشعار لمستخدم محدد (للمدير فقط)"""
+    
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    target_user_id = data.user_id
+    if not target_user_id:
+        raise HTTPException(status_code=400, detail="user_id مطلوب")
+    
+    # جلب tokens المستخدم
+    tokens = await db.push_tokens.find(
+        {"user_id": target_user_id, "is_active": True},
+        {"_id": 0, "token": 1}
+    ).to_list(10)
+    
+    if not tokens:
+        return {"success": False, "message": "لا يوجد token مسجل للمستخدم"}
+    
+    token_list = [t["token"] for t in tokens]
+    
+    # إرسال الإشعار
+    result = await send_push_to_multiple(
+        tokens=token_list,
+        title=data.title,
+        body=data.body,
+        data=data.data,
+        image=data.image
+    )
+    
+    # حذف tokens الفاشلة
+    if result.get("failed_tokens"):
+        await db.push_tokens.update_many(
+            {"token": {"$in": result["failed_tokens"]}},
+            {"$set": {"is_active": False}}
+        )
+    
+    return result
+
+@router.post("/send-to-topic")
+async def send_notification_to_topic(
+    topic: str,
+    title: str,
+    body: str,
+    data: Optional[dict] = None,
+    image: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """إرسال إشعار لموضوع (للمدير فقط)"""
+    
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدير فقط")
+    
+    result = await send_push_to_topic(
+        topic=topic,
+        title=title,
+        body=body,
+        data=data,
+        image=image
+    )
+    
+    return result
+
+# ==================== إدارة الاشتراكات ====================
 
 @router.post("/subscribe")
-async def subscribe_to_push(request: SubscriptionRequest):
-    """الاشتراك في إشعارات Push"""
-    db = get_db()
+async def subscribe_user_to_topic(
+    data: TopicSubscription,
+    user: dict = Depends(get_current_user)
+):
+    """اشتراك المستخدم في موضوع"""
     
-    subscription_data = {
-        "endpoint": request.subscription.endpoint,
-        "keys": request.subscription.keys,
-        "user_type": request.user_type,
-        "active": True
-    }
+    tokens = await db.push_tokens.find(
+        {"user_id": user["id"], "is_active": True},
+        {"_id": 0, "token": 1}
+    ).to_list(10)
     
-    # التحقق من عدم وجود اشتراك مكرر
-    existing = await db.push_subscriptions.find_one({"endpoint": request.subscription.endpoint})
-    if existing:
-        # تحديث الاشتراك الموجود
-        await db.push_subscriptions.update_one(
-            {"endpoint": request.subscription.endpoint},
-            {"$set": subscription_data}
-        )
-        return {"message": "تم تحديث الاشتراك", "status": "updated"}
+    if not tokens:
+        return {"success": False, "message": "لا يوجد token مسجل"}
     
-    # إضافة اشتراك جديد
-    await db.push_subscriptions.insert_one(subscription_data)
-    return {"message": "تم الاشتراك بنجاح", "status": "subscribed"}
+    token_list = [t["token"] for t in tokens]
+    result = await subscribe_to_topic(token_list, data.topic)
+    
+    return result
 
 @router.post("/unsubscribe")
-async def unsubscribe_from_push(request: SubscriptionRequest):
-    """إلغاء الاشتراك من إشعارات Push"""
-    db = get_db()
+async def unsubscribe_user_from_topic(
+    data: TopicSubscription,
+    user: dict = Depends(get_current_user)
+):
+    """إلغاء اشتراك المستخدم من موضوع"""
     
-    result = await db.push_subscriptions.delete_one({"endpoint": request.subscription.endpoint})
-    if result.deleted_count > 0:
-        return {"message": "تم إلغاء الاشتراك", "status": "unsubscribed"}
-    return {"message": "لم يتم العثور على الاشتراك", "status": "not_found"}
+    tokens = await db.push_tokens.find(
+        {"user_id": user["id"], "is_active": True},
+        {"_id": 0, "token": 1}
+    ).to_list(10)
+    
+    if not tokens:
+        return {"success": False, "message": "لا يوجد token مسجل"}
+    
+    token_list = [t["token"] for t in tokens]
+    result = await unsubscribe_from_topic(token_list, data.topic)
+    
+    return result
 
-async def send_push_notification(subscription: dict, payload: dict):
-    """إرسال إشعار Push لمشترك واحد"""
-    try:
-        vapid_private_key = os.environ.get("VAPID_PRIVATE_KEY")
-        vapid_email = os.environ.get("VAPID_EMAIL", "mailto:admin@trendsyria.com")
-        
-        if not vapid_private_key:
-            print("VAPID private key not configured")
-            return False
-        
-        subscription_info = {
-            "endpoint": subscription["endpoint"],
-            "keys": subscription["keys"]
-        }
-        
-        webpush(
-            subscription_info=subscription_info,
-            data=json.dumps(payload),
-            vapid_private_key=vapid_private_key,
-            vapid_claims={"sub": vapid_email}
+# ==================== دالة مساعدة للإرسال من أي مكان ====================
+
+async def send_push_to_user_id(
+    user_id: str,
+    title: str,
+    body: str,
+    data: dict = None,
+    image: str = None
+) -> dict:
+    """
+    دالة مساعدة لإرسال Push من أي مكان في التطبيق
+    تُستخدم مع نظام الإشعارات الحالي
+    """
+    tokens = await db.push_tokens.find(
+        {"user_id": user_id, "is_active": True},
+        {"_id": 0, "token": 1}
+    ).to_list(10)
+    
+    if not tokens:
+        return {"success": False, "reason": "no_tokens"}
+    
+    token_list = [t["token"] for t in tokens]
+    
+    result = await send_push_to_multiple(
+        tokens=token_list,
+        title=title,
+        body=body,
+        data=data,
+        image=image
+    )
+    
+    # تنظيف tokens الفاشلة
+    if result.get("failed_tokens"):
+        await db.push_tokens.update_many(
+            {"token": {"$in": result["failed_tokens"]}},
+            {"$set": {"is_active": False}}
         )
-        return True
-    except WebPushException as e:
-        print(f"WebPush error: {e}")
-        # إذا كان الاشتراك غير صالح، نقوم بحذفه
-        if e.response and e.response.status_code in [404, 410]:
-            db = get_db()
-            await db.push_subscriptions.delete_one({"endpoint": subscription["endpoint"]})
-        return False
-    except Exception as e:
-        print(f"Push notification error: {e}")
-        return False
-
-async def notify_user_type(user_type: str, notification: NotificationPayload):
-    """إرسال إشعار لجميع المشتركين من نوع معين"""
-    db = get_db()
     
-    # البحث عن جميع الاشتراكات من هذا النوع
-    cursor = db.push_subscriptions.find({"user_type": user_type, "active": True})
-    subscriptions = await cursor.to_list(length=1000)
-    
-    # إذا كان النوع delivery، نستثني السائقين غير المتاحين
-    if user_type == "delivery":
-        # جلب قائمة السائقين المتاحين
-        available_drivers = await db.delivery_documents.find(
-            {"is_available": True},
-            {"driver_id": 1, "delivery_id": 1}
-        ).to_list(1000)
-        
-        available_driver_ids = set()
-        for doc in available_drivers:
-            if doc.get("driver_id"):
-                available_driver_ids.add(doc["driver_id"])
-            if doc.get("delivery_id"):
-                available_driver_ids.add(doc["delivery_id"])
-        
-        # تصفية الاشتراكات للسائقين المتاحين فقط
-        subscriptions = [
-            sub for sub in subscriptions 
-            if sub.get("user_id") in available_driver_ids
-        ]
-    
-    payload = {
-        "title": notification.title,
-        "body": notification.body,
-        "icon": notification.icon,
-        "badge": notification.badge,
-        "url": notification.url,
-        "tag": notification.tag,
-        "data": notification.data or {}
-    }
-    
-    success_count = 0
-    for sub in subscriptions:
-        if await send_push_notification(sub, payload):
-            success_count += 1
-    
-    return {"sent": success_count, "total": len(subscriptions)}
-
-@router.post("/notify/sellers")
-async def notify_all_sellers(notification: NotificationPayload):
-    """إرسال إشعار لجميع البائعين"""
-    result = await notify_user_type("seller", notification)
     return result
-
-@router.post("/notify/food-sellers")
-async def notify_all_food_sellers(notification: NotificationPayload):
-    """إرسال إشعار لجميع بائعي الطعام"""
-    result = await notify_user_type("food_seller", notification)
-    return result
-
-@router.post("/notify/delivery")
-async def notify_all_delivery(notification: NotificationPayload):
-    """إرسال إشعار لجميع سائقي التوصيل"""
-    result = await notify_user_type("delivery", notification)
-    return result
-
-# دالة مساعدة للاستخدام في routes أخرى
-async def send_new_order_notification_to_food_seller(store_id: str, order_number: str, total: float):
-    """إرسال إشعار طلب جديد لبائع الطعام"""
-    notification = NotificationPayload(
-        title="طلب جديد!",
-        body=f"طلب جديد #{order_number} - {total:,.0f} ل.س",
-        icon="/logo192.png",
-        url="/seller/dashboard?tab=menu",
-        tag=f"new-order-{order_number}",
-        data={"type": "new_food_order", "order_number": order_number}
-    )
-    return await notify_user_type("food_seller", notification)
-
-async def send_new_order_notification_to_delivery(order_type: str, city: str):
-    """إرسال إشعار طلب جديد متاح للتوصيل"""
-    notification = NotificationPayload(
-        title="طلب جديد متاح للتوصيل!",
-        body=f"طلب {order_type} جديد في {city}",
-        icon="/logo192.png",
-        url="/delivery/dashboard?tab=available",
-        tag="new-delivery-order",
-        data={"type": "new_delivery_order", "city": city}
-    )
-    return await notify_user_type("delivery", notification)
-
-async def send_order_status_notification(endpoint: str, title: str, body: str, url: str = "/"):
-    """إرسال إشعار حالة الطلب لمشترك محدد"""
-    db = get_db()
-    subscription = await db.push_subscriptions.find_one({"endpoint": endpoint})
-    if subscription:
-        payload = {
-            "title": title,
-            "body": body,
-            "icon": "/logo192.png",
-            "url": url
-        }
-        return await send_push_notification(subscription, payload)
-    return False
