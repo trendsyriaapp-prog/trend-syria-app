@@ -1,10 +1,10 @@
 // /app/frontend/src/components/RecommendedProducts.js
 // أقسام التوصيات - رائج الآن + عروض وخصومات + منتجات جديدة
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Tag, Heart, MapPin, Sparkles, ChevronLeft } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -41,7 +41,7 @@ const RecommendedProducts = () => {
     fetchAllData();
   }, []);
 
-  // دوران الشارات العام - مرة واحدة فقط
+  // دوران الشارات العام
   useEffect(() => {
     if (!loaded) return;
     const interval = setInterval(() => {
@@ -54,29 +54,26 @@ const RecommendedProducts = () => {
     return new Intl.NumberFormat('ar-SY').format(price);
   };
 
-  // حساب نص الشارة
-  const getBadgeInfo = (product) => {
+  // ألوان شارة التوصيل المتقلبة
+  const deliveryBadgeColors = [
+    'from-blue-500 to-blue-600',
+    'from-emerald-500 to-emerald-600',
+    'from-violet-500 to-violet-600',
+    'from-rose-600 to-rose-700'
+  ];
+
+  // حساب شارة التوصيل
+  const getDeliveryBadge = (product) => {
     if (!badgeSettings?.enabled || !badgeSettings?.badge_types) return null;
     
     const { badge_types } = badgeSettings;
     const price = product.price || 0;
     
-    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
-      const messages = badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً'];
-      return { messages, colorIndex: 3 };
-    }
-    
-    if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
-      const messages = badge_types.most_viewed.messages || ['👁️ رائج'];
-      return { messages, colorIndex: 2 };
-    }
-    
     if (badge_types.free_shipping?.enabled) {
       const threshold = badge_types.free_shipping.threshold || 30000;
       
       if (price >= threshold) {
-        const messages = badge_types.free_shipping.messages || ['🚚 شحن مجاني'];
-        return { messages, colorIndex: 1 };
+        return { messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني'] };
       }
       
       const unitsNeeded = Math.ceil(threshold / price);
@@ -86,8 +83,7 @@ const RecommendedProducts = () => {
             `🛒 ${unitsNeeded} = شحن مجاني`,
             `📦 ${unitsNeeded} قطع = توصيل`,
             `✨ وفّر بـ ${unitsNeeded} قطع`
-          ],
-          colorIndex: 0
+          ]
         };
       }
     }
@@ -95,22 +91,32 @@ const RecommendedProducts = () => {
     return null;
   };
 
-  const bgColors = [
-    'from-blue-500 to-blue-600',
-    'from-emerald-500 to-emerald-600',
-    'from-violet-500 to-violet-600',
-    'from-rose-600 to-rose-700'
-  ];
-
-  // مكون بطاقة المنتج الصغيرة
-  const ProductCard = ({ product, color = 'purple', index = 0 }) => {
-    const colorClasses = {
-      purple: { border: 'border-purple-100 hover:border-purple-300', text: 'text-purple-600', icon: 'text-purple-500', badge: 'bg-purple-500/90' },
-      green: { border: 'border-green-100 hover:border-green-300', text: 'text-green-600', icon: 'text-green-500', badge: 'bg-green-500/90' },
-      cyan: { border: 'border-cyan-100 hover:border-cyan-300', text: 'text-cyan-600', icon: 'text-cyan-500', badge: 'bg-cyan-500/90' },
+  // مكون بطاقة المنتج
+  const ProductCard = ({ product, sectionColor = 'purple', index = 0 }) => {
+    const deliveryBadge = getDeliveryBadge(product);
+    
+    // ألوان حسب القسم
+    const sectionColors = {
+      purple: { 
+        border: 'border-purple-100 hover:border-purple-300', 
+        text: 'text-purple-600', 
+        icon: 'text-purple-500',
+        badge: 'bg-purple-500'
+      },
+      green: { 
+        border: 'border-green-100 hover:border-green-300', 
+        text: 'text-green-600', 
+        icon: 'text-green-500',
+        badge: 'bg-green-500'
+      },
+      cyan: { 
+        border: 'border-cyan-100 hover:border-cyan-300', 
+        text: 'text-cyan-600', 
+        icon: 'text-cyan-500',
+        badge: 'bg-cyan-500'
+      },
     };
-    const colors = colorClasses[color] || colorClasses.purple;
-    const badgeInfo = getBadgeInfo(product);
+    const colors = sectionColors[sectionColor] || sectionColors.purple;
 
     return (
       <div className="flex-shrink-0 w-36">
@@ -125,26 +131,33 @@ const RecommendedProducts = () => {
               className="w-full h-full object-cover"
             />
             
-            {product.discount_percent > 0 && (
-              <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                -{product.discount_percent}%
-              </span>
-            )}
-            
+            {/* شارة التوصية - أعلى يمين - لون القسم */}
             {product.recommendation_reason && (
-              <span className={`absolute bottom-2 right-2 ${colors.badge} text-white text-[9px] px-1.5 py-0.5 rounded-full`}>
+              <span className={`absolute top-1 right-1 ${colors.badge} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
                 {product.recommendation_reason}
               </span>
             )}
             
-            {/* شارة التوصيل - مع دوران */}
-            {badgeInfo && (
-              <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[badgeInfo.colorIndex]} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
-                {badgeInfo.messages[globalBadgeIndex % badgeInfo.messages.length]}
+            {/* شارة التوصيل - أسفل يسار - ألوان متقلبة مع حركة للأعلى */}
+            {deliveryBadge && (
+              <div className="absolute bottom-1 left-1 overflow-hidden h-5">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={globalBadgeIndex}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className={`bg-gradient-to-r ${deliveryBadgeColors[globalBadgeIndex % deliveryBadgeColors.length]} text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}
+                  >
+                    {deliveryBadge.messages[globalBadgeIndex % deliveryBadge.messages.length]}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             )}
             
-            <button className="absolute top-2 left-2 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center">
+            {/* زر المفضلة */}
+            <button className="absolute top-1 left-1 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center">
               <Heart size={12} className="text-gray-400" />
             </button>
           </div>
@@ -167,7 +180,7 @@ const RecommendedProducts = () => {
   };
 
   // مكون القسم
-  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color }) => {
+  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, sectionColor }) => {
     if (products.length === 0) return null;
 
     return (
@@ -188,7 +201,12 @@ const RecommendedProducts = () => {
         <div className="px-3">
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {products.map((product, index) => (
-              <ProductCard key={product.id} product={product} color={color} index={index} />
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                sectionColor={sectionColor} 
+                index={index} 
+              />
             ))}
           </div>
         </div>
@@ -196,7 +214,7 @@ const RecommendedProducts = () => {
     );
   };
 
-  // عرض skeleton أثناء التحميل الأولي
+  // عرض skeleton أثناء التحميل
   if (!loaded) {
     return (
       <div className="py-2 space-y-4">
@@ -216,7 +234,7 @@ const RecommendedProducts = () => {
 
   return (
     <div className="py-2">
-      {/* 1. قسم رائج الآن */}
+      {/* 1. قسم رائج الآن - بنفسجي */}
       <Section
         title="رائج الآن"
         icon={TrendingUp}
@@ -224,10 +242,10 @@ const RecommendedProducts = () => {
         linkColor="text-purple-500"
         linkTo="/products?sort=trending"
         products={trendingProducts}
-        color="purple"
+        sectionColor="purple"
       />
 
-      {/* 2. قسم عروض وخصومات */}
+      {/* 2. قسم عروض وخصومات - أخضر */}
       <Section
         title="عروض وخصومات"
         icon={Tag}
@@ -235,10 +253,10 @@ const RecommendedProducts = () => {
         linkColor="text-green-500"
         linkTo="/products?sort=deals"
         products={dealsProducts}
-        color="green"
+        sectionColor="green"
       />
 
-      {/* 3. قسم منتجات جديدة */}
+      {/* 3. قسم منتجات جديدة - سماوي */}
       <Section
         title="منتجات جديدة"
         icon={Sparkles}
@@ -246,7 +264,7 @@ const RecommendedProducts = () => {
         linkColor="text-cyan-500"
         linkTo="/products?sort=newest"
         products={newProducts}
-        color="cyan"
+        sectionColor="cyan"
       />
     </div>
   );
