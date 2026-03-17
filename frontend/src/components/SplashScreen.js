@@ -49,8 +49,8 @@ const SplashScreen = ({ onComplete }) => {
               style={{
                 filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4)) drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
               }}
-              initial={{ scale: 0.8, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
               transition={{ 
                 duration: 1,
                 ease: "easeOut"
