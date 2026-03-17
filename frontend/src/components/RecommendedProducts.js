@@ -126,86 +126,82 @@ const RecommendedProducts = () => {
         })}
       </div>
 
-      {/* Products Grid */}
+      {/* Products Horizontal Scroll */}
       {loading ? (
-        <div className="px-3 grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-gray-100 rounded-xl h-48 animate-pulse" />
-          ))}
+        <div className="px-3">
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
+            ))}
+          </div>
         </div>
       ) : products.length === 0 ? (
         <div className="px-3 text-center py-8 text-gray-500">
           <p className="text-sm">لا توجد منتجات في هذا القسم</p>
         </div>
       ) : (
-        <div className="px-3 grid grid-cols-2 gap-3">
-          {products.slice(0, 4).map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Link
-                to={`/products/${product.id}`}
-                className="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+        <div className="px-3">
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            {products.slice(0, 8).map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-36"
               >
-                {/* Image */}
-                <div className="relative aspect-square">
-                  <img
-                    src={product.images?.[0] || product.image || 'https://via.placeholder.com/200'}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+                <Link
+                  to={`/products/${product.id}`}
+                  className="block bg-white rounded-xl border-2 border-purple-100 hover:border-purple-300 overflow-hidden hover:shadow-lg transition-all"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-square">
+                    <img
+                      src={product.images?.[0] || product.image || 'https://via.placeholder.com/200'}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Discount Badge */}
+                    {product.discount_percent > 0 && (
+                      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        -{product.discount_percent}%
+                      </span>
+                    )}
+                    
+                    {/* Reason Badge */}
+                    {product.recommendation_reason && (
+                      <span className="absolute bottom-2 right-2 bg-purple-500/90 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                        {product.recommendation_reason}
+                      </span>
+                    )}
+                    
+                    {/* شارة التوصيل */}
+                    <SmallBadge product={product} badgeSettings={badgeSettings} />
+                    
+                    {/* Favorite Button */}
+                    <button className="absolute top-2 left-2 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center">
+                      <Heart size={12} className="text-gray-400" />
+                    </button>
+                  </div>
                   
-                  {/* Discount Badge */}
-                  {product.discount_percent > 0 && (
-                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      -{product.discount_percent}%
-                    </span>
-                  )}
-                  
-                  {/* Reason Badge */}
-                  {product.recommendation_reason && (
-                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-full">
-                      {product.recommendation_reason}
-                    </span>
-                  )}
-                  
-                  {/* شارة التوصيل */}
-                  <SmallBadge product={product} badgeSettings={badgeSettings} />
-                  
-                  {/* Favorite Button */}
-                  <button className="absolute top-2 left-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center">
-                    <Heart size={16} className="text-gray-400" />
-                  </button>
-                </div>
-                
-                {/* Info */}
-                <div className="p-3">
-                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-0.5">
-                    {product.name}
-                  </h3>
-                  {product.city && (
-                    <div className="flex items-center gap-1 text-gray-500 mb-1">
-                      <MapPin size={10} className="text-[#FF6B00]" />
-                      <span className="text-[10px]">{product.city}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <p className="text-orange-500 font-bold text-sm">
+                  {/* Info */}
+                  <div className="p-2">
+                    <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                    {product.city && (
+                      <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                        <MapPin size={10} className="text-purple-500" />
+                        <span className="text-[10px]">{product.city}</span>
+                      </div>
+                    )}
+                    <p className="text-purple-600 font-bold text-sm mt-1">
                       {formatPrice(product.price)} ل.س
                     </p>
-                    {product.original_price && product.original_price > product.price && (
-                      <p className="text-gray-400 text-xs line-through">
-                        {formatPrice(product.original_price)}
-                      </p>
-                    )}
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
     </div>
