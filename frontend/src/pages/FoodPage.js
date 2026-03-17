@@ -331,16 +331,28 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* شريط قسم الطعام مع المدينة */}
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-4 py-2">
-        <div className="max-w-7xl mx-auto">
+      {/* شريط قسم الطعام مع المدينة - مزخرف */}
+      <div className="relative bg-gradient-to-r from-[#FF6B00] via-[#FF7B20] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
+        {/* زخارف خلفية */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-5 text-3xl animate-bounce">🍕</div>
+          <div className="absolute bottom-0 left-10 text-2xl">🍔</div>
+          <div className="absolute top-1 left-1/4 text-xl">🌮</div>
+          <div className="absolute bottom-1 right-1/3 text-xl">🍟</div>
+          <div className="absolute top-0 left-1/2 text-lg">☕</div>
+          <div className="absolute bottom-0 right-1/4 text-lg">🧁</div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <span className="text-xl">🍕</span>
+            <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <span className="text-lg">🍕</span>
+            </div>
             <h1 className="text-base font-bold">قسم الطعام</h1>
             {/* زر تغيير المدينة */}
             <button 
               onClick={() => setShowCitySelector(true)}
-              className="mr-auto flex items-center gap-1 bg-white/20 rounded-full px-3 py-1 text-xs hover:bg-white/30 transition-colors"
+              className="mr-auto flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs hover:bg-white/30 transition-colors border border-white/30"
             >
               <MapPin size={12} />
               <span>{userCity || 'اختر مدينة'}</span>
