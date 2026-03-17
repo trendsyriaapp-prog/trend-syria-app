@@ -1,7 +1,7 @@
 // /app/frontend/src/pages/FoodStorePage.js
 // صفحة تفاصيل متجر الطعام
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -28,12 +28,23 @@ const FoodStorePage = () => {
   const [showReviews, setShowReviews] = useState(false);
   const [reviews, setReviews] = useState({ reviews: [], stats: null });
   const [priceRating, setPriceRating] = useState(null);
+  const [badgeSettings, setBadgeSettings] = useState(null);
 
   useEffect(() => {
     fetchStore();
     loadCart();
     fetchPriceRating();
+    fetchBadgeSettings();
   }, [storeId]);
+
+  const fetchBadgeSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/settings/product-badges`);
+      setBadgeSettings(res.data);
+    } catch (e) {
+      // لا مشكلة
+    }
+  };
 
   const fetchStore = async () => {
     try {
@@ -290,6 +301,7 @@ const FoodStorePage = () => {
                     onAdd={() => addToCart(product)}
                     onView={() => setSelectedProduct(product)}
                     isStoreClosed={store?.is_open === false}
+                    badgeSettings={badgeSettings}
                   />
                 ))}
               </div>
@@ -342,56 +354,110 @@ const FoodStorePage = () => {
   );
 };
 
-const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed }) => (
-  <motion.div
-    whileTap={{ scale: 0.98 }}
-    onClick={onView}
-    className={`bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer transition-shadow
-      ${isStoreClosed ? 'opacity-60' : 'hover:shadow-md'}`}
-  >
-    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-      {product.images?.[0] ? (
-        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <ShoppingBag size={24} className="text-gray-400" />
-        </div>
-      )}
-    </div>
-    <div className="flex-1 min-w-0">
-      <h3 className="font-bold text-gray-900 truncate">{product.name}</h3>
-      {product.description && (
-        <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
-      )}
-      <div className="flex items-center justify-between mt-2">
-        <div>
-          <span className="font-bold text-[#E65000]">{product.price.toLocaleString()} ل.س</span>
-          {product.original_price && (
-            <span className="text-sm text-gray-400 line-through mr-2">
-              {product.original_price.toLocaleString()}
-            </span>
-          )}
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isStoreClosed) onAdd();
-          }}
-          disabled={isStoreClosed}
-          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm
-            ${isStoreClosed 
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-              : cartQuantity > 0 
-                ? 'bg-[#FF6B00] text-white' 
-                : 'bg-orange-100 text-[#E65000]'
-            }`}
-        >
-          {cartQuantity > 0 && !isStoreClosed ? cartQuantity : <Plus size={20} />}
-        </button>
+const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badgeSettings }) => {
+  const [badgeIndex, setBadgeIndex] = React.useState(0);
+  const [activeBadge, setActiveBadge] = React.useState(null);
+
+  // تحديد الشارة المناسبة
+  React.useEffect(() => {
+    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
+      setActiveBadge(null);
+      return;
+    }
+    const { badge_types } = badgeSettings;
+    
+    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
+      setActiveBadge({ messages: badge_types.best_seller.messages || ['🔥 الأكثر مبيعاً'] });
+    } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
+      setActiveBadge({ messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة'] });
+    } else if (badge_types.free_shipping?.enabled && product.price >= (badge_types.free_shipping.threshold || 30000)) {
+      setActiveBadge({ messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني'] });
+    } else {
+      setActiveBadge(null);
+    }
+  }, [product, badgeSettings]);
+
+  // دوران الشارة
+  React.useEffect(() => {
+    if (!activeBadge || activeBadge.messages.length <= 1) return;
+    const interval = setInterval(() => {
+      setBadgeIndex((prev) => (prev + 1) % activeBadge.messages.length);
+    }, badgeSettings?.rotation_speed || 3000);
+    return () => clearInterval(interval);
+  }, [activeBadge, badgeSettings?.rotation_speed]);
+
+  const bgColors = [
+    'from-blue-500 via-blue-600 to-blue-500',
+    'from-emerald-500 via-emerald-600 to-emerald-500',
+    'from-violet-500 via-violet-600 to-violet-500',
+    'from-rose-800 via-rose-900 to-rose-800'
+  ];
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      onClick={onView}
+      className={`bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer transition-shadow
+        ${isStoreClosed ? 'opacity-60' : 'hover:shadow-md'}`}
+    >
+      <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+        {product.images?.[0] ? (
+          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingBag size={24} className="text-gray-400" />
+          </div>
+        )}
+        {/* شارة المنتج */}
+        {activeBadge && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={badgeIndex}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className={`absolute bottom-1 right-1 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
+            >
+              {activeBadge.messages[badgeIndex]}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
-    </div>
-  </motion.div>
-);
+      <div className="flex-1 min-w-0">
+        <h3 className="font-bold text-gray-900 truncate">{product.name}</h3>
+        {product.description && (
+          <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <span className="font-bold text-[#E65000]">{product.price.toLocaleString()} ل.س</span>
+            {product.original_price && (
+              <span className="text-sm text-gray-400 line-through mr-2">
+                {product.original_price.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isStoreClosed) onAdd();
+            }}
+            disabled={isStoreClosed}
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm
+              ${isStoreClosed 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                : cartQuantity > 0 
+                  ? 'bg-[#FF6B00] text-white' 
+                  : 'bg-orange-100 text-[#E65000]'
+              }`}
+          >
+            {cartQuantity > 0 && !isStoreClosed ? cartQuantity : <Plus size={20} />}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
   const [quantity, setQuantity] = useState(1);
