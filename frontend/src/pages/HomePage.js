@@ -386,7 +386,13 @@ const HomePage = () => {
                   <h2 className="text-sm font-bold text-gray-900">عروض فلاش</h2>
                 </div>
               </div>
-              <FlashCountdown endTime={shopFlashSale.end_time} color="orange" />
+              <Link 
+                to="/products?sort=flash"
+                className="text-orange-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
             </div>
             
             {/* Flash Products Horizontal Scroll */}
@@ -443,14 +449,6 @@ const HomePage = () => {
                   </motion.div>
                 ))}
               </div>
-              
-              {/* View All Arrow */}
-              <Link 
-                to="/products"
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 hover:bg-orange-50 transition-colors"
-              >
-                <ChevronLeft size={20} className="text-orange-500" />
-              </Link>
             </div>
           </div>
         </section>

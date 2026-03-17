@@ -140,7 +140,7 @@ const ProductsPage = () => {
   const sort = searchParams.get('sort') || 'newest';
   
   // التحقق إذا كانت صفحة قسم مخصص (بدون بانرات وأقسام إضافية)
-  const isSpecialSection = ['trending', 'deals'].includes(sort);
+  const isSpecialSection = ['trending', 'deals', 'newest', 'popular', 'flash'].includes(sort);
 
   // Reset when filters change
   useEffect(() => {
@@ -298,6 +298,7 @@ const ProductsPage = () => {
     { value: 'popular', label: 'الأكثر مبيعاً' },
     { value: 'trending', label: 'رائج الآن' },
     { value: 'deals', label: 'عروض وخصومات' },
+    { value: 'flash', label: 'عروض فلاش' },
     { value: 'price_low', label: 'السعر: من الأقل' },
     { value: 'price_high', label: 'السعر: من الأعلى' }
   ];
@@ -441,7 +442,13 @@ const ProductsPage = () => {
                   <p className="text-[10px] text-gray-500">{flashSale.name}</p>
                 </div>
               </div>
-              <FlashCountdown endTime={flashSale.end_time} />
+              <Link 
+                to="/products?sort=flash"
+                className="text-orange-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
             </div>
             
             <div className="relative">
@@ -656,6 +663,7 @@ const ProductsPage = () => {
                 : sort === 'deals' ? 'عروض وخصومات 🏷️'
                 : sort === 'newest' ? 'منتجات جديدة ✨'
                 : sort === 'popular' ? 'الأكثر مبيعاً 🛒'
+                : sort === 'flash' ? 'عروض فلاش ⚡'
                 : 'جميع المنتجات'}
             </h1>
             <p className="text-gray-500 text-sm">

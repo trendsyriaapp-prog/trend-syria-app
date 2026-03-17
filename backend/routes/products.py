@@ -168,7 +168,8 @@ async def get_products(
         "price_high": [("price", -1)],
         "popular": [("sales_count", -1), ("rating", -1)],
         "trending": [("views", -1), ("sales_count", -1)],
-        "deals": [("discount_percentage", -1), ("price", 1)]
+        "deals": [("discount_percentage", -1), ("price", 1)],
+        "flash": [("created_at", -1)]
     }
     sort_query = sort_options.get(sort, [("created_at", -1)])
     
@@ -180,6 +181,10 @@ async def get_products(
             {"original_price": {"$exists": True, "$gt": 0}},
             {"discount_percentage": {"$exists": True, "$gt": 0}}
         ]
+    elif sort == "flash":
+        query["is_flash_sale"] = True  # منتجات الفلاش فقط
+    elif sort == "popular":
+        query["sales_count"] = {"$gte": 1}  # المنتجات الأكثر مبيعاً
     
     # Projection - only essential fields for listing
     projection = {
