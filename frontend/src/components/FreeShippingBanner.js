@@ -75,7 +75,7 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
         y: { duration: 0.3 },
         background: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
       }}
-      className="relative py-1.5 text-white overflow-hidden"
+      className="relative py-2 text-white overflow-hidden"
       data-testid="free-shipping-banner"
     >
       {/* خلفية مزخرفة */}
