@@ -386,6 +386,11 @@ const FoodPage = () => {
         </div>
       </div>
 
+      {/* 🎁 بانر الشحن المجاني الشامل - خارج الحاوية ليكون بعرض الشاشة */}
+      {!loading && globalFreeShipping && (
+        <FreeShippingBanner promo={globalFreeShipping} variant="food" />
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-4">
         {loading ? (
           <div className="flex justify-center py-12">
@@ -393,11 +398,6 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
-            {/* 🎁 بانر الشحن المجاني الشامل */}
-            {globalFreeShipping && (
-              <FreeShippingBanner promo={globalFreeShipping} variant="food" />
-            )}
-
             {/* Flash Sales Banner */}
             {flashSales.length > 0 && (
               <section className="mb-4">
