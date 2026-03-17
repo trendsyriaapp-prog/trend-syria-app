@@ -370,6 +370,8 @@ const HomePage = () => {
                           <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
                             إعلان
                           </div>
+                          {/* شارة التوصيل */}
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
                         </div>
                         <div className="p-2">
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
@@ -441,6 +443,8 @@ const HomePage = () => {
                           <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
                             -{product.flash_discount}%
                           </div>
+                          {/* شارة التوصيل */}
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
                         </div>
                         <div className="p-2">
                           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
@@ -662,6 +666,63 @@ const FlashCountdown = ({ endTime, color = 'orange' }) => {
         <span>:</span>
         <span className="bg-white/20 px-1 rounded">{String(timeLeft.seconds).padStart(2, '0')}</span>
       </div>
+    </div>
+  );
+};
+
+// مكون الشارة الصغيرة للبطاقات المصغرة
+const SmallProductBadge = ({ product, badgeSettings }) => {
+  const [badgeText, setBadgeText] = useState(null);
+  const [colorIndex, setColorIndex] = useState(0);
+  
+  const bgColors = [
+    'from-blue-500 to-blue-600',
+    'from-emerald-500 to-emerald-600',
+    'from-violet-500 to-violet-600',
+    'from-rose-600 to-rose-700'
+  ];
+
+  useEffect(() => {
+    if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
+      setBadgeText(null);
+      return;
+    }
+    
+    const { badge_types } = badgeSettings;
+    const price = product.flash_price || product.price || 0;
+    
+    // الأولوية: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
+    if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
+      setBadgeText('🔥 الأكثر مبيعاً');
+      setColorIndex(3);
+    } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
+      setBadgeText('👁️ رائج');
+      setColorIndex(2);
+    } else if (badge_types.free_shipping?.enabled) {
+      const threshold = badge_types.free_shipping.threshold || 30000;
+      
+      if (price >= threshold) {
+        setBadgeText('🚚 شحن مجاني');
+        setColorIndex(1);
+      } else {
+        const unitsNeeded = Math.ceil(threshold / price);
+        if (unitsNeeded >= 2 && unitsNeeded <= 3) {
+          setBadgeText(`✨ ${unitsNeeded} = شحن مجاني`);
+          setColorIndex(0);
+        } else {
+          setBadgeText(null);
+        }
+      }
+    } else {
+      setBadgeText(null);
+    }
+  }, [product, badgeSettings]);
+
+  if (!badgeText) return null;
+
+  return (
+    <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[colorIndex]} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
+      {badgeText}
     </div>
   );
 };
