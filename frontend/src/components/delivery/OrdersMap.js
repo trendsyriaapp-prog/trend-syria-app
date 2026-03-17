@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, X, Navigation, Phone, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
+import { Map, X, Navigation, Phone, PhoneOff, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
@@ -2563,6 +2563,29 @@ const OrdersMap = ({
                           اتصل
                         </a>
                       )}
+                      
+                      {/* زر لم يرد - طلب مساعدة الموظف */}
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await axios.post(`${API}/api/call-requests`, {
+                              order_id: selectedOrderForRoute.id,
+                              order_type: selectedOrderForRoute.store_id ? 'food' : 'shopping',
+                              reason: 'العميل لا يرد على الاتصال'
+                            }, {
+                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                            });
+                            alert('✅ تم إرسال طلب للموظف. سيتواصل مع العميل ويبلغك.');
+                          } catch (err) {
+                            alert(err.response?.data?.detail || 'حدث خطأ');
+                          }
+                        }}
+                        className="py-3 px-4 bg-orange-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                        title="طلب مساعدة الموظف"
+                      >
+                        <PhoneOff size={16} />
+                        لم يرد
+                      </button>
                       
                       {/* زر بدء الملاحة */}
                       <button

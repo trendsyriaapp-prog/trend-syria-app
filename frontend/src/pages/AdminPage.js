@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -52,6 +52,7 @@ import ImageSettingsTab from '../components/admin/ImageSettingsTab';
 import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
 import ProductBadgesTab from '../components/admin/ProductBadgesTab';
 import CategoriesTab from '../components/admin/CategoriesTab';
+import CallRequestsTab from '../components/admin/CallRequestsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -336,7 +337,8 @@ const AdminDashboardPage = () => {
     'ticker-messages': 'شريط العروض المتحرك',
     'image-settings': 'إعدادات الصور',
     'product-badges': 'شارات المنتجات',
-    'categories': 'إدارة الفئات'
+    'categories': 'إدارة الفئات',
+    'call-requests': 'طلبات الاتصال'
   };
 
   return (
@@ -497,6 +499,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'categories' && user.user_type === 'admin' && (
               <CategoriesTab />
             )}
+            {activeTab === 'call-requests' && (
+              <CallRequestsTab />
+            )}
           </>
         ) : (
           <>
@@ -592,6 +597,7 @@ const AdminDashboardPage = () => {
                     { icon: AlertTriangle, label: 'المخالفات', tab: 'violations' },
                     { icon: DollarSign, label: 'التحديات', tab: 'challenges' },
                     { icon: AlertTriangle, label: 'طوارئ', tab: 'emergency-help', urgent: true },
+                    { icon: Phone, label: 'طلبات اتصال', tab: 'call-requests', urgent: true },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors ${item.urgent ? 'bg-red-50' : ''}`}>
                       <item.icon size={16} className={item.urgent ? 'text-red-500' : 'text-cyan-600'} />
