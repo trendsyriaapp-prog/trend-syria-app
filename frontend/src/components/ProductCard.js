@@ -306,15 +306,15 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
             </motion.div>
           )}
 
-          {/* شارة المنتج المتغيرة الألوان */}
+          {/* شارة المنتج المتغيرة الألوان - أسفل يسار مع حركة slide-up */}
           {activeBadge && (
-            <div className="absolute bottom-2 right-2 z-20">
+            <div className="absolute bottom-2 left-2 z-20 overflow-hidden h-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={badgeIndex}
-                  initial={{ opacity: 0, y: -8, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                  initial={{ y: 24, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -24, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className={`text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${
                     ['from-blue-500 via-blue-600 to-blue-500',

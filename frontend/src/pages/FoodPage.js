@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
@@ -655,16 +655,22 @@ const FoodProductCard = ({ product, badgeSettings }) => {
             )}
           </div>
 
-          {/* شارة التوصيل/المبيعات */}
+          {/* شارة التوصيل/المبيعات - حركة slide-up */}
           {activeBadge && (
-            <motion.div
-              key={badgeIndex}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`absolute bottom-1 left-1 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
-            >
-              {activeBadge.messages[badgeIndex]}
-            </motion.div>
+            <div className="absolute bottom-1 left-1 overflow-hidden h-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={badgeIndex}
+                  initial={{ y: 24, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -24, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
+                >
+                  {activeBadge.messages[badgeIndex]}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           )}
           
           {/* Favorite */}

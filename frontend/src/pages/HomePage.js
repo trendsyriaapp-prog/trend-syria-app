@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
   ArrowLeft, Smartphone, Shirt, 
@@ -595,10 +595,11 @@ const FlashCountdown = ({ endTime, color = 'orange' }) => {
   );
 };
 
-// مكون الشارة الصغيرة للبطاقات المصغرة
+// مكون الشارة الصغيرة للبطاقات المصغرة - مع حركة slide-up
 const SmallProductBadge = ({ product, badgeSettings }) => {
   const [badgeText, setBadgeText] = useState(null);
   const [colorIndex, setColorIndex] = useState(0);
+  const [badgeMessages, setBadgeMessages] = useState([]);
   
   const bgColors = [
     'from-blue-500 to-blue-600',
@@ -610,6 +611,7 @@ const SmallProductBadge = ({ product, badgeSettings }) => {
   useEffect(() => {
     if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
       setBadgeText(null);
+      setBadgeMessages([]);
       return;
     }
     
@@ -618,36 +620,70 @@ const SmallProductBadge = ({ product, badgeSettings }) => {
     
     // الأولوية: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
     if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
-      setBadgeText('🔥 الأكثر مبيعاً');
+      setBadgeMessages(['🔥 الأكثر مبيعاً']);
       setColorIndex(3);
     } else if (badge_types.most_viewed?.enabled && (product.views || 0) >= (badge_types.most_viewed.min_views || 100)) {
-      setBadgeText('👁️ رائج');
+      setBadgeMessages(['👁️ رائج']);
       setColorIndex(2);
     } else if (badge_types.free_shipping?.enabled) {
       const threshold = badge_types.free_shipping.threshold || 30000;
       
       if (price >= threshold) {
-        setBadgeText('🚚 شحن مجاني');
+        setBadgeMessages(['🚚 شحن مجاني']);
         setColorIndex(1);
       } else {
         const unitsNeeded = Math.ceil(threshold / price);
         if (unitsNeeded >= 2 && unitsNeeded <= 3) {
-          setBadgeText(`✨ ${unitsNeeded} = شحن مجاني`);
+          setBadgeMessages([
+            `✨ ${unitsNeeded} = شحن مجاني`,
+            `🛒 ${unitsNeeded} قطع = توصيل`,
+            `📦 وفّر بـ ${unitsNeeded} قطع`
+          ]);
           setColorIndex(0);
         } else {
-          setBadgeText(null);
+          setBadgeMessages([]);
         }
       }
     } else {
-      setBadgeText(null);
+      setBadgeMessages([]);
     }
   }, [product, badgeSettings]);
+
+  // دوران الشارة والألوان
+  useEffect(() => {
+    if (badgeMessages.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setColorIndex((prev) => (prev + 1) % bgColors.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [badgeMessages.length]);
+
+  // تحديث النص المعروض
+  useEffect(() => {
+    if (badgeMessages.length > 0) {
+      setBadgeText(badgeMessages[colorIndex % badgeMessages.length]);
+    } else {
+      setBadgeText(null);
+    }
+  }, [colorIndex, badgeMessages]);
 
   if (!badgeText) return null;
 
   return (
-    <div className={`absolute bottom-1 left-1 bg-gradient-to-r ${bgColors[colorIndex]} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}>
-      {badgeText}
+    <div className="absolute bottom-1 left-1 overflow-hidden h-5">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={colorIndex}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`bg-gradient-to-r ${bgColors[colorIndex % bgColors.length]} text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md`}
+        >
+          {badgeText}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
