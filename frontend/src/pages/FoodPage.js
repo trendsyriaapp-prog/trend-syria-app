@@ -331,8 +331,26 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* شريط قسم الطعام مع المدينة - مزخرف */}
-      <div className="relative bg-gradient-to-r from-[#FF6B00] via-[#FF7B20] to-[#FF8C00] text-white px-4 py-3 overflow-hidden">
+      {/* شريط قسم الطعام مع المدينة - مزخرف مع وميض */}
+      <motion.div 
+        className="relative text-white px-4 py-3 overflow-hidden"
+        animate={{
+          background: [
+            'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+            'linear-gradient(to right, #E91E63, #F06292, #FF80AB)',
+            'linear-gradient(to right, #9C27B0, #BA68C8, #CE93D8)',
+            'linear-gradient(to right, #2196F3, #64B5F6, #90CAF9)',
+            'linear-gradient(to right, #4CAF50, #81C784, #A5D6A7)',
+            'linear-gradient(to right, #FF5722, #FF8A65, #FFAB91)',
+            'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+          ]
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: 'easeInOut'
+        }}
+      >
         {/* زخارف خلفية */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 right-5 text-3xl animate-bounce">🍕</div>
@@ -345,9 +363,13 @@ const FoodPage = () => {
         
         <div className="relative max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+            <motion.div 
+              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
               <span className="text-lg">🍕</span>
-            </div>
+            </motion.div>
             <h1 className="text-base font-bold">قسم الطعام</h1>
             {/* زر تغيير المدينة */}
             <button 
@@ -359,7 +381,7 @@ const FoodPage = () => {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Categories with Food Images */}
       {/* الفئات */}
