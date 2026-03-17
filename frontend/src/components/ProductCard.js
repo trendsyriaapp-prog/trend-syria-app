@@ -51,11 +51,29 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
         type: 'most_viewed',
         messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة']
       });
-    } else if (badge_types.free_shipping?.enabled && product.price >= (badge_types.free_shipping.threshold || 50000)) {
-      setActiveBadge({
-        type: 'free_shipping',
-        messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني']
-      });
+    } else if (badge_types.free_shipping?.enabled) {
+      const threshold = badge_types.free_shipping.threshold || 50000;
+      
+      if (product.price >= threshold) {
+        // السعر أعلى من الحد - شحن مجاني مباشر
+        setActiveBadge({
+          type: 'free_shipping',
+          messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني']
+        });
+      } else {
+        // حساب عدد القطع المطلوبة للشحن المجاني
+        const neededQty = Math.ceil(threshold / product.price);
+        
+        if (neededQty <= 3) {
+          // إظهار شارة "اشترِ X = شحن مجاني"
+          setActiveBadge({
+            type: 'free_shipping_qty',
+            messages: [`🛒 اشترِ ${neededQty} = شحن مجاني`, `📦 ${neededQty} قطع = توصيل مجاني`, `✨ وفّر التوصيل بـ ${neededQty} قطع`]
+          });
+        } else {
+          setActiveBadge(null);
+        }
+      }
     } else {
       setActiveBadge(null);
     }
