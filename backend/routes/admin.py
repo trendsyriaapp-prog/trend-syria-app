@@ -726,6 +726,9 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
         if not isinstance(rate, (int, float)) or rate < 0 or rate > 1:
             raise HTTPException(status_code=400, detail=f"نسبة غير صحيحة للفئة {category}")
     
+    # جلب النسب القديمة للمقارنة
+    old_rates = await get_commission_rates_from_db()
+    
     await db.commission_rates.update_one(
         {"id": "main"},
         {
@@ -738,7 +741,48 @@ async def update_commission_rates(rates: dict, user: dict = Depends(get_current_
         upsert=True
     )
     
-    return {"message": "تم تحديث نسب العمولات بنجاح", "rates": rates}
+    # إرسال إشعارات للبائعين عند تغيير العمولة
+    changed_categories = []
+    for category, new_rate in rates.items():
+        old_rate = old_rates.get(category, 0)
+        if old_rate != new_rate:
+            changed_categories.append({
+                "category": category,
+                "old_rate": old_rate,
+                "new_rate": new_rate
+            })
+    
+    if changed_categories:
+        # جلب جميع البائعين (عاديين + طعام)
+        sellers = await db.users.find(
+            {"user_type": {"$in": ["seller", "food_seller"]}}, 
+            {"_id": 0, "id": 1, "name": 1}
+        ).to_list(None)
+        
+        for change in changed_categories:
+            category = change["category"]
+            old_percentage = f"{change['old_rate'] * 100:.0f}%"
+            new_percentage = f"{change['new_rate'] * 100:.0f}%"
+            
+            # إنشاء إشعار لكل بائع
+            for seller in sellers:
+                notification = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": seller["id"],
+                    "type": "commission_update",
+                    "title": "📢 تحديث نسبة العمولة",
+                    "message": f"تم تغيير نسبة العمولة لفئة '{category}' من {old_percentage} إلى {new_percentage}",
+                    "data": {
+                        "category": category,
+                        "old_rate": change["old_rate"],
+                        "new_rate": change["new_rate"]
+                    },
+                    "read": False,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.notifications.insert_one(notification)
+    
+    return {"message": "تم تحديث نسب العمولات بنجاح", "rates": rates, "notifications_sent": len(changed_categories) > 0}
 
 @router.post("/commissions/rates/category")
 async def add_commission_category(category: str, rate: float, user: dict = Depends(get_current_user)):
@@ -763,6 +807,24 @@ async def add_commission_category(category: str, rate: float, user: dict = Depen
         upsert=True
     )
     
+    # إرسال إشعار لجميع البائعين (عاديين + طعام)
+    sellers = await db.users.find(
+        {"user_type": {"$in": ["seller", "food_seller"]}}, 
+        {"_id": 0, "id": 1}
+    ).to_list(None)
+    for seller in sellers:
+        notification = {
+            "id": str(uuid.uuid4()),
+            "user_id": seller["id"],
+            "type": "commission_update",
+            "title": "📢 فئة عمولة جديدة",
+            "message": f"تم إضافة فئة '{category}' بنسبة عمولة {rate * 100:.0f}%",
+            "data": {"category": category, "rate": rate},
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.notifications.insert_one(notification)
+    
     return {"message": f"تم إضافة فئة {category} بنسبة {rate * 100:.0f}%"}
 
 @router.delete("/commissions/rates/category/{category}")
@@ -774,6 +836,7 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
         raise HTTPException(status_code=400, detail="لا يمكن حذف الفئة الافتراضية")
     
     current_rates = await get_commission_rates_from_db()
+    old_rate = current_rates.get(category, 0)
     if category in current_rates:
         del current_rates[category]
     
@@ -788,6 +851,24 @@ async def delete_commission_category(category: str, user: dict = Depends(get_cur
         },
         upsert=True
     )
+    
+    # إرسال إشعار لجميع البائعين (عاديين + طعام)
+    sellers = await db.users.find(
+        {"user_type": {"$in": ["seller", "food_seller"]}}, 
+        {"_id": 0, "id": 1}
+    ).to_list(None)
+    for seller in sellers:
+        notification = {
+            "id": str(uuid.uuid4()),
+            "user_id": seller["id"],
+            "type": "commission_update",
+            "title": "📢 حذف فئة عمولة",
+            "message": f"تم حذف فئة '{category}' (كانت {old_rate * 100:.0f}%) - ستُطبق العمولة الافتراضية على منتجات هذه الفئة",
+            "data": {"category": category, "old_rate": old_rate},
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.notifications.insert_one(notification)
     
     return {"message": f"تم حذف فئة {category}"}
 
