@@ -8,11 +8,21 @@ import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Store, Heart, Sparkles, Cake,
-  Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X
+  Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X,
+  ShoppingBasket
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// خريطة الأيقونات الديناميكية
+const ICON_MAP = {
+  UtensilsCrossed, ShoppingCart, Apple, Store, Cake, Coffee, 
+  Croissant, GlassWater, ShoppingBasket, Package, Scale, Utensils, IceCream
+};
+
+// دالة للحصول على الأيقونة
+const getIcon = (iconName) => ICON_MAP[iconName] || Package;
 
 // إعدادات كل قسم - ألوان وأيقونات ووحدات القياس
 const CATEGORY_CONFIG = {
@@ -134,6 +144,27 @@ const FoodPage = () => {
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [badgeSettings, setBadgeSettings] = useState(null);
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+
+  // جلب الفئات الديناميكية من الـ API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(`${API}/categories/food`);
+        setDynamicCategories(res.data);
+      } catch (err) {
+        console.log('Using default categories');
+        // استخدام الفئات الافتراضية في حالة الخطأ
+        setDynamicCategories(Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
+          id,
+          name: config.name,
+          icon: config.icon?.name || 'UtensilsCrossed',
+          color: config.color?.replace('bg-', '#') || '#FF6B00'
+        })));
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // دالة تغيير الفئة مع تحديث URL
   const handleCategoryChange = (categoryId) => {
@@ -334,20 +365,23 @@ const FoodPage = () => {
               <Store size={16} />
               <span className="text-sm font-medium">الكل</span>
             </button>
-            {foodCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
-                  activeCategory === cat.id
-                    ? 'bg-[#FF6B00] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <cat.icon size={16} />
-                <span className="text-sm font-medium">{cat.name}</span>
-              </button>
-            ))}
+            {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories).map((cat) => {
+              const IconComp = typeof cat.icon === 'string' ? getIcon(cat.icon) : cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                    activeCategory === cat.id
+                      ? 'bg-[#FF6B00] text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <IconComp size={16} />
+                  <span className="text-sm font-medium">{cat.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -51,6 +51,7 @@ import TickerMessagesTab from '../components/admin/TickerMessagesTab';
 import ImageSettingsTab from '../components/admin/ImageSettingsTab';
 import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
 import ProductBadgesTab from '../components/admin/ProductBadgesTab';
+import CategoriesTab from '../components/admin/CategoriesTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -334,7 +335,8 @@ const AdminDashboardPage = () => {
     'problem-solver': 'حل المشاكل',
     'ticker-messages': 'شريط العروض المتحرك',
     'image-settings': 'إعدادات الصور',
-    'product-badges': 'شارات المنتجات'
+    'product-badges': 'شارات المنتجات',
+    'categories': 'إدارة الفئات'
   };
 
   return (
@@ -491,6 +493,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'product-badges' && user.user_type === 'admin' && (
               <ProductBadgesTab />
+            )}
+            {activeTab === 'categories' && user.user_type === 'admin' && (
+              <CategoriesTab />
             )}
           </>
         ) : (
@@ -661,6 +666,7 @@ const AdminDashboardPage = () => {
                       { icon: Settings, label: 'الأقسام', tab: 'platform-settings' },
                       { icon: Camera, label: 'الصور', tab: 'image-settings' },
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },
+                      { icon: Package, label: 'الفئات', tab: 'categories' },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors">
                         <item.icon size={16} className="text-gray-600" />

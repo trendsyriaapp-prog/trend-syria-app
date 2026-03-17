@@ -83,6 +83,7 @@ from routes.price_reports import router as price_reports_router
 from routes.websocket import router as websocket_router
 from routes.chat import router as chat_router
 from routes.support import router as support_router
+from routes.categories import router as categories_router
 from routes.activity_log import router as activity_log_router
 from routes.reports_export import router as reports_export_router
 from routes.image_templates import router as image_templates_router
@@ -169,6 +170,7 @@ api_router.include_router(support_router)
 api_router.include_router(activity_log_router)
 api_router.include_router(reports_export_router)
 api_router.include_router(image_templates_router)
+api_router.include_router(categories_router)
 
 # ============== Categories ==============
 
