@@ -331,22 +331,19 @@ const FoodPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* شريط قسم الطعام مع المدينة - مزخرف مع وميض */}
+      {/* شريط قسم الطعام مع المدينة - وميض برتقالي */}
       <motion.div 
         className="relative text-white px-4 py-3 overflow-hidden"
         animate={{
           background: [
-            'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
-            'linear-gradient(to right, #E91E63, #F06292, #FF80AB)',
-            'linear-gradient(to right, #9C27B0, #BA68C8, #CE93D8)',
-            'linear-gradient(to right, #2196F3, #64B5F6, #90CAF9)',
-            'linear-gradient(to right, #4CAF50, #81C784, #A5D6A7)',
-            'linear-gradient(to right, #FF5722, #FF8A65, #FFAB91)',
-            'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+            'linear-gradient(to right, #FF6B00, #FF8C00, #FFA033)',
+            'linear-gradient(to right, #FF8C00, #FFA033, #FFB347)',
+            'linear-gradient(to right, #FFA033, #FF8C00, #FF6B00)',
+            'linear-gradient(to right, #FF6B00, #FF8C00, #FFA033)',
           ]
         }}
         transition={{
-          duration: 6,
+          duration: 2,
           repeat: Infinity,
           ease: 'easeInOut'
         }}
