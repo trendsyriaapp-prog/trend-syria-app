@@ -1,5 +1,5 @@
 // /app/frontend/src/components/RecommendedProducts.js
-// قسم التوصيات - رائج الآن + عروض
+// أقسام التوصيات - رائج الآن + عروض وخصومات + منتجات جديدة
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -12,13 +12,16 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const RecommendedProducts = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [dealsProducts, setDealsProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [loadingDeals, setLoadingDeals] = useState(true);
+  const [loadingNew, setLoadingNew] = useState(true);
   const [badgeSettings, setBadgeSettings] = useState(null);
 
   useEffect(() => {
     fetchTrending();
     fetchDeals();
+    fetchNewProducts();
     fetchBadgeSettings();
   }, []);
 
@@ -57,6 +60,19 @@ const RecommendedProducts = () => {
     }
   };
 
+  const fetchNewProducts = async () => {
+    setLoadingNew(true);
+    try {
+      const res = await axios.get(`${API}/api/recommendations/new-products?limit=8`);
+      setNewProducts(res.data);
+    } catch (error) {
+      console.error('Error fetching new products:', error);
+      setNewProducts([]);
+    } finally {
+      setLoadingNew(false);
+    }
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price);
   };
@@ -66,8 +82,9 @@ const RecommendedProducts = () => {
     const colorClasses = {
       purple: { border: 'border-purple-100 hover:border-purple-300', text: 'text-purple-600', icon: 'text-purple-500', badge: 'bg-purple-500/90' },
       green: { border: 'border-green-100 hover:border-green-300', text: 'text-green-600', icon: 'text-green-500', badge: 'bg-green-500/90' },
+      cyan: { border: 'border-cyan-100 hover:border-cyan-300', text: 'text-cyan-600', icon: 'text-cyan-500', badge: 'bg-cyan-500/90' },
     };
-    const colors = colorClasses[color];
+    const colors = colorClasses[color] || colorClasses.purple;
 
     return (
       <motion.div
@@ -122,75 +139,81 @@ const RecommendedProducts = () => {
     );
   };
 
-  return (
-    <div className="py-2 space-y-4">
-      {/* 1. قسم رائج الآن */}
+  // مكون القسم
+  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, loading, color }) => {
+    if (!loading && products.length === 0) return null;
+
+    return (
       <section>
         <div className="px-3 flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="p-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-              <TrendingUp size={14} className="text-white" />
+            <div className={`p-1 bg-gradient-to-r ${iconGradient} rounded-lg`}>
+              <Icon size={14} className="text-white" />
             </div>
-            <h2 className="text-sm font-bold text-gray-900">رائج الآن</h2>
+            <h2 className="text-sm font-bold text-gray-900">{title}</h2>
           </div>
-          <Link to="/products?sort=trending" className="text-purple-500 flex items-center gap-1 text-xs font-medium">
+          <Link to={linkTo} className={`${linkColor} flex items-center gap-1 text-xs font-medium`}>
             عرض الكل
             <ChevronLeft size={14} />
           </Link>
         </div>
 
         <div className="px-3">
-          {loadingTrending ? (
+          {loading ? (
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
               ))}
             </div>
-          ) : trendingProducts.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">لا توجد منتجات رائجة</p>
           ) : (
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-              {trendingProducts.map((product) => (
-                <ProductCard key={product.id} product={product} color="purple" />
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} color={color} />
               ))}
             </div>
           )}
         </div>
       </section>
+    );
+  };
 
-      {/* 2. قسم العروض */}
-      {(loadingDeals || dealsProducts.length > 0) && (
-        <section>
-          <div className="px-3 flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                <Tag size={14} className="text-white" />
-              </div>
-              <h2 className="text-sm font-bold text-gray-900">عروض وخصومات</h2>
-            </div>
-            <Link to="/products?sort=deals" className="text-green-500 flex items-center gap-1 text-xs font-medium">
-              عرض الكل
-              <ChevronLeft size={14} />
-            </Link>
-          </div>
+  return (
+    <div className="py-2 space-y-4">
+      {/* 1. قسم رائج الآن */}
+      <Section
+        title="رائج الآن"
+        icon={TrendingUp}
+        iconGradient="from-purple-500 to-pink-500"
+        linkColor="text-purple-500"
+        linkTo="/products?sort=trending"
+        products={trendingProducts}
+        loading={loadingTrending}
+        color="purple"
+      />
 
-          <div className="px-3">
-            {loadingDeals ? (
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {dealsProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} color="green" />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {/* 2. قسم عروض وخصومات */}
+      <Section
+        title="عروض وخصومات"
+        icon={Tag}
+        iconGradient="from-green-500 to-emerald-500"
+        linkColor="text-green-500"
+        linkTo="/products?sort=deals"
+        products={dealsProducts}
+        loading={loadingDeals}
+        color="green"
+      />
+
+      {/* 3. قسم منتجات جديدة */}
+      <Section
+        title="منتجات جديدة"
+        icon={Sparkles}
+        iconGradient="from-cyan-500 to-blue-500"
+        linkColor="text-cyan-500"
+        linkTo="/products?sort=newest"
+        products={newProducts}
+        loading={loadingNew}
+        color="cyan"
+      />
     </div>
   );
 };

@@ -209,6 +209,35 @@ async def get_best_deals(limit: int = 10):
     
     return products
 
+
+@router.get("/new-products")
+async def get_new_products(limit: int = 10):
+    """المنتجات الجديدة"""
+    
+    # المنتجات المضافة في آخر 7 أيام
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    
+    products = await db.products.find(
+        {
+            "is_approved": True,
+            "created_at": {"$gte": week_ago}
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # إذا لم توجد منتجات في آخر أسبوع، نجلب آخر المنتجات المضافة
+    if not products:
+        products = await db.products.find(
+            {"is_approved": True},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    for p in products:
+        p["recommendation_reason"] = "جديد ✨"
+    
+    return products
+
+
 @router.post("/track-view/{product_id}")
 async def track_product_view(product_id: str, user: dict = Depends(get_current_user)):
     """تتبع مشاهدة المنتج (لتحسين التوصيات)"""
