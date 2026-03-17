@@ -228,11 +228,26 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* بانر الطعام الثابت */}
+      {/* بانر الطعام الثابت مع تأثير النبض */}
       {foodEnabled && (
         <div className="h-14 md:h-16">
           <Link to="/food" className="block h-full">
-            <div className="relative h-full bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFB347]">
+            <motion.div 
+              className="relative h-full"
+              animate={{
+                background: [
+                  'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+                  'linear-gradient(to right, #FF4500, #FF6B00, #FF8C00)',
+                  'linear-gradient(to right, #E65000, #FF4500, #FF6B00)',
+                  'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+                ]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }}
+            >
               {/* خلفية مزخرفة */}
               <div className="absolute inset-0 opacity-15">
                 <div className="absolute top-1 right-8 text-2xl">🍕</div>
@@ -244,20 +259,28 @@ const HomePage = () => {
               <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
                 <div className="text-white">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium">
+                    <motion.span 
+                      className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
                       جديد ✨
-                    </span>
+                    </motion.span>
                   </div>
                   <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
                   <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
                 </div>
                 
-                {/* زر الطلب */}
-                <div className="bg-white text-[#FF6B00] px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md">
+                {/* زر الطلب مع نبض */}
+                <motion.div 
+                  className="bg-white text-[#FF6B00] px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
                   اطلب الآن
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </Link>
         </div>
       )}
