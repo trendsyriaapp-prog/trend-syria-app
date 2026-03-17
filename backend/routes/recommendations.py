@@ -136,7 +136,21 @@ async def get_similar_products(product_id: str, limit: int = 6):
 async def get_trending_products(limit: int = 10):
     """المنتجات الرائجة حالياً"""
     
-    # المنتجات الأكثر مشاهدة في آخر 7 أيام
+    # أولاً: البحث عن المنتجات ذات أعلى views مباشرة
+    products = await db.products.find(
+        {
+            "is_approved": True,
+            "views": {"$gt": 0}
+        },
+        {"_id": 0}
+    ).sort("views", -1).limit(limit).to_list(limit)
+    
+    if products:
+        for p in products:
+            p["recommendation_reason"] = "رائج الآن 🔥"
+        return products
+    
+    # Fallback: المنتجات الأكثر مشاهدة من product_views
     week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     
     pipeline = [
@@ -165,6 +179,7 @@ async def get_trending_products(limit: int = 10):
 async def get_best_deals(limit: int = 10):
     """أفضل العروض والخصومات"""
     
+    # البحث عن منتجات بخصم
     products = await db.products.find(
         {
             "is_approved": True,
@@ -173,8 +188,24 @@ async def get_best_deals(limit: int = 10):
         {"_id": 0}
     ).sort("discount_percent", -1).limit(limit).to_list(limit)
     
+    if products:
+        for p in products:
+            p["recommendation_reason"] = f"خصم {p.get('discount_percent', 0)}%"
+        return products
+    
+    # Fallback: المنتجات التي لها original_price أعلى من price
+    products = await db.products.find(
+        {
+            "is_approved": True,
+            "$expr": {"$gt": ["$original_price", "$price"]}
+        },
+        {"_id": 0}
+    ).limit(limit).to_list(limit)
+    
     for p in products:
-        p["recommendation_reason"] = f"خصم {p.get('discount_percent', 0)}%"
+        if p.get("original_price") and p.get("price"):
+            discount = int((1 - p["price"] / p["original_price"]) * 100)
+            p["recommendation_reason"] = f"خصم {discount}%"
     
     return products
 
