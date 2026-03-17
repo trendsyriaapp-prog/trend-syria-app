@@ -1,5 +1,5 @@
 // /app/frontend/src/hooks/usePushNotifications.js
-// Hook لإدارة إشعارات Push
+// Hook لإدارة إشعارات Push - متوافق مع جميع المكونات
 
 import { useState, useEffect, useCallback } from 'react';
 import { getFCMToken, setupForegroundHandler } from '../firebase';
@@ -8,13 +8,15 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const usePushNotifications = () => {
+const usePushNotifications = (userType = null) => {
   const { token: authToken, user } = useAuth();
   const [fcmToken, setFcmToken] = useState(null);
   const [permission, setPermission] = useState('default');
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // للتوافق مع المكونات القديمة
   const [error, setError] = useState(null);
   const [isSupported, setIsSupported] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   // التحقق من دعم الإشعارات
   useEffect(() => {
@@ -34,6 +36,7 @@ const usePushNotifications = () => {
 
     if (checkSupport()) {
       setPermission(Notification.permission);
+      setIsSubscribed(Notification.permission === 'granted');
     }
   }, []);
 
@@ -55,6 +58,7 @@ const usePushNotifications = () => {
     if (!isSupported) return null;
     
     setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -65,6 +69,7 @@ const usePushNotifications = () => {
       if (permissionResult !== 'granted') {
         setError('تم رفض إذن الإشعارات');
         setLoading(false);
+        setIsLoading(false);
         return null;
       }
 
@@ -73,6 +78,7 @@ const usePushNotifications = () => {
       
       if (token) {
         setFcmToken(token);
+        setIsSubscribed(true);
         
         // تسجيل Token في الخادم
         if (authToken) {
@@ -91,14 +97,21 @@ const usePushNotifications = () => {
       }
 
       setLoading(false);
+      setIsLoading(false);
       return token;
     } catch (err) {
       console.error('Error requesting notification permission:', err);
       setError(err.message);
       setLoading(false);
+      setIsLoading(false);
       return null;
     }
   }, [isSupported, authToken]);
+
+  // دالة subscribe للتوافق مع المكونات القديمة
+  const subscribe = useCallback(async () => {
+    return await requestPermission();
+  }, [requestPermission]);
 
   // تسجيل Token عند تسجيل الدخول
   useEffect(() => {
@@ -113,7 +126,6 @@ const usePushNotifications = () => {
 
     const handleForegroundMessage = (payload) => {
       console.log('Foreground notification:', payload);
-      // يمكن إضافة toast أو تحديث UI هنا
     };
 
     setupForegroundHandler(handleForegroundMessage);
@@ -129,20 +141,33 @@ const usePushNotifications = () => {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       setFcmToken(null);
+      setIsSubscribed(false);
       console.log('FCM Token unregistered');
     } catch (err) {
       console.error('Failed to unregister token:', err);
     }
   }, [fcmToken, authToken]);
 
+  // دالة unsubscribe للتوافق
+  const unsubscribe = useCallback(async () => {
+    return await unregisterToken();
+  }, [unregisterToken]);
+
   return {
+    // الخصائص الجديدة
     fcmToken,
     permission,
     loading,
     error,
     isSupported,
     requestPermission,
-    unregisterToken
+    unregisterToken,
+    
+    // الخصائص للتوافق مع المكونات القديمة
+    isLoading,
+    isSubscribed,
+    subscribe,
+    unsubscribe
   };
 };
 

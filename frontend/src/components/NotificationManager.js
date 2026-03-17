@@ -21,14 +21,25 @@ const NotificationManager = () => {
     if (!authToken || !fcmTokenValue) return;
     
     try {
+      // استخدام API الجديد لتسجيل Token
       await axios.post(
-        `${API}/api/notifications/fcm-token`, 
-        { fcm_token: fcmTokenValue },
+        `${API}/api/push/register-token`, 
+        { token: fcmTokenValue, device_type: 'web' },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
       console.log('✅ FCM Token saved to server');
     } catch (error) {
-      console.error('Error saving FCM token:', error);
+      // محاولة API القديم كـ fallback
+      try {
+        await axios.post(
+          `${API}/api/notifications/fcm-token`, 
+          { fcm_token: fcmTokenValue },
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+        console.log('✅ FCM Token saved to server (fallback)');
+      } catch (fallbackError) {
+        console.error('Error saving FCM token:', fallbackError);
+      }
     }
   }, [authToken]);
 
