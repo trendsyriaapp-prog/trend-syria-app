@@ -308,7 +308,7 @@ const HomePage = () => {
                 </div>
               </div>
               <Link 
-                to="/products"
+                to="/products?sort=sponsored"
                 className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
               >
                 عرض الكل

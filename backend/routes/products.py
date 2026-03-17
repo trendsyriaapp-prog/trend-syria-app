@@ -169,7 +169,8 @@ async def get_products(
         "popular": [("sales_count", -1), ("rating", -1)],
         "trending": [("views", -1), ("sales_count", -1)],
         "deals": [("discount_percentage", -1), ("price", 1)],
-        "flash": [("created_at", -1)]
+        "flash": [("created_at", -1)],
+        "sponsored": [("created_at", -1)]
     }
     sort_query = sort_options.get(sort, [("created_at", -1)])
     
@@ -206,6 +207,8 @@ async def get_products(
             query["id"] = {"$in": []}  # لا يوجد فلاش نشط
     elif sort == "popular":
         query["sales_count"] = {"$gte": 1}  # المنتجات الأكثر مبيعاً
+    elif sort == "sponsored":
+        query["is_sponsored"] = True  # المنتجات المُعلن عنها
     
     # Projection - only essential fields for listing
     projection = {

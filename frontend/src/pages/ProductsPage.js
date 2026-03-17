@@ -140,7 +140,7 @@ const ProductsPage = () => {
   const sort = searchParams.get('sort') || 'newest';
   
   // التحقق إذا كانت صفحة قسم مخصص (بدون بانرات وأقسام إضافية)
-  const isSpecialSection = ['trending', 'deals', 'newest', 'popular', 'flash'].includes(sort);
+  const isSpecialSection = ['trending', 'deals', 'newest', 'popular', 'flash', 'sponsored'].includes(sort);
 
   // Reset when filters change
   useEffect(() => {
@@ -299,6 +299,7 @@ const ProductsPage = () => {
     { value: 'trending', label: 'رائج الآن' },
     { value: 'deals', label: 'عروض وخصومات' },
     { value: 'flash', label: 'عروض فلاش' },
+    { value: 'sponsored', label: 'مُعلن عنها' },
     { value: 'price_low', label: 'السعر: من الأقل' },
     { value: 'price_high', label: 'السعر: من الأعلى' }
   ];
@@ -664,6 +665,7 @@ const ProductsPage = () => {
                 : sort === 'newest' ? 'منتجات جديدة ✨'
                 : sort === 'popular' ? 'الأكثر مبيعاً 🛒'
                 : sort === 'flash' ? 'عروض فلاش ⚡'
+                : sort === 'sponsored' ? 'منتجات مُعلن عنها ⭐'
                 : 'جميع المنتجات'}
             </h1>
             <p className="text-gray-500 text-sm">
