@@ -45,9 +45,12 @@ const SplashScreen = ({ onComplete }) => {
             <motion.img
               src="/images/logo.png"
               alt="ترند سورية"
-              className="w-64 h-64 md:w-80 md:h-80 object-contain drop-shadow-2xl"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
+              className="w-64 h-64 md:w-80 md:h-80 object-contain"
+              style={{
+                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4)) drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
+              }}
+              initial={{ scale: 0.8, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
               transition={{ 
                 duration: 1,
                 ease: "easeOut"
