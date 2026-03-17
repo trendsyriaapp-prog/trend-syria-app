@@ -2,7 +2,7 @@
 // صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات، مقاهي، مخابز، مشروبات
 
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -116,10 +116,11 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
 const FoodPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
   const [stores, setStores] = useState([]);
@@ -133,6 +134,19 @@ const FoodPage = () => {
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [badgeSettings, setBadgeSettings] = useState(null);
+
+  // دالة تغيير الفئة مع تحديث URL
+  const handleCategoryChange = (categoryId) => {
+    setActiveCategory(categoryId);
+    // تحديث URL مع الحفاظ على باقي المعاملات
+    const newParams = new URLSearchParams(searchParams);
+    if (categoryId === 'all') {
+      newParams.delete('category');
+    } else {
+      newParams.set('category', categoryId);
+    }
+    setSearchParams(newParams);
+  };
 
   // تحديث searchQuery عند تغير searchParam
   useEffect(() => {
@@ -310,7 +324,7 @@ const FoodPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex gap-2 overflow-x-auto hide-scrollbar">
             <button
-              onClick={() => setActiveCategory('all')}
+              onClick={() => handleCategoryChange('all')}
               className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                 activeCategory === 'all'
                   ? 'bg-[#FF6B00] text-white'
@@ -323,7 +337,7 @@ const FoodPage = () => {
             {foodCategories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => handleCategoryChange(cat.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                   activeCategory === cat.id
                     ? 'bg-[#FF6B00] text-white'

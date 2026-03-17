@@ -39,24 +39,9 @@ const Header = () => {
   // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
   const isFoodPage = location.pathname.startsWith('/food');
   
-  // التحقق إذا كنا في صفحة متجر طعام
-  const isFoodStorePage = location.pathname.startsWith('/food/store/');
-  
-  // التحقق إذا كنا في صفحة سلة الطعام
-  const isFoodCartPage = location.pathname.startsWith('/food/cart/') || location.pathname === '/food/my-cart';
-  
-  // دالة الرجوع الذكية
+  // دالة الرجوع الذكية - ترجع للصفحة السابقة في التاريخ
   const handleGoBack = () => {
-    // إذا كنا في صفحة متجر طعام، نرجع لصفحة الطعام
-    if (isFoodStorePage || isFoodCartPage) {
-      navigate('/food');
-    } else if (isFoodPage) {
-      // إذا كنا في أي صفحة طعام أخرى، نرجع للصفحة الرئيسية
-      navigate('/');
-    } else {
-      // في باقي الصفحات، نستخدم الرجوع العادي
-      navigate(-1);
-    }
+    navigate(-1);
   };
   
   // هل يتصفح كعميل؟
