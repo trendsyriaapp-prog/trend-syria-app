@@ -18,6 +18,7 @@ import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner";
 import SplashScreen from "./components/SplashScreen";
 import ChangePasswordModal from "./components/ChangePasswordModal";
+import IncomingCallHandler from "./components/voip/IncomingCallHandler";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -119,6 +120,8 @@ function App() {
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
                   <FoodDeliveryBanner />
+                  {/* معالج المكالمات الواردة */}
+                  <IncomingCallHandler />
               <main className="pb-16 md:pb-0">
               <Routes>
                 {/* Public Routes */}

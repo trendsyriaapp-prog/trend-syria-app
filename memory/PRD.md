@@ -1414,3 +1414,91 @@ All critical features are implemented and tested.
 
 ### 🎯 الحالة النهائية:
 **التطبيق جاهز للنشر على الأسواق** ✅
+
+---
+
+## تحديثات 17 مارس 2026 (الجزء الثاني) - نظام VoIP والأيقونات ✅
+
+### 1. تحديث أيقونات التطبيق ✅
+
+#### أيقونات PWA الجديدة:
+- تم إنشاء جميع أحجام أيقونات PWA من الشعار الجديد الشفاف
+- الأحجام: 48x48, 72x72, 96x96, 144x144, 192x192, 512x512
+- **الموقع:** `/app/frontend/public/icons/`
+
+#### Favicon جديد:
+- تم استبدال `favicon.ico` و `favicon.png` بالشعار الجديد
+- **الموقع:** `/app/frontend/public/`
+
+### 2. نظام مكالمات VoIP ✅
+
+#### الوصف:
+نظام اتصال صوتي داخل التطبيق يسمح للسائق بالاتصال بالعميل دون الكشف عن أرقام الهواتف، باستخدام تقنية WebRTC.
+
+#### الملفات الجديدة:
+
+##### Backend:
+- `/app/backend/routes/voip.py` - API كامل لنظام VoIP
+  - `POST /api/voip/call/initiate` - بدء مكالمة جديدة
+  - `POST /api/voip/call/signal` - إرسال إشارات WebRTC
+  - `GET /api/voip/call/{call_id}/signals` - جلب الإشارات المعلقة
+  - `POST /api/voip/call/action` - قبول/رفض/إنهاء المكالمة
+  - `GET /api/voip/call/{call_id}` - حالة المكالمة
+  - `GET /api/voip/active-calls` - المكالمات النشطة
+  - `GET /api/voip/call-history` - سجل المكالمات
+  - `GET /api/voip/incoming-call` - التحقق من مكالمة واردة
+
+##### Frontend:
+- `/app/frontend/src/components/voip/VoIPCallModal.js` - مكونات واجهة المكالمات
+  - `OutgoingCallModal` - نافذة المكالمة الصادرة
+  - `IncomingCallModal` - نافذة المكالمة الواردة
+  - `ActiveCallModal` - نافذة المكالمة المتصلة
+- `/app/frontend/src/components/voip/CallCustomerButton.js` - زر الاتصال بالعميل
+- `/app/frontend/src/components/voip/IncomingCallHandler.js` - معالج المكالمات الواردة على مستوى التطبيق
+- `/app/frontend/src/hooks/useIncomingCall.js` - Hook للتحقق من المكالمات الواردة
+
+#### الميزات:
+- ✅ اتصال صوتي peer-to-peer باستخدام WebRTC
+- ✅ إخفاء أرقام الهواتف للخصوصية
+- ✅ إشعارات المكالمات الواردة
+- ✅ كتم/إلغاء كتم الميكروفون
+- ✅ تفعيل/إيقاف السماعة
+- ✅ عداد مدة المكالمة
+- ✅ سجل المكالمات
+- ✅ تكامل مع نظام الإشعارات
+
+#### Collections جديدة في MongoDB:
+- `voip_calls` - سجل المكالمات
+- `voip_signals` - إشارات WebRTC
+
+#### التكامل:
+- تم إضافة زر "اتصل بالعميل" في واجهة السائق (`MyOrdersList.js`)
+- يظهر الزر لطلبات الطعام والمنتجات غير المسلّمة
+- تم إضافة `IncomingCallHandler` في `App.js` للتعامل مع المكالمات الواردة
+
+### الملفات المعدّلة:
+- `/app/backend/server.py` - إضافة voip_router
+- `/app/frontend/src/components/delivery/MyOrdersList.js` - إضافة زر الاتصال
+- `/app/frontend/src/App.js` - إضافة IncomingCallHandler
+
+---
+
+## Prioritized Backlog
+
+### P0 (Critical - Done ✅):
+- ✅ نظام VoIP للاتصال بين السائق والعميل
+- ✅ تحديث أيقونات التطبيق
+
+### P1 (High Priority - Next):
+- 🔄 تحسين نظام VoIP مع fallback للدعم البشري
+- 🔄 إضافة تسجيل المكالمات (اختياري)
+
+### P2 (Medium Priority):
+- ⏳ دمج مزود دفع سوري للمحفظة
+- ⏳ التسوق عبر المحافظات
+- ⏳ تحسينات أداء إضافية
+
+### P3 (Future Enhancements):
+- ⏳ إشعارات Push حقيقية
+- ⏳ نظام مكافآت متقدم
+- ⏳ تحليلات وإحصائيات متقدمة

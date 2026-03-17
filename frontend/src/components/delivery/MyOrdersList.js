@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Truck, User, MapPin, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, MessageCircle, Route, Layers, Lock, XCircle, HelpCircle, Loader2, PhoneCall } from 'lucide-react';
+import { Truck, User, MapPin, Navigation, CheckCircle, ChevronRight, Map, Clock, QrCode, AlertTriangle, MessageCircle, Route, Layers, Lock, XCircle, HelpCircle, Loader2, PhoneCall, Phone } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import RouteSelector from './RouteSelector';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
+import CallCustomerButton from '../voip/CallCustomerButton';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -837,27 +838,39 @@ const MyOrdersList = ({
                   </button>
                 )}
                 {!isDelivered && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
-                      className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
-                        isLocked ? 'bg-gray-400 text-white' : 'bg-green-600 text-white'
-                      }`}
-                      data-testid={`chat-customer-btn-${order.id}`}
-                    >
-                      <MessageCircle size={14} />
-                      محادثة العميل
-                    </button>
-                    <button
-                      onClick={() => setShowHelpModal(order.id)}
-                      className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
-                        isLocked ? 'bg-gray-400 text-white' : 'bg-orange-500 text-white'
-                      }`}
-                      data-testid={`help-btn-${order.id}`}
-                    >
-                      <HelpCircle size={14} />
-                      طلب مساعدة
-                    </button>
+                  <div className="space-y-2">
+                    {/* زر الاتصال VoIP */}
+                    {!isLocked && (
+                      <CallCustomerButton
+                        orderId={order.id}
+                        orderType="shopping"
+                        orderNumber={order.order_number || order.id?.slice(0, 8)}
+                        className="w-full"
+                        size="normal"
+                      />
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
+                        className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
+                          isLocked ? 'bg-gray-400 text-white' : 'bg-green-600 text-white'
+                        }`}
+                        data-testid={`chat-customer-btn-${order.id}`}
+                      >
+                        <MessageCircle size={14} />
+                        محادثة العميل
+                      </button>
+                      <button
+                        onClick={() => setShowHelpModal(order.id)}
+                        className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
+                          isLocked ? 'bg-gray-400 text-white' : 'bg-orange-500 text-white'
+                        }`}
+                        data-testid={`help-btn-${order.id}`}
+                      >
+                        <HelpCircle size={14} />
+                        طلب مساعدة
+                      </button>
+                    </div>
                   </div>
                 )}
                 {/* رابط للتتبع */}
@@ -1114,23 +1127,33 @@ const MyOrdersList = ({
                 )}
                 
                 {!isDelivered && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
-                      className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
-                      data-testid={`food-chat-btn-${order.id}`}
-                    >
-                      <MessageCircle size={14} />
-                      محادثة العميل
-                    </button>
-                    <button
-                      onClick={() => setShowHelpModal(order.id)}
-                      className="bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
-                      data-testid={`food-help-btn-${order.id}`}
-                    >
-                      <HelpCircle size={14} />
-                      طلب مساعدة
-                    </button>
+                  <div className="space-y-2">
+                    {/* زر الاتصال VoIP */}
+                    <CallCustomerButton
+                      orderId={order.id}
+                      orderType="food"
+                      orderNumber={order.order_number || order.id?.slice(0, 8)}
+                      className="w-full"
+                      size="normal"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
+                        className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        data-testid={`food-chat-btn-${order.id}`}
+                      >
+                        <MessageCircle size={14} />
+                        محادثة العميل
+                      </button>
+                      <button
+                        onClick={() => setShowHelpModal(order.id)}
+                        className="bg-orange-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
+                        data-testid={`food-help-btn-${order.id}`}
+                      >
+                        <HelpCircle size={14} />
+                        طلب مساعدة
+                      </button>
+                    </div>
                   </div>
                 )}
                 {isDelivered && (

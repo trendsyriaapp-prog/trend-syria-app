@@ -88,6 +88,7 @@ from routes.activity_log import router as activity_log_router
 from routes.reports_export import router as reports_export_router
 from routes.image_templates import router as image_templates_router
 from routes.call_requests import router as call_requests_router
+from routes.voip import router as voip_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -173,6 +174,7 @@ api_router.include_router(reports_export_router)
 api_router.include_router(image_templates_router)
 api_router.include_router(categories_router)
 api_router.include_router(call_requests_router)
+api_router.include_router(voip_router)
 
 # ============== Categories ==============
 
