@@ -629,7 +629,7 @@ const FoodProductCard = ({ product, badgeSettings }) => {
           )}
           
           {/* Badges */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1">
+          <div className="absolute top-1 right-1 flex flex-col gap-1">
             {isNew && (
               <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Sparkles size={10} />
@@ -649,7 +649,7 @@ const FoodProductCard = ({ product, badgeSettings }) => {
               key={badgeIndex}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`absolute bottom-2 left-2 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
+              className={`absolute bottom-1 left-1 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
             >
               {activeBadge.messages[badgeIndex]}
             </motion.div>
@@ -657,7 +657,7 @@ const FoodProductCard = ({ product, badgeSettings }) => {
           
           {/* Favorite */}
           <button 
-            className="absolute top-2 left-2 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
+            className="absolute top-1 left-1 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
             onClick={(e) => e.preventDefault()}
           >
             <Heart size={14} className="text-gray-500" />
