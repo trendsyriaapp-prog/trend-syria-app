@@ -200,13 +200,8 @@ const Header = () => {
         {/* الصف الأول: البحث + الأيقونات */}
         <div className="flex items-center gap-2">
           {/* Logo - الشعار */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-1">
-            <img 
-              src="/images/logo.png" 
-              alt="ترند سورية" 
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain"
-            />
-            <span className="text-xs sm:text-sm font-bold text-gray-900 hidden sm:block">
+          <Link to="/" className="flex-shrink-0 flex items-center">
+            <span className="text-base sm:text-lg font-bold text-gray-900">
               ترند<span className="text-[#FF6B00]">سورية</span>
             </span>
           </Link>
