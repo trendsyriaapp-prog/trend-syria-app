@@ -639,12 +639,6 @@ const FoodProductCard = ({ product, badgeSettings }) => {
             )}
           </div>
 
-          {/* شارة نوع القسم */}
-          <div className={`absolute bottom-2 right-2 ${categoryConfig.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}>
-            <UnitIcon size={10} />
-            <span>/{categoryConfig.unit}</span>
-          </div>
-          
           {/* شارة التوصيل/المبيعات */}
           {activeBadge && (
             <motion.div
