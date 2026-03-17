@@ -39,6 +39,26 @@ const Header = () => {
   // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
   const isFoodPage = location.pathname.startsWith('/food');
   
+  // التحقق إذا كنا في صفحة متجر طعام
+  const isFoodStorePage = location.pathname.startsWith('/food/store/');
+  
+  // التحقق إذا كنا في صفحة سلة الطعام
+  const isFoodCartPage = location.pathname.startsWith('/food/cart/') || location.pathname === '/food/my-cart';
+  
+  // دالة الرجوع الذكية
+  const handleGoBack = () => {
+    // إذا كنا في صفحة متجر طعام، نرجع لصفحة الطعام
+    if (isFoodStorePage || isFoodCartPage) {
+      navigate('/food');
+    } else if (isFoodPage) {
+      // إذا كنا في أي صفحة طعام أخرى، نرجع للصفحة الرئيسية
+      navigate('/');
+    } else {
+      // في باقي الصفحات، نستخدم الرجوع العادي
+      navigate(-1);
+    }
+  };
+  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
@@ -327,7 +347,7 @@ const Header = () => {
             {/* سهم الرجوع */}
             {!isHomePage && (
               <button 
-                onClick={() => navigate(-1)}
+                onClick={handleGoBack}
                 className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
                 data-testid="back-btn"
               >
