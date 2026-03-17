@@ -285,8 +285,12 @@ def validate_url(url: str) -> bool:
     """التحقق من صحة الرابط"""
     return validators.url(url) if url else True
 
-def validate_password_strength(password: str) -> tuple:
-    """التحقق من قوة كلمة المرور"""
+def validate_password_strength(password: str, strict: bool = False) -> tuple:
+    """
+    التحقق من قوة كلمة المرور
+    strict=True: للحسابات الجديدة (متطلبات أقوى)
+    strict=False: للتوافق مع الحسابات القديمة
+    """
     issues = []
     
     if len(password) < 6:
@@ -295,15 +299,40 @@ def validate_password_strength(password: str) -> tuple:
     if len(password) > 128:
         issues.append("كلمة المرور طويلة جداً")
     
-    # يمكن تفعيل هذه الشروط لاحقاً لكلمات مرور أقوى
-    # if not re.search(r'[A-Z]', password):
-    #     issues.append("يجب أن تحتوي على حرف كبير")
-    # if not re.search(r'[a-z]', password):
-    #     issues.append("يجب أن تحتوي على حرف صغير")
-    # if not re.search(r'\d', password):
-    #     issues.append("يجب أن تحتوي على رقم")
+    # متطلبات أقوى للحسابات الجديدة
+    if strict:
+        if len(password) < 8:
+            issues.append("كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+        if not re.search(r'\d', password):
+            issues.append("يجب أن تحتوي على رقم واحد على الأقل")
+        if not re.search(r'[a-zA-Z\u0600-\u06FF]', password):  # حروف عربية أو إنجليزية
+            issues.append("يجب أن تحتوي على حرف واحد على الأقل")
+    
+    # فحص كلمات المرور الضعيفة الشائعة
+    weak_passwords = ['123456', '123456789', 'password', 'admin123', 'seller123', 
+                      'buyer123', 'delivery123', 'food123', 'user123', '000000',
+                      '111111', 'qwerty', 'password1']
+    if password.lower() in weak_passwords:
+        issues.append("كلمة المرور ضعيفة جداً. اختر كلمة مرور أقوى")
     
     return (len(issues) == 0, issues)
+
+# ============== التحقق من الحسابات الافتراضية ==============
+DEFAULT_ACCOUNTS = {
+    "0911111111": "admin123",      # حساب الأدمن الافتراضي
+    "0922222222": "seller123",     # بائع تجريبي
+    "0933333333": "user123",       # مشتري تجريبي
+    "0944444444": "food123",       # مطعم تجريبي
+    "0900000000": "delivery123",   # سائق تجريبي
+}
+
+def is_default_account(phone: str, password: str) -> bool:
+    """التحقق إذا كان الحساب افتراضي ولم يتم تغيير كلمة المرور"""
+    return DEFAULT_ACCOUNTS.get(phone) == password
+
+def check_password_change_required(user: dict) -> bool:
+    """التحقق إذا كان يجب على المستخدم تغيير كلمة المرور"""
+    return user.get("force_password_change", False)
 
 # ============== 8. تسجيل الأنشطة المشبوهة ==============
 def log_suspicious_activity(

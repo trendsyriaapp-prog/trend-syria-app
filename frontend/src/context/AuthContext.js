@@ -9,11 +9,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
+    localStorage.removeItem('forcePasswordChange');
     setToken(null);
     setUser(null);
+    setForcePasswordChange(false);
     delete axios.defaults.headers.common['Authorization'];
   }, []);
 
@@ -42,6 +45,11 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
+      // التحقق من حالة تغيير كلمة المرور
+      const savedForceChange = localStorage.getItem('forcePasswordChange');
+      if (savedForceChange === 'true') {
+        setForcePasswordChange(true);
+      }
     } else {
       setLoading(false);
     }
@@ -65,6 +73,13 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     setToken(newToken);
     setUser(res.data.user);
+    
+    // التحقق من إجبار تغيير كلمة المرور
+    if (res.data.force_password_change) {
+      localStorage.setItem('forcePasswordChange', 'true');
+      setForcePasswordChange(true);
+    }
+    
     return res.data;
   };
 
@@ -78,8 +93,32 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    const res = await axios.post(`${API}/auth/change-password`, {
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+    
+    // إزالة حالة إجبار تغيير كلمة المرور
+    localStorage.removeItem('forcePasswordChange');
+    setForcePasswordChange(false);
+    
+    return res.data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, fetchUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      logout, 
+      loading, 
+      fetchUser,
+      changePassword,
+      forcePasswordChange,
+      setForcePasswordChange
+    }}>
       {children}
     </AuthContext.Provider>
   );

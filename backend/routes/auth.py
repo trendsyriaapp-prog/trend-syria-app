@@ -15,6 +15,8 @@ from core.security import (
     clear_failed_attempts,
     validate_phone,
     validate_password_strength,
+    is_default_account,
+    check_password_change_required,
     sanitize_input,
     log_suspicious_activity,
     create_access_token,
@@ -146,6 +148,9 @@ async def login(request: Request, credentials: UserLogin):
             {"$set": {"password": new_hash}}
         )
     
+    # 🔒 التحقق من الحساب الافتراضي - إجبار تغيير كلمة المرور
+    force_password_change = is_default_account(credentials.phone, credentials.password) or user.get("force_password_change", False)
+    
     # 🔒 إنشاء توكنات آمنة
     access_token = create_access_token(user["id"], user["user_type"])
     refresh_token = create_refresh_token(user["id"])
@@ -170,7 +175,8 @@ async def login(request: Request, credentials: UserLogin):
             "phone": user["phone"],
             "user_type": user["user_type"],
             "is_approved": user.get("is_approved", False)
-        }
+        },
+        "force_password_change": force_password_change
     }
 
 @router.post("/refresh")
@@ -1043,6 +1049,67 @@ async def reset_password(request: Request, data: ResetPasswordRequest):
         "success": True,
         "message": "تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول."
     }
+
+
+# ============================================
+# 🔐 تغيير كلمة المرور (للمستخدم المسجل)
+# ============================================
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+@limiter.limit("5/minute")
+async def change_password(request: Request, data: ChangePasswordRequest, user: dict = Depends(get_current_user)):
+    """
+    تغيير كلمة المرور للمستخدم المسجل
+    يُستخدم أيضاً عند إجبار تغيير كلمة المرور الافتراضية
+    """
+    client_ip = get_remote_address(request)
+    
+    # جلب بيانات المستخدم الكاملة
+    full_user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # التحقق من كلمة المرور الحالية
+    if not verify_password(data.current_password, full_user["password"]):
+        log_suspicious_activity(
+            "failed_password_change",
+            f"Failed password change attempt for {full_user.get('phone', 'unknown')}",
+            client_ip
+        )
+        raise HTTPException(status_code=401, detail="كلمة المرور الحالية غير صحيحة")
+    
+    # التحقق من أن كلمة المرور الجديدة مختلفة
+    if data.current_password == data.new_password:
+        raise HTTPException(status_code=400, detail="كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية")
+    
+    # التحقق من قوة كلمة المرور الجديدة (صارم)
+    is_valid, issues = validate_password_strength(data.new_password, strict=True)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=issues[0])
+    
+    # تحديث كلمة المرور
+    new_password_hash = hash_password_secure(data.new_password)
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "password": new_password_hash,
+                "force_password_change": False,  # إزالة إجبار التغيير
+                "password_changed_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "تم تغيير كلمة المرور بنجاح"
+    }
+
 
 
 @router.put("/user/emergency-phone")

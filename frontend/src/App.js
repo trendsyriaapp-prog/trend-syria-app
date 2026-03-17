@@ -1,7 +1,7 @@
 import "@/App.css";
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { FoodCartProvider } from "./context/FoodCartContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
@@ -17,6 +17,7 @@ import NotificationManager from "./components/NotificationManager";
 import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner";
 import SplashScreen from "./components/SplashScreen";
+import ChangePasswordModal from "./components/ChangePasswordModal";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -76,6 +77,27 @@ const FoodRoute = ({ children }) => {
   return children;
 };
 
+// مكون لعرض نافذة تغيير كلمة المرور الإجبارية
+const ForcePasswordChangeWrapper = ({ children }) => {
+  const { user, forcePasswordChange, setForcePasswordChange } = useAuth();
+  
+  // عرض النافذة فقط إذا كان المستخدم مسجل وكلمة المرور تحتاج تغيير
+  if (user && forcePasswordChange) {
+    return (
+      <>
+        {children}
+        <ChangePasswordModal 
+          isOpen={true} 
+          onClose={() => setForcePasswordChange(false)}
+          isForced={true}
+        />
+      </>
+    );
+  }
+  
+  return children;
+};
+
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -93,6 +115,7 @@ function App() {
               )}
               <BrowserRouter>
                 <ScrollProvider>
+                <ForcePasswordChangeWrapper>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
                   <FoodDeliveryBanner />
@@ -168,6 +191,7 @@ function App() {
             <NotificationManager />
             <FreeShippingFloatingBanner />
           </div>
+          </ForcePasswordChangeWrapper>
           </ScrollProvider>
         </BrowserRouter>
         </WebSocketProvider>

@@ -649,3 +649,33 @@ async def performance_middleware(request: Request, call_next):
     response.headers["X-Response-Time"] = f"{duration_ms:.2f}ms"
     
     return response
+
+# ============== Cache Headers Middleware ==============
+
+@app.middleware("http")
+async def cache_headers_middleware(request: Request, call_next):
+    """⚡ إضافة Cache Headers للصور والملفات الثابتة"""
+    response = await call_next(request)
+    
+    path = request.url.path.lower()
+    
+    # Cache للصور (30 يوم)
+    if any(path.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.ico', '.svg']):
+        response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        response.headers["Vary"] = "Accept-Encoding"
+    
+    # Cache للملفات الثابتة (CSS, JS) (7 أيام)
+    elif any(path.endswith(ext) for ext in ['.css', '.js', '.woff', '.woff2', '.ttf']):
+        response.headers["Cache-Control"] = "public, max-age=604800"
+        response.headers["Vary"] = "Accept-Encoding"
+    
+    # API responses - no cache by default
+    elif path.startswith('/api/'):
+        if request.method == "GET" and not any(x in path for x in ['auth', 'user', 'cart', 'notification']):
+            # Cache بسيط لـ GET requests غير الحساسة (5 دقائق)
+            response.headers["Cache-Control"] = "private, max-age=300"
+        else:
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    
+    return response
+

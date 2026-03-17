@@ -105,17 +105,24 @@ async def create_database_indexes(db):
         await db.users.create_index("user_type")
         await db.users.create_index("created_at")
         await db.users.create_index("referral_code", sparse=True)
+        await db.users.create_index("is_approved")
+        await db.users.create_index("city")
+        await db.users.create_index([("user_type", 1), ("is_approved", 1)])  # فهرس مركب
         logger.info("✅ Users indexes created")
         
         # ========== Products Collection ==========
         await db.products.create_index("id", unique=True)
         await db.products.create_index("seller_id")
         await db.products.create_index("category_id")
+        await db.products.create_index("category")
         await db.products.create_index("status")
+        await db.products.create_index("approval_status")
+        await db.products.create_index("is_active")
         await db.products.create_index("price")
         await db.products.create_index("created_at")
         await db.products.create_index("views", background=True)
         await db.products.create_index("sales_count", background=True)
+        await db.products.create_index("city")
         # فهرس نصي للبحث (بدون تحديد لغة افتراضية)
         try:
             await db.products.create_index([
@@ -127,6 +134,8 @@ async def create_database_indexes(db):
             logger.warning(f"Text index may already exist: {text_error}")
         # فهرس مركب للفلترة
         await db.products.create_index([("status", 1), ("category_id", 1), ("price", 1)])
+        await db.products.create_index([("seller_id", 1), ("is_active", 1)])
+        await db.products.create_index([("city", 1), ("category", 1)])
         logger.info("✅ Products indexes created")
         
         # ========== Orders Collection ==========
@@ -136,9 +145,43 @@ async def create_database_indexes(db):
         await db.orders.create_index("delivery_driver_id", sparse=True)
         await db.orders.create_index("status")
         await db.orders.create_index("created_at")
+        await db.orders.create_index("order_type")
         await db.orders.create_index([("user_id", 1), ("created_at", -1)])
         await db.orders.create_index([("seller_id", 1), ("status", 1)])
+        await db.orders.create_index([("delivery_driver_id", 1), ("status", 1)])
+        await db.orders.create_index([("status", 1), ("created_at", -1)])
         logger.info("✅ Orders indexes created")
+        
+        # ========== Food Orders Collection ==========
+        await db.food_orders.create_index("id", unique=True)
+        await db.food_orders.create_index("user_id")
+        await db.food_orders.create_index("restaurant_id")
+        await db.food_orders.create_index("store_id")
+        await db.food_orders.create_index("seller_id")
+        await db.food_orders.create_index("status")
+        await db.food_orders.create_index("delivery_driver_id", sparse=True)
+        await db.food_orders.create_index([("user_id", 1), ("created_at", -1)])
+        await db.food_orders.create_index([("seller_id", 1), ("status", 1)])
+        logger.info("✅ Food orders indexes created")
+        
+        # ========== Food Stores Collection ==========
+        await db.food_stores.create_index("id", unique=True)
+        await db.food_stores.create_index("owner_id")
+        await db.food_stores.create_index("city")
+        await db.food_stores.create_index("is_active")
+        await db.food_stores.create_index("is_approved")
+        await db.food_stores.create_index("store_type")
+        await db.food_stores.create_index([("city", 1), ("is_active", 1), ("is_approved", 1)])
+        logger.info("✅ Food stores indexes created")
+        
+        # ========== Food Products Collection ==========
+        await db.food_products.create_index("id", unique=True)
+        await db.food_products.create_index("store_id")
+        await db.food_products.create_index("seller_id")
+        await db.food_products.create_index("category")
+        await db.food_products.create_index("is_available")
+        await db.food_products.create_index([("store_id", 1), ("is_available", 1)])
+        logger.info("✅ Food products indexes created")
         
         # ========== Categories Collection ==========
         await db.categories.create_index("id", unique=True)
@@ -150,14 +193,19 @@ async def create_database_indexes(db):
         await db.reviews.create_index("id", unique=True)
         await db.reviews.create_index("product_id")
         await db.reviews.create_index("user_id")
+        await db.reviews.create_index("seller_id")
+        await db.reviews.create_index("rating")
         await db.reviews.create_index([("product_id", 1), ("created_at", -1)])
+        await db.reviews.create_index([("seller_id", 1), ("rating", -1)])
         logger.info("✅ Reviews indexes created")
         
         # ========== Notifications Collection ==========
         await db.notifications.create_index("id", unique=True)
         await db.notifications.create_index("user_id")
         await db.notifications.create_index("target")
+        await db.notifications.create_index("is_read")
         await db.notifications.create_index("created_at")
+        await db.notifications.create_index([("user_id", 1), ("is_read", 1)])
         await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
         logger.info("✅ Notifications indexes created")
         
@@ -175,13 +223,32 @@ async def create_database_indexes(db):
         await db.coupons.create_index("code", unique=True)
         await db.coupons.create_index("is_active")
         await db.coupons.create_index("expiry_date")
+        await db.coupons.create_index("seller_id", sparse=True)
         logger.info("✅ Coupons indexes created")
         
         # ========== Wallet Transactions ==========
         await db.wallet_transactions.create_index("user_id")
+        await db.wallet_transactions.create_index("type")
         await db.wallet_transactions.create_index("created_at")
         await db.wallet_transactions.create_index([("user_id", 1), ("created_at", -1)])
+        await db.wallet_transactions.create_index([("user_id", 1), ("type", 1)])
         logger.info("✅ Wallet transactions indexes created")
+        
+        # ========== Messages / Chat ==========
+        await db.messages.create_index("conversation_id")
+        await db.messages.create_index("sender_id")
+        await db.messages.create_index("receiver_id")
+        await db.messages.create_index("created_at")
+        await db.messages.create_index([("conversation_id", 1), ("created_at", -1)])
+        logger.info("✅ Messages indexes created")
+        
+        # ========== Support Tickets ==========
+        await db.support_tickets.create_index("id", unique=True)
+        await db.support_tickets.create_index("user_id")
+        await db.support_tickets.create_index("status")
+        await db.support_tickets.create_index("ticket_type")
+        await db.support_tickets.create_index([("status", 1), ("created_at", -1)])
+        logger.info("✅ Support tickets indexes created")
         
         # ========== Newsletter Subscribers ==========
         await db.newsletter_subscribers.create_index("email", unique=True)
@@ -194,23 +261,33 @@ async def create_database_indexes(db):
         await db.fcm_tokens.create_index("fcm_token")
         logger.info("✅ FCM tokens indexes created")
         
-        # ========== Food Orders (if food platform enabled) ==========
-        await db.food_orders.create_index("id", unique=True)
-        await db.food_orders.create_index("user_id")
-        await db.food_orders.create_index("restaurant_id")
-        await db.food_orders.create_index("status")
-        logger.info("✅ Food orders indexes created")
-        
         # ========== Driver Locations ==========
         await db.driver_locations.create_index("driver_id", unique=True)
         await db.driver_locations.create_index("updated_at")
+        await db.driver_locations.create_index("is_online")
+        await db.driver_locations.create_index("city")
         logger.info("✅ Driver locations indexes created")
         
         # ========== Gifts ==========
         await db.gifts.create_index("sender_id")
         await db.gifts.create_index("recipient_phone")
+        await db.gifts.create_index("recipient_id", sparse=True)
         await db.gifts.create_index("status")
+        await db.gifts.create_index([("recipient_id", 1), ("status", 1)])
         logger.info("✅ Gifts indexes created")
+        
+        # ========== Activity Log (للأمان) ==========
+        await db.activity_log.create_index("user_id")
+        await db.activity_log.create_index("action")
+        await db.activity_log.create_index("created_at")
+        await db.activity_log.create_index([("user_id", 1), ("created_at", -1)])
+        logger.info("✅ Activity log indexes created")
+        
+        # ========== Refresh Tokens ==========
+        await db.refresh_tokens.create_index("user_id", unique=True)
+        await db.refresh_tokens.create_index("token")
+        await db.refresh_tokens.create_index("created_at")
+        logger.info("✅ Refresh tokens indexes created")
         
         logger.info("🎉 All database indexes created successfully!")
         return True
@@ -243,7 +320,83 @@ IMAGE_OPTIMIZATION_CONFIG = {
     "format": "webp",           # تنسيق الإخراج المفضل
     "lazy_loading": True,       # التحميل الكسول
     "placeholder_blur": True,   # صورة ضبابية كـ placeholder
+    "max_file_size_kb": 500,    # الحد الأقصى لحجم الملف بعد الضغط (KB)
 }
+
+# ============== Image Compression Helper ==============
+
+def compress_image(image_data: bytes, max_size_kb: int = 500, quality: int = 85) -> bytes:
+    """
+    ضغط الصورة مع الحفاظ على الجودة
+    يقلل الحجم تدريجياً حتى يصل للحد المطلوب
+    """
+    from PIL import Image
+    import io
+    
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        
+        # تحويل RGBA لـ RGB إذا لزم (للـ JPEG)
+        if img.mode == 'RGBA':
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # تصغير الأبعاد إذا كانت كبيرة جداً
+        max_dim = max(IMAGE_OPTIMIZATION_CONFIG["max_width"], IMAGE_OPTIMIZATION_CONFIG["max_height"])
+        if max(img.size) > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+        
+        # ضغط تدريجي
+        current_quality = quality
+        output = io.BytesIO()
+        
+        while current_quality >= 30:
+            output.seek(0)
+            output.truncate()
+            img.save(output, format='JPEG', quality=current_quality, optimize=True)
+            
+            if output.tell() <= max_size_kb * 1024:
+                break
+            
+            current_quality -= 10
+        
+        output.seek(0)
+        return output.getvalue()
+        
+    except Exception as e:
+        logger.error(f"Error compressing image: {e}")
+        return image_data  # إرجاع الأصلية في حالة الخطأ
+
+def generate_thumbnail(image_data: bytes, size: int = 300) -> bytes:
+    """إنشاء صورة مصغرة"""
+    from PIL import Image
+    import io
+    
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        
+        # تحويل لـ RGB
+        if img.mode == 'RGBA':
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # تصغير مع الحفاظ على النسبة
+        img.thumbnail((size, size), Image.Resampling.LANCZOS)
+        
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=75, optimize=True)
+        output.seek(0)
+        return output.getvalue()
+        
+    except Exception as e:
+        logger.error(f"Error generating thumbnail: {e}")
+        return image_data
 
 # ============== Performance Monitoring ==============
 
