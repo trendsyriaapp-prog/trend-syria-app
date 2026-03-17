@@ -391,6 +391,15 @@ async def background_dispatch_loop():
                 except Exception as e:
                     logger.error(f"Error releasing held earnings: {e}")
             
+            # تنظيف تسجيلات المكالمات المنتهية كل ساعة
+            if release_counter == 0:  # كل 5 دقائق، لكن سنتحقق كل ساعة
+                try:
+                    from routes.voip import cleanup_expired_recordings
+                    await cleanup_expired_recordings()
+                    logger.debug("VoIP recordings cleanup completed")
+                except Exception as e:
+                    logger.error(f"Error cleaning up VoIP recordings: {e}")
+            
         except Exception as e:
             logger.error(f"Error in dispatch loop: {e}")
         
