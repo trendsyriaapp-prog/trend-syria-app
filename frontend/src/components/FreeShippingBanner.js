@@ -90,7 +90,7 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
             <Clock size={10} className="text-yellow-300" />
             <div className="flex gap-0.5 text-[10px] font-bold">
               {timeLeft.days > 0 && (
-                <span className="bg-white/20 rounded px-1 py-0.5">{timeLeft.days}d</span>
+                <span className="bg-white/20 rounded px-1 py-0.5">{timeLeft.days} يوم</span>
               )}
               <span className="bg-white/20 rounded px-1 py-0.5">
                 {timeLeft.hours.toString().padStart(2, '0')}:
