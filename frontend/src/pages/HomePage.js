@@ -463,19 +463,19 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 4. المنتجات الرائجة */}
+      {/* 4. المنتجات الرائجة - شريط أفقي */}
       <section className="py-1.5">
         <div className="max-w-7xl mx-auto px-3">
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-1 bg-[#FF6B00]/10 rounded-lg">
-                <TrendingUp size={14} className="text-[#FF6B00]" />
+              <div className="p-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
+                <TrendingUp size={14} className="text-white" />
               </div>
               <h2 className="text-sm font-bold text-gray-900">المنتجات الرائجة</h2>
             </div>
             <Link 
               to="/products" 
-              className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium" 
+              className="text-blue-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium" 
               data-testid="view-all-products"
             >
               عرض الكل
@@ -483,33 +483,70 @@ const HomePage = () => {
             </Link>
           </div>
           
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                  <div className="aspect-[4/5] shimmer" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 shimmer rounded w-full" />
-                    <div className="h-3 shimmer rounded w-2/3" />
-                    <div className="h-5 shimmer rounded w-1/2" />
+          {/* Trending Products Horizontal Scroll */}
+          <div className="relative">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-36 bg-white rounded-xl overflow-hidden shadow-sm">
+                    <div className="aspect-square shimmer" />
+                    <div className="p-2 space-y-2">
+                      <div className="h-3 shimmer rounded w-full" />
+                      <div className="h-4 shimmer rounded w-1/2" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                products.slice(0, 10).map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-blue-100 hover:border-blue-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* Trending Badge */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                            🔥 رائج
+                          </div>
+                          {/* شارة التوصيل */}
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-blue-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-blue-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))
+              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-              {products.map((product, i) => (
-                <motion.div 
-                  key={product.id} 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <ProductCard product={product} badgeSettings={badgeSettings} />
-                </motion.div>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
       </section>
 
