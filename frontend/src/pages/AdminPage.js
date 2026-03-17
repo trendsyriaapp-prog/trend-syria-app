@@ -519,30 +519,22 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* تنبيهات المعلقات */}
-            {(stats?.pending_sellers > 0 || stats?.pending_products > 0 || stats?.pending_delivery > 0) && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-                <p className="text-[10px] font-bold text-amber-700 mb-1.5 flex items-center gap-1">
-                  <AlertTriangle size={12} /> طلبات تحتاج موافقة
-                </p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {stats?.pending_sellers > 0 && (
-                    <button onClick={() => setActiveTab('pending-sellers')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200">
-                      {stats.pending_sellers} بائع
-                    </button>
-                  )}
-                  {stats?.pending_products > 0 && (
-                    <button onClick={() => setActiveTab('pending-products')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200">
-                      {stats.pending_products} منتج
-                    </button>
-                  )}
-                  {stats?.pending_delivery > 0 && (
-                    <button onClick={() => setActiveTab('pending-delivery')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200">
-                      {stats.pending_delivery} سائق
-                    </button>
-                  )}
-                </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
+              <p className="text-[10px] font-bold text-amber-700 mb-1.5 flex items-center gap-1">
+                <Clock size={12} /> الموافقات المعلقة
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                <button onClick={() => setActiveTab('pending-sellers')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
+                  <Users size={10} /> بائعين ({stats?.pending_sellers || 0})
+                </button>
+                <button onClick={() => setActiveTab('pending-products')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
+                  <Package size={10} /> منتجات ({stats?.pending_products || 0})
+                </button>
+                <button onClick={() => setActiveTab('pending-delivery')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
+                  <Truck size={10} /> سائقين ({stats?.pending_delivery || 0})
+                </button>
               </div>
-            )}
+            </div>
 
             {/* ======== الأقسام المجمّعة ======== */}
             <div className="space-y-3">
@@ -560,6 +552,7 @@ const AdminDashboardPage = () => {
                     { icon: Users, label: 'البائعين', tab: 'sellers' },
                     { icon: Bell, label: 'الإشعارات', tab: 'notifications', badge: notifications.length },
                     { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
+                    { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
                       <item.icon size={16} className="text-blue-600" />
