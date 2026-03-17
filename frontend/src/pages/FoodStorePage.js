@@ -425,23 +425,25 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badg
             <ShoppingBag size={24} className="text-gray-400" />
           </div>
         )}
-        {/* شارة المنتج - في زاوية الصورة */}
-        {activeBadge && (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={badgeIndex}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className={`absolute -top-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-md bg-gradient-to-r ${bgColors[badgeIndex % 4]} max-w-[70px] text-center leading-tight`}
-            >
-              {activeBadge.messages[badgeIndex]}
-            </motion.div>
-          </AnimatePresence>
-        )}
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-gray-900 truncate">{product.name}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-bold text-gray-900 truncate flex-1">{product.name}</h3>
+          {/* شارة المنتج - صغيرة وأنيقة */}
+          {activeBadge && (
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={badgeIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={`text-white text-[10px] font-medium px-1.5 py-0.5 rounded bg-gradient-to-r ${bgColors[badgeIndex % 4]} whitespace-nowrap flex-shrink-0`}
+              >
+                {activeBadge.messages[badgeIndex]}
+              </motion.span>
+            </AnimatePresence>
+          )}
+        </div>
         {product.description && (
           <p className="text-sm text-gray-500 line-clamp-1 mt-1">{product.description}</p>
         )}
