@@ -13,7 +13,7 @@ const SplashScreen = ({ onComplete }) => {
       setIsVisible(false);
       setTimeout(() => {
         onComplete();
-      }, 500); // انتظار انتهاء الـ animation
+      }, 500);
     }, 3500);
 
     return () => clearTimeout(timer);
@@ -31,17 +31,8 @@ const SplashScreen = ({ onComplete }) => {
             background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C00 50%, #FFA500 100%)'
           }}
         >
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.1, opacity: 0 }}
-            transition={{ 
-              duration: 0.8,
-              ease: "easeOut"
-            }}
-            className="flex flex-col items-center"
-          >
-            {/* اللوجو */}
+          <div className="flex flex-col items-center">
+            {/* اللوجو - ثابت بدون أنيميشن */}
             <img
               src="/images/logo.png"
               alt="ترند سورية"
@@ -50,7 +41,7 @@ const SplashScreen = ({ onComplete }) => {
                 filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4)) drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
               }}
             />
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
