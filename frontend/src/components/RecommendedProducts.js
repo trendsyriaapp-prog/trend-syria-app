@@ -13,65 +13,33 @@ const RecommendedProducts = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [dealsProducts, setDealsProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
-  const [loadingTrending, setLoadingTrending] = useState(true);
-  const [loadingDeals, setLoadingDeals] = useState(true);
-  const [loadingNew, setLoadingNew] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [badgeSettings, setBadgeSettings] = useState(null);
 
   useEffect(() => {
-    fetchTrending();
-    fetchDeals();
-    fetchNewProducts();
-    fetchBadgeSettings();
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const [trendingRes, dealsRes, newRes, badgeRes] = await Promise.all([
+          axios.get(`${API}/api/recommendations/trending?limit=8`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/recommendations/deals?limit=8`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/recommendations/new-products?limit=8`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
+        ]);
+        
+        setTrendingProducts(trendingRes.data || []);
+        setDealsProducts(dealsRes.data || []);
+        setNewProducts(newRes.data || []);
+        setBadgeSettings(badgeRes.data);
+      } catch (error) {
+        console.error('Error fetching recommendations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAllData();
   }, []);
-
-  const fetchBadgeSettings = async () => {
-    try {
-      const res = await axios.get(`${API}/api/settings/product-badges`);
-      setBadgeSettings(res.data);
-    } catch (err) {
-      console.log('Badge settings not available');
-    }
-  };
-
-  const fetchTrending = async () => {
-    setLoadingTrending(true);
-    try {
-      const res = await axios.get(`${API}/api/recommendations/trending?limit=8`);
-      setTrendingProducts(res.data);
-    } catch (error) {
-      console.error('Error fetching trending:', error);
-      setTrendingProducts([]);
-    } finally {
-      setLoadingTrending(false);
-    }
-  };
-
-  const fetchDeals = async () => {
-    setLoadingDeals(true);
-    try {
-      const res = await axios.get(`${API}/api/recommendations/deals?limit=8`);
-      setDealsProducts(res.data);
-    } catch (error) {
-      console.error('Error fetching deals:', error);
-      setDealsProducts([]);
-    } finally {
-      setLoadingDeals(false);
-    }
-  };
-
-  const fetchNewProducts = async () => {
-    setLoadingNew(true);
-    try {
-      const res = await axios.get(`${API}/api/recommendations/new-products?limit=8`);
-      setNewProducts(res.data);
-    } catch (error) {
-      console.error('Error fetching new products:', error);
-      setNewProducts([]);
-    } finally {
-      setLoadingNew(false);
-    }
-  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price);
@@ -140,8 +108,8 @@ const RecommendedProducts = () => {
   };
 
   // مكون القسم
-  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, loading, color }) => {
-    if (!loading && products.length === 0) return null;
+  const Section = ({ title, icon: Icon, iconGradient, linkColor, linkTo, products, color }) => {
+    if (products.length === 0) return null;
 
     return (
       <section>
@@ -159,23 +127,32 @@ const RecommendedProducts = () => {
         </div>
 
         <div className="px-3">
-          {loading ? (
-            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} color={color} />
-              ))}
-            </div>
-          )}
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} color={color} />
+            ))}
+          </div>
         </div>
       </section>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="py-2 space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="px-3">
+            <div className="h-6 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+              {[1, 2, 3, 4].map(j => (
+                <div key={j} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="py-2 space-y-4">
@@ -187,7 +164,6 @@ const RecommendedProducts = () => {
         linkColor="text-purple-500"
         linkTo="/products?sort=trending"
         products={trendingProducts}
-        loading={loadingTrending}
         color="purple"
       />
 
@@ -199,7 +175,6 @@ const RecommendedProducts = () => {
         linkColor="text-green-500"
         linkTo="/products?sort=deals"
         products={dealsProducts}
-        loading={loadingDeals}
         color="green"
       />
 
@@ -211,7 +186,6 @@ const RecommendedProducts = () => {
         linkColor="text-cyan-500"
         linkTo="/products?sort=newest"
         products={newProducts}
-        loading={loadingNew}
         color="cyan"
       />
     </div>
