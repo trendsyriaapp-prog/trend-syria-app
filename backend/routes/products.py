@@ -300,7 +300,22 @@ async def get_sponsored_products(limit: int = Query(default=10, le=20)):
     """جلب المنتجات المُعلن عنها (Sponsored)"""
     now = datetime.now(timezone.utc).isoformat()
     
-    # جلب الإعلانات النشطة
+    # أولاً: البحث عن منتجات مميزة (is_sponsored = true)
+    sponsored_products = await db.products.find(
+        {
+            "is_sponsored": True,
+            "is_approved": True,
+            "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
+        },
+        {"_id": 0}
+    ).sort("sponsor_priority", 1).limit(limit).to_list(limit)
+    
+    if sponsored_products:
+        for p in sponsored_products:
+            p["ad_type"] = "featured"
+        return sponsored_products
+    
+    # Fallback: جلب من ads collection
     active_ads = await db.ads.find({
         "status": "active",
         "end_date": {"$gte": now}
