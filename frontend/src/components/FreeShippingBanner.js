@@ -64,7 +64,7 @@ const FreeShippingBanner = ({ promo, variant = 'products' }) => {
         <div className="absolute top-1 left-1/3 text-2xl">✨</div>
       </div>
       
-      <div className="relative flex items-center gap-3 max-w-7xl mx-auto px-4">
+      <div className="relative flex items-center gap-3 px-4">
         {/* أيقونة متحركة */}
         <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
           <Truck size={20} className="animate-bounce" />
