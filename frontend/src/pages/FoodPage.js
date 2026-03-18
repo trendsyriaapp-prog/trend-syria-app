@@ -181,6 +181,11 @@ const FoodPage = () => {
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
 
+  // تحديث showOnlyFreeDelivery عند تغير filterParam
+  useEffect(() => {
+    setShowOnlyFreeDelivery(filterParam === 'free_delivery');
+  }, [filterParam]);
+
   // جلب الفئات الديناميكية من الـ API
   useEffect(() => {
     const fetchCategories = async () => {
