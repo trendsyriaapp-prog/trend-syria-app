@@ -78,6 +78,12 @@ const DeliverySettingsTab = () => {
   };
 
   const handleSaveSettings = async () => {
+    // التحقق من تحديد الموقع
+    if (!deliverySettings.home_latitude || !deliverySettings.home_longitude) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقع منزلك على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
+    
     setSaving(true);
     try {
       await axios.put(`${API}/auth/delivery/settings`, deliverySettings);
@@ -233,8 +239,8 @@ const DeliverySettingsTab = () => {
               placeholder="العنوان التفصيلي لمنزلك"
             />
             <GoogleMapsLocationPicker
-              label="📍 موقع المنزل على الخريطة"
-              required={false}
+              label="📍 موقع المنزل على الخريطة (إجباري)"
+              required={true}
               currentLocation={deliverySettings.home_latitude ? { 
                 latitude: deliverySettings.home_latitude, 
                 longitude: deliverySettings.home_longitude 

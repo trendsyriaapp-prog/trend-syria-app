@@ -72,6 +72,12 @@ const StoreSettingsTab = () => {
   };
 
   const handleSaveSettings = async () => {
+    // التحقق من تحديد الموقع
+    if (!storeSettings.store_latitude || !storeSettings.store_longitude) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
+    
     setSaving(true);
     try {
       await axios.put(`${API}/auth/seller/store-settings`, storeSettings);
@@ -221,8 +227,8 @@ const StoreSettingsTab = () => {
           {/* موقع المتجر على الخريطة */}
           <div>
             <GoogleMapsLocationPicker
-              label="📍 موقع المتجر على الخريطة (يساعد العملاء في الوصول)"
-              required={false}
+              label="📍 موقع المتجر على الخريطة (إجباري)"
+              required={true}
               currentLocation={storeSettings.store_latitude ? { 
                 latitude: storeSettings.store_latitude, 
                 longitude: storeSettings.store_longitude 

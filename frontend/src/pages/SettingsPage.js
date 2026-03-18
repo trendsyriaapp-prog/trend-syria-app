@@ -22,6 +22,7 @@ import DriverAchievements from '../components/delivery/DriverAchievements';
 import DriverPerformance from '../components/delivery/DriverPerformance';
 import MyBoxCard from '../components/delivery/MyBoxCard';
 import NotificationToneSettings from '../components/delivery/NotificationToneSettings';
+import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -278,6 +279,19 @@ const SettingsPage = () => {
               النغمات
             </button>
           )}
+          {/* تبويب إعدادات التوصيل - للسائق فقط */}
+          {user?.user_type === 'delivery' && (
+            <button
+              onClick={() => setActiveTab('delivery-settings')}
+              className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+                activeTab === 'delivery-settings' ? 'bg-green-500 text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+              }`}
+              data-testid="delivery-settings-tab-btn"
+            >
+              <MapPin size={12} />
+              العنوان
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('loyalty')}
             className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
@@ -399,6 +413,11 @@ const SettingsPage = () => {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Delivery Settings Tab - تبويب إعدادات التوصيل للسائق */}
+        {activeTab === 'delivery-settings' && user?.user_type === 'delivery' && (
+          <DeliverySettingsTab />
         )}
 
         {/* Loyalty Tab */}
