@@ -276,8 +276,8 @@ const HomePage = () => {
                   'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
                   'linear-gradient(to right, #AD1457, #C2185B, #D81B60)',
                   'linear-gradient(to right, #6A1B9A, #7B1FA2, #8E24AA)',
-                  'linear-gradient(to right, #1565C0, #1976D2, #1E88E5)',
-                  'linear-gradient(to right, #2E7D32, #388E3C, #43A047)',
+                  'linear-gradient(to right, #B71C1C, #C62828, #D32F2F)',
+                  'linear-gradient(to right, #FF6F00, #FF8F00, #FFA000)',
                   'linear-gradient(to right, #D84315, #E64A19, #F4511E)',
                   'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
                 ]
@@ -316,7 +316,7 @@ const HomePage = () => {
                   className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg"
                   animate={{ 
                     scale: [1, 1.05, 1],
-                    color: ['#E65100', '#AD1457', '#6A1B9A', '#1565C0', '#2E7D32', '#D84315', '#E65100']
+                    color: ['#E65100', '#AD1457', '#6A1B9A', '#B71C1C', '#FF6F00', '#D84315', '#E65100']
                   }}
                   transition={{ duration: 6, repeat: Infinity }}
                 >
