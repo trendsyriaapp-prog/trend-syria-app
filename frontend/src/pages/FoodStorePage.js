@@ -40,29 +40,26 @@ const FoodStorePage = () => {
     fetchBadgeSettings();
   }, [storeId]);
 
-  // التمرير للمنتج المحدد بعد تحميل البيانات
+  // التمرير للمنتج المحدد بعد تحميل البيانات - مرة واحدة فقط
   useEffect(() => {
     if (highlightedProductId && store && highlightedRef.current) {
-      // محاولات متعددة للتمرير مع offset لضمان ظهور المنتج بالكامل
-      const scrollToProduct = () => {
+      // تمرير واحد فقط بعد تحميل المحتوى بالكامل
+      const timeoutId = setTimeout(() => {
         if (highlightedRef.current) {
           const element = highlightedRef.current;
           const elementRect = element.getBoundingClientRect();
           const absoluteElementTop = elementRect.top + window.pageYOffset;
-          // تمرير للمنتج مع ترك مسافة 150px من الأعلى
-          const offsetPosition = absoluteElementTop - 150;
+          // تمرير للمنتج مع ترك مسافة 120px من الأعلى
+          const offsetPosition = absoluteElementTop - 120;
           
           window.scrollTo({
             top: offsetPosition,
-            behavior: 'smooth'
+            behavior: 'instant' // تمرير فوري بدون حركة متكررة
           });
         }
-      };
+      }, 300);
       
-      // تمرير بعد تحميل المحتوى
-      setTimeout(scrollToProduct, 500);
-      setTimeout(scrollToProduct, 1000);
-      setTimeout(scrollToProduct, 2000);
+      return () => clearTimeout(timeoutId);
     }
   }, [highlightedProductId, store]);
 
