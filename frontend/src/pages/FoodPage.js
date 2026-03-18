@@ -513,6 +513,13 @@ const FoodPage = () => {
                       <p className="text-[10px] text-gray-500">اطلب واحصل على توصيل مجاني فوراً!</p>
                     </div>
                   </div>
+                  <Link 
+                    to="/food?filter=free_delivery" 
+                    className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
+                  >
+                    <span>عرض الكل</span>
+                    <ChevronLeft size={14} />
+                  </Link>
                 </div>
                 
                 <div className="relative">

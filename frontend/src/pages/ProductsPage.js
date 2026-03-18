@@ -669,6 +669,13 @@ const ProductsPage = () => {
                   <p className="text-[10px] text-gray-500">اطلب واحصل على شحن مجاني فوراً!</p>
                 </div>
               </div>
+              <Link 
+                to="/products?sort=default&free_shipping=true" 
+                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
+              >
+                <span>عرض الكل</span>
+                <ChevronLeft size={14} />
+              </Link>
             </div>
             
             <div className="relative">
