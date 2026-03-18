@@ -749,7 +749,7 @@ const FoodProductCard = ({ product, badgeSettings }) => {
   }
 
   return (
-    <Link to={`/food/store/${product.store_id}`}>
+    <Link to={`/food/store/${product.store_id}?highlight=${product.id}`}>
       {cardContent}
     </Link>
   );

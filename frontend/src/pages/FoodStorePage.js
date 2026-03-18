@@ -1,8 +1,8 @@
 // /app/frontend/src/pages/FoodStorePage.js
 // صفحة تفاصيل متجر الطعام
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -16,9 +16,12 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const FoodStorePage = () => {
   const { storeId } = useParams();
+  const [searchParams] = useSearchParams();
+  const highlightedProductId = searchParams.get('highlight');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const highlightedRef = useRef(null);
 
   const [store, setStore] = useState(null);
   const [offers, setOffers] = useState([]);
@@ -36,6 +39,15 @@ const FoodStorePage = () => {
     fetchPriceRating();
     fetchBadgeSettings();
   }, [storeId]);
+
+  // التمرير للمنتج المحدد بعد تحميل البيانات
+  useEffect(() => {
+    if (highlightedProductId && store && highlightedRef.current) {
+      setTimeout(() => {
+        highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
+  }, [highlightedProductId, store]);
 
   const fetchBadgeSettings = async () => {
     try {
@@ -302,6 +314,8 @@ const FoodStorePage = () => {
                     onView={() => setSelectedProduct(product)}
                     isStoreClosed={store?.is_open === false}
                     badgeSettings={badgeSettings}
+                    isHighlighted={product.id === highlightedProductId}
+                    highlightedRef={product.id === highlightedProductId ? highlightedRef : null}
                   />
                 ))}
               </div>
@@ -354,7 +368,7 @@ const FoodStorePage = () => {
   );
 };
 
-const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badgeSettings }) => {
+const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badgeSettings, isHighlighted, highlightedRef }) => {
   const [badgeIndex, setBadgeIndex] = React.useState(0);
   const [activeBadge, setActiveBadge] = React.useState(null);
 
@@ -412,9 +426,17 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badg
 
   return (
     <motion.div
+      ref={highlightedRef}
       whileTap={{ scale: 0.98 }}
       onClick={onView}
-      className={`bg-white rounded-xl p-3 border border-gray-200 flex gap-3 cursor-pointer transition-shadow
+      initial={isHighlighted ? { scale: 1.02, boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)' } : {}}
+      animate={isHighlighted ? { 
+        scale: [1.02, 1, 1.02], 
+        boxShadow: ['0 0 20px rgba(147, 51, 234, 0.5)', '0 0 10px rgba(147, 51, 234, 0.3)', '0 0 20px rgba(147, 51, 234, 0.5)']
+      } : {}}
+      transition={isHighlighted ? { duration: 2, repeat: 2 } : {}}
+      className={`bg-white rounded-xl p-3 border-2 flex gap-3 cursor-pointer transition-shadow
+        ${isHighlighted ? 'border-purple-500 bg-purple-50 shadow-lg' : 'border-gray-200'}
         ${isStoreClosed ? 'opacity-60' : 'hover:shadow-md'}`}
     >
       <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
