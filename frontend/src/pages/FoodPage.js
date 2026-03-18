@@ -125,66 +125,34 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون كاروسيل المتاجر مع تحكم أفضل بالتمرير - معرّف قبل FoodPage
+// مكون كاروسيل المتاجر - نسخة مبسطة
 const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
   const totalGroups = Math.ceil(stores.length / 4);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollStart, setScrollStart] = useState(0);
   
-  const getGroupWidth = () => {
-    if (scrollRef.current) {
-      return scrollRef.current.offsetWidth;
+  // تحديث النقطة النشطة عند التمرير
+  const handleScroll = (e) => {
+    const container = e.target;
+    const scrollLeft = container.scrollLeft;
+    const groupWidth = container.offsetWidth;
+    
+    if (groupWidth > 0) {
+      const newIndex = Math.round(scrollLeft / groupWidth);
+      const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
+      
+      if (clampedIndex !== activeIndex) {
+        setActiveIndex(clampedIndex);
+      }
     }
-    return window.innerWidth - 32;
   };
   
+  // التمرير لمجموعة معينة عند النقر على النقطة
   const scrollToGroup = (index) => {
     if (scrollRef.current) {
-      const groupWidth = getGroupWidth();
+      const groupWidth = scrollRef.current.offsetWidth;
       scrollRef.current.scrollTo({
         left: groupWidth * index,
         behavior: 'smooth'
       });
-      setActiveIndex(index);
-    }
-  };
-  
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].clientX);
-    setScrollStart(scrollRef.current?.scrollLeft || 0);
-  };
-  
-  const handleTouchMove = (e) => {
-    if (!isDragging || !scrollRef.current) return;
-    const x = e.touches[0].clientX;
-    const diff = startX - x;
-    scrollRef.current.scrollLeft = scrollStart + diff;
-  };
-  
-  const handleTouchEnd = () => {
-    if (!isDragging || !scrollRef.current) return;
-    setIsDragging(false);
-    
-    const groupWidth = getGroupWidth();
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const newIndex = Math.round(scrollLeft / groupWidth);
-    const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
-    
-    scrollToGroup(clampedIndex);
-  };
-  
-  const handleScroll = () => {
-    if (isDragging || !scrollRef.current) return;
-    
-    const groupWidth = getGroupWidth();
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const newIndex = Math.round(scrollLeft / groupWidth);
-    const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
-    
-    if (clampedIndex !== activeIndex) {
-      setActiveIndex(clampedIndex);
     }
   };
   
@@ -192,7 +160,7 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
-        {stores.length > 4 && (
+        {totalGroups > 1 && (
           <span className="text-gray-400 text-xs flex items-center gap-1">
             اسحب لرؤية المزيد ←
           </span>
@@ -201,38 +169,32 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
       
       <div 
         ref={scrollRef}
-        className="overflow-x-auto hide-scrollbar -mx-4"
+        className="flex overflow-x-auto hide-scrollbar gap-0 -mx-4"
         style={{ 
           scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          scrollBehavior: isDragging ? 'auto' : 'smooth'
+          WebkitOverflowScrolling: 'touch'
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         onScroll={handleScroll}
       >
-        <div className="flex">
-          {Array.from({ length: totalGroups }).map((_, groupIndex) => (
-            <div 
-              key={groupIndex} 
-              className="grid grid-cols-2 grid-rows-2 gap-3 flex-shrink-0 px-4" 
-              style={{ 
-                width: 'calc(100vw - 32px)', 
-                minWidth: 'calc(100vw - 32px)',
-                scrollSnapAlign: 'center',
-                scrollSnapStop: 'always'
-              }}
-            >
-              {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
-                <StoreCard key={store.id} store={store} />
-              ))}
-            </div>
-          ))}
-        </div>
+        {Array.from({ length: totalGroups }).map((_, groupIndex) => (
+          <div 
+            key={groupIndex} 
+            className="grid grid-cols-2 grid-rows-2 gap-3 flex-shrink-0 px-4" 
+            style={{ 
+              width: '100%',
+              minWidth: '100%',
+              scrollSnapAlign: 'start'
+            }}
+          >
+            {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
+              <StoreCard key={store.id} store={store} />
+            ))}
+          </div>
+        ))}
       </div>
       
-      {stores.length > 4 && (
+      {/* مؤشر النقاط */}
+      {totalGroups > 1 && (
         <div className="flex justify-center gap-2 mt-3">
           {Array.from({ length: totalGroups }).map((_, i) => (
             <button 
@@ -241,9 +203,8 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === activeIndex 
                   ? 'bg-[#FF6B00] w-6' 
-                  : 'bg-gray-300 w-2 hover:bg-gray-400'
+                  : 'bg-gray-300 w-2'
               }`}
-              aria-label={`الانتقال للصفحة ${i + 1}`}
             />
           ))}
         </div>
