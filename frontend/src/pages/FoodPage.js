@@ -509,7 +509,7 @@ const FoodPage = () => {
                       <Truck size={16} className="text-white" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-bold text-gray-900">توصيلها مجاني</h2>
+                      <h2 className="text-sm font-bold text-gray-900">توصيل مجاني</h2>
                       <p className="text-[10px] text-gray-500">اطلب واحصل على توصيل مجاني فوراً!</p>
                     </div>
                   </div>
