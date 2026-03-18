@@ -545,16 +545,13 @@ const FoodPage = () => {
                       <p className="text-[10px] text-gray-500">اطلب واحصل على توصيل مجاني فوراً!</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => {
-                      setShowOnlyFreeDelivery(true);
-                      setSearchParams({ filter: 'free_delivery' });
-                    }}
+                  <Link 
+                    to="/food/free-delivery"
                     className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
                   >
                     <span>عرض الكل</span>
                     <ChevronLeft size={14} />
-                  </button>
+                  </Link>
                 </div>
                 
                 <div className="relative">

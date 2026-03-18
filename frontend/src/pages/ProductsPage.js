@@ -69,6 +69,8 @@ const ProductsPage = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
   const [freeShippingProducts, setFreeShippingProducts] = useState([]);
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [sponsoredProducts, setSponsoredProducts] = useState([]);
   
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
@@ -78,18 +80,20 @@ const ProductsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
 
-  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً + شحنها مجاني
+  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً + شحنها مجاني + الرائج + معلن عنها
   useEffect(() => {
     const fetchExtras = async () => {
       try {
-        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes, settingsRes] = await Promise.all([
+        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes, settingsRes, trendingRes, sponsoredRes] = await Promise.all([
           axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
           axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
           axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
-          axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }))
+          axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } })),
+          axios.get(`${API}/products/trending`).catch(() => ({ data: [] })),
+          axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] }))
         ]);
         
         const promo = promoRes.data;
@@ -105,6 +109,8 @@ const ProductsPage = () => {
         setFlashSale(flashRes.data?.flash_sale || null);
         setBestSellers(bestSellersRes.data || []);
         setNewlyAddedProducts(newlyAddedRes.data || []);
+        setTrendingProducts(trendingRes.data || []);
+        setSponsoredProducts(sponsoredRes.data || []);
         
         // جلب منتجات شحنها مجاني (سعرها >= حد الشحن المجاني)
         const threshold = settingsRes.data?.free_shipping_threshold || 150000;
@@ -656,6 +662,80 @@ const ProductsPage = () => {
           </section>
         )}
 
+        {/* 📈 شريط الرائج */}
+        {!isSpecialSection && trendingProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-lg">
+                  <TrendingUp size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">الرائج</h2>
+                  <p className="text-[10px] text-gray-500">المنتجات الأكثر رواجاً</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=trending"
+                className="text-rose-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {trendingProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-rose-100 hover:border-rose-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <TrendingUp size={10} />
+                            رائج
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-rose-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-rose-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 🚚 شريط شحنها مجاني */}
         {!isSpecialSection && freeShippingProducts.length > 0 && (
           <section className="mb-4">
@@ -717,6 +797,80 @@ const ProductsPage = () => {
                           )}
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-green-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ⭐ شريط معلن عنها */}
+        {!isSpecialSection && sponsoredProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg">
+                  <Zap size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">معلن عنها</h2>
+                  <p className="text-[10px] text-gray-500">منتجات مميزة ومُعلن عنها</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=sponsored"
+                className="text-amber-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {sponsoredProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-amber-100 hover:border-amber-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Zap size={10} />
+                            مميز
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-amber-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-amber-600 font-bold text-sm">
                               {product.price?.toLocaleString()} ل.س
                             </span>
                           </div>

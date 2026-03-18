@@ -48,6 +48,7 @@ import PackagingGuidePage from "./pages/PackagingGuidePage";
 import JoinAsSellerPage from "./pages/JoinAsSellerPage";
 import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
 import FoodPage from "./pages/FoodPage";
+import FoodFreeDeliveryPage from "./pages/FoodFreeDeliveryPage";
 import JoinAsFoodSellerPage from "./pages/JoinAsFoodSellerPage";
 import FoodStoreDashboard from "./pages/FoodStoreDashboard";
 import FoodStorePage from "./pages/FoodStorePage";
@@ -186,6 +187,7 @@ function App() {
                 
                 {/* Food Delivery Routes - محمية */}
                 <Route path="/food" element={<FoodRoute><FoodPage /></FoodRoute>} />
+                <Route path="/food/free-delivery" element={<FoodRoute><FoodFreeDeliveryPage /></FoodRoute>} />
                 <Route path="/join/food-seller" element={<FoodRoute><JoinAsFoodSellerPage /></FoodRoute>} />
                 <Route path="/food/dashboard" element={<FoodRoute><FoodStoreDashboard /></FoodRoute>} />
                 <Route path="/food/store/:storeId" element={<FoodRoute><FoodStorePage /></FoodRoute>} />

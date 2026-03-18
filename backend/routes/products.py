@@ -389,6 +389,38 @@ async def get_sponsored_products(limit: int = Query(default=10, le=20)):
     
     return products
 
+@router.get("/trending")
+async def get_trending_products(limit: int = Query(default=10, le=20)):
+    """جلب المنتجات الرائجة (بناءً على المشاهدات والمبيعات)"""
+    cache_key = f"trending_{limit}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+    
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "price": 1,
+        "images": {"$slice": 1},
+        "rating": 1,
+        "reviews_count": 1,
+        "sales_count": 1,
+        "views": 1,
+        "stock": 1,
+        "city": 1
+    }
+    
+    # المنتجات الرائجة = أعلى مشاهدات + مبيعات
+    products = await db.products.find(
+        {"is_active": True, "is_approved": True},
+        projection
+    ).sort([("views", -1), ("sales_count", -1)]).limit(limit).to_list(limit)
+    
+    cache.set(cache_key, products, ttl_seconds=600)
+    
+    return products
+
 # ============== الأكثر مبيعاً والأقل سعراً ==============
 
 @router.get("/best-sellers")
