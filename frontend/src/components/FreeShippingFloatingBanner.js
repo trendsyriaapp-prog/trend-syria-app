@@ -26,6 +26,7 @@ const FreeShippingFloatingBanner = () => {
   const [dismissedStores, setDismissedStores] = useState([]);
   const [lastCartTotal, setLastCartTotal] = useState(0);
   const [lastFoodTotal, setLastFoodTotal] = useState(0);
+  const [manuallyDismissed, setManuallyDismissed] = useState(false);
   
   // الصفحات التي لا يظهر فيها الشريط
   const hiddenPaths = ['/cart', '/food/my-cart', '/food/cart/', '/checkout', '/food/batch-checkout'];
@@ -179,8 +180,8 @@ const FreeShippingFloatingBanner = () => {
         curr.progress > prev.progress ? curr : prev
       );
       setCurrentStore(closest);
-      // إظهار الشريط إذا لم نكن في صفحة محظورة
-      if (!shouldHide) {
+      // إظهار الشريط إذا لم نكن في صفحة محظورة ولم يتم إغلاقه يدوياً
+      if (!shouldHide && !manuallyDismissed) {
         setVisible(true);
       }
     } else {
@@ -188,7 +189,7 @@ const FreeShippingFloatingBanner = () => {
       setCurrentStore(null);
       setVisible(false);
     }
-  }, [storesProgress, dismissedStores, shouldHide]);
+  }, [storesProgress, dismissedStores, shouldHide, manuallyDismissed]);
   
   // تحديث الإظهار عند تغيير الإجمالي
   useEffect(() => {
@@ -200,15 +201,16 @@ const FreeShippingFloatingBanner = () => {
       setLastCartTotal(cartTotal);
     }
     
-    // إظهار الشريط إذا كان هناك منتجات
-    if (currentTotal > 0 && currentStore && !shouldHide) {
+    // إظهار الشريط إذا كان هناك منتجات ولم يتم إغلاقه يدوياً
+    if (currentTotal > 0 && currentStore && !shouldHide && !manuallyDismissed) {
       setVisible(true);
     }
-  }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide]);
+  }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide, manuallyDismissed]);
   
   // إعادة تعيين عند تغيير القسم
   useEffect(() => {
     setDismissedStores([]);
+    setManuallyDismissed(false); // إعادة إظهار الشريط عند الانتقال لقسم آخر
   }, [isFood]);
   
   // إخفاء في صفحات السلة
@@ -263,7 +265,10 @@ const FreeShippingFloatingBanner = () => {
                 
                 {/* زر الإغلاق */}
                 <button 
-                  onClick={() => setVisible(false)}
+                  onClick={() => {
+                    setVisible(false);
+                    setManuallyDismissed(true);
+                  }}
                   className="p-0.5 hover:bg-gray-100 rounded-full flex-shrink-0"
                   data-testid="banner-close-btn"
                 >
