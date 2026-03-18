@@ -297,10 +297,10 @@ const HomePage = () => {
               
               {/* المحتوى */}
               <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
-                <div className="text-white">
+                <div className="text-white" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}>
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <motion.span 
-                      className="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
+                      className="bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
@@ -308,12 +308,13 @@ const HomePage = () => {
                     </motion.span>
                   </div>
                   <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
-                  <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
+                  <p className="text-white text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
                 </div>
                 
                 {/* زر الطلب مع نبض */}
                 <motion.div 
-                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-md"
+                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg border border-gray-200"
+                  style={{ textShadow: 'none' }}
                   animate={{ 
                     scale: [1, 1.05, 1],
                     color: ['#FF6B00', '#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FF5722', '#FF6B00']
