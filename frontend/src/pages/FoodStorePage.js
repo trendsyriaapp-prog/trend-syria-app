@@ -32,6 +32,7 @@ const FoodStorePage = () => {
   const [reviews, setReviews] = useState({ reviews: [], stats: null });
   const [priceRating, setPriceRating] = useState(null);
   const [badgeSettings, setBadgeSettings] = useState(null);
+  const [contentReady, setContentReady] = useState(false); // للتحكم بظهور المحتوى
 
   useEffect(() => {
     fetchStore();
@@ -40,28 +41,38 @@ const FoodStorePage = () => {
     fetchBadgeSettings();
   }, [storeId]);
 
-  // التمرير للمنتج المحدد بعد تحميل البيانات - مرة واحدة فقط
+  // التمرير للمنتج المحدد فوراً عند توفر ref
   useEffect(() => {
-    if (highlightedProductId && store && highlightedRef.current) {
-      // تمرير واحد فقط بعد تحميل المحتوى بالكامل
-      const timeoutId = setTimeout(() => {
-        if (highlightedRef.current) {
-          const element = highlightedRef.current;
-          const elementRect = element.getBoundingClientRect();
-          const absoluteElementTop = elementRect.top + window.pageYOffset;
-          // تمرير للمنتج مع ترك مسافة 120px من الأعلى
-          const offsetPosition = absoluteElementTop - 120;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'instant' // تمرير فوري بدون حركة متكررة
-          });
-        }
-      }, 300);
-      
-      return () => clearTimeout(timeoutId);
-    }
+    if (!highlightedProductId || !store) return;
+    
+    // استخدام requestAnimationFrame للتمرير الفوري بعد render
+    const scrollToHighlighted = () => {
+      if (highlightedRef.current) {
+        const element = highlightedRef.current;
+        const elementRect = element.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
+        const offsetPosition = absoluteElementTop - 120;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'instant'
+        });
+        setContentReady(true);
+      } else {
+        // إذا لم يكن الـ ref جاهزاً، حاول مرة أخرى
+        requestAnimationFrame(scrollToHighlighted);
+      }
+    };
+    
+    requestAnimationFrame(scrollToHighlighted);
   }, [highlightedProductId, store]);
+  
+  // إظهار المحتوى فوراً إذا لم يكن هناك منتج للتمييز
+  useEffect(() => {
+    if (!highlightedProductId && !loading) {
+      setContentReady(true);
+    }
+  }, [highlightedProductId, loading]);
 
   const fetchBadgeSettings = async () => {
     try {
@@ -171,7 +182,7 @@ const FoodStorePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className={`min-h-screen bg-gray-50 pb-24 ${highlightedProductId && !contentReady ? 'invisible' : 'visible'}`}>
       {/* بانر المتجر مغلق */}
       {store.is_open === false && (
         <div className="bg-red-600 text-white px-4 py-3 text-center sticky top-0 z-50">
