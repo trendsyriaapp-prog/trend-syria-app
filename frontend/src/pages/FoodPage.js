@@ -1,7 +1,7 @@
 // /app/frontend/src/pages/FoodPage.js
 // صفحة توصيل الطعام - وجبات سريعة، ماركت، خضار، حلويات، مقاهي، مخابز، مشروبات
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -145,6 +145,8 @@ const FoodPage = () => {
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [badgeSettings, setBadgeSettings] = useState(null);
   const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [activeStoreGroup, setActiveStoreGroup] = useState(0);
+  const storesScrollRef = useRef(null);
 
   // جلب الفئات الديناميكية من الـ API
   useEffect(() => {
@@ -429,20 +431,61 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
-            {/* Stores Section */}
+            {/* Stores Section - 2x2 Grid with Horizontal Scroll */}
             {stores.length > 0 && (
               <section className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
-                  <Link to="/food/stores" className="text-[#FF6B00] text-sm flex items-center gap-1">
-                    عرض الكل <ChevronLeft size={14} />
-                  </Link>
+                  {stores.length > 4 && (
+                    <span className="text-gray-400 text-xs flex items-center gap-1">
+                      اسحب لرؤية المزيد ←
+                    </span>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {stores.slice(0, 4).map((store) => (
-                    <StoreCard key={store.id} store={store} />
-                  ))}
+                <div 
+                  ref={storesScrollRef}
+                  className="overflow-x-auto hide-scrollbar -mx-4 px-4 snap-x snap-mandatory"
+                  onScroll={(e) => {
+                    const scrollLeft = e.target.scrollLeft;
+                    const itemWidth = e.target.scrollWidth / Math.ceil(stores.length / 4);
+                    const newIndex = Math.round(scrollLeft / itemWidth);
+                    if (newIndex !== activeStoreGroup) {
+                      setActiveStoreGroup(newIndex);
+                    }
+                  }}
+                >
+                  <div className="flex gap-3" style={{ width: 'max-content' }}>
+                    {/* تقسيم المتاجر إلى مجموعات من 4 (2×2) */}
+                    {Array.from({ length: Math.ceil(stores.length / 4) }).map((_, groupIndex) => (
+                      <div 
+                        key={groupIndex} 
+                        className="grid grid-cols-2 grid-rows-2 gap-3 snap-center" 
+                        style={{ width: 'calc(100vw - 32px)', maxWidth: '400px' }}
+                      >
+                        {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
+                          <StoreCard key={store.id} store={store} />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                {/* مؤشر النقاط */}
+                {stores.length > 4 && (
+                  <div className="flex justify-center gap-1.5 mt-3">
+                    {Array.from({ length: Math.ceil(stores.length / 4) }).map((_, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => {
+                          if (storesScrollRef.current) {
+                            const itemWidth = storesScrollRef.current.scrollWidth / Math.ceil(stores.length / 4);
+                            storesScrollRef.current.scrollTo({ left: itemWidth * i, behavior: 'smooth' });
+                          }
+                        }}
+                        className={`w-2 h-2 rounded-full transition-colors ${i === activeStoreGroup ? 'bg-[#FF6B00]' : 'bg-gray-300'}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
