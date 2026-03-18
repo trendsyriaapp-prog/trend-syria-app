@@ -297,18 +297,18 @@ const HomePage = () => {
               
               {/* المحتوى */}
               <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
-                <div className="text-white">
+                <div className="text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <motion.span 
-                      className="bg-white/25 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
+                      className="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full text-[9px] font-bold"
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
                       جديد ✨
                     </motion.span>
                   </div>
-                  <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
-                  <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
+                  <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
+                  <p className="text-white text-[10px] md:text-xs font-medium">توصيل سريع من أفضل المطاعم</p>
                 </div>
                 
                 {/* زر الطلب مع نبض */}
