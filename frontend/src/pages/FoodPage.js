@@ -444,23 +444,34 @@ const FoodPage = () => {
                 </div>
                 <div 
                   ref={storesScrollRef}
-                  className="overflow-x-auto hide-scrollbar -mx-4 px-4 snap-x snap-mandatory"
+                  className="overflow-x-auto hide-scrollbar -mx-4 px-4"
+                  style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
                   onScroll={(e) => {
-                    const scrollLeft = e.target.scrollLeft;
-                    const itemWidth = e.target.scrollWidth / Math.ceil(stores.length / 4);
-                    const newIndex = Math.round(scrollLeft / itemWidth);
-                    if (newIndex !== activeStoreGroup) {
-                      setActiveStoreGroup(newIndex);
+                    const container = e.target;
+                    const scrollLeft = container.scrollLeft;
+                    // عرض كل مجموعة = عرض الشاشة - 32px (padding)
+                    const groupWidth = window.innerWidth - 32;
+                    const newIndex = Math.round(scrollLeft / groupWidth);
+                    const maxIndex = Math.ceil(stores.length / 4) - 1;
+                    const clampedIndex = Math.max(0, Math.min(newIndex, maxIndex));
+                    if (clampedIndex !== activeStoreGroup) {
+                      setActiveStoreGroup(clampedIndex);
                     }
                   }}
                 >
-                  <div className="flex gap-3" style={{ width: 'max-content' }}>
+                  <div className="flex" style={{ gap: '0px' }}>
                     {/* تقسيم المتاجر إلى مجموعات من 4 (2×2) */}
                     {Array.from({ length: Math.ceil(stores.length / 4) }).map((_, groupIndex) => (
                       <div 
                         key={groupIndex} 
-                        className="grid grid-cols-2 grid-rows-2 gap-3 snap-center" 
-                        style={{ width: 'calc(100vw - 32px)', maxWidth: '400px' }}
+                        className="grid grid-cols-2 grid-rows-2 gap-3 flex-shrink-0" 
+                        style={{ 
+                          width: 'calc(100vw - 32px)', 
+                          maxWidth: '400px',
+                          scrollSnapAlign: 'start',
+                          paddingLeft: groupIndex === 0 ? '0' : '8px',
+                          paddingRight: '8px'
+                        }}
                       >
                         {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
                           <StoreCard key={store.id} store={store} />
@@ -471,17 +482,18 @@ const FoodPage = () => {
                 </div>
                 {/* مؤشر النقاط */}
                 {stores.length > 4 && (
-                  <div className="flex justify-center gap-1.5 mt-3">
+                  <div className="flex justify-center gap-2 mt-3">
                     {Array.from({ length: Math.ceil(stores.length / 4) }).map((_, i) => (
                       <button 
                         key={i}
                         onClick={() => {
                           if (storesScrollRef.current) {
-                            const itemWidth = storesScrollRef.current.scrollWidth / Math.ceil(stores.length / 4);
-                            storesScrollRef.current.scrollTo({ left: itemWidth * i, behavior: 'smooth' });
+                            const groupWidth = window.innerWidth - 32;
+                            storesScrollRef.current.scrollTo({ left: groupWidth * i, behavior: 'smooth' });
+                            setActiveStoreGroup(i);
                           }
                         }}
-                        className={`w-2 h-2 rounded-full transition-colors ${i === activeStoreGroup ? 'bg-[#FF6B00]' : 'bg-gray-300'}`}
+                        className={`h-2 rounded-full transition-all duration-300 ${i === activeStoreGroup ? 'bg-[#FF6B00] w-6' : 'bg-gray-300 w-2'}`}
                       />
                     ))}
                   </div>

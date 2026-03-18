@@ -168,6 +168,8 @@ class AddressCreate(BaseModel):
     apartment_number: Optional[str] = None
     phone: str
     is_default: bool = False
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class PaymentMethodCreate(BaseModel):
     type: str

@@ -14,6 +14,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import LoyaltyCard from '../components/LoyaltyCard';
 import SupportTickets from '../components/support/SupportTickets';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 // مكونات السائق
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
@@ -116,6 +117,13 @@ const SettingsPage = () => {
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
+    
+    // التحقق من تحديد الموقع على الخريطة - إجباري
+    if (!newAddress.latitude || !newAddress.longitude) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
+    
     try {
       if (editingAddress) {
         await axios.put(`${API}/user/addresses/${editingAddress.id}`, newAddress);
@@ -126,7 +134,7 @@ const SettingsPage = () => {
       }
       setShowAddAddress(false);
       setEditingAddress(null);
-      setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false });
+      setNewAddress({ title: '', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false, latitude: null, longitude: null });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل حفظ العنوان", variant: "destructive" });
@@ -158,7 +166,8 @@ const SettingsPage = () => {
     setNewAddress({
       title: address.title, city: address.city, area: address.area || '', 
       street_number: address.street_number || '', building_number: address.building_number || '', 
-      apartment_number: address.apartment_number || '', phone: address.phone || '', is_default: address.is_default
+      apartment_number: address.apartment_number || '', phone: address.phone || '', is_default: address.is_default,
+      latitude: address.latitude || null, longitude: address.longitude || null
     });
     setShowAddAddress(true);
   };
@@ -428,6 +437,21 @@ const SettingsPage = () => {
                     <input type="text" placeholder="رقم المنزل *" value={newAddress.apartment_number} onChange={(e) => setNewAddress({...newAddress, apartment_number: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
                   </div>
                   <input type="tel" placeholder="رقم الهاتف *" value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className={`w-full p-2 border rounded-lg text-xs ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`} required />
+                  
+                  {/* تحديد الموقع على الخريطة - إجباري */}
+                  <GoogleMapsLocationPicker
+                    label="📍 موقع التوصيل على الخريطة (إجباري)"
+                    required={true}
+                    currentLocation={newAddress.latitude ? { latitude: newAddress.latitude, longitude: newAddress.longitude } : null}
+                    onLocationSelect={(location) => {
+                      if (location) {
+                        setNewAddress({ ...newAddress, latitude: location.latitude, longitude: location.longitude });
+                      } else {
+                        setNewAddress({ ...newAddress, latitude: null, longitude: null });
+                      }
+                    }}
+                  />
+                  
                   <label className={`flex items-center gap-1.5 text-[10px] ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     <input type="checkbox" checked={newAddress.is_default} onChange={(e) => setNewAddress({...newAddress, is_default: e.target.checked})} className="w-3 h-3 accent-[#FF6B00]" />
                     عنوان افتراضي
