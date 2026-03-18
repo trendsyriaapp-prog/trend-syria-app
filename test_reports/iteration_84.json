@@ -1,0 +1,151 @@
+{
+  "summary": "Backend-only testing of driver scenario completed. 20/20 tests passed for the API layer, but discovered CRITICAL BUG: home location fields (home_latitude, home_longitude, home_address) are not saved by backend despite frontend requiring them as mandatory.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "PUT /api/auth/delivery/settings",
+        "issue": "Backend DeliverySettingsUpdate schema missing home_address, home_latitude, home_longitude fields. API accepts these fields but silently ignores them - data is NOT persisted. Frontend requires mandatory location on line 82-84 of DeliverySettingsTab.js",
+        "priority": "CRITICAL",
+        "root_cause": "DeliverySettingsUpdate Pydantic model in auth.py (line 539-543) only has: vehicle_type, vehicle_number, working_city, working_hours - missing home location fields",
+        "suggested_fix": "Add home_address: Optional[str], home_latitude: Optional[float], home_longitude: Optional[float] to DeliverySettingsUpdate model and include them in update_delivery_settings handler"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Driver Settings - Home Location",
+        "issue": "Frontend requires mandatory home location (line 82-84) but backend doesn't save these fields - user sees success toast but data is lost on reload",
+        "affected_selectors": ["GoogleMapsLocationPicker component"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_driver_scenario.py",
+    "/app/test_reports/pytest/driver_scenario_results.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Fix DeliverySettingsUpdate model in /app/backend/routes/auth.py to include home_address, home_latitude, home_longitude fields",
+    "Update update_delivery_settings endpoint to save these fields to database",
+    "Update get_delivery_settings endpoint to return these fields from database"
+  ],
+  "critical_code_review_comments": [
+    "DeliverySettingsUpdate model (auth.py line 539) is incomplete - missing home location fields that frontend sends",
+    "Frontend enforces mandatory location but backend silently discards the data - critical data loss bug",
+    "Driver registration correctly sets is_approved=False for new drivers",
+    "Admin approval workflow works correctly via /api/admin/delivery/{id}/approve",
+    "Payment accounts CRUD working correctly for delivery users"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_driver_scenario.py"
+  ],
+  "success_rate": {
+    "backend": "100% - 20/20 API tests passed (but home location persistence bug found through manual verification)",
+    "frontend": "N/A - Backend only test"
+  },
+  "test_credentials": {
+    "admin": { "phone": "0911111111", "password": "Admin@123" },
+    "test_driver_created": {
+      "phone": "Random (09xxxxxxxx)",
+      "password": "Driver@123Test",
+      "note": "New driver created each test run with random phone"
+    }
+  },
+  "seed_data_creation": "TEST_سائق اختباري جديد driver created, documents submitted, and approved during test",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Driver scenario (Part 2 of 3) complete but with CRITICAL BUG. Home location fields (home_latitude, home_longitude, home_address) are NOT persisted by backend despite frontend requiring them as mandatory. All other driver APIs working correctly (registration, approval, settings, payment accounts, availability).",
+  "features_tested": {
+    "driver_registration": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/register",
+      "notes": "New driver with user_type='delivery' gets is_approved=False by default"
+    },
+    "admin_login": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/login",
+      "notes": "Admin credentials (0911111111/Admin@123) working correctly"
+    },
+    "pending_drivers_list": {
+      "status": "PASSED",
+      "endpoint": "GET /api/admin/delivery/pending",
+      "notes": "Returns drivers with pending document status"
+    },
+    "all_drivers_list": {
+      "status": "PASSED",
+      "endpoint": "GET /api/admin/delivery/all",
+      "notes": "Returns all delivery users"
+    },
+    "driver_documents_submit": {
+      "status": "PASSED",
+      "endpoint": "POST /api/delivery/documents",
+      "notes": "Driver can submit required documents (national_id, photos, license)"
+    },
+    "driver_approval": {
+      "status": "PASSED",
+      "endpoint": "POST /api/admin/delivery/{id}/approve",
+      "notes": "Sets is_approved=True on user and documents"
+    },
+    "driver_login_after_approval": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/login",
+      "notes": "Driver can login and is_approved=True confirmed"
+    },
+    "driver_settings_get": {
+      "status": "PASSED",
+      "endpoint": "GET /api/auth/delivery/settings",
+      "notes": "Returns vehicle_type, vehicle_number, working_city, working_hours (NO home location fields)"
+    },
+    "driver_settings_update_basic": {
+      "status": "PASSED",
+      "endpoint": "PUT /api/auth/delivery/settings",
+      "notes": "Basic settings update works"
+    },
+    "driver_settings_home_location": {
+      "status": "FAILED - BUG",
+      "endpoint": "PUT /api/auth/delivery/settings",
+      "notes": "API accepts home_latitude, home_longitude, home_address but DOES NOT save them - returns success but data is lost"
+    },
+    "payment_accounts_crud": {
+      "status": "PASSED",
+      "endpoints": [
+        "GET /api/auth/delivery/payment-accounts",
+        "POST /api/auth/delivery/payment-accounts"
+      ],
+      "notes": "Full CRUD operations working for shamcash account type"
+    },
+    "driver_stats": {
+      "status": "PASSED",
+      "endpoint": "GET /api/delivery/stats",
+      "notes": "Returns total_delivered, total_earnings, etc."
+    },
+    "driver_availability": {
+      "status": "PASSED",
+      "endpoints": [
+        "GET /api/delivery/availability",
+        "PUT /api/delivery/availability"
+      ],
+      "notes": "Can get and set availability status"
+    },
+    "unauthorized_access": {
+      "status": "PASSED",
+      "notes": "401 for unauthenticated, 403 for wrong user type"
+    }
+  },
+  "rca_of_the_issue": {
+    "bug_title": "Driver home location not persisted by backend",
+    "reproduction_steps": [
+      "1. Login as driver",
+      "2. PUT /api/auth/delivery/settings with home_latitude, home_longitude, home_address",
+      "3. API returns 200 success",
+      "4. GET /api/auth/delivery/settings",
+      "5. home_* fields are missing from response - data was not saved"
+    ],
+    "root_cause": "DeliverySettingsUpdate Pydantic model in /app/backend/routes/auth.py (line 539-543) doesn't include home_address, home_latitude, home_longitude fields. The update_delivery_settings handler only processes fields defined in the model, so home location data is silently ignored.",
+    "impact": "Critical - Driver cannot save their home location despite frontend requiring it as mandatory. User experience: sees success message but data is lost on page reload.",
+    "suggested_mitigation": "Update DeliverySettingsUpdate model to include: home_address: Optional[str] = None, home_latitude: Optional[float] = None, home_longitude: Optional[float] = None. Then update the update_delivery_settings and get_delivery_settings functions to handle these fields."
+  }
+}
