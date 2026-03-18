@@ -43,9 +43,17 @@ const FoodStorePage = () => {
   // التمرير للمنتج المحدد بعد تحميل البيانات
   useEffect(() => {
     if (highlightedProductId && store && highlightedRef.current) {
-      setTimeout(() => {
-        highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500);
+      // محاولات متعددة للتمرير
+      const scrollToProduct = () => {
+        if (highlightedRef.current) {
+          highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      
+      // تمرير فوري ثم بعد تحميل المحتوى
+      setTimeout(scrollToProduct, 300);
+      setTimeout(scrollToProduct, 800);
+      setTimeout(scrollToProduct, 1500);
     }
   }, [highlightedProductId, store]);
 
@@ -429,16 +437,22 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badg
       ref={highlightedRef}
       whileTap={{ scale: 0.98 }}
       onClick={onView}
-      initial={isHighlighted ? { scale: 1.02, boxShadow: '0 0 20px rgba(147, 51, 234, 0.5)' } : {}}
+      initial={isHighlighted ? { scale: 1.02 } : {}}
       animate={isHighlighted ? { 
-        scale: [1.02, 1, 1.02], 
-        boxShadow: ['0 0 20px rgba(147, 51, 234, 0.5)', '0 0 10px rgba(147, 51, 234, 0.3)', '0 0 20px rgba(147, 51, 234, 0.5)']
+        scale: [1.02, 1, 1.02],
       } : {}}
-      transition={isHighlighted ? { duration: 2, repeat: 2 } : {}}
-      className={`bg-white rounded-xl p-3 border-2 flex gap-3 cursor-pointer transition-shadow
-        ${isHighlighted ? 'border-purple-500 bg-purple-50 shadow-lg' : 'border-gray-200'}
+      transition={isHighlighted ? { duration: 1.5, repeat: 3 } : {}}
+      className={`relative bg-white rounded-xl p-3 flex gap-3 cursor-pointer transition-all
+        ${isHighlighted ? 'border-4 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 shadow-xl ring-4 ring-purple-200' : 'border-2 border-gray-200'}
         ${isStoreClosed ? 'opacity-60' : 'hover:shadow-md'}`}
     >
+      {/* شريط "المنتج المحدد" */}
+      {isHighlighted && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg animate-bounce">
+          ⭐ المنتج الذي اخترته
+        </div>
+      )}
+      
       <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
         {product.images?.[0] ? (
           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
