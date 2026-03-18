@@ -125,81 +125,20 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون كاروسيل المتاجر - تصميم محسّن
-const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
-  const totalGroups = Math.ceil(stores.length / 4);
-  const [currentDot, setCurrentDot] = useState(0);
-  
-  // تتبع التمرير وتحديث النقطة
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    
-    const handleScroll = () => {
-      const scrollLeft = container.scrollLeft;
-      const width = container.offsetWidth;
-      
-      if (width > 0) {
-        const newIndex = Math.round(scrollLeft / width);
-        const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
-        setCurrentDot(clampedIndex);
-      }
-    };
-    
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [scrollRef, totalGroups]);
-  
+// مكون المتاجر - شبكة ثابتة 2×2
+const StoresCarousel = ({ stores, StoreCard }) => {
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
-        {totalGroups > 1 && (
-          <span className="text-gray-400 text-xs">اسحب لرؤية المزيد ←</span>
-        )}
       </div>
       
-      {/* حاوية التمرير */}
-      <div 
-        ref={scrollRef}
-        className="overflow-x-auto hide-scrollbar"
-        style={{ 
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        <div className="flex">
-          {Array.from({ length: totalGroups }).map((_, groupIndex) => (
-            <div 
-              key={groupIndex} 
-              className="min-w-full grid grid-cols-2 gap-3"
-              style={{ scrollSnapAlign: 'start' }}
-            >
-              {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
-                <StoreCard key={store.id} store={store} />
-              ))}
-            </div>
-          ))}
-        </div>
+      {/* شبكة ثابتة 2×2 */}
+      <div className="grid grid-cols-2 gap-3">
+        {stores.slice(0, 4).map((store) => (
+          <StoreCard key={store.id} store={store} />
+        ))}
       </div>
-      
-      {/* النقاط */}
-      {totalGroups > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-4">
-          {Array.from({ length: totalGroups }).map((_, i) => (
-            <div 
-              key={i}
-              className={`
-                rounded-full transition-all duration-300
-                ${i === currentDot 
-                  ? 'w-6 h-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00]' 
-                  : 'w-2 h-2 bg-gray-300'
-                }
-              `}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 };
@@ -510,13 +449,10 @@ const FoodPage = () => {
           </div>
         ) : (
           <>
-            {/* Stores Section - 2x2 Grid with Horizontal Scroll */}
+            {/* Stores Section - 2x2 Grid */}
             {stores.length > 0 && (
               <StoresCarousel 
                 stores={stores} 
-                activeIndex={activeStoreGroup}
-                setActiveIndex={setActiveStoreGroup}
-                scrollRef={storesScrollRef}
                 StoreCard={StoreCard}
               />
             )}
