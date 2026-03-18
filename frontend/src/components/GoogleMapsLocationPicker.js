@@ -207,11 +207,24 @@ const GoogleMapsLocationPicker = ({
       {/* رسالة المساعدة */}
       {!isLocationSet && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-700 font-bold mb-1">💡 كيفية تحديد الموقع:</p>
-          <ol className="text-xs text-blue-600 space-y-1 list-decimal list-inside">
-            <li>اضغط "موقعي الحالي" للتحديد التلقائي</li>
-            <li>أو افتح Google Maps → حدد موقعك → انسخ الرابط → اضغط "لصق من Maps"</li>
-          </ol>
+          <p className="text-xs text-blue-700 font-bold mb-2">💡 كيفية تحديد الموقع:</p>
+          <div className="text-xs text-blue-600 space-y-2">
+            <div className="flex items-start gap-2">
+              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</span>
+              <span>اضغط <strong>"موقعي الحالي"</strong> للتحديد التلقائي</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</span>
+              <div>
+                <span>أو افتح Google Maps:</span>
+                <ul className="mt-1 mr-2 space-y-0.5 text-[10px] text-blue-500">
+                  <li>• حدد موقعك على الخريطة</li>
+                  <li>• انسخ الرابط من شريط العنوان</li>
+                  <li>• اضغط <strong>"لصق من Maps"</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
