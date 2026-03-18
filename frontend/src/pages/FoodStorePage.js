@@ -43,17 +43,26 @@ const FoodStorePage = () => {
   // التمرير للمنتج المحدد بعد تحميل البيانات
   useEffect(() => {
     if (highlightedProductId && store && highlightedRef.current) {
-      // محاولات متعددة للتمرير
+      // محاولات متعددة للتمرير مع offset لضمان ظهور المنتج بالكامل
       const scrollToProduct = () => {
         if (highlightedRef.current) {
-          highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const element = highlightedRef.current;
+          const elementRect = element.getBoundingClientRect();
+          const absoluteElementTop = elementRect.top + window.pageYOffset;
+          // تمرير للمنتج مع ترك مسافة 150px من الأعلى
+          const offsetPosition = absoluteElementTop - 150;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
         }
       };
       
-      // تمرير فوري ثم بعد تحميل المحتوى
-      setTimeout(scrollToProduct, 300);
-      setTimeout(scrollToProduct, 800);
-      setTimeout(scrollToProduct, 1500);
+      // تمرير بعد تحميل المحتوى
+      setTimeout(scrollToProduct, 500);
+      setTimeout(scrollToProduct, 1000);
+      setTimeout(scrollToProduct, 2000);
     }
   }, [highlightedProductId, store]);
 
