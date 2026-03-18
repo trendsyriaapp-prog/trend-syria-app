@@ -144,6 +144,9 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             end_date = global_free_shipping.get("end_date")
             if end_date:
                 end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                # ضمان أن end_datetime يحتوي على معلومات المنطقة الزمنية
+                if end_datetime.tzinfo is None:
+                    end_datetime = end_datetime.replace(tzinfo=timezone.utc)
                 if now <= end_datetime:
                     is_global_free_shipping = True
             else:

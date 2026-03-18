@@ -1,0 +1,198 @@
+{
+  "summary": "Backend-only testing of Customer Scenario (Part 3 of 3) completed successfully. 25/25 tests passed. FIXED: Critical datetime comparison bug in orders.py that caused 500 error during order creation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [],
+    "fixed_during_testing": [
+      {
+        "endpoint": "POST /api/orders",
+        "issue": "500 error when creating orders due to datetime comparison between timezone-aware and timezone-naive datetimes",
+        "priority": "CRITICAL",
+        "root_cause": "Line 147 in orders.py compared 'now' (timezone-aware, UTC) with 'end_datetime' which could be timezone-naive when parsed from database",
+        "fix_applied": "Added timezone check and fallback to UTC when end_datetime.tzinfo is None",
+        "file_modified": "/app/backend/routes/orders.py"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_customer_scenario.py",
+    "/app/test_reports/pytest/customer_scenario_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fixed datetime comparison bug in orders.py - now handles both timezone-aware and timezone-naive datetimes",
+    "Customer registration with user_type=buyer correctly auto-approves the account",
+    "Address creation correctly persists latitude/longitude fields",
+    "Cart operations (add, update, clear) working correctly",
+    "Order creation, tracking, and retrieval all working correctly",
+    "Payment methods CRUD operations working correctly"
+  ],
+  "updated_files": [
+    "/app/backend/routes/orders.py",
+    "/app/backend/tests/test_customer_scenario.py"
+  ],
+  "success_rate": {
+    "backend": "100% - 25/25 tests passed",
+    "frontend": "N/A - Backend only test"
+  },
+  "test_credentials": {
+    "admin": { "phone": "0911111111", "password": "Admin@123" },
+    "test_customer_created": {
+      "phone": "Random (09xxxxxxxx)",
+      "password": "Customer@123Test",
+      "note": "New customer created each test run with random phone"
+    }
+  },
+  "seed_data_creation": "TEST_عميل اختباري جديد customer created with address, payment method, and order during test",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 scenarios tested successfully: Seller (iteration_83), Driver (iteration_84), Customer (iteration_85). Critical bug fixed in orders.py - datetime comparison issue. Note: Driver home location bug from iteration_84 still exists (separate issue).",
+  "features_tested": {
+    "customer_registration": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/register",
+      "notes": "New customer with user_type='buyer' gets is_approved=True automatically"
+    },
+    "duplicate_phone_registration": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/register",
+      "notes": "Returns 400 with Arabic message when phone already registered"
+    },
+    "customer_login": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/login",
+      "notes": "Token returned in 'token' field (not 'access_token')"
+    },
+    "wrong_password_login": {
+      "status": "PASSED",
+      "endpoint": "POST /api/auth/login",
+      "notes": "Returns 401 for wrong password"
+    },
+    "get_current_user": {
+      "status": "PASSED",
+      "endpoint": "GET /api/auth/me",
+      "notes": "Returns user profile correctly"
+    },
+    "add_address_with_location": {
+      "status": "PASSED",
+      "endpoint": "POST /api/user/addresses",
+      "notes": "Latitude/longitude fields are correctly persisted"
+    },
+    "get_addresses": {
+      "status": "PASSED",
+      "endpoint": "GET /api/user/addresses",
+      "notes": "Returns list of addresses with all fields"
+    },
+    "update_address": {
+      "status": "PASSED",
+      "endpoint": "PUT /api/user/addresses/{id}",
+      "notes": "All fields including location are updated"
+    },
+    "browse_products": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products",
+      "notes": "Returns paginated product list"
+    },
+    "browse_by_category": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products?category=X",
+      "notes": "Category filtering works"
+    },
+    "get_categories": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products/categories",
+      "notes": "Returns list of categories with icons"
+    },
+    "get_featured": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products/featured",
+      "notes": "Returns featured products"
+    },
+    "get_empty_cart": {
+      "status": "PASSED",
+      "endpoint": "GET /api/cart",
+      "notes": "Returns empty cart with total=0"
+    },
+    "add_to_cart": {
+      "status": "PASSED",
+      "endpoint": "POST /api/cart/add",
+      "notes": "Product added to cart successfully"
+    },
+    "get_cart_with_items": {
+      "status": "PASSED",
+      "endpoint": "GET /api/cart",
+      "notes": "Returns cart items with product details"
+    },
+    "update_cart_quantity": {
+      "status": "PASSED",
+      "endpoint": "PUT /api/cart/update",
+      "notes": "Quantity updated correctly"
+    },
+    "create_order": {
+      "status": "PASSED (BUG FIXED)",
+      "endpoint": "POST /api/orders",
+      "notes": "Fixed datetime comparison bug - order creation now works correctly"
+    },
+    "get_order_details": {
+      "status": "PASSED",
+      "endpoint": "GET /api/orders/{id}",
+      "notes": "Returns full order details with items"
+    },
+    "get_customer_orders": {
+      "status": "PASSED",
+      "endpoint": "GET /api/orders",
+      "notes": "Returns list of customer's orders"
+    },
+    "get_order_tracking": {
+      "status": "PASSED",
+      "endpoint": "GET /api/orders/{id}/tracking",
+      "notes": "Returns tracking info with steps"
+    },
+    "clear_cart": {
+      "status": "PASSED",
+      "endpoint": "DELETE /api/cart",
+      "notes": "Cart cleared successfully"
+    },
+    "payment_methods_crud": {
+      "status": "PASSED",
+      "endpoints": [
+        "POST /api/user/payment-methods",
+        "GET /api/user/payment-methods",
+        "DELETE /api/user/payment-methods/{id}"
+      ],
+      "notes": "All CRUD operations working"
+    },
+    "unauthorized_access": {
+      "status": "PASSED",
+      "notes": "401 returned for missing/invalid token"
+    },
+    "best_sellers": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products/best-sellers",
+      "notes": "Returns best selling products"
+    },
+    "newly_added": {
+      "status": "PASSED",
+      "endpoint": "GET /api/products/newly-added",
+      "notes": "Returns newly added products"
+    }
+  },
+  "rca_of_the_issue": {
+    "bug_title": "Order creation fails with 500 error - datetime comparison error",
+    "reproduction_steps": [
+      "1. Login as customer",
+      "2. Add product to cart",
+      "3. POST /api/orders to create order",
+      "4. Backend throws TypeError: can't compare offset-naive and offset-aware datetimes"
+    ],
+    "root_cause": "In /app/backend/routes/orders.py line 147, the code compares 'now' (which is datetime.now(timezone.utc) - timezone-aware) with 'end_datetime' parsed from database which might be timezone-naive if the stored end_date doesn't have timezone info.",
+    "impact": "Critical - All order creation was broken, customers couldn't place orders",
+    "fix_applied": "Added check for end_datetime.tzinfo is None and fallback to UTC timezone if missing",
+    "status": "FIXED"
+  }
+}

@@ -541,6 +541,9 @@ class DeliverySettingsUpdate(BaseModel):
     vehicle_number: Optional[str] = None
     working_city: Optional[str] = None
     working_hours: Optional[str] = None
+    home_address: Optional[str] = None
+    home_latitude: Optional[float] = None
+    home_longitude: Optional[float] = None
 
 @router.get("/delivery/settings")
 async def get_delivery_settings(user: dict = Depends(get_current_user)):
@@ -550,14 +553,18 @@ async def get_delivery_settings(user: dict = Depends(get_current_user)):
     
     delivery = await db.users.find_one(
         {"id": user["id"]},
-        {"_id": 0, "vehicle_type": 1, "vehicle_number": 1, "working_city": 1, "working_hours": 1, "city": 1}
+        {"_id": 0, "vehicle_type": 1, "vehicle_number": 1, "working_city": 1, "working_hours": 1, "city": 1,
+         "home_address": 1, "home_latitude": 1, "home_longitude": 1}
     )
     
     return {
         "vehicle_type": delivery.get("vehicle_type", "motorcycle"),
         "vehicle_number": delivery.get("vehicle_number", ""),
         "working_city": delivery.get("working_city", delivery.get("city", "دمشق")),
-        "working_hours": delivery.get("working_hours", "")
+        "working_hours": delivery.get("working_hours", ""),
+        "home_address": delivery.get("home_address", ""),
+        "home_latitude": delivery.get("home_latitude"),
+        "home_longitude": delivery.get("home_longitude")
     }
 
 @router.put("/delivery/settings")
@@ -575,6 +582,12 @@ async def update_delivery_settings(settings: DeliverySettingsUpdate, user: dict 
         update_data["working_city"] = settings.working_city
     if settings.working_hours is not None:
         update_data["working_hours"] = settings.working_hours
+    if settings.home_address is not None:
+        update_data["home_address"] = settings.home_address
+    if settings.home_latitude is not None:
+        update_data["home_latitude"] = settings.home_latitude
+    if settings.home_longitude is not None:
+        update_data["home_longitude"] = settings.home_longitude
     
     if update_data:
         update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
