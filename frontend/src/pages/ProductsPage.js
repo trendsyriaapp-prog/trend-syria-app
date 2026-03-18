@@ -139,10 +139,10 @@ const ProductsPage = () => {
   const priceMin = searchParams.get('price_min') || '';
   const priceMax = searchParams.get('price_max') || '';
   const cityFilter = searchParams.get('city') || '';
-  const sort = searchParams.get('sort') || 'newest';
+  const sort = searchParams.get('sort') || '';
   
   // التحقق إذا كانت صفحة قسم مخصص (بدون بانرات وأقسام إضافية)
-  const isSpecialSection = ['trending', 'deals', 'newest', 'popular', 'flash', 'sponsored'].includes(sort);
+  const isSpecialSection = ['trending', 'deals', 'popular', 'flash', 'sponsored'].includes(sort);
 
   // Reset when filters change
   useEffect(() => {
