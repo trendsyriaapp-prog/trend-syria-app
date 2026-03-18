@@ -2,6 +2,7 @@
 // مكون البحث عن المنتجات بالصورة
 
 import { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -146,13 +147,13 @@ const ImageSearchModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/60 z-[100] flex items-start justify-center p-4 pt-8 overflow-y-auto"
         onClick={onClose}
       >
         <motion.div
@@ -435,6 +436,9 @@ const ImageSearchModal = ({ isOpen, onClose }) => {
       </motion.div>
     </AnimatePresence>
   );
+
+  // استخدام Portal لعرض Modal خارج Header
+  return createPortal(modalContent, document.body);
 };
 
 export default ImageSearchModal;
