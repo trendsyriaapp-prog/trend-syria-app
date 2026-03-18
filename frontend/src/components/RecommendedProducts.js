@@ -118,8 +118,6 @@ const ProductCard = memo(({ product, sectionColor = 'purple', deliveryBadge, bad
 // مكون القسم - خارج المكون الرئيسي مع useRef للحفاظ على موقع الـ scroll
 const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, products, sectionColor, badgeIndex, getDeliveryBadge }) => {
   const scrollRef = useRef(null);
-  
-  if (products.length === 0) return null;
 
   return (
     <section className="mb-4">
@@ -137,17 +135,21 @@ const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, prod
       </div>
 
       <div className="px-3">
-        <div ref={scrollRef} className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-          {products.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              sectionColor={sectionColor}
-              deliveryBadge={getDeliveryBadge(product)}
-              badgeIndex={badgeIndex}
-            />
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div ref={scrollRef} className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            {products.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                sectionColor={sectionColor}
+                deliveryBadge={getDeliveryBadge(product)}
+                badgeIndex={badgeIndex}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-sm text-center py-4">لا توجد منتجات حالياً</p>
+        )}
       </div>
     </section>
   );
@@ -227,12 +229,38 @@ const RecommendedProducts = () => {
   if (!loaded) {
     return (
       <div className="py-2 space-y-4">
-        {[1, 2, 3].map(i => (
+        {[
+          { title: 'رائج الآن', icon: TrendingUp, gradient: 'from-purple-500 to-pink-500', link: 'text-purple-500' },
+          { title: 'عروض وخصومات', icon: Tag, gradient: 'from-green-500 to-emerald-500', link: 'text-green-500' },
+          { title: 'منتجات جديدة', icon: Sparkles, gradient: 'from-cyan-500 to-blue-500', link: 'text-cyan-500' }
+        ].map((section, i) => (
           <div key={i} className="px-3 mb-4">
-            <div className="h-6 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`p-1 bg-gradient-to-r ${section.gradient} rounded-lg`}>
+                  <section.icon size={14} className="text-white" />
+                </div>
+                <h2 className="text-sm font-bold text-gray-900">{section.title}</h2>
+              </div>
+              <span className={`${section.link} flex items-center gap-1 text-xs font-medium`}>
+                عرض الكل
+                <ChevronLeft size={14} />
+              </span>
+            </div>
+            {/* Skeleton Cards */}
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {[1, 2, 3, 4].map(j => (
-                <div key={j} className="flex-shrink-0 w-36 bg-gray-100 rounded-xl h-48 animate-pulse" />
+                <div key={j} className="flex-shrink-0 w-36 animate-pulse">
+                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="aspect-square bg-gray-200" />
+                    <div className="p-2 space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-3/4" />
+                      <div className="h-2 bg-gray-200 rounded w-1/2" />
+                      <div className="h-3 bg-gray-200 rounded w-2/3" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

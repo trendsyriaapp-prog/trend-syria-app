@@ -27,6 +27,43 @@ const iconMap = {
   Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 };
 
+// مكون Skeleton للمنتجات - يظهر أثناء التحميل
+const ProductSkeleton = ({ count = 4, color = 'gray' }) => (
+  <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+    {[...Array(count)].map((_, i) => (
+      <div key={i} className="flex-shrink-0 w-36 animate-pulse">
+        <div className={`bg-white rounded-xl overflow-hidden border-2 border-${color}-100`}>
+          <div className="aspect-square bg-gray-200" />
+          <div className="p-2 space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-3/4" />
+            <div className="h-2 bg-gray-200 rounded w-1/2" />
+            <div className="h-3 bg-gray-200 rounded w-2/3" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// مكون Section Header
+const SectionHeader = ({ icon: Icon, title, linkTo, linkColor = 'text-purple-600', iconBg = 'from-purple-500 to-pink-500' }) => (
+  <div className="flex items-center justify-between mb-2">
+    <div className="flex items-center gap-2">
+      <div className={`p-1 bg-gradient-to-r ${iconBg} rounded-lg`}>
+        <Icon size={14} className="text-white" />
+      </div>
+      <h2 className="text-sm font-bold text-gray-900">{title}</h2>
+    </div>
+    <Link 
+      to={linkTo}
+      className={`${linkColor} flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium`}
+    >
+      عرض الكل
+      <ChevronLeft size={14} />
+    </Link>
+  </div>
+);
+
 const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -295,38 +332,24 @@ const HomePage = () => {
       <DailyDeal />
 
       {/* 1. Sponsored Products - المنتجات المُعلن عنها */}
-      {sponsoredProducts.length > 0 && (
-        <section className="py-1.5">
-          <div className="max-w-7xl mx-auto px-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                  <Star size={14} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">منتجات مُعلن عنها</h2>
-                </div>
-              </div>
-              <Link 
-                to="/products?sort=sponsored"
-                className="text-purple-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={14} />
-              </Link>
-            </div>
-            
-            {/* Sponsored Products Horizontal Scroll */}
-            <div className="relative">
+      <section className="py-1.5">
+        <div className="max-w-7xl mx-auto px-3">
+          <SectionHeader 
+            icon={Star} 
+            title="منتجات مُعلن عنها" 
+            linkTo="/products?sort=sponsored"
+            linkColor="text-purple-600"
+            iconBg="from-purple-500 to-pink-500"
+          />
+          
+          {/* Sponsored Products Horizontal Scroll */}
+          <div className="relative">
+            {loading ? (
+              <ProductSkeleton count={4} color="purple" />
+            ) : sponsoredProducts.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
                 {sponsoredProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
+                  <div key={product.id} className="flex-shrink-0 w-36">
                     <Link to={`/products/${product.id}`}>
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
@@ -364,48 +387,35 @@ const HomePage = () => {
                         </div>
                       </div>
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-gray-400 text-sm text-center py-4">لا توجد منتجات مُعلن عنها حالياً</p>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* 2. Flash Sale Products - عروض فلاش */}
-      {shopFlashProducts.length > 0 && shopFlashSale && (
-        <section className="py-1.5">
-          <div className="max-w-7xl mx-auto px-3">
-            {/* Flash Sale Header with Countdown */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                  <Zap size={14} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">عروض فلاش</h2>
-                </div>
-              </div>
-              <Link 
-                to="/products?sort=flash"
-                className="text-orange-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={14} />
-              </Link>
-            </div>
-            
-            {/* Flash Products Horizontal Scroll */}
-            <div className="relative">
+      <section className="py-1.5">
+        <div className="max-w-7xl mx-auto px-3">
+          <SectionHeader 
+            icon={Zap} 
+            title="عروض فلاش" 
+            linkTo="/products?sort=flash"
+            linkColor="text-orange-600"
+            iconBg="from-orange-500 to-red-500"
+          />
+          
+          {/* Flash Products Horizontal Scroll */}
+          <div className="relative">
+            {loading ? (
+              <ProductSkeleton count={4} color="orange" />
+            ) : shopFlashProducts.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
                 {shopFlashProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
+                  <div key={product.id} className="flex-shrink-0 w-36">
                     <Link to={`/products/${product.id}`}>
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
@@ -446,13 +456,15 @@ const HomePage = () => {
                         </div>
                       </div>
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-gray-400 text-sm text-center py-4">لا توجد عروض فلاش حالياً</p>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* 3. قسم التوصيات - رائج + عروض + جديد */}
       <section className="py-1.5 bg-gradient-to-b from-white to-gray-50">
