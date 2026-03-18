@@ -83,6 +83,10 @@ const FoodCartPage = () => {
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   
+  // Modal الخريطة لتحديد الموقع
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [tempLocation, setTempLocation] = useState({ latitude: null, longitude: null });
+  
   // إعدادات المنصة - حد التوصيل المجاني الموحد
   const [platformFreeDeliveryThreshold, setPlatformFreeDeliveryThreshold] = useState(100000);
   
@@ -389,6 +393,44 @@ const FoodCartPage = () => {
     saveCart(newItems);
   };
 
+  // حفظ الموقع المحدد من Modal الخريطة
+  const handleSaveLocation = async () => {
+    if (!tempLocation.latitude || !tempLocation.longitude) {
+      toast({ title: "تنبيه", description: "يرجى تحديد موقعك على الخريطة", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      // تحديث العنوان المحفوظ بالموقع الجديد
+      const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
+      if (selectedAddr) {
+        await axios.put(`${API}/user/addresses/${selectedAddressId}`, {
+          ...selectedAddr,
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // تحديث العناوين المحلية
+        setSavedAddresses(prev => prev.map(a => 
+          a.id === selectedAddressId 
+            ? { ...a, latitude: tempLocation.latitude, longitude: tempLocation.longitude }
+            : a
+        ));
+        
+        setShowLocationModal(false);
+        toast({ title: "تم", description: "تم حفظ الموقع بنجاح", variant: "default" });
+        
+        // إعادة حساب رسوم التوصيل
+        calculateDistanceDeliveryFee();
+      }
+    } catch (error) {
+      console.error('Error saving location:', error);
+      toast({ title: "خطأ", description: "فشل في حفظ الموقع", variant: "destructive" });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!token) {
       toast({ title: "تنبيه", description: "يجب تسجيل الدخول أولاً", variant: "destructive" });
@@ -410,6 +452,15 @@ const FoodCartPage = () => {
     } else if (!selectedAddressId) {
       toast({ title: "تنبيه", description: "يرجى اختيار عنوان التوصيل", variant: "destructive" });
       return;
+    } else {
+      // التحقق من وجود موقع للعنوان المحفوظ
+      const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
+      if (!selectedAddr?.latitude || !selectedAddr?.longitude) {
+        // فتح Modal الخريطة لتحديد الموقع
+        setTempLocation({ latitude: null, longitude: null });
+        setShowLocationModal(true);
+        return;
+      }
     }
 
     // التحقق من طريقة الدفع
@@ -1262,6 +1313,99 @@ const FoodCartPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal تحديد الموقع على الخريطة */}
+      <AnimatePresence>
+        {showLocationModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowLocationModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-[#FF6B00] text-white p-4 flex items-center justify-between">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <MapPin size={20} />
+                  تحديد موقع التوصيل
+                </h3>
+                <button
+                  onClick={() => setShowLocationModal(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-4">
+                <p className="text-gray-600 text-sm mb-4 text-center">
+                  يرجى تحديد موقعك على الخريطة لضمان وصول الطلب بدقة
+                </p>
+                
+                {/* العنوان المحفوظ */}
+                {selectedAddressId && (
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-gray-500 mb-1">العنوان المسجل:</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {(() => {
+                        const addr = savedAddresses.find(a => a.id === selectedAddressId);
+                        return addr ? `${addr.area}${addr.street_number ? ' - شارع ' + addr.street_number : ''}` : '';
+                      })()}
+                    </p>
+                  </div>
+                )}
+                
+                {/* الخريطة */}
+                <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
+                  <GoogleMapsLocationPicker
+                    currentLocation={tempLocation.latitude ? tempLocation : null}
+                    onLocationSelect={(location) => {
+                      setTempLocation({ latitude: location.latitude, longitude: location.longitude });
+                    }}
+                    onLocationClear={() => {
+                      setTempLocation({ latitude: null, longitude: null });
+                    }}
+                  />
+                </div>
+                
+                {tempLocation.latitude && (
+                  <p className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
+                    <Check size={14} />
+                    تم تحديد الموقع بنجاح
+                  </p>
+                )}
+              </div>
+              
+              {/* Footer */}
+              <div className="p-4 border-t bg-gray-50 flex gap-3">
+                <button
+                  onClick={() => setShowLocationModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleSaveLocation}
+                  disabled={!tempLocation.latitude}
+                  className="flex-1 py-3 rounded-xl bg-[#FF6B00] text-white font-bold hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  <Check size={18} />
+                  حفظ الموقع
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
