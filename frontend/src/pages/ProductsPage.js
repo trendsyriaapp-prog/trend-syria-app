@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package, Truck } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
@@ -89,7 +89,7 @@ const ProductsPage = () => {
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
           axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
-          axios.get(`${API}/settings/platform`).catch(() => ({ data: { free_shipping_threshold: 150000 } }))
+          axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }))
         ]);
         
         const promo = promoRes.data;

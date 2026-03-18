@@ -9,7 +9,7 @@ import {
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Store, Heart, Sparkles, Cake,
   Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X,
-  ShoppingBasket
+  ShoppingBasket, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -283,7 +283,7 @@ const FoodPage = () => {
     setLoading(true);
     try {
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
-      const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes, featuredRes] = await Promise.all([
+      const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes, featuredRes, publicSettingsRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
@@ -298,7 +298,8 @@ const FoodPage = () => {
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
         axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/featured-stores/public`).catch(() => ({ data: { is_featured: false, stores: [] } }))
+        axios.get(`${API}/settings/featured-stores/public`).catch(() => ({ data: { is_featured: false, stores: [] } })),
+        axios.get(`${API}/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 100000 } }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
@@ -318,6 +319,17 @@ const FoodPage = () => {
       } else {
         setGlobalFreeShipping(null);
       }
+      
+      // جلب منتجات التوصيل المجاني (سعرها >= حد التوصيل المجاني)
+      const foodThreshold = publicSettingsRes.data?.food_free_delivery_threshold || 100000;
+      try {
+        const allProducts = productsRes.data || [];
+        const freeDeliveryItems = allProducts.filter(p => p.price >= foodThreshold);
+        setFreeDeliveryProducts(freeDeliveryItems.slice(0, 10));
+      } catch (err) {
+        console.error('Error filtering free delivery products:', err);
+        setFreeDeliveryProducts([]);
+      }
     } catch (error) {
       console.error('Error fetching food data:', error);
       setStores([]);
@@ -325,6 +337,7 @@ const FoodPage = () => {
       setFlashSales([]);
       setFoodBanners([]);
       setGlobalFreeShipping(null);
+      setFreeDeliveryProducts([]);
     } finally {
       setLoading(false);
     }
@@ -484,6 +497,73 @@ const FoodPage = () => {
                 {flashSales.slice(0, 1).map((flash) => (
                   <FlashSaleBanner key={flash.id} flash={flash} />
                 ))}
+              </section>
+            )}
+
+            {/* 🚚 قسم توصيلها مجاني */}
+            {freeDeliveryProducts.length > 0 && (
+              <section className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                      <Truck size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-bold text-gray-900">توصيلها مجاني</h2>
+                      <p className="text-[10px] text-gray-500">اطلب واحصل على توصيل مجاني فوراً!</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                    {freeDeliveryProducts.map((product, i) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex-shrink-0 w-36"
+                      >
+                        <Link to={`/food/product/${product.id}`}>
+                          <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                            <div className="relative aspect-square bg-gray-100">
+                              {product.images?.[0] ? (
+                                <img 
+                                  src={product.images[0]} 
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package size={32} className="text-gray-300" />
+                                </div>
+                              )}
+                              <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                                <Truck size={10} />
+                                توصيل مجاني
+                              </div>
+                            </div>
+                            <div className="p-2">
+                              <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                              {product.store_name && (
+                                <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                                  <Store size={10} className="text-green-500" />
+                                  <span className="text-[10px] truncate">{product.store_name}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-green-600 font-bold text-sm">
+                                  {product.price?.toLocaleString()} ل.س
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
               </section>
             )}
 
