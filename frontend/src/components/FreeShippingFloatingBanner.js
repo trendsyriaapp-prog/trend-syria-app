@@ -273,7 +273,7 @@ const FreeShippingFloatingBanner = () => {
               
               {/* عدد المتاجر */}
               {storesProgress.filter(s => !s.isFree).length > 1 && (
-                <p className="text-[9px] text-gray-400 text-center mt-1">
+                <p className="text-sm font-bold text-[#FF6B00] text-center mt-1">
                   {storesProgress.filter(s => !s.isFree).length} متاجر في السلة
                 </p>
               )}
