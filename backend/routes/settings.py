@@ -169,8 +169,87 @@ async def update_free_shipping_threshold(
         "free_shipping_threshold": threshold
     }
 
+# ============== إعدادات إعلانات المتاجر (الطعام) ==============
 
-@router.put("/food-free-delivery")
+class FeaturedStoresSettings(BaseModel):
+    enabled: bool = False
+    store_ids: list = []
+
+@router.get("/featured-stores")
+async def get_featured_stores_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات المتاجر المميزة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    return {
+        "enabled": settings.get("featured_stores_enabled", False) if settings else False,
+        "store_ids": settings.get("featured_store_ids", []) if settings else []
+    }
+
+@router.put("/featured-stores")
+async def update_featured_stores_settings(
+    settings: FeaturedStoresSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات المتاجر المميزة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "featured_stores_enabled": settings.enabled,
+                "featured_store_ids": settings.store_ids,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات المتاجر المميزة",
+        "enabled": settings.enabled,
+        "store_ids": settings.store_ids
+    }
+
+@router.get("/featured-stores/public")
+async def get_featured_stores_public():
+    """جلب المتاجر المميزة (للعامة)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    enabled = settings.get("featured_stores_enabled", False) if settings else False
+    store_ids = settings.get("featured_store_ids", []) if settings else []
+    
+    if not enabled or not store_ids:
+        # إذا كانت الميزة معطلة، نُرجع أفضل 4 متاجر حسب التقييم
+        top_stores = await db.food_stores.find(
+            {"is_active": True, "is_approved": True},
+            {"_id": 0}
+        ).sort("rating", -1).limit(4).to_list(4)
+        
+        return {
+            "is_featured": False,
+            "stores": top_stores
+        }
+    
+    # جلب المتاجر المميزة المحددة
+    featured_stores = await db.food_stores.find(
+        {"id": {"$in": store_ids}, "is_active": True},
+        {"_id": 0}
+    ).to_list(len(store_ids))
+    
+    # ترتيب حسب ترتيب الـ store_ids
+    stores_dict = {s["id"]: s for s in featured_stores}
+    ordered_stores = [stores_dict[sid] for sid in store_ids if sid in stores_dict]
+    
+    return {
+        "is_featured": True,
+        "stores": ordered_stores[:4]
+    }
 async def update_food_free_delivery_threshold(
     threshold: int,
     user: dict = Depends(get_current_user)

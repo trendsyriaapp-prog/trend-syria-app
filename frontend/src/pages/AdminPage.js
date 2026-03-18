@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -53,6 +53,7 @@ import EmergencyHelpTab from '../components/admin/EmergencyHelpTab';
 import ProductBadgesTab from '../components/admin/ProductBadgesTab';
 import CategoriesTab from '../components/admin/CategoriesTab';
 import CallRequestsTab from '../components/admin/CallRequestsTab';
+import FeaturedStoresTab from '../components/admin/FeaturedStoresTab';
 import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -324,6 +325,7 @@ const AdminDashboardPage = () => {
     'emergency-help': 'طلبات المساعدة الطارئة',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
+    'featured-stores': 'المتاجر المميزة',
     'food-offers': 'عروض الفلاش',
     'banners': 'إدارة البانرات',
     'coupons': 'كوبونات الخصم',
@@ -455,6 +457,10 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'food-stores' && (
               <FoodStoresTab />
+            )}
+            
+            {activeTab === 'featured-stores' && user.user_type === 'admin' && (
+              <FeaturedStoresTab />
             )}
             {activeTab === 'food-offers' && user.user_type === 'admin' && (
               <FoodOffersTab token={localStorage.getItem('token')} />
@@ -627,6 +633,7 @@ const AdminDashboardPage = () => {
                     { icon: DollarSign, label: 'العمولات', tab: 'commissions' },
                     { icon: DollarSign, label: 'السحب', tab: 'withdrawals' },
                     { icon: UtensilsCrossed, label: 'المطاعم', tab: 'food-stores' },
+                    { icon: Store, label: 'المتاجر المميزة', tab: 'featured-stores' },
                     { icon: AlertTriangle, label: 'المخزون', tab: 'low-stock' },
                     { icon: Flag, label: 'بلاغات السعر', tab: 'price-reports' },
                     { icon: AlertTriangle, label: 'البلاغات', tab: 'driver-reports' },

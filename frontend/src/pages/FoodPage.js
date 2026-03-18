@@ -126,16 +126,26 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
 // مكون المتاجر - شبكة ثابتة 2×2
-const StoresCarousel = ({ stores, StoreCard }) => {
+const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
+  // استخدام المتاجر المميزة إذا كانت مفعلة، وإلا أفضل المتاجر
+  const displayStores = isFeatured && featuredStores.length > 0 ? featuredStores : stores;
+  
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
+          {isFeatured && featuredStores.length > 0 && (
+            <span className="text-[10px] bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-2 py-0.5 rounded-full">
+              مميزة
+            </span>
+          )}
+        </div>
       </div>
       
       {/* شبكة ثابتة 2×2 */}
       <div className="grid grid-cols-2 gap-3">
-        {stores.slice(0, 4).map((store) => (
+        {displayStores.slice(0, 4).map((store) => (
           <StoreCard key={store.id} store={store} />
         ))}
       </div>
@@ -165,6 +175,8 @@ const FoodPage = () => {
   const [dynamicCategories, setDynamicCategories] = useState([]);
   const [activeStoreGroup, setActiveStoreGroup] = useState(0);
   const storesScrollRef = useRef(null);
+  const [featuredStores, setFeaturedStores] = useState([]);
+  const [isFeaturedEnabled, setIsFeaturedEnabled] = useState(false);
 
   // جلب الفئات الديناميكية من الـ API
   useEffect(() => {
@@ -270,7 +282,7 @@ const FoodPage = () => {
     setLoading(true);
     try {
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
-      const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes] = await Promise.all([
+      const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes, featuredRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
@@ -284,13 +296,19 @@ const FoodPage = () => {
         axios.get(`${API}/food/flash-sales/active`),
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+        axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
+        axios.get(`${API}/settings/featured-stores/public`).catch(() => ({ data: { is_featured: false, stores: [] } }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);
       setFlashSales(flashRes.data || []);
       setFoodBanners(bannersRes.data || []);
       setBadgeSettings(badgeRes.data || null);
+      
+      // المتاجر المميزة
+      const featuredData = featuredRes.data;
+      setIsFeaturedEnabled(featuredData?.is_featured || false);
+      setFeaturedStores(featuredData?.stores || []);
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل الطعام
       const promo = promoRes.data;
@@ -450,9 +468,11 @@ const FoodPage = () => {
         ) : (
           <>
             {/* Stores Section - 2x2 Grid */}
-            {stores.length > 0 && (
+            {(stores.length > 0 || featuredStores.length > 0) && (
               <StoresCarousel 
                 stores={stores} 
+                featuredStores={featuredStores}
+                isFeatured={isFeaturedEnabled}
                 StoreCard={StoreCard}
               />
             )}
