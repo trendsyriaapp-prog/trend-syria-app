@@ -27,12 +27,12 @@ const iconMap = {
   Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 };
 
-// مكون Skeleton للمنتجات - يظهر أثناء التحميل
-const ProductSkeleton = ({ count = 4, color = 'gray' }) => (
-  <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+// مكون Skeleton للمنتجات - ارتفاع ثابت لمنع القفزات
+const ProductSkeleton = ({ count = 4 }) => (
+  <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
     {[...Array(count)].map((_, i) => (
       <div key={i} className="flex-shrink-0 w-36 animate-pulse">
-        <div className={`bg-white rounded-xl overflow-hidden border-2 border-${color}-100`}>
+        <div className="bg-white rounded-xl overflow-hidden border-2 border-gray-100">
           <div className="aspect-square bg-gray-200" />
           <div className="p-2 space-y-2">
             <div className="h-3 bg-gray-200 rounded w-3/4" />
@@ -332,7 +332,7 @@ const HomePage = () => {
       <DailyDeal />
 
       {/* 1. Sponsored Products - المنتجات المُعلن عنها */}
-      <section className="py-1.5">
+      <section className="py-1.5" style={{ minHeight: '240px' }}>
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
             icon={Star} 
@@ -343,9 +343,9 @@ const HomePage = () => {
           />
           
           {/* Sponsored Products Horizontal Scroll */}
-          <div className="relative">
+          <div className="relative" style={{ minHeight: '200px' }}>
             {loading ? (
-              <ProductSkeleton count={4} color="purple" />
+              <ProductSkeleton count={4} />
             ) : sponsoredProducts.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
                 {sponsoredProducts.map((product, i) => (
@@ -391,14 +391,16 @@ const HomePage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm text-center py-4">لا توجد منتجات مُعلن عنها حالياً</p>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
+                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد منتجات مُعلن عنها حالياً</p>
+              </div>
             )}
           </div>
         </div>
       </section>
 
       {/* 2. Flash Sale Products - عروض فلاش */}
-      <section className="py-1.5">
+      <section className="py-1.5" style={{ minHeight: '240px' }}>
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
             icon={Zap} 
@@ -409,9 +411,9 @@ const HomePage = () => {
           />
           
           {/* Flash Products Horizontal Scroll */}
-          <div className="relative">
+          <div className="relative" style={{ minHeight: '200px' }}>
             {loading ? (
-              <ProductSkeleton count={4} color="orange" />
+              <ProductSkeleton count={4} />
             ) : shopFlashProducts.length > 0 ? (
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
                 {shopFlashProducts.map((product, i) => (
@@ -460,7 +462,9 @@ const HomePage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm text-center py-4">لا توجد عروض فلاش حالياً</p>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
+                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد عروض فلاش حالياً</p>
+              </div>
             )}
           </div>
         </div>

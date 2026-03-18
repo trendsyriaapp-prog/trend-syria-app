@@ -120,7 +120,7 @@ const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, prod
   const scrollRef = useRef(null);
 
   return (
-    <section className="mb-4">
+    <section className="mb-4" style={{ minHeight: '220px' }}>
       <div className="px-3 flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className={`p-1 bg-gradient-to-r ${iconGradient} rounded-lg`}>
@@ -134,7 +134,7 @@ const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, prod
         </Link>
       </div>
 
-      <div className="px-3">
+      <div className="px-3" style={{ minHeight: '190px' }}>
         {products.length > 0 ? (
           <div ref={scrollRef} className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {products.map((product) => (
@@ -148,7 +148,9 @@ const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, prod
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm text-center py-4">لا توجد منتجات حالياً</p>
+          <div className="flex items-center justify-center" style={{ minHeight: '190px' }}>
+            <p className="text-gray-400 text-sm text-center">لا توجد منتجات حالياً</p>
+          </div>
         )}
       </div>
     </section>
@@ -234,7 +236,7 @@ const RecommendedProducts = () => {
           { title: 'عروض وخصومات', icon: Tag, gradient: 'from-green-500 to-emerald-500', link: 'text-green-500' },
           { title: 'منتجات جديدة', icon: Sparkles, gradient: 'from-cyan-500 to-blue-500', link: 'text-cyan-500' }
         ].map((section, i) => (
-          <div key={i} className="px-3 mb-4">
+          <div key={i} className="px-3 mb-4" style={{ minHeight: '220px' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -249,7 +251,7 @@ const RecommendedProducts = () => {
               </span>
             </div>
             {/* Skeleton Cards */}
-            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '190px' }}>
               {[1, 2, 3, 4].map(j => (
                 <div key={j} className="flex-shrink-0 w-36 animate-pulse">
                   <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
