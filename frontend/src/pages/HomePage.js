@@ -26,20 +26,37 @@ const iconMap = {
   Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
 };
 
+// دالة مساعدة لجلب البيانات المحفوظة من sessionStorage
+const getCache = (key) => {
+  try {
+    const cached = sessionStorage.getItem(`home_${key}`);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {}
+  return null;
+};
+
+// دالة مساعدة لحفظ البيانات في sessionStorage
+const setCache = (key, data) => {
+  try {
+    sessionStorage.setItem(`home_${key}`, JSON.stringify(data));
+  } catch (e) {}
+};
+
 const HomePage = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [ads, setAds] = useState([]);
-  const [shopFlashProducts, setShopFlashProducts] = useState([]);
-  const [shopFlashSale, setShopFlashSale] = useState(null);
-  const [sponsoredProducts, setSponsoredProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // استخدام البيانات المحفوظة كقيم أولية (لتجنب الوميض عند الرجوع)
+  const [products, setProducts] = useState(() => getCache('products') || []);
+  const [categories, setCategories] = useState(() => getCache('categories') || []);
+  const [ads, setAds] = useState(() => getCache('ads') || []);
+  const [shopFlashProducts, setShopFlashProducts] = useState(() => getCache('flashProducts') || []);
+  const [shopFlashSale, setShopFlashSale] = useState(() => getCache('flashSale'));
+  const [sponsoredProducts, setSponsoredProducts] = useState(() => getCache('sponsored') || []);
+  const [loading, setLoading] = useState(() => !getCache('products')); // لا تُظهر loading إذا كانت البيانات محفوظة
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
-  const [tickerMessages, setTickerMessages] = useState([]);
+  const [globalFreeShipping, setGlobalFreeShipping] = useState(() => getCache('freeShipping'));
+  const [tickerMessages, setTickerMessages] = useState(() => getCache('ticker') || []);
   const [tickerEnabled, setTickerEnabled] = useState(true);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
-  const [badgeSettings, setBadgeSettings] = useState(null);
+  const [badgeSettings, setBadgeSettings] = useState(() => getCache('badges'));
   const location = useLocation();
   const { isFeatureEnabled } = useSettings();
   
@@ -83,21 +100,39 @@ const HomePage = () => {
         axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
         axios.get(`${API}/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } }))
       ]);
-      setProducts(productsRes.data);
-      setCategories(categoriesRes.data);
-      setAds(adsRes.data || []);
-      setShopFlashProducts(shopFlashRes.data?.products || []);
-      setShopFlashSale(shopFlashRes.data?.flash_sale || null);
-      setSponsoredProducts(sponsoredRes.data || []);
       
-      // شريط العروض
-      setTickerMessages(tickerRes.data?.messages || []);
+      // تحديث الـ state وحفظ في الـ cache
+      const productsData = productsRes.data;
+      const categoriesData = categoriesRes.data;
+      const adsData = adsRes.data || [];
+      const flashProductsData = shopFlashRes.data?.products || [];
+      const flashSaleData = shopFlashRes.data?.flash_sale || null;
+      const sponsoredData = sponsoredRes.data || [];
+      const tickerData = tickerRes.data?.messages || [];
+      
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setAds(adsData);
+      setShopFlashProducts(flashProductsData);
+      setShopFlashSale(flashSaleData);
+      setSponsoredProducts(sponsoredData);
+      setTickerMessages(tickerData);
       setTickerEnabled(tickerRes.data?.is_enabled !== false);
+      
+      // حفظ في sessionStorage للتحميل الفوري عند الرجوع
+      setCache('products', productsData);
+      setCache('categories', categoriesData);
+      setCache('ads', adsData);
+      setCache('flashProducts', flashProductsData);
+      setCache('flashSale', flashSaleData);
+      setCache('sponsored', sponsoredData);
+      setCache('ticker', tickerData);
       
       // جلب إعدادات الشارات
       try {
         const badgeRes = await axios.get(`${API}/settings/product-badges`);
         setBadgeSettings(badgeRes.data);
+        setCache('badges', badgeRes.data);
       } catch (err) {
         console.log('Badge settings not available');
       }
@@ -106,8 +141,10 @@ const HomePage = () => {
       const promo = promoRes.data;
       if (promo?.is_active && ['all', 'products'].includes(promo.applies_to)) {
         setGlobalFreeShipping(promo);
+        setCache('freeShipping', promo);
       } else {
         setGlobalFreeShipping(null);
+        setCache('freeShipping', null);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
