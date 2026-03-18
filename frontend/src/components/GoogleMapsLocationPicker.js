@@ -176,32 +176,50 @@ const GoogleMapsLocationPicker = ({
 
       {/* أزرار تحديد الموقع */}
       {!isLocationSet && (
-        <div className="grid grid-cols-2 gap-2">
-          {/* زر GPS */}
-          <button
-            type="button"
-            onClick={getCurrentLocation}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 p-3 bg-blue-500 text-white rounded-xl font-bold text-sm hover:bg-blue-600 disabled:opacity-50 transition-all"
-          >
-            {loading ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <MapPin size={18} />
-            )}
-            <span>موقعي الحالي</span>
-          </button>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            {/* زر GPS */}
+            <button
+              type="button"
+              onClick={getCurrentLocation}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 p-3 bg-blue-500 text-white rounded-xl font-bold text-sm hover:bg-blue-600 disabled:opacity-70 transition-all relative"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>جاري التحديد...</span>
+                </>
+              ) : (
+                <>
+                  <MapPin size={18} />
+                  <span>موقعي الحالي</span>
+                </>
+              )}
+            </button>
 
-          {/* زر Google Maps */}
-          <button
-            type="button"
-            onClick={handlePasteLink}
-            className="flex items-center justify-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all"
-          >
+            {/* زر Google Maps */}
+            <button
+              type="button"
+              onClick={handlePasteLink}
+              className="flex items-center justify-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all"
+            >
             <ExternalLink size={18} />
             <span>لصق من Maps</span>
           </button>
         </div>
+        
+        {/* رسالة انتظار GPS */}
+        {loading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3">
+            <Loader2 size={20} className="animate-spin text-blue-500" />
+            <div>
+              <p className="text-sm font-bold text-blue-700">جاري تحديد موقعك...</p>
+              <p className="text-xs text-blue-600">يرجى السماح بالوصول للموقع إذا طُلب منك</p>
+            </div>
+          </div>
+        )}
+      </div>
       )}
 
       {/* رسالة المساعدة */}
@@ -231,7 +249,11 @@ const GoogleMapsLocationPicker = ({
       {/* رسالة الخطأ */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-sm font-bold text-red-700 mb-1">⚠️ تعذر تحديد الموقع</p>
           <p className="text-xs text-red-600">{error}</p>
+          <p className="text-xs text-gray-600 mt-2">
+            💡 جرّب استخدام زر "لصق من Maps" بدلاً من ذلك
+          </p>
         </div>
       )}
     </div>

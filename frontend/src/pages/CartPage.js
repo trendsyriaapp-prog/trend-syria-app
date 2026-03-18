@@ -53,6 +53,18 @@ const CartPage = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempLocation, setTempLocation] = useState({ latitude: null, longitude: null });
   
+  // منع تمرير الصفحة الخلفية عند فتح Modal
+  useEffect(() => {
+    if (showLocationModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showLocationModal]);
+  
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
   // Fetch customer address and calculate shipping
@@ -778,16 +790,18 @@ const CartPage = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
             onClick={() => setShowLocationModal(false)}
+            onTouchMove={(e) => e.stopPropagation()}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
+              className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto overscroll-contain"
               onClick={e => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="bg-[#FF6B00] text-white p-4 flex items-center justify-between">
+              <div className="bg-[#FF6B00] text-white p-4 flex items-center justify-between sticky top-0 z-10">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <MapPin size={20} />
                   تحديد موقع التوصيل
