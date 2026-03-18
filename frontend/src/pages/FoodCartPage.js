@@ -83,6 +83,9 @@ const FoodCartPage = () => {
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   
+  // إعدادات المنصة - حد التوصيل المجاني الموحد
+  const [platformFreeDeliveryThreshold, setPlatformFreeDeliveryThreshold] = useState(100000);
+  
   // جلب البيانات الأولية (المتجر + العناوين + طرق الدفع)
   useEffect(() => {
     let isMounted = true;
@@ -93,16 +96,22 @@ const FoodCartPage = () => {
       setLoading(true);
       
       try {
-        // جلب بيانات المتجر
-        const [storeRes, offersRes] = await Promise.all([
+        // جلب بيانات المتجر وإعدادات المنصة
+        const [storeRes, offersRes, settingsRes] = await Promise.all([
           axios.get(`${API}/food/stores/${storeId}`),
-          axios.get(`${API}/food/stores/${storeId}/offers`)
+          axios.get(`${API}/food/stores/${storeId}/offers`),
+          axios.get(`${API}/settings/public`).catch(() => ({ data: {} }))
         ]);
         
         if (!isMounted) return;
         
         setStore(storeRes.data);
         setOffers(offersRes.data || []);
+        
+        // تعيين حد التوصيل المجاني من إعدادات المنصة
+        if (settingsRes.data?.food_free_delivery_threshold) {
+          setPlatformFreeDeliveryThreshold(settingsRes.data.food_free_delivery_threshold);
+        }
         
         // جلب المحفظة إذا كان المستخدم مسجل
         if (token) {
@@ -287,7 +296,7 @@ const FoodCartPage = () => {
   const isCouponFreeDelivery = appliedCoupon?.coupon?.is_free_delivery || false;
   
   const storeDeliveryFee = store?.delivery_fee || 5000;
-  const freeDeliveryMin = store?.free_delivery_minimum || 0;
+  const freeDeliveryMin = platformFreeDeliveryThreshold; // استخدام حد المنصة الموحد
   const finalSubtotal = subtotal - offerDiscount - couponDiscount;
   
   // التحقق من تطابق مدينة المستخدم مع مدينة المتجر
@@ -633,11 +642,11 @@ const FoodCartPage = () => {
         </div>
 
         {/* Free Delivery Progress - شريط التوصيل المجاني */}
-        {store?.free_delivery_minimum > 0 && (
+        {platformFreeDeliveryThreshold > 0 && (
           <div className={`rounded-xl p-3 border ${
             !citiesMatch 
               ? 'bg-yellow-50 border-yellow-200'
-              : subtotal >= store.free_delivery_minimum 
+              : subtotal >= platformFreeDeliveryThreshold 
                 ? 'bg-green-50 border-green-200' 
                 : 'bg-orange-50 border-orange-200'
           }`}>
@@ -648,7 +657,7 @@ const FoodCartPage = () => {
                   ملاحظة: أنت في {userCity} والمتجر في {storeCity}. التوصيل المجاني غير متاح.
                 </span>
               </div>
-            ) : subtotal >= store.free_delivery_minimum ? (
+            ) : subtotal >= platformFreeDeliveryThreshold ? (
               <div className="flex items-center gap-2 text-green-700">
                 <Check size={18} className="text-green-600" />
                 <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
@@ -657,16 +666,16 @@ const FoodCartPage = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-orange-700 font-medium">
-                    أضف {(store.free_delivery_minimum - subtotal).toLocaleString()} ل.س للتوصيل المجاني
+                    أضف {(platformFreeDeliveryThreshold - subtotal).toLocaleString()} ل.س للتوصيل المجاني
                   </span>
                   <span className="text-orange-600 font-bold">
-                    {Math.round((subtotal / store.free_delivery_minimum) * 100)}%
+                    {Math.round((subtotal / platformFreeDeliveryThreshold) * 100)}%
                   </span>
                 </div>
                 <div className="h-2 bg-orange-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / store.free_delivery_minimum) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((subtotal / platformFreeDeliveryThreshold) * 100, 100)}%` }}
                   />
                 </div>
               </div>
