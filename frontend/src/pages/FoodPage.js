@@ -125,34 +125,29 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون كاروسيل المتاجر - نسخة مبسطة
+// مكون كاروسيل المتاجر - الخطوة 3: إضافة النقاط
 const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
   const totalGroups = Math.ceil(stores.length / 4);
   
-  // تحديث النقطة النشطة عند التمرير
+  // تحديث النقطة عند التمرير
   const handleScroll = (e) => {
     const container = e.target;
     const scrollLeft = container.scrollLeft;
-    const groupWidth = container.offsetWidth;
+    const width = container.offsetWidth;
     
-    if (groupWidth > 0) {
-      const newIndex = Math.round(scrollLeft / groupWidth);
-      const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
-      
-      if (clampedIndex !== activeIndex) {
-        setActiveIndex(clampedIndex);
+    if (width > 0) {
+      const newIndex = Math.round(scrollLeft / width);
+      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < totalGroups) {
+        setActiveIndex(newIndex);
       }
     }
   };
   
-  // التمرير لمجموعة معينة عند النقر على النقطة
-  const scrollToGroup = (index) => {
+  // الانتقال عند النقر على نقطة
+  const goToGroup = (index) => {
     if (scrollRef.current) {
-      const groupWidth = scrollRef.current.offsetWidth;
-      scrollRef.current.scrollTo({
-        left: groupWidth * index,
-        behavior: 'smooth'
-      });
+      const width = scrollRef.current.offsetWidth;
+      scrollRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
     }
   };
   
@@ -161,49 +156,41 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-bold text-gray-900">المتاجر</h2>
         {totalGroups > 1 && (
-          <span className="text-gray-400 text-xs flex items-center gap-1">
-            اسحب لرؤية المزيد ←
-          </span>
+          <span className="text-gray-400 text-xs">اسحب لرؤية المزيد ←</span>
         )}
       </div>
       
+      {/* حاوية التمرير الأفقي */}
       <div 
         ref={scrollRef}
-        className="flex overflow-x-auto hide-scrollbar gap-0 -mx-4"
-        style={{ 
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch'
-        }}
+        className="overflow-x-auto hide-scrollbar"
+        style={{ scrollSnapType: 'x mandatory' }}
         onScroll={handleScroll}
       >
-        {Array.from({ length: totalGroups }).map((_, groupIndex) => (
-          <div 
-            key={groupIndex} 
-            className="grid grid-cols-2 grid-rows-2 gap-3 flex-shrink-0 px-4" 
-            style={{ 
-              width: '100%',
-              minWidth: '100%',
-              scrollSnapAlign: 'start'
-            }}
-          >
-            {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
-              <StoreCard key={store.id} store={store} />
-            ))}
-          </div>
-        ))}
+        <div className="flex">
+          {Array.from({ length: totalGroups }).map((_, groupIndex) => (
+            <div 
+              key={groupIndex} 
+              className="min-w-full px-0 grid grid-cols-2 gap-3"
+              style={{ scrollSnapAlign: 'start' }}
+            >
+              {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
+                <StoreCard key={store.id} store={store} />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
       
-      {/* مؤشر النقاط */}
+      {/* النقاط */}
       {totalGroups > 1 && (
         <div className="flex justify-center gap-2 mt-3">
           {Array.from({ length: totalGroups }).map((_, i) => (
             <button 
               key={i}
-              onClick={() => scrollToGroup(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === activeIndex 
-                  ? 'bg-[#FF6B00] w-6' 
-                  : 'bg-gray-300 w-2'
+              onClick={() => goToGroup(i)}
+              className={`h-2 rounded-full transition-all duration-200 ${
+                i === activeIndex ? 'bg-[#FF6B00] w-6' : 'bg-gray-300 w-2'
               }`}
             />
           ))}
