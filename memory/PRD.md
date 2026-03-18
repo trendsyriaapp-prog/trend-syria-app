@@ -23,43 +23,36 @@
 
 ---
 
-## What's Been Implemented (Latest Session - Dec 2025)
+## What's Been Implemented
 
-### ✅ Session Completed Tasks
+### Session: December 2025
 
-#### 1. إصلاح مشكلة Carousels (الصفحة الرئيسية)
-- المشكلة: الـ Carousels كانت تعيد التعيين كل بضع ثوان
-- الحل: نقل تعريفات المكونات خارج دالة الـ render واستخدام `React.memo`
-- الملف: `/app/frontend/src/components/RecommendedProducts.js`
+#### 1. اختبار E2E شامل للنظام (Completed)
+- **سيناريو البائع**: تسجيل ← موافقة الأدمن ← إعداد المتجر ✅
+- **سيناريو السائق**: تسجيل ← موافقة الأدمن ← إعداد الموقع ✅
+- **سيناريو العميل**: تسجيل ← عنوان ← سلة ← طلب ✅
+- **الأخطاء المصلحة**:
+  - إصلاح حفظ موقع منزل السائق (auth.py)
+  - إصلاح خطأ datetime في إنشاء الطلبات (orders.py)
 
-#### 2. صفحات "عرض الكل" المخصصة
-- تم إضافة filtering في الـ backend لـ `trending`, `deals`, `flash`, `popular`, `sponsored`
-- الملفات:
-  - `/app/backend/routes/products.py`
-  - `/app/frontend/src/pages/ProductsPage.js`
-  - `/app/frontend/src/pages/HomePage.js`
+#### 2. نظام المتاجر المميزة (Completed)
+- تبديل بين المتاجر المختارة يدوياً أو الأعلى تقييماً
+- لوحة تحكم في صفحة الأدمن
 
-#### 3. أنيميشن بانر قسم الطعام
-- تم إضافة gradient pulsating animation للبانر
-- الملف: `/app/frontend/src/pages/FoodPage.js`
+#### 3. إلزامية تحديد الموقع على الخريطة (Completed)
+- للعملاء: عند إضافة عنوان
+- للبائعين: عند إعداد المتجر
+- للسائقين: عند تحديد موقع المنزل
 
-#### 4. ✅ إصلاح استعادة موقع التمرير (Scroll Restoration)
-- **المشكلة**: عند الضغط على "رجوع"، الصفحة كانت تبقى في الأعلى
-- **الحل النهائي**: 
-  - حفظ مستمر لموقع التمرير كل 100ms
-  - قفل الحفظ عند النقر على الروابط
-  - محاولات استعادة متكررة للتعامل مع المحتوى الديناميكي
-- **الملفات**:
-  - `/app/frontend/src/components/ScrollToTop.js` (أُعيد كتابته بالكامل)
-  - `/app/frontend/src/context/ScrollContext.js` (مُبسّط)
-- **نتائج الاختبار**: الفرق < 50px في جميع الحالات ✅
+#### 4. تحسينات واجهة المستخدم (Completed)
+- إصلاح مشكلة التمرير في صفحة المنتجات
+- تبسيط شبكة المتاجر (2×2 ثابتة)
+- توحيد حساب الشحن المجاني
+- إضافة قسم "المزيد من المنتجات" في الصفحة الرئيسية
 
 ---
 
 ## Prioritized Backlog
-
-### P0 - Critical (Resolved)
-- ~~استعادة موقع التمرير على الموبايل~~ ✅
 
 ### P1 - High Priority
 - **تكامل بوابة الدفع السورية**: تفعيل شحن المحفظة الإلكترونية
@@ -93,20 +86,31 @@
 ```
 /app/
 ├── backend/
-│   └── routes/products.py    # Product filtering & sorting
+│   ├── routes/
+│   │   ├── auth.py        # تسجيل/دخول + إعدادات البائع والسائق
+│   │   ├── orders.py      # إدارة الطلبات (تم إصلاح datetime bug)
+│   │   ├── settings.py    # المتاجر المميزة
+│   │   └── user.py        # إدارة العناوين
+│   └── models/
+│       └── schemas.py     # نماذج البيانات
 ├── frontend/src/
 │   ├── components/
-│   │   ├── ScrollToTop.js    # Scroll restoration (REWRITTEN)
-│   │   └── RecommendedProducts.js
-│   ├── context/
-│   │   └── ScrollContext.js  # Simplified context
+│   │   ├── admin/FeaturedStoresTab.js
+│   │   ├── seller/StoreSettingsTab.js
+│   │   └── delivery/DeliverySettingsTab.js
 │   └── pages/
 │       ├── HomePage.js
-│       ├── ProductsPage.js
-│       └── FoodPage.js
+│       ├── FoodPage.js
+│       ├── AdminPage.js
+│       └── SettingsPage.js
 ```
 
 ---
+
+## Test Reports
+- `/app/test_reports/iteration_83.json` - سيناريو البائع (13/13 ✅)
+- `/app/test_reports/iteration_84.json` - سيناريو السائق (20/20 ✅)
+- `/app/test_reports/iteration_85.json` - سيناريو العميل (25/25 ✅)
 
 ## Test Credentials
 - **Admin**: Phone: `0911111111`, Password: `Admin@123`
