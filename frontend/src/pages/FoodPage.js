@@ -128,20 +128,27 @@ import FreeShippingBanner from '../components/FreeShippingBanner';
 // مكون كاروسيل المتاجر - تصميم محسّن
 const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
   const totalGroups = Math.ceil(stores.length / 4);
+  const [currentDot, setCurrentDot] = useState(0);
   
-  // تحديث النقطة عند التمرير
-  const handleScroll = (e) => {
-    const container = e.target;
-    const scrollLeft = container.scrollLeft;
-    const width = container.offsetWidth;
+  // تتبع التمرير وتحديث النقطة
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
     
-    if (width > 0) {
-      const newIndex = Math.round(scrollLeft / width);
-      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < totalGroups) {
-        setActiveIndex(newIndex);
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const width = container.offsetWidth;
+      
+      if (width > 0) {
+        const newIndex = Math.round(scrollLeft / width);
+        const clampedIndex = Math.max(0, Math.min(newIndex, totalGroups - 1));
+        setCurrentDot(clampedIndex);
       }
-    }
-  };
+    };
+    
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [scrollRef, totalGroups]);
   
   return (
     <section className="mb-6">
@@ -152,23 +159,21 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
         )}
       </div>
       
-      {/* حاوية التمرير - تمرير سلس */}
+      {/* حاوية التمرير */}
       <div 
         ref={scrollRef}
         className="overflow-x-auto hide-scrollbar"
         style={{ 
           scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          scrollBehavior: 'smooth'
+          WebkitOverflowScrolling: 'touch'
         }}
-        onScroll={handleScroll}
       >
         <div className="flex">
           {Array.from({ length: totalGroups }).map((_, groupIndex) => (
             <div 
               key={groupIndex} 
-              className="min-w-full px-0 grid grid-cols-2 gap-3"
-              style={{ scrollSnapAlign: 'center' }}
+              className="min-w-full grid grid-cols-2 gap-3"
+              style={{ scrollSnapAlign: 'start' }}
             >
               {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
                 <StoreCard key={store.id} store={store} />
@@ -178,22 +183,19 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
         </div>
       </div>
       
-      {/* النقاط - تصميم جديد أنيق */}
+      {/* النقاط */}
       {totalGroups > 1 && (
-        <div className="flex justify-center items-center gap-1.5 mt-4">
+        <div className="flex justify-center items-center gap-2 mt-4">
           {Array.from({ length: totalGroups }).map((_, i) => (
             <div 
               key={i}
               className={`
-                rounded-full transition-all duration-300 ease-out
-                ${i === activeIndex 
-                  ? 'w-8 h-2.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] shadow-lg shadow-orange-300/50' 
-                  : 'w-2.5 h-2.5 bg-gray-200 hover:bg-gray-300'
+                rounded-full transition-all duration-300
+                ${i === currentDot 
+                  ? 'w-6 h-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00]' 
+                  : 'w-2 h-2 bg-gray-300'
                 }
               `}
-              style={{
-                transform: i === activeIndex ? 'scale(1.1)' : 'scale(1)',
-              }}
             />
           ))}
         </div>
