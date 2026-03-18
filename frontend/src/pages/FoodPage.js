@@ -177,6 +177,7 @@ const FoodPage = () => {
   const storesScrollRef = useRef(null);
   const [featuredStores, setFeaturedStores] = useState([]);
   const [isFeaturedEnabled, setIsFeaturedEnabled] = useState(false);
+  const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
 
   // جلب الفئات الديناميكية من الـ API
   useEffect(() => {
