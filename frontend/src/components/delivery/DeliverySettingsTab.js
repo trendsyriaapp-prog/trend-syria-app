@@ -7,6 +7,7 @@ import {
   Truck, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Clock, Bike, Car
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -39,7 +40,10 @@ const DeliverySettingsTab = () => {
     vehicle_type: 'motorcycle',
     vehicle_number: '',
     working_city: 'دمشق',
-    working_hours: ''
+    working_hours: '',
+    home_address: '',
+    home_latitude: null,
+    home_longitude: null
   });
   
   // حسابات الاستلام
@@ -215,6 +219,41 @@ const DeliverySettingsTab = () => {
               onChange={(e) => setDeliverySettings({...deliverySettings, working_hours: e.target.value})}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
               placeholder="مثال: 9 صباحاً - 9 مساءً"
+            />
+          </div>
+
+          {/* عنوان المنزل */}
+          <div>
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">عنوان المنزل</label>
+            <input
+              type="text"
+              value={deliverySettings.home_address}
+              onChange={(e) => setDeliverySettings({...deliverySettings, home_address: e.target.value})}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none mb-2"
+              placeholder="العنوان التفصيلي لمنزلك"
+            />
+            <GoogleMapsLocationPicker
+              label="📍 موقع المنزل على الخريطة"
+              required={false}
+              currentLocation={deliverySettings.home_latitude ? { 
+                latitude: deliverySettings.home_latitude, 
+                longitude: deliverySettings.home_longitude 
+              } : null}
+              onLocationSelect={(location) => {
+                if (location) {
+                  setDeliverySettings({ 
+                    ...deliverySettings, 
+                    home_latitude: location.latitude, 
+                    home_longitude: location.longitude 
+                  });
+                } else {
+                  setDeliverySettings({ 
+                    ...deliverySettings, 
+                    home_latitude: null, 
+                    home_longitude: null 
+                  });
+                }
+              }}
             />
           </div>
 

@@ -7,6 +7,7 @@ import {
   Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -34,7 +35,9 @@ const StoreSettingsTab = () => {
     store_description: '',
     store_address: '',
     store_city: 'دمشق',
-    store_phone: ''
+    store_phone: '',
+    store_latitude: null,
+    store_longitude: null
   });
   
   // حسابات الاستلام
@@ -212,6 +215,33 @@ const StoreSettingsTab = () => {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
               placeholder="09xxxxxxxx"
               dir="ltr"
+            />
+          </div>
+
+          {/* موقع المتجر على الخريطة */}
+          <div>
+            <GoogleMapsLocationPicker
+              label="📍 موقع المتجر على الخريطة (يساعد العملاء في الوصول)"
+              required={false}
+              currentLocation={storeSettings.store_latitude ? { 
+                latitude: storeSettings.store_latitude, 
+                longitude: storeSettings.store_longitude 
+              } : null}
+              onLocationSelect={(location) => {
+                if (location) {
+                  setStoreSettings({ 
+                    ...storeSettings, 
+                    store_latitude: location.latitude, 
+                    store_longitude: location.longitude 
+                  });
+                } else {
+                  setStoreSettings({ 
+                    ...storeSettings, 
+                    store_latitude: null, 
+                    store_longitude: null 
+                  });
+                }
+              }}
             />
           </div>
 
