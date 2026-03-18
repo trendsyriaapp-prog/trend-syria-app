@@ -125,7 +125,7 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون كاروسيل المتاجر - الخطوة 3: إضافة النقاط
+// مكون كاروسيل المتاجر
 const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
   const totalGroups = Math.ceil(stores.length / 4);
   
@@ -140,14 +140,6 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
       if (newIndex !== activeIndex && newIndex >= 0 && newIndex < totalGroups) {
         setActiveIndex(newIndex);
       }
-    }
-  };
-  
-  // الانتقال عند النقر على نقطة
-  const goToGroup = (index) => {
-    if (scrollRef.current) {
-      const width = scrollRef.current.offsetWidth;
-      scrollRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
     }
   };
   
@@ -182,13 +174,12 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
         </div>
       </div>
       
-      {/* النقاط */}
+      {/* النقاط - للعرض فقط بدون نقر */}
       {totalGroups > 1 && (
         <div className="flex justify-center gap-2 mt-3">
           {Array.from({ length: totalGroups }).map((_, i) => (
-            <button 
+            <div 
               key={i}
-              onClick={() => goToGroup(i)}
               className={`h-2 rounded-full transition-all duration-200 ${
                 i === activeIndex ? 'bg-[#FF6B00] w-6' : 'bg-gray-300 w-2'
               }`}
