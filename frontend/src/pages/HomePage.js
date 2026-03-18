@@ -273,13 +273,13 @@ const HomePage = () => {
               className="relative h-full"
               animate={{
                 background: [
-                  'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
-                  'linear-gradient(to right, #E91E63, #F06292, #FF80AB)',
-                  'linear-gradient(to right, #9C27B0, #BA68C8, #CE93D8)',
-                  'linear-gradient(to right, #2196F3, #64B5F6, #90CAF9)',
-                  'linear-gradient(to right, #4CAF50, #81C784, #A5D6A7)',
-                  'linear-gradient(to right, #FF5722, #FF8A65, #FFAB91)',
-                  'linear-gradient(to right, #FF6B00, #FF8C00, #FFB347)',
+                  'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
+                  'linear-gradient(to right, #AD1457, #C2185B, #D81B60)',
+                  'linear-gradient(to right, #6A1B9A, #7B1FA2, #8E24AA)',
+                  'linear-gradient(to right, #1565C0, #1976D2, #1E88E5)',
+                  'linear-gradient(to right, #2E7D32, #388E3C, #43A047)',
+                  'linear-gradient(to right, #D84315, #E64A19, #F4511E)',
+                  'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
                 ]
               }}
               transition={{
@@ -297,10 +297,10 @@ const HomePage = () => {
               
               {/* المحتوى */}
               <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
-                <div className="text-white" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.3)' }}>
+                <div className="text-white">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <motion.span 
-                      className="bg-black/30 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
+                      className="bg-white/25 backdrop-blur-sm px-1.5 py-0.5 rounded-full text-[8px] font-medium"
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
@@ -308,16 +308,15 @@ const HomePage = () => {
                     </motion.span>
                   </div>
                   <h3 className="text-xs md:text-sm font-bold">قسم الطعام</h3>
-                  <p className="text-white text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
+                  <p className="text-white/90 text-[9px] md:text-[10px]">توصيل سريع من أفضل المطاعم</p>
                 </div>
                 
                 {/* زر الطلب مع نبض */}
                 <motion.div 
-                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg border border-gray-200"
-                  style={{ textShadow: 'none' }}
+                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg"
                   animate={{ 
                     scale: [1, 1.05, 1],
-                    color: ['#FF6B00', '#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FF5722', '#FF6B00']
+                    color: ['#E65100', '#AD1457', '#6A1B9A', '#1565C0', '#2E7D32', '#D84315', '#E65100']
                   }}
                   transition={{ duration: 6, repeat: Infinity }}
                 >
