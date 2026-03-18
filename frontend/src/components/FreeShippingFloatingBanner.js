@@ -194,6 +194,12 @@ const FreeShippingFloatingBanner = () => {
   // تحديث الإظهار عند تغيير الإجمالي
   useEffect(() => {
     const currentTotal = isFood ? foodTotalAmount : cartTotal;
+    const previousTotal = isFood ? lastFoodTotal : lastCartTotal;
+    
+    // إذا زاد الإجمالي (تمت إضافة منتج)، نعيد إظهار الشريط
+    if (currentTotal > previousTotal && currentTotal > 0) {
+      setManuallyDismissed(false); // إلغاء الإغلاق اليدوي عند إضافة منتج جديد
+    }
     
     if (isFood) {
       setLastFoodTotal(foodTotalAmount);
@@ -205,7 +211,7 @@ const FreeShippingFloatingBanner = () => {
     if (currentTotal > 0 && currentStore && !shouldHide && !manuallyDismissed) {
       setVisible(true);
     }
-  }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide, manuallyDismissed]);
+  }, [cartTotal, foodTotalAmount, isFood, currentStore, shouldHide, manuallyDismissed, lastFoodTotal, lastCartTotal]);
   
   // إعادة تعيين عند تغيير القسم
   useEffect(() => {
