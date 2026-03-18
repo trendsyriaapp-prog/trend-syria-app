@@ -77,16 +77,10 @@ export const WebSocketProvider = ({ children }) => {
   }, []);
 
   const handleDisconnect = useCallback((event) => {
-    console.log('WebSocket Provider: Disconnected');
-    if (event.code !== 1000 && event.code !== 1001) {
-      // قطع غير طبيعي
-      toast({
-        title: 'انقطع الاتصال',
-        description: 'جاري إعادة الاتصال...',
-        variant: 'warning'
-      });
-    }
-  }, [toast]);
+    console.log('WebSocket Provider: Disconnected', event?.code);
+    // لا نُظهر الإشعار إلا في حالات الانقطاع الحقيقية (ليس عند إغلاق الصفحة)
+    // ونتجاهل الانقطاعات المؤقتة التي يتم إعادة الاتصال فيها تلقائياً
+  }, []);
 
   const ws = useWebSocket({
     onMessage: handleMessage,
