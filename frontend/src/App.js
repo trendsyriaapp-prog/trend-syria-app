@@ -14,6 +14,7 @@ import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
 import Chatbot from "./components/Chatbot";
 import NotificationManager from "./components/NotificationManager";
+import PushNotificationPrompt from "./components/PushNotificationPrompt";
 import FoodDeliveryBanner from "./components/FoodDeliveryBanner";
 import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner";
 import SplashScreen from "./components/SplashScreen";
@@ -97,6 +98,16 @@ const ForcePasswordChangeWrapper = ({ children }) => {
   }
   
   return children;
+};
+
+// مكون عرض إشعارات Push للعملاء
+const BuyerNotificationPrompt = () => {
+  const { user } = useAuth();
+  
+  // عرض فقط للعملاء (buyer)
+  if (!user || user.user_type !== 'buyer') return null;
+  
+  return <PushNotificationPrompt userType="buyer" userName={user.name || user.full_name} />;
 };
 
 function App() {
@@ -192,6 +203,7 @@ function App() {
             <Toaster />
             <Chatbot />
             <NotificationManager />
+            <BuyerNotificationPrompt />
             <FreeShippingFloatingBanner />
           </div>
           </ForcePasswordChangeWrapper>

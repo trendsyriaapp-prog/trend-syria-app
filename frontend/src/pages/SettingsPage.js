@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ChevronLeft, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -15,6 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LoyaltyCard from '../components/LoyaltyCard';
 import SupportTickets from '../components/support/SupportTickets';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import NotificationGuide from '../components/NotificationGuide';
 // مكونات السائق
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
@@ -329,6 +330,16 @@ const SettingsPage = () => {
             <HelpCircle size={12} />
             الدعم
           </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-lg font-bold text-[10px] transition-colors whitespace-nowrap px-2 ${
+              activeTab === 'notifications' ? 'bg-[#FF6B00] text-white' : isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white border border-gray-200 text-gray-700'
+            }`}
+            data-testid="notifications-tab-btn"
+          >
+            <Bell size={12} />
+            الإشعارات
+          </button>
         </div>
 
         {/* Driver Tab - تبويب السائق */}
@@ -606,6 +617,13 @@ const SettingsPage = () => {
         {activeTab === 'support' && (
           <section>
             <SupportTickets token={localStorage.getItem('token')} />
+          </section>
+        )}
+
+        {/* Notifications Guide Tab */}
+        {activeTab === 'notifications' && (
+          <section data-testid="notifications-section">
+            <NotificationGuide userType={user?.user_type || 'buyer'} />
           </section>
         )}
 
