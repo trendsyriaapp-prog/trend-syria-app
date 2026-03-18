@@ -153,28 +153,12 @@ const Section = memo(({ title, icon: Icon, iconGradient, linkColor, linkTo, prod
   );
 });
 
-// دوال مساعدة للـ cache
-const getRecCache = (key) => {
-  try {
-    const cached = sessionStorage.getItem(`rec_${key}`);
-    if (cached) return JSON.parse(cached);
-  } catch (e) {}
-  return null;
-};
-
-const setRecCache = (key, data) => {
-  try {
-    sessionStorage.setItem(`rec_${key}`, JSON.stringify(data));
-  } catch (e) {}
-};
-
 const RecommendedProducts = () => {
-  // استخدام البيانات المحفوظة كقيم أولية
-  const [trendingProducts, setTrendingProducts] = useState(() => getRecCache('trending') || []);
-  const [dealsProducts, setDealsProducts] = useState(() => getRecCache('deals') || []);
-  const [newProducts, setNewProducts] = useState(() => getRecCache('new') || []);
-  const [badgeSettings, setBadgeSettings] = useState(() => getRecCache('badges'));
-  const [loaded, setLoaded] = useState(() => !!getRecCache('trending'));
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [dealsProducts, setDealsProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
+  const [badgeSettings, setBadgeSettings] = useState(null);
+  const [loaded, setLoaded] = useState(false);
   const [badgeIndex, setBadgeIndex] = useState(0);
 
   useEffect(() => {
@@ -187,22 +171,11 @@ const RecommendedProducts = () => {
           axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
-        const trending = trendingRes.data || [];
-        const deals = dealsRes.data || [];
-        const newProds = newRes.data || [];
-        const badges = badgeRes.data;
-        
-        setTrendingProducts(trending);
-        setDealsProducts(deals);
-        setNewProducts(newProds);
-        setBadgeSettings(badges);
+        setTrendingProducts(trendingRes.data || []);
+        setDealsProducts(dealsRes.data || []);
+        setNewProducts(newRes.data || []);
+        setBadgeSettings(badgeRes.data);
         setLoaded(true);
-        
-        // حفظ في الـ cache
-        setRecCache('trending', trending);
-        setRecCache('deals', deals);
-        setRecCache('new', newProds);
-        setRecCache('badges', badges);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
         setLoaded(true);

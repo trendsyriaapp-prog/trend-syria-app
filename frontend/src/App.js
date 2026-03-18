@@ -19,7 +19,6 @@ import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner"
 import SplashScreen from "./components/SplashScreen";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import IncomingCallHandler from "./components/voip/IncomingCallHandler";
-import ScrollToTop from "./components/ScrollToTop";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -117,7 +116,6 @@ function App() {
               )}
               <BrowserRouter>
                 <ScrollProvider>
-                <ScrollToTop />
                 <ForcePasswordChangeWrapper>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
                   <Header />
