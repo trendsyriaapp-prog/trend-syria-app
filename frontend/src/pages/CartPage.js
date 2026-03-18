@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle, Store, MapPin, Check } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Truck, Info, Tag, CheckCircle, Loader2, X, AlertTriangle, Store, MapPin, Check, Edit3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../hooks/use-toast';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -47,6 +48,10 @@ const CartPage = () => {
   
   // رسوم التوصيل بالمسافة
   const [distanceDeliveryFee, setDistanceDeliveryFee] = useState(null);
+  
+  // Modal تعديل الموقع
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [tempLocation, setTempLocation] = useState({ latitude: null, longitude: null });
   
   const FREE_SHIPPING_THRESHOLD = settings.free_shipping_threshold || 150000;
   
@@ -194,6 +199,47 @@ const CartPage = () => {
   // Final total (with shipping)
   const finalTotal = cart.total - discountAmount + (isFreeShipping ? 0 : shippingCost);
 
+  // دالة حفظ الموقع من Modal الخريطة
+  const handleSaveLocation = async () => {
+    if (!tempLocation.latitude || !tempLocation.longitude) {
+      toast({ title: "تنبيه", description: "يرجى تحديد موقعك على الخريطة", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      if (customerAddress?.id) {
+        // تحديث العنوان الموجود
+        await axios.put(`${API}/user/addresses/${customerAddress.id}`, {
+          ...customerAddress,
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude
+        });
+        
+        // تحديث العنوان المحلي
+        setCustomerAddress(prev => ({
+          ...prev,
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude
+        }));
+        
+        setShowLocationModal(false);
+        toast({ title: "تم", description: "تم حفظ الموقع بنجاح" });
+      }
+    } catch (error) {
+      console.error('Error saving location:', error);
+      toast({ title: "خطأ", description: "فشل في حفظ الموقع", variant: "destructive" });
+    }
+  };
+
+  // فتح Modal تعديل الموقع
+  const openLocationModal = () => {
+    setTempLocation({
+      latitude: customerAddress?.latitude || null,
+      longitude: customerAddress?.longitude || null
+    });
+    setShowLocationModal(true);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
@@ -244,11 +290,30 @@ const CartPage = () => {
 
         {/* عنوان العميل الحالي */}
         {customerAddress && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3 flex items-center gap-2">
-            <MapPin size={14} className="text-blue-600" />
-            <span className="text-xs text-blue-700">
-              عنوانك: <strong>{customerAddress.city}</strong>
-            </span>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin size={14} className="text-blue-600" />
+                <span className="text-xs text-blue-700">
+                  عنوانك: <strong>{customerAddress.area || customerAddress.city}</strong>
+                  {customerAddress.street_number && ` - شارع ${customerAddress.street_number}`}
+                </span>
+              </div>
+              <button
+                onClick={openLocationModal}
+                className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded-full transition-colors"
+                data-testid="edit-location-btn"
+              >
+                <Edit3 size={10} />
+                {customerAddress.latitude ? 'تعديل الموقع' : 'تحديد الموقع'}
+              </button>
+            </div>
+            {!customerAddress.latitude && (
+              <p className="text-[10px] text-orange-600 mt-1 flex items-center gap-1">
+                <AlertTriangle size={10} />
+                يرجى تحديد موقعك على الخريطة لضمان دقة التوصيل
+              </p>
+            )}
           </div>
         )}
 
@@ -688,6 +753,13 @@ const CartPage = () => {
                 state={{ coupon: appliedCoupon, discountAmount }}
                 className="w-full flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold py-2 rounded-full mt-3 hover:bg-[#E65000] transition-colors text-sm"
                 data-testid="checkout-btn"
+                onClick={(e) => {
+                  // التحقق من وجود موقع للعنوان
+                  if (customerAddress && !customerAddress.latitude) {
+                    e.preventDefault();
+                    openLocationModal();
+                  }
+                }}
               >
                 إتمام الشراء
                 <ArrowLeft size={14} />
@@ -696,6 +768,97 @@ const CartPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal تعديل الموقع على الخريطة */}
+      <AnimatePresence>
+        {showLocationModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+            onClick={() => setShowLocationModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-[#FF6B00] text-white p-4 flex items-center justify-between">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <MapPin size={20} />
+                  تحديد موقع التوصيل
+                </h3>
+                <button
+                  onClick={() => setShowLocationModal(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-4">
+                <p className="text-gray-600 text-sm mb-4 text-center">
+                  يرجى تحديد موقعك على الخريطة لضمان وصول الطلب بدقة
+                </p>
+                
+                {/* العنوان المحفوظ */}
+                {customerAddress && (
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-gray-500 mb-1">العنوان المسجل:</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {customerAddress.area || customerAddress.city}
+                      {customerAddress.street_number && ` - شارع ${customerAddress.street_number}`}
+                    </p>
+                  </div>
+                )}
+                
+                {/* الخريطة */}
+                <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
+                  <GoogleMapsLocationPicker
+                    currentLocation={tempLocation.latitude ? tempLocation : null}
+                    onLocationSelect={(location) => {
+                      setTempLocation({ latitude: location.latitude, longitude: location.longitude });
+                    }}
+                    onLocationClear={() => {
+                      setTempLocation({ latitude: null, longitude: null });
+                    }}
+                  />
+                </div>
+                
+                {tempLocation.latitude && (
+                  <p className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
+                    <Check size={14} />
+                    تم تحديد الموقع بنجاح
+                  </p>
+                )}
+              </div>
+              
+              {/* Footer */}
+              <div className="p-4 border-t bg-gray-50 flex gap-3">
+                <button
+                  onClick={() => setShowLocationModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleSaveLocation}
+                  disabled={!tempLocation.latitude}
+                  className="flex-1 py-3 rounded-xl bg-[#FF6B00] text-white font-bold hover:bg-[#E65000] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  <Check size={18} />
+                  حفظ الموقع
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

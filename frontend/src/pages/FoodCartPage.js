@@ -745,36 +745,65 @@ const FoodCartPage = () => {
           {savedAddresses.length > 0 && !useNewAddress && (
             <div className="space-y-2">
               {savedAddresses.map((addr) => (
-                <label
+                <div
                   key={addr.id}
-                  className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
+                  className={`p-3 border rounded-xl transition-all ${
                     selectedAddressId === addr.id 
                       ? 'border-[#FF6B00] bg-orange-50' 
                       : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="address"
-                    checked={selectedAddressId === addr.id}
-                    onChange={() => setSelectedAddressId(addr.id)}
-                    className="w-4 h-4 text-[#E65000]"
-                  />
-                  <Home size={18} className="text-gray-500" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900">{addr.title || 'عنوان'}</p>
-                      {addr.is_default && (
-                        <span className="text-xs bg-orange-100 text-[#E65000] px-2 py-0.5 rounded-full">افتراضي</span>
-                      )}
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="address"
+                      checked={selectedAddressId === addr.id}
+                      onChange={() => setSelectedAddressId(addr.id)}
+                      className="w-4 h-4 text-[#E65000]"
+                    />
+                    <Home size={18} className="text-gray-500" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900">{addr.title || 'عنوان'}</p>
+                        {addr.is_default && (
+                          <span className="text-xs bg-orange-100 text-[#E65000] px-2 py-0.5 rounded-full">افتراضي</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {addr.city} - {addr.area}
+                        {addr.street_number && ` - شارع ${addr.street_number}`}
+                      </p>
+                      <p className="text-xs text-gray-400">{addr.phone}</p>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {addr.city} - {addr.area}
-                      {addr.street_number && ` - شارع ${addr.street_number}`}
-                    </p>
-                    <p className="text-xs text-gray-400">{addr.phone}</p>
+                  </label>
+                  {/* زر تعديل الموقع */}
+                  <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    {addr.latitude ? (
+                      <span className="text-[10px] text-green-600 flex items-center gap-1">
+                        <Check size={12} />
+                        الموقع محدد على الخريطة
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-orange-600 flex items-center gap-1">
+                        <AlertCircle size={12} />
+                        يرجى تحديد الموقع
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedAddressId(addr.id);
+                        setTempLocation({ latitude: addr.latitude || null, longitude: addr.longitude || null });
+                        setShowLocationModal(true);
+                      }}
+                      className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full transition-colors flex items-center gap-1"
+                    >
+                      <MapPin size={10} />
+                      {addr.latitude ? 'تعديل الموقع' : 'تحديد الموقع'}
+                    </button>
                   </div>
-                </label>
+                </div>
               ))}
               
               <button
