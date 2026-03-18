@@ -435,9 +435,48 @@ const FoodMyCartPage = () => {
       </div>
 
       {/* Total Summary */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-2 z-40 shadow-lg">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-2 z-40 shadow-lg max-h-[45vh] overflow-y-auto">
+        {/* ملخص كل متجر */}
+        {stores.length > 0 && (
+          <div className="mb-2 pb-2 border-b border-gray-100">
+            <p className="text-[10px] text-gray-500 mb-1.5 font-medium">ملخص الطلبات حسب المتجر:</p>
+            <div className="space-y-1">
+              {stores.map((store) => {
+                const details = storeDetails[store.storeId];
+                const freeDeliveryMin = details?.free_delivery_minimum || 0;
+                const qualifiesForFree = freeDeliveryMin > 0 && store.totalAmount >= freeDeliveryMin;
+                const deliveryFee = qualifiesForFree ? 0 : (details?.delivery_fee || 5000);
+                
+                return (
+                  <div key={store.storeId} className="flex justify-between items-center bg-gray-50 rounded-lg px-2 py-1.5">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] text-gray-700 truncate block font-medium">
+                        {details?.name || 'متجر'}
+                      </span>
+                      <span className="text-[9px] text-gray-400">
+                        {store.itemCount} منتج
+                      </span>
+                    </div>
+                    <div className="text-left">
+                      <span className="text-[10px] font-bold text-gray-900 block">
+                        {formatPrice(store.totalAmount)}
+                      </span>
+                      {qualifiesForFree ? (
+                        <span className="text-[9px] font-bold text-green-600">توصيل مجاني ✓</span>
+                      ) : (
+                        <span className="text-[9px] text-orange-600">+ توصيل {formatPrice(deliveryFee)}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {/* الإجمالي الكلي */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">الإجمالي ({totalItems} منتج)</span>
+          <span className="text-sm text-gray-600">الإجمالي ({totalItems} منتج من {stores.length} متجر)</span>
           <span className="text-lg font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
         </div>
         
@@ -460,10 +499,20 @@ const FoodMyCartPage = () => {
           </button>
         )}
         
+        {stores.length === 1 && (
+          <Link
+            to={`/food/cart/${stores[0].storeId}`}
+            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-2.5 rounded-lg font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-1 shadow-md text-sm"
+          >
+            <ShoppingCart size={16} />
+            إكمال الطلب
+          </Link>
+        )}
+        
         <p className="text-[10px] text-gray-500 text-center">
           {stores.length > 1 
             ? '🛵 سائق واحد سيجمع جميع طلباتك ويوصلها دفعة واحدة'
-            : 'اضغط على "إكمال الطلب" لإتمام طلبك'
+            : '🛵 اضغط لإتمام طلبك'
           }
         </p>
       </div>
