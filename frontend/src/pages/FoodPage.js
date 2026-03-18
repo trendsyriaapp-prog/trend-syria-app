@@ -576,6 +576,9 @@ const FoodProductCard = ({ product, badgeSettings }) => {
   const categoryConfig = CATEGORY_CONFIG[product.store_type] || CATEGORY_CONFIG.restaurants;
   const UnitIcon = categoryConfig.unitIcon;
   
+  // التحقق من حالة المتجر (مفتوح/مغلق)
+  const isStoreOpen = product.store_is_open !== false;
+  
   const [badgeIndex, setBadgeIndex] = useState(0);
   const [activeBadge, setActiveBadge] = useState(null);
   
@@ -640,94 +643,114 @@ const FoodProductCard = ({ product, badgeSettings }) => {
     return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
   };
 
+  const cardContent = (
+    <motion.div
+      whileHover={isStoreOpen ? { y: -4 } : {}}
+      className={`bg-white rounded-xl border-2 ${categoryConfig.borderColor} overflow-hidden transition-all relative
+        ${isStoreOpen ? 'hover:shadow-md' : 'grayscale opacity-70'}`}
+    >
+      {/* شارة مغلق على المنتج */}
+      {!isStoreOpen && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 rounded-xl">
+          <div className="bg-red-600 text-white px-3 py-1.5 rounded-full font-bold text-xs shadow-lg flex items-center gap-1.5">
+            <Clock size={14} />
+            <span>المتجر مغلق</span>
+          </div>
+        </div>
+      )}
+      
+      <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+        {(product.image || product.images?.[0]) ? (
+          <img 
+            src={product.image || product.images?.[0]} 
+            alt={product.name} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center ${categoryConfig.bgLight}`}>
+            <categoryConfig.icon size={32} className={categoryConfig.textColor} />
+          </div>
+        )}
+        
+        {/* Badges */}
+        <div className="absolute top-1 right-1 flex flex-col gap-1">
+          {isNew && (
+            <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Sparkles size={10} />
+              جديد
+            </span>
+          )}
+          {product.original_price && product.original_price > product.price && (
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              خصم {Math.round((1 - product.price / product.original_price) * 100)}%
+            </span>
+          )}
+        </div>
+
+        {/* شارة التوصيل/المبيعات - حركة slide-up */}
+        {activeBadge && isStoreOpen && (
+          <div className="absolute bottom-1 left-1 overflow-hidden h-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={badgeIndex}
+                initial={{ y: 24, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -24, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
+              >
+                {activeBadge.messages[badgeIndex]}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
+        
+        {/* Favorite */}
+        <button 
+          className="absolute top-1 left-1 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
+          onClick={(e) => e.preventDefault()}
+        >
+          <Heart size={14} className="text-gray-500" />
+        </button>
+      </div>
+      
+      <div className="p-3">
+        <h3 className="font-bold text-gray-900 text-sm truncate mb-1">{product.name}</h3>
+        {product.store_name && (
+          <p className={`text-xs ${categoryConfig.textColor} mb-2 truncate flex items-center gap-1 font-medium`}>
+            <categoryConfig.icon size={10} />
+            {product.store_name}
+          </p>
+        )}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className={`${categoryConfig.textColor} font-bold text-sm`}>{formatPrice(product.price)}</span>
+            <span className="text-gray-400 text-[10px] mr-1">/{categoryConfig.unit}</span>
+            {product.original_price && product.original_price > product.price && (
+              <span className="text-gray-400 text-xs line-through mr-1">
+                {formatPrice(product.original_price)}
+              </span>
+            )}
+          </div>
+          {product.rating > 0 && (
+            <div className="flex items-center gap-0.5 text-xs text-gray-600">
+              <Star size={10} className="text-yellow-500 fill-yellow-500" />
+              {product.rating.toFixed(1)}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // إذا كان المتجر مغلقاً، لا نجعل المنتج رابطاً قابلاً للنقر
+  if (!isStoreOpen) {
+    return <div className="cursor-not-allowed">{cardContent}</div>;
+  }
+
   return (
     <Link to={`/food/store/${product.store_id}`}>
-      <motion.div
-        whileHover={{ y: -4 }}
-        className={`bg-white rounded-xl border-2 ${categoryConfig.borderColor} overflow-hidden hover:shadow-md transition-all`}
-      >
-        <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-          {(product.image || product.images?.[0]) ? (
-            <img 
-              src={product.image || product.images?.[0]} 
-              alt={product.name} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className={`w-full h-full flex items-center justify-center ${categoryConfig.bgLight}`}>
-              <categoryConfig.icon size={32} className={categoryConfig.textColor} />
-            </div>
-          )}
-          
-          {/* Badges */}
-          <div className="absolute top-1 right-1 flex flex-col gap-1">
-            {isNew && (
-              <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Sparkles size={10} />
-                جديد
-              </span>
-            )}
-            {product.original_price && product.original_price > product.price && (
-              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                خصم {Math.round((1 - product.price / product.original_price) * 100)}%
-              </span>
-            )}
-          </div>
-
-          {/* شارة التوصيل/المبيعات - حركة slide-up */}
-          {activeBadge && (
-            <div className="absolute bottom-1 left-1 overflow-hidden h-6">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={badgeIndex}
-                  initial={{ y: 24, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -24, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className={`text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg bg-gradient-to-r ${bgColors[badgeIndex % 4]}`}
-                >
-                  {activeBadge.messages[badgeIndex]}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
-          
-          {/* Favorite */}
-          <button 
-            className="absolute top-1 left-1 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
-            onClick={(e) => e.preventDefault()}
-          >
-            <Heart size={14} className="text-gray-500" />
-          </button>
-        </div>
-        
-        <div className="p-3">
-          <h3 className="font-bold text-gray-900 text-sm truncate mb-1">{product.name}</h3>
-          {product.store_name && (
-            <p className={`text-xs ${categoryConfig.textColor} mb-2 truncate flex items-center gap-1 font-medium`}>
-              <categoryConfig.icon size={10} />
-              {product.store_name}
-            </p>
-          )}
-          <div className="flex items-center justify-between">
-            <div>
-              <span className={`${categoryConfig.textColor} font-bold text-sm`}>{formatPrice(product.price)}</span>
-              <span className="text-gray-400 text-[10px] mr-1">/{categoryConfig.unit}</span>
-              {product.original_price && product.original_price > product.price && (
-                <span className="text-gray-400 text-xs line-through mr-1">
-                  {formatPrice(product.original_price)}
-                </span>
-              )}
-            </div>
-            {product.rating > 0 && (
-              <div className="flex items-center gap-0.5 text-xs text-gray-600">
-                <Star size={10} className="text-yellow-500 fill-yellow-500" />
-                {product.rating.toFixed(1)}
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
+      {cardContent}
     </Link>
   );
 };

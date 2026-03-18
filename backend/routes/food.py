@@ -352,12 +352,43 @@ async def get_food_products(
     
     products = await db.food_products.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(None)
     
-    # إضافة معلومات المتجر
+    # إضافة معلومات المتجر (بما في ذلك حالة الفتح/الإغلاق)
     for product in products:
-        store = await db.food_stores.find_one({"id": product["store_id"]}, {"_id": 0, "name": 1, "store_type": 1})
+        store = await db.food_stores.find_one({"id": product["store_id"]}, {"_id": 0, "name": 1, "store_type": 1, "working_hours": 1})
         if store:
             product["store_name"] = store.get("name", "")
             product["store_type"] = store.get("store_type", "")
+            
+            # حساب حالة الفتح/الإغلاق
+            working_hours = store.get("working_hours", {})
+            product["store_is_open"] = True  # افتراضياً مفتوح
+            
+            if working_hours:
+                days_map = {0: "monday", 1: "tuesday", 2: "wednesday", 3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"}
+                today = days_map[datetime.now().weekday()]
+                today_hours = working_hours.get(today, {})
+                
+                if not today_hours or not today_hours.get("is_open", True):
+                    product["store_is_open"] = False
+                else:
+                    try:
+                        from datetime import datetime as dt
+                        now = dt.now()
+                        current_time = now.hour * 60 + now.minute
+                        
+                        open_time = today_hours.get("open", "08:00")
+                        close_time = today_hours.get("close", "22:00")
+                        
+                        open_parts = open_time.split(":")
+                        close_parts = close_time.split(":")
+                        
+                        open_minutes = int(open_parts[0]) * 60 + int(open_parts[1])
+                        close_minutes = int(close_parts[0]) * 60 + int(close_parts[1])
+                        
+                        if current_time < open_minutes or current_time > close_minutes:
+                            product["store_is_open"] = False
+                    except:
+                        pass
     
     return products
 
