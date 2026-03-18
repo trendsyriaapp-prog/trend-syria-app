@@ -78,6 +78,7 @@ const HomePage = () => {
   const [tickerEnabled, setTickerEnabled] = useState(true);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const [badgeSettings, setBadgeSettings] = useState(null);
+  const [extraProducts, setExtraProducts] = useState([]);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -148,6 +149,14 @@ const HomePage = () => {
         setBadgeSettings(badgeRes.data);
       } catch (err) {
         console.log('Badge settings not available');
+      }
+      
+      // جلب منتجات إضافية للعرض أسفل الأقسام الرئيسية
+      try {
+        const extraRes = await axios.get(`${API}/products?limit=20&skip=0`);
+        setExtraProducts(extraRes.data?.products || extraRes.data || []);
+      } catch (err) {
+        console.log('Extra products not available');
       }
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
@@ -476,6 +485,41 @@ const HomePage = () => {
           <RecommendedProducts />
         </div>
       </section>
+
+      {/* 4. قسم منتجات إضافية - شبكة عادية مع شارات */}
+      {extraProducts.length > 0 && (
+        <section className="py-4 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <SectionHeader 
+              icon={Package}
+              title="المزيد من المنتجات" 
+              linkTo="/category/all"
+              linkColor="text-[#FF6B00]"
+              iconBg="from-[#FF6B00] to-[#FF8C00]"
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3">
+              {extraProducts.slice(0, 20).map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  badgeSettings={badgeSettings}
+                />
+              ))}
+            </div>
+            
+            {/* زر عرض المزيد */}
+            <div className="text-center mt-4">
+              <Link 
+                to="/category/all"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white font-bold px-6 py-2.5 rounded-full hover:shadow-lg transition-all"
+              >
+                عرض جميع المنتجات
+                <ChevronLeft size={18} />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Banner - Modern Style */}
       <section className="py-6">
