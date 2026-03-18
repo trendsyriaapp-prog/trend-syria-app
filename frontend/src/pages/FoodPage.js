@@ -157,6 +157,7 @@ const FoodPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
+  const filterParam = searchParams.get('filter');
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -178,6 +179,7 @@ const FoodPage = () => {
   const [featuredStores, setFeaturedStores] = useState([]);
   const [isFeaturedEnabled, setIsFeaturedEnabled] = useState(false);
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
+  const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
 
   // جلب الفئات الديناميكية من الـ API
   useEffect(() => {
@@ -292,7 +294,8 @@ const FoodPage = () => {
         axios.get(`${API}/food/products`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
-          search: searchQuery || undefined
+          search: searchQuery || undefined,
+          limit: 100
         }}),
         axios.get(`${API}/food/flash-sales/active`),
         axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
@@ -474,6 +477,30 @@ const FoodPage = () => {
         <FreeShippingBanner promo={globalFreeShipping} variant="food" />
       )}
 
+      {/* 🚚 شريط فلتر التوصيل المجاني */}
+      {showOnlyFreeDelivery && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+          <div className="max-w-7xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Truck size={18} />
+                <span className="font-bold text-sm">عرض منتجات التوصيل المجاني فقط</span>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowOnlyFreeDelivery(false);
+                  setSearchParams({});
+                }}
+                className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs transition-all"
+              >
+                <X size={14} />
+                <span>إلغاء الفلتر</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-4">
         {loading ? (
           <div className="flex justify-center py-12">
@@ -575,7 +602,32 @@ const FoodPage = () => {
             )}
 
             {/* Products Section */}
-            {products.length > 0 ? (
+            {showOnlyFreeDelivery ? (
+              // عرض منتجات التوصيل المجاني فقط
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                      <Truck size={16} className="text-white" />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">منتجات التوصيل المجاني</h2>
+                  </div>
+                  <span className="text-sm text-gray-500">{freeDeliveryProducts.length} منتج</span>
+                </div>
+                {freeDeliveryProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {freeDeliveryProducts.map((product) => (
+                      <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Truck size={48} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-gray-500">لا توجد منتجات بتوصيل مجاني حالياً</p>
+                  </div>
+                )}
+              </section>
+            ) : products.length > 0 ? (
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-bold text-gray-900">المنتجات</h2>
@@ -588,7 +640,7 @@ const FoodPage = () => {
               </section>
             ) : (
               <EmptyState category={activeCategory} />
-            )}
+            )}}
           </>
         )}
       </div>
