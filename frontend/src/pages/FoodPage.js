@@ -125,7 +125,7 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون كاروسيل المتاجر
+// مكون كاروسيل المتاجر - تصميم محسّن
 const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreCard }) => {
   const totalGroups = Math.ceil(stores.length / 4);
   
@@ -152,11 +152,15 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
         )}
       </div>
       
-      {/* حاوية التمرير الأفقي */}
+      {/* حاوية التمرير - تمرير سلس */}
       <div 
         ref={scrollRef}
         className="overflow-x-auto hide-scrollbar"
-        style={{ scrollSnapType: 'x mandatory' }}
+        style={{ 
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth'
+        }}
         onScroll={handleScroll}
       >
         <div className="flex">
@@ -164,7 +168,7 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
             <div 
               key={groupIndex} 
               className="min-w-full px-0 grid grid-cols-2 gap-3"
-              style={{ scrollSnapAlign: 'start' }}
+              style={{ scrollSnapAlign: 'center' }}
             >
               {stores.slice(groupIndex * 4, groupIndex * 4 + 4).map((store) => (
                 <StoreCard key={store.id} store={store} />
@@ -174,15 +178,22 @@ const StoresCarousel = ({ stores, activeIndex, setActiveIndex, scrollRef, StoreC
         </div>
       </div>
       
-      {/* النقاط - للعرض فقط بدون نقر */}
+      {/* النقاط - تصميم جديد أنيق */}
       {totalGroups > 1 && (
-        <div className="flex justify-center gap-2 mt-3">
+        <div className="flex justify-center items-center gap-1.5 mt-4">
           {Array.from({ length: totalGroups }).map((_, i) => (
             <div 
               key={i}
-              className={`h-2 rounded-full transition-all duration-200 ${
-                i === activeIndex ? 'bg-[#FF6B00] w-6' : 'bg-gray-300 w-2'
-              }`}
+              className={`
+                rounded-full transition-all duration-300 ease-out
+                ${i === activeIndex 
+                  ? 'w-8 h-2.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] shadow-lg shadow-orange-300/50' 
+                  : 'w-2.5 h-2.5 bg-gray-200 hover:bg-gray-300'
+                }
+              `}
+              style={{
+                transform: i === activeIndex ? 'scale(1.1)' : 'scale(1)',
+              }}
             />
           ))}
         </div>
