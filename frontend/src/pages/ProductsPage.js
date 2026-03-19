@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
+import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -49,6 +50,7 @@ const FlashCountdown = ({ endTime }) => {
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const { restoreScrollPosition } = useScroll();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
@@ -120,7 +122,15 @@ const ProductsPage = () => {
     }
   }, [ads.length]);
 
-  // ملاحظة: استعادة التمرير يتم التعامل معها في ScrollToTop.js
+  // استعادة موقع التمرير بعد تحميل البيانات
+  useEffect(() => {
+    if (!loading && products.length > 0) {
+      const timer = setTimeout(() => {
+        restoreScrollPosition(location.pathname + location.search);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, products.length]);
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
@@ -128,9 +138,6 @@ const ProductsPage = () => {
   const priceMax = searchParams.get('price_max') || '';
   const cityFilter = searchParams.get('city') || '';
   const sort = searchParams.get('sort') || 'newest';
-  
-  // التحقق إذا كانت صفحة قسم مخصص (بدون بانرات وأقسام إضافية)
-  const isSpecialSection = ['trending', 'deals', 'newest', 'popular', 'flash', 'sponsored'].includes(sort);
 
   // Reset when filters change
   useEffect(() => {
@@ -288,8 +295,6 @@ const ProductsPage = () => {
     { value: 'popular', label: 'الأكثر مبيعاً' },
     { value: 'trending', label: 'رائج الآن' },
     { value: 'deals', label: 'عروض وخصومات' },
-    { value: 'flash', label: 'عروض فلاش' },
-    { value: 'sponsored', label: 'مُعلن عنها' },
     { value: 'price_low', label: 'السعر: من الأقل' },
     { value: 'price_high', label: 'السعر: من الأعلى' }
   ];
@@ -336,12 +341,12 @@ const ProductsPage = () => {
     <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* 🎁 بانر الشحن المجاني الشامل */}
-        {!isSpecialSection && globalFreeShipping && (
+        {globalFreeShipping && (
           <FreeShippingBanner promo={globalFreeShipping} />
         )}
 
         {/* 📢 شريط الإعلانات */}
-        {!isSpecialSection && ads.length > 0 && (
+        {ads.length > 0 && (
           <div className="mb-3">
             <div className="relative overflow-hidden h-16 md:h-20">
               {ads.map((ad, index) => (
@@ -421,7 +426,7 @@ const ProductsPage = () => {
         )}
 
         {/* ⚡ شريط فلاش */}
-        {!isSpecialSection && flashProducts.length > 0 && flashSale && (
+        {flashProducts.length > 0 && flashSale && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -433,13 +438,7 @@ const ProductsPage = () => {
                   <p className="text-[10px] text-gray-500">{flashSale.name}</p>
                 </div>
               </div>
-              <Link 
-                to="/products?sort=flash"
-                className="text-orange-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={14} />
-              </Link>
+              <FlashCountdown endTime={flashSale.end_time} />
             </div>
             
             <div className="relative">
@@ -497,7 +496,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🔥 شريط الأكثر مبيعاً */}
-        {!isSpecialSection && bestSellers.length > 0 && (
+        {bestSellers.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -571,7 +570,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🆕 شريط وصل حديثاً */}
-        {!isSpecialSection && newlyAddedProducts.length > 0 && (
+        {newlyAddedProducts.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -654,8 +653,6 @@ const ProductsPage = () => {
                 : sort === 'deals' ? 'عروض وخصومات 🏷️'
                 : sort === 'newest' ? 'منتجات جديدة ✨'
                 : sort === 'popular' ? 'الأكثر مبيعاً 🛒'
-                : sort === 'flash' ? 'عروض فلاش ⚡'
-                : sort === 'sponsored' ? 'منتجات مُعلن عنها ⭐'
                 : 'جميع المنتجات'}
             </h1>
             <p className="text-gray-500 text-sm">
