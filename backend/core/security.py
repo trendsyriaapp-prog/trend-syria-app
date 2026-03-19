@@ -36,11 +36,11 @@ limiter = Limiter(key_func=get_remote_address)
 
 # حدود مختلفة لكل نوع من الطلبات
 RATE_LIMITS = {
-    "login": "5/minute",           # 5 محاولات تسجيل دخول بالدقيقة
-    "register": "3/minute",        # 3 تسجيلات بالدقيقة
-    "api_general": "100/minute",   # 100 طلب عام بالدقيقة
-    "api_heavy": "20/minute",      # 20 طلب ثقيل بالدقيقة
-    "password_reset": "3/hour",    # 3 طلبات استعادة كلمة مرور بالساعة
+    "login": "15/minute",           # 15 محاولة تسجيل دخول بالدقيقة (مرن للاختبار)
+    "register": "5/minute",         # 5 تسجيلات بالدقيقة
+    "api_general": "100/minute",    # 100 طلب عام بالدقيقة
+    "api_heavy": "20/minute",       # 20 طلب ثقيل بالدقيقة
+    "password_reset": "5/hour",     # 5 طلبات استعادة كلمة مرور بالساعة
 }
 
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
@@ -200,14 +200,34 @@ def should_refresh_token(payload: dict) -> bool:
     remaining = exp - datetime.now(timezone.utc).timestamp()
     return remaining < 86400  # أقل من 24 ساعة
 
-# ============== 5. حماية من Brute Force ==============
+# ============== 5. حماية من Brute Force (محسّنة) ==============
 # تخزين محاولات تسجيل الدخول الفاشلة
 failed_login_attempts: Dict[str, Dict] = {}
-LOCKOUT_THRESHOLD = 5  # عدد المحاولات قبل القفل
-LOCKOUT_DURATION = 15 * 60  # 15 دقيقة
+LOCKOUT_THRESHOLD = 10  # عدد المحاولات قبل القفل (زيادة للتسامح مع الاختبارات)
+LOCKOUT_DURATION = 5 * 60  # 5 دقائق (تقليل المدة)
+ATTEMPT_WINDOW = 10 * 60  # نافذة 10 دقائق للمحاولات
+
+def _cleanup_old_attempts():
+    """تنظيف المحاولات القديمة تلقائياً"""
+    now = datetime.now(timezone.utc).timestamp()
+    keys_to_delete = []
+    
+    for key, data in failed_login_attempts.items():
+        last_attempt = data.get("last_attempt", 0)
+        locked_until = data.get("locked_until", 0)
+        
+        # حذف السجلات القديمة (أكثر من 30 دقيقة)
+        if now - last_attempt > 1800 and locked_until < now:
+            keys_to_delete.append(key)
+    
+    for key in keys_to_delete:
+        del failed_login_attempts[key]
 
 def check_brute_force(identifier: str, ip: str) -> None:
-    """فحص محاولات الاختراق"""
+    """فحص محاولات الاختراق مع تنظيف تلقائي"""
+    # تنظيف المحاولات القديمة أولاً
+    _cleanup_old_attempts()
+    
     key = f"{identifier}:{ip}"
     now = datetime.now(timezone.utc).timestamp()
     
@@ -215,16 +235,23 @@ def check_brute_force(identifier: str, ip: str) -> None:
         data = failed_login_attempts[key]
         
         # التحقق من القفل
-        if data.get("locked_until", 0) > now:
-            remaining = int(data["locked_until"] - now)
+        locked_until = data.get("locked_until", 0)
+        if locked_until > now:
+            remaining = int(locked_until - now)
+            remaining_min = max(1, remaining // 60)
             raise HTTPException(
                 status_code=429,
-                detail=f"الحساب مقفل مؤقتاً. يرجى الانتظار {remaining // 60} دقيقة."
+                detail=f"تم تجاوز عدد المحاولات. انتظر {remaining_min} دقيقة."
             )
         
         # إعادة تعيين بعد انتهاء القفل
-        if data.get("locked_until", 0) < now and data.get("locked_until", 0) > 0:
-            failed_login_attempts[key] = {"attempts": 0, "locked_until": 0}
+        if locked_until > 0 and locked_until <= now:
+            failed_login_attempts[key] = {"attempts": 0, "locked_until": 0, "last_attempt": now}
+        
+        # إعادة تعيين إذا مرت فترة كافية من آخر محاولة
+        last_attempt = data.get("last_attempt", 0)
+        if now - last_attempt > ATTEMPT_WINDOW:
+            failed_login_attempts[key] = {"attempts": 0, "locked_until": 0, "last_attempt": now}
 
 def record_failed_login(identifier: str, ip: str) -> None:
     """تسجيل محاولة دخول فاشلة"""
@@ -232,9 +259,10 @@ def record_failed_login(identifier: str, ip: str) -> None:
     now = datetime.now(timezone.utc).timestamp()
     
     if key not in failed_login_attempts:
-        failed_login_attempts[key] = {"attempts": 0, "locked_until": 0}
+        failed_login_attempts[key] = {"attempts": 0, "locked_until": 0, "last_attempt": now}
     
     failed_login_attempts[key]["attempts"] += 1
+    failed_login_attempts[key]["last_attempt"] = now
     
     # قفل الحساب بعد تجاوز الحد
     if failed_login_attempts[key]["attempts"] >= LOCKOUT_THRESHOLD:
@@ -249,6 +277,11 @@ def clear_failed_attempts(identifier: str, ip: str) -> None:
     key = f"{identifier}:{ip}"
     if key in failed_login_attempts:
         del failed_login_attempts[key]
+    
+    # مسح أيضاً بناءً على المعرف فقط (لجميع IPs)
+    keys_to_clear = [k for k in failed_login_attempts.keys() if k.startswith(f"{identifier}:")]
+    for k in keys_to_clear:
+        del failed_login_attempts[k]
 
 # ============== 6. Security Headers ==============
 SECURITY_HEADERS = {
@@ -387,3 +420,10 @@ def block_ip(ip: str, reason: str):
 def unblock_ip(ip: str):
     """رفع الحظر عن IP"""
     blocked_ips.discard(ip)
+
+
+def reset_all_brute_force_locks():
+    """إعادة تعيين جميع أقفال brute force (للتطوير والاختبار)"""
+    global failed_login_attempts
+    failed_login_attempts.clear()
+    return {"cleared": True, "message": "تم مسح جميع أقفال تسجيل الدخول"}

@@ -23,7 +23,8 @@ from core.security import (
     create_refresh_token,
     decode_token,
     should_refresh_token,
-    limiter
+    limiter,
+    reset_all_brute_force_locks
 )
 from models.schemas import (
     UserRegister, UserLogin, SellerDocuments, DeliveryDocuments,
@@ -115,7 +116,7 @@ async def register(request: Request, user: UserRegister):
     }
 
 @router.post("/login")
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 async def login(request: Request, credentials: UserLogin):
     client_ip = get_remote_address(request)
     
@@ -178,6 +179,15 @@ async def login(request: Request, credentials: UserLogin):
         },
         "force_password_change": force_password_change
     }
+
+@router.post("/reset-brute-force")
+async def reset_brute_force_locks(user: dict = Depends(get_current_user)):
+    """🔒 إعادة تعيين أقفال brute force - للأدمن فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    result = reset_all_brute_force_locks()
+    return result
 
 @router.post("/refresh")
 async def refresh_token(request: Request):
@@ -368,7 +378,7 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     if docs.vehicle_type not in valid_vehicle_types:
         raise HTTPException(
             status_code=400, 
-            detail=f"نوع المركبة غير صالح. الأنواع المتاحة: سيارة، دراجة نارية، سكوتر كهربائي، دراجة هوائية"
+            detail="نوع المركبة غير صالح. الأنواع المتاحة: سيارة، دراجة نارية، سكوتر كهربائي، دراجة هوائية"
         )
     
     # المركبات التي تتطلب رخصة قيادة

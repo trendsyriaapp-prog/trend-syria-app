@@ -2244,32 +2244,51 @@ async def accept_food_order(
             )
     
     # التحقق من المسافة إذا كان لديه طلبات سابقة
+    # للطلبات الباردة: حد أقصى 3 كم بين مواقع التسليم
+    # للطلبات الساخنة: يتم التحقق من المسافة أيضاً لكن مع تسامح أكبر
+    COLD_DRY_MAX_DISTANCE_KM = 3.0  # الحد الأقصى للطلبات الباردة
+    
     if len(current_orders) > 0:
-        first_order = current_orders[0]
-        first_lat = first_order.get("latitude")
-        first_lon = first_order.get("longitude")
         new_lat = order.get("latitude")
         new_lon = order.get("longitude")
         
-        if first_lat and first_lon and new_lat and new_lon:
-            import math
-            R = 6371
+        if new_lat and new_lon:
+            # للطلبات الباردة: التحقق من أن جميع مواقع التسليم قريبة من بعضها
+            if new_store_category == "cold_dry" and cold_dry_count > 0:
+                for existing_order in current_orders:
+                    existing_store = await db.food_stores.find_one({"id": existing_order.get("store_id")})
+                    existing_category = get_store_delivery_category(existing_store.get("store_type", "restaurants")) if existing_store else "hot_fresh"
+                    
+                    # التحقق فقط من الطلبات الباردة الأخرى
+                    if existing_category == "cold_dry":
+                        existing_lat = existing_order.get("latitude")
+                        existing_lon = existing_order.get("longitude")
+                        
+                        if existing_lat and existing_lon:
+                            distance_between = calculate_distance_km(
+                                existing_lat, existing_lon,
+                                new_lat, new_lon
+                            )
+                            
+                            if distance_between > COLD_DRY_MAX_DISTANCE_KM:
+                                raise HTTPException(
+                                    status_code=400,
+                                    detail=f"📦 موقع تسليم هذا الطلب بعيد عن طلباتك الأخرى ({distance_between:.1f} كم). للطلبات الباردة، يجب أن تكون مواقع التسليم قريبة (≤ {COLD_DRY_MAX_DISTANCE_KM} كم) لضمان سرعة التوصيل."
+                                )
             
-            lat1, lon1 = math.radians(first_lat), math.radians(first_lon)
-            lat2, lon2 = math.radians(new_lat), math.radians(new_lon)
+            # التحقق العام من المسافة (للطلبات الساخنة وكفحص إضافي)
+            first_order = current_orders[0]
+            first_lat = first_order.get("latitude")
+            first_lon = first_order.get("longitude")
             
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
-            
-            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-            c = 2 * math.asin(math.sqrt(a))
-            distance = R * c
-            
-            if distance > max_distance_km:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"هذا الطلب بعيد عن مسارك الحالي ({distance:.1f} كم). الحد الأقصى المسموح: {max_distance_km} كم"
-                )
+            if first_lat and first_lon:
+                distance = calculate_distance_km(first_lat, first_lon, new_lat, new_lon)
+                
+                if distance > max_distance_km:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"هذا الطلب بعيد عن مسارك الحالي ({distance:.1f} كم). الحد الأقصى المسموح: {max_distance_km} كم"
+                    )
     
     await db.food_orders.update_one(
         {"id": order_id},
