@@ -51,7 +51,7 @@ const FlashSaleProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto">
           <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-1 text-xs">
             <ChevronRight size={14} />
@@ -59,11 +59,11 @@ const FlashSaleProductsPage = () => {
           </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-white/20 rounded-lg">
-                <Zap size={18} />
+              <div className="p-1 bg-white/20 rounded-lg">
+                <Zap size={16} />
               </div>
               <div>
-                <h1 className="text-lg font-bold">عروض فلاش</h1>
+                <h1 className="text-base font-bold">عروض فلاش</h1>
                 <p className="text-white/80 text-xs">خصومات لفترة محدودة</p>
               </div>
             </div>
