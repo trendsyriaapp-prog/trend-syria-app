@@ -15,6 +15,8 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import DailyDeal from '../components/DailyDeal';
 import RecommendedProducts from '../components/RecommendedProducts';
 import FreeShippingBanner from '../components/FreeShippingBanner';
+import LazyImage from '../components/LazyImage';
+import LazySection from '../components/LazySection';
 import { useSettings } from '../context/SettingsContext';
 import { useScroll } from '../context/ScrollContext';
 
@@ -166,7 +168,19 @@ const HomePage = () => {
   
   // تطبيق بيانات الصفحة الرئيسية
   const applyHomepageData = (data) => {
-    setCategories(data.categories || []);
+    // تحويل قائمة الفئات من strings إلى objects
+    const categoriesData = (data.categories || []).map((cat, index) => {
+      if (typeof cat === 'string') {
+        return {
+          id: cat,
+          name: getCategoryNameAr(cat),
+          icon: getCategoryIcon(cat),
+          type: ['food', 'restaurants', 'meals'].includes(cat) ? 'food' : 'products'
+        };
+      }
+      return cat;
+    });
+    setCategories(categoriesData);
     setAds(data.ads || []);
     setSponsoredProducts(data.sponsored_products || []);
     setShopFlashSale(data.flash_sale);
@@ -200,6 +214,72 @@ const HomePage = () => {
         setGlobalFreeShipping(data.settings.free_shipping);
       }
     }
+  };
+  
+  // ترجمة أسماء الفئات
+  const getCategoryNameAr = (cat) => {
+    const names = {
+      'accessories': 'إكسسوارات',
+      'appliances': 'أجهزة منزلية',
+      'beauty': 'جمال',
+      'books': 'كتب',
+      'cars': 'سيارات',
+      'clothes': 'ملابس',
+      'computers': 'كمبيوتر',
+      'electronics': 'إلكترونيات',
+      'food': 'طعام',
+      'furniture': 'أثاث',
+      'games': 'ألعاب',
+      'gifts': 'هدايا',
+      'health': 'صحة',
+      'home': 'منزل',
+      'kids': 'أطفال',
+      'medicines': 'أدوية',
+      'mobiles': 'موبايلات',
+      'perfumes': 'عطور',
+      'shoes': 'أحذية',
+      'sports': 'رياضة',
+      'watches': 'ساعات',
+      'bags': 'حقائب',
+      'jewelry': 'مجوهرات',
+      'أدوات منزلية': 'أدوات منزلية',
+      'إلكترونيات': 'إلكترونيات',
+      'مستلزمات مكتبية': 'مستلزمات مكتبية'
+    };
+    return names[cat] || cat;
+  };
+  
+  // أيقونات الفئات
+  const getCategoryIcon = (cat) => {
+    const icons = {
+      'accessories': 'Watch',
+      'appliances': 'Refrigerator',
+      'beauty': 'SprayCan',
+      'books': 'BookOpen',
+      'cars': 'Car',
+      'clothes': 'Shirt',
+      'computers': 'Laptop',
+      'electronics': 'Smartphone',
+      'food': 'UtensilsCrossed',
+      'furniture': 'Sofa',
+      'games': 'Gamepad2',
+      'gifts': 'Gift',
+      'health': 'Pill',
+      'home': 'Home',
+      'kids': 'Gamepad2',
+      'medicines': 'Pill',
+      'mobiles': 'Smartphone',
+      'perfumes': 'SprayCan',
+      'shoes': 'Footprints',
+      'sports': 'Dumbbell',
+      'watches': 'Watch',
+      'bags': 'ShoppingBasket',
+      'jewelry': 'Sparkles',
+      'أدوات منزلية': 'Home',
+      'إلكترونيات': 'Smartphone',
+      'مستلزمات مكتبية': 'BookOpen'
+    };
+    return icons[cat] || 'Package';
   };
   
   // الطريقة القديمة كـ fallback
@@ -440,7 +520,11 @@ const HomePage = () => {
 
       {/* 1. Sponsored Products - مروّج */}
       {sectionsSettings.sponsored_enabled && (
-      <section className="py-1.5" style={{ minHeight: '240px' }}>
+      <LazySection 
+        className="py-1.5" 
+        minHeight="240px"
+        priority={true}
+      >
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
             icon={Star} 
@@ -462,10 +546,11 @@ const HomePage = () => {
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
-                            <img 
+                            <LazyImage 
                               src={product.images[0]} 
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              wrapperClassName="w-full h-full"
+                              priority={i < 3}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -505,12 +590,16 @@ const HomePage = () => {
             )}
           </div>
         </div>
-      </section>
+      </LazySection>
       )}
 
       {/* 2. Flash Sale Products - عروض فلاش */}
       {sectionsSettings.flash_sale_enabled && (
-      <section className="py-1.5" style={{ minHeight: '240px' }}>
+      <LazySection 
+        className="py-1.5" 
+        minHeight="240px"
+        rootMargin="150px"
+      >
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
             icon={Zap} 
@@ -532,10 +621,10 @@ const HomePage = () => {
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
-                            <img 
+                            <LazyImage 
                               src={product.images[0]} 
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              wrapperClassName="w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -578,12 +667,16 @@ const HomePage = () => {
             )}
           </div>
         </div>
-      </section>
+      </LazySection>
       )}
 
       {/* 3. 🚚 شحن مجاني - منتجات تستحق شحن مجاني */}
       {sectionsSettings.free_shipping_enabled && freeShippingProducts.length > 0 && (
-        <section className="py-1.5" style={{ minHeight: '240px' }}>
+        <LazySection 
+          className="py-1.5" 
+          minHeight="240px"
+          rootMargin="150px"
+        >
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
               icon={Truck} 
@@ -601,10 +694,10 @@ const HomePage = () => {
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
-                            <img 
+                            <LazyImage 
                               src={product.images[0]} 
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              wrapperClassName="w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -640,12 +733,16 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </LazySection>
       )}
 
       {/* 4. 🔥 الأكثر مبيعاً */}
       {sectionsSettings.best_sellers_enabled && bestSellers.length > 0 && (
-        <section className="py-1.5" style={{ minHeight: '240px' }}>
+        <LazySection 
+          className="py-1.5" 
+          minHeight="240px"
+          rootMargin="150px"
+        >
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
               icon={TrendingUp} 
@@ -663,10 +760,10 @@ const HomePage = () => {
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-red-100 hover:border-red-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
-                            <img 
+                            <LazyImage 
                               src={product.images[0]} 
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              wrapperClassName="w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -701,12 +798,16 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </LazySection>
       )}
 
       {/* 5. 🆕 منتجات جديدة */}
       {sectionsSettings.new_arrivals_enabled && newlyAddedProducts.length > 0 && (
-        <section className="py-1.5" style={{ minHeight: '240px' }}>
+        <LazySection 
+          className="py-1.5" 
+          minHeight="240px"
+          rootMargin="150px"
+        >
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
               icon={Sparkles} 
@@ -724,10 +825,10 @@ const HomePage = () => {
                       <div className="bg-white rounded-xl overflow-hidden border-2 border-blue-100 hover:border-blue-300 transition-all shadow-sm hover:shadow-md">
                         <div className="relative aspect-square bg-gray-100">
                           {product.images?.[0] ? (
-                            <img 
+                            <LazyImage 
                               src={product.images[0]} 
                               alt={product.name}
-                              className="w-full h-full object-cover"
+                              wrapperClassName="w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -762,12 +863,16 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </LazySection>
       )}
 
       {/* 6. قسم منتجات إضافية - شبكة عادية مع شارات */}
       {extraProducts.length > 0 && (
-        <section className="py-4 bg-white">
+        <LazySection 
+          className="py-4 bg-white" 
+          minHeight="400px"
+          rootMargin="200px"
+        >
           <div className="max-w-7xl mx-auto px-4">
             <SectionHeader 
               icon={Package}
@@ -797,7 +902,7 @@ const HomePage = () => {
               </Link>
             </div>
           </div>
-        </section>
+        </LazySection>
       )}
 
       {/* CTA Banner - Modern Style */}

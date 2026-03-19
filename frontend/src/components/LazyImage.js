@@ -1,26 +1,31 @@
 // /app/frontend/src/components/LazyImage.js
-// مكون صورة محسّن مع Lazy Loading و Placeholder
+// مكون صورة محسّن مع Lazy Loading و Blur Placeholder
 
-import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect, memo } from 'react';
 
-const LazyImage = ({ 
+const LazyImage = memo(({ 
   src, 
   alt, 
   className = '', 
+  wrapperClassName = '',
   placeholderColor = '#f3f4f6',
-  aspectRatio = '4/5',
+  aspectRatio,
+  width,
+  height,
   onContextMenu,
   onDragStart,
+  priority = false, // للصور المهمة فوق الطية
   ...props 
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(priority); // الصور ذات الأولوية تُحمّل فوراً
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef(null);
 
   useEffect(() => {
-    // Intersection Observer for lazy loading
+    if (priority) return; // لا حاجة للـ observer إذا كانت الصورة ذات أولوية
+    
+    // Intersection Observer للـ lazy loading
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -29,7 +34,7 @@ const LazyImage = ({
         }
       },
       {
-        rootMargin: '100px', // Start loading 100px before entering viewport
+        rootMargin: '200px', // بدء التحميل 200px قبل الظهور
         threshold: 0.01
       }
     );
@@ -39,7 +44,7 @@ const LazyImage = ({
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [priority]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -50,42 +55,58 @@ const LazyImage = ({
     setIsLoaded(true);
   };
 
+  const containerStyle = {
+    ...(aspectRatio && { aspectRatio }),
+    ...(width && { width }),
+    ...(height && { height }),
+  };
+
   return (
     <div 
       ref={imgRef}
-      className={`relative overflow-hidden ${className}`}
-      style={{ aspectRatio }}
+      className={`relative overflow-hidden ${wrapperClassName}`}
+      style={containerStyle}
     >
-      {/* Placeholder */}
+      {/* Blur Placeholder مع Shimmer */}
       <div 
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          isLoaded ? 'opacity-0' : 'opacity-100'
+        className={`absolute inset-0 transition-opacity duration-500 ${
+          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         style={{ backgroundColor: placeholderColor }}
       >
-        {/* Shimmer effect */}
-        <div className="absolute inset-0 shimmer-effect" />
+        {/* تأثير Shimmer متحرك */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+            animation: 'shimmer 1.5s infinite',
+          }}
+        />
       </div>
 
-      {/* Actual Image */}
+      {/* الصورة الفعلية */}
       {isInView && (
-        <motion.img
-          src={hasError ? 'https://via.placeholder.com/400?text=صورة+غير+متوفرة' : src}
+        <img
+          src={hasError ? '/placeholder-image.svg' : src}
           alt={alt}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
           onLoad={handleLoad}
           onError={handleError}
           onContextMenu={onContextMenu}
           onDragStart={onDragStart}
           draggable="false"
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
+          className={`w-full h-full object-cover transition-opacity duration-500 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          } ${className}`}
           style={{ pointerEvents: 'none' }}
           {...props}
         />
       )}
     </div>
   );
-};
+});
+
+LazyImage.displayName = 'LazyImage';
 
 export default LazyImage;
