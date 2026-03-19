@@ -8,7 +8,7 @@ import {
   UtensilsCrossed, SprayCan, ChevronLeft, TrendingUp,
   Package, Star, ShoppingBasket, Apple, Zap, ChevronRight,
   Pill, Car, MapPin, Watch, Gift, Sparkles, Laptop, Footprints,
-  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
+  Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Truck
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FeaturedProducts from '../components/FeaturedProducts';
@@ -79,6 +79,7 @@ const HomePage = () => {
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const [badgeSettings, setBadgeSettings] = useState(null);
   const [extraProducts, setExtraProducts] = useState([]);
+  const [freeShippingProducts, setFreeShippingProducts] = useState([]);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -157,6 +158,17 @@ const HomePage = () => {
         setExtraProducts(extraRes.data?.products || extraRes.data || []);
       } catch (err) {
         console.log('Extra products not available');
+      }
+      
+      // جلب منتجات شحنها مجاني (سعرها >= حد الشحن المجاني)
+      try {
+        const settingsRes = await axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
+        const threshold = settingsRes.data?.free_shipping_threshold || 150000;
+        const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
+        const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
+        setFreeShippingProducts(freeShipProducts.slice(0, 10));
+      } catch (err) {
+        console.log('Free shipping products not available');
       }
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
@@ -479,14 +491,76 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 3. قسم التوصيات - رائج + عروض + جديد */}
+      {/* 3. 🚚 شحنها مجاني - منتجات تستحق شحن مجاني */}
+      {freeShippingProducts.length > 0 && (
+        <section className="py-1.5" style={{ minHeight: '240px' }}>
+          <div className="max-w-7xl mx-auto px-3">
+            <SectionHeader 
+              icon={Truck} 
+              title="شحنها مجاني" 
+              linkTo="/products?price_min=150000"
+              linkColor="text-green-600"
+              iconBg="from-green-500 to-emerald-500"
+            />
+            
+            <div className="relative" style={{ minHeight: '200px' }}>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {freeShippingProducts.map((product, i) => (
+                  <div key={product.id} className="flex-shrink-0 w-36">
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* شارة شحن مجاني */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Truck size={10} />
+                            شحن مجاني
+                          </div>
+                          {/* شارة التوصيل */}
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-green-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-green-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 4. قسم التوصيات - رائج + عروض + جديد */}
       <section className="py-1.5 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">
           <RecommendedProducts />
         </div>
       </section>
 
-      {/* 4. قسم منتجات إضافية - شبكة عادية مع شارات */}
+      {/* 5. قسم منتجات إضافية - شبكة عادية مع شارات */}
       {extraProducts.length > 0 && (
         <section className="py-4 bg-white">
           <div className="max-w-7xl mx-auto px-4">
