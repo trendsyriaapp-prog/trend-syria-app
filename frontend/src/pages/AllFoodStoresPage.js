@@ -1,7 +1,7 @@
 // /app/frontend/src/pages/AllFoodStoresPage.js
 // صفحة عرض جميع متاجر الطعام
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -14,19 +14,28 @@ import LazyImage from '../components/LazyImage';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Cache للمتاجر
+const storesCache = {
+  data: null,
+  timestamp: null,
+  TTL: 2 * 60 * 1000 // 2 دقيقة
+};
+
 const AllFoodStoresPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stores, setStores] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stores, setStores] = useState(storesCache.data || []);
+  const [loading, setLoading] = useState(!storesCache.data);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('rating'); // rating, delivery_time, min_order
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState('rating');
   const [userCity, setUserCity] = useState(null);
 
   useEffect(() => {
-    // جلب مدينة المستخدم
-    if (user?.addresses?.length > 0) {
+    // جلب مدينة المستخدم من localStorage أو من بيانات المستخدم
+    const savedCity = localStorage.getItem('food_delivery_city');
+    if (savedCity) {
+      setUserCity(savedCity);
+    } else if (user?.addresses?.length > 0) {
       const defaultAddress = user.addresses.find(a => a.is_default) || user.addresses[0];
       setUserCity(defaultAddress.city);
     }
@@ -34,25 +43,28 @@ const AllFoodStoresPage = () => {
 
   useEffect(() => {
     fetchStores();
-  }, [userCity, sortBy]);
+  }, [userCity]);
 
   const fetchStores = async () => {
+    // التحقق من الـ cache
+    const now = Date.now();
+    if (storesCache.data && storesCache.timestamp && (now - storesCache.timestamp < storesCache.TTL)) {
+      setStores(storesCache.data);
+      setLoading(false);
+      return;
+    }
+    
     try {
-      setLoading(true);
+      if (!storesCache.data) setLoading(true);
       const params = {};
       if (userCity) params.city = userCity;
       
       const res = await axios.get(`${API}/food/stores`, { params });
-      let storesData = res.data || [];
+      const storesData = res.data || [];
       
-      // الترتيب
-      if (sortBy === 'rating') {
-        storesData.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      } else if (sortBy === 'delivery_time') {
-        storesData.sort((a, b) => (a.delivery_time || 30) - (b.delivery_time || 30));
-      } else if (sortBy === 'min_order') {
-        storesData.sort((a, b) => (a.min_order || 0) - (b.min_order || 0));
-      }
+      // حفظ في الـ cache
+      storesCache.data = storesData;
+      storesCache.timestamp = now;
       
       setStores(storesData);
     } catch (error) {
@@ -62,11 +74,29 @@ const AllFoodStoresPage = () => {
     }
   };
 
-  // تصفية المتاجر حسب البحث
-  const filteredStores = stores.filter(store => 
-    store.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    store.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // الترتيب والتصفية باستخدام useMemo للأداء
+  const filteredStores = useMemo(() => {
+    let result = [...stores];
+    
+    // التصفية حسب البحث
+    if (searchQuery) {
+      result = result.filter(store => 
+        store.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        store.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // الترتيب
+    if (sortBy === 'rating') {
+      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (sortBy === 'delivery_time') {
+      result.sort((a, b) => (a.delivery_time || 30) - (b.delivery_time || 30));
+    } else if (sortBy === 'min_order') {
+      result.sort((a, b) => (a.min_order || 0) - (b.min_order || 0));
+    }
+    
+    return result;
+  }, [stores, searchQuery, sortBy]);
 
   const StoreCard = ({ store }) => {
     const isOpen = store.is_open !== false && !store.manual_close;

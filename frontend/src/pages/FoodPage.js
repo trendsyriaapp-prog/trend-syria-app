@@ -125,34 +125,10 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون المتاجر - تمرير أفقي مع العودة للبداية عند التمرير للخلف
+// مكون المتاجر - تمرير أفقي حر
 const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
-  const scrollRef = useRef(null);
-  const lastScrollLeft = useRef(0);
-  const scrollDirection = useRef(null); // 'left' or 'right'
-  
   // استخدام المتاجر المميزة إذا كانت مفعلة، وإلا أفضل المتاجر
   const displayStores = isFeatured && featuredStores.length > 0 ? featuredStores : stores;
-  
-  // التحكم بالتمرير - العودة للبداية عند التمرير للخلف
-  const handleScroll = (e) => {
-    const container = e.target;
-    const currentScroll = container.scrollLeft;
-    
-    // في RTL، scrollLeft يكون سالب
-    // التمرير لليسار (للأمام) = القيمة تصبح أكثر سلبية
-    // التمرير لليمين (للخلف) = القيمة تصبح أقل سلبية (تقترب من الصفر)
-    
-    if (currentScroll > lastScrollLeft.current) {
-      // المستخدم يحاول التمرير لليمين (للخلف)
-      // نرجعه للبداية (أقصى اليسار = الصفر في RTL)
-      container.scrollTo({ left: 0, behavior: 'smooth' });
-      lastScrollLeft.current = 0;
-    } else {
-      // التمرير لليسار (للأمام) - طبيعي
-      lastScrollLeft.current = currentScroll;
-    }
-  };
   
   return (
     <section className="mb-6">
@@ -174,15 +150,10 @@ const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
         </Link>
       </div>
       
-      {/* تمرير أفقي */}
-      <div 
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x snap-mandatory"
-        style={{ overscrollBehaviorX: 'contain' }}
-      >
+      {/* تمرير أفقي حر - المستخدم يتحكم */}
+      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
         {displayStores.map((store) => (
-          <div key={store.id} className="flex-shrink-0 w-44 snap-start">
+          <div key={store.id} className="flex-shrink-0 w-44">
             <StoreCard store={store} />
           </div>
         ))}
