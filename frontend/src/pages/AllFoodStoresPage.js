@@ -2,12 +2,10 @@
 // صفحة عرض جميع متاجر الطعام
 
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  ArrowRight, Store, Star, Clock, MapPin, Search, Filter,
-  ChevronDown, X, Truck
+  Store, Star, Clock, MapPin, Search, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LazyImage from '../components/LazyImage';
@@ -23,7 +21,6 @@ const storesCache = {
 
 const AllFoodStoresPage = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [stores, setStores] = useState(storesCache.data || []);
   const [loading, setLoading] = useState(!storesCache.data);
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,10 +100,8 @@ const AllFoodStoresPage = () => {
     
     return (
       <Link to={`/food/store/${store.id}`}>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all ${
+        <div
+          className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${
             !isOpen ? 'opacity-75' : ''
           }`}
         >
@@ -163,23 +158,17 @@ const AllFoodStoresPage = () => {
               الحد الأدنى: {(store.min_order || 0).toLocaleString()} ل.س
             </div>
           </div>
-        </motion.div>
+        </div>
       </Link>
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* الهيدر - مصغر */}
+      {/* الهيدر - مصغر بدون سهم الرجوع */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white sticky top-0 z-40">
         <div className="px-3 py-2">
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigate(-1)}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors"
-            >
-              <ArrowRight size={18} />
-            </button>
             <div className="w-6 h-6 bg-white/20 rounded-md flex items-center justify-center">
               <Store size={14} />
             </div>
