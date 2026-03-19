@@ -165,32 +165,6 @@ const FoodFreeDeliveryPage = () => {
                 </div>
               )}
             </section>
-
-            {/* قسم جميع الأصناف */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg">
-                  <Package size={20} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">جميع الأصناف</h2>
-                  <p className="text-xs text-gray-500">{allProducts.length} منتج</p>
-                </div>
-              </div>
-              
-              {allProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {allProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} isFreeDelivery={false} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-white rounded-xl">
-                  <Package size={40} className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-gray-500">لا توجد منتجات أخرى</p>
-                </div>
-              )}
-            </section>
           </>
         )}
       </div>

@@ -438,6 +438,80 @@ const ProductsPage = () => {
           </div>
         )}
 
+        {/* ⭐ شريط معلن عنها */}
+        {!isSpecialSection && sponsoredProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg">
+                  <Zap size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">معلن عنها</h2>
+                  <p className="text-[10px] text-gray-500">منتجات مميزة ومُعلن عنها</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=sponsored"
+                className="text-amber-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {sponsoredProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-amber-100 hover:border-amber-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Zap size={10} />
+                            مميز
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-amber-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-amber-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ⚡ شريط فلاش */}
         {!isSpecialSection && flashProducts.length > 0 && flashSale && (
           <section className="mb-4">
@@ -502,6 +576,80 @@ const ProductsPage = () => {
                             </span>
                             <span className="text-gray-400 text-xs line-through">
                               {product.price?.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 🚚 شريط شحن مجاني */}
+        {!isSpecialSection && freeShippingProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                  <Truck size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">شحن مجاني</h2>
+                  <p className="text-[10px] text-gray-500">اطلب واحصل على شحن مجاني فوراً!</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?sort=default&free_shipping=true" 
+                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
+              >
+                <span>عرض الكل</span>
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {freeShippingProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Truck size={10} />
+                            شحن مجاني
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-green-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-green-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
                             </span>
                           </div>
                         </div>
@@ -649,228 +797,6 @@ const ProductsPage = () => {
                           )}
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-purple-600 font-bold text-sm">
-                              {product.price?.toLocaleString()} ل.س
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 📈 شريط الرائج */}
-        {!isSpecialSection && trendingProducts.length > 0 && (
-          <section className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-lg">
-                  <TrendingUp size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">الرائج</h2>
-                  <p className="text-[10px] text-gray-500">المنتجات الأكثر رواجاً</p>
-                </div>
-              </div>
-              <Link 
-                to="/products?sort=trending"
-                className="text-rose-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={14} />
-              </Link>
-            </div>
-            
-            <div className="relative">
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {trendingProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
-                    <Link to={`/products/${product.id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-rose-100 hover:border-rose-300 transition-all shadow-sm hover:shadow-md">
-                        <div className="relative aspect-square bg-gray-100">
-                          {product.images?.[0] ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package size={32} className="text-gray-300" />
-                            </div>
-                          )}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                            <TrendingUp size={10} />
-                            رائج
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
-                          {product.city && (
-                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-                              <MapPin size={10} className="text-rose-500" />
-                              <span className="text-[10px]">{product.city}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-rose-600 font-bold text-sm">
-                              {product.price?.toLocaleString()} ل.س
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 🚚 شريط شحنها مجاني */}
-        {!isSpecialSection && freeShippingProducts.length > 0 && (
-          <section className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
-                  <Truck size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">شحن مجاني</h2>
-                  <p className="text-[10px] text-gray-500">اطلب واحصل على شحن مجاني فوراً!</p>
-                </div>
-              </div>
-              <Link 
-                to="/products?sort=default&free_shipping=true" 
-                className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
-              >
-                <span>عرض الكل</span>
-                <ChevronLeft size={14} />
-              </Link>
-            </div>
-            
-            <div className="relative">
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {freeShippingProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
-                    <Link to={`/products/${product.id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
-                        <div className="relative aspect-square bg-gray-100">
-                          {product.images?.[0] ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package size={32} className="text-gray-300" />
-                            </div>
-                          )}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                            <Truck size={10} />
-                            شحن مجاني
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
-                          {product.city && (
-                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-                              <MapPin size={10} className="text-green-500" />
-                              <span className="text-[10px]">{product.city}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-green-600 font-bold text-sm">
-                              {product.price?.toLocaleString()} ل.س
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ⭐ شريط معلن عنها */}
-        {!isSpecialSection && sponsoredProducts.length > 0 && (
-          <section className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg">
-                  <Zap size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">معلن عنها</h2>
-                  <p className="text-[10px] text-gray-500">منتجات مميزة ومُعلن عنها</p>
-                </div>
-              </div>
-              <Link 
-                to="/products?sort=sponsored"
-                className="text-amber-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
-              >
-                عرض الكل
-                <ChevronLeft size={14} />
-              </Link>
-            </div>
-            
-            <div className="relative">
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-                {sponsoredProducts.map((product, i) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex-shrink-0 w-36"
-                  >
-                    <Link to={`/products/${product.id}`}>
-                      <div className="bg-white rounded-xl overflow-hidden border-2 border-amber-100 hover:border-amber-300 transition-all shadow-sm hover:shadow-md">
-                        <div className="relative aspect-square bg-gray-100">
-                          {product.images?.[0] ? (
-                            <img 
-                              src={product.images[0]} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package size={32} className="text-gray-300" />
-                            </div>
-                          )}
-                          <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
-                            <Zap size={10} />
-                            مميز
-                          </div>
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
-                          {product.city && (
-                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-                              <MapPin size={10} className="text-amber-500" />
-                              <span className="text-[10px]">{product.city}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-amber-600 font-bold text-sm">
                               {product.price?.toLocaleString()} ل.س
                             </span>
                           </div>

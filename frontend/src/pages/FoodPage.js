@@ -420,13 +420,13 @@ const FoodPage = () => {
         
         <div className="relative max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <motion.div 
-              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+            {/* أيقونة الانتقال لصفحة المنتجات */}
+            <Link 
+              to="/products"
+              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
             >
-              <span className="text-lg">🍕</span>
-            </motion.div>
+              <Package size={18} className="text-white" />
+            </Link>
             <h1 className="text-base font-bold">قسم الطعام</h1>
             {/* زر تغيير المدينة */}
             <button 
