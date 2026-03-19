@@ -301,6 +301,32 @@
 
 ---
 
+## Latest Session Updates - March 2026 (19 Mar)
+
+### 🆕 15. إصلاح نظام الحماية من Brute Force (Completed ✅)
+- **المشكلة**: نظام brute force كان يقفل الحساب بسرعة كبيرة (5 محاولات) مما يسبب مشاكل في الاختبار والاستخدام
+- **الحل**:
+  - رفع حد المحاولات من 5 إلى **10 محاولات**
+  - تقليل مدة القفل من 15 إلى **5 دقائق**
+  - إضافة نافذة زمنية 10 دقائق (إعادة تعيين العداد بعدها)
+  - تنظيف تلقائي للسجلات القديمة (> 30 دقيقة)
+  - رفع rate limit لـ login من 5/minute إلى **15/minute**
+- **الملفات المعدلة**:
+  - `backend/core/security.py` - `check_brute_force()`, `_cleanup_old_attempts()`
+  - `backend/routes/auth.py` - rate limit decorator
+- **الاختبار**: ✅ 13/13 اختبار ناجح
+
+### 🆕 16. منع تجميع الطلبات الباردة البعيدة (Completed ✅)
+- **الوصف**: منع السائق من قبول طلبات "باردة/جافة" متعددة إذا كانت مواقع التسليم بعيدة
+- **القاعدة الجديدة**: الحد الأقصى للمسافة بين مواقع تسليم الطلبات الباردة = **3 كم**
+- **أنواع المتاجر الباردة**: `market`, `vegetables` (سوبر ماركت، خضار وفواكه)
+- **أنواع المتاجر الساخنة**: `restaurants`, `cafes`, `bakery`, `drinks`, `sweets`
+- **رسالة الرفض**: "موقع تسليم هذا الطلب بعيد عن طلباتك الأخرى (X كم). للطلبات الباردة، يجب أن تكون مواقع التسليم قريبة (≤ 3 كم)"
+- **الملف المعدل**: `backend/routes/food_orders.py` - `accept_food_order()` خط 2249-2277
+- **الاختبار**: ✅ تم اختباره يدوياً وعبر testing agent
+
+---
+
 ## Technical Architecture
 
 ### Frontend
@@ -339,11 +365,12 @@
 - `/app/test_reports/iteration_85.json` - سيناريو العميل (25/25 ✅)
 - `/app/test_reports/iteration_91.json` - محفظة العميل ✅
 - `/app/test_reports/iteration_92.json` - منطق توصيل الطعام الجديد (8/8 ✅)
+- `/app/test_reports/iteration_93.json` - إصلاح Brute Force + منع تجميع الطلبات البعيدة (13/13 ✅)
 
 ## Test Credentials
 - **Admin**: Phone: `0911111111`, Password: `Admin@123`
 - **Customer**: Phone: `0933333333`, Password: `buyer123`
-- **Driver**: Phone: `0900000000`, Password: `Delivery@123`
+- **Driver**: Phone: `0900000000`, Password: `test1234`
 
 ---
 
