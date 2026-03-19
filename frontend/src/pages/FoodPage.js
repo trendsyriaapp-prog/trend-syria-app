@@ -573,7 +573,7 @@ const FoodPage = () => {
                         transition={{ delay: i * 0.05 }}
                         className="flex-shrink-0 w-36"
                       >
-                        <Link to={`/food/product/${product.id}`}>
+                        <Link to={`/food/store/${product.store_id}?highlight=${product.id}`}>
                           <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
                             <div className="relative aspect-square bg-gray-100">
                               {product.images?.[0] ? (
