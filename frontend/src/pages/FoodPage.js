@@ -645,7 +645,7 @@ const FoodPage = () => {
               </section>
             ) : (
               <EmptyState category={activeCategory} />
-            )}}
+            )}
           </>
         )}
       </div>
