@@ -83,57 +83,56 @@ const AllProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header - مصغر */}
+      {/* Header - مصغر أكثر */}
       <div className="bg-gradient-to-l from-[#FF6B00] to-[#FF8C00] text-white">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="max-w-7xl mx-auto px-3 py-2">
+          <div className="flex items-center gap-2">
             <Link to="/" className="text-white/80 hover:text-white">
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </Link>
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <Package size={18} />
+            <div className="w-6 h-6 bg-white/20 rounded-md flex items-center justify-center">
+              <Package size={14} />
             </div>
-            <div>
-              <h1 className="text-lg font-bold">جميع المنتجات</h1>
-              <p className="text-white/80 text-xs">
+            <div className="flex-1">
+              <h1 className="text-sm font-bold">جميع المنتجات</h1>
+              <p className="text-white/80 text-[10px]">
                 {filteredProducts.length} منتج
               </p>
             </div>
-          </div>
-
-          {/* Search Bar - مصغر */}
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
-              placeholder="ابحث عن منتج..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-3 pr-9 py-2 text-sm rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
+            
+            {/* Search inline */}
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+              <input
+                type="text"
+                placeholder="ابحث..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-2 pr-7 py-1.5 text-xs rounded-md text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Sort Options - مصغر */}
+      {/* Sort Options - مصغر أكثر */}
       <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <SlidersHorizontal size={14} className="text-gray-500 flex-shrink-0" />
-            <span className="text-xs text-gray-500 flex-shrink-0">ترتيب:</span>
+        <div className="max-w-7xl mx-auto px-3 py-1.5">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <SlidersHorizontal size={12} className="text-gray-400 flex-shrink-0" />
             {[
               { value: 'newest', label: 'الأحدث' },
               { value: 'popular', label: 'الأكثر مبيعاً' },
-              { value: 'price_low', label: 'السعر: من الأقل' },
-              { value: 'price_high', label: 'السعر: من الأعلى' },
+              { value: 'price_low', label: 'الأقل سعراً' },
+              { value: 'price_high', label: 'الأعلى سعراً' },
             ].map((option) => (
               <button
                 key={option.value}
                 onClick={() => setSortBy(option.value)}
-                className={`px-2 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
+                className={`px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap transition-colors ${
                   sortBy === option.value
                     ? 'bg-[#FF6B00] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {option.label}
