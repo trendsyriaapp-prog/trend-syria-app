@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package } from 'lucide-react';
+import { Filter, X, ChevronDown, MapPin, DollarSign, ArrowUpDown, Loader2, Sparkles, Zap, TrendingUp, Tag, ChevronLeft, Package, Truck } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import { useScroll } from '../context/ScrollContext';
@@ -69,6 +69,8 @@ const ProductsPage = () => {
   const [flashSale, setFlashSale] = useState(null);
   const [bestSellers, setBestSellers] = useState([]);
   const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
+  const [freeShippingProducts, setFreeShippingProducts] = useState([]);
+  const [badgeSettings, setBadgeSettings] = useState(null);
   
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
@@ -78,16 +80,18 @@ const ProductsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
 
-  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً
+  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً + شحنها مجاني
   useEffect(() => {
     const fetchExtras = async () => {
       try {
-        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes] = await Promise.all([
+        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, settingsRes, badgeRes] = await Promise.all([
           axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
           axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
-          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] }))
+          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
+          axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } })),
+          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         const promo = promoRes.data;
@@ -102,6 +106,17 @@ const ProductsPage = () => {
         setFlashSale(flashRes.data?.flash_sale || null);
         setBestSellers(bestSellersRes.data || []);
         setNewlyAddedProducts(newlyAddedRes.data || []);
+        setBadgeSettings(badgeRes.data);
+        
+        // جلب منتجات شحنها مجاني (سعرها >= حد الشحن المجاني)
+        const threshold = settingsRes.data?.free_shipping_threshold || 150000;
+        try {
+          const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
+          const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
+          setFreeShippingProducts(freeShipProducts.slice(0, 10));
+        } catch (err) {
+          console.error('Error fetching free shipping products:', err);
+        }
       } catch (error) {
         console.error('Error fetching extras:', error);
       }
@@ -478,6 +493,80 @@ const ProductsPage = () => {
                             </span>
                             <span className="text-gray-400 text-xs line-through">
                               {product.price?.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 🚚 شريط شحنها مجاني */}
+        {freeShippingProducts.length > 0 && (
+          <section className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                  <Truck size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">شحنها مجاني</h2>
+                  <p className="text-[10px] text-gray-500">اطلب واحصل على شحن مجاني فوراً!</p>
+                </div>
+              </div>
+              <Link 
+                to="/products?price_min=150000"
+                className="text-green-600 flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+              >
+                عرض الكل
+                <ChevronLeft size={14} />
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {freeShippingProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0 w-36"
+                  >
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Truck size={10} />
+                            شحن مجاني
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-green-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-green-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
                             </span>
                           </div>
                         </div>
