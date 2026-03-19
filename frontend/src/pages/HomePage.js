@@ -80,6 +80,8 @@ const HomePage = () => {
   const [badgeSettings, setBadgeSettings] = useState(null);
   const [extraProducts, setExtraProducts] = useState([]);
   const [freeShippingProducts, setFreeShippingProducts] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -169,6 +171,22 @@ const HomePage = () => {
         setFreeShippingProducts(freeShipProducts.slice(0, 10));
       } catch (err) {
         console.log('Free shipping products not available');
+      }
+      
+      // جلب الأكثر مبيعاً
+      try {
+        const bestSellersRes = await axios.get(`${API}/products/best-sellers`);
+        setBestSellers(bestSellersRes.data || []);
+      } catch (err) {
+        console.log('Best sellers not available');
+      }
+      
+      // جلب المنتجات الجديدة
+      try {
+        const newlyAddedRes = await axios.get(`${API}/products/newly-added`);
+        setNewlyAddedProducts(newlyAddedRes.data || []);
+      } catch (err) {
+        console.log('Newly added products not available');
       }
       
       // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
@@ -352,12 +370,12 @@ const HomePage = () => {
       {/* Daily Deal - صفقة اليوم */}
       <DailyDeal />
 
-      {/* 1. Sponsored Products - المنتجات المُعلن عنها */}
+      {/* 1. Sponsored Products - مروّج */}
       <section className="py-1.5" style={{ minHeight: '240px' }}>
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
             icon={Star} 
-            title="منتجات مُعلن عنها" 
+            title="إعلانات مميزة" 
             linkTo="/products?sort=sponsored"
             linkColor="text-purple-600"
             iconBg="from-purple-500 to-pink-500"
@@ -413,7 +431,7 @@ const HomePage = () => {
               </div>
             ) : (
               <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
-                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد منتجات مُعلن عنها حالياً</p>
+                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد منتجات مروّجة حالياً</p>
               </div>
             )}
           </div>
@@ -491,13 +509,13 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 3. 🚚 شحنها مجاني - منتجات تستحق شحن مجاني */}
+      {/* 3. 🚚 شحن مجاني - منتجات تستحق شحن مجاني */}
       {freeShippingProducts.length > 0 && (
         <section className="py-1.5" style={{ minHeight: '240px' }}>
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
               icon={Truck} 
-              title="شحنها مجاني" 
+              title="شحن مجاني" 
               linkTo="/products?price_min=150000"
               linkColor="text-green-600"
               iconBg="from-green-500 to-emerald-500"
@@ -553,14 +571,129 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* 4. قسم التوصيات - رائج + عروض + جديد */}
-      <section className="py-1.5 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <RecommendedProducts />
-        </div>
-      </section>
+      {/* 4. 🔥 الأكثر مبيعاً */}
+      {bestSellers.length > 0 && (
+        <section className="py-1.5" style={{ minHeight: '240px' }}>
+          <div className="max-w-7xl mx-auto px-3">
+            <SectionHeader 
+              icon={TrendingUp} 
+              title="الأكثر مبيعاً" 
+              linkTo="/products?sort=best_sellers"
+              linkColor="text-red-600"
+              iconBg="from-red-500 to-pink-500"
+            />
+            
+            <div className="relative" style={{ minHeight: '200px' }}>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {bestSellers.slice(0, 10).map((product, i) => (
+                  <div key={product.id} className="flex-shrink-0 w-36">
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-red-100 hover:border-red-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* شارة المبيعات */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <TrendingUp size={10} />
+                            {product.sales_count || 0} مبيع
+                          </div>
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-red-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-red-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* 5. قسم منتجات إضافية - شبكة عادية مع شارات */}
+      {/* 5. 🆕 منتجات جديدة */}
+      {newlyAddedProducts.length > 0 && (
+        <section className="py-1.5" style={{ minHeight: '240px' }}>
+          <div className="max-w-7xl mx-auto px-3">
+            <SectionHeader 
+              icon={Sparkles} 
+              title="منتجات جديدة" 
+              linkTo="/products?sort=newly_added"
+              linkColor="text-blue-600"
+              iconBg="from-blue-500 to-cyan-500"
+            />
+            
+            <div className="relative" style={{ minHeight: '200px' }}>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                {newlyAddedProducts.slice(0, 10).map((product, i) => (
+                  <div key={product.id} className="flex-shrink-0 w-36">
+                    <Link to={`/products/${product.id}`}>
+                      <div className="bg-white rounded-xl overflow-hidden border-2 border-blue-100 hover:border-blue-300 transition-all shadow-sm hover:shadow-md">
+                        <div className="relative aspect-square bg-gray-100">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package size={32} className="text-gray-300" />
+                            </div>
+                          )}
+                          {/* شارة جديد */}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Sparkles size={10} />
+                            جديد
+                          </div>
+                          <SmallProductBadge product={product} badgeSettings={badgeSettings} />
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+                          {product.city && (
+                            <div className="flex items-center gap-1 text-gray-500 mt-0.5">
+                              <MapPin size={10} className="text-blue-500" />
+                              <span className="text-[10px]">{product.city}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-blue-600 font-bold text-sm">
+                              {product.price?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 6. قسم منتجات إضافية - شبكة عادية مع شارات */}
       {extraProducts.length > 0 && (
         <section className="py-4 bg-white">
           <div className="max-w-7xl mx-auto px-4">
