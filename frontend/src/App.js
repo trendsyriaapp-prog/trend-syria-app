@@ -57,6 +57,7 @@ import FoodMyCartPage from "./pages/FoodMyCartPage";
 import FoodBatchCheckoutPage from "./pages/FoodBatchCheckoutPage";
 import FoodBatchSuccessPage from "./pages/FoodBatchSuccessPage";
 import FoodOrderTracking from "./pages/FoodOrderTracking";
+import AllFoodStoresPage from "./pages/AllFoodStoresPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
 import DeliveryMapPage from "./pages/DeliveryMapPage";
@@ -201,6 +202,7 @@ function App() {
                 
                 {/* Food Delivery Routes - محمية */}
                 <Route path="/food" element={<FoodRoute><FoodPage /></FoodRoute>} />
+                <Route path="/food/stores" element={<FoodRoute><AllFoodStoresPage /></FoodRoute>} />
                 <Route path="/food/free-delivery" element={<FoodRoute><FoodFreeDeliveryPage /></FoodRoute>} />
                 <Route path="/join/food-seller" element={<FoodRoute><JoinAsFoodSellerPage /></FoodRoute>} />
                 <Route path="/food/dashboard" element={<FoodRoute><FoodStoreDashboard /></FoodRoute>} />

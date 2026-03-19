@@ -125,7 +125,7 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون المتاجر - شبكة ثابتة 2×2
+// مكون المتاجر - تمرير أفقي
 const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
   // استخدام المتاجر المميزة إذا كانت مفعلة، وإلا أفضل المتاجر
   const displayStores = isFeatured && featuredStores.length > 0 ? featuredStores : stores;
@@ -141,12 +141,21 @@ const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
             </span>
           )}
         </div>
+        <Link 
+          to="/food/stores" 
+          className="text-[#FF6B00] flex items-center gap-1 hover:gap-2 transition-all text-xs font-medium"
+        >
+          عرض الكل
+          <ChevronLeft size={14} />
+        </Link>
       </div>
       
-      {/* شبكة ثابتة 2×2 */}
-      <div className="grid grid-cols-2 gap-3">
-        {displayStores.slice(0, 4).map((store) => (
-          <StoreCard key={store.id} store={store} />
+      {/* تمرير أفقي */}
+      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x snap-mandatory">
+        {displayStores.map((store) => (
+          <div key={store.id} className="flex-shrink-0 w-44 snap-start">
+            <StoreCard store={store} />
+          </div>
         ))}
       </div>
     </section>
