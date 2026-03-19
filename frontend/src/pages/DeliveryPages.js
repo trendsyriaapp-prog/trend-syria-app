@@ -338,6 +338,12 @@ const DeliveryDashboard = () => {
   const [showDeliveryChecklist, setShowDeliveryChecklist] = useState(null);
   const [showReturnChecklist, setShowReturnChecklist] = useState(null);
   
+  // Delivery Code Modal - لطلبات المنتجات
+  const [showDeliveryCodeModal, setShowDeliveryCodeModal] = useState(null);
+  const [deliveryCodeInput, setDeliveryCodeInput] = useState('');
+  const [deliveryCodeError, setDeliveryCodeError] = useState('');
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  
   // ETA Modal - الوقت المتوقع للوصول
   const [showETAModal, setShowETAModal] = useState(null);
   const [estimatedTime, setEstimatedTime] = useState(30);
@@ -595,6 +601,17 @@ const DeliveryDashboard = () => {
   };
 
   const handleCompleteOrder = async (orderId, note) => {
+    // إذا كان الطلب يحتوي على delivery_code، نفتح نافذة إدخال الكود
+    const order = showDeliveryChecklist;
+    if (order?.delivery_code && !order?.delivery_code_verified) {
+      setShowDeliveryChecklist(null);
+      setShowDeliveryCodeModal(order);
+      setDeliveryCodeInput('');
+      setDeliveryCodeError('');
+      return;
+    }
+    
+    // إذا تم التحقق من الكود مسبقاً أو لا يوجد كود، نُكمل التسليم مباشرة
     try {
       await axios.post(`${API}/orders/${orderId}/delivery/delivered`);
       toast({
@@ -605,11 +622,51 @@ const DeliveryDashboard = () => {
       fetchOrders();
       fetchWallet();
     } catch (error) {
-      toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
-        variant: "destructive"
+      // إذا كان الخطأ بسبب عدم التحقق من الكود
+      if (error.response?.data?.detail?.includes('كود التسليم')) {
+        const order = myOrders.find(o => o.id === orderId);
+        if (order) {
+          setShowDeliveryChecklist(null);
+          setShowDeliveryCodeModal(order);
+          setDeliveryCodeInput('');
+          setDeliveryCodeError('');
+        }
+      } else {
+        toast({
+          title: "خطأ",
+          description: error.response?.data?.detail || "حدث خطأ",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // التحقق من كود التسليم للمنتجات
+  const handleVerifyDeliveryCode = async () => {
+    if (!deliveryCodeInput || deliveryCodeInput.length !== 4) {
+      setDeliveryCodeError('الكود يجب أن يكون 4 أرقام');
+      return;
+    }
+    
+    setVerifyingCode(true);
+    setDeliveryCodeError('');
+    
+    try {
+      await axios.post(`${API}/orders/${showDeliveryCodeModal.id}/delivery/verify-code`, {
+        delivery_code: deliveryCodeInput
       });
+      toast({
+        title: "تم بنجاح ✅",
+        description: "تم التحقق من الكود وتسليم الطلب بنجاح"
+      });
+      setShowDeliveryCodeModal(null);
+      setDeliveryCodeInput('');
+      fetchOrders();
+      fetchWallet();
+    } catch (error) {
+      setDeliveryCodeError(error.response?.data?.detail || 'كود خاطئ');
+    } finally {
+      setVerifyingCode(false);
     }
   };
 
@@ -984,6 +1041,100 @@ const DeliveryDashboard = () => {
           onComplete={(note) => handleCompleteOrder(showDeliveryChecklist.id, note)}
           onClose={() => setShowDeliveryChecklist(null)}
         />
+      )}
+
+      {/* Delivery Code Modal - نافذة إدخال كود التسليم للمنتجات */}
+      {showDeliveryCodeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`w-full max-w-sm rounded-2xl overflow-hidden ${
+              currentTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-white'
+            }`}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 text-white text-center">
+              <span className="text-3xl mb-2 block">🔐</span>
+              <h3 className="text-lg font-bold">كود التسليم</h3>
+              <p className="text-sm text-white/80 mt-1">اطلب الكود من العميل</p>
+            </div>
+            
+            {/* Content */}
+            <div className="p-4">
+              <p className={`text-sm text-center mb-4 ${
+                currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                طلب #{showDeliveryCodeModal.id?.slice(0, 8).toUpperCase()}
+              </p>
+              
+              {/* Code Input */}
+              <div className="flex justify-center gap-2 mb-4">
+                {[0, 1, 2, 3].map((index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={deliveryCodeInput[index] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      const newCode = deliveryCodeInput.split('');
+                      newCode[index] = val;
+                      setDeliveryCodeInput(newCode.join('').slice(0, 4));
+                      setDeliveryCodeError('');
+                      // الانتقال للحقل التالي
+                      if (val && index < 3) {
+                        document.getElementById(`shop-code-${index + 1}`)?.focus();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' && !deliveryCodeInput[index] && index > 0) {
+                        document.getElementById(`shop-code-${index - 1}`)?.focus();
+                      }
+                    }}
+                    id={`shop-code-${index}`}
+                    className={`w-14 h-14 text-center text-2xl font-bold rounded-xl border-2 focus:outline-none focus:ring-2 ${
+                      currentTheme === 'dark' 
+                        ? 'bg-[#252525] border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500/30' 
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-purple-500 focus:ring-purple-500/30'
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              {/* Error */}
+              {deliveryCodeError && (
+                <p className="text-red-500 text-sm text-center mb-3">{deliveryCodeError}</p>
+              )}
+              
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeliveryCodeModal(null);
+                    setDeliveryCodeInput('');
+                    setDeliveryCodeError('');
+                  }}
+                  className={`flex-1 py-3 rounded-xl font-bold ${
+                    currentTheme === 'dark' 
+                      ? 'bg-gray-700 text-gray-300' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleVerifyDeliveryCode}
+                  disabled={verifyingCode || deliveryCodeInput.length !== 4}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                >
+                  {verifyingCode ? 'جاري التحقق...' : 'تأكيد التسليم'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {/* Return Checklist Modal */}

@@ -173,6 +173,10 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     delivery_distance_km = order.delivery_distance_km
     final_total = total + delivery_fee
     
+    # توليد كود التسليم للعميل (4 أرقام)
+    import random
+    delivery_code = str(random.randint(1000, 9999))
+    
     order_doc = {
         "id": order_id,
         "user_id": user["id"],
@@ -193,6 +197,8 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "payment_phone": order.payment_phone,
         "status": "pending_payment",
         "delivery_status": "pending",
+        "delivery_code": delivery_code,  # كود التسليم للعميل
+        "delivery_code_verified": False,
         "created_at": now.isoformat(),
         "can_process_after": can_process_after.isoformat(),
         "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
@@ -913,9 +919,113 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
     
     return {"message": "تم تحديث الحالة", "estimated_minutes": estimated_minutes}
 
+
+# ============== نظام تأكيد التسليم بالكود ==============
+
+class VerifyDeliveryCode(BaseModel):
+    delivery_code: str
+
+@router.post("/orders/{order_id}/delivery/verify-code")
+async def verify_shop_delivery_code(
+    order_id: str, 
+    data: VerifyDeliveryCode, 
+    user: dict = Depends(get_current_user)
+):
+    """التحقق من كود التسليم من العميل وإتمام الطلب"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({
+        "id": order_id, 
+        "delivery_driver_id": user["id"], 
+        "delivery_status": "on_the_way"
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً إليك")
+    
+    # التحقق من الكود
+    if order.get("delivery_code") != data.delivery_code:
+        raise HTTPException(status_code=400, detail="كود التسليم غير صحيح")
+    
+    # تحديث حالة الطلب
+    now = datetime.now(timezone.utc)
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": "delivered",
+                "status": "completed",
+                "delivered_at": now.isoformat(),
+                "delivery_code_verified": True,
+                "delivery_code_verified_at": now.isoformat()
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "delivered",
+                    "timestamp": now.isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "note": "تم التسليم بكود التأكيد من العميل"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل بالتسليم مع طلب التقييم
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="🎉 تم تسليم طلبك بنجاح!",
+        message=f"رقم الطلب: #{order_id[:8]}\n⭐ قيّم تجربتك مع موظف التوصيل\n🛍️ قيّم المنتجات\nشكراً لتسوقك معنا!",
+        notification_type="delivery",
+        order_id=order_id,
+        extra_data={
+            "action": "rate",
+            "driver_id": user["id"],
+            "show_rating_prompt": True
+        }
+    )
+    
+    # إشعار البائع
+    seller_ids = set(item["seller_id"] for item in order.get("items", []))
+    for seller_id in seller_ids:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="✅ تم تسليم الطلب",
+            message=f"رقم الطلب: #{order_id[:8]}\nتم تسليم طلبك للعميل بنجاح",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    # إضافة أجرة التوصيل لمحفظة موظف التوصيل
+    delivery_fee = order.get("driver_delivery_fee", order.get("delivery_fee", 5000))
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {
+            "$inc": {"balance": delivery_fee, "total_earned": delivery_fee},
+            "$push": {
+                "transactions": {
+                    "id": str(uuid.uuid4()),
+                    "type": "delivery_earning",
+                    "amount": delivery_fee,
+                    "order_id": order_id,
+                    "timestamp": now.isoformat(),
+                    "description": f"أجرة توصيل طلب #{order_id[:8]}"
+                }
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "message": "تم التحقق من الكود وإتمام التسليم بنجاح",
+        "delivery_fee": delivery_fee
+    }
+
+
 @router.post("/orders/{order_id}/delivery/delivered")
 async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None, user: dict = Depends(get_current_user)):
-    """موظف التوصيل يؤكد التسليم"""
+    """موظف التوصيل يؤكد التسليم - يتطلب كود التسليم أولاً"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -930,8 +1040,8 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     
     # حساب عدد الطلبات الساخنة/الطازجة فقط
     hot_fresh_count = 0
-    for order in active_food_orders:
-        store = await db.food_stores.find_one({"id": order.get("store_id")})
+    for fo in active_food_orders:
+        store = await db.food_stores.find_one({"id": fo.get("store_id")})
         store_type = store.get("store_type", "restaurants") if store else "restaurants"
         if store_type in HOT_FRESH_STORE_TYPES:
             hot_fresh_count += 1
@@ -948,6 +1058,13 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
     
     if order.get("delivery_driver_id") != user["id"]:
         raise HTTPException(status_code=403, detail="هذا الطلب ليس مسنداً إليك")
+    
+    # التحقق من أن كود التسليم تم التحقق منه
+    if order.get("delivery_code") and not order.get("delivery_code_verified"):
+        raise HTTPException(
+            status_code=400, 
+            detail="يجب إدخال كود التسليم من العميل أولاً. استخدم /delivery/verify-code"
+        )
     
     update_data = {
         "delivery_status": "delivered",

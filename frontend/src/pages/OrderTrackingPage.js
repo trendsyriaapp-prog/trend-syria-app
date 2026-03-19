@@ -338,6 +338,32 @@ const OrderTrackingPage = () => {
           </motion.div>
         )}
 
+        {/* كود التسليم للعميل */}
+        {order.delivery_code && !isDelivered && order.delivery_status === 'on_the_way' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 shadow-lg"
+          >
+            <div className="text-center text-white">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-2xl">🔐</span>
+                <h3 className="font-bold text-lg">كود التسليم</h3>
+              </div>
+              <p className="text-white/80 text-sm mb-3">أعطِ هذا الكود لموظف التوصيل عند الاستلام</p>
+              <div className="bg-white rounded-xl py-3 px-6 inline-block">
+                <span className="text-3xl font-bold text-purple-600 tracking-[0.3em]" data-testid="delivery-code">
+                  {order.delivery_code}
+                </span>
+              </div>
+              <p className="text-white/70 text-xs mt-3">
+                ⚠️ لا تشارك هذا الكود مع أي شخص آخر
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Customer Note Section */}
         {canAddNote && (
           <motion.div
