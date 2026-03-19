@@ -67,6 +67,7 @@ import FlashSaleProductsPage from "./pages/FlashSaleProductsPage";
 import FreeShippingProductsPage from "./pages/FreeShippingProductsPage";
 import BestSellersPage from "./pages/BestSellersPage";
 import NewArrivalsPage from "./pages/NewArrivalsPage";
+import AllProductsPage from "./pages/AllProductsPage";
 
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
@@ -153,6 +154,7 @@ function App() {
                 <Route path="/products/new-arrivals" element={<NewArrivalsPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/category/all" element={<AllProductsPage />} />
                 <Route path="/store/:sellerId" element={<StorePage />} />
                 
                 {/* Auth Routes */}
