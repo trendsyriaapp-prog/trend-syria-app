@@ -655,7 +655,7 @@ const FoodCartPage = () => {
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
+          <button onClick={() => navigate('/food')} className="p-2 hover:bg-gray-100 rounded-full">
             <ArrowLeft size={20} />
           </button>
           <div>

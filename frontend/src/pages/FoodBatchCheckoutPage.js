@@ -356,7 +356,7 @@ const FoodBatchCheckoutPage = () => {
       {/* Header */}
       <div className="bg-gradient-to-b from-[#FF6B00] to-[#FF8C00] text-white px-4 py-4 sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1">
+          <button onClick={() => navigate('/food')} className="p-1">
             <ArrowRight size={24} />
           </button>
           <div>
