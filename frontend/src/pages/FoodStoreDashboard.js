@@ -33,6 +33,9 @@ const FoodStoreDashboard = () => {
   const [showAddOffer, setShowAddOffer] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [driverArrivingAlert, setDriverArrivingAlert] = useState(null);
+  const [togglingStore, setTogglingStore] = useState(false);
+  const [showCloseReason, setShowCloseReason] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
   
   // مرجع لصوت الإشعار
   const audioRef = useRef(null);
@@ -47,6 +50,43 @@ const FoodStoreDashboard = () => {
       audioRef.current.play().catch(e => console.log('Audio play failed:', e));
     } catch (e) {
       console.log('Audio error:', e);
+    }
+  };
+
+  // تبديل حالة المتجر (فتح/إغلاق)
+  const toggleStoreStatus = async (shouldClose, reason = '') => {
+    if (!store) return;
+    
+    setTogglingStore(true);
+    try {
+      const res = await axios.post(
+        `${API}/food/stores/${store.id}/toggle-status`,
+        { is_closed: shouldClose, close_reason: reason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // تحديث حالة المتجر محلياً
+      setStore(prev => ({
+        ...prev,
+        manual_close: shouldClose,
+        manual_close_reason: shouldClose ? reason : null
+      }));
+      
+      toast({
+        title: shouldClose ? "تم إغلاق المتجر" : "تم فتح المتجر",
+        description: res.data.message,
+      });
+      
+      setShowCloseReason(false);
+      setCloseReason('');
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ أثناء تغيير حالة المتجر",
+        variant: "destructive"
+      });
+    } finally {
+      setTogglingStore(false);
     }
   };
 
@@ -302,6 +342,104 @@ const FoodStoreDashboard = () => {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
+            {/* بطاقة حالة المتجر - فتح/إغلاق */}
+            <div className={`rounded-xl p-4 border-2 ${
+              store.manual_close 
+                ? 'bg-red-50 border-red-200' 
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    store.manual_close ? 'bg-red-500' : 'bg-green-500'
+                  }`}>
+                    {store.manual_close ? (
+                      <EyeOff size={24} className="text-white" />
+                    ) : (
+                      <Store size={24} className="text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className={`font-bold text-lg ${
+                      store.manual_close ? 'text-red-800' : 'text-green-800'
+                    }`}>
+                      {store.manual_close ? 'المتجر مغلق مؤقتاً' : 'المتجر مفتوح'}
+                    </h3>
+                    {store.manual_close && store.manual_close_reason && (
+                      <p className="text-sm text-red-600">{store.manual_close_reason}</p>
+                    )}
+                    {!store.manual_close && (
+                      <p className="text-sm text-green-600">العملاء يستطيعون الطلب الآن</p>
+                    )}
+                  </div>
+                </div>
+                
+                {store.manual_close ? (
+                  <button
+                    onClick={() => toggleStoreStatus(false)}
+                    disabled={togglingStore}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {togglingStore ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Eye size={18} />
+                        فتح المتجر
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowCloseReason(true)}
+                    disabled={togglingStore}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <EyeOff size={18} />
+                    إغلاق المتجر
+                  </button>
+                )}
+              </div>
+              
+              {/* نافذة سبب الإغلاق */}
+              {showCloseReason && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    سبب الإغلاق (اختياري)
+                  </label>
+                  <input
+                    type="text"
+                    value={closeReason}
+                    onChange={(e) => setCloseReason(e.target.value)}
+                    placeholder="مثال: إجازة، صيانة، نفاد المنتجات..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => toggleStoreStatus(true, closeReason)}
+                      disabled={togglingStore}
+                      className="flex-1 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {togglingStore ? 'جاري الإغلاق...' : 'تأكيد الإغلاق'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCloseReason(false);
+                        setCloseReason('');
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <h3 className="font-bold text-gray-900 mb-3">إحصائيات سريعة</h3>
               <div className="grid grid-cols-2 gap-4">

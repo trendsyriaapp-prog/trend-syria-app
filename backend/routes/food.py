@@ -140,6 +140,13 @@ async def get_food_stores(
     for store in stores:
         store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
         
+        # التحقق من الإغلاق اليدوي أولاً
+        if store.get("manual_close", False):
+            store["is_open"] = False
+            store["open_status"] = "مغلق مؤقتاً"
+            store["manual_close_reason"] = store.get("manual_close_reason", "")
+            continue
+        
         # التحقق من أوقات العمل
         working_hours = store.get("working_hours", {})
         
@@ -215,49 +222,56 @@ async def get_food_store(store_id: str):
     
     store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
     
-    # حساب حالة الفتح/الإغلاق
-    now = datetime.now(timezone.utc)
-    local_hour = (now.hour + 3) % 24  # توقيت سوريا +3
-    local_minute = now.minute
-    current_day = (now.weekday() + 1) % 7
-    day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-    current_day_name = day_names[current_day]
-    
-    working_hours = store.get("working_hours", {})
-    
-    if not working_hours:
-        store["is_open"] = True
-        store["open_status"] = "مفتوح"
+    # التحقق من الإغلاق اليدوي أولاً
+    if store.get("manual_close", False):
+        store["is_open"] = False
+        store["open_status"] = "مغلق مؤقتاً"
+        store["manual_close_reason"] = store.get("manual_close_reason", "")
         store["next_open_time"] = None
     else:
-        today_hours = working_hours.get(current_day_name, {})
+        # حساب حالة الفتح/الإغلاق بناءً على ساعات العمل
+        now = datetime.now(timezone.utc)
+        local_hour = (now.hour + 3) % 24  # توقيت سوريا +3
+        local_minute = now.minute
+        current_day = (now.weekday() + 1) % 7
+        day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+        current_day_name = day_names[current_day]
         
-        if not today_hours or not today_hours.get("is_open", True):
-            store["is_open"] = False
-            store["open_status"] = "مغلق اليوم"
-            store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+        working_hours = store.get("working_hours", {})
+        
+        if not working_hours:
+            store["is_open"] = True
+            store["open_status"] = "مفتوح"
+            store["next_open_time"] = None
         else:
-            open_hour = today_hours.get("open_hour", 8)
-            open_minute = today_hours.get("open_minute", 0)
-            close_hour = today_hours.get("close_hour", 22)
-            close_minute = today_hours.get("close_minute", 0)
+            today_hours = working_hours.get(current_day_name, {})
             
-            current_time = local_hour * 60 + local_minute
-            open_time = open_hour * 60 + open_minute
-            close_time = close_hour * 60 + close_minute
-            
-            if open_time <= current_time < close_time:
-                store["is_open"] = True
-                store["open_status"] = "مفتوح"
-                store["closes_at"] = f"{close_hour:02d}:{close_minute:02d}"
-            elif current_time < open_time:
+            if not today_hours or not today_hours.get("is_open", True):
                 store["is_open"] = False
-                store["open_status"] = f"يفتح الساعة {open_hour:02d}:{open_minute:02d}"
-                store["next_open_time"] = f"{open_hour:02d}:{open_minute:02d}"
-            else:
-                store["is_open"] = False
-                store["open_status"] = "مغلق الآن"
+                store["open_status"] = "مغلق اليوم"
                 store["next_open_time"] = _get_next_open_time(working_hours, current_day)
+            else:
+                open_hour = today_hours.get("open_hour", 8)
+                open_minute = today_hours.get("open_minute", 0)
+                close_hour = today_hours.get("close_hour", 22)
+                close_minute = today_hours.get("close_minute", 0)
+                
+                current_time = local_hour * 60 + local_minute
+                open_time = open_hour * 60 + open_minute
+                close_time = close_hour * 60 + close_minute
+                
+                if open_time <= current_time < close_time:
+                    store["is_open"] = True
+                    store["open_status"] = "مفتوح"
+                    store["closes_at"] = f"{close_hour:02d}:{close_minute:02d}"
+                elif current_time < open_time:
+                    store["is_open"] = False
+                    store["open_status"] = f"يفتح الساعة {open_hour:02d}:{open_minute:02d}"
+                    store["next_open_time"] = f"{open_hour:02d}:{open_minute:02d}"
+                else:
+                    store["is_open"] = False
+                    store["open_status"] = "مغلق الآن"
+                    store["next_open_time"] = _get_next_open_time(working_hours, current_day)
     
     # جلب منتجات المتجر
     products = await db.food_products.find(
@@ -311,6 +325,96 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
     
     await db.food_stores.insert_one(store_doc)
     return {"id": store_id, "message": "تم إنشاء المتجر بنجاح، في انتظار موافقة الإدارة"}
+
+# ===============================
+# فتح/إغلاق المتجر يدوياً
+# ===============================
+
+class StoreToggleRequest(BaseModel):
+    is_closed: bool
+    close_reason: Optional[str] = None
+
+@router.post("/stores/{store_id}/toggle-status")
+async def toggle_store_status(
+    store_id: str, 
+    request: StoreToggleRequest,
+    user: dict = Depends(get_current_user)
+):
+    """فتح أو إغلاق المتجر يدوياً"""
+    # التحقق من ملكية المتجر
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتعديل هذا المتجر")
+    
+    # تحديث حالة الإغلاق اليدوي
+    update_data = {
+        "manual_close": request.is_closed,
+        "manual_close_reason": request.close_reason if request.is_closed else None,
+        "manual_close_at": datetime.now(timezone.utc).isoformat() if request.is_closed else None
+    }
+    
+    await db.food_stores.update_one(
+        {"id": store_id},
+        {"$set": update_data}
+    )
+    
+    status_msg = "تم إغلاق المتجر مؤقتاً" if request.is_closed else "تم فتح المتجر"
+    return {
+        "success": True,
+        "message": status_msg,
+        "is_closed": request.is_closed
+    }
+
+@router.get("/stores/{store_id}/status")
+async def get_store_status(store_id: str):
+    """جلب حالة المتجر (مفتوح/مغلق)"""
+    store = await db.food_stores.find_one({"id": store_id}, {"_id": 0})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    # التحقق من الإغلاق اليدوي أولاً
+    if store.get("manual_close", False):
+        return {
+            "is_open": False,
+            "status": "مغلق مؤقتاً",
+            "reason": store.get("manual_close_reason", ""),
+            "manual_close": True
+        }
+    
+    # ثم التحقق من ساعات العمل
+    now = datetime.now(timezone.utc)
+    local_hour = (now.hour + 3) % 24
+    local_minute = now.minute
+    current_day = (now.weekday() + 1) % 7
+    day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    current_day_name = day_names[current_day]
+    
+    working_hours = store.get("working_hours", {})
+    
+    if not working_hours:
+        return {"is_open": True, "status": "مفتوح", "manual_close": False}
+    
+    today_hours = working_hours.get(current_day_name, {})
+    
+    if not today_hours or not today_hours.get("is_open", True):
+        return {"is_open": False, "status": "مغلق اليوم", "manual_close": False}
+    
+    open_hour = today_hours.get("open_hour", 8)
+    open_minute = today_hours.get("open_minute", 0)
+    close_hour = today_hours.get("close_hour", 22)
+    close_minute = today_hours.get("close_minute", 0)
+    
+    current_time = local_hour * 60 + local_minute
+    open_time = open_hour * 60 + open_minute
+    close_time = close_hour * 60 + close_minute
+    
+    if open_time <= current_time < close_time:
+        return {"is_open": True, "status": "مفتوح", "manual_close": False}
+    else:
+        return {"is_open": False, "status": "مغلق حالياً", "manual_close": False}
 
 # ===============================
 # المنتجات

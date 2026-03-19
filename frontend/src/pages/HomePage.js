@@ -132,6 +132,79 @@ const HomePage = () => {
 
   const fetchData = async () => {
     try {
+      // التحقق من الكاش أولاً
+      const cachedData = sessionStorage.getItem('homepage_cache');
+      const cacheTimestamp = sessionStorage.getItem('homepage_cache_time');
+      const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
+      
+      // استخدام الكاش إذا كان أقل من 5 دقائق
+      if (cachedData && cacheAge < 5 * 60 * 1000) {
+        const data = JSON.parse(cachedData);
+        applyHomepageData(data);
+        setLoading(false);
+        return;
+      }
+      
+      // جلب البيانات من API الموحد
+      const response = await axios.get(`${API}/products/homepage-data`);
+      const data = response.data;
+      
+      // حفظ في الكاش
+      sessionStorage.setItem('homepage_cache', JSON.stringify(data));
+      sessionStorage.setItem('homepage_cache_time', Date.now().toString());
+      
+      applyHomepageData(data);
+      
+    } catch (error) {
+      console.error('Error fetching homepage data:', error);
+      // في حالة الخطأ، جرب الطريقة القديمة
+      await fetchDataLegacy();
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // تطبيق بيانات الصفحة الرئيسية
+  const applyHomepageData = (data) => {
+    setCategories(data.categories || []);
+    setAds(data.ads || []);
+    setSponsoredProducts(data.sponsored_products || []);
+    setShopFlashSale(data.flash_sale);
+    setShopFlashProducts(data.flash_products || []);
+    setFreeShippingProducts(data.free_shipping_products || []);
+    setBestSellers(data.best_sellers || []);
+    setNewlyAddedProducts(data.new_arrivals || []);
+    setExtraProducts(data.extra_products || []);
+    setProducts(data.best_sellers || []);
+    
+    // الإعدادات
+    if (data.settings) {
+      setSectionsSettings(data.settings.sections || {
+        sponsored_enabled: true,
+        flash_sale_enabled: true,
+        free_shipping_enabled: true,
+        best_sellers_enabled: true,
+        new_arrivals_enabled: true
+      });
+      
+      if (data.settings.ticker) {
+        setTickerMessages(data.settings.ticker.messages || []);
+        setTickerEnabled(data.settings.ticker.is_enabled !== false);
+      }
+      
+      if (data.settings.badge) {
+        setBadgeSettings(data.settings.badge);
+      }
+      
+      if (data.settings.free_shipping?.is_active) {
+        setGlobalFreeShipping(data.settings.free_shipping);
+      }
+    }
+  };
+  
+  // الطريقة القديمة كـ fallback
+  const fetchDataLegacy = async () => {
+    try {
       const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes] = await Promise.all([
         axios.get(`${API}/products/featured`),
         axios.get(`${API}/categories`),
@@ -156,54 +229,37 @@ const HomePage = () => {
       setShopFlashSale(shopFlashRes.data?.flash_sale || null);
       setSponsoredProducts(sponsoredRes.data || []);
       
-      // شريط العروض
       setTickerMessages(tickerRes.data?.messages || []);
       setTickerEnabled(tickerRes.data?.is_enabled !== false);
       
-      // جلب إعدادات الشارات
       try {
         const badgeRes = await axios.get(`${API}/settings/product-badges`);
         setBadgeSettings(badgeRes.data);
-      } catch (err) {
-        console.log('Badge settings not available');
-      }
+      } catch (err) {}
       
-      // جلب منتجات إضافية للعرض أسفل الأقسام الرئيسية
       try {
         const extraRes = await axios.get(`${API}/products?limit=20&skip=0`);
         setExtraProducts(extraRes.data?.products || extraRes.data || []);
-      } catch (err) {
-        console.log('Extra products not available');
-      }
+      } catch (err) {}
       
-      // جلب منتجات شحنها مجاني (سعرها >= حد الشحن المجاني)
       try {
         const settingsRes = await axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
         const threshold = settingsRes.data?.free_shipping_threshold || 150000;
         const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
         const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
         setFreeShippingProducts(freeShipProducts.slice(0, 10));
-      } catch (err) {
-        console.log('Free shipping products not available');
-      }
+      } catch (err) {}
       
-      // جلب الأكثر مبيعاً
       try {
         const bestSellersRes = await axios.get(`${API}/products/best-sellers`);
         setBestSellers(bestSellersRes.data || []);
-      } catch (err) {
-        console.log('Best sellers not available');
-      }
+      } catch (err) {}
       
-      // جلب المنتجات الجديدة
       try {
         const newlyAddedRes = await axios.get(`${API}/products/newly-added`);
         setNewlyAddedProducts(newlyAddedRes.data || []);
-      } catch (err) {
-        console.log('Newly added products not available');
-      }
+      } catch (err) {}
       
-      // تعيين عرض الشحن المجاني إذا كان مفعلاً ويشمل المنتجات
       const promo = promoRes.data;
       if (promo?.is_active && ['all', 'products'].includes(promo.applies_to)) {
         setGlobalFreeShipping(promo);
@@ -211,9 +267,7 @@ const HomePage = () => {
         setGlobalFreeShipping(null);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error in legacy fetch:', error);
     }
   };
 
