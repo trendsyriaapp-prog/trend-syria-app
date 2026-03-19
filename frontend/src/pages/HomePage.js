@@ -890,17 +890,6 @@ const HomePage = () => {
                 />
               ))}
             </div>
-            
-            {/* زر عرض المزيد */}
-            <div className="text-center mt-4">
-              <Link 
-                to="/category/all"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white font-bold px-6 py-2.5 rounded-full hover:shadow-lg transition-all"
-              >
-                عرض جميع المنتجات
-                <ChevronLeft size={18} />
-              </Link>
-            </div>
           </div>
         </LazySection>
       )}
