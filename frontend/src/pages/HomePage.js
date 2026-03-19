@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -16,6 +16,7 @@ import DailyDeal from '../components/DailyDeal';
 import RecommendedProducts from '../components/RecommendedProducts';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import { useSettings } from '../context/SettingsContext';
+import { useScroll } from '../context/ScrollContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -90,9 +91,20 @@ const HomePage = () => {
   });
   const location = useLocation();
   const { isFeatureEnabled } = useSettings();
+  const { signalContentReady, isNavigatingBack } = useScroll();
   
   // التحقق من تفعيل منصة الطعام
   const foodEnabled = isFeatureEnabled('food_enabled');
+
+  // إشارة لاكتمال تحميل البيانات
+  useLayoutEffect(() => {
+    if (!loading && isNavigatingBack) {
+      // تأخير قصير للسماح للـ DOM بالتحديث
+      requestAnimationFrame(() => {
+        signalContentReady();
+      });
+    }
+  }, [loading, isNavigatingBack, signalContentReady]);
 
   useEffect(() => {
     fetchData();

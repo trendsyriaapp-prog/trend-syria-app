@@ -13,7 +13,7 @@ const FlashSaleProductsPage = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // التمرير للأعلى يتم التعامل معه في ScrollContext
     const fetchProducts = async () => {
       try {
         const res = await axios.get(`${API}/products/flash-products`);

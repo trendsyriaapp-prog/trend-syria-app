@@ -11,7 +11,7 @@ const NewArrivalsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    
     const fetchProducts = async () => {
       try {
         const res = await axios.get(`${API}/products/newly-added`);

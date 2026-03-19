@@ -12,7 +12,7 @@ const FreeShippingProductsPage = () => {
   const [threshold, setThreshold] = useState(150000);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    
     const fetchProducts = async () => {
       try {
         // Get threshold first

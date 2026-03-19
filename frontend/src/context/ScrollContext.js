@@ -1,21 +1,34 @@
-import { createContext, useContext, useCallback, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { createContext, useContext, useCallback, useEffect, useRef, useState, useLayoutEffect } from 'react';
+import { useLocation, useNavigationType } from 'react-router-dom';
 
 const ScrollContext = createContext();
 
 // تعطيل استعادة التمرير التلقائية للمتصفح
-if ('scrollRestoration' in window.history) {
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
 }
 
 export const ScrollProvider = ({ children }) => {
   const location = useLocation();
+  const navigationType = useNavigationType();
   const isRestoring = useRef(false);
   const lastPathname = useRef(location.pathname);
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const pendingScrollPosition = useRef(null);
+  const scrollKey = useRef(0);
+  const contentReadyRef = useRef(false);
+  const currentScrollPath = useRef(location.pathname);
+  const isNavigating = useRef(false);
 
-  // حفظ موقع التمرير
+  // حفظ موقع التمرير - فقط للمسار المحدد في ref
   const saveScrollPosition = useCallback((pathname) => {
-    sessionStorage.setItem(`scroll_${pathname}`, window.scrollY.toString());
+    // لا تحفظ إذا كنا في منتصف الاستعادة أو التنقل أو إذا تغير المسار
+    if (!isRestoring.current && !isNavigating.current && pathname === currentScrollPath.current) {
+      const scrollY = window.scrollY;
+      if (scrollY > 0) {
+        sessionStorage.setItem(`scroll_${pathname}`, scrollY.toString());
+      }
+    }
   }, []);
 
   // استعادة موقع التمرير
@@ -23,7 +36,7 @@ export const ScrollProvider = ({ children }) => {
     const saved = sessionStorage.getItem(`scroll_${pathname}`);
     if (saved !== null) {
       const position = parseInt(saved, 10);
-      window.scrollTo(0, position);
+      window.scrollTo({ top: position, behavior: 'instant' });
       return position;
     }
     return 0;
@@ -40,14 +53,60 @@ export const ScrollProvider = ({ children }) => {
     return pos ? parseInt(pos, 10) : 0;
   }, []);
 
+  // إشارة لإتمام استعادة التمرير من الصفحة
+  const signalContentReady = useCallback(() => {
+    contentReadyRef.current = true;
+    if (pendingScrollPosition.current !== null && isRestoring.current) {
+      const position = pendingScrollPosition.current;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: position, behavior: 'instant' });
+          pendingScrollPosition.current = null;
+          isRestoring.current = false;
+          setIsNavigatingBack(false);
+        });
+      });
+    }
+  }, []);
+
   // حفظ موقع التمرير أثناء التمرير
   useEffect(() => {
     let ticking = false;
+    let lastUserScrollTime = 0;
+    let lastScrollY = 0;
+    
     const handleScroll = () => {
-      if (!ticking && !isRestoring.current) {
+      if (!ticking) {
+        // حفظ المسار الحالي عند لحظة الـ scroll
+        const pathAtScrollTime = location.pathname;
+        const scrollYNow = window.scrollY;
+        const now = Date.now();
+        
+        // تتبع إذا كان المستخدم يتمرر بشكل طبيعي (ليس قفز تلقائي)
+        const isUserScrolling = Math.abs(scrollYNow - lastScrollY) < 500;
+        
         window.requestAnimationFrame(() => {
-          saveScrollPosition(location.pathname);
           ticking = false;
+          // التحقق من العلامات داخل الـ callback
+          if (isRestoring.current || isNavigating.current) return;
+          
+          // التحقق من أن المسار لم يتغير
+          if (pathAtScrollTime !== location.pathname) return;
+          if (pathAtScrollTime !== currentScrollPath.current) return;
+          
+          const scrollY = window.scrollY;
+          if (pathAtScrollTime && scrollY > 0) {
+            // الحصول على القيمة المحفوظة حالياً
+            const currentSaved = parseInt(sessionStorage.getItem(`scroll_${pathAtScrollTime}`) || '0', 10);
+            
+            // إذا كان التمرير الحالي قريب من المحفوظ أو أكبر منه، احفظ
+            if (scrollY >= currentSaved || scrollY > currentSaved * 0.2) {
+              sessionStorage.setItem(`scroll_${pathAtScrollTime}`, scrollY.toString());
+            }
+          }
+          
+          lastScrollY = scrollY;
+          lastUserScrollTime = now;
         });
         ticking = true;
       }
@@ -55,52 +114,103 @@ export const ScrollProvider = ({ children }) => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname, saveScrollPosition]);
+  }, [location.pathname]);
 
-  // استعادة موقع التمرير عند تغيير الصفحة
-  useEffect(() => {
-    const savedPosition = getScrollPosition(location.pathname);
-    const isNavigatingBack = lastPathname.current !== location.pathname;
-    lastPathname.current = location.pathname;
+  // التعامل مع تغيير المسار - useLayoutEffect يعمل قبل الرسم
+  useLayoutEffect(() => {
+    const currentPath = location.pathname;
+    const previousPath = lastPathname.current;
+    const isPop = navigationType === 'POP';
+    const hasChanged = previousPath !== currentPath;
     
-    // للصفحات الجديدة، ابدأ من الأعلى
-    if (savedPosition === 0 || !isNavigatingBack) {
-      window.scrollTo(0, 0);
+    if (!hasChanged) return;
+    
+    // إيقاف حفظ التمرير فوراً عند بدء التنقل
+    isNavigating.current = true;
+    
+    // للتنقل للأمام (PUSH)
+    // الآن نحدث المسار الحالي
+    currentScrollPath.current = currentPath;
+    lastPathname.current = currentPath;
+    scrollKey.current += 1;
+    contentReadyRef.current = false;
+    
+    // الحصول على موقع التمرير المحفوظ للصفحة الحالية
+    const savedPosition = getScrollPosition(currentPath);
+    
+    // للتنقل الجديد (PUSH/REPLACE)، ابدأ من الأعلى فوراً
+    if (!isPop) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      pendingScrollPosition.current = null;
+      isRestoring.current = false;
+      setIsNavigatingBack(false);
+      
+      // إلغاء علامة التنقل بعد استقرار الصفحة
+      setTimeout(() => {
+        isNavigating.current = false;
+      }, 200);
       return;
     }
     
-    // للرجوع للصفحة السابقة
-    isRestoring.current = true;
-    
-    // استعادة الموقع بعد تحميل المحتوى
-    const restore = () => {
-      window.scrollTo(0, savedPosition);
-    };
-    
-    // استعادة فورية
-    restore();
-    
-    // استعادات متكررة لضمان الموقع الصحيح
-    const timers = [30, 80, 150, 300, 500].map(delay => 
-      setTimeout(restore, delay)
-    );
+    // للرجوع للصفحة السابقة (POP) مع موقع محفوظ
+    if (savedPosition > 0) {
+      isRestoring.current = true;
+      pendingScrollPosition.current = savedPosition;
+      setIsNavigatingBack(true);
+      
+      // تثبيت ارتفاع الصفحة لمنع القفز أثناء التحميل
+      const currentHeight = document.documentElement.scrollHeight;
+      const minHeight = savedPosition + window.innerHeight;
+      if (currentHeight < minHeight) {
+        document.body.style.minHeight = `${minHeight}px`;
+      }
+      
+      // استعادة فورية لتثبيت الموقع ومنع القفز
+      window.scrollTo({ top: savedPosition, behavior: 'instant' });
+      
+      // إعادة المحاولة بشكل متكرر وسريع حتى يستقر المحتوى
+      let attempts = 0;
+      const maxAttempts = 30;
+      const intervalId = setInterval(() => {
+        attempts++;
+        window.scrollTo({ top: savedPosition, behavior: 'instant' });
+        
+        if (contentReadyRef.current || attempts >= maxAttempts) {
+          clearInterval(intervalId);
+          // إزالة الارتفاع الثابت بعد الاستقرار
+          setTimeout(() => {
+            document.body.style.minHeight = '';
+            window.scrollTo({ top: savedPosition, behavior: 'instant' });
+            pendingScrollPosition.current = null;
+            isRestoring.current = false;
+            isNavigating.current = false;  // إلغاء علامة التنقل
+            setIsNavigatingBack(false);
+          }, 50);
+        }
+      }, 30);
 
-    const endTimer = setTimeout(() => {
+      return () => {
+        clearInterval(intervalId);
+      };
+    } else {
+      // لا يوجد موقع محفوظ، ابدأ من الأعلى
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      pendingScrollPosition.current = null;
       isRestoring.current = false;
-    }, 600);
-
-    return () => {
-      timers.forEach(clearTimeout);
-      clearTimeout(endTimer);
-    };
-  }, [location.pathname, getScrollPosition]);
+      isNavigating.current = false;  // إلغاء علامة التنقل
+      setIsNavigatingBack(false);
+    }
+  }, [location.pathname, navigationType, getScrollPosition]);
 
   return (
     <ScrollContext.Provider value={{
       saveScrollPosition,
       restoreScrollPosition,
       clearScrollPosition,
-      getScrollPosition
+      getScrollPosition,
+      signalContentReady,
+      isNavigatingBack,
+      scrollKey: scrollKey.current
     }}>
       {children}
     </ScrollContext.Provider>

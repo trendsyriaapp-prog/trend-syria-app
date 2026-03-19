@@ -25,6 +25,24 @@
 
 ## What's Been Implemented
 
+### Session: December 2025 (Latest - 19 Dec)
+
+#### إصلاح مشكلة القفز عند استعادة التمرير (Completed ✅)
+- **المشكلة**: عند الضغط على زر الرجوع من صفحة المنتجات، كانت الصفحة الرئيسية تقفز قبل أن تستقر
+- **السبب الجذري**: متغير `isNavigating` لم يُلغى بعد اكتمال استعادة التمرير في حالة POP
+- **الإصلاحات**:
+  - تحديث `ScrollContext.js` لإضافة `isNavigating.current = false` عند اكتمال الاستعادة
+  - إزالة استدعاءات `window.scrollTo(0, 0)` غير الضرورية من صفحات المنتجات
+  - تحسين منطق حفظ التمرير لمنع الكتابة فوق القيم أثناء التنقل
+- **الملفات المعدلة**:
+  - `/app/frontend/src/context/ScrollContext.js`
+  - `/app/frontend/src/pages/FlashSaleProductsPage.js`
+  - `/app/frontend/src/pages/BestSellersPage.js`
+  - `/app/frontend/src/pages/FreeShippingProductsPage.js`
+  - `/app/frontend/src/pages/NewArrivalsPage.js`
+  - `/app/frontend/src/pages/SponsoredProductsPage.js`
+- **الاختبار**: ✅ نجح اختبار التمرير للأسفل والأعلى مع استعادة صحيحة
+
 ### Session: December 2025
 
 #### 1. تحسين إرشادات إشعارات PWA (Completed - Latest)
