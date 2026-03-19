@@ -54,9 +54,11 @@ const LoginPage = () => {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#FF6B00] flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">ت</span>
-          </div>
+          <img 
+            src="/images/logo.png" 
+            alt="ترند سوريا" 
+            className="w-20 h-20 object-contain mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
           <p className="text-gray-500 mt-2">مرحباً بعودتك إلى ترند سورية</p>
         </div>
@@ -207,9 +209,11 @@ const RegisterPage = () => {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#FF6B00] flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">ت</span>
-          </div>
+          <img 
+            src="/images/logo.png" 
+            alt="ترند سوريا" 
+            className="w-20 h-20 object-contain mx-auto mb-4"
+          />
           <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
           <p className="text-gray-500 mt-2">انضم إلى ترند سورية الآن</p>
         </div>
