@@ -69,44 +69,59 @@ export const ScrollProvider = ({ children }) => {
     }
   }, []);
 
+  // الاستماع للنقر على الروابط لتعيين isNavigating مبكراً
+  useEffect(() => {
+    const handleClick = (e) => {
+      const link = e.target.closest('a');
+      if (link && link.href) {
+        try {
+          const url = new URL(link.href);
+          // إذا كان رابط داخلي ومختلف عن الصفحة الحالية
+          if (url.origin === window.location.origin && url.pathname !== location.pathname) {
+            // تعيين علامة التنقل فوراً
+            isNavigating.current = true;
+          }
+        } catch (err) {
+          // تجاهل الأخطاء
+        }
+      }
+    };
+
+    // استخدام capture للتأكد من أننا نلتقط الحدث أولاً
+    document.addEventListener('click', handleClick, { capture: true });
+    return () => document.removeEventListener('click', handleClick, { capture: true });
+  }, [location.pathname]);
+
   // حفظ موقع التمرير أثناء التمرير
   useEffect(() => {
     let ticking = false;
-    let lastUserScrollTime = 0;
-    let lastScrollY = 0;
     
     const handleScroll = () => {
       if (!ticking) {
-        // حفظ المسار الحالي عند لحظة الـ scroll
-        const pathAtScrollTime = location.pathname;
-        const scrollYNow = window.scrollY;
-        const now = Date.now();
+        // التقاط الحالة فوراً
+        const navigating = isNavigating.current;
+        const restoring = isRestoring.current;
+        const pathToSave = currentScrollPath.current;
+        const scrollY = window.scrollY;
         
-        // تتبع إذا كان المستخدم يتمرر بشكل طبيعي (ليس قفز تلقائي)
-        const isUserScrolling = Math.abs(scrollYNow - lastScrollY) < 500;
+        // لا تُجدول إذا كنا في حالة تنقل أو استعادة
+        if (navigating || restoring) return;
         
         window.requestAnimationFrame(() => {
           ticking = false;
-          // التحقق من العلامات داخل الـ callback
+          // التحقق مرة أخرى داخل الـ callback
           if (isRestoring.current || isNavigating.current) return;
+          if (pathToSave !== currentScrollPath.current) return;
           
-          // التحقق من أن المسار لم يتغير
-          if (pathAtScrollTime !== location.pathname) return;
-          if (pathAtScrollTime !== currentScrollPath.current) return;
-          
-          const scrollY = window.scrollY;
-          if (pathAtScrollTime && scrollY > 0) {
+          if (pathToSave && scrollY > 0) {
             // الحصول على القيمة المحفوظة حالياً
-            const currentSaved = parseInt(sessionStorage.getItem(`scroll_${pathAtScrollTime}`) || '0', 10);
+            const currentSaved = parseInt(sessionStorage.getItem(`scroll_${pathToSave}`) || '0', 10);
             
             // إذا كان التمرير الحالي قريب من المحفوظ أو أكبر منه، احفظ
             if (scrollY >= currentSaved || scrollY > currentSaved * 0.2) {
-              sessionStorage.setItem(`scroll_${pathAtScrollTime}`, scrollY.toString());
+              sessionStorage.setItem(`scroll_${pathToSave}`, scrollY.toString());
             }
           }
-          
-          lastScrollY = scrollY;
-          lastUserScrollTime = now;
         });
         ticking = true;
       }
@@ -114,7 +129,7 @@ export const ScrollProvider = ({ children }) => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname]);
+  }, []);
 
   // التعامل مع تغيير المسار - useLayoutEffect يعمل قبل الرسم
   useLayoutEffect(() => {
