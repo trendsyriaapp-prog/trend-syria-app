@@ -40,7 +40,7 @@ const AllProductsPage = () => {
         
         const [productsRes, badgeRes] = await Promise.all([
           axios.get(`${API}/api/products?limit=50`),
-          axios.get(`${API}/api/settings/badge-settings`).catch(() => ({ data: null }))
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         // Handle both array and object response

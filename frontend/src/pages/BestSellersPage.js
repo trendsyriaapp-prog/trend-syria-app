@@ -15,7 +15,7 @@ const BestSellersPage = () => {
       try {
         const [productsRes, badgeRes] = await Promise.all([
           axios.get(`${API}/products/best-sellers`),
-          axios.get(`${API}/settings/badge-settings`).catch(() => ({ data: null }))
+          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         setProducts(productsRes.data || []);
         setBadgeSettings(badgeRes.data);

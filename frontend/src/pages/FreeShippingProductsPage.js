@@ -22,7 +22,7 @@ const FreeShippingProductsPage = () => {
         // Get products and badge settings
         const [productsRes, badgeRes] = await Promise.all([
           axios.get(`${API}/products?price_min=${thresh}&limit=50`),
-          axios.get(`${API}/settings/badge-settings`).catch(() => ({ data: null }))
+          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         const prods = productsRes.data?.products || productsRes.data || [];
