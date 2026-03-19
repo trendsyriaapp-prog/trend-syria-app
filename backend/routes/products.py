@@ -663,11 +663,21 @@ async def get_homepage_data():
         
         # جلب منتجات فلاش إذا كان هناك عرض نشط
         flash_products = []
-        if flash_sale and flash_sale.get("product_ids"):
-            flash_products = await db.products.find(
-                {"id": {"$in": flash_sale["product_ids"]}, "is_active": True, "is_approved": True},
-                {"_id": 0}
-            ).to_list(20)
+        if flash_sale:
+            # البحث عن معرفات المنتجات - قد تكون في أي من هذه الحقول
+            product_ids = flash_sale.get("product_ids") or flash_sale.get("applicable_shop_products") or []
+            if product_ids:
+                flash_products = await db.products.find(
+                    {"id": {"$in": product_ids}, "is_active": True, "is_approved": True},
+                    {"_id": 0}
+                ).to_list(20)
+                
+                # إضافة سعر الفلاش لكل منتج
+                discount = flash_sale.get("discount_percentage", 0)
+                for product in flash_products:
+                    original_price = product.get("price", 0)
+                    product["flash_discount"] = discount
+                    product["flash_price"] = int(original_price * (100 - discount) / 100)
         
         # تجميع البيانات
         homepage_data = {
@@ -676,12 +686,18 @@ async def get_homepage_data():
             "sponsored_products": sponsored_products,
             "flash_sale": flash_sale,
             "flash_products": flash_products,
-            "free_shipping_products": [],  # سيتم ملؤها من best_sellers
+            "free_shipping_products": [],  # سيتم ملؤها لاحقاً
             "best_sellers": best_sellers,
             "new_arrivals": new_arrivals,
             "extra_products": extra_products,
             "settings": {
-                "sections": sections_settings.get("settings", {}) if sections_settings else {},
+                "sections": sections_settings.get("settings", {}) if sections_settings and sections_settings.get("settings") else {
+                    "sponsored_enabled": True,
+                    "flash_sale_enabled": True,
+                    "free_shipping_enabled": True,
+                    "best_sellers_enabled": True,
+                    "new_arrivals_enabled": True
+                },
                 "free_shipping": free_shipping_settings if free_shipping_settings else {},
                 "ticker": ticker_settings if ticker_settings else {},
                 "badge": badge_settings if badge_settings else {}
