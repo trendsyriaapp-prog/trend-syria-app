@@ -44,9 +44,12 @@ class DeliveryDocuments(BaseModel):
     vehicle_photo: Optional[str] = None  # صورة المركبة
     
 class SellerDocuments(BaseModel):
-    seller_id: str
     business_name: str
-    business_license: str
+    seller_type: str  # traditional_shop, restaurant
+    national_id: str  # صورة الهوية
+    commercial_registration: str  # السجل التجاري
+    shop_photo: Optional[str] = None  # صورة المحل (للمتاجر التقليدية)
+    health_certificate: Optional[str] = None  # الشهادة الصحية (للمطاعم)
 
 # ============== Product Models ==============
 

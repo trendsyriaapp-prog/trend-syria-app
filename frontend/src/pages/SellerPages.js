@@ -252,9 +252,31 @@ const SellerDocumentsPage = () => {
   const { toast } = useToast();
 
   const [businessName, setBusinessName] = useState('');
-  const [license, setLicense] = useState(null);
+  const [sellerType, setSellerType] = useState('');
+  const [nationalId, setNationalId] = useState(null);
+  const [commercialReg, setCommercialReg] = useState(null);
+  const [shopPhoto, setShopPhoto] = useState(null);
+  const [healthCert, setHealthCert] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
+
+  // أنواع البائعين
+  const sellerTypes = [
+    {
+      id: 'traditional_shop',
+      name: 'متجر تقليدي',
+      icon: '🏪',
+      description: 'محل تجاري بموقع ثابت',
+      requiredDocs: ['nationalId', 'commercialReg', 'shopPhoto']
+    },
+    {
+      id: 'restaurant',
+      name: 'مطعم/طعام',
+      icon: '🍳',
+      description: 'مطعم أو محل طعام',
+      requiredDocs: ['nationalId', 'commercialReg', 'healthCert']
+    }
+  ];
 
   useEffect(() => {
     if (user) {
@@ -274,34 +296,52 @@ const SellerDocumentsPage = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (setter) => (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLicense(reader.result);
+        setter(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const selectedType = sellerTypes.find(t => t.id === sellerType);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!license) {
-      toast({
-        title: "خطأ",
-        description: "يرجى رفع شهادة البائع",
-        variant: "destructive"
-      });
+    
+    if (!sellerType) {
+      toast({ title: "خطأ", description: "يرجى اختيار نوع النشاط", variant: "destructive" });
+      return;
+    }
+    if (!nationalId) {
+      toast({ title: "خطأ", description: "يرجى رفع صورة الهوية", variant: "destructive" });
+      return;
+    }
+    if (!commercialReg) {
+      toast({ title: "خطأ", description: "يرجى رفع السجل التجاري", variant: "destructive" });
+      return;
+    }
+    if (sellerType === 'traditional_shop' && !shopPhoto) {
+      toast({ title: "خطأ", description: "يرجى رفع صورة المحل", variant: "destructive" });
+      return;
+    }
+    if (sellerType === 'restaurant' && !healthCert) {
+      toast({ title: "خطأ", description: "يرجى رفع الشهادة الصحية", variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
       await axios.post(`${API}/seller/documents`, {
-        seller_id: user.id,
         business_name: businessName,
-        business_license: license
+        seller_type: sellerType,
+        national_id: nationalId,
+        commercial_registration: commercialReg,
+        shop_photo: shopPhoto,
+        health_certificate: healthCert
       });
 
       toast({
@@ -320,7 +360,7 @@ const SellerDocumentsPage = () => {
     }
   };
 
-  if (!user || user.user_type !== 'seller') {
+  if (!user || !['seller', 'food_seller'].includes(user.user_type)) {
     navigate('/');
     return null;
   }
@@ -330,6 +370,42 @@ const SellerDocumentsPage = () => {
     return null;
   }
 
+  // مكون رفع الصور
+  const ImageUploader = ({ label, value, onChange, inputId }) => (
+    <div>
+      <label className="block text-sm font-medium mb-2">{label}</label>
+      <div 
+        className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer"
+        onClick={() => document.getElementById(inputId).click()}
+      >
+        {value ? (
+          <div className="relative">
+            <img src={value} alt={label} className="w-full h-32 object-cover rounded-lg" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange({ target: { files: [] } }); }}
+              className="absolute top-1 left-1 bg-red-500 text-white p-1 rounded-full text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <>
+            <Upload size={24} className="mx-auto mb-2 text-white/40" />
+            <p className="text-white/50 text-sm">اضغط للرفع</p>
+          </>
+        )}
+      </div>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        className="hidden"
+      />
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <motion.div
@@ -337,12 +413,12 @@ const SellerDocumentsPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="w-16 h-16 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mx-auto mb-4">
             <FileText size={32} className="text-[#FF6B00]" />
           </div>
           <h1 className="text-2xl font-bold">تأكيد حساب البائع</h1>
-          <p className="text-white/50 mt-2">ارفع شهادة البائع للموافقة على حسابك</p>
+          <p className="text-white/50 mt-2 text-sm">ارفع المستندات المطلوبة للموافقة على حسابك</p>
         </div>
 
         {status === 'pending' ? (
@@ -372,54 +448,95 @@ const SellerDocumentsPage = () => {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-6 border border-white/5">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">اسم النشاط التجاري</label>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none"
-                  placeholder="اسم نشاطك التجاري"
-                  required
-                  data-testid="business-name-input"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-5 border border-white/5 space-y-4">
+            {/* اسم النشاط */}
+            <div>
+              <label className="block text-sm font-medium mb-2">اسم النشاط التجاري</label>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none"
+                placeholder="اسم نشاطك التجاري"
+                required
+                data-testid="business-name-input"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">شهادة البائع (سجل تجاري)</label>
-                <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer"
-                  onClick={() => document.getElementById('license-input').click()}
-                >
-                  {license ? (
-                    <div className="flex items-center justify-center gap-2 text-green-500">
-                      <Check size={24} />
-                      <span>تم رفع الملف</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload size={32} className="mx-auto mb-2 text-white/40" />
-                      <p className="text-white/50">اضغط لرفع صورة الشهادة</p>
-                      <p className="text-xs text-white/30 mt-1">PNG, JPG حتى 5MB</p>
-                    </>
-                  )}
-                </div>
-                <input
-                  id="license-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  data-testid="license-input"
-                />
+            {/* اختيار نوع النشاط */}
+            <div>
+              <label className="block text-sm font-medium mb-2">نوع النشاط</label>
+              <div className="grid grid-cols-2 gap-3">
+                {sellerTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setSellerType(type.id)}
+                    className={`p-4 rounded-xl border-2 transition-all text-center ${
+                      sellerType === type.id
+                        ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                        : 'border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <span className="text-3xl block mb-2">{type.icon}</span>
+                    <span className="text-sm font-medium block">{type.name}</span>
+                    <span className="text-[10px] text-white/50 block mt-1">{type.description}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
+            {/* الوثائق المطلوبة */}
+            {sellerType && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="space-y-4 pt-2"
+              >
+                <p className="text-xs text-white/50 text-center">📋 الوثائق المطلوبة لـ{selectedType?.name}</p>
+                
+                {/* صورة الهوية - مطلوبة للجميع */}
+                <ImageUploader
+                  label="صورة الهوية الشخصية"
+                  value={nationalId}
+                  onChange={handleFileChange(setNationalId)}
+                  inputId="national-id-input"
+                />
+
+                {/* السجل التجاري - مطلوب للجميع */}
+                <ImageUploader
+                  label="السجل التجاري"
+                  value={commercialReg}
+                  onChange={handleFileChange(setCommercialReg)}
+                  inputId="commercial-reg-input"
+                />
+
+                {/* صورة المحل - للمتاجر فقط */}
+                {sellerType === 'traditional_shop' && (
+                  <ImageUploader
+                    label="صورة المحل"
+                    value={shopPhoto}
+                    onChange={handleFileChange(setShopPhoto)}
+                    inputId="shop-photo-input"
+                  />
+                )}
+
+                {/* الشهادة الصحية - للمطاعم فقط */}
+                {sellerType === 'restaurant' && (
+                  <ImageUploader
+                    label="الشهادة الصحية"
+                    value={healthCert}
+                    onChange={handleFileChange(setHealthCert)}
+                    inputId="health-cert-input"
+                  />
+                )}
+              </motion.div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#FF6B00] text-black font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              disabled={loading || !sellerType}
+              className="w-full bg-[#FF6B00] text-black font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               data-testid="submit-docs-btn"
             >
               {loading ? (

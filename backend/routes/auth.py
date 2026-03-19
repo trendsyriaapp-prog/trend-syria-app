@@ -269,26 +269,86 @@ seller_router = APIRouter(prefix="/seller", tags=["Seller"])
 
 @seller_router.post("/documents")
 async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(get_current_user)):
-    if user["user_type"] != "seller":
+    if user["user_type"] not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    # التحقق من وجود مستندات سابقة
+    existing = await db.seller_documents.find_one({"seller_id": user["id"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="تم رفع المستندات مسبقاً")
+    
+    # التحقق من نوع البائع
+    valid_seller_types = ["traditional_shop", "restaurant"]
+    if docs.seller_type not in valid_seller_types:
+        raise HTTPException(
+            status_code=400,
+            detail="نوع البائع غير صالح. الأنواع المتاحة: متجر تقليدي، مطعم"
+        )
+    
+    # التحقق من الوثائق المطلوبة حسب النوع
+    if docs.seller_type == "traditional_shop":
+        if not docs.shop_photo:
+            raise HTTPException(status_code=400, detail="صورة المحل مطلوبة للمتاجر التقليدية")
+    
+    if docs.seller_type == "restaurant":
+        if not docs.health_certificate:
+            raise HTTPException(status_code=400, detail="الشهادة الصحية مطلوبة للمطاعم")
+    
+    # ترجمة نوع البائع
+    seller_type_names = {
+        "traditional_shop": "متجر تقليدي",
+        "restaurant": "مطعم/طعام"
+    }
     
     doc = {
         "id": str(uuid.uuid4()),
         "seller_id": user["id"],
         "business_name": docs.business_name,
-        "business_license": docs.business_license,
+        "seller_type": docs.seller_type,
+        "seller_type_name": seller_type_names.get(docs.seller_type, docs.seller_type),
+        "national_id": docs.national_id,
+        "commercial_registration": docs.commercial_registration,
+        "shop_photo": docs.shop_photo if docs.seller_type == "traditional_shop" else None,
+        "health_certificate": docs.health_certificate if docs.seller_type == "restaurant" else None,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.seller_documents.insert_one(doc)
-    return {"message": "تم رفع المستندات بنجاح، في انتظار الموافقة"}
+    return {"message": "تم رفع المستندات بنجاح، سيتم مراجعتها قريباً"}
+
+@seller_router.get("/seller-types")
+async def get_seller_types():
+    """جلب أنواع البائعين المتاحة للتسجيل"""
+    return {
+        "seller_types": [
+            {
+                "id": "traditional_shop",
+                "name": "متجر تقليدي",
+                "icon": "🏪",
+                "description": "محل تجاري بموقع ثابت",
+                "required_documents": ["national_id", "commercial_registration", "shop_photo"]
+            },
+            {
+                "id": "restaurant",
+                "name": "مطعم/طعام",
+                "icon": "🍳",
+                "description": "مطعم أو محل طعام",
+                "required_documents": ["national_id", "commercial_registration", "health_certificate"]
+            }
+        ]
+    }
 
 @seller_router.get("/documents/status")
 async def get_documents_status(user: dict = Depends(get_current_user)):
     doc = await db.seller_documents.find_one({"seller_id": user["id"]}, {"_id": 0})
     if not doc:
         return {"status": "not_submitted"}
-    return {"status": doc["status"], "business_name": doc.get("business_name")}
+    return {
+        "status": doc["status"],
+        "business_name": doc.get("business_name"),
+        "seller_type": doc.get("seller_type"),
+        "seller_type_name": doc.get("seller_type_name")
+    }
 
 # ============== Delivery Routes ==============
 
