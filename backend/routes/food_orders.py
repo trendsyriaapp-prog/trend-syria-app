@@ -114,6 +114,80 @@ ORDER_STATUSES = {
     "cancelled": "ملغي"
 }
 
+# ============== حساب المسافة والتحذير الذكي ==============
+
+class DistanceCheckRequest(BaseModel):
+    store_id: str
+    customer_lat: float
+    customer_lng: float
+
+@router.post("/check-distance")
+async def check_delivery_distance(data: DistanceCheckRequest):
+    """
+    حساب المسافة بين المتجر والعميل وإرجاع تحذير ذكي إذا لزم الأمر
+    يُستخدم من الـ Frontend لعرض تحذير قبل الطلب
+    """
+    # جلب بيانات المتجر
+    store = await db.food_stores.find_one({"id": data.store_id}, {"_id": 0})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    store_lat = store.get("latitude")
+    store_lng = store.get("longitude")
+    
+    if not store_lat or not store_lng:
+        return {
+            "success": False,
+            "error": "المتجر لا يملك موقع محدد"
+        }
+    
+    # حساب المسافة
+    distance_km = calculate_distance_km(
+        store_lat, store_lng,
+        data.customer_lat, data.customer_lng
+    )
+    
+    # حساب الوقت التقديري (متوسط سرعة 25 كم/ساعة في المدينة + وقت التحضير)
+    avg_speed_kmh = 25
+    travel_time_minutes = (distance_km / avg_speed_kmh) * 60
+    preparation_time = store.get("delivery_time", 20)  # وقت التحضير الافتراضي
+    total_estimated_time = round(preparation_time + travel_time_minutes)
+    
+    # حساب رسوم التوصيل
+    fee_info = await calculate_driver_fee_by_km(distance_km)
+    
+    # تحديد مستوى التحذير
+    warning_level = "none"
+    warning_message = None
+    warning_emoji = None
+    
+    if distance_km > 10:
+        warning_level = "high"
+        warning_emoji = "⚠️"
+        warning_message = f"المطعم بعيد جداً ({distance_km:.1f} كم) - قد يصل الطعام بارداً"
+    elif distance_km > 5:
+        warning_level = "medium"
+        warning_emoji = "📍"
+        warning_message = f"المطعم يبعد {distance_km:.1f} كم - الوقت المتوقع: {total_estimated_time} دقيقة"
+    elif distance_km > 3:
+        warning_level = "low"
+        warning_emoji = "🛵"
+        warning_message = f"المطعم يبعد {distance_km:.1f} كم - التوصيل خلال {total_estimated_time} دقيقة"
+    
+    return {
+        "success": True,
+        "distance_km": round(distance_km, 2),
+        "estimated_time_minutes": total_estimated_time,
+        "delivery_fee": fee_info["driver_fee"],
+        "warning": {
+            "level": warning_level,
+            "emoji": warning_emoji,
+            "message": warning_message
+        } if warning_level != "none" else None,
+        "store_name": store.get("name"),
+        "store_type": store.get("store_type")
+    }
+
 # Models
 class FoodOrderItem(BaseModel):
     product_id: str
@@ -277,12 +351,8 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير متاح")
     
-    # ===== التحقق من المسافة بين المطعم والعميل =====
-    # جلب إعدادات المسافة القصوى
-    settings = await db.platform_settings.find_one({"id": "main"})
-    max_delivery_distance = 5.0  # الافتراضي 5 كم
-    if settings:
-        max_delivery_distance = settings.get("max_store_customer_distance_km", 5.0)
+    # ===== حساب المسافة بين المطعم والعميل =====
+    # ملاحظة: تم إزالة قيد المسافة القصوى - العميل يقرر والتحذير يظهر في الواجهة
     
     # إحداثيات المتجر (مطلوبة)
     store_lat = store.get("latitude")
@@ -304,7 +374,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             detail="يرجى تحديد موقعك على الخريطة لحساب أجرة التوصيل بدقة."
         )
     
-    # حساب المسافة
+    # حساب المسافة (للتسجيل وحساب الأجرة فقط - بدون رفض الطلب)
     import math
     R = 6371  # نصف قطر الأرض بالكيلومتر
     
@@ -318,11 +388,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     c = 2 * math.asin(math.sqrt(a))
     distance = R * c
     
-    if distance > max_delivery_distance:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"المتجر بعيد عنك ({distance:.1f} كم). الحد الأقصى للتوصيل: {max_delivery_distance:.0f} كم. جرّب متجراً أقرب!"
-        )
+    # لا نرفض الطلب بناءً على المسافة - العميل اختار المطعم وهو على علم بالمسافة
     
     # حساب المجموع
     subtotal = 0

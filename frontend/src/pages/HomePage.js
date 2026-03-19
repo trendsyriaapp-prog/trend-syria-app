@@ -26,7 +26,7 @@ const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Dumbbell, 
   BookOpen, Gamepad2, UtensilsCrossed, SprayCan,
   ShoppingBasket, Apple, Pill, Car, Watch, Gift, Sparkles,
-  Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater
+  Laptop, Footprints, Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
 };
 
 // مكون Skeleton للمنتجات - ارتفاع ثابت لمنع القفزات
@@ -219,6 +219,7 @@ const HomePage = () => {
   // ترجمة أسماء الفئات
   const getCategoryNameAr = (cat) => {
     const names = {
+      // الفئات بالإنجليزية
       'accessories': 'إكسسوارات',
       'appliances': 'أجهزة منزلية',
       'beauty': 'جمال',
@@ -242,9 +243,36 @@ const HomePage = () => {
       'watches': 'ساعات',
       'bags': 'حقائب',
       'jewelry': 'مجوهرات',
+      'groceries': 'مواد غذائية',
+      'restaurants': 'مطاعم',
+      'cafes': 'مقاهي',
+      'sweets': 'حلويات',
+      'bakery': 'مخابز',
+      'drinks': 'مشروبات',
+      'market': 'ماركت',
+      'vegetables': 'خضار وفواكه',
+      // الفئات بالعربية
       'أدوات منزلية': 'أدوات منزلية',
       'إلكترونيات': 'إلكترونيات',
-      'مستلزمات مكتبية': 'مستلزمات مكتبية'
+      'مستلزمات مكتبية': 'مستلزمات مكتبية',
+      'ملابس': 'ملابس',
+      'أحذية': 'أحذية',
+      'حقائب': 'حقائب',
+      'ساعات': 'ساعات',
+      'عطور': 'عطور',
+      'مكياج': 'مكياج',
+      'العناية بالبشرة': 'العناية بالبشرة',
+      'العناية بالشعر': 'العناية بالشعر',
+      'أثاث': 'أثاث',
+      'ديكور': 'ديكور',
+      'أجهزة كهربائية': 'أجهزة كهربائية',
+      'كمبيوتر': 'كمبيوتر',
+      'هواتف': 'هواتف',
+      'ألعاب': 'ألعاب',
+      'رياضة': 'رياضة',
+      'كتب': 'كتب',
+      'أدوية': 'أدوية',
+      'سيارات': 'سيارات'
     };
     return names[cat] || cat;
   };
@@ -252,6 +280,7 @@ const HomePage = () => {
   // أيقونات الفئات
   const getCategoryIcon = (cat) => {
     const icons = {
+      // الفئات بالإنجليزية
       'accessories': 'Watch',
       'appliances': 'Refrigerator',
       'beauty': 'SprayCan',
@@ -275,9 +304,36 @@ const HomePage = () => {
       'watches': 'Watch',
       'bags': 'ShoppingBasket',
       'jewelry': 'Sparkles',
+      'groceries': 'ShoppingBasket',
+      'restaurants': 'UtensilsCrossed',
+      'cafes': 'Coffee',
+      'sweets': 'Cake',
+      'bakery': 'Croissant',
+      'drinks': 'GlassWater',
+      'market': 'ShoppingBasket',
+      'vegetables': 'Apple',
+      // الفئات بالعربية
       'أدوات منزلية': 'Home',
       'إلكترونيات': 'Smartphone',
-      'مستلزمات مكتبية': 'BookOpen'
+      'مستلزمات مكتبية': 'BookOpen',
+      'ملابس': 'Shirt',
+      'أحذية': 'Footprints',
+      'حقائب': 'ShoppingBasket',
+      'ساعات': 'Watch',
+      'عطور': 'SprayCan',
+      'مكياج': 'SprayCan',
+      'العناية بالبشرة': 'SprayCan',
+      'العناية بالشعر': 'SprayCan',
+      'أثاث': 'Sofa',
+      'ديكور': 'Home',
+      'أجهزة كهربائية': 'Refrigerator',
+      'كمبيوتر': 'Laptop',
+      'هواتف': 'Smartphone',
+      'ألعاب': 'Gamepad2',
+      'رياضة': 'Dumbbell',
+      'كتب': 'BookOpen',
+      'أدوية': 'Pill',
+      'سيارات': 'Car'
     };
     return icons[cat] || 'Package';
   };

@@ -34,6 +34,9 @@ const FoodCartPage = () => {
   const [distanceDeliveryFee, setDistanceDeliveryFee] = useState(null);
   const [calculatingDeliveryFee, setCalculatingDeliveryFee] = useState(false);
   
+  // تحذير المسافة الذكي
+  const [distanceWarning, setDistanceWarning] = useState(null);
+  
   // العناوين وطرق الدفع المحفوظة
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [savedPayments, setSavedPayments] = useState([]);
@@ -226,25 +229,43 @@ const FoodCartPage = () => {
     // إذا لم تتوفر الإحداثيات، استخدم رسوم المتجر الافتراضية
     if (!customerLat || !customerLon || !storeLat || !storeLon) {
       setDistanceDeliveryFee(null);
+      setDistanceWarning(null);
       return;
     }
     
     setCalculatingDeliveryFee(true);
     try {
-      const res = await axios.get(`${API}/shipping/calculate-by-distance`, {
-        params: {
-          store_lat: storeLat,
-          store_lon: storeLon,
+      // استدعاء API حساب المسافة الجديد
+      const [feeRes, warningRes] = await Promise.all([
+        axios.get(`${API}/shipping/calculate-by-distance`, {
+          params: {
+            store_lat: storeLat,
+            store_lon: storeLon,
+            customer_lat: customerLat,
+            customer_lon: customerLon,
+            order_total: subtotal,
+            order_type: 'food'
+          }
+        }),
+        axios.post(`${API}/food/orders/check-distance`, {
+          store_id: storeId,
           customer_lat: customerLat,
-          customer_lon: customerLon,
-          order_total: subtotal,
-          order_type: 'food'
-        }
-      });
-      setDistanceDeliveryFee(res.data);
+          customer_lng: customerLon
+        }).catch(() => ({ data: null }))
+      ]);
+      
+      setDistanceDeliveryFee(feeRes.data);
+      
+      // تعيين التحذير إذا وُجد
+      if (warningRes.data?.warning) {
+        setDistanceWarning(warningRes.data);
+      } else {
+        setDistanceWarning(null);
+      }
     } catch (error) {
       console.error('Error calculating distance delivery fee:', error);
       setDistanceDeliveryFee(null);
+      setDistanceWarning(null);
     } finally {
       setCalculatingDeliveryFee(false);
     }
@@ -703,6 +724,51 @@ const FoodCartPage = () => {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* 🚨 تحذير المسافة الذكي */}
+        {distanceWarning?.warning && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl p-4 border ${
+              distanceWarning.warning.level === 'high' 
+                ? 'bg-red-50 border-red-200' 
+                : distanceWarning.warning.level === 'medium'
+                  ? 'bg-yellow-50 border-yellow-200'
+                  : 'bg-blue-50 border-blue-200'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">{distanceWarning.warning.emoji}</span>
+              <div className="flex-1">
+                <p className={`font-bold text-sm ${
+                  distanceWarning.warning.level === 'high' 
+                    ? 'text-red-800' 
+                    : distanceWarning.warning.level === 'medium'
+                      ? 'text-yellow-800'
+                      : 'text-blue-800'
+                }`}>
+                  {distanceWarning.warning.message}
+                </p>
+                <div className="mt-2 flex items-center gap-4 text-xs text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <MapPin size={12} />
+                    المسافة: {distanceWarning.distance_km} كم
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} />
+                    الوقت المتوقع: {distanceWarning.estimated_time_minutes} دقيقة
+                  </span>
+                </div>
+                {distanceWarning.warning.level === 'high' && (
+                  <p className="mt-2 text-xs text-red-600">
+                    💡 نصيحة: جرّب مطعماً أقرب للحصول على طعام ساخن وطازج!
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Free Delivery Progress - شريط التوصيل المجاني */}
         {platformFreeDeliveryThreshold > 0 && (
