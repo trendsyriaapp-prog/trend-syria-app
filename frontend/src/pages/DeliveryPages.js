@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
-  Car, Bike
+  Car, Bike, Check
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -208,6 +208,53 @@ const DeliveryDocuments = () => {
     </div>
   );
 
+  // Live camera capture component for personal photo
+  const LiveCameraCapture = ({ value, onCapture }) => (
+    <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <label className="block text-sm font-bold text-gray-700 mb-2">
+        <Camera size={16} className="inline ml-1" />
+        صورة شخصية حية (سيلفي)
+      </label>
+      <div className="relative">
+        {value ? (
+          <div className="relative">
+            <img src={value} alt="صورة شخصية" className="w-full h-48 object-cover rounded-lg" />
+            <button
+              type="button"
+              onClick={() => setDocs(prev => ({ ...prev, personal_photo: '' }))}
+              className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
+            >
+              ✕
+            </button>
+            <div className="absolute bottom-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+              <Check size={12} />
+              تم التقاط الصورة
+            </div>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#FF6B00]/50 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors bg-orange-50/50">
+            <div className="w-16 h-16 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-3">
+              <Camera size={32} className="text-[#FF6B00]" />
+            </div>
+            <span className="text-sm font-medium text-gray-700">اضغط لالتقاط صورة سيلفي</span>
+            <span className="text-xs text-gray-500 mt-1">سيتم فتح الكاميرا الأمامية</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={onCapture}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+      <p className="text-[10px] text-orange-600 mt-2 flex items-center gap-1">
+        <AlertTriangle size={10} />
+        يجب التقاط صورة حية من الكاميرا - لا يُسمح بالرفع من المعرض
+      </p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-lg mx-auto px-4 py-6">
@@ -231,12 +278,10 @@ const DeliveryDocuments = () => {
             />
           </div>
 
-          <ImageUploadField
-            field="personal_photo"
-            label="صورة شخصية حديثة"
-            icon={Camera}
+          {/* صورة شخصية حية من الكاميرا */}
+          <LiveCameraCapture
             value={docs.personal_photo}
-            onUpload={handleImageUpload('personal_photo')}
+            onCapture={handleImageUpload('personal_photo')}
           />
 
           <ImageUploadField
