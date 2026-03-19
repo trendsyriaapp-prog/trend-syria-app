@@ -12,6 +12,7 @@ const FlashSaleProductsPage = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchProducts = async () => {
       try {
         const res = await axios.get(`${API}/products/flash-products`);
@@ -50,26 +51,26 @@ const FlashSaleProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-6 px-4">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto">
-          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-2 text-sm">
-            <ChevronRight size={16} />
+          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-1 text-xs">
+            <ChevronRight size={14} />
             <span>العودة للرئيسية</span>
           </Link>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl">
-                <Zap size={24} />
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-white/20 rounded-lg">
+                <Zap size={18} />
               </div>
               <div>
-                <h1 className="text-xl font-bold">عروض فلاش</h1>
-                <p className="text-white/80 text-sm">خصومات لفترة محدودة</p>
+                <h1 className="text-lg font-bold">عروض فلاش</h1>
+                <p className="text-white/80 text-xs">خصومات لفترة محدودة</p>
               </div>
             </div>
             {flashSale && (
-              <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-xl">
-                <Clock size={18} />
-                <span className="font-mono font-bold">
+              <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-lg">
+                <Clock size={14} />
+                <span className="font-mono font-bold text-sm">
                   {String(timeLeft.hours).padStart(2, '0')}:
                   {String(timeLeft.minutes).padStart(2, '0')}:
                   {String(timeLeft.seconds).padStart(2, '0')}

@@ -10,6 +10,7 @@ const NewArrivalsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchProducts = async () => {
       try {
         const res = await axios.get(`${API}/products/newly-added`);
@@ -26,19 +27,19 @@ const NewArrivalsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-6 px-4">
+      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto">
-          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-2 text-sm">
-            <ChevronRight size={16} />
+          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-1 text-xs">
+            <ChevronRight size={14} />
             <span>العودة للرئيسية</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <Sparkles size={24} />
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-white/20 rounded-lg">
+              <Sparkles size={18} />
             </div>
             <div>
-              <h1 className="text-xl font-bold">منتجات جديدة</h1>
-              <p className="text-white/80 text-sm">أحدث المنتجات المضافة</p>
+              <h1 className="text-lg font-bold">منتجات جديدة</h1>
+              <p className="text-white/80 text-xs">أحدث المنتجات المضافة</p>
             </div>
           </div>
         </div>

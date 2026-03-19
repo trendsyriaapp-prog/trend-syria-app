@@ -11,6 +11,7 @@ const FreeShippingProductsPage = () => {
   const [threshold, setThreshold] = useState(150000);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchProducts = async () => {
       try {
         // Get threshold first
@@ -34,19 +35,19 @@ const FreeShippingProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-6 px-4">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto">
-          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-2 text-sm">
-            <ChevronRight size={16} />
+          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-1 text-xs">
+            <ChevronRight size={14} />
             <span>العودة للرئيسية</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <Truck size={24} />
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-white/20 rounded-lg">
+              <Truck size={18} />
             </div>
             <div>
-              <h1 className="text-xl font-bold">شحن مجاني</h1>
-              <p className="text-white/80 text-sm">منتجات بسعر {threshold.toLocaleString()} ل.س وأكثر</p>
+              <h1 className="text-lg font-bold">شحن مجاني</h1>
+              <p className="text-white/80 text-xs">منتجات بسعر {threshold.toLocaleString()} ل.س وأكثر</p>
             </div>
           </div>
         </div>
