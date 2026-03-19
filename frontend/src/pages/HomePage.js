@@ -15,7 +15,6 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import DailyDeal from '../components/DailyDeal';
 import RecommendedProducts from '../components/RecommendedProducts';
 import FreeShippingBanner from '../components/FreeShippingBanner';
-import { useScroll } from '../context/ScrollContext';
 import { useSettings } from '../context/SettingsContext';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -90,22 +89,10 @@ const HomePage = () => {
     new_arrivals_enabled: true
   });
   const location = useLocation();
-  const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
   
   // التحقق من تفعيل منصة الطعام
   const foodEnabled = isFeatureEnabled('food_enabled');
-
-  // استعادة موقع التمرير عند العودة للصفحة بعد تحميل البيانات
-  useEffect(() => {
-    if (!loading) {
-      // تأخير لضمان تحميل المحتوى بالكامل
-      const timer = setTimeout(() => {
-        restoreScrollPosition(location.pathname);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, location.pathname, restoreScrollPosition]);
 
   useEffect(() => {
     fetchData();
