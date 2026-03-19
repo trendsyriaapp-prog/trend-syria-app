@@ -55,6 +55,7 @@ import CategoriesTab from '../components/admin/CategoriesTab';
 import CallRequestsTab from '../components/admin/CallRequestsTab';
 import FeaturedStoresTab from '../components/admin/FeaturedStoresTab';
 import RecordedCallsTab from '../components/admin/RecordedCallsTab';
+import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -513,6 +514,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'recorded-calls' && user.user_type === 'admin' && (
               <RecordedCallsTab />
             )}
+            {activeTab === 'homepage-sections' && user.user_type === 'admin' && (
+              <HomepageSectionsTab />
+            )}
           </>
         ) : (
           <>
@@ -682,6 +686,7 @@ const AdminDashboardPage = () => {
                   <div className="grid grid-cols-4 gap-px bg-gray-100">
                     {[
                       { icon: Settings, label: 'المنصة', tab: 'settings' },
+                      { icon: Home, label: 'أقسام الرئيسية', tab: 'homepage-sections' },
                       { icon: Settings, label: 'الأقسام', tab: 'platform-settings' },
                       { icon: Camera, label: 'الصور', tab: 'image-settings' },
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },

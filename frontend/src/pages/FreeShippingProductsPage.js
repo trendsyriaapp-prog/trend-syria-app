@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Truck, Package, MapPin, ChevronRight, Loader2 } from 'lucide-react';
+import { Truck, Package, MapPin, Loader2 } from 'lucide-react';
+import LazyImage from '../components/LazyImage';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -63,17 +64,12 @@ const FreeShippingProductsPage = () => {
                 <Link key={product.id} to={`/products/${product.id}`}>
                   <div className="bg-white rounded-xl overflow-hidden border-2 border-green-100 hover:border-green-300 transition-all shadow-sm hover:shadow-md">
                     <div className="relative aspect-square bg-gray-100">
-                      {product.images?.[0] ? (
-                        <img 
-                          src={product.images[0]} 
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={32} className="text-gray-300" />
-                        </div>
-                      )}
+                      <LazyImage 
+                        src={product.images?.[0]} 
+                        alt={product.name}
+                        className="w-full h-full"
+                        aspectRatio="1/1"
+                      />
                       <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
                         <Truck size={10} />
                         شحن مجاني

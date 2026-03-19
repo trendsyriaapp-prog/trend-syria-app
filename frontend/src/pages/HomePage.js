@@ -82,6 +82,13 @@ const HomePage = () => {
   const [freeShippingProducts, setFreeShippingProducts] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
   const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
+  const [sectionsSettings, setSectionsSettings] = useState({
+    sponsored_enabled: true,
+    flash_sale_enabled: true,
+    free_shipping_enabled: true,
+    best_sellers_enabled: true,
+    new_arrivals_enabled: true
+  });
   const location = useLocation();
   const { restoreScrollPosition } = useScroll();
   const { isFeatureEnabled } = useSettings();
@@ -126,16 +133,24 @@ const HomePage = () => {
 
   const fetchData = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes] = await Promise.all([
         axios.get(`${API}/products/featured`),
         axios.get(`${API}/categories`),
         axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
         axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
         axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] })),
         axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } }))
+        axios.get(`${API}/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } })),
+        axios.get(`${API}/settings/homepage-sections`).catch(() => ({ data: {
+          sponsored_enabled: true,
+          flash_sale_enabled: true,
+          free_shipping_enabled: true,
+          best_sellers_enabled: true,
+          new_arrivals_enabled: true
+        }}))
       ]);
       setProducts(productsRes.data);
+      setSectionsSettings(sectionsRes.data);
       setCategories(categoriesRes.data);
       setAds(adsRes.data || []);
       setShopFlashProducts(shopFlashRes.data?.products || []);
@@ -371,6 +386,7 @@ const HomePage = () => {
       <DailyDeal />
 
       {/* 1. Sponsored Products - مروّج */}
+      {sectionsSettings.sponsored_enabled && (
       <section className="py-1.5" style={{ minHeight: '240px' }}>
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
@@ -437,8 +453,10 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* 2. Flash Sale Products - عروض فلاش */}
+      {sectionsSettings.flash_sale_enabled && (
       <section className="py-1.5" style={{ minHeight: '240px' }}>
         <div className="max-w-7xl mx-auto px-3">
           <SectionHeader 
@@ -508,9 +526,10 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* 3. 🚚 شحن مجاني - منتجات تستحق شحن مجاني */}
-      {freeShippingProducts.length > 0 && (
+      {sectionsSettings.free_shipping_enabled && freeShippingProducts.length > 0 && (
         <section className="py-1.5" style={{ minHeight: '240px' }}>
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
@@ -572,7 +591,7 @@ const HomePage = () => {
       )}
 
       {/* 4. 🔥 الأكثر مبيعاً */}
-      {bestSellers.length > 0 && (
+      {sectionsSettings.best_sellers_enabled && bestSellers.length > 0 && (
         <section className="py-1.5" style={{ minHeight: '240px' }}>
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 
@@ -633,7 +652,7 @@ const HomePage = () => {
       )}
 
       {/* 5. 🆕 منتجات جديدة */}
-      {newlyAddedProducts.length > 0 && (
+      {sectionsSettings.new_arrivals_enabled && newlyAddedProducts.length > 0 && (
         <section className="py-1.5" style={{ minHeight: '240px' }}>
           <div className="max-w-7xl mx-auto px-3">
             <SectionHeader 

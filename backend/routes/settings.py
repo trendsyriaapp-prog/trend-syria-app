@@ -169,6 +169,71 @@ async def update_free_shipping_threshold(
         "free_shipping_threshold": threshold
     }
 
+# ============== إعدادات أقسام الصفحة الرئيسية ==============
+
+class HomepageSectionsSettings(BaseModel):
+    sponsored_enabled: bool = True
+    flash_sale_enabled: bool = True
+    free_shipping_enabled: bool = True
+    best_sellers_enabled: bool = True
+    new_arrivals_enabled: bool = True
+
+@router.get("/homepage-sections")
+async def get_homepage_sections():
+    """جلب إعدادات أقسام الصفحة الرئيسية (للجميع)"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        return {
+            "sponsored_enabled": True,
+            "flash_sale_enabled": True,
+            "free_shipping_enabled": True,
+            "best_sellers_enabled": True,
+            "new_arrivals_enabled": True
+        }
+    
+    return {
+        "sponsored_enabled": settings.get("sponsored_enabled", True),
+        "flash_sale_enabled": settings.get("flash_sale_enabled", True),
+        "free_shipping_enabled": settings.get("free_shipping_enabled", True),
+        "best_sellers_enabled": settings.get("best_sellers_enabled", True),
+        "new_arrivals_enabled": settings.get("new_arrivals_enabled", True)
+    }
+
+@router.put("/homepage-sections")
+async def update_homepage_sections(
+    sections: HomepageSectionsSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات أقسام الصفحة الرئيسية"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {
+            "$set": {
+                "sponsored_enabled": sections.sponsored_enabled,
+                "flash_sale_enabled": sections.flash_sale_enabled,
+                "free_shipping_enabled": sections.free_shipping_enabled,
+                "best_sellers_enabled": sections.best_sellers_enabled,
+                "new_arrivals_enabled": sections.new_arrivals_enabled,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user["id"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث إعدادات الأقسام بنجاح",
+        "sponsored_enabled": sections.sponsored_enabled,
+        "flash_sale_enabled": sections.flash_sale_enabled,
+        "free_shipping_enabled": sections.free_shipping_enabled,
+        "best_sellers_enabled": sections.best_sellers_enabled,
+        "new_arrivals_enabled": sections.new_arrivals_enabled
+    }
+
 # ============== إعدادات إعلانات المتاجر (الطعام) ==============
 
 class FeaturedStoresSettings(BaseModel):

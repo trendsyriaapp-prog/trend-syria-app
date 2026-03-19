@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Zap, Package, MapPin, ChevronRight, Loader2, Clock } from 'lucide-react';
+import { Zap, Package, MapPin, Loader2, Clock } from 'lucide-react';
+import LazyImage from '../components/LazyImage';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -91,17 +92,12 @@ const FlashSaleProductsPage = () => {
                 <Link key={product.id} to={`/products/${product.id}`}>
                   <div className="bg-white rounded-xl overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all shadow-sm hover:shadow-md">
                     <div className="relative aspect-square bg-gray-100">
-                      {product.images?.[0] ? (
-                        <img 
-                          src={product.images[0]} 
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={32} className="text-gray-300" />
-                        </div>
-                      )}
+                      <LazyImage 
+                        src={product.images?.[0]} 
+                        alt={product.name}
+                        className="w-full h-full"
+                        aspectRatio="1/1"
+                      />
                       {product.discount_percentage && (
                         <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
                           {product.discount_percentage}%-
