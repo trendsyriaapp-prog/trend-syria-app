@@ -546,6 +546,170 @@ async def clear_search_history(user: dict = Depends(get_current_user)):
     await db.search_logs.delete_many({"user_id": user["id"]})
     return {"message": "تم مسح سجل البحث"}
 
+
+# ============== Homepage API (Unified) ==============
+
+@router.get("/homepage-data")
+async def get_homepage_data():
+    """
+    API موحد للصفحة الرئيسية - يجمع كل البيانات في طلب واحد
+    لتحسين الأداء وتقليل عدد الطلبات
+    """
+    from asyncio import gather
+    
+    # التحقق من الكاش
+    cached_data = cache.get("homepage_data")
+    if cached_data:
+        return cached_data
+    
+    try:
+        # جلب جميع البيانات بشكل متوازي باستخدام الفلاتر الصحيحة
+        
+        # الفئات من API الموجود
+        categories_task = db.products.distinct("category")
+        
+        # الإعلانات النشطة
+        ads_task = db.ads.find(
+            {"is_active": True},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(5).to_list(5)
+        
+        # المنتجات الدعائية (Sponsored) - بنفس فلتر API الأصلي
+        sponsored_task = db.products.find(
+            {
+                "is_sponsored": True,
+                "is_approved": True,
+                "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
+            },
+            {"_id": 0}
+        ).limit(10).to_list(10)
+        
+        # عروض فلاش النشطة
+        flash_sale_task = db.flash_sales.find_one(
+            {"is_active": True},
+            {"_id": 0}
+        )
+        
+        # الأكثر مبيعاً - بنفس فلتر API الأصلي
+        best_sellers_task = db.products.find(
+            {"is_active": True, "is_approved": True, "sales_count": {"$gt": 0}},
+            {"_id": 0}
+        ).sort("sales_count", -1).limit(10).to_list(10)
+        
+        # منتجات جديدة - بنفس فلتر API الأصلي
+        new_arrivals_task = db.products.find(
+            {"is_active": True, "is_approved": True, "stock": {"$gt": 0}},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(10).to_list(10)
+        
+        # المزيد من المنتجات
+        extra_products_task = db.products.find(
+            {"is_active": True, "is_approved": True},
+            {"_id": 0}
+        ).sort("created_at", -1).skip(20).limit(12).to_list(12)
+        
+        # إعدادات الأقسام
+        sections_settings_task = db.settings.find_one(
+            {"key": "homepage_sections"},
+            {"_id": 0}
+        )
+        
+        # إعدادات الشحن المجاني
+        free_shipping_settings_task = db.settings.find_one(
+            {"key": "free_shipping"},
+            {"_id": 0}
+        )
+        
+        # إعدادات الشريط المتحرك
+        ticker_settings_task = db.settings.find_one(
+            {"key": "ticker_messages"},
+            {"_id": 0}
+        )
+        
+        # إعدادات الشارات
+        badge_settings_task = db.settings.find_one(
+            {"key": "badge_settings"},
+            {"_id": 0}
+        )
+        
+        # تنفيذ جميع الطلبات بشكل متوازي
+        results = await gather(
+            categories_task,
+            ads_task,
+            sponsored_task,
+            flash_sale_task,
+            best_sellers_task,
+            new_arrivals_task,
+            extra_products_task,
+            sections_settings_task,
+            free_shipping_settings_task,
+            ticker_settings_task,
+            badge_settings_task,
+            return_exceptions=True
+        )
+        
+        # معالجة النتائج
+        categories = results[0] if not isinstance(results[0], Exception) else []
+        ads = results[1] if not isinstance(results[1], Exception) else []
+        sponsored_products = results[2] if not isinstance(results[2], Exception) else []
+        flash_sale = results[3] if not isinstance(results[3], Exception) else None
+        best_sellers = results[4] if not isinstance(results[4], Exception) else []
+        new_arrivals = results[5] if not isinstance(results[5], Exception) else []
+        extra_products = results[6] if not isinstance(results[6], Exception) else []
+        sections_settings = results[7] if not isinstance(results[7], Exception) else None
+        free_shipping_settings = results[8] if not isinstance(results[8], Exception) else None
+        ticker_settings = results[9] if not isinstance(results[9], Exception) else None
+        badge_settings = results[10] if not isinstance(results[10], Exception) else None
+        
+        # جلب منتجات فلاش إذا كان هناك عرض نشط
+        flash_products = []
+        if flash_sale and flash_sale.get("product_ids"):
+            flash_products = await db.products.find(
+                {"id": {"$in": flash_sale["product_ids"]}, "is_active": True, "is_approved": True},
+                {"_id": 0}
+            ).to_list(20)
+        
+        # تجميع البيانات
+        homepage_data = {
+            "categories": categories,
+            "ads": ads,
+            "sponsored_products": sponsored_products,
+            "flash_sale": flash_sale,
+            "flash_products": flash_products,
+            "free_shipping_products": [],  # سيتم ملؤها من best_sellers
+            "best_sellers": best_sellers,
+            "new_arrivals": new_arrivals,
+            "extra_products": extra_products,
+            "settings": {
+                "sections": sections_settings.get("settings", {}) if sections_settings else {},
+                "free_shipping": free_shipping_settings if free_shipping_settings else {},
+                "ticker": ticker_settings if ticker_settings else {},
+                "badge": badge_settings if badge_settings else {}
+            }
+        }
+        
+        # حفظ في الكاش لمدة دقيقة
+        cache.set("homepage_data", homepage_data, ttl_seconds=60)
+        
+        return homepage_data
+        
+    except Exception as e:
+        logging.error(f"Error fetching homepage data: {e}")
+        # إرجاع بيانات فارغة في حالة الخطأ
+        return {
+            "categories": [],
+            "ads": [],
+            "sponsored_products": [],
+            "flash_sale": None,
+            "flash_products": [],
+            "free_shipping_products": [],
+            "best_sellers": [],
+            "new_arrivals": [],
+            "extra_products": [],
+            "settings": {}
+        }
+
+
 @router.get("/{product_id}")
 async def get_product(product_id: str, authorization: Optional[str] = Header(default=None)):
     product = await db.products.find_one({"id": product_id}, {"_id": 0})
@@ -677,169 +841,3 @@ async def get_seller_products(user: dict = Depends(get_current_user)):
     
     products = await db.products.find({"seller_id": user["id"]}, {"_id": 0}).to_list(100)
     return products
-
-
-# ============== Homepage API (Unified) ==============
-
-@router.get("/homepage-data")
-async def get_homepage_data():
-    """
-    API موحد للصفحة الرئيسية - يجمع كل البيانات في طلب واحد
-    لتحسين الأداء وتقليل عدد الطلبات
-    """
-    # التحقق من الكاش
-    cached_data = cache.get("homepage_data")
-    if cached_data:
-        return cached_data
-    
-    try:
-        # جلب جميع البيانات بشكل متوازي
-        from asyncio import gather
-        
-        # الفئات
-        categories_task = db.products.distinct("category")
-        
-        # الإعلانات
-        ads_task = db.ads.find(
-            {"is_active": True},
-            {"_id": 0}
-        ).sort("created_at", -1).limit(5).to_list(5)
-        
-        # المنتجات الدعائية (Sponsored)
-        sponsored_task = db.products.find(
-            {"is_sponsored": True, "status": "approved"},
-            {"_id": 0}
-        ).limit(10).to_list(10)
-        
-        # عروض فلاش
-        flash_sale_task = db.flash_sales.find_one(
-            {"is_active": True},
-            {"_id": 0}
-        )
-        
-        # منتجات الشحن المجاني
-        free_shipping_task = db.products.find(
-            {"free_shipping": True, "status": "approved"},
-            {"_id": 0}
-        ).limit(10).to_list(10)
-        
-        # الأكثر مبيعاً
-        best_sellers_task = db.products.find(
-            {"status": "approved"},
-            {"_id": 0}
-        ).sort("sales_count", -1).limit(10).to_list(10)
-        
-        # منتجات جديدة
-        new_arrivals_task = db.products.find(
-            {"status": "approved"},
-            {"_id": 0}
-        ).sort("created_at", -1).limit(10).to_list(10)
-        
-        # المزيد من المنتجات
-        extra_products_task = db.products.find(
-            {"status": "approved"},
-            {"_id": 0}
-        ).sort("created_at", -1).skip(20).limit(12).to_list(12)
-        
-        # إعدادات الأقسام
-        sections_settings_task = db.settings.find_one(
-            {"key": "homepage_sections"},
-            {"_id": 0}
-        )
-        
-        # إعدادات الشحن المجاني
-        free_shipping_settings_task = db.settings.find_one(
-            {"key": "free_shipping"},
-            {"_id": 0}
-        )
-        
-        # إعدادات الشريط المتحرك
-        ticker_settings_task = db.settings.find_one(
-            {"key": "ticker_messages"},
-            {"_id": 0}
-        )
-        
-        # إعدادات الشارات
-        badge_settings_task = db.settings.find_one(
-            {"key": "badge_settings"},
-            {"_id": 0}
-        )
-        
-        # تنفيذ جميع الطلبات بشكل متوازي
-        results = await gather(
-            categories_task,
-            ads_task,
-            sponsored_task,
-            flash_sale_task,
-            free_shipping_task,
-            best_sellers_task,
-            new_arrivals_task,
-            extra_products_task,
-            sections_settings_task,
-            free_shipping_settings_task,
-            ticker_settings_task,
-            badge_settings_task,
-            return_exceptions=True
-        )
-        
-        # معالجة النتائج
-        categories = results[0] if not isinstance(results[0], Exception) else []
-        ads = results[1] if not isinstance(results[1], Exception) else []
-        sponsored_products = results[2] if not isinstance(results[2], Exception) else []
-        flash_sale = results[3] if not isinstance(results[3], Exception) else None
-        free_shipping_products = results[4] if not isinstance(results[4], Exception) else []
-        best_sellers = results[5] if not isinstance(results[5], Exception) else []
-        new_arrivals = results[6] if not isinstance(results[6], Exception) else []
-        extra_products = results[7] if not isinstance(results[7], Exception) else []
-        sections_settings = results[8] if not isinstance(results[8], Exception) else None
-        free_shipping_settings = results[9] if not isinstance(results[9], Exception) else None
-        ticker_settings = results[10] if not isinstance(results[10], Exception) else None
-        badge_settings = results[11] if not isinstance(results[11], Exception) else None
-        
-        # جلب منتجات فلاش إذا كان هناك عرض نشط
-        flash_products = []
-        if flash_sale and flash_sale.get("product_ids"):
-            flash_products = await db.products.find(
-                {"id": {"$in": flash_sale["product_ids"]}, "status": "approved"},
-                {"_id": 0}
-            ).to_list(20)
-        
-        # تجميع البيانات
-        homepage_data = {
-            "categories": categories,
-            "ads": ads,
-            "sponsored_products": sponsored_products,
-            "flash_sale": flash_sale,
-            "flash_products": flash_products,
-            "free_shipping_products": free_shipping_products,
-            "best_sellers": best_sellers,
-            "new_arrivals": new_arrivals,
-            "extra_products": extra_products,
-            "settings": {
-                "sections": sections_settings.get("settings", {}) if sections_settings else {},
-                "free_shipping": free_shipping_settings if free_shipping_settings else {},
-                "ticker": ticker_settings if ticker_settings else {},
-                "badge": badge_settings if badge_settings else {}
-            }
-        }
-        
-        # حفظ في الكاش لمدة دقيقة
-        cache.set("homepage_data", homepage_data, ttl=60)
-        
-        return homepage_data
-        
-    except Exception as e:
-        logging.error(f"Error fetching homepage data: {e}")
-        # إرجاع بيانات فارغة في حالة الخطأ
-        return {
-            "categories": [],
-            "ads": [],
-            "sponsored_products": [],
-            "flash_sale": None,
-            "flash_products": [],
-            "free_shipping_products": [],
-            "best_sellers": [],
-            "new_arrivals": [],
-            "extra_products": [],
-            "settings": {}
-        }

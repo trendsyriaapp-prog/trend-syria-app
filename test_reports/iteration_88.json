@@ -1,0 +1,75 @@
+{
+  "summary": "Backend API testing for store toggle status and homepage data features. All 18 tests passed (100%). Features tested: 1) Manual store open/close toggle API, 2) Store status API, 3) Unified homepage data API with caching, 4) Stores list showing manual close status as 'مغلق مؤقتاً'.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_store_toggle_homepage.py",
+    "/app/test_reports/pytest/store_toggle_homepage_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Store toggle status API correctly updates manual_close field in database",
+    "Homepage data API properly implements caching with 60-second TTL",
+    "Store status endpoint correctly checks manual_close before working hours",
+    "Stores list correctly shows 'مغلق مؤقتاً' for manually closed stores"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_store_toggle_homepage.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "N/A - backend only testing"
+  },
+  "test_credentials": {
+    "food_seller_phone": "0966666666",
+    "food_seller_password": "test123",
+    "store_id": "421443ed-55d6-4f1e-990a-2f3f53b2427e"
+  },
+  "seed_data_creation": null,
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Store toggle and homepage data APIs are working correctly. Store toggle requires food_seller auth. Tested: POST /api/food/stores/{id}/toggle-status (close/open), GET /api/food/stores/{id}/status, GET /api/products/homepage-data, GET /api/food/stores (list with status).",
+  "tested_apis": {
+    "POST /api/food/stores/{store_id}/toggle-status": {
+      "status": "✅ Working",
+      "auth_required": true,
+      "tests": [
+        "Close store with reason",
+        "Open store",
+        "Unauthorized request rejected",
+        "Non-existent store returns 404"
+      ]
+    },
+    "GET /api/food/stores/{store_id}/status": {
+      "status": "✅ Working",
+      "auth_required": false,
+      "tests": [
+        "Returns is_open, status, manual_close fields",
+        "Non-existent store returns 404"
+      ]
+    },
+    "GET /api/products/homepage-data": {
+      "status": "✅ Working",
+      "auth_required": false,
+      "tests": [
+        "Returns all required sections (categories, ads, sponsored_products, flash_sale, flash_products, best_sellers, new_arrivals, settings)",
+        "Caching works correctly"
+      ]
+    },
+    "GET /api/food/stores": {
+      "status": "✅ Working",
+      "auth_required": false,
+      "tests": [
+        "Shows manual close status as 'مغلق مؤقتاً'",
+        "Stores sorted with open stores first"
+      ]
+    }
+  }
+}
