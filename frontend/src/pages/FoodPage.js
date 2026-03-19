@@ -125,10 +125,26 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون المتاجر - تمرير أفقي
+// مكون المتاجر - تمرير أفقي لليسار فقط
 const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
+  const scrollRef = useRef(null);
+  const lastScrollLeft = useRef(0);
+  
   // استخدام المتاجر المميزة إذا كانت مفعلة، وإلا أفضل المتاجر
   const displayStores = isFeatured && featuredStores.length > 0 ? featuredStores : stores;
+  
+  // منع التمرير للخلف (لليمين في RTL)
+  const handleScroll = (e) => {
+    const container = e.target;
+    // في RTL، scrollLeft يكون سالب أو صفر
+    // التمرير لليسار يزيد القيمة المطلقة (أكثر سلبية)
+    if (container.scrollLeft > lastScrollLeft.current) {
+      // محاولة التمرير للخلف - نمنعها
+      container.scrollLeft = lastScrollLeft.current;
+    } else {
+      lastScrollLeft.current = container.scrollLeft;
+    }
+  };
   
   return (
     <section className="mb-6">
@@ -150,8 +166,13 @@ const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
         </Link>
       </div>
       
-      {/* تمرير أفقي */}
-      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x snap-mandatory">
+      {/* تمرير أفقي - لليسار فقط */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x snap-mandatory"
+        style={{ overscrollBehaviorX: 'contain' }}
+      >
         {displayStores.map((store) => (
           <div key={store.id} className="flex-shrink-0 w-44 snap-start">
             <StoreCard store={store} />
