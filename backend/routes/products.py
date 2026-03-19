@@ -590,6 +590,12 @@ async def get_homepage_data():
             {"_id": 0}
         )
         
+        # منتجات الشحن المجاني
+        free_shipping_products_task = db.products.find(
+            {"is_active": True, "is_approved": True, "free_shipping": True},
+            {"_id": 0}
+        ).limit(10).to_list(10)
+        
         # الأكثر مبيعاً - بنفس فلتر API الأصلي
         best_sellers_task = db.products.find(
             {"is_active": True, "is_approved": True, "sales_count": {"$gt": 0}},
@@ -638,6 +644,7 @@ async def get_homepage_data():
             ads_task,
             sponsored_task,
             flash_sale_task,
+            free_shipping_products_task,
             best_sellers_task,
             new_arrivals_task,
             extra_products_task,
@@ -653,13 +660,14 @@ async def get_homepage_data():
         ads = results[1] if not isinstance(results[1], Exception) else []
         sponsored_products = results[2] if not isinstance(results[2], Exception) else []
         flash_sale = results[3] if not isinstance(results[3], Exception) else None
-        best_sellers = results[4] if not isinstance(results[4], Exception) else []
-        new_arrivals = results[5] if not isinstance(results[5], Exception) else []
-        extra_products = results[6] if not isinstance(results[6], Exception) else []
-        sections_settings = results[7] if not isinstance(results[7], Exception) else None
-        free_shipping_settings = results[8] if not isinstance(results[8], Exception) else None
-        ticker_settings = results[9] if not isinstance(results[9], Exception) else None
-        badge_settings = results[10] if not isinstance(results[10], Exception) else None
+        free_shipping_products = results[4] if not isinstance(results[4], Exception) else []
+        best_sellers = results[5] if not isinstance(results[5], Exception) else []
+        new_arrivals = results[6] if not isinstance(results[6], Exception) else []
+        extra_products = results[7] if not isinstance(results[7], Exception) else []
+        sections_settings = results[8] if not isinstance(results[8], Exception) else None
+        free_shipping_settings = results[9] if not isinstance(results[9], Exception) else None
+        ticker_settings = results[10] if not isinstance(results[10], Exception) else None
+        badge_settings = results[11] if not isinstance(results[11], Exception) else None
         
         # جلب منتجات فلاش إذا كان هناك عرض نشط
         flash_products = []
@@ -679,6 +687,24 @@ async def get_homepage_data():
                     product["flash_discount"] = discount
                     product["flash_price"] = int(original_price * (100 - discount) / 100)
         
+        # القيم الافتراضية للشارات
+        default_badge_settings = {
+            "show_delivery_badge": True,
+            "show_free_shipping_badge": True,
+            "show_new_badge": True,
+            "show_bestseller_badge": True,
+            "show_discount_badge": True,
+            "new_product_days": 7
+        }
+        
+        # القيم الافتراضية للشحن المجاني
+        default_free_shipping = {
+            "is_active": True,
+            "min_order_amount": 100000,
+            "banner_text": "🚚 توصيل مجاني للطلبات فوق 100,000 ل.س",
+            "show_banner": True
+        }
+        
         # تجميع البيانات
         homepage_data = {
             "categories": categories,
@@ -686,7 +712,7 @@ async def get_homepage_data():
             "sponsored_products": sponsored_products,
             "flash_sale": flash_sale,
             "flash_products": flash_products,
-            "free_shipping_products": [],  # سيتم ملؤها لاحقاً
+            "free_shipping_products": free_shipping_products,
             "best_sellers": best_sellers,
             "new_arrivals": new_arrivals,
             "extra_products": extra_products,
@@ -698,9 +724,9 @@ async def get_homepage_data():
                     "best_sellers_enabled": True,
                     "new_arrivals_enabled": True
                 },
-                "free_shipping": free_shipping_settings if free_shipping_settings else {},
+                "free_shipping": free_shipping_settings if free_shipping_settings else default_free_shipping,
                 "ticker": ticker_settings if ticker_settings else {},
-                "badge": badge_settings if badge_settings else {}
+                "badge": badge_settings if badge_settings else default_badge_settings
             }
         }
         
