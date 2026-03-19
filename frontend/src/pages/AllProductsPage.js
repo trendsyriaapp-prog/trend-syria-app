@@ -1,26 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Package, ChevronRight, Search, SlidersHorizontal } from 'lucide-react';
+import { Package, Search, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import LazyImage from '../components/LazyImage';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Cache للمنتجات - يعمل على مستوى الـ module
+const productsCache = {
+  data: null,
+  badgeSettings: null,
+  timestamp: null,
+  TTL: 2 * 60 * 1000 // 2 دقيقة
+};
+
 const AllProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [badgeSettings, setBadgeSettings] = useState(null);
+  const [products, setProducts] = useState(productsCache.data || []);
+  const [loading, setLoading] = useState(!productsCache.data);
+  const [badgeSettings, setBadgeSettings] = useState(productsCache.badgeSettings);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const productsPerPage = 20;
 
   useEffect(() => {
     const fetchProducts = async () => {
+      // التحقق من الـ cache
+      const now = Date.now();
+      if (productsCache.data && productsCache.timestamp && (now - productsCache.timestamp < productsCache.TTL)) {
+        setProducts(productsCache.data);
+        setBadgeSettings(productsCache.badgeSettings);
+        setLoading(false);
+        return;
+      }
+      
       try {
-        setLoading(true);
+        if (!productsCache.data) setLoading(true);
+        
         const [productsRes, badgeRes] = await Promise.all([
           axios.get(`${API}/api/products?limit=50`),
           axios.get(`${API}/api/settings/badge-settings`).catch(() => ({ data: null }))
@@ -31,20 +48,13 @@ const AllProductsPage = () => {
           ? productsRes.data 
           : productsRes.data?.products || [];
         
-        // Sort products
-        if (sortBy === 'newest') {
-          allProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        } else if (sortBy === 'price_low') {
-          allProducts.sort((a, b) => a.price - b.price);
-        } else if (sortBy === 'price_high') {
-          allProducts.sort((a, b) => b.price - a.price);
-        } else if (sortBy === 'popular') {
-          allProducts.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
-        }
+        // حفظ في الـ cache
+        productsCache.data = allProducts;
+        productsCache.badgeSettings = badgeRes.data;
+        productsCache.timestamp = now;
         
         setProducts(allProducts);
         setBadgeSettings(badgeRes.data);
-        setHasMore(allProducts.length > productsPerPage);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -53,14 +63,33 @@ const AllProductsPage = () => {
     };
     
     fetchProducts();
-  }, [sortBy]);
+  }, []);
 
-  // Filter products by search
-  const filteredProducts = products.filter(product => 
-    !searchTerm || 
-    product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // الترتيب والتصفية باستخدام useMemo للأداء
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+    
+    // التصفية حسب البحث
+    if (searchTerm) {
+      result = result.filter(product => 
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // الترتيب
+    if (sortBy === 'newest') {
+      result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (sortBy === 'price_low') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price_high') {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'popular') {
+      result.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
+    }
+    
+    return result;
+  }, [products, searchTerm, sortBy]);
 
   // Paginate
   const displayedProducts = filteredProducts.slice(0, page * productsPerPage);
@@ -83,13 +112,10 @@ const AllProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header - مصغر أكثر */}
-      <div className="bg-gradient-to-l from-[#FF6B00] to-[#FF8C00] text-white">
+      {/* Header - مصغر بدون سهم الرجوع */}
+      <div className="bg-gradient-to-l from-[#FF6B00] to-[#FF8C00] text-white sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 py-2">
           <div className="flex items-center gap-2">
-            <Link to="/" className="text-white/80 hover:text-white">
-              <ChevronRight size={18} />
-            </Link>
             <div className="w-6 h-6 bg-white/20 rounded-md flex items-center justify-center">
               <Package size={14} />
             </div>
