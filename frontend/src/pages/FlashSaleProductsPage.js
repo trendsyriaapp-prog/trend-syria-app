@@ -51,12 +51,8 @@ const FlashSaleProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 px-4">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-1.5 px-4">
         <div className="max-w-7xl mx-auto">
-          <Link to="/" className="flex items-center gap-2 text-white/80 hover:text-white mb-1 text-xs">
-            <ChevronRight size={14} />
-            <span>العودة للرئيسية</span>
-          </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1 bg-white/20 rounded-lg">
