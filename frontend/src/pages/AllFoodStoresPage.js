@@ -140,46 +140,46 @@ const AllFoodStoresPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* الهيدر */}
+      {/* الهيدر - مصغر */}
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white sticky top-0 z-40">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => navigate(-1)}
-              className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
+              className="p-1 hover:bg-white/20 rounded-full transition-colors"
             >
-              <ArrowRight size={22} />
+              <ArrowRight size={18} />
             </button>
-            <div>
-              <h1 className="text-lg font-bold">جميع المتاجر</h1>
-              <p className="text-xs text-white/80">{filteredStores.length} متجر</p>
+            <div className="w-6 h-6 bg-white/20 rounded-md flex items-center justify-center">
+              <Store size={14} />
             </div>
-          </div>
-        </div>
-        
-        {/* شريط البحث */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="ابحث عن متجر..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white rounded-xl pr-10 pl-4 py-2.5 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
-            />
+            <div className="flex-1">
+              <h1 className="text-sm font-bold">جميع المتاجر</h1>
+              <p className="text-[10px] text-white/80">{filteredStores.length} متجر</p>
+            </div>
+            
+            {/* البحث مدمج */}
+            <div className="relative flex-1 max-w-xs">
+              <Search size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="ابحث..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white rounded-md pr-7 pl-2 py-1.5 text-gray-900 text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+            </div>
           </div>
         </div>
       </div>
       
-      {/* خيارات الترتيب */}
-      <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">ترتيب:</span>
+      {/* خيارات الترتيب - مصغر */}
+      <div className="bg-white border-b border-gray-100 px-3 py-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-1">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="text-xs font-medium text-gray-700 bg-gray-100 rounded-lg px-2 py-1 focus:outline-none"
+            className="text-[10px] font-medium text-gray-700 bg-gray-100 rounded-md px-2 py-0.5 focus:outline-none"
           >
             <option value="rating">الأعلى تقييماً</option>
             <option value="delivery_time">الأسرع توصيلاً</option>

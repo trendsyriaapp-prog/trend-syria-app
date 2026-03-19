@@ -125,24 +125,32 @@ const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذق
 
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
-// مكون المتاجر - تمرير أفقي لليسار فقط
+// مكون المتاجر - تمرير أفقي مع العودة للبداية عند التمرير للخلف
 const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
   const scrollRef = useRef(null);
   const lastScrollLeft = useRef(0);
+  const scrollDirection = useRef(null); // 'left' or 'right'
   
   // استخدام المتاجر المميزة إذا كانت مفعلة، وإلا أفضل المتاجر
   const displayStores = isFeatured && featuredStores.length > 0 ? featuredStores : stores;
   
-  // منع التمرير للخلف (لليمين في RTL)
+  // التحكم بالتمرير - العودة للبداية عند التمرير للخلف
   const handleScroll = (e) => {
     const container = e.target;
-    // في RTL، scrollLeft يكون سالب أو صفر
-    // التمرير لليسار يزيد القيمة المطلقة (أكثر سلبية)
-    if (container.scrollLeft > lastScrollLeft.current) {
-      // محاولة التمرير للخلف - نمنعها
-      container.scrollLeft = lastScrollLeft.current;
+    const currentScroll = container.scrollLeft;
+    
+    // في RTL، scrollLeft يكون سالب
+    // التمرير لليسار (للأمام) = القيمة تصبح أكثر سلبية
+    // التمرير لليمين (للخلف) = القيمة تصبح أقل سلبية (تقترب من الصفر)
+    
+    if (currentScroll > lastScrollLeft.current) {
+      // المستخدم يحاول التمرير لليمين (للخلف)
+      // نرجعه للبداية (أقصى اليسار = الصفر في RTL)
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+      lastScrollLeft.current = 0;
     } else {
-      lastScrollLeft.current = container.scrollLeft;
+      // التمرير لليسار (للأمام) - طبيعي
+      lastScrollLeft.current = currentScroll;
     }
   };
   
@@ -166,7 +174,7 @@ const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
         </Link>
       </div>
       
-      {/* تمرير أفقي - لليسار فقط */}
+      {/* تمرير أفقي */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
