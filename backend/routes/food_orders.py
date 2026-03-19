@@ -1771,8 +1771,12 @@ async def report_false_driver_arrival(
 # ===============================
 
 @router.get("/delivery/available")
-async def get_available_food_orders(user: dict = Depends(get_current_user)):
-    """جلب الطلبات المتاحة للتوصيل - فقط بعد انتهاء مهلة الإلغاء"""
+async def get_available_food_orders(
+    driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
+    driver_lng: float = Query(None, description="خط طول السائق الحالي"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب الطلبات المتاحة للتوصيل - مرتبة حسب القرب من السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1790,6 +1794,20 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
         },
         {"_id": 0}
     ).sort("created_at", 1).to_list(None)
+    
+    # دالة حساب المسافة
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        if not all([lat1, lon1, lat2, lon2]):
+            return 9999  # مسافة كبيرة للطلبات بدون إحداثيات
+        import math
+        R = 6371
+        lat1, lon1 = math.radians(lat1), math.radians(lon1)
+        lat2, lon2 = math.radians(lat2), math.radians(lon2)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        c = 2 * math.asin(math.sqrt(a))
+        return R * c
     
     # تجميع الطلبات حسب batch_id
     batched_orders = {}
@@ -1811,6 +1829,29 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
                     "latitude": store.get("latitude"),
                     "longitude": store.get("longitude")
                 }]
+            
+            # حساب المسافة بين السائق والمتجر
+            if driver_lat and driver_lng:
+                driver_to_store_km = calculate_distance(
+                    driver_lat, driver_lng,
+                    store.get("latitude"), store.get("longitude")
+                )
+                order["driver_distance_km"] = round(driver_to_store_km, 2)
+                order["driver_eta_minutes"] = round((driver_to_store_km / 25) * 60)  # متوسط سرعة 25 كم/ساعة
+                
+                # تصنيف القرب
+                if driver_to_store_km <= 1:
+                    order["proximity_label"] = "قريب جداً 🟢"
+                    order["proximity_level"] = 1
+                elif driver_to_store_km <= 3:
+                    order["proximity_label"] = "قريب 🟡"
+                    order["proximity_level"] = 2
+                elif driver_to_store_km <= 5:
+                    order["proximity_label"] = "متوسط 🟠"
+                    order["proximity_level"] = 3
+                else:
+                    order["proximity_label"] = "بعيد 🔴"
+                    order["proximity_level"] = 4
         
         # إضافة عنوان العميل كـ buyer_address للتوافق
         if not order.get("buyer_address"):
@@ -1874,11 +1915,17 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
     # تحويل الدفعات إلى قائمة
     batch_list = list(batched_orders.values())
     
+    # ترتيب الطلبات حسب القرب من السائق (إذا تم تحديد موقعه)
+    if driver_lat and driver_lng:
+        single_orders.sort(key=lambda x: x.get("driver_distance_km", 9999))
+        batch_list.sort(key=lambda x: min([o.get("driver_distance_km", 9999) for o in x.get("orders", [])]) if x.get("orders") else 9999)
+    
     # إرجاع الطلبات الفردية + الدفعات المجمعة
     return {
         "single_orders": single_orders,
         "batch_orders": batch_list,
-        "total_count": len(single_orders) + len(batch_list)
+        "total_count": len(single_orders) + len(batch_list),
+        "sorted_by_proximity": driver_lat is not None and driver_lng is not None
     }
 
 
@@ -2111,7 +2158,14 @@ async def complete_batch_delivery(batch_id: str, user: dict = Depends(get_curren
     }
 
 @router.post("/delivery/{order_id}/accept")
-async def accept_food_order(order_id: str, user: dict = Depends(get_current_user)):
+@router.post("/orders/{order_id}/accept")
+@router.put("/orders/{order_id}/accept")
+async def accept_food_order(
+    order_id: str, 
+    driver_lat: float = Query(None, description="خط عرض السائق الحالي"),
+    driver_lng: float = Query(None, description="خط طول السائق الحالي"),
+    user: dict = Depends(get_current_user)
+):
     """قبول طلب توصيل مع التحقق من الحد الأقصى حسب نوع المتجر (ساخن/طازج أو بارد/جاف)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
@@ -2236,6 +2290,86 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
             }
         }
     )
+    
+    # ========== إشعار البائع بوقت وصول السائق ==========
+    driver_eta_to_store = None
+    preparation_suggestion = None
+    
+    if driver_lat and driver_lng and store:
+        store_lat = store.get("latitude")
+        store_lng = store.get("longitude")
+        
+        if store_lat and store_lng:
+            # حساب المسافة بين السائق والمتجر
+            import math
+            R = 6371
+            lat1, lon1 = math.radians(driver_lat), math.radians(driver_lng)
+            lat2, lon2 = math.radians(store_lat), math.radians(store_lng)
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+            c = 2 * math.asin(math.sqrt(a))
+            driver_to_store_km = R * c
+            
+            # حساب وقت وصول السائق للمتجر (متوسط سرعة 25 كم/ساعة)
+            avg_speed = 25
+            driver_eta_to_store = round((driver_to_store_km / avg_speed) * 60)
+            
+            # اقتراح وقت بدء التحضير
+            store_prep_time = store.get("delivery_time", 15)  # وقت التحضير المعتاد
+            
+            if driver_eta_to_store > store_prep_time:
+                # السائق بعيد - اقتراح تأخير التحضير
+                delay_minutes = driver_eta_to_store - store_prep_time
+                preparation_suggestion = f"ابدأ التحضير بعد {delay_minutes} دقيقة"
+                suggestion_type = "delay"
+            elif driver_eta_to_store > 5:
+                # السائق في الطريق - ابدأ الآن
+                preparation_suggestion = "ابدأ التحضير الآن"
+                suggestion_type = "start_now"
+            else:
+                # السائق قريب جداً
+                preparation_suggestion = "السائق قريب جداً - جهّز الطلب فوراً!"
+                suggestion_type = "urgent"
+            
+            # إرسال إشعار للبائع
+            try:
+                from services.notification_helper import send_notification_with_push
+                
+                # تحديد الأيقونة والرسالة حسب الحالة
+                if suggestion_type == "delay":
+                    emoji = "⏰"
+                    title = f"طلب جديد #{order.get('order_number', '')[-4:]}"
+                    message = f"السائق {user['name']} يصل بعد {driver_eta_to_store} دقيقة\n💡 {preparation_suggestion}"
+                elif suggestion_type == "start_now":
+                    emoji = "🍳"
+                    title = f"ابدأ تحضير الطلب #{order.get('order_number', '')[-4:]}"
+                    message = f"السائق {user['name']} يصل بعد {driver_eta_to_store} دقيقة\nابدأ التحضير الآن ليكون جاهزاً عند وصوله"
+                else:
+                    emoji = "🚨"
+                    title = f"السائق قريب! طلب #{order.get('order_number', '')[-4:]}"
+                    message = f"السائق {user['name']} يصل خلال {driver_eta_to_store} دقيقة\nجهّز الطلب فوراً!"
+                
+                # إشعار لصاحب المتجر
+                await send_notification_with_push(
+                    user_id=store.get("owner_id"),
+                    title=f"{emoji} {title}",
+                    message=message,
+                    notification_type="driver_accepted_order",
+                    data={
+                        "order_id": order_id,
+                        "order_number": order.get("order_number"),
+                        "driver_name": user["name"],
+                        "driver_phone": user.get("phone"),
+                        "driver_eta_minutes": driver_eta_to_store,
+                        "preparation_suggestion": preparation_suggestion,
+                        "action": "prepare_order"
+                    },
+                    play_sound=True,
+                    priority="high"
+                )
+            except Exception as e:
+                print(f"Seller notification error: {e}")
     
     # إشعار العميل مع Push notification والوقت المتوقع
     try:
