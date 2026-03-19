@@ -110,9 +110,11 @@ const ProductsPage = () => {
         
         // جلب منتجات شحنها مجاني (سعرها >= حد الشحن المجاني)
         const threshold = settingsRes.data?.free_shipping_threshold || 150000;
+        console.log('Free shipping threshold:', threshold);
         try {
           const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
           const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
+          console.log('Free shipping products count:', freeShipProducts.length);
           setFreeShippingProducts(freeShipProducts.slice(0, 10));
         } catch (err) {
           console.error('Error fetching free shipping products:', err);
