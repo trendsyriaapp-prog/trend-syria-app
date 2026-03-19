@@ -303,13 +303,44 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     if existing:
         raise HTTPException(status_code=400, detail="تم رفع المستندات مسبقاً")
     
+    # التحقق من نوع المركبة
+    valid_vehicle_types = ["car", "motorcycle", "electric_scooter", "bicycle"]
+    if docs.vehicle_type not in valid_vehicle_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"نوع المركبة غير صالح. الأنواع المتاحة: سيارة، دراجة نارية، سكوتر كهربائي، دراجة هوائية"
+        )
+    
+    # المركبات التي تتطلب رخصة قيادة
+    requires_license = ["car", "motorcycle"]
+    
+    if docs.vehicle_type in requires_license and not docs.motorcycle_license:
+        vehicle_name = "السيارة" if docs.vehicle_type == "car" else "الدراجة النارية"
+        raise HTTPException(
+            status_code=400, 
+            detail=f"رخصة القيادة مطلوبة لـ{vehicle_name}"
+        )
+    
+    # ترجمة نوع المركبة للعرض
+    vehicle_type_names = {
+        "car": "سيارة",
+        "motorcycle": "دراجة نارية",
+        "electric_scooter": "سكوتر كهربائي",
+        "bicycle": "دراجة هوائية"
+    }
+    
     doc = {
         "id": str(uuid.uuid4()),
         "delivery_id": user["id"],
+        "driver_id": user["id"],  # للتوافق مع الكود القديم
         "national_id": docs.national_id,
         "personal_photo": docs.personal_photo,
         "id_photo": docs.id_photo,
-        "motorcycle_license": docs.motorcycle_license,
+        "vehicle_type": docs.vehicle_type,
+        "vehicle_type_name": vehicle_type_names.get(docs.vehicle_type, docs.vehicle_type),
+        "motorcycle_license": docs.motorcycle_license if docs.vehicle_type in requires_license else None,
+        "vehicle_photo": docs.vehicle_photo,
+        "requires_license": docs.vehicle_type in requires_license,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -325,7 +356,48 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
     doc = await db.delivery_documents.find_one({"delivery_id": user["id"]}, {"_id": 0})
     if not doc:
         return {"status": "not_submitted"}
-    return {"status": doc["status"]}
+    return {
+        "status": doc["status"],
+        "vehicle_type": doc.get("vehicle_type"),
+        "vehicle_type_name": doc.get("vehicle_type_name"),
+        "requires_license": doc.get("requires_license", True)
+    }
+
+@delivery_auth_router.get("/vehicle-types")
+async def get_vehicle_types():
+    """جلب أنواع المركبات المتاحة للتسجيل"""
+    return {
+        "vehicle_types": [
+            {
+                "id": "car",
+                "name": "سيارة",
+                "icon": "🚗",
+                "requires_license": True,
+                "description": "سيارة عادية أو فان"
+            },
+            {
+                "id": "motorcycle",
+                "name": "دراجة نارية",
+                "icon": "🏍️",
+                "requires_license": True,
+                "description": "دراجة نارية بنزين"
+            },
+            {
+                "id": "electric_scooter",
+                "name": "سكوتر كهربائي",
+                "icon": "🛵",
+                "requires_license": False,
+                "description": "دراجة كهربائية أو سكوتر"
+            },
+            {
+                "id": "bicycle",
+                "name": "دراجة هوائية",
+                "icon": "🚲",
+                "requires_license": False,
+                "description": "دراجة هوائية عادية"
+            }
+        ]
+    }
 
 
 # ============================================

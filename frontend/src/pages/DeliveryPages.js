@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
-  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings
+  Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
+  Car, Bike
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -36,16 +37,37 @@ const DeliveryDocuments = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [docs, setDocs] = useState({
     national_id: '',
     personal_photo: '',
     id_photo: '',
-    motorcycle_license: ''
+    vehicle_type: '',
+    motorcycle_license: '',
+    vehicle_photo: ''
   });
+
+  // أنواع المركبات
+  const defaultVehicleTypes = [
+    { id: 'car', name: 'سيارة', icon: '🚗', requires_license: true },
+    { id: 'motorcycle', name: 'دراجة نارية', icon: '🏍️', requires_license: true },
+    { id: 'electric_scooter', name: 'سكوتر كهربائي', icon: '🛵', requires_license: false },
+    { id: 'bicycle', name: 'دراجة هوائية', icon: '🚲', requires_license: false }
+  ];
 
   useEffect(() => {
     checkStatus();
+    fetchVehicleTypes();
   }, []);
+
+  const fetchVehicleTypes = async () => {
+    try {
+      const res = await axios.get(`${API}/delivery/vehicle-types`);
+      setVehicleTypes(res.data.vehicle_types || defaultVehicleTypes);
+    } catch (error) {
+      setVehicleTypes(defaultVehicleTypes);
+    }
+  };
 
   const checkStatus = async () => {
     try {
@@ -55,6 +77,11 @@ const DeliveryDocuments = () => {
       console.error(error);
     }
   };
+
+  // التحقق من الحاجة للرخصة
+  const allVehicleTypes = vehicleTypes.length > 0 ? vehicleTypes : defaultVehicleTypes;
+  const selectedVehicle = allVehicleTypes.find(v => v.id === docs.vehicle_type);
+  const requiresLicense = docs.vehicle_type ? (selectedVehicle?.requires_license ?? true) : true;
 
   const handleImageUpload = (field) => (e) => {
     const file = e.target.files[0];
@@ -78,10 +105,21 @@ const DeliveryDocuments = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.motorcycle_license) {
+    // التحقق من الحقول الأساسية
+    if (!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type) {
       toast({
         title: "خطأ",
-        description: "يرجى ملء جميع الحقول ورفع جميع الصور",
+        description: "يرجى ملء جميع الحقول الأساسية واختيار نوع المركبة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // التحقق من الرخصة إذا كانت مطلوبة
+    if (requiresLicense && !docs.motorcycle_license) {
+      toast({
+        title: "خطأ",
+        description: "رخصة القيادة مطلوبة لهذا النوع من المركبات",
         variant: "destructive"
       });
       return;
@@ -209,18 +247,83 @@ const DeliveryDocuments = () => {
             onUpload={handleImageUpload('id_photo')}
           />
 
+          {/* اختيار نوع المركبة */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <label className="block text-sm font-bold text-gray-700 mb-3">
+              <Truck size={16} className="inline ml-1" />
+              نوع المركبة
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(vehicleTypes.length > 0 ? vehicleTypes : defaultVehicleTypes).map((vehicle) => (
+                <button
+                  key={vehicle.id}
+                  type="button"
+                  onClick={() => setDocs(prev => ({ ...prev, vehicle_type: vehicle.id, motorcycle_license: vehicle.requires_license ? prev.motorcycle_license : '' }))}
+                  className={`p-3 rounded-xl border-2 transition-all text-center ${
+                    docs.vehicle_type === vehicle.id
+                      ? 'border-[#FF6B00] bg-orange-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-2xl block mb-1">{vehicle.icon}</span>
+                  <span className="text-sm font-medium block">{vehicle.name}</span>
+                  {!vehicle.requires_license && (
+                    <span className="text-[10px] text-green-600 block mt-1">بدون رخصة</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* رخصة القيادة - تظهر فقط إذا كانت مطلوبة */}
+          {requiresLicense && (
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                <CreditCard size={16} className="inline ml-1" />
+                رخصة القيادة
+              </label>
+              <div className="relative">
+                {docs.motorcycle_license ? (
+                  <div className="relative">
+                    <img src={docs.motorcycle_license} alt="رخصة القيادة" className="w-full h-40 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => setDocs(prev => ({ ...prev, motorcycle_license: '' }))}
+                      className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
+                    <Upload size={24} className="text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-500">اضغط لرفع رخصة القيادة</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload('motorcycle_license')}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="text-[10px] text-red-500 mt-2">* يجب أن تكون الرخصة باسمك الشخصي وسارية المفعول</p>
+            </div>
+          )}
+
+          {/* صورة المركبة (اختياري) */}
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              <Truck size={16} className="inline ml-1" />
-              شهادة/رخصة الدراجة (باسمك)
+              <Camera size={16} className="inline ml-1" />
+              صورة المركبة <span className="text-gray-400 font-normal">(اختياري)</span>
             </label>
             <div className="relative">
-              {docs.motorcycle_license ? (
+              {docs.vehicle_photo ? (
                 <div className="relative">
-                  <img src={docs.motorcycle_license} alt="رخصة الدراجة" className="w-full h-40 object-cover rounded-lg" />
+                  <img src={docs.vehicle_photo} alt="صورة المركبة" className="w-full h-40 object-cover rounded-lg" />
                   <button
                     type="button"
-                    onClick={() => setDocs(prev => ({ ...prev, motorcycle_license: '' }))}
+                    onClick={() => setDocs(prev => ({ ...prev, vehicle_photo: '' }))}
                     className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-full"
                   >
                     ✕
@@ -229,17 +332,16 @@ const DeliveryDocuments = () => {
               ) : (
                 <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#FF6B00] transition-colors">
                   <Upload size={24} className="text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">اضغط لرفع شهادة الدراجة</span>
+                  <span className="text-sm text-gray-500">اضغط لرفع صورة المركبة</span>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload('motorcycle_license')}
+                    onChange={handleImageUpload('vehicle_photo')}
                     className="hidden"
                   />
                 </label>
               )}
             </div>
-            <p className="text-[10px] text-red-500 mt-2">* يجب أن تكون الشهادة باسمك الشخصي</p>
           </div>
 
           {/* زر الإرسال */}

@@ -39,7 +39,9 @@ class DeliveryDocuments(BaseModel):
     national_id: str
     personal_photo: str
     id_photo: str
-    motorcycle_license: str
+    vehicle_type: str  # car, motorcycle, electric_scooter, bicycle
+    motorcycle_license: Optional[str] = None  # إجباري فقط لـ car و motorcycle
+    vehicle_photo: Optional[str] = None  # صورة المركبة
     
 class SellerDocuments(BaseModel):
     seller_id: str
