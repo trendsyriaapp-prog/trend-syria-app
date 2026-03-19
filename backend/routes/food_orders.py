@@ -2558,11 +2558,11 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
 @router.post("/delivery/{order_id}/arrived")
 async def driver_arrived_at_store(
     order_id: str, 
-    latitude: float = None,
-    longitude: float = None,
+    latitude: float = Query(..., description="خط العرض - إجباري"),
+    longitude: float = Query(..., description="خط الطول - إجباري"),
     user: dict = Depends(get_current_user)
 ):
-    """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار"""
+    """تسجيل وصول السائق للمطعم - يبدأ عداد الانتظار (يتطلب موقع GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -2582,52 +2582,51 @@ async def driver_arrived_at_store(
             "arrived_at": order.get("driver_arrived_at")
         }
     
-    # === Geofencing: التحقق من موقع السائق ===
-    # جلب المسافة المسموحة من الإعدادات (الافتراضي 150 متر)
+    # === Geofencing: التحقق من موقع السائق (إجباري) ===
+    # جلب المسافة المسموحة من الإعدادات (الافتراضي 100 متر)
     settings = await db.settings.find_one({"type": "delivery_settings"})
-    MAX_DISTANCE_METERS = 150  # الافتراضي
+    MAX_DISTANCE_METERS = 100  # الافتراضي 100 متر
     if settings and settings.get("values", {}).get("geofencing_max_distance_meters"):
         MAX_DISTANCE_METERS = settings["values"]["geofencing_max_distance_meters"]
     
-    if latitude and longitude:
-        # جلب موقع المتجر
-        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
-        if store and store.get("latitude") and store.get("longitude"):
-            store_lat = store.get("latitude")
-            store_lon = store.get("longitude")
-            
-            # حساب المسافة بين السائق والمتجر (Haversine formula)
-            import math
-            R = 6371000  # نصف قطر الأرض بالمتر
-            
-            lat1_rad = math.radians(latitude)
-            lat2_rad = math.radians(store_lat)
-            delta_lat = math.radians(store_lat - latitude)
-            delta_lon = math.radians(store_lon - longitude)
-            
-            a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-            distance_meters = R * c
-            
-            if distance_meters > MAX_DISTANCE_METERS:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"يجب أن تكون قرب المتجر لتسجيل الوصول. أنت على بعد {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
-                )
+    # جلب موقع المتجر
+    store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+    if not store or not store.get("latitude") or not store.get("longitude"):
+        raise HTTPException(status_code=400, detail="المتجر ليس له موقع محدد")
+    
+    store_lat = store.get("latitude")
+    store_lon = store.get("longitude")
+    
+    # حساب المسافة بين السائق والمتجر (Haversine formula)
+    import math
+    R = 6371000  # نصف قطر الأرض بالمتر
+    
+    lat1_rad = math.radians(latitude)
+    lat2_rad = math.radians(store_lat)
+    delta_lat = math.radians(store_lat - latitude)
+    delta_lon = math.radians(store_lon - longitude)
+    
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance_meters = R * c
+    
+    if distance_meters > MAX_DISTANCE_METERS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"يجب أن تكون قرب المتجر لتسجيل الوصول. أنت على بعد {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
+        )
     
     now = datetime.now(timezone.utc)
     
-    # تسجيل الوصول مع موقع السائق
+    # تسجيل الوصول مع موقع السائق (إجباري)
     update_data = {
         "driver_arrived_at": now.isoformat(),
-        "waiting_started": True
-    }
-    
-    if latitude and longitude:
-        update_data["driver_arrival_location"] = {
+        "waiting_started": True,
+        "driver_arrival_location": {
             "latitude": latitude,
             "longitude": longitude
         }
+    }
     
     await db.food_orders.update_one(
         {"id": order_id},

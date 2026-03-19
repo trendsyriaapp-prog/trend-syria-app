@@ -147,7 +147,7 @@ async def checkout_order(
     for item in cart["items"]:
         product = await db.products.find_one({"id": item["product_id"]})
         if not product:
-            raise HTTPException(status_code=400, detail=f"المنتج غير موجود")
+            raise HTTPException(status_code=400, detail="المنتج غير موجود")
         if product["stock"] < item["quantity"]:
             raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
         
@@ -309,7 +309,6 @@ async def verify_payment_otp(
     await db.carts.delete_one({"user_id": user["id"]})
     
     # Update product stock
-    cart = await db.carts.find_one({"user_id": user["id"]})
     for item in order["items"]:
         await db.products.update_one(
             {"id": item["product_id"]},
@@ -339,6 +338,105 @@ async def verify_payment_otp(
         "success": True,
         "message": "تم الدفع بنجاح!",
         "order_id": order_id
+    }
+
+
+# ============== Wallet Payment ==============
+
+@router.post("/wallet/pay")
+async def pay_with_wallet(
+    order_id: str = Query(...),
+    user: dict = Depends(get_current_user)
+):
+    """الدفع من المحفظة - للعملاء فقط"""
+    
+    if user["user_type"] != "buyer":
+        raise HTTPException(status_code=403, detail="الدفع بالمحفظة للعملاء فقط")
+    
+    # Get order
+    order = await db.orders.find_one({"id": order_id, "user_id": user["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("status") != "pending_payment":
+        raise HTTPException(status_code=400, detail="تم دفع هذا الطلب مسبقاً أو حالته لا تسمح بالدفع")
+    
+    # Get wallet
+    wallet = await db.wallets.find_one({"user_id": user["id"]})
+    if not wallet:
+        raise HTTPException(status_code=400, detail="ليس لديك محفظة")
+    
+    total_amount = order.get("total", 0) + order.get("delivery_fee", 0)
+    
+    if wallet.get("balance", 0) < total_amount:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"رصيد غير كافٍ. رصيدك: {wallet.get('balance', 0):,.0f} ل.س، المطلوب: {total_amount:,.0f} ل.س"
+        )
+    
+    now = datetime.now(timezone.utc)
+    
+    # خصم من محفظة العميل
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"balance": -total_amount}}
+    )
+    
+    # تسجيل المعاملة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "payment",
+        "amount": -total_amount,
+        "description": f"دفع الطلب #{order_id[:8]}",
+        "order_id": order_id,
+        "created_at": now.isoformat()
+    })
+    
+    # تحديث حالة الطلب
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "paid",
+                "payment_method": "wallet",
+                "paid_at": now.isoformat()
+            }
+        }
+    )
+    
+    # تحديث المخزون
+    for item in order.get("items", []):
+        await db.products.update_one(
+            {"id": item["product_id"]},
+            {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
+        )
+    
+    # إضافة أرباح معلقة للبائعين
+    for seller_id, earnings in order.get("sellers_earnings", {}).items():
+        await add_pending_to_wallet(
+            user_id=seller_id,
+            user_type="seller",
+            amount=earnings["amount"],
+            order_id=order_id
+        )
+    
+    # إشعار البائعين
+    for seller_id in order.get("sellers_earnings", {}).keys():
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="طلب جديد مدفوع!",
+            message=f"طلب جديد مدفوع بالمحفظة بقيمة {order['total']:,.0f} ل.س",
+            notification_type="new_order",
+            order_id=order_id
+        )
+    
+    return {
+        "success": True,
+        "message": "تم الدفع بنجاح من محفظتك!",
+        "order_id": order_id,
+        "amount_paid": total_amount,
+        "new_balance": wallet.get("balance", 0) - total_amount
     }
 
 @router.post("/confirm-delivery/{order_id}")

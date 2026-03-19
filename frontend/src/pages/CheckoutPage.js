@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   MapPin, CreditCard, Check, Loader2, Plus, 
-  ShoppingBag, Truck, X, ChevronLeft, Clock
+  ShoppingBag, Truck, X, ChevronLeft, Clock, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -16,6 +16,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة', 'ريف دمشق'];
 
 const PAYMENT_METHODS = [
+  { id: 'wallet', name: 'المحفظة', icon: '👛', description: 'الدفع من رصيد محفظتك' },
   { id: 'card', name: 'بطاقة بنكية', icon: '💳', description: 'Visa / Mastercard' },
   { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية' },
   { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش' },
@@ -36,6 +37,9 @@ const CheckoutPage = () => {
   const [savedPayments, setSavedPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  
+  // رصيد المحفظة
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
@@ -110,12 +114,14 @@ const CheckoutPage = () => {
 
   const fetchSavedData = async () => {
     try {
-      const [addressesRes, paymentsRes] = await Promise.all([
+      const [addressesRes, paymentsRes, walletRes] = await Promise.all([
         axios.get(`${API}/user/addresses`),
-        axios.get(`${API}/user/payment-methods`)
+        axios.get(`${API}/user/payment-methods`),
+        axios.get(`${API}/wallet/balance`).catch(() => ({ data: { balance: 0 } }))
       ]);
       setSavedAddresses(addressesRes.data);
       setSavedPayments(paymentsRes.data);
+      setWalletBalance(walletRes.data?.balance || 0);
       
       const defaultAddress = addressesRes.data.find(a => a.is_default);
       const defaultPayment = paymentsRes.data.find(p => p.is_default);
@@ -185,8 +191,21 @@ const CheckoutPage = () => {
 
       let paymentData;
       if (useNewPayment) {
-        // لا نحفظ طريقة الدفع للبطاقة
-        if (newPayment.type !== 'card') {
+        // التحقق من رصيد المحفظة إذا اختار الدفع بالمحفظة
+        if (newPayment.type === 'wallet') {
+          const totalWithShipping = cart.total + finalShippingCost;
+          if (walletBalance < totalWithShipping) {
+            toast({ 
+              title: "رصيد غير كافٍ", 
+              description: `رصيد محفظتك ${formatPrice(walletBalance)} والمطلوب ${formatPrice(totalWithShipping)}`,
+              variant: "destructive" 
+            });
+            setSubmitting(false);
+            return;
+          }
+        }
+        // لا نحفظ طريقة الدفع للبطاقة أو المحفظة
+        if (newPayment.type !== 'card' && newPayment.type !== 'wallet') {
           await axios.post(`${API}/user/payment-methods`, newPayment);
         }
         paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone || '' };
@@ -207,7 +226,17 @@ const CheckoutPage = () => {
       setOrderId(res.data.order_id);
       
       // معالجة مختلفة حسب طريقة الدفع
-      if (paymentData.payment_method === 'card') {
+      if (paymentData.payment_method === 'wallet') {
+        // الدفع من المحفظة - يتم فوراً
+        try {
+          await axios.post(`${API}/payment/wallet/pay?order_id=${res.data.order_id}`);
+          clearCart();
+          setOrderComplete(true);
+          toast({ title: "تم الدفع بنجاح!", description: "تم خصم المبلغ من محفظتك" });
+        } catch (walletError) {
+          toast({ title: "خطأ", description: walletError.response?.data?.detail || "فشل الدفع من المحفظة", variant: "destructive" });
+        }
+      } else if (paymentData.payment_method === 'card') {
         // البطاقة البنكية - سيتم التوجيه لصفحة الدفع
         toast({ title: "تم إنشاء الطلب", description: "جاري التوجيه لصفحة الدفع الآمن..." });
         clearCart();

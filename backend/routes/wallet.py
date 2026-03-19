@@ -1,7 +1,8 @@
 # /app/backend/routes/wallet.py
-# نظام المحفظة والسحب للبائعين وموظفي التوصيل
+# نظام المحفظة للجميع (عملاء، بائعين، موظفي توصيل)
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
 import uuid
@@ -28,6 +29,7 @@ async def get_wallet_balance(user: dict = Depends(get_current_user)):
             "pending_balance": 0,  # رصيد معلق (طلبات لم تُسلّم بعد)
             "total_earned": 0,
             "total_withdrawn": 0,
+            "total_topped_up": 0,  # إجمالي الشحن (للعملاء)
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.wallets.insert_one(wallet)
@@ -35,16 +37,26 @@ async def get_wallet_balance(user: dict = Depends(get_current_user)):
     
     # Get pending withdrawal requests (for sellers/delivery)
     pending_amount = 0
-    if user["user_type"] in ["seller", "delivery"]:
+    if user["user_type"] in ["seller", "delivery", "food_seller"]:
         pending_withdrawals = await db.withdrawal_requests.find({
             "user_id": user["id"],
             "status": "pending"
         }, {"_id": 0}).to_list(10)
         pending_amount = sum(w.get("amount", 0) for w in pending_withdrawals)
     
+    # Get pending topup requests (for buyers)
+    pending_topup = 0
+    if user["user_type"] == "buyer":
+        pending_topups = await db.topup_requests.find({
+            "user_id": user["id"],
+            "status": "pending"
+        }, {"_id": 0}).to_list(10)
+        pending_topup = sum(t.get("amount", 0) for t in pending_topups)
+    
     return {
         **wallet,
         "pending_withdrawals": pending_amount,
+        "pending_topup": pending_topup,
         "available_balance": wallet["balance"] - pending_amount
     }
 
@@ -53,9 +65,7 @@ async def get_wallet_transactions(
     user: dict = Depends(get_current_user),
     limit: int = Query(default=50, le=100)
 ):
-    """سجل المعاملات"""
-    if user["user_type"] not in ["seller", "delivery"]:
-        raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
+    """سجل المعاملات - متاح لجميع المستخدمين"""
     
     transactions = await db.wallet_transactions.find(
         {"user_id": user["id"]},
@@ -63,6 +73,223 @@ async def get_wallet_transactions(
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
     return transactions
+
+
+# ============== شحن المحفظة للعملاء (Top Up) ==============
+
+class TopUpRequest(BaseModel):
+    amount: int
+    shamcash_phone: str
+
+@router.post("/topup/request")
+async def request_topup(
+    data: TopUpRequest,
+    user: dict = Depends(get_current_user)
+):
+    """طلب شحن رصيد المحفظة - للعملاء فقط"""
+    if user["user_type"] != "buyer":
+        raise HTTPException(status_code=403, detail="شحن المحفظة متاح للعملاء فقط")
+    
+    # التحقق من الحد الأدنى والأقصى
+    MIN_TOPUP = 10000  # 10,000 ل.س
+    MAX_TOPUP = 5000000  # 5,000,000 ل.س
+    
+    if data.amount < MIN_TOPUP:
+        raise HTTPException(status_code=400, detail=f"الحد الأدنى للشحن {MIN_TOPUP:,} ل.س")
+    
+    if data.amount > MAX_TOPUP:
+        raise HTTPException(status_code=400, detail=f"الحد الأقصى للشحن {MAX_TOPUP:,} ل.س")
+    
+    # إنشاء طلب الشحن
+    topup_id = str(uuid.uuid4())
+    topup_code = f"TOP{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:4].upper()}"
+    
+    topup_request = {
+        "id": topup_id,
+        "code": topup_code,
+        "user_id": user["id"],
+        "user_name": user.get("full_name", user.get("name", "")),
+        "user_phone": user.get("phone", ""),
+        "amount": data.amount,
+        "shamcash_phone": data.shamcash_phone,
+        "status": "pending",  # pending, approved, rejected, cancelled
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.topup_requests.insert_one(topup_request)
+    
+    # إشعار الإدارة
+    await create_notification_for_user(
+        user_id="admin",  # سيُرسل لجميع المدراء
+        title="💳 طلب شحن محفظة جديد",
+        message=f"طلب شحن بقيمة {data.amount:,} ل.س من {user.get('name', '')}",
+        notification_type="topup_request"
+    )
+    
+    return {
+        "success": True,
+        "message": "تم إرسال طلب الشحن. سيتم مراجعته وإضافة الرصيد خلال دقائق.",
+        "topup_id": topup_id,
+        "topup_code": topup_code,
+        "amount": data.amount,
+        "status": "pending"
+    }
+
+@router.get("/topup/history")
+async def get_topup_history(user: dict = Depends(get_current_user)):
+    """سجل طلبات الشحن - للعملاء"""
+    if user["user_type"] != "buyer":
+        raise HTTPException(status_code=403, detail="للعملاء فقط")
+    
+    topups = await db.topup_requests.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return topups
+
+@router.delete("/topup/{topup_id}")
+async def cancel_topup(topup_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء طلب شحن معلق"""
+    topup = await db.topup_requests.find_one({
+        "id": topup_id,
+        "user_id": user["id"]
+    })
+    
+    if not topup:
+        raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")
+    
+    if topup["status"] != "pending":
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء هذا الطلب")
+    
+    await db.topup_requests.update_one(
+        {"id": topup_id},
+        {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "تم إلغاء طلب الشحن"}
+
+
+# ============== إدارة طلبات الشحن (للأدمن) ==============
+
+@router.get("/admin/topup-requests")
+async def get_all_topup_requests(
+    status: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع طلبات الشحن - للإدارة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    topups = await db.topup_requests.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return topups
+
+@router.post("/admin/topup/{topup_id}/approve")
+async def approve_topup(topup_id: str, user: dict = Depends(get_current_user)):
+    """الموافقة على طلب شحن - للإدارة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    topup = await db.topup_requests.find_one({"id": topup_id})
+    if not topup:
+        raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")
+    
+    if topup["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الطلب ليس معلقاً")
+    
+    now = datetime.now(timezone.utc)
+    
+    # تحديث طلب الشحن
+    await db.topup_requests.update_one(
+        {"id": topup_id},
+        {
+            "$set": {
+                "status": "approved",
+                "approved_at": now.isoformat(),
+                "approved_by": user["id"]
+            }
+        }
+    )
+    
+    # إضافة الرصيد للمحفظة
+    await db.wallets.update_one(
+        {"user_id": topup["user_id"]},
+        {
+            "$inc": {
+                "balance": topup["amount"],
+                "total_topped_up": topup["amount"]
+            }
+        },
+        upsert=True
+    )
+    
+    # تسجيل المعاملة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": topup["user_id"],
+        "type": "topup",
+        "amount": topup["amount"],
+        "description": f"شحن رصيد - {topup['code']}",
+        "topup_id": topup_id,
+        "created_at": now.isoformat()
+    })
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=topup["user_id"],
+        title="✅ تم شحن محفظتك!",
+        message=f"تم إضافة {topup['amount']:,} ل.س إلى محفظتك بنجاح",
+        notification_type="topup_approved"
+    )
+    
+    return {"message": "تم الموافقة وإضافة الرصيد", "amount": topup["amount"]}
+
+@router.post("/admin/topup/{topup_id}/reject")
+async def reject_topup(
+    topup_id: str,
+    reason: str = Query(default="لم يتم استلام التحويل"),
+    user: dict = Depends(get_current_user)
+):
+    """رفض طلب شحن - للإدارة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    topup = await db.topup_requests.find_one({"id": topup_id})
+    if not topup:
+        raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")
+    
+    if topup["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الطلب ليس معلقاً")
+    
+    await db.topup_requests.update_one(
+        {"id": topup_id},
+        {
+            "$set": {
+                "status": "rejected",
+                "rejected_at": datetime.now(timezone.utc).isoformat(),
+                "rejected_by": user["id"],
+                "reject_reason": reason
+            }
+        }
+    )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=topup["user_id"],
+        title="❌ تم رفض طلب الشحن",
+        message=f"السبب: {reason}",
+        notification_type="topup_rejected"
+    )
+    
+    return {"message": "تم رفض الطلب"}
 
 # ============== Withdrawal Requests ==============
 
