@@ -61,6 +61,13 @@ import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
 import DeliveryMapPage from "./pages/DeliveryMapPage";
 
+// Section Pages
+import SponsoredProductsPage from "./pages/SponsoredProductsPage";
+import FlashSaleProductsPage from "./pages/FlashSaleProductsPage";
+import FreeShippingProductsPage from "./pages/FreeShippingProductsPage";
+import BestSellersPage from "./pages/BestSellersPage";
+import NewArrivalsPage from "./pages/NewArrivalsPage";
+
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
   const { isFeatureEnabled, loading } = useSettings();
@@ -139,6 +146,11 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/" element={<HomeRouter />} />
                 <Route path="/products" element={<ProductsPage />} />
+                <Route path="/products/sponsored" element={<SponsoredProductsPage />} />
+                <Route path="/products/flash-sale" element={<FlashSaleProductsPage />} />
+                <Route path="/products/free-shipping" element={<FreeShippingProductsPage />} />
+                <Route path="/products/best-sellers" element={<BestSellersPage />} />
+                <Route path="/products/new-arrivals" element={<NewArrivalsPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/store/:sellerId" element={<StorePage />} />

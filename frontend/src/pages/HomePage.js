@@ -376,7 +376,7 @@ const HomePage = () => {
           <SectionHeader 
             icon={Star} 
             title="إعلانات مميزة" 
-            linkTo="/products?sort=sponsored"
+            linkTo="/products/sponsored"
             linkColor="text-purple-600"
             iconBg="from-purple-500 to-pink-500"
           />
@@ -444,7 +444,7 @@ const HomePage = () => {
           <SectionHeader 
             icon={Zap} 
             title="عروض فلاش" 
-            linkTo="/products?sort=flash"
+            linkTo="/products/flash-sale"
             linkColor="text-orange-600"
             iconBg="from-orange-500 to-red-500"
           />
@@ -516,7 +516,7 @@ const HomePage = () => {
             <SectionHeader 
               icon={Truck} 
               title="شحن مجاني" 
-              linkTo="/products?price_min=150000"
+              linkTo="/products/free-shipping"
               linkColor="text-green-600"
               iconBg="from-green-500 to-emerald-500"
             />
@@ -578,7 +578,7 @@ const HomePage = () => {
             <SectionHeader 
               icon={TrendingUp} 
               title="الأكثر مبيعاً" 
-              linkTo="/products?sort=best_sellers"
+              linkTo="/products/best-sellers"
               linkColor="text-red-600"
               iconBg="from-red-500 to-pink-500"
             />
@@ -639,7 +639,7 @@ const HomePage = () => {
             <SectionHeader 
               icon={Sparkles} 
               title="منتجات جديدة" 
-              linkTo="/products?sort=newly_added"
+              linkTo="/products/new-arrivals"
               linkColor="text-blue-600"
               iconBg="from-blue-500 to-cyan-500"
             />
