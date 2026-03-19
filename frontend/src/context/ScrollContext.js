@@ -33,6 +33,13 @@ export const ScrollProvider = ({ children }) => {
 
   // استعادة موقع التمرير
   const restoreScrollPosition = useCallback((pathname) => {
+    // أولاً تحقق من window
+    if (window.__savedScrollPositions && window.__savedScrollPositions[pathname] !== undefined) {
+      const position = window.__savedScrollPositions[pathname];
+      window.scrollTo({ top: position, behavior: 'instant' });
+      return position;
+    }
+    // ثم من sessionStorage
     const saved = sessionStorage.getItem(`scroll_${pathname}`);
     if (saved !== null) {
       const position = parseInt(saved, 10);
@@ -49,6 +56,11 @@ export const ScrollProvider = ({ children }) => {
 
   // الحصول على موقع التمرير المحفوظ
   const getScrollPosition = useCallback((pathname) => {
+    // أولاً تحقق من window (الأسرع)
+    if (window.__savedScrollPositions && window.__savedScrollPositions[pathname] !== undefined) {
+      return window.__savedScrollPositions[pathname];
+    }
+    // ثم من sessionStorage
     const pos = sessionStorage.getItem(`scroll_${pathname}`);
     return pos ? parseInt(pos, 10) : 0;
   }, []);
@@ -69,6 +81,55 @@ export const ScrollProvider = ({ children }) => {
     }
   }, []);
 
+  // حفظ آخر موضع تمرير معروف باستمرار (حل بسيط وموثوق)
+  const lastKnownScrollRef = useRef({});
+  
+  useEffect(() => {
+    const trackScroll = () => {
+      const scrollY = window.scrollY;
+      const path = location.pathname;
+      // حفظ فقط إذا كان أكبر من 0 ولم نكن في حالة استعادة
+      if (scrollY > 0 && !isRestoring.current && !isNavigating.current) {
+        lastKnownScrollRef.current[path] = scrollY;
+        // حفظ في sessionStorage بشكل دوري
+        sessionStorage.setItem(`scroll_${path}`, scrollY.toString());
+      }
+    };
+    
+    // تتبع التمرير بشكل متكرر
+    const interval = setInterval(trackScroll, 200);
+    window.addEventListener('scroll', trackScroll, { passive: true });
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('scroll', trackScroll);
+    };
+  }, [location.pathname]);
+  
+  // حفظ الموضع فوراً قبل أي تغيير في المسار
+  useEffect(() => {
+    const saveBeforeNav = () => {
+      const path = location.pathname;
+      const scrollY = lastKnownScrollRef.current[path] || window.scrollY;
+      if (scrollY > 0) {
+        sessionStorage.setItem(`scroll_${path}`, scrollY.toString());
+      }
+    };
+    
+    // الحفظ عند أي نقرة (قبل التنقل)
+    const handleAnyClick = () => {
+      saveBeforeNav();
+    };
+    
+    document.addEventListener('click', handleAnyClick, { capture: true });
+    window.addEventListener('beforeunload', saveBeforeNav);
+    
+    return () => {
+      document.removeEventListener('click', handleAnyClick, { capture: true });
+      window.removeEventListener('beforeunload', saveBeforeNav);
+    };
+  }, [location.pathname]);
+
   // الاستماع للنقر على الروابط لتعيين isNavigating مبكراً
   useEffect(() => {
     const handleClick = (e) => {
@@ -76,18 +137,21 @@ export const ScrollProvider = ({ children }) => {
       if (link && link.href) {
         try {
           const url = new URL(link.href);
-          // إذا كان رابط داخلي ومختلف عن الصفحة الحالية
           if (url.origin === window.location.origin && url.pathname !== location.pathname) {
-            // تعيين علامة التنقل فوراً
+            // حفظ الموضع الحالي فوراً
+            const currentPath = location.pathname;
+            const scrollY = lastKnownScrollRef.current[currentPath] || window.scrollY;
+            
+            if (scrollY > 0) {
+              sessionStorage.setItem(`scroll_${currentPath}`, scrollY.toString());
+            }
+            
             isNavigating.current = true;
           }
-        } catch (err) {
-          // تجاهل الأخطاء
-        }
+        } catch (err) {}
       }
     };
 
-    // استخدام capture للتأكد من أننا نلتقط الحدث أولاً
     document.addEventListener('click', handleClick, { capture: true });
     return () => document.removeEventListener('click', handleClick, { capture: true });
   }, [location.pathname]);
@@ -95,6 +159,8 @@ export const ScrollProvider = ({ children }) => {
   // حفظ موقع التمرير أثناء التمرير
   useEffect(() => {
     let ticking = false;
+    let lastSaveTime = 0;
+    const MIN_SAVE_INTERVAL = 100; // الحد الأدنى بين عمليات الحفظ
     
     const handleScroll = () => {
       if (!ticking) {
@@ -103,24 +169,30 @@ export const ScrollProvider = ({ children }) => {
         const restoring = isRestoring.current;
         const pathToSave = currentScrollPath.current;
         const scrollY = window.scrollY;
+        const now = Date.now();
         
         // لا تُجدول إذا كنا في حالة تنقل أو استعادة
         if (navigating || restoring) return;
+        
+        // لا تحفظ بشكل متكرر جداً
+        if (now - lastSaveTime < MIN_SAVE_INTERVAL) return;
+        
+        // لا تحفظ إذا كان التمرير 0 (قد يكون بسبب الانتقال)
+        if (scrollY === 0) return;
+        
+        // لا تكتب فوق القيمة المحمية
+        if (sessionStorage.getItem(`scroll_protected_${pathToSave}`)) return;
         
         window.requestAnimationFrame(() => {
           ticking = false;
           // التحقق مرة أخرى داخل الـ callback
           if (isRestoring.current || isNavigating.current) return;
           if (pathToSave !== currentScrollPath.current) return;
+          if (sessionStorage.getItem(`scroll_protected_${pathToSave}`)) return;
           
           if (pathToSave && scrollY > 0) {
-            // الحصول على القيمة المحفوظة حالياً
-            const currentSaved = parseInt(sessionStorage.getItem(`scroll_${pathToSave}`) || '0', 10);
-            
-            // إذا كان التمرير الحالي قريب من المحفوظ أو أكبر منه، احفظ
-            if (scrollY >= currentSaved || scrollY > currentSaved * 0.2) {
-              sessionStorage.setItem(`scroll_${pathToSave}`, scrollY.toString());
-            }
+            sessionStorage.setItem(`scroll_${pathToSave}`, scrollY.toString());
+            lastSaveTime = Date.now();
           }
         });
         ticking = true;
@@ -143,7 +215,7 @@ export const ScrollProvider = ({ children }) => {
     // إيقاف حفظ التمرير فوراً عند بدء التنقل
     isNavigating.current = true;
     
-    // للتنقل للأمام (PUSH)
+    // للتنقل للأمام (PUSH) - لا نمسح القيمة المحفوظة للصفحة السابقة
     // الآن نحدث المسار الحالي
     currentScrollPath.current = currentPath;
     lastPathname.current = currentPath;
@@ -160,10 +232,10 @@ export const ScrollProvider = ({ children }) => {
       isRestoring.current = false;
       setIsNavigatingBack(false);
       
-      // إلغاء علامة التنقل بعد استقرار الصفحة
+      // إلغاء علامة التنقل بعد استقرار الصفحة - ولكن أبقِها أطول
       setTimeout(() => {
         isNavigating.current = false;
-      }, 200);
+      }, 500);
       return;
     }
     
