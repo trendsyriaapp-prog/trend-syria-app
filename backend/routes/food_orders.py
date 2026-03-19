@@ -390,6 +390,12 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     
     # لا نرفض الطلب بناءً على المسافة - العميل اختار المطعم وهو على علم بالمسافة
     
+    # حساب الوقت المتوقع للتوصيل (تحضير + سفر)
+    preparation_time = store.get("delivery_time", 20)  # وقت التحضير
+    avg_speed_kmh = 25  # متوسط سرعة السائق في المدينة
+    travel_time_minutes = (distance / avg_speed_kmh) * 60
+    estimated_total_time = round(preparation_time + travel_time_minutes)
+    
     # حساب المجموع
     subtotal = 0
     order_items = []
@@ -724,7 +730,9 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "can_process_after": can_process_after.isoformat(),
         "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
         "seller_notified": False,
-        "driver_notified": False
+        "driver_notified": False,
+        "distance_km": round(distance, 2),
+        "estimated_total_time": estimated_total_time
     }
     
     await db.food_orders.insert_one(order_doc)
@@ -748,6 +756,37 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         )
     except Exception as e:
         print(f"Push notification error: {e}")
+    
+    # 🆕 إرسال إشعار للعميل مع الوقت المتوقع
+    try:
+        from services.notification_helper import send_notification_with_push
+        
+        # تحديد نوع الرسالة حسب الوقت
+        if estimated_total_time > 45:
+            emoji = "⏰"
+            time_note = f"الوقت المتوقع: ~{estimated_total_time} دقيقة (المطعم يبعد {round(distance, 1)} كم)"
+        else:
+            emoji = "🍔"
+            time_note = f"الوقت المتوقع: ~{estimated_total_time} دقيقة"
+        
+        await send_notification_with_push(
+            user_id=user["id"],
+            title=f"{emoji} تم استلام طلبك!",
+            message=f"طلبك من {store.get('name')} قيد التحضير\n{time_note}",
+            notification_type="food_order",
+            data={
+                "order_id": order_id,
+                "order_number": order_number,
+                "store_name": store.get("name"),
+                "estimated_time": estimated_total_time,
+                "distance_km": round(distance, 2),
+                "action": "view_order"
+            },
+            play_sound=True,
+            priority="high"
+        )
+    except Exception as e:
+        print(f"Customer notification error: {e}")
     
     # تحديث عداد استخدام العرض
     if offer_applied:
@@ -2198,16 +2237,51 @@ async def accept_food_order(order_id: str, user: dict = Depends(get_current_user
         }
     )
     
-    # إشعار العميل
-    await db.notifications.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": order["customer_id"],
-        "title": "🚗 طلبك في الطريق!",
-        "message": f"موظف التوصيل {user['name']} في طريقه إليك",
-        "type": "order_out_for_delivery",
-        "is_read": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    # إشعار العميل مع Push notification والوقت المتوقع
+    try:
+        from services.notification_helper import send_notification_with_push
+        
+        # حساب الوقت المتبقي للتوصيل
+        distance_km = order.get("distance_km", 3)
+        avg_speed_kmh = 25
+        remaining_time = round((distance_km / avg_speed_kmh) * 60)
+        
+        # إذا كان الوقت طويل، نضيف تنبيه
+        if remaining_time > 20:
+            emoji = "🛵"
+            time_msg = f"الوقت المتوقع للوصول: ~{remaining_time} دقيقة"
+        else:
+            emoji = "🚀"
+            time_msg = f"يصلك خلال ~{remaining_time} دقيقة"
+        
+        await send_notification_with_push(
+            user_id=order["customer_id"],
+            title=f"{emoji} طلبك في الطريق!",
+            message=f"السائق {user['name']} استلم طلبك\n{time_msg}",
+            notification_type="order_out_for_delivery",
+            data={
+                "order_id": order_id,
+                "order_number": order.get("order_number"),
+                "driver_name": user["name"],
+                "driver_phone": user.get("phone"),
+                "estimated_arrival": remaining_time,
+                "action": "track_order"
+            },
+            play_sound=True,
+            priority="high"
+        )
+    except Exception as e:
+        print(f"Customer pickup notification error: {e}")
+        # Fallback للإشعار القديم
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": order["customer_id"],
+            "title": "🚗 طلبك في الطريق!",
+            "message": f"موظف التوصيل {user['name']} في طريقه إليك",
+            "type": "order_out_for_delivery",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
     
     return {
         "message": "تم قبول الطلب", 
