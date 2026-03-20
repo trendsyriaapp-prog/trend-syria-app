@@ -5,39 +5,13 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Award, Clock, Save, RefreshCw, CheckCircle, AlertCircle,
-  Star, Zap, Crown, Diamond, Trophy, Gift, Truck, MapPin,
-  ChevronDown, ChevronUp
+  Star, Zap, Crown, Diamond, Trophy, Gift, Truck, MapPin
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
-};
-
-// مكون القسم القابل للطي
-const CollapsibleSection = ({ title, icon, color, children, defaultOpen = false }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full p-4 flex items-center justify-between text-white ${color}`}
-      >
-        <div className="flex items-center gap-3">
-          {icon}
-          <h2 className="font-bold text-lg">{title}</h2>
-        </div>
-        {isOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-      </button>
-      {isOpen && (
-        <div className="p-4">
-          {children}
-        </div>
-      )}
-    </div>
-  );
 };
 
 const DeliverySettingsTab = () => {
@@ -68,12 +42,8 @@ const DeliverySettingsTab = () => {
     cold_dry_limit: 5
   });
 
-  // إعدادات رسوم الطقس الصعب
-  const [weatherSurcharge, setWeatherSurcharge] = useState({
-    is_active: false,
-    amount: 5000,
-    reason: 'طقس صعب'
-  });
+  // التصنيف النشط للفلتر
+  const [activeCategory, setActiveCategory] = useState('all');
 
   // إعدادات أجور التوصيل بالمسافة
   const [distanceSettings, setDistanceSettings] = useState({
@@ -147,19 +117,10 @@ const DeliverySettingsTab = () => {
   });
   const [holdSummary, setHoldSummary] = useState(null);
 
-  // إعدادات نظام الكيلومتر للسائقين
-  const [driverKmSettings, setDriverKmSettings] = useState({
-    enabled: true,
-    base_fee: 1000,
-    price_per_km: 300,
-    min_fee: 1500
-  });
-
   useEffect(() => {
     fetchSettings();
     fetchDistanceSettings();
     fetchDriverEarningsSettings();
-    fetchDriverKmSettings();
     fetchWaitTime();
     fetchSmartOrderLimits();
     fetchWaitCompensationSettings();
@@ -170,7 +131,6 @@ const DeliverySettingsTab = () => {
     fetchUndeliveredReport();
     fetchHoldSettings();
     fetchHoldSummary();
-    fetchWeatherSurcharge();
   }, []);
 
   const fetchSettings = async () => {
@@ -184,9 +144,7 @@ const DeliverySettingsTab = () => {
         food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5,
         // إعدادات حدود التوصيل الجديدة
         hot_fresh_limit: res.data.food_delivery_limits?.hot_fresh_limit || 2,
-        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5,
-        // المسافة بين المطعم والعميل
-        max_store_customer_distance_km: res.data.max_store_customer_distance_km || 5
+        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -210,33 +168,6 @@ const DeliverySettingsTab = () => {
       setDriverEarningsSettings(res.data);
     } catch (error) {
       console.error('Error fetching driver earnings settings:', error);
-    }
-  };
-
-  const fetchDriverKmSettings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/settings/driver-km-settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDriverKmSettings(res.data);
-    } catch (error) {
-      console.error('Error fetching driver km settings:', error);
-    }
-  };
-
-  const handleSaveDriverKmSettings = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/settings/driver-km-settings`, driverKmSettings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert('تم حفظ إعدادات نظام الكيلومتر بنجاح!');
-    } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -469,7 +400,6 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      // حفظ حدود التوصيل
       await axios.put(`${API}/api/settings/food-delivery-limits`, {
         hot_fresh_limit: settings.hot_fresh_limit || 2,
         cold_dry_limit: settings.cold_dry_limit || 5,
@@ -477,53 +407,9 @@ const DeliverySettingsTab = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // حفظ المسافة بين المطعم والعميل
-      await axios.put(`${API}/api/settings/store-customer-distance`, {
-        max_distance_km: settings.max_store_customer_distance_km || 5
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
       alert('تم حفظ إعدادات حدود التوصيل بنجاح!');
     } catch (error) {
       alert(error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ============== رسوم الطقس الصعب ==============
-  const fetchWeatherSurcharge = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/settings/weather-surcharge`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWeatherSurcharge({
-        is_active: res.data.is_active || false,
-        amount: res.data.amount || 5000,
-        reason: res.data.reason || 'طقس صعب'
-      });
-    } catch (error) {
-      console.error('Error fetching weather surcharge:', error);
-    }
-  };
-
-  const handleSaveWeatherSurcharge = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.put(`${API}/api/settings/weather-surcharge`, {
-        is_active: weatherSurcharge.is_active,
-        amount: weatherSurcharge.amount,
-        reason: weatherSurcharge.reason
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert(`${res.data.message}\nتم إرسال ${res.data.notifications_sent} إشعار للسائقين`);
-    } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
     } finally {
       setSaving(false);
     }
@@ -608,95 +494,148 @@ const DeliverySettingsTab = () => {
 
   const { performance_levels, working_hours, leaderboard_rewards, max_food_orders_per_driver, food_orders_max_distance_km } = settings;
 
+  // تصنيفات الأقسام
+  const CATEGORIES = [
+    { id: 'all', name: 'الكل', icon: '📋' },
+    { id: 'prices', name: 'الأسعار', icon: '💰' },
+    { id: 'times', name: 'الأوقات', icon: '⏰' },
+    { id: 'orders', name: 'الطلبات', icon: '🚚' },
+    { id: 'penalties', name: 'العقوبات', icon: '⚠️' },
+    { id: 'rewards', name: 'المكافآت', icon: '🏆' },
+  ];
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* فلتر التصنيفات */}
+      <div className="bg-white rounded-xl border border-gray-200 p-2 sticky top-0 z-10">
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                activeCategory === cat.id 
+                  ? 'bg-orange-500 text-white shadow' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-6">
       {/* Dispatch Status & Violations Report - حالة التوزيع التلقائي */}
-      <CollapsibleSection 
-        title="حالة التوزيع والمخالفات" 
-        icon={<span className="text-2xl">🚀</span>}
-        color="bg-gradient-to-l from-blue-500 to-indigo-500"
-        defaultOpen={false}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* حالة التوزيع */}
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <span>🚀</span> حالة التوزيع التلقائي
-            </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* حالة التوزيع */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-blue-500 to-indigo-500 p-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🚀</span>
+              <h2 className="font-bold text-lg">حالة التوزيع التلقائي</h2>
+            </div>
+          </div>
+          <div className="p-4">
             {dispatchStatus ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">النظام</span>
-                  <span className={`font-bold text-sm ${dispatchStatus.background_task_running ? 'text-green-600' : 'text-red-600'}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-600">النظام</span>
+                  <span className={`font-bold ${dispatchStatus.background_task_running ? 'text-green-600' : 'text-red-600'}`}>
                     {dispatchStatus.background_task_running ? '✅ يعمل' : '❌ متوقف'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">السائقين المتاحين</span>
-                  <span className="font-bold text-sm text-blue-600">{dispatchStatus.available_drivers}</span>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <span className="text-gray-600">السائقين المتاحين</span>
+                  <span className="font-bold text-blue-600">{dispatchStatus.available_drivers}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">بانتظار التوزيع</span>
-                  <span className="font-bold text-sm text-orange-600">{dispatchStatus.pending_dispatch}</span>
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600">بانتظار التوزيع</span>
+                  <span className="font-bold text-orange-600">{dispatchStatus.pending_dispatch}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">تم توزيعها اليوم</span>
-                  <span className="font-bold text-sm text-purple-600">{dispatchStatus.dispatched_today}</span>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <span className="text-gray-600">تم توزيعها اليوم</span>
+                  <span className="font-bold text-purple-600">{dispatchStatus.dispatched_today}</span>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-4 text-sm">جاري التحميل...</div>
+              <div className="text-center text-gray-500 py-4">جاري التحميل...</div>
             )}
             <button
               onClick={fetchDispatchStatus}
-              className="mt-3 w-full bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2 text-sm"
+              className="mt-4 w-full bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2"
             >
-              <RefreshCw size={14} />
-              تحديث
-            </button>
-          </div>
-
-          {/* تقرير المخالفات */}
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <span>📊</span> تقرير المخالفات (30 يوم)
-            </h3>
-            {violationsReport ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">إجمالي المخالفات</span>
-                  <span className="font-bold text-sm text-red-600">{violationsReport.total_violations}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">إجمالي التعويضات</span>
-                  <span className="font-bold text-sm text-green-600">{formatPrice(violationsReport.total_compensations)}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg">
-                  <span className="text-gray-600 text-sm">متوسط وقت التأخير</span>
-                  <span className="font-bold text-sm text-yellow-600">{violationsReport.average_waiting_minutes} دقيقة</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-4 text-sm">جاري التحميل...</div>
-            )}
-            <button
-              onClick={fetchViolationsReport}
-              className="mt-3 w-full bg-red-100 text-red-700 py-2 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2 text-sm"
-            >
-              <RefreshCw size={14} />
+              <RefreshCw size={16} />
               تحديث
             </button>
           </div>
         </div>
-      </CollapsibleSection>
+
+        {/* تقرير المخالفات */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📊</span>
+              <h2 className="font-bold text-lg">تقرير المخالفات (30 يوم)</h2>
+            </div>
+          </div>
+          <div className="p-4">
+            {violationsReport ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <span className="text-gray-600">إجمالي المخالفات</span>
+                  <span className="font-bold text-red-600">{violationsReport.total_violations}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <span className="text-gray-600">إجمالي التعويضات</span>
+                  <span className="font-bold text-green-600">{formatPrice(violationsReport.total_compensations)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <span className="text-gray-600">متوسط وقت التأخير</span>
+                  <span className="font-bold text-yellow-600">{violationsReport.average_waiting_minutes} دقيقة</span>
+                </div>
+                {violationsReport.violating_stores?.length > 0 && (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-700 mb-2">المتاجر المخالفة:</p>
+                    <div className="space-y-1">
+                      {violationsReport.violating_stores.slice(0, 3).map((store, i) => (
+                        <div key={i} className="flex justify-between text-sm">
+                          <span className="text-gray-600">{store.name}</span>
+                          <span className="text-red-600">{store.count} مخالفة</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">جاري التحميل...</div>
+            )}
+            <button
+              onClick={fetchViolationsReport}
+              className="mt-4 w-full bg-red-100 text-red-700 py-2 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={16} />
+              تحديث
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Distance Delivery Settings - إعدادات أجور التوصيل بالمسافة */}
-      <CollapsibleSection 
-        title="أجور التوصيل بالمسافة" 
-        icon={<MapPin size={24} />}
-        color="bg-gradient-to-l from-green-500 to-teal-500"
-        defaultOpen={false}
-      >
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-green-500 to-teal-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <MapPin size={24} />
+            <div>
+              <h2 className="font-bold text-lg">أجور التوصيل بالمسافة</h2>
+              <p className="text-sm text-white/80">حساب رسوم التوصيل تلقائياً بناءً على المسافة بين المتجر والعميل</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
           {/* صيغة الحساب */}
           <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl border border-green-200">
             <h4 className="font-bold text-gray-700 mb-2">📐 صيغة الحساب:</h4>
@@ -830,168 +769,149 @@ const DeliverySettingsTab = () => {
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات أجور التوصيل
           </button>
-      </CollapsibleSection>
+        </div>
+      </div>
 
-      {/* Driver Km Settings - إعدادات نظام الكيلومتر للسائقين */}
-      <CollapsibleSection 
-        title="نظام الكيلومتر للسائقين" 
-        icon={<MapPin size={24} />}
-        color="bg-gradient-to-l from-amber-500 to-orange-500"
-        defaultOpen={false}
-      >
-        <div className="space-y-4">
-          {/* تفعيل/تعطيل النظام */}
-          <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${driverKmSettings.enabled ? 'bg-green-500' : 'bg-gray-400'}`}>
-                <span className="text-white text-2xl">{driverKmSettings.enabled ? '✅' : '❌'}</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800">تفعيل نظام الكيلومتر</h3>
-                <p className="text-xs text-gray-500">
-                  {driverKmSettings.enabled 
-                    ? 'أجرة السائق تُحسب بناءً على المسافة' 
-                    : 'أجرة السائق ثابتة (من إعدادات المنصة)'}
-                </p>
-              </div>
+      {/* Driver Earnings Settings - إعدادات أرباح السائق */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Truck size={24} />
+            <div>
+              <h2 className="font-bold text-lg">أرباح السائق</h2>
+              <p className="text-sm text-white/80">تحديد ربح السائق بناءً على المسافة الكلية</p>
             </div>
-            <button
-              onClick={() => setDriverKmSettings({...driverKmSettings, enabled: !driverKmSettings.enabled})}
-              className={`px-4 py-2 rounded-lg font-bold transition-colors ${
-                driverKmSettings.enabled 
-                  ? 'bg-green-500 text-white hover:bg-green-600' 
-                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-              }`}
-            >
-              {driverKmSettings.enabled ? 'مفعّل' : 'معطّل'}
-            </button>
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          {/* توضيح المعادلة */}
+          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب ربح السائق:</h3>
+            <p className="text-amber-700 font-mono text-sm">
+              الربح = <span className="text-orange-600">{formatPrice(driverEarningsSettings.base_fee)}</span> + (المسافة الكلية × <span className="text-amber-600">{formatPrice(driverEarningsSettings.price_per_km)}</span>)
+            </p>
+            <p className="text-xs text-amber-600 mt-2">
+              المسافة الكلية = (السائق ← المتجر) + (المتجر ← العميل)
+            </p>
+            <p className="text-xs text-amber-600 mt-1">
+              مثال: 5 كم = {formatPrice(driverEarningsSettings.base_fee)} + (5 × {formatPrice(driverEarningsSettings.price_per_km)}) = <strong>{formatPrice(driverEarningsSettings.base_fee + (5 * driverEarningsSettings.price_per_km))}</strong>
+            </p>
           </div>
 
-          {driverKmSettings.enabled && (
-            <>
-              {/* توضيح المعادلة */}
-              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب أجرة السائق:</h3>
-                <p className="text-amber-700 font-mono text-sm">
-                  الأجرة = <span className="text-orange-600">{formatPrice(driverKmSettings.base_fee)}</span> + (المسافة × <span className="text-amber-600">{formatPrice(driverKmSettings.price_per_km)}</span>)
-                </p>
-                <p className="text-xs text-amber-600 mt-2">
-                  المسافة = من المتجر إلى العميل (بالكيلومتر)
-                </p>
-                <p className="text-xs text-amber-600 mt-1">
-                  مثال: 5 كم = {formatPrice(driverKmSettings.base_fee)} + (5 × {formatPrice(driverKmSettings.price_per_km)}) = <strong>{formatPrice(driverKmSettings.base_fee + (5 * driverKmSettings.price_per_km))}</strong>
-                </p>
-              </div>
-
-              {/* الإعدادات */}
-              <div className="grid gap-4">
-                {/* الأجرة الأساسية */}
-                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg">💰</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">الأجرة الأساسية</h3>
-                      <p className="text-xs text-gray-500">المبلغ الثابت لكل توصيلة</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={driverKmSettings.base_fee}
-                      onChange={(e) => setDriverKmSettings({...driverKmSettings, base_fee: parseInt(e.target.value) || 0})}
-                      className="flex-1 p-3 border-2 border-orange-300 rounded-lg text-center text-lg font-bold"
-                    />
-                    <span className="text-sm text-gray-500">ل.س</span>
-                  </div>
+          {/* الإعدادات */}
+          <div className="grid gap-4">
+            {/* الأجرة الأساسية للسائق */}
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">💰</span>
                 </div>
-
-                {/* سعر الكيلومتر */}
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg">🛣️</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">سعر الكيلومتر</h3>
-                      <p className="text-xs text-gray-500">المبلغ المضاف لكل كيلومتر</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={driverKmSettings.price_per_km}
-                      onChange={(e) => setDriverKmSettings({...driverKmSettings, price_per_km: parseInt(e.target.value) || 0})}
-                      className="flex-1 p-3 border-2 border-amber-300 rounded-lg text-center text-lg font-bold"
-                    />
-                    <span className="text-sm text-gray-500">ل.س/كم</span>
-                  </div>
-                </div>
-
-                {/* الحد الأدنى للأجرة */}
-                <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg">🛡️</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">الحد الأدنى للأجرة</h3>
-                      <p className="text-xs text-gray-500">لا تقل أجرة السائق عن هذا المبلغ</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={driverKmSettings.min_fee}
-                      onChange={(e) => setDriverKmSettings({...driverKmSettings, min_fee: parseInt(e.target.value) || 0})}
-                      className="flex-1 p-3 border-2 border-yellow-300 rounded-lg text-center text-lg font-bold"
-                    />
-                    <span className="text-sm text-gray-500">ل.س</span>
-                  </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الأجرة الأساسية للسائق</h3>
+                  <p className="text-xs text-gray-500">المبلغ الثابت لكل توصيلة</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.base_fee}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, base_fee: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-orange-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س</span>
+              </div>
+            </div>
 
-              {/* مقارنة الأجور */}
-              <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
-                <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على أجرة السائق:</h4>
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  {[1, 3, 5, 10].map(km => {
-                    const earnings = Math.max(
-                      driverKmSettings.base_fee + (km * driverKmSettings.price_per_km),
-                      driverKmSettings.min_fee
-                    );
-                    return (
-                      <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
-                        <div className="text-2xl">🏍️</div>
-                        <div className="text-sm text-gray-600">{km} كم</div>
-                        <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
-                      </div>
-                    );
-                  })}
+            {/* سعر الكيلومتر للسائق */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🛣️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">سعر الكيلومتر للسائق</h3>
+                  <p className="text-xs text-gray-500">المبلغ المضاف لكل كيلومتر</p>
                 </div>
               </div>
-            </>
-          )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.price_per_km}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, price_per_km: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-amber-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س/كم</span>
+              </div>
+            </div>
+
+            {/* الحد الأدنى لربح السائق */}
+            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg">🛡️</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">الحد الأدنى لربح السائق</h3>
+                  <p className="text-xs text-gray-500">لا يقل ربح السائق عن هذا المبلغ</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={driverEarningsSettings.min_fee}
+                  onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, min_fee: parseInt(e.target.value) || 0})}
+                  className="flex-1 p-3 border-2 border-yellow-300 rounded-lg text-center text-lg font-bold"
+                />
+                <span className="text-sm text-gray-500">ل.س</span>
+              </div>
+            </div>
+          </div>
+
+          {/* مقارنة الأرباح */}
+          <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
+            <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على الأرباح:</h4>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {[2, 5, 10].map(km => {
+                const earnings = Math.max(
+                  driverEarningsSettings.base_fee + (km * driverEarningsSettings.price_per_km),
+                  driverEarningsSettings.min_fee
+                );
+                return (
+                  <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div className="text-2xl">🏍️</div>
+                    <div className="text-sm text-gray-600">{km} كم</div>
+                    <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           <button
-            onClick={handleSaveDriverKmSettings}
+            onClick={handleSaveDriverEarningsSettings}
             disabled={saving}
             className="mt-4 w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            حفظ إعدادات نظام الكيلومتر
+            حفظ إعدادات أرباح السائق
           </button>
         </div>
-      </CollapsibleSection>
+      </div>
 
       {/* Wait Time Settings - إعدادات وقت الانتظار */}
-      <CollapsibleSection 
-        title="وقت انتظار التوصيل" 
-        icon={<Clock size={24} />}
-        color="bg-gradient-to-l from-purple-500 to-pink-500"
-        defaultOpen={false}
-      >
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-pink-500 p-4 text-white">
+          <div className="flex items-center gap-3">
+            <Clock size={24} />
+            <div>
+              <h2 className="font-bold text-lg">وقت انتظار التوصيل</h2>
+              <p className="text-sm text-white/80">الوقت الذي ينتظره السائق إذا لم يرد العميل</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4">
           <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
@@ -1268,140 +1188,6 @@ const DeliverySettingsTab = () => {
         </div>
       </div>
 
-      {/* Weather Surcharge Section - رسوم الطقس الصعب */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className={`p-4 text-white ${weatherSurcharge.is_active ? 'bg-gradient-to-l from-amber-500 to-orange-500' : 'bg-gradient-to-l from-gray-500 to-gray-600'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{weatherSurcharge.is_active ? '🌧️' : '☀️'}</span>
-              <div>
-                <h2 className="font-bold text-lg">رسوم الطقس الصعب</h2>
-                <p className="text-sm text-white/80">
-                  {weatherSurcharge.is_active ? 'مفعّل - يتم تطبيق رسوم إضافية' : 'متوقف - لا توجد رسوم إضافية'}
-                </p>
-              </div>
-            </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-bold ${weatherSurcharge.is_active ? 'bg-white/20' : 'bg-gray-400/50'}`}>
-              {weatherSurcharge.is_active ? '🟢 مفعّل' : '⚪ متوقف'}
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* تفعيل/إيقاف */}
-            <div className={`rounded-xl p-4 border-2 ${weatherSurcharge.is_active ? 'bg-amber-50 border-amber-300' : 'bg-gray-50 border-gray-200'}`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{weatherSurcharge.is_active ? '🌧️' : '☀️'}</span>
-                  <div>
-                    <h3 className="font-bold text-gray-800">حالة الرسوم</h3>
-                    <p className="text-xs text-gray-500">تفعيل/إيقاف الرسوم الإضافية</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setWeatherSurcharge({...weatherSurcharge, is_active: !weatherSurcharge.is_active})}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${weatherSurcharge.is_active ? 'bg-amber-500' : 'bg-gray-300'}`}
-                >
-                  <span className={`absolute top-0.5 ${weatherSurcharge.is_active ? 'right-0.5' : 'left-0.5'} w-6 h-6 bg-white rounded-full shadow transition-all`}></span>
-                </button>
-              </div>
-              
-              {/* المبلغ */}
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">💰 المبلغ الإضافي (ل.س)</label>
-                <input
-                  type="number"
-                  value={weatherSurcharge.amount}
-                  onChange={(e) => setWeatherSurcharge({...weatherSurcharge, amount: parseInt(e.target.value) || 0})}
-                  className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
-                  min={0}
-                  max={50000}
-                  step={500}
-                />
-                <p className="text-center text-sm text-amber-600 mt-1">
-                  +{weatherSurcharge.amount?.toLocaleString()} ل.س على كل طلب
-                </p>
-              </div>
-              
-              {/* السبب */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">📝 سبب الرسوم</label>
-                <select
-                  value={weatherSurcharge.reason}
-                  onChange={(e) => setWeatherSurcharge({...weatherSurcharge, reason: e.target.value})}
-                  className="w-full p-3 border-2 border-amber-300 rounded-lg font-medium"
-                >
-                  <option value="طقس صعب">🌧️ طقس صعب</option>
-                  <option value="مطر غزير">🌧️ مطر غزير</option>
-                  <option value="ثلوج">❄️ ثلوج</option>
-                  <option value="عاصفة رملية">💨 عاصفة رملية</option>
-                  <option value="حرارة شديدة">🌡️ حرارة شديدة</option>
-                  <option value="ضغط عالي">📈 ضغط عالي على الطلبات</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* معاينة ما سيراه العميل */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <h3 className="font-bold text-gray-800 mb-3">👁️ معاينة - ما سيراه العميل:</h3>
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">المنتجات:</span>
-                    <span className="font-medium">45,000 ل.س</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">رسوم التوصيل:</span>
-                    <span className="font-medium">5,000 ل.س</span>
-                  </div>
-                  {weatherSurcharge.is_active && (
-                    <div className="flex justify-between text-amber-600">
-                      <span className="flex items-center gap-1">
-                        <span>🌧️</span>
-                        <span>رسوم {weatherSurcharge.reason}:</span>
-                      </span>
-                      <span className="font-bold">+{weatherSurcharge.amount?.toLocaleString()} ل.س</span>
-                    </div>
-                  )}
-                  <div className="border-t pt-2 flex justify-between font-bold">
-                    <span>المجموع:</span>
-                    <span className={weatherSurcharge.is_active ? 'text-amber-600' : ''}>
-                      {(50000 + (weatherSurcharge.is_active ? weatherSurcharge.amount : 0)).toLocaleString()} ل.س
-                    </span>
-                  </div>
-                </div>
-                {!weatherSurcharge.is_active && (
-                  <p className="text-xs text-gray-400 mt-3 text-center">
-                    * عند التفعيل ستظهر رسوم الطقس الصعب هنا
-                  </p>
-                )}
-              </div>
-              
-              {/* ملاحظة مهمة */}
-              <div className={`mt-4 p-3 rounded-lg ${weatherSurcharge.is_active ? 'bg-amber-100 border border-amber-300' : 'bg-blue-50 border border-blue-200'}`}>
-                <p className="text-xs text-gray-700">
-                  <strong>📌 ملاحظة:</strong> رسوم الطقس الصعب تُطبق فقط على الطلبات التي <strong>لم تصل للحد المجاني</strong> للتوصيل.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <button
-            onClick={handleSaveWeatherSurcharge}
-            disabled={saving}
-            className={`mt-4 w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold text-white ${
-              weatherSurcharge.is_active 
-                ? 'bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
-                : 'bg-gradient-to-l from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
-            }`}
-          >
-            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            {weatherSurcharge.is_active ? '💾 تفعيل وإرسال إشعار للسائقين' : '💾 إيقاف وإرسال إشعار للسائقين'}
-          </button>
-        </div>
-      </div>
-
       {/* Order Limits Section - إعدادات قبول الطلبات */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-orange-500 to-red-500 p-4 text-white">
@@ -1535,15 +1321,15 @@ const DeliverySettingsTab = () => {
               </p>
             </div>
 
-            {/* المسافة القصوى بين عملاء الطعام */}
+            {/* المسافة القصوى */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <MapPin size={20} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">المسافة بين العملاء</h3>
-                  <p className="text-xs text-gray-500">للسائق الذي يحمل عدة طلبات</p>
+                  <h3 className="font-bold text-gray-800">المسافة القصوى</h3>
+                  <p className="text-xs text-gray-500">بين عملاء الطعام</p>
                 </div>
               </div>
               <input
@@ -1560,37 +1346,6 @@ const DeliverySettingsTab = () => {
               />
               <p className="text-center text-sm text-blue-600 mt-2">
                 {food_orders_max_distance_km} كم
-              </p>
-            </div>
-
-            {/* المسافة القصوى بين المطعم والعميل */}
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg">🏪</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">المسافة بين المطعم والعميل</h3>
-                  <p className="text-xs text-gray-500">الحد الأقصى لنطاق التوصيل</p>
-                </div>
-              </div>
-              <input
-                type="number"
-                value={settings.max_store_customer_distance_km || 5}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  max_store_customer_distance_km: parseFloat(e.target.value) || 5
-                })}
-                className="w-full p-3 border-2 border-amber-300 rounded-lg text-center text-2xl font-bold"
-                min={1}
-                max={30}
-                step={0.5}
-              />
-              <p className="text-center text-sm text-amber-600 mt-2">
-                {settings.max_store_customer_distance_km || 5} كم
-              </p>
-              <p className="text-center text-xs text-gray-500 mt-1">
-                العميل لا يستطيع الطلب من متجر يبعد أكثر من هذه المسافة
               </p>
             </div>
           </div>
@@ -2564,6 +2319,7 @@ const DeliverySettingsTab = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

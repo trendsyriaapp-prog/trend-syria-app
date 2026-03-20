@@ -237,6 +237,64 @@ const FoodStoresTab = () => {
                     )}
                   </div>
                 </div>
+
+                {/* الوثائق المقدمة */}
+                {!store.is_approved && store.documents && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-2 font-medium">الوثائق المقدمة:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {store.documents.store_photo && (
+                        <div>
+                          <p className="text-[10px] text-gray-400 mb-1">صورة المتجر</p>
+                          <img 
+                            src={store.documents.store_photo} 
+                            alt="صورة المتجر" 
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200"
+                            onClick={() => window.open(store.documents.store_photo, '_blank')}
+                          />
+                        </div>
+                      )}
+                      {store.documents.license_photo && (
+                        <div>
+                          <p className="text-[10px] text-gray-400 mb-1">الترخيص</p>
+                          <img 
+                            src={store.documents.license_photo} 
+                            alt="الترخيص" 
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
+                            onClick={() => window.open(store.documents.license_photo, '_blank')}
+                          />
+                        </div>
+                      )}
+                      {store.documents.health_certificate && (
+                        <div>
+                          <p className="text-[10px] text-gray-400 mb-1">الشهادة الصحية</p>
+                          <img 
+                            src={store.documents.health_certificate} 
+                            alt="الشهادة الصحية" 
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
+                            onClick={() => window.open(store.documents.health_certificate, '_blank')}
+                          />
+                        </div>
+                      )}
+                      {store.documents.id_photo && (
+                        <div>
+                          <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                          <img 
+                            src={store.documents.id_photo} 
+                            alt="صورة الهوية" 
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
+                            onClick={() => window.open(store.documents.id_photo, '_blank')}
+                          />
+                        </div>
+                      )}
+                      {/* إذا لم توجد أي وثائق */}
+                      {!store.documents.store_photo && !store.documents.license_photo && 
+                       !store.documents.health_certificate && !store.documents.id_photo && (
+                        <p className="col-span-3 text-xs text-gray-400 italic">لم يتم تقديم أي وثائق</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -149,7 +149,7 @@ const CallRequestsTab = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto">
+      <div className="flex gap-2 flex-wrap">
         {[
           { id: 'pending', label: 'معلقة', count: requests.filter(r => r.status === 'pending').length },
           { id: 'in_progress', label: 'قيد المعالجة' },
