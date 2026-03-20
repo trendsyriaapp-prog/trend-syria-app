@@ -232,15 +232,13 @@ const JoinAsFoodSellerPage = () => {
       {/* Header */}
       <div className="bg-gradient-to-b from-[#E65000] to-[#FF6B00] text-white px-4 py-6">
         <div className="max-w-2xl mx-auto">
-          {step > 1 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="flex items-center gap-2 text-white/80 hover:text-white mb-4"
-            >
-              <ArrowLeft size={20} />
-              الخطوة السابقة
-            </button>
-          )}
+          <button
+            onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
+            className="flex items-center gap-2 text-white/80 hover:text-white mb-4"
+          >
+            <ArrowLeft size={20} />
+            رجوع
+          </button>
           <h1 className="text-2xl font-bold">انضم كمتجر طعام</h1>
           <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في ترند سورية</p>
           

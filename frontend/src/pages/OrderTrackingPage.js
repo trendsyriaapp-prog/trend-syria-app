@@ -152,9 +152,17 @@ const OrderTrackingPage = () => {
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <h1 className="font-bold text-gray-900">تتبع الطلب</h1>
-          <p className="text-xs text-gray-500">#{orderId.slice(0, 8)}</p>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <ArrowRight size={20} />
+          </button>
+          <div>
+            <h1 className="font-bold text-gray-900">تتبع الطلب</h1>
+            <p className="text-xs text-gray-500">#{orderId.slice(0, 8)}</p>
+          </div>
         </div>
       </div>
 

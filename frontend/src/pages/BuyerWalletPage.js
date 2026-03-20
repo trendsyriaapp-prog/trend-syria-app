@@ -2,10 +2,11 @@
 // صفحة المحفظة للعملاء - شحن واستخدام الرصيد
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Wallet, Plus, Clock, CheckCircle, XCircle, 
-  CreditCard, History
+  CreditCard, History, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -17,7 +18,7 @@ const formatPrice = (price) => {
 };
 
 const BuyerWalletPage = () => {
-  // Note: useNavigate was removed since back button is no longer needed
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -152,6 +153,12 @@ const BuyerWalletPage = () => {
         
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow"
+          >
+            <ArrowRight size={20} />
+          </button>
           <h1 className="text-xl font-bold text-gray-900">محفظتي</h1>
         </div>
         

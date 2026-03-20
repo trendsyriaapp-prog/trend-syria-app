@@ -60,7 +60,15 @@ const AboutPage = () => {
       {/* Header */}
       <div className="bg-gradient-to-l from-orange-500 to-red-500 text-white">
         <div className="p-4">
-          <h1 className="text-xl font-bold">من نحن</h1>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <ArrowRight size={24} />
+            </button>
+            <h1 className="text-xl font-bold">من نحن</h1>
+          </div>
         </div>
         
         {/* Hero Section */}
