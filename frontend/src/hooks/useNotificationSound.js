@@ -131,13 +131,25 @@ export const useNotificationSound = () => {
 
   // إنشاء AudioContext عند الحاجة
   const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      if (!audioContextRef.current) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+          console.warn('AudioContext غير مدعوم في هذا المتصفح');
+          return null;
+        }
+        audioContextRef.current = new AudioContextClass();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume().catch(() => {
+          console.log('تعذر استئناف AudioContext');
+        });
+      }
+      return audioContextRef.current;
+    } catch (error) {
+      console.warn('خطأ في إنشاء AudioContext:', error);
+      return null;
     }
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
-    return audioContextRef.current;
   }, []);
 
   // تشغيل الصوت الافتراضي من ملف MP3
@@ -160,6 +172,10 @@ export const useNotificationSound = () => {
   const playTone = useCallback((toneId) => {
     try {
       const audioContext = getAudioContext();
+      if (!audioContext) {
+        playDefaultSound();
+        return;
+      }
       const toneFunction = tonePatterns[toneId];
       if (toneFunction) {
         toneFunction(audioContext);
@@ -178,6 +194,11 @@ export const useNotificationSound = () => {
   const playSound = useCallback((type = 'default') => {
     try {
       const audioContext = getAudioContext();
+      
+      if (!audioContext) {
+        playDefaultSound();
+        return;
+      }
       
       if (type === 'success') {
         playSuccessSound(audioContext);

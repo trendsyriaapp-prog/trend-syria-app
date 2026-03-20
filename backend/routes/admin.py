@@ -357,8 +357,24 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    now = datetime.now(timezone.utc).isoformat()
+    
     await db.users.update_one({"id": seller_id}, {"$set": {"is_approved": True}})
-    await db.seller_documents.update_one({"seller_id": seller_id}, {"$set": {"status": "approved"}})
+    await db.seller_documents.update_one({"seller_id": seller_id}, {"$set": {"status": "approved", "approved_at": now}})
+    
+    # إرسال إشعار للبائع بالموافقة
+    seller = await db.users.find_one({"id": seller_id})
+    if seller:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": "✅ تم قبول طلبك!",
+            "message": "مبروك! تم قبول طلبك كبائع. يمكنك الآن إضافة منتجاتك والبدء بالبيع.",
+            "type": "seller_approved",
+            "is_read": False,
+            "created_at": now
+        })
+    
     return {"message": "تم تفعيل البائع"}
 
 @router.post("/sellers/{seller_id}/reject")
@@ -515,15 +531,28 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    now = datetime.now(timezone.utc).isoformat()
+    
     result = await db.delivery_documents.update_one(
         {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
-        {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": "approved", "approved_at": now}}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
     
     await db.users.update_one({"id": driver_id}, {"$set": {"is_approved": True}})
+    
+    # إرسال إشعار لموظف التوصيل بالموافقة
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": driver_id,
+        "title": "✅ تم قبول طلبك!",
+        "message": "مبروك! تم قبول طلبك كموظف توصيل. يمكنك الآن البدء باستلام الطلبات.",
+        "type": "delivery_approved",
+        "is_read": False,
+        "created_at": now
+    })
     
     return {"message": "تم اعتماد موظف التوصيل"}
 

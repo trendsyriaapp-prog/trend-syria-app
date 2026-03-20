@@ -386,8 +386,20 @@ async def get_availability(user: dict = Depends(get_current_user)):
         {"_id": 0, "is_available": 1}
     )
     
+    # إذا لم توجد وثائق، إنشاء وثيقة افتراضية
+    if not driver_doc:
+        new_doc = {
+            "driver_id": user["id"],
+            "delivery_id": user["id"],
+            "status": "pending",
+            "is_available": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.delivery_documents.insert_one(new_doc)
+        return {"is_available": False}
+    
     # افتراضياً السائق غير متاح
-    is_available = driver_doc.get("is_available", False) if driver_doc else False
+    is_available = driver_doc.get("is_available", False)
     
     return {"is_available": is_available}
 
@@ -396,6 +408,29 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
     """تحديث حالة توفر السائق"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من وجود وثائق السائق أولاً
+    driver_doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]}
+    )
+    
+    # إذا لم توجد وثائق، إنشاء وثيقة جديدة
+    if not driver_doc:
+        new_doc = {
+            "driver_id": user["id"],
+            "delivery_id": user["id"],
+            "status": "pending",
+            "is_available": data.is_available,
+            "availability_updated_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.delivery_documents.insert_one(new_doc)
+        status_text = "متاح" if data.is_available else "غير متاح"
+        return {
+            "success": True, 
+            "is_available": data.is_available,
+            "message": f"تم تحديث حالتك إلى: {status_text}"
+        }
     
     # إذا كان السائق يريد تعيين نفسه "غير متاح"، نتحقق من عدم وجود طلبات نشطة
     if not data.is_available:
