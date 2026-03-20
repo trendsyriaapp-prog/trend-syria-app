@@ -2525,3 +2525,396 @@ async def get_available_drivers(user: dict = Depends(get_current_user)):
             for d in drivers
         ]
     }
+
+
+
+# ============== إدارة الطلبات للمدير ==============
+
+@router.post("/orders/{order_id}/cancel")
+async def admin_cancel_order(
+    order_id: str,
+    data: dict = None,
+    user: dict = Depends(get_current_user)
+):
+    """إلغاء طلب بواسطة المدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    reason = data.get("reason", "") if data else ""
+    admin_note = data.get("admin_note", "") if data else ""
+    
+    # البحث في طلبات المنتجات
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    collection = db.orders
+    order_type = "product"
+    
+    if not order:
+        # البحث في طلبات الطعام
+        order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+        collection = db.food_orders
+        order_type = "food"
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من إمكانية الإلغاء
+    if order.get("status") in ["delivered", "completed"]:
+        raise HTTPException(status_code=400, detail="لا يمكن إلغاء طلب تم توصيله")
+    
+    if order.get("status") == "cancelled":
+        raise HTTPException(status_code=400, detail="الطلب ملغي مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الطلب
+    update_data = {
+        "status": "cancelled",
+        "cancelled_at": now,
+        "cancelled_by": user["id"],
+        "cancelled_by_type": "admin",
+        "cancellation_reason": reason,
+        "admin_note": admin_note
+    }
+    
+    await collection.update_one({"id": order_id}, {"$set": update_data})
+    
+    # إشعار العميل
+    customer_id = order.get("customer_id") or order.get("user_id")
+    if customer_id:
+        message = "تم إلغاء طلبك من قبل الإدارة."
+        if reason:
+            reason_labels = {
+                "customer_request": "بناءً على طلبك",
+                "out_of_stock": "منتج غير متوفر",
+                "payment_issue": "مشكلة في الدفع",
+                "delivery_issue": "مشكلة في التوصيل",
+                "other": "لأسباب إدارية"
+            }
+            message += f" السبب: {reason_labels.get(reason, reason)}"
+        
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": customer_id,
+            "title": "❌ تم إلغاء طلبك",
+            "message": message,
+            "type": "order_cancelled",
+            "data": {"order_id": order_id},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # إشعار البائع
+    seller_id = order.get("seller_id") or order.get("store_owner_id")
+    if seller_id:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": "❌ تم إلغاء طلب",
+            "message": f"تم إلغاء الطلب #{order_id[:8]} من قبل الإدارة",
+            "type": "order_cancelled_by_admin",
+            "data": {"order_id": order_id},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # إشعار السائق إذا كان معيناً
+    driver_id = order.get("driver_id")
+    if driver_id:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": driver_id,
+            "title": "❌ تم إلغاء طلب",
+            "message": f"تم إلغاء الطلب #{order_id[:8]} الذي كنت تقوم بتوصيله",
+            "type": "order_cancelled_driver",
+            "data": {"order_id": order_id},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {"message": "تم إلغاء الطلب بنجاح", "order_id": order_id}
+
+
+@router.post("/orders/{order_id}/status")
+async def admin_change_order_status(
+    order_id: str,
+    data: dict,
+    user: dict = Depends(get_current_user)
+):
+    """تغيير حالة الطلب بواسطة المدير"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    new_status = data.get("status")
+    admin_note = data.get("admin_note", "")
+    
+    if not new_status:
+        raise HTTPException(status_code=400, detail="يجب تحديد الحالة الجديدة")
+    
+    valid_statuses = ["pending", "confirmed", "processing", "ready", "on_the_way", "delivered", "cancelled"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"حالة غير صالحة. الحالات المتاحة: {', '.join(valid_statuses)}")
+    
+    # البحث في طلبات المنتجات
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    collection = db.orders
+    order_type = "product"
+    
+    if not order:
+        # البحث في طلبات الطعام
+        order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+        collection = db.food_orders
+        order_type = "food"
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    old_status = order.get("status")
+    if old_status == new_status:
+        raise HTTPException(status_code=400, detail="الطلب بالفعل في هذه الحالة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الطلب
+    update_data = {
+        "status": new_status,
+        "status_updated_at": now,
+        "status_updated_by": user["id"],
+        "admin_note": admin_note
+    }
+    
+    # إضافة تاريخ التوصيل إذا تم التسليم
+    if new_status == "delivered":
+        update_data["delivered_at"] = now
+    
+    await collection.update_one({"id": order_id}, {"$set": update_data})
+    
+    # أسماء الحالات بالعربية
+    status_labels = {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "processing": "قيد التجهيز",
+        "ready": "جاهز للتوصيل",
+        "on_the_way": "في الطريق",
+        "delivered": "تم التوصيل",
+        "cancelled": "ملغي"
+    }
+    
+    # إشعار العميل
+    customer_id = order.get("customer_id") or order.get("user_id")
+    if customer_id:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": customer_id,
+            "title": "📦 تحديث حالة الطلب",
+            "message": f"تم تحديث حالة طلبك إلى: {status_labels.get(new_status, new_status)}",
+            "type": "order_status_updated",
+            "data": {"order_id": order_id, "new_status": new_status},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {
+        "message": f"تم تغيير حالة الطلب إلى: {status_labels.get(new_status, new_status)}",
+        "order_id": order_id,
+        "old_status": old_status,
+        "new_status": new_status
+    }
+
+
+@router.post("/orders/{order_id}/refund")
+async def admin_full_refund(
+    order_id: str,
+    data: dict = None,
+    user: dict = Depends(get_current_user)
+):
+    """استرداد كامل المبلغ للعميل"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    admin_note = data.get("admin_note", "") if data else ""
+    
+    # البحث عن الطلب
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    collection = db.orders
+    order_type = "product"
+    
+    if not order:
+        order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+        collection = db.food_orders
+        order_type = "food"
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن الطلب لم يُسترد مسبقاً
+    if order.get("status") == "refunded":
+        raise HTTPException(status_code=400, detail="تم استرداد هذا الطلب مسبقاً")
+    
+    order_total = order.get("total", 0)
+    customer_id = order.get("customer_id") or order.get("user_id")
+    
+    if not customer_id:
+        raise HTTPException(status_code=400, detail="لم يتم العثور على العميل")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إضافة المبلغ لمحفظة العميل
+    await db.users.update_one(
+        {"id": customer_id},
+        {"$inc": {"wallet_balance": order_total}}
+    )
+    
+    # تسجيل معاملة المحفظة
+    await db.wallet_transactions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": customer_id,
+        "type": "refund",
+        "amount": order_total,
+        "description": f"استرداد كامل للطلب #{order_id[:8]}",
+        "order_id": order_id,
+        "admin_id": user["id"],
+        "admin_note": admin_note,
+        "created_at": now
+    })
+    
+    # تحديث الطلب
+    await collection.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "refunded",
+                "refunded_at": now,
+                "refunded_by": user["id"],
+                "refund_amount": order_total,
+                "refund_type": "full",
+                "admin_note": admin_note
+            }
+        }
+    )
+    
+    # إشعار العميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": customer_id,
+        "title": "💰 تم استرداد المبلغ",
+        "message": f"تم إضافة {order_total:,.0f} ل.س إلى محفظتك كاسترداد للطلب #{order_id[:8]}",
+        "type": "refund_completed",
+        "data": {"order_id": order_id, "amount": order_total},
+        "is_read": False,
+        "created_at": now
+    })
+    
+    return {
+        "message": "تم استرداد المبلغ بنجاح",
+        "order_id": order_id,
+        "refund_amount": order_total
+    }
+
+
+# ============== إدارة المنتجات للمدير ==============
+
+@router.post("/products/{product_id}/toggle-visibility")
+async def admin_toggle_product_visibility(
+    product_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """إخفاء/إظهار منتج"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    current_status = product.get("is_hidden", False)
+    new_status = not current_status
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.products.update_one(
+        {"id": product_id},
+        {
+            "$set": {
+                "is_hidden": new_status,
+                "visibility_updated_at": now,
+                "visibility_updated_by": user["id"]
+            }
+        }
+    )
+    
+    # إشعار البائع
+    seller_id = product.get("seller_id")
+    if seller_id:
+        action = "إخفاء" if new_status else "إظهار"
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": f"{'👁️‍🗨️' if new_status else '👁️'} تم {action} منتجك",
+            "message": f"تم {action} المنتج '{product.get('name', '')}' من قبل الإدارة",
+            "type": "product_visibility_changed",
+            "data": {"product_id": product_id, "is_hidden": new_status},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {
+        "message": f"تم {'إخفاء' if new_status else 'إظهار'} المنتج بنجاح",
+        "product_id": product_id,
+        "is_hidden": new_status
+    }
+
+
+@router.delete("/products/{product_id}")
+async def admin_delete_product(
+    product_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """حذف منتج نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمديرين فقط")
+    
+    product = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    seller_id = product.get("seller_id")
+    product_name = product.get("name", "")
+    
+    # حذف المنتج
+    await db.products.delete_one({"id": product_id})
+    
+    # حذف من المفضلة
+    await db.favorites.delete_many({"product_id": product_id})
+    
+    # حذف من السلات
+    await db.carts.update_many(
+        {},
+        {"$pull": {"items": {"product_id": product_id}}}
+    )
+    
+    # إشعار البائع
+    if seller_id:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": "🗑️ تم حذف منتج",
+            "message": f"تم حذف المنتج '{product_name}' من قبل الإدارة",
+            "type": "product_deleted_by_admin",
+            "data": {"product_name": product_name},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # تسجيل النشاط
+    await db.admin_activity_log.insert_one({
+        "id": str(uuid.uuid4()),
+        "admin_id": user["id"],
+        "action": "delete_product",
+        "target_type": "product",
+        "target_id": product_id,
+        "details": {"product_name": product_name, "seller_id": seller_id},
+        "created_at": now
+    })
+    
+    return {"message": "تم حذف المنتج بنجاح", "product_id": product_id}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertTriangle, CheckCircle, XCircle, RefreshCw, User, Package, Clock, DollarSign } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, RefreshCw, User, Package, Clock, DollarSign, X } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -21,11 +22,18 @@ const formatDate = (dateStr) => {
 };
 
 const ViolationsTab = () => {
+  const { toast } = useToast();
   const [violations, setViolations] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [processing, setProcessing] = useState(null);
+  
+  // Modals
+  const [applyModal, setApplyModal] = useState({ isOpen: false, violation: null });
+  const [cancelModal, setCancelModal] = useState({ isOpen: false, violationId: null });
+  const [checkModal, setCheckModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const fetchViolations = async () => {
     setLoading(true);
@@ -47,56 +55,57 @@ const ViolationsTab = () => {
     fetchViolations();
   }, []);
 
-  const handleApplyViolation = async (violationId) => {
-    if (!window.confirm('هل أنت متأكد من تطبيق هذه المخالفة وخصم المبلغ من رصيد السائق؟')) return;
+  const handleApplyViolation = async () => {
+    if (!applyModal.violation) return;
     
-    setProcessing(violationId);
+    setProcessing(applyModal.violation.id);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/delivery/violations/${violationId}/apply`, {}, {
+      await axios.post(`${API}/api/delivery/violations/${applyModal.violation.id}/apply`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchViolations();
-      alert('تم تطبيق المخالفة بنجاح');
+      toast({ title: "تم بنجاح", description: "تم تطبيق المخالفة بنجاح" });
+      setApplyModal({ isOpen: false, violation: null });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setProcessing(null);
     }
   };
 
-  const handleCancelViolation = async (violationId) => {
-    const reason = prompt('سبب إلغاء المخالفة (اختياري):');
-    if (reason === null) return;
+  const handleCancelViolation = async () => {
+    if (!cancelModal.violationId) return;
     
-    setProcessing(violationId);
+    setProcessing(cancelModal.violationId);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/api/delivery/violations/${violationId}/cancel?reason=${encodeURIComponent(reason)}`, {}, {
+      await axios.post(`${API}/api/delivery/violations/${cancelModal.violationId}/cancel?reason=${encodeURIComponent(cancelReason)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchViolations();
-      alert('تم إلغاء المخالفة');
+      toast({ title: "تم بنجاح", description: "تم إلغاء المخالفة" });
+      setCancelModal({ isOpen: false, violationId: null });
+      setCancelReason('');
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setProcessing(null);
     }
   };
 
   const handleCheckUndelivered = async () => {
-    if (!window.confirm('سيتم التحقق من الطلبات غير المُسلّمة وإنشاء مخالفات جديدة. متابعة؟')) return;
-    
+    setCheckModal(false);
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API}/api/delivery/check-undelivered-orders`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert(res.data.message);
+      toast({ title: "تم بنجاح", description: res.data.message });
       await fetchViolations();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -184,7 +193,7 @@ const ViolationsTab = () => {
       {/* أزرار التحكم */}
       <div className="flex flex-wrap gap-3">
         <button
-          onClick={handleCheckUndelivered}
+          onClick={() => setCheckModal(true)}
           className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-orange-600"
         >
           <AlertTriangle size={18} />
@@ -263,7 +272,7 @@ const ViolationsTab = () => {
               {violation.status === 'pending' && (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleApplyViolation(violation.id)}
+                    onClick={() => setApplyModal({ isOpen: true, violation })}
                     disabled={processing === violation.id}
                     className="flex-1 py-2 bg-red-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-red-600 disabled:opacity-50"
                   >
@@ -275,7 +284,7 @@ const ViolationsTab = () => {
                     تطبيق الخصم
                   </button>
                   <button
-                    onClick={() => handleCancelViolation(violation.id)}
+                    onClick={() => setCancelModal({ isOpen: true, violationId: violation.id })}
                     disabled={processing === violation.id}
                     className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50"
                   >
@@ -300,6 +309,135 @@ const ViolationsTab = () => {
           ))
         )}
       </div>
+
+      {/* Apply Violation Modal */}
+      {applyModal.isOpen && applyModal.violation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">تأكيد تطبيق المخالفة</h3>
+                <p className="text-xs text-gray-500">طلب #{applyModal.violation.order_number}</p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 rounded-lg p-3 mb-4 text-center">
+              <p className="text-sm text-gray-600 mb-1">المبلغ المستحق الخصم</p>
+              <p className="text-xl font-bold text-red-600">{formatPrice(applyModal.violation.amount)}</p>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من تطبيق هذه المخالفة وخصم المبلغ من رصيد السائق <span className="font-bold">{applyModal.violation.driver_name}</span>؟
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setApplyModal({ isOpen: false, violation: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleApplyViolation}
+                disabled={processing === applyModal.violation.id}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {processing === applyModal.violation.id ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <CheckCircle size={16} />
+                )}
+                تأكيد الخصم
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Violation Modal */}
+      {cancelModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold">إلغاء المخالفة</h3>
+              <button onClick={() => { setCancelModal({ isOpen: false, violationId: null }); setCancelReason(''); }} className="p-1 hover:bg-gray-100 rounded-full">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">سبب الإلغاء (اختياري)</label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="أضف سبب الإلغاء..."
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setCancelModal({ isOpen: false, violationId: null }); setCancelReason(''); }}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                رجوع
+              </button>
+              <button
+                onClick={handleCancelViolation}
+                disabled={processing === cancelModal.violationId}
+                className="flex-1 py-2 bg-gray-700 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {processing === cancelModal.violationId ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <XCircle size={16} />
+                )}
+                إلغاء المخالفة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Check Undelivered Modal */}
+      {checkModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <AlertTriangle size={20} className="text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">التحقق من الطلبات</h3>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              سيتم التحقق من الطلبات غير المُسلّمة وإنشاء مخالفات جديدة للسائقين المخالفين. هل تريد المتابعة؟
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCheckModal(false)}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleCheckUndelivered}
+                className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                <CheckCircle size={16} />
+                متابعة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

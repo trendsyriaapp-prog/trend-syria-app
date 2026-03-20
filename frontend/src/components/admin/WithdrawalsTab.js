@@ -25,6 +25,8 @@ const WithdrawalsTab = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [approveModal, setApproveModal] = useState({ isOpen: false, withdrawalId: null, amount: 0, userName: '' });
   const [approveProcessing, setApproveProcessing] = useState(false);
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, withdrawalId: null, userName: '' });
+  const [rejectProcessing, setRejectProcessing] = useState(false);
   
   useEffect(() => {
     fetchWithdrawals();

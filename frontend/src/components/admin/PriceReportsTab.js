@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Flag, CheckCircle, XCircle, RefreshCw, AlertTriangle, Package, Clock, Eye, Ban, UserCheck, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { Flag, CheckCircle, XCircle, RefreshCw, AlertTriangle, Package, Clock, Eye, Ban, UserCheck, ChevronDown, ChevronUp, MessageSquare, X } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -21,6 +22,7 @@ const formatDate = (dateStr) => {
 };
 
 const PriceReportsTab = () => {
+  const { toast } = useToast();
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState({});
   const [sellersWithViolations, setSellersWithViolations] = useState([]);
@@ -34,6 +36,10 @@ const PriceReportsTab = () => {
   const [resolutionStatus, setResolutionStatus] = useState('warning');
   const [violationPoints, setViolationPoints] = useState(1);
   const [adminNotes, setAdminNotes] = useState('');
+  
+  // Confirmation modals
+  const [suspendModal, setSuspendModal] = useState({ isOpen: false, sellerId: null, sellerName: '' });
+  const [unsuspendModal, setUnsuspendModal] = useState({ isOpen: false, sellerId: null });
 
   const fetchReports = async () => {
     setLoading(true);
@@ -85,7 +91,7 @@ const PriceReportsTab = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      alert('تم حل البلاغ بنجاح');
+      toast({ title: "تم بنجاح", description: "تم حل البلاغ بنجاح" });
       setExpandedReport(null);
       setResolutionStatus('warning');
       setViolationPoints(1);
@@ -93,39 +99,43 @@ const PriceReportsTab = () => {
       await fetchReports();
       await fetchSellersWithViolations();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setProcessing(null);
     }
   };
 
-  const handleSuspendSeller = async (sellerId, sellerName) => {
-    if (!window.confirm(`هل أنت متأكد من تعليق حساب البائع "${sellerName}"؟`)) return;
-    
+  const handleSuspendSeller = async () => {
+    setProcessing(suspendModal.sellerId);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/price-reports/admin/seller/${sellerId}/suspend?reason=مخالفة الأسعار`, {}, {
+      await axios.put(`${API}/api/price-reports/admin/seller/${suspendModal.sellerId}/suspend?reason=مخالفة الأسعار`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('تم تعليق حساب البائع');
+      toast({ title: "تم بنجاح", description: "تم تعليق حساب البائع" });
+      setSuspendModal({ isOpen: false, sellerId: null, sellerName: '' });
       await fetchSellersWithViolations();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
+    } finally {
+      setProcessing(null);
     }
   };
 
-  const handleUnsuspendSeller = async (sellerId) => {
-    if (!window.confirm('هل أنت متأكد من إلغاء تعليق حساب البائع؟')) return;
-    
+  const handleUnsuspendSeller = async () => {
+    setProcessing(unsuspendModal.sellerId);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/price-reports/admin/seller/${sellerId}/unsuspend`, {}, {
+      await axios.put(`${API}/api/price-reports/admin/seller/${unsuspendModal.sellerId}/unsuspend`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('تم إلغاء تعليق الحساب');
+      toast({ title: "تم بنجاح", description: "تم إلغاء تعليق الحساب" });
+      setUnsuspendModal({ isOpen: false, sellerId: null });
       await fetchSellersWithViolations();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -496,7 +506,7 @@ const PriceReportsTab = () => {
                 <div className="flex gap-2 mt-3">
                   {seller.is_suspended ? (
                     <button
-                      onClick={() => handleUnsuspendSeller(seller.id)}
+                      onClick={() => setUnsuspendModal({ isOpen: true, sellerId: seller.id })}
                       className="flex-1 py-2 bg-green-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
                     >
                       <UserCheck size={16} />
@@ -504,7 +514,7 @@ const PriceReportsTab = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleSuspendSeller(seller.id, seller.name)}
+                      onClick={() => setSuspendModal({ isOpen: true, sellerId: seller.id, sellerName: seller.name })}
                       className="flex-1 py-2 bg-red-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-red-600"
                     >
                       <Ban size={16} />
@@ -515,6 +525,91 @@ const PriceReportsTab = () => {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Suspend Seller Modal */}
+      {suspendModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Ban size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">تعليق الحساب</h3>
+                <p className="text-xs text-gray-500">{suspendModal.sellerName}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من تعليق حساب البائع <span className="font-bold">"{suspendModal.sellerName}"</span>؟
+              سيتم إيقاف جميع منتجاته عن البيع.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSuspendModal({ isOpen: false, sellerId: null, sellerName: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleSuspendSeller}
+                disabled={processing === suspendModal.sellerId}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {processing === suspendModal.sellerId ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <Ban size={16} />
+                )}
+                تعليق الحساب
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsuspend Seller Modal */}
+      {unsuspendModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <UserCheck size={20} className="text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">إلغاء التعليق</h3>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من إلغاء تعليق حساب البائع؟
+              سيتمكن من البيع مرة أخرى.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUnsuspendModal({ isOpen: false, sellerId: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleUnsuspendSeller}
+                disabled={processing === unsuspendModal.sellerId}
+                className="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {processing === unsuspendModal.sellerId ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <UserCheck size={16} />
+                )}
+                إلغاء التعليق
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
