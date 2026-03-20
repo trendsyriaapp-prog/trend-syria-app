@@ -301,7 +301,39 @@
 
 ---
 
-## Latest Session Updates - March 2026 (19 Mar)
+## Latest Session Updates - March 2026 (20 Mar)
+
+### 🆕 17. إصلاح 4 أخطاء في نظام التوصيل (Completed ✅) - 20 Mar 2026
+- **P0 - خطأ توفر السائق**:
+  - **المشكلة**: عند إعادة تحميل صفحة السائق، كانت الطلبات تختفي والحالة تتحول لـ "غير متاح"
+  - **السبب**: لم تكن `delivery_documents` موجودة لبعض السائقين مما يسبب خطأ 404
+  - **الحل**: إضافة إنشاء تلقائي لـ `delivery_documents` عند عدم وجودها في `delivery.py`
+  - **الاختبار**: ✅ التبديل يعمل، الطلبات تستمر بعد إعادة التحميل
+
+- **P1 - خطأ اختيار نغمة الرنين**:
+  - **المشكلة**: خطأ عند محاولة تشغيل صوت التنبيه
+  - **الحل**: إضافة معالجة أخطاء لـ `AudioContext` في `useNotificationSound.js`
+  - **الاختبار**: ✅ لا توجد أخطاء في الكونسول
+
+- **P2 - شريط البحث في صفحة السائق**:
+  - **المشكلة**: شريط البحث يظهر في لوحة تحكم السائق
+  - **الحل**: إضافة `isDeliveryPage` للتحقق في `Header.js`
+  - **الاختبار**: ✅ شريط البحث مخفي في `/delivery/dashboard`
+
+- **P2 - إشعارات الموافقة/الرفض المفقودة**:
+  - **المشكلة**: البائعون والسائقون لا يتلقون إشعارات عند الموافقة/الرفض
+  - **الحل**: إضافة إنشاء إشعارات في `admin.py` (approve_seller, reject_seller, approve_delivery_driver, reject_delivery_driver)
+  - **الاختبار**: ✅ تم التحقق من الكود
+
+- **الملفات المعدلة**:
+  - `backend/routes/delivery.py` - سطور 389-399، 417-433
+  - `backend/routes/admin.py` - سطور 365-377، 546-556
+  - `frontend/src/components/Header.js` - سطر 54، 57
+  - `frontend/src/hooks/useNotificationSound.js` - سطور 133-153، 173-189
+
+- **تقرير الاختبار**: `/app/test_reports/iteration_94.json`
+
+---
 
 ### 🆕 15. إصلاح نظام الحماية من Brute Force (Completed ✅)
 - **المشكلة**: نظام brute force كان يقفل الحساب بسرعة كبيرة (5 محاولات) مما يسبب مشاكل في الاختبار والاستخدام
@@ -366,11 +398,14 @@
 - `/app/test_reports/iteration_91.json` - محفظة العميل ✅
 - `/app/test_reports/iteration_92.json` - منطق توصيل الطعام الجديد (8/8 ✅)
 - `/app/test_reports/iteration_93.json` - إصلاح Brute Force + منع تجميع الطلبات البعيدة (13/13 ✅)
+- `/app/test_reports/iteration_94.json` - إصلاح 4 أخطاء في نظام التوصيل (14/14 Backend + Frontend ✅)
 
 ## Test Credentials
-- **Admin**: Phone: `0911111111`, Password: `Admin@123`
+- **Admin**: Phone: `0911111111`, Password: `admin123`
 - **Customer**: Phone: `0933333333`, Password: `buyer123`
-- **Driver**: Phone: `0900000000`, Password: `test1234`
+- **Driver**: Phone: `0955555555`, Password: `test1234`
+- **Food Seller**: Phone: `0966666666`, Password: `test1234`
+- **Product Seller**: Phone: `0922222222`, Password: `seller123`
 
 ---
 
