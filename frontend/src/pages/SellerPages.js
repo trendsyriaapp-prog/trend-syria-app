@@ -932,7 +932,7 @@ const SellerDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 md:pb-10 bg-gray-50">
+    <div className="min-h-screen pb-36 md:pb-10 bg-gray-50">
       <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
         {/* Header with store name and notifications */}
         <div className="mb-3">

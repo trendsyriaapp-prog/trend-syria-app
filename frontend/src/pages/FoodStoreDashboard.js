@@ -264,7 +264,7 @@ const FoodStoreDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-36">
       {/* إشعار اقتراب السائق */}
       {driverArrivingAlert && (
         <motion.div 
