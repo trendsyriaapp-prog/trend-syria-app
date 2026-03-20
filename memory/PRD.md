@@ -333,6 +333,25 @@
 
 - **تقرير الاختبار**: `/app/test_reports/iteration_94.json`
 
+### 🆕 18. إصلاح واجهة صفحة المدير (Completed ✅) - 20 Mar 2026
+- **المشاكل المُصلحة**:
+  1. **شريط البحث**: كان يظهر في صفحة المدير - تم إخفاؤه
+  2. **شريط التنقل السفلي**: كان يظهر (سلة، أصناف، إلخ) - تم إخفاؤه
+  3. **إشعارات الطلبات**: كانت تظهر للمدير - تم فلترتها لتظهر فقط إشعارات المدير
+
+- **الحل التقني**:
+  - إضافة `isAdminPage` check في `Header.js` و `MobileNav.js`
+  - إضافة `ADMIN_NOTIFICATION_TYPES` في `notifications.py`
+  - إضافة فلترة `context='admin'` في `NotificationsDropdown.js`
+
+- **الملفات المعدلة**:
+  - `frontend/src/components/Header.js` - سطر 55-60
+  - `frontend/src/components/MobileNav.js` - سطور 41-45
+  - `frontend/src/components/NotificationsDropdown.js` - سطور 117-122
+  - `backend/routes/notifications.py` - سطور 28-38، 50-80
+
+- **تقرير الاختبار**: `/app/test_reports/iteration_95.json`
+
 ---
 
 ### 🆕 15. إصلاح نظام الحماية من Brute Force (Completed ✅)
@@ -399,6 +418,7 @@
 - `/app/test_reports/iteration_92.json` - منطق توصيل الطعام الجديد (8/8 ✅)
 - `/app/test_reports/iteration_93.json` - إصلاح Brute Force + منع تجميع الطلبات البعيدة (13/13 ✅)
 - `/app/test_reports/iteration_94.json` - إصلاح 4 أخطاء في نظام التوصيل (14/14 Backend + Frontend ✅)
+- `/app/test_reports/iteration_95.json` - إصلاح واجهة صفحة المدير (3/3 Frontend ✅)
 
 ## Test Credentials
 - **Admin**: Phone: `0911111111`, Password: `admin123`
