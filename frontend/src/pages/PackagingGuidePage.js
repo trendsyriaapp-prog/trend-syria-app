@@ -18,14 +18,9 @@ const PackagingGuidePage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Package className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">إرشادات التغليف</h1>
-          </div>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
+          <Package className="text-[#FF6B00]" size={20} />
+          <h1 className="font-bold text-gray-900">إرشادات التغليف</h1>
         </div>
       </div>
 

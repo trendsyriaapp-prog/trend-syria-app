@@ -39,11 +39,6 @@ const Header = () => {
   // التحقق إذا كنا في صفحات الطعام - لإخفاء شريط البحث
   const isFoodPage = location.pathname.startsWith('/food');
   
-  // دالة الرجوع الذكية - ترجع للصفحة السابقة في التاريخ
-  const handleGoBack = () => {
-    navigate(-1);
-  };
-  
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
   
@@ -332,17 +327,6 @@ const Header = () => {
 
           {/* الأيقونات - على اليسار */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            {/* سهم الرجوع */}
-            {!isHomePage && (
-              <button 
-                onClick={handleGoBack}
-                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-                data-testid="back-btn"
-              >
-                <ArrowRight size={18} />
-              </button>
-            )}
-            
             {/* المجيب الآلي */}
             <button
               type="button"

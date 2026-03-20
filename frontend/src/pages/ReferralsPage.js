@@ -128,12 +128,7 @@ const ReferralsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 pb-24" dir="rtl">
         <div className="bg-gradient-to-br from-gray-400 to-gray-500 text-white px-4 py-6">
-          <div className="flex items-center gap-3 mb-6">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/20 rounded-full">
-              <ArrowRight size={20} />
-            </button>
-            <h1 className="text-xl font-bold">دعوة الأصدقاء</h1>
-          </div>
+          <h1 className="text-xl font-bold mb-6">دعوة الأصدقاء</h1>
         </div>
         
         <div className="p-4 text-center mt-10">
@@ -157,12 +152,7 @@ const ReferralsPage = () => {
     <div className="min-h-screen bg-gray-50 pb-24" dir="rtl">
       {/* Header */}
       <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white px-4 py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/20 rounded-full">
-            <ArrowRight size={20} />
-          </button>
-          <h1 className="text-xl font-bold">دعوة الأصدقاء</h1>
-        </div>
+        <h1 className="text-xl font-bold mb-6">دعوة الأصدقاء</h1>
         
         {/* Hero */}
         <div className="text-center py-4">

@@ -87,14 +87,9 @@ export const PrivacyPolicyPage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <Shield className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">سياسة الخصوصية</h1>
-          </div>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
+          <Shield className="text-[#FF6B00]" size={20} />
+          <h1 className="font-bold text-gray-900">سياسة الخصوصية</h1>
         </div>
       </div>
 
@@ -321,14 +316,9 @@ export const TermsOfServicePage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <FileText className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">شروط الاستخدام</h1>
-          </div>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
+          <FileText className="text-[#FF6B00]" size={20} />
+          <h1 className="font-bold text-gray-900">شروط الاستخدام</h1>
         </div>
       </div>
 
@@ -410,14 +400,9 @@ export const ReturnPolicyPage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
-          </button>
-          <div className="flex items-center gap-2">
-            <RefreshCcw className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">سياسة الإرجاع والاستبدال</h1>
-          </div>
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
+          <RefreshCcw className="text-[#FF6B00]" size={20} />
+          <h1 className="font-bold text-gray-900">سياسة الإرجاع والاستبدال</h1>
         </div>
       </div>
 
