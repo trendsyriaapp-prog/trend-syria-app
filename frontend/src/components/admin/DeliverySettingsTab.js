@@ -20,6 +20,7 @@ const DeliverySettingsTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [releaseModal, setReleaseModal] = useState(false);
+  const [processUndeliveredModal, setProcessUndeliveredModal] = useState(false);
   const [settings, setSettings] = useState({
     performance_levels: {
       beginner_max: 9,
@@ -469,9 +470,7 @@ const DeliverySettingsTab = () => {
 
   // معالجة الطلبات غير المُسلّمة (خصم من رصيد السائقين)
   const handleProcessUndelivered = async () => {
-    if (!confirm('هل أنت متأكد من خصم قيمة الطلبات غير المُسلّمة من رصيد السائقين؟')) {
-      return;
-    }
+    setProcessUndeliveredModal(false);
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -2328,7 +2327,7 @@ const DeliverySettingsTab = () => {
 
                 {undeliveredReport.yesterday_pending_penalty.count > 0 && (
                   <button
-                    onClick={handleProcessUndelivered}
+                    onClick={() => setProcessUndeliveredModal(true)}
                     disabled={saving}
                     className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >
@@ -2362,6 +2361,13 @@ const DeliverySettingsTab = () => {
         isOpen={releaseModal}
         onClose={() => setReleaseModal(false)}
         onConfirm={handleReleaseAllHeld}
+      />
+
+      {/* Process Undelivered Orders Modal */}
+      <ProcessUndeliveredModal
+        isOpen={processUndeliveredModal}
+        onClose={() => setProcessUndeliveredModal(false)}
+        onConfirm={handleProcessUndelivered}
       />
     </div>
   );
@@ -2412,6 +2418,46 @@ const ReleaseEarningsModal = ({ isOpen, onClose, onConfirm }) => {
           >
             <CheckCircle size={16} />
             تأكيد الإطلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Process Undelivered Orders Confirmation Modal
+const ProcessUndeliveredModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertCircle size={20} className="text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-bold">خصم الطلبات غير المُسلّمة</h3>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          هل أنت متأكد من خصم قيمة الطلبات غير المُسلّمة من رصيد السائقين؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+          >
+            <AlertCircle size={16} />
+            تأكيد الخصم
           </button>
         </div>
       </div>

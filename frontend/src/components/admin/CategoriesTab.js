@@ -42,7 +42,6 @@ const CategoriesTab = () => {
     order: 0,
     is_active: true
   });
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchCategories();
