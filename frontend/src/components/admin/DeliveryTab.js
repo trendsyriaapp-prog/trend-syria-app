@@ -56,68 +56,106 @@ const DeliveryTab = ({
             <p className="text-gray-500 text-sm">لا يوجد موظفي توصيل في انتظار الموافقة</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {pendingDelivery.map((doc) => (
-              <div key={doc.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="p-3">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-bold text-sm text-gray-900">{doc.driver_name || doc.driver?.full_name || doc.driver?.name}</h3>
-                      <p className="text-xs text-gray-500">{doc.driver_phone || doc.driver?.phone}</p>
-                      <p className="text-xs text-gray-400">{doc.driver_city || doc.driver?.city}</p>
-                      <p className="text-xs text-gray-600 mt-1">رقم الهوية: {doc.national_id}</p>
+              <div key={doc.id} className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-sm">
+                {/* Header with driver info */}
+                <div className="bg-gradient-to-l from-yellow-50 to-orange-50 p-4 border-b border-yellow-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <Truck size={24} className="text-yellow-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">{doc.driver_name || doc.driver?.full_name || doc.driver?.name}</h3>
+                        <p className="text-sm text-gray-600" dir="ltr">{doc.driver_phone || doc.driver?.phone}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin size={12} />
+                            {doc.driver_city || doc.driver?.city}
+                          </span>
+                          <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                            هوية: {doc.national_id}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => onApprove(doc.driver_id || doc.delivery_id)}
-                        className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 text-sm font-medium"
                         data-testid={`approve-driver-${doc.driver_id || doc.delivery_id}`}
                       >
-                        <Check size={14} />
+                        <Check size={18} />
+                        قبول
                       </button>
                       <button
                         onClick={() => handleRejectClick(doc.driver_id || doc.delivery_id, doc.driver_name || doc.driver?.full_name || doc.driver?.name)}
-                        className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 text-sm font-medium"
                         data-testid={`reject-driver-${doc.driver_id || doc.delivery_id}`}
                       >
-                        <X size={14} />
+                        <X size={18} />
+                        رفض
                       </button>
                     </div>
                   </div>
+                </div>
 
-                  {/* الوثائق */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <p className="text-[10px] text-gray-500 mb-1">صورة شخصية</p>
-                      {doc.personal_photo && (
+                {/* Documents Section */}
+                <div className="p-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <Eye size={16} className="text-blue-500" />
+                    المستندات المقدمة
+                  </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* صورة شخصية */}
+                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">صورة شخصية</p>
+                      {doc.personal_photo ? (
                         <img 
                           src={doc.personal_photo} 
                           alt="صورة شخصية" 
-                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
                           onClick={() => window.open(doc.personal_photo, '_blank')}
                         />
+                      ) : (
+                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 mb-1">صورة الهوية</p>
-                      {doc.id_photo && (
+
+                    {/* صورة الهوية */}
+                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">صورة الهوية</p>
+                      {doc.id_photo ? (
                         <img 
                           src={doc.id_photo} 
                           alt="صورة الهوية" 
-                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
                           onClick={() => window.open(doc.id_photo, '_blank')}
                         />
+                      ) : (
+                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 mb-1">رخصة الدراجة</p>
-                      {doc.motorcycle_license && (
+
+                    {/* رخصة القيادة */}
+                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">رخصة القيادة</p>
+                      {doc.motorcycle_license ? (
                         <img 
                           src={doc.motorcycle_license} 
-                          alt="رخصة الدراجة" 
-                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          alt="رخصة القيادة" 
+                          className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
                           onClick={() => window.open(doc.motorcycle_license, '_blank')}
                         />
+                      ) : (
+                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        </div>
                       )}
                     </div>
                   </div>
