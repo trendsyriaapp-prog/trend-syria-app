@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import RejectModal from './RejectModal';
+import ImageLightbox from '../ui/ImageLightbox';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -30,6 +31,7 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
   const [editingCommissions, setEditingCommissions] = useState({});
   const [rejectModal, setRejectModal] = useState({ isOpen: false, storeId: null, storeName: '' });
   const [rejectProcessing, setRejectProcessing] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   useEffect(() => {
     // إذا كان pendingOnly، استخدم البيانات الممررة
@@ -257,8 +259,8 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
                           <img 
                             src={store.documents.store_photo} 
                             alt="صورة المتجر" 
-                            className="w-full h-16 object-cover rounded-lg border border-gray-200"
-                            onClick={() => window.open(store.documents.store_photo, '_blank')}
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setLightboxImage({ src: store.documents.store_photo, alt: 'صورة المتجر' })}
                           />
                         </div>
                       )}
@@ -268,8 +270,8 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
                           <img 
                             src={store.documents.license_photo} 
                             alt="الترخيص" 
-                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
-                            onClick={() => window.open(store.documents.license_photo, '_blank')}
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setLightboxImage({ src: store.documents.license_photo, alt: 'الترخيص' })}
                           />
                         </div>
                       )}
@@ -279,8 +281,8 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
                           <img 
                             src={store.documents.health_certificate} 
                             alt="الشهادة الصحية" 
-                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
-                            onClick={() => window.open(store.documents.health_certificate, '_blank')}
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setLightboxImage({ src: store.documents.health_certificate, alt: 'الشهادة الصحية' })}
                           />
                         </div>
                       )}
@@ -290,8 +292,8 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
                           <img 
                             src={store.documents.id_photo} 
                             alt="صورة الهوية" 
-                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer"
-                            onClick={() => window.open(store.documents.id_photo, '_blank')}
+                            className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
+                            onClick={() => setLightboxImage({ src: store.documents.id_photo, alt: 'صورة الهوية' })}
                           />
                         </div>
                       )}
@@ -374,6 +376,15 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
         itemName={rejectModal.storeName}
         processing={rejectProcessing}
       />
+
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <ImageLightbox 
+          src={lightboxImage.src} 
+          alt={lightboxImage.alt} 
+          onClose={() => setLightboxImage(null)} 
+        />
+      )}
     </div>
   );
 };

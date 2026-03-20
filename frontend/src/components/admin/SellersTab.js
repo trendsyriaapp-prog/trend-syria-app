@@ -1,10 +1,12 @@
 // /app/frontend/src/components/admin/SellersTab.js
 import { useState } from 'react';
 import { Store, Phone, MapPin, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, XCircle } from 'lucide-react';
+import ImageLightbox from '../ui/ImageLightbox';
 
 const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, onRejectSeller }) => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   const handleAction = (action, seller) => {
     setShowMenu(null);
@@ -144,7 +146,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={s.documents.national_id} 
                           alt="صورة الهوية" 
                           className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(s.documents.national_id, '_blank')}
+                          onClick={() => setLightboxImage({ src: s.documents.national_id, alt: 'صورة الهوية' })}
                         />
                       </div>
                     )}
@@ -155,7 +157,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={s.documents.commercial_registration} 
                           alt="السجل التجاري" 
                           className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(s.documents.commercial_registration, '_blank')}
+                          onClick={() => setLightboxImage({ src: s.documents.commercial_registration, alt: 'السجل التجاري' })}
                         />
                       </div>
                     )}
@@ -166,7 +168,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={s.documents.shop_photo} 
                           alt="صورة المحل" 
                           className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(s.documents.shop_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: s.documents.shop_photo, alt: 'صورة المحل' })}
                         />
                       </div>
                     )}
@@ -177,7 +179,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={s.documents.health_certificate} 
                           alt="الشهادة الصحية" 
                           className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(s.documents.health_certificate, '_blank')}
+                          onClick={() => setLightboxImage({ src: s.documents.health_certificate, alt: 'الشهادة الصحية' })}
                         />
                       </div>
                     )}
@@ -311,6 +313,15 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <ImageLightbox 
+          src={lightboxImage.src} 
+          alt={lightboxImage.alt} 
+          onClose={() => setLightboxImage(null)} 
+        />
       )}
     </section>
   );

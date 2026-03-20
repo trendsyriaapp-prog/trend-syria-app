@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin } from 'lucide-react';
 import RejectModal from './RejectModal';
+import ImageLightbox from '../ui/ImageLightbox';
 
 const DeliveryTab = ({ 
   allDelivery, 
@@ -16,6 +17,7 @@ const DeliveryTab = ({
   const [processing, setProcessing] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   const handleRejectClick = (driverId, driverName) => {
     setRejectModal({ isOpen: true, driverId, driverName });
@@ -116,7 +118,7 @@ const DeliveryTab = ({
                           src={doc.personal_photo} 
                           alt="صورة شخصية" 
                           className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
-                          onClick={() => window.open(doc.personal_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: doc.personal_photo, alt: 'صورة شخصية' })}
                         />
                       ) : (
                         <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -133,7 +135,7 @@ const DeliveryTab = ({
                           src={doc.id_photo} 
                           alt="صورة الهوية" 
                           className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
-                          onClick={() => window.open(doc.id_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: doc.id_photo, alt: 'صورة الهوية' })}
                         />
                       ) : (
                         <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -150,7 +152,7 @@ const DeliveryTab = ({
                           src={doc.motorcycle_license} 
                           alt="رخصة القيادة" 
                           className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
-                          onClick={() => window.open(doc.motorcycle_license, '_blank')}
+                          onClick={() => setLightboxImage({ src: doc.motorcycle_license, alt: 'رخصة القيادة' })}
                         />
                       ) : (
                         <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -379,6 +381,15 @@ const DeliveryTab = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Lightbox */}
+      {lightboxImage && (
+        <ImageLightbox 
+          src={lightboxImage.src} 
+          alt={lightboxImage.alt} 
+          onClose={() => setLightboxImage(null)} 
+        />
       )}
     </section>
   );
