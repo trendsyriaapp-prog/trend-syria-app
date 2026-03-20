@@ -282,28 +282,14 @@ const FoodStoreDashboard = () => {
                 <p className="text-green-100 text-sm">{store.city}</p>
               </div>
             </div>
-            {/* أزرار الإعدادات وتسجيل الخروج */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/')}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                title="الصفحة الرئيسية"
-              >
-                <ChevronRight size={20} />
-              </button>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/login');
-                  toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
-                }}
-                className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
-                title="تسجيل الخروج"
-                data-testid="logout-btn"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
+            {/* زر الرجوع للصفحة الرئيسية */}
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              title="الصفحة الرئيسية"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
       </div>
@@ -706,6 +692,8 @@ const FoodStoreDashboard = () => {
 // Store Settings Component
 const StoreSettings = ({ store, token, onUpdate }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [sameHoursAllDays, setSameHoursAllDays] = useState(true);
   
   const defaultWorkingHours = {
@@ -961,6 +949,22 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         )}
         حفظ التغييرات
       </button>
+
+      {/* زر تسجيل الخروج */}
+      <div className="border-t pt-4 mt-4">
+        <button
+          onClick={() => {
+            logout();
+            navigate('/login');
+            toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+          }}
+          className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+          data-testid="logout-btn"
+        >
+          <LogOut size={18} />
+          تسجيل الخروج
+        </button>
+      </div>
     </div>
   );
 };

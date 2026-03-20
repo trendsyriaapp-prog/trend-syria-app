@@ -966,19 +966,6 @@ const SellerDashboardPage = () => {
                 </button>
               )}
               <NotificationsDropdown />
-              {/* زر تسجيل الخروج */}
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/login');
-                  toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
-                }}
-                className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                title="تسجيل الخروج"
-                data-testid="logout-btn"
-              >
-                <LogOut size={16} />
-              </button>
             </div>
           </div>
           {/* أزرار الإجراءات - شريط ممتلئ */}

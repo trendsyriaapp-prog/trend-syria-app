@@ -2,11 +2,13 @@
 // تبويب إعدادات المتجر وحسابات الاستلام المالي
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText
+  Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText, LogOut
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import { useAuth } from '../../context/AuthContext';
 import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -26,6 +28,8 @@ const PAYMENT_TYPES = [
 
 const StoreSettingsTab = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -460,6 +464,22 @@ const StoreSettingsTab = () => {
           </div>
         </div>
       )}
+      
+      {/* زر تسجيل الخروج */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <button
+          onClick={() => {
+            logout();
+            navigate('/login');
+            toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+          }}
+          className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+          data-testid="logout-btn"
+        >
+          <LogOut size={18} />
+          تسجيل الخروج
+        </button>
+      </div>
     </div>
   );
 };

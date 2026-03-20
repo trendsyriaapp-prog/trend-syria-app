@@ -921,23 +921,6 @@ const DeliveryDashboard = () => {
             >
               {isLoadingAvailability ? '...' : (isAvailable ? '● متاح' : '○ مغلق')}
             </button>
-            {/* زر تسجيل الخروج */}
-            <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-                toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
-              }}
-              className={`p-2 rounded-xl transition-all ${
-                currentTheme === 'dark'
-                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
-                  : 'bg-red-100 text-red-600 hover:bg-red-200'
-              }`}
-              title="تسجيل الخروج"
-              data-testid="delivery-logout-btn"
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </div>
 
@@ -1110,7 +1093,28 @@ const DeliveryDashboard = () => {
 
         {/* Earnings Statistics */}
         {activeTab === 'earnings' && (
-          <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
+          <>
+            <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
+            {/* زر تسجيل الخروج */}
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                  toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+                }}
+                className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                  currentTheme === 'dark'
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
+                }`}
+                data-testid="delivery-logout-btn"
+              >
+                <LogOut size={18} />
+                تسجيل الخروج
+              </button>
+            </div>
+          </>
         )}
 
         {/* Achievements */}
