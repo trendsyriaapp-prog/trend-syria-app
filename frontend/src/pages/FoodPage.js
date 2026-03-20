@@ -164,14 +164,11 @@ const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
 const FoodPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
-  const sectionParam = searchParams.get('section'); // القسم الرئيسي (food/market)
   const searchParam = searchParams.get('search');
   const filterParam = searchParams.get('filter');
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // تحديد الفئة النشطة بناءً على القسم الرئيسي
-  const [activeSection, setActiveSection] = useState(sectionParam || 'all');
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
@@ -192,11 +189,6 @@ const FoodPage = () => {
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
 
-  // تحديث القسم النشط عند تغير URL
-  useEffect(() => {
-    setActiveSection(sectionParam || 'all');
-  }, [sectionParam]);
-
   // تحديث showOnlyFreeDelivery عند تغير filterParam
   useEffect(() => {
     setShowOnlyFreeDelivery(filterParam === 'free_delivery');
@@ -211,13 +203,7 @@ const FoodPage = () => {
       } catch (err) {
         console.log('Using default categories');
         // استخدام الفئات الافتراضية في حالة الخطأ
-        // فلترة حسب القسم الرئيسي إذا تم تحديده
-        let categories = Object.entries(CATEGORY_CONFIG);
-        if (activeSection && activeSection !== 'all' && MAIN_SECTIONS[activeSection]) {
-          const allowedCategories = MAIN_SECTIONS[activeSection].categories;
-          categories = categories.filter(([id]) => allowedCategories.includes(id));
-        }
-        setDynamicCategories(categories.map(([id, config]) => ({
+        setDynamicCategories(Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
           id,
           name: config.name,
           icon: config.icon?.name || 'UtensilsCrossed',
@@ -226,7 +212,7 @@ const FoodPage = () => {
       }
     };
     fetchCategories();
-  }, [activeSection]);
+  }, []);
 
   // دالة تغيير الفئة مع تحديث URL
   const handleCategoryChange = (categoryId) => {
@@ -294,7 +280,7 @@ const FoodPage = () => {
     if (userCity) {
       fetchData();
     }
-  }, [activeCategory, activeSection, userCity, searchQuery]);
+  }, [activeCategory, userCity, searchQuery]);
 
   // Auto-rotate banners
   useEffect(() => {
@@ -311,26 +297,15 @@ const FoodPage = () => {
     
     setLoading(true);
     try {
-      // تحديد الفئات المسموحة بناءً على القسم الرئيسي
-      let categoryFilter = activeCategory !== 'all' ? activeCategory : undefined;
-      let mainCategoryFilter = undefined;
-      
-      // إذا تم اختيار قسم رئيسي (food/market)
-      if (activeSection && activeSection !== 'all' && MAIN_SECTIONS[activeSection]) {
-        mainCategoryFilter = activeSection;
-      }
-      
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
       const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes, featuredRes, publicSettingsRes] = await Promise.all([
         axios.get(`${API}/food/stores`, { params: { 
-          category: categoryFilter,
-          main_category: mainCategoryFilter,
+          category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
           search: searchQuery || undefined
         }}),
         axios.get(`${API}/food/products`, { params: { 
-          category: categoryFilter,
-          main_category: mainCategoryFilter,
+          category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
           search: searchQuery || undefined,
           limit: 100
@@ -473,71 +448,8 @@ const FoodPage = () => {
         </div>
       </motion.div>
 
-      {/* 🔀 التبديل بين الأقسام الرئيسية (طعام/ماركت) */}
-      <div className="bg-gray-50 border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex justify-center gap-3">
-            {/* زر الكل */}
-            <button
-              onClick={() => {
-                setActiveSection('all');
-                setActiveCategory('all');
-                const newParams = new URLSearchParams();
-                setSearchParams(newParams);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                activeSection === 'all'
-                  ? 'bg-gradient-to-r from-gray-700 to-gray-800 text-white shadow-lg'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              <Store size={18} />
-              <span>الكل</span>
-            </button>
-            
-            {/* زر الطعام */}
-            <button
-              onClick={() => {
-                setActiveSection('food');
-                setActiveCategory('all');
-                const newParams = new URLSearchParams();
-                newParams.set('section', 'food');
-                setSearchParams(newParams);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                activeSection === 'food'
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200'
-                  : 'bg-white text-gray-600 hover:bg-orange-50 border border-gray-200'
-              }`}
-            >
-              <span className="text-lg">🍔</span>
-              <span>طعام</span>
-            </button>
-            
-            {/* زر الماركت */}
-            <button
-              onClick={() => {
-                setActiveSection('market');
-                setActiveCategory('all');
-                const newParams = new URLSearchParams();
-                newParams.set('section', 'market');
-                setSearchParams(newParams);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                activeSection === 'market'
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-200'
-                  : 'bg-white text-gray-600 hover:bg-green-50 border border-gray-200'
-              }`}
-            >
-              <span className="text-lg">🛒</span>
-              <span>ماركت</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Categories with Food Images */}
-      {/* الفئات الفرعية */}
+      {/* الفئات */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
@@ -552,14 +464,7 @@ const FoodPage = () => {
               <Store size={12} />
               <span className="text-xs font-medium">الكل</span>
             </button>
-            {/* فلترة الفئات حسب القسم الرئيسي */}
-            {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories)
-              .filter(cat => {
-                if (activeSection === 'all') return true;
-                const config = CATEGORY_CONFIG[cat.id];
-                return config && config.mainCategory === activeSection;
-              })
-              .map((cat) => {
+            {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories).map((cat) => {
               const IconComp = typeof cat.icon === 'string' ? getIcon(cat.icon) : cat.icon;
               return (
                 <button
