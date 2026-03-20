@@ -573,9 +573,8 @@ const SellerDashboardPage = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
-  // قراءة التبويب من URL أو استخدام 'products' كافتراضي
-  const defaultTab = isFoodSeller ? 'menu' : 'products';
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || defaultTab);
+  // قراءة التبويب من URL أو استخدام 'overview' كافتراضي
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
@@ -592,14 +591,13 @@ const SellerDashboardPage = () => {
 
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
-    const defaultTabForUser = isFoodSeller ? 'menu' : 'products';
-    if (activeTab === defaultTabForUser) {
+    if (activeTab === 'overview') {
       searchParams.delete('tab');
     } else {
       searchParams.set('tab', activeTab);
     }
     setSearchParams(searchParams, { replace: true });
-  }, [activeTab, isFoodSeller]);
+  }, [activeTab]);
 
   // قراءة التبويب من URL عند التحميل
   useEffect(() => {
@@ -997,21 +995,15 @@ const SellerDashboardPage = () => {
           </div>
         </div>
 
-        {/* Tabs - تصغير للجوال */}
+        {/* Tabs - الترتيب الجديد الموحد */}
         <div className="flex gap-0.5 mb-3 bg-white rounded-lg p-0.5 border border-gray-200 overflow-x-auto no-scrollbar">
-          {(isFoodSeller ? [
-            { id: 'menu', icon: Package, label: 'قائمة الطعام' },
-            { id: 'reviews', icon: Star, label: 'التقييمات' },
-            { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
-            { id: 'store', icon: Store, label: 'إعدادات المطعم' },
-          ] : [
-            { id: 'products', icon: Package, label: 'منتجاتي' },
-            { id: 'reviews', icon: Star, label: 'التقييمات' },
-            { id: 'ads', icon: Megaphone, label: 'الإعلانات' },
-            { id: 'discounts', icon: Gift, label: 'الخصومات' },
-            { id: 'analytics', icon: TrendingUp, label: 'التقارير' },
-            { id: 'store', icon: Store, label: 'المتجر' },
-          ]).map(tab => (
+          {[
+            { id: 'overview', icon: Home, label: 'نظرة عامة' },
+            { id: 'orders', icon: ShoppingBag, label: 'الطلبات' },
+            { id: 'products', icon: Package, label: 'المنتجات' },
+            { id: 'wallet', icon: Wallet, label: 'المحفظة' },
+            { id: 'settings', icon: Store, label: 'الإعدادات' },
+          ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -1029,32 +1021,13 @@ const SellerDashboardPage = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'ads' && !isFoodSeller && (
-          <SellerAdsTab user={user} products={products} walletBalance={walletBalance} />
-        )}
-
-        {activeTab === 'discounts' && !isFoodSeller && (
-          <SellerDiscountsTab products={products} />
-        )}
-
-        {activeTab === 'analytics' && (
-          <SellerAdAnalytics />
-        )}
-
-        {activeTab === 'store' && (
-          <StoreSettingsTab isFoodSeller={isFoodSeller} />
-        )}
-
-        {activeTab === 'reviews' && (
-          <SellerReviewsTab />
-        )}
-
-        {/* محتوى تبويب المنتجات/قائمة الطعام */}
-        {(activeTab === 'products' || activeTab === 'menu') && (
+        
+        {/* تبويب نظرة عامة - Overview */}
+        {activeTab === 'overview' && (
           <>
             {/* Wallet Quick Access Card */}
             <div 
-              onClick={() => navigate('/wallet')}
+              onClick={() => setActiveTab('wallet')}
               className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
               data-testid="wallet-quick-access"
             >
@@ -1090,47 +1063,102 @@ const SellerDashboardPage = () => {
               isFoodSeller={isFoodSeller}
             />
 
-            {/* Products/Menu Items */}
-            <section className="mb-4">
-              <h2 className="text-xs font-bold mb-2 text-gray-900">
-                {isFoodSeller ? 'قائمة الطعام' : 'منتجاتي'}
-              </h2>
-              {isFoodSeller ? (
-                <FoodItemsGrid 
-                  items={foodItems} 
-                  onEdit={handleEditProduct} 
-                  onDelete={handleDeleteProduct}
-                  onChangeAvailability={handleChangeFoodAvailability}
-                />
-              ) : (
-                <SellerProductsGrid 
-                  products={products} 
-                  onEdit={handleEditProduct} 
-                  onDelete={handleDeleteProduct}
-                  onDuplicate={handleDuplicateProduct}
-                />
-              )}
-            </section>
-
-            {/* Recent Orders */}
-            <section>
-              <h2 className="text-xs font-bold mb-2 text-gray-900">
-                {isFoodSeller ? 'طلبات الطعام' : 'الطلبات الأخيرة'}
-              </h2>
+            {/* Quick Access to Orders */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-gray-900">أحدث الطلبات</h3>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="text-[#FF6B00] text-sm font-medium"
+                >
+                  عرض الكل ←
+                </button>
+              </div>
               {isFoodSeller ? (
                 <FoodOrdersSection 
-                  orders={foodOrders}
+                  orders={foodOrders.slice(0, 3)}
                   onStatusChange={handleFoodOrderStatus}
                 />
               ) : (
                 <SellerOrdersSection 
-                  orders={orders} 
+                  orders={orders.slice(0, 3)} 
                   onSellerAction={handleSellerAction} 
                   onPrintLabel={setPrintLabelOrder} 
                 />
               )}
-            </section>
+            </div>
           </>
+        )}
+
+        {/* تبويب الطلبات - Orders */}
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900">
+              {isFoodSeller ? 'طلبات الطعام' : 'جميع الطلبات'}
+            </h2>
+            {isFoodSeller ? (
+              <FoodOrdersSection 
+                orders={foodOrders}
+                onStatusChange={handleFoodOrderStatus}
+              />
+            ) : (
+              <SellerOrdersSection 
+                orders={orders} 
+                onSellerAction={handleSellerAction} 
+                onPrintLabel={setPrintLabelOrder} 
+              />
+            )}
+          </div>
+        )}
+
+        {/* تبويب المنتجات - Products */}
+        {activeTab === 'products' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900">
+              {isFoodSeller ? 'قائمة الطعام' : 'منتجاتي'}
+            </h2>
+            {isFoodSeller ? (
+              <FoodItemsGrid 
+                items={foodItems} 
+                onEdit={handleEditProduct} 
+                onDelete={handleDeleteProduct}
+                onChangeAvailability={handleChangeFoodAvailability}
+              />
+            ) : (
+              <SellerProductsGrid 
+                products={products} 
+                onEdit={handleEditProduct} 
+                onDelete={handleDeleteProduct}
+                onDuplicate={handleDuplicateProduct}
+              />
+            )}
+          </div>
+        )}
+
+        {/* تبويب المحفظة - Wallet */}
+        {activeTab === 'wallet' && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white">
+              <div className="text-center mb-4">
+                <Wallet size={48} className="mx-auto mb-2 opacity-80" />
+                <p className="text-white/80 text-sm">رصيدك الحالي</p>
+                <p className="text-3xl font-bold">{formatPrice(walletBalance)}</p>
+              </div>
+              <button
+                onClick={() => navigate('/wallet')}
+                className="w-full bg-white text-green-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-50"
+              >
+                <DollarSign size={20} />
+                إدارة المحفظة وطلب سحب
+              </button>
+            </div>
+            <SellerAdAnalytics />
+          </div>
+        )}
+
+        {/* تبويب الإعدادات - Settings */}
+        {activeTab === 'settings' && (
+          <StoreSettingsTab isFoodSeller={isFoodSeller} />
         )}
       </div>
 

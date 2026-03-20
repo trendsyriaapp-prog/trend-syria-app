@@ -2,7 +2,7 @@
 // لوحة تحكم متجر الطعام
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -29,7 +29,26 @@ const FoodStoreDashboard = () => {
   const [offers, setOffers] = useState([]);
   const [commissionInfo, setCommissionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  
+  // تحديث URL عند تغيير التبويب
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', activeTab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [activeTab]);
+  
+  // قراءة التبويب من URL عند التحميل
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddOffer, setShowAddOffer] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -315,34 +334,27 @@ const FoodStoreDashboard = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - الترتيب الجديد */}
       <div className="max-w-4xl mx-auto px-4 mt-4">
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
           {[
-            { id: 'overview', label: 'نظرة عامة' },
-            { id: 'analytics', label: '📊 التحليلات' },
-            { id: 'products', label: 'المنتجات' },
-            { id: 'offers', label: 'العروض' },
-            { id: 'flash', label: 'الفلاش' },
-            { id: 'orders', label: 'الطلبات' },
+            { id: 'overview', label: '🏠 نظرة عامة' },
+            { id: 'orders', label: '📋 الطلبات' },
+            { id: 'products', label: '🍔 القائمة' },
             { id: 'wallet', label: '💰 المحفظة' },
-            { id: 'settings', label: 'الإعدادات' },
+            { id: 'settings', label: '⚙️ الإعدادات' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              data-testid={`tab-${tab.id}`}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
-                  ? tab.id === 'flash' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' : 'bg-green-500 text-white'
+                  ? 'bg-[#FF6B00] text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
             >
               {tab.label}
-              {tab.id === 'offers' && offers.length > 0 && (
-                <span className="mr-1 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
-                  {offers.filter(o => o.is_active).length}
-                </span>
-              )}
             </button>
           ))}
         </div>

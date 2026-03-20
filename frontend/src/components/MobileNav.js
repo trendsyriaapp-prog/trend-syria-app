@@ -68,12 +68,15 @@ const MobileNav = () => {
   let navItems = [];
   
   // شريط خاص بالبائع في جميع صفحاته
+  // تحديد مسار لوحة التحكم حسب نوع البائع
+  const sellerDashboardPath = user?.user_type === 'food_seller' ? '/food/dashboard' : '/seller/dashboard';
+  
   if (isSellerPage) {
     navItems = [
-      { path: '/seller/dashboard', icon: Home, label: 'لوحة التحكم' },
-      { path: '/seller/orders', icon: ClipboardList, label: 'الطلبات' },
-      { path: '/wallet', icon: Wallet, label: 'المحفظة' },
-      { path: '/seller/dashboard?tab=store', icon: Settings, label: 'الإعدادات' }
+      { path: `${sellerDashboardPath}?tab=overview`, icon: Home, label: 'نظرة عامة' },
+      { path: `${sellerDashboardPath}?tab=orders`, icon: ClipboardList, label: 'الطلبات' },
+      { path: `${sellerDashboardPath}?tab=wallet`, icon: Wallet, label: 'المحفظة' },
+      { path: `${sellerDashboardPath}?tab=settings`, icon: Settings, label: 'الإعدادات' }
     ];
   } else if (isDeliveryPage) {
     // شريط خاص بموظف التوصيل في جميع صفحاته
