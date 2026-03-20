@@ -555,10 +555,11 @@
 - **الاختبار**: ✅ 100% (17/17 Backend tests + Frontend tests)
 - **تقرير الاختبار**: `/app/test_reports/iteration_102.json`
 
-### ✅ P0: استبدال window.confirm بـ modals (In Progress) - 20 Mar 2026
+### ✅ P0: استبدال window.confirm بـ modals (COMPLETED) - 20 Mar 2026
 - **الوصف**: تحسين تجربة المستخدم باستبدال `window.confirm` و `alert` بـ modals حديثة
+- **الحالة**: ✅ مكتمل - تم استبدال جميع الـ `window.confirm` و `alert` في كل ملفات admin
 
-#### الملفات المُحسّنة ✅:
+#### جميع الملفات المُحسّنة ✅:
 - `SupportTicketsTab.js` - تذاكر الدعم
 - `FeaturedStoresTab.js` - المتاجر المميزة
 - `ChallengesTab.js` - التحديات
@@ -567,14 +568,16 @@
 - `BannersTab.js` - البانرات
 - `DriverReportsTab.js` - بلاغات السائقين
 - `CategoriesTab.js` - الفئات
-
-#### الملفات المتبقية (6):
-- `DeliverySettingsTab.js` - إعدادات التوصيل (31 استخدام - يحتاج إعادة هيكلة كبيرة)
-- `DeliveryBoxesTab.js` - صناديق التوصيل (1 استخدام)
-- `FoodOffersTab.js` - عروض الطعام (2 استخدام)
-- `SellersTab.js` - البائعين (2 استخدام)
-- `UsersTab.js` - المستخدمين (2 استخدام)
-- `DeliveryTab.js` - السائقين (2 استخدام)
+- `DeliverySettingsTab.js` - إعدادات التوصيل (30 alert + 1 confirm → toasts + modal)
+- `DeliveryBoxesTab.js` - صناديق التوصيل
+- `FoodOffersTab.js` - عروض الطعام
+- `SellersTab.js` - البائعين
+- `UsersTab.js` - المستخدمين
+- `DeliveryTab.js` - السائقين
+- `SupportTicketsAdmin.js` - إدارة التذاكر
+- `PriceReportsTab.js` - بلاغات الأسعار
+- `ViolationsTab.js` - المخالفات
+- `WithdrawalsTab.js` - السحوبات
 
 ---
 

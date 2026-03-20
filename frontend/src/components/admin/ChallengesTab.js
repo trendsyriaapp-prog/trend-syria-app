@@ -289,6 +289,7 @@ const ChallengeRow = ({ challenge, onEdit, onDelete, onToggle }) => {
 };
 
 const ChallengeForm = ({ challenge, onClose, onSave }) => {
+  const { toast } = useToast();
   const [form, setForm] = useState({
     title: challenge?.title || '',
     description: challenge?.description || '',
@@ -311,7 +312,7 @@ const ChallengeForm = ({ challenge, onClose, onSave }) => {
       }
       onSave();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }

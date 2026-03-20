@@ -1,30 +1,36 @@
 // /app/frontend/src/components/admin/SellersTab.js
 import { useState } from 'react';
-import { Store, Phone, MapPin, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, XCircle } from 'lucide-react';
+import { Store, Phone, MapPin, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import ImageLightbox from '../ui/ImageLightbox';
 
 const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, onRejectSeller }) => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [actionModal, setActionModal] = useState({ isOpen: false, type: null, seller: null });
 
   const handleAction = (action, seller) => {
     setShowMenu(null);
     if (action === 'view') {
       setSelectedSeller(seller);
     } else if (action === 'delete') {
-      if (window.confirm(`هل تريد حذف البائع "${seller.full_name || seller.name}"؟`)) {
-        onDeleteSeller?.(seller.id);
-      }
+      setActionModal({ isOpen: true, type: 'delete', seller });
     } else if (action === 'ban') {
-      if (window.confirm(`هل تريد حظر البائع "${seller.full_name || seller.name}"؟`)) {
-        onBanSeller?.(seller.id);
-      }
+      setActionModal({ isOpen: true, type: 'ban', seller });
     } else if (action === 'approve') {
       onApproveSeller?.(seller.id);
     } else if (action === 'reject') {
       onRejectSeller?.(seller.id);
     }
+  };
+
+  const confirmAction = () => {
+    if (actionModal.type === 'delete') {
+      onDeleteSeller?.(actionModal.seller.id);
+    } else if (actionModal.type === 'ban') {
+      onBanSeller?.(actionModal.seller.id);
+    }
+    setActionModal({ isOpen: false, type: null, seller: null });
   };
 
   return (
@@ -322,6 +328,58 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
           alt={lightboxImage.alt} 
           onClose={() => setLightboxImage(null)} 
         />
+      )}
+
+      {/* Action Confirmation Modal */}
+      {actionModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                actionModal.type === 'delete' ? 'bg-red-100' : 'bg-orange-100'
+              }`}>
+                {actionModal.type === 'delete' ? (
+                  <Trash2 size={20} className="text-red-600" />
+                ) : (
+                  <Ban size={20} className="text-orange-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold">
+                  {actionModal.type === 'delete' ? 'حذف البائع' : 'حظر البائع'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {actionModal.seller?.full_name || actionModal.seller?.name}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {actionModal.type === 'delete' 
+                ? 'هل تريد حذف هذا البائع؟ سيتم إزالة جميع منتجاته.'
+                : 'هل تريد حظر هذا البائع؟ لن يتمكن من البيع بعد الآن.'
+              }
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActionModal({ isOpen: false, type: null, seller: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={confirmAction}
+                className={`flex-1 py-2 text-white rounded-lg text-sm flex items-center justify-center gap-2 ${
+                  actionModal.type === 'delete' ? 'bg-red-500' : 'bg-orange-500'
+                }`}
+              >
+                {actionModal.type === 'delete' ? <Trash2 size={16} /> : <Ban size={16} />}
+                {actionModal.type === 'delete' ? 'حذف' : 'حظر'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

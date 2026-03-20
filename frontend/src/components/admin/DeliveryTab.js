@@ -18,6 +18,7 @@ const DeliveryTab = ({
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [actionModal, setActionModal] = useState({ isOpen: false, type: null, driver: null });
 
   const handleRejectClick = (driverId, driverName) => {
     setRejectModal({ isOpen: true, driverId, driverName });
@@ -38,14 +39,19 @@ const DeliveryTab = ({
     if (action === 'view') {
       setSelectedDriver(driver);
     } else if (action === 'delete') {
-      if (window.confirm(`هل تريد حذف السائق "${driver.full_name || driver.name}"؟`)) {
-        onDeleteDriver?.(driver.id);
-      }
+      setActionModal({ isOpen: true, type: 'delete', driver });
     } else if (action === 'ban') {
-      if (window.confirm(`هل تريد حظر السائق "${driver.full_name || driver.name}"؟`)) {
-        onBanDriver?.(driver.id);
-      }
+      setActionModal({ isOpen: true, type: 'ban', driver });
     }
+  };
+
+  const confirmAction = () => {
+    if (actionModal.type === 'delete') {
+      onDeleteDriver?.(actionModal.driver.id);
+    } else if (actionModal.type === 'ban') {
+      onBanDriver?.(actionModal.driver.id);
+    }
+    setActionModal({ isOpen: false, type: null, driver: null });
   };
 
   // Pending delivery drivers view
@@ -390,6 +396,58 @@ const DeliveryTab = ({
           alt={lightboxImage.alt} 
           onClose={() => setLightboxImage(null)} 
         />
+      )}
+
+      {/* Action Confirmation Modal */}
+      {actionModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                actionModal.type === 'delete' ? 'bg-red-100' : 'bg-orange-100'
+              }`}>
+                {actionModal.type === 'delete' ? (
+                  <Trash2 size={20} className="text-red-600" />
+                ) : (
+                  <Ban size={20} className="text-orange-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold">
+                  {actionModal.type === 'delete' ? 'حذف السائق' : 'حظر السائق'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {actionModal.driver?.full_name || actionModal.driver?.name}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {actionModal.type === 'delete' 
+                ? 'هل تريد حذف هذا السائق؟ لا يمكن التراجع عن هذا الإجراء.'
+                : 'هل تريد حظر هذا السائق؟ لن يتمكن من العمل بعد الآن.'
+              }
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActionModal({ isOpen: false, type: null, driver: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={confirmAction}
+                className={`flex-1 py-2 text-white rounded-lg text-sm flex items-center justify-center gap-2 ${
+                  actionModal.type === 'delete' ? 'bg-red-500' : 'bg-orange-500'
+                }`}
+              >
+                {actionModal.type === 'delete' ? <Trash2 size={16} /> : <Ban size={16} />}
+                {actionModal.type === 'delete' ? 'حذف' : 'حظر'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

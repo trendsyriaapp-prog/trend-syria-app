@@ -8,6 +8,7 @@ import {
   AlertCircle, X, RefreshCw, Filter, Search,
   ChevronRight, User, ChevronLeft, Tag, AlertTriangle
 } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -35,6 +36,7 @@ const PRIORITY_CONFIG = {
 };
 
 const SupportTicketsAdmin = () => {
+  const { toast } = useToast();
   const [tickets, setTickets] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -94,8 +96,9 @@ const SupportTicketsAdmin = () => {
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket({ ...selectedTicket, status: newStatus });
       }
+      toast({ title: 'تم بنجاح', description: 'تم تحديث حالة التذكرة' });
     } catch (err) {
-      alert(err.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     }
   };
 
@@ -110,6 +113,7 @@ const SupportTicketsAdmin = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReply('');
+      toast({ title: 'تم بنجاح', description: 'تم إرسال الرد' });
       
       // Refresh ticket
       const res = await axios.get(`${API}/api/support/tickets/${selectedTicket.id}`, {
@@ -117,7 +121,7 @@ const SupportTicketsAdmin = () => {
       });
       setSelectedTicket(res.data);
     } catch (err) {
-      alert(err.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSending(false);
     }

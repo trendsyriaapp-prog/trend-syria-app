@@ -40,6 +40,9 @@ const DeliveryBoxesTab = () => {
   
   // Expanded rows
   const [expandedBox, setExpandedBox] = useState(null);
+  
+  // Return Box Modal
+  const [returnModal, setReturnModal] = useState({ isOpen: false, driverId: null, driverName: '', condition: null });
 
   useEffect(() => {
     fetchData();
@@ -141,14 +144,13 @@ const DeliveryBoxesTab = () => {
     }
   };
 
-  const handleReturnBox = async (driverId, condition) => {
-    if (!window.confirm(`هل تريد استرجاع الصندوق؟ ${condition === 'good' ? 'سيتم رد الإيداع' : 'لن يتم رد الإيداع (تالف)'}`)) {
-      return;
-    }
+  const handleReturnBox = async () => {
+    if (!returnModal.driverId) return;
     
     try {
-      const res = await axios.post(`${API}/api/delivery-boxes/admin/return/${driverId}?condition=${condition}`);
+      const res = await axios.post(`${API}/api/delivery-boxes/admin/return/${returnModal.driverId}?condition=${returnModal.condition}`);
       toast({ title: "تم", description: res.data.message });
+      setReturnModal({ isOpen: false, driverId: null, driverName: '', condition: null });
       fetchData();
     } catch (error) {
       toast({
@@ -157,6 +159,10 @@ const DeliveryBoxesTab = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const openReturnModal = (driverId, driverName, condition) => {
+    setReturnModal({ isOpen: true, driverId, driverName, condition });
   };
 
   const getStatusBadge = (status) => {
@@ -304,7 +310,7 @@ const DeliveryBoxesTab = () => {
                           دفعة
                         </button>
                         <button
-                          onClick={() => handleReturnBox(box.assigned_to, 'good')}
+                          onClick={() => openReturnModal(box.assigned_to, box.assigned_to_name || 'السائق', 'good')}
                           className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold"
                         >
                           استرجاع
@@ -483,6 +489,52 @@ const DeliveryBoxesTab = () => {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Return Box Confirmation Modal */}
+      {returnModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Package size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">استرجاع الصندوق</h3>
+                <p className="text-xs text-gray-500">{returnModal.driverName}</p>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg mb-4 ${returnModal.condition === 'good' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <p className="text-sm text-gray-700">
+                {returnModal.condition === 'good' 
+                  ? '✅ سيتم رد الإيداع للسائق لأن الصندوق بحالة جيدة.'
+                  : '❌ لن يتم رد الإيداع لأن الصندوق تالف.'
+                }
+              </p>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل تريد متابعة استرجاع الصندوق؟
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setReturnModal({ isOpen: false, driverId: null, driverName: '', condition: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleReturnBox}
+                className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={16} />
+                تأكيد الاسترجاع
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

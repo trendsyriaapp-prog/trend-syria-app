@@ -24,6 +24,7 @@ const FoodOffersTab = ({ token }) => {
   const [filter, setFilter] = useState('all');
   const [showFlashModal, setShowFlashModal] = useState(false);
   const [editingFlash, setEditingFlash] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, id: null, name: '' });
 
   useEffect(() => {
     fetchData();
@@ -66,17 +67,24 @@ const FoodOffersTab = ({ token }) => {
     }
   };
 
-  const handleDeleteOffer = async (offerId) => {
-    if (!window.confirm('هل تريد حذف هذا العرض؟')) return;
+  const handleDeleteOffer = async () => {
+    if (!deleteModal.id) return;
     
     try {
-      await axios.delete(`${API}/admin/food-offers/${offerId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast({ title: "تم الحذف", description: "تم حذف العرض" });
+      if (deleteModal.type === 'offer') {
+        await axios.delete(`${API}/admin/food-offers/${deleteModal.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        await axios.delete(`${API}/admin/flash-sales/${deleteModal.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      toast({ title: "تم الحذف", description: deleteModal.type === 'offer' ? "تم حذف العرض" : "تم حذف الفلاش" });
+      setDeleteModal({ isOpen: false, type: null, id: null, name: '' });
       fetchData();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل حذف العرض", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
     }
   };
 
@@ -87,20 +95,6 @@ const FoodOffersTab = ({ token }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast({ title: flash.is_active ? "تم إيقاف الفلاش" : "تم تفعيل الفلاش" });
-      fetchData();
-    } catch (error) {
-      toast({ title: "خطأ", variant: "destructive" });
-    }
-  };
-
-  const handleDeleteFlash = async (flashId) => {
-    if (!window.confirm('هل تريد حذف عرض الفلاش هذا؟')) return;
-    
-    try {
-      await axios.delete(`${API}/admin/flash-sales/${flashId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast({ title: "تم الحذف" });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", variant: "destructive" });
@@ -262,7 +256,7 @@ const FoodOffersTab = ({ token }) => {
                         {offer.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                       </button>
                       <button
-                        onClick={() => handleDeleteOffer(offer.id)}
+                        onClick={() => setDeleteModal({ isOpen: true, type: 'offer', id: offer.id, name: offer.store_name || 'عرض' })}
                         className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                         title="حذف"
                       >
@@ -375,7 +369,7 @@ const FoodOffersTab = ({ token }) => {
                         {flash.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                       </button>
                       <button
-                        onClick={() => handleDeleteFlash(flash.id)}
+                        onClick={() => setDeleteModal({ isOpen: true, type: 'flash', id: flash.id, name: flash.title || 'فلاش' })}
                         className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                         title="حذف"
                       >
@@ -415,6 +409,45 @@ const FoodOffersTab = ({ token }) => {
             fetchData();
           }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">
+                  {deleteModal.type === 'offer' ? 'حذف العرض' : 'حذف الفلاش'}
+                </h3>
+                <p className="text-xs text-gray-500">{deleteModal.name}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل تريد حذف هذا {deleteModal.type === 'offer' ? 'العرض' : 'الفلاش'}؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, type: null, id: null, name: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleDeleteOffer}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                حذف
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

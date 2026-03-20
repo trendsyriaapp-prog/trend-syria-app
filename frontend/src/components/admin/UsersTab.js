@@ -5,20 +5,26 @@ import { Users, MapPin, Phone, Calendar, MoreVertical, Trash2, Ban, Eye, X } fro
 const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
+  const [actionModal, setActionModal] = useState({ isOpen: false, type: null, user: null });
 
   const handleAction = (action, user) => {
     setShowMenu(null);
     if (action === 'view') {
       setSelectedUser(user);
     } else if (action === 'delete') {
-      if (window.confirm(`هل تريد حذف المستخدم "${user.full_name || user.name}"؟`)) {
-        onDeleteUser?.(user.id);
-      }
+      setActionModal({ isOpen: true, type: 'delete', user });
     } else if (action === 'ban') {
-      if (window.confirm(`هل تريد حظر المستخدم "${user.full_name || user.name}"؟`)) {
-        onBanUser?.(user.id);
-      }
+      setActionModal({ isOpen: true, type: 'ban', user });
     }
+  };
+
+  const confirmAction = () => {
+    if (actionModal.type === 'delete') {
+      onDeleteUser?.(actionModal.user.id);
+    } else if (actionModal.type === 'ban') {
+      onBanUser?.(actionModal.user.id);
+    }
+    setActionModal({ isOpen: false, type: null, user: null });
   };
 
   return (
@@ -157,6 +163,58 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
               >
                 <Trash2 size={14} />
                 حذف
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Confirmation Modal */}
+      {actionModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                actionModal.type === 'delete' ? 'bg-red-100' : 'bg-orange-100'
+              }`}>
+                {actionModal.type === 'delete' ? (
+                  <Trash2 size={20} className="text-red-600" />
+                ) : (
+                  <Ban size={20} className="text-orange-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold">
+                  {actionModal.type === 'delete' ? 'حذف المستخدم' : 'حظر المستخدم'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {actionModal.user?.full_name || actionModal.user?.name}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {actionModal.type === 'delete' 
+                ? 'هل تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.'
+                : 'هل تريد حظر هذا المستخدم؟ لن يتمكن من استخدام التطبيق.'
+              }
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActionModal({ isOpen: false, type: null, user: null })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={confirmAction}
+                className={`flex-1 py-2 text-white rounded-lg text-sm flex items-center justify-center gap-2 ${
+                  actionModal.type === 'delete' ? 'bg-red-500' : 'bg-orange-500'
+                }`}
+              >
+                {actionModal.type === 'delete' ? <Trash2 size={16} /> : <Ban size={16} />}
+                {actionModal.type === 'delete' ? 'حذف' : 'حظر'}
               </button>
             </div>
           </div>

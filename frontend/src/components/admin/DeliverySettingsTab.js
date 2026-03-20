@@ -7,6 +7,7 @@ import {
   Award, Clock, Save, RefreshCw, CheckCircle, AlertCircle,
   Star, Zap, Crown, Diamond, Trophy, Gift, Truck, MapPin
 } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -15,8 +16,10 @@ const formatPrice = (price) => {
 };
 
 const DeliverySettingsTab = () => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [releaseModal, setReleaseModal] = useState(false);
   const [settings, setSettings] = useState({
     performance_levels: {
       beginner_max: 9,
@@ -184,9 +187,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/distance-delivery`, distanceSettings);
-      alert('تم حفظ إعدادات أجور التوصيل بالمسافة بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات أجور التوصيل بالمسافة بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -196,9 +199,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/driver-earnings`, driverEarningsSettings);
-      alert('تم حفظ إعدادات أرباح السائق بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات أرباح السائق بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -208,9 +211,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/delivery-wait-time?wait_time_minutes=${waitTimeMinutes}`);
-      alert('تم حفظ وقت الانتظار بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ وقت الانتظار بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -269,10 +272,10 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/admin/delivery-time-settings`, deliveryTimeSettings);
-      alert('تم حفظ إعدادات وقت التوصيل بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات وقت التوصيل بنجاح' });
     } catch (error) {
       console.error('Error saving delivery time settings:', error);
-      alert('حدث خطأ أثناء حفظ الإعدادات');
+      toast({ title: 'خطأ', description: 'حدث خطأ أثناء حفظ الإعدادات', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -282,9 +285,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/admin/settings/delivery`, waitCompensationSettings);
-      alert('تم حفظ إعدادات تعويض الانتظار بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات تعويض الانتظار بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -294,9 +297,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/smart-order-limits`, smartOrderLimits);
-      alert('تم حفظ إعدادات الحدود الذكية بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات الحدود الذكية بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -325,22 +328,22 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/admin/settings/earnings-hold`, holdSettings);
-      alert('تم حفظ إعدادات تعليق الأرباح بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات تعليق الأرباح بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleReleaseAllHeld = async () => {
-    if (!window.confirm('هل تريد إطلاق جميع الأرباح المعلقة الآن؟')) return;
+    setReleaseModal(false);
     try {
       const res = await axios.post(`${API}/api/admin/held-earnings/release-all`);
-      alert(res.data.message);
+      toast({ title: 'نجاح', description: res.data.message });
       fetchHoldSummary();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     }
   };
 
@@ -348,9 +351,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/performance-levels`, settings.performance_levels);
-      alert('تم حفظ مستويات الأداء بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ مستويات الأداء بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -360,9 +363,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/working-hours`, settings.working_hours);
-      alert('تم حفظ ساعات العمل بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ ساعات العمل بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -372,9 +375,9 @@ const DeliverySettingsTab = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/api/settings/leaderboard-rewards`, settings.leaderboard_rewards);
-      alert('تم حفظ جوائز الصدارة بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ جوائز الصدارة بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -387,9 +390,9 @@ const DeliverySettingsTab = () => {
         max_food_orders_per_driver: settings.max_food_orders_per_driver,
         food_orders_max_distance_km: settings.food_orders_max_distance_km
       });
-      alert('تم حفظ إعدادات قبول الطلبات بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات قبول الطلبات بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -407,9 +410,9 @@ const DeliverySettingsTab = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('تم حفظ إعدادات حدود التوصيل بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ إعدادات حدود التوصيل بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ في حفظ الإعدادات', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -443,9 +446,9 @@ const DeliverySettingsTab = () => {
       await axios.put(`${API}/api/admin/settings/product-delivery-hours`, productDeliveryHours, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('تم حفظ ساعات توصيل المنتجات بنجاح!');
+      toast({ title: 'نجاح', description: 'تم حفظ ساعات توصيل المنتجات بنجاح' });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -475,10 +478,10 @@ const DeliverySettingsTab = () => {
       const res = await axios.post(`${API}/api/admin/delivery/process-undelivered`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert(`تم معالجة ${res.data.deductions.length} طلب. إجمالي الخصم: ${formatPrice(res.data.total_deducted)}`);
+      toast({ title: 'نجاح', description: `تم معالجة ${res.data.deductions.length} طلب. إجمالي الخصم: ${formatPrice(res.data.total_deducted)}` });
       fetchUndeliveredReport();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: 'خطأ', description: error.response?.data?.detail || 'حدث خطأ', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -2256,7 +2259,7 @@ const DeliverySettingsTab = () => {
               
               {holdSummary.total_held > 0 && (
                 <button
-                  onClick={handleReleaseAllHeld}
+                  onClick={() => setReleaseModal(true)}
                   className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm flex items-center justify-center gap-2"
                 >
                   <CheckCircle size={16} />
@@ -2353,6 +2356,13 @@ const DeliverySettingsTab = () => {
       </div>
       )}
       </div>
+
+      {/* Release Earnings Modal */}
+      <ReleaseEarningsModal
+        isOpen={releaseModal}
+        onClose={() => setReleaseModal(false)}
+        onConfirm={handleReleaseAllHeld}
+      />
     </div>
   );
 };
@@ -2368,5 +2378,45 @@ const LevelCard = ({ icon, name, color, range, description }) => (
     <p className="text-xs text-gray-500 mt-1">{description}</p>
   </div>
 );
+
+// Release Earnings Confirmation Modal
+const ReleaseEarningsModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle size={20} className="text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-bold">إطلاق الأرباح المعلقة</h3>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          هل تريد إطلاق جميع الأرباح المعلقة للسائقين الآن؟ سيتم تحويل المبالغ إلى محافظهم.
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+          >
+            <CheckCircle size={16} />
+            تأكيد الإطلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default DeliverySettingsTab;
