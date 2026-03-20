@@ -537,61 +537,55 @@ const AdminDashboardPage = () => {
               )}
             </div>
 
-            {/* تنبيهات المعلقات - تصميم جديد أكبر وأجمل */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 mb-4 shadow-sm">
-              <p className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-                <Clock size={18} className="text-amber-600" /> 
-                الموافقات المعلقة
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {/* بائعين منتجات */}
-                <button 
-                  onClick={() => setActiveTab('pending-sellers')} 
-                  className="bg-white border-2 border-amber-200 rounded-xl p-3 hover:border-amber-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
-                >
-                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                    <Users size={24} className="text-amber-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">بائعين منتجات</span>
-                  <span className="text-lg font-bold text-amber-600">{stats?.pending_sellers || pendingSellers.length || 0}</span>
-                </button>
+            {/* الموافقات المعلقة - تصميم مدمج بدون إطار */}
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {/* بائعين منتجات */}
+              <button 
+                onClick={() => setActiveTab('pending-sellers')} 
+                className="bg-amber-50 border border-amber-200 rounded-lg p-2 hover:bg-amber-100 transition-all flex flex-col items-center gap-1"
+              >
+                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                  <Users size={16} className="text-amber-600" />
+                </div>
+                <span className="text-[10px] text-gray-600">بائعين</span>
+                <span className="text-sm font-bold text-amber-600">{stats?.pending_sellers || pendingSellers.length || 0}</span>
+              </button>
 
-                {/* منتجات */}
-                <button 
-                  onClick={() => setActiveTab('pending-products')} 
-                  className="bg-white border-2 border-blue-200 rounded-xl p-3 hover:border-blue-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
-                >
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Package size={24} className="text-blue-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">منتجات</span>
-                  <span className="text-lg font-bold text-blue-600">{stats?.pending_products || pendingProducts.length || 0}</span>
-                </button>
+              {/* منتجات */}
+              <button 
+                onClick={() => setActiveTab('pending-products')} 
+                className="bg-blue-50 border border-blue-200 rounded-lg p-2 hover:bg-blue-100 transition-all flex flex-col items-center gap-1"
+              >
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Package size={16} className="text-blue-600" />
+                </div>
+                <span className="text-[10px] text-gray-600">منتجات</span>
+                <span className="text-sm font-bold text-blue-600">{stats?.pending_products || pendingProducts.length || 0}</span>
+              </button>
 
-                {/* سائقين */}
-                <button 
-                  onClick={() => setActiveTab('pending-delivery')} 
-                  className="bg-white border-2 border-cyan-200 rounded-xl p-3 hover:border-cyan-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
-                >
-                  <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
-                    <Truck size={24} className="text-cyan-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">سائقين</span>
-                  <span className="text-lg font-bold text-cyan-600">{stats?.pending_delivery || pendingDelivery.length || 0}</span>
-                </button>
+              {/* سائقين */}
+              <button 
+                onClick={() => setActiveTab('pending-delivery')} 
+                className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 hover:bg-cyan-100 transition-all flex flex-col items-center gap-1"
+              >
+                <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
+                  <Truck size={16} className="text-cyan-600" />
+                </div>
+                <span className="text-[10px] text-gray-600">سائقين</span>
+                <span className="text-sm font-bold text-cyan-600">{stats?.pending_delivery || pendingDelivery.length || 0}</span>
+              </button>
 
-                {/* متاجر طعام */}
-                <button 
-                  onClick={() => setActiveTab('pending-food-stores')} 
-                  className="bg-white border-2 border-green-200 rounded-xl p-3 hover:border-green-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
-                >
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <Store size={24} className="text-green-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">متاجر طعام</span>
-                  <span className="text-lg font-bold text-green-600">{pendingFoodStores.length || 0}</span>
-                </button>
-              </div>
+              {/* متاجر طعام */}
+              <button 
+                onClick={() => setActiveTab('pending-food-stores')} 
+                className="bg-green-50 border border-green-200 rounded-lg p-2 hover:bg-green-100 transition-all flex flex-col items-center gap-1"
+              >
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <Store size={16} className="text-green-600" />
+                </div>
+                <span className="text-[10px] text-gray-600">متاجر</span>
+                <span className="text-sm font-bold text-green-600">{pendingFoodStores.length || 0}</span>
+              </button>
             </div>
 
             {/* ======== الأقسام المجمّعة ======== */}
