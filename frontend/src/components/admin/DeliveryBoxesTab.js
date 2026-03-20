@@ -236,18 +236,18 @@ const DeliveryBoxesTab = () => {
 
       {/* Boxes List View */}
       {activeView === 'boxes' && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="space-y-3">
           {/* Header */}
-          <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="bg-white rounded-xl border border-gray-200 p-3">
+            <div className="flex items-center gap-2 mb-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="بحث..."
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm w-48"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-              <button onClick={fetchData} className="p-1.5 hover:bg-gray-100 rounded-lg">
+              <button onClick={fetchData} className="p-2 hover:bg-gray-100 rounded-lg">
                 <RefreshCw size={16} className="text-gray-500" />
               </button>
             </div>
@@ -257,11 +257,11 @@ const DeliveryBoxesTab = () => {
                 value={newBoxSerial}
                 onChange={(e) => setNewBoxSerial(e.target.value)}
                 placeholder="رقم صندوق جديد"
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm w-36"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
               <button
                 onClick={handleAddBox}
-                className="flex items-center gap-1 bg-[#FF6B00] text-white px-3 py-1.5 rounded-lg text-sm font-bold"
+                className="flex items-center gap-1 bg-[#FF6B00] text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap"
               >
                 <Plus size={14} />
                 إضافة
@@ -269,81 +269,68 @@ const DeliveryBoxesTab = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 text-right font-bold text-gray-700">الرقم</th>
-                  <th className="p-3 text-right font-bold text-gray-700">الحالة</th>
-                  <th className="p-3 text-right font-bold text-gray-700">الموظف</th>
-                  <th className="p-3 text-right font-bold text-gray-700">المدفوع</th>
-                  <th className="p-3 text-right font-bold text-gray-700">التقدم</th>
-                  <th className="p-3 text-right font-bold text-gray-700">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBoxes.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="p-8 text-center text-gray-500">
-                      لا توجد صناديق
-                    </td>
-                  </tr>
-                ) : (
-                  filteredBoxes.map((box) => {
-                    const totalRequired = settings.deposit_amount + (settings.monthly_installment * settings.total_installments);
-                    const progress = box.assigned_to ? Math.min(100, (box.total_paid / totalRequired) * 100) : 0;
-                    
-                    return (
-                      <tr key={box.id} className="border-t border-gray-100 hover:bg-gray-50">
-                        <td className="p-3">
-                          <span className="font-mono font-bold">{box.serial}</span>
-                        </td>
-                        <td className="p-3">{getStatusBadge(box.status)}</td>
-                        <td className="p-3">
-                          {box.assigned_to_name || '-'}
-                        </td>
-                        <td className="p-3">
-                          {box.assigned_to ? formatPrice(box.total_paid || 0) : '-'}
-                        </td>
-                        <td className="p-3">
-                          {box.assigned_to && (
-                            <div className="w-24">
-                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full rounded-full ${progress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
-                                  style={{ width: `${progress}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-gray-500 mt-0.5">{progress.toFixed(0)}%</p>
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          {box.status === 'assigned' && (
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => setShowPaymentModal(box.assigned_to)}
-                                className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold"
-                              >
-                                دفعة
-                              </button>
-                              <button
-                                onClick={() => handleReturnBox(box.assigned_to, 'good')}
-                                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold"
-                              >
-                                استرجاع
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+          {/* Boxes Cards */}
+          {filteredBoxes.length === 0 ? (
+            <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+              <Package size={40} className="text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">لا توجد صناديق</p>
+            </div>
+          ) : (
+            filteredBoxes.map((box) => {
+              const totalRequired = settings.deposit_amount + (settings.monthly_installment * settings.total_installments);
+              const progress = box.assigned_to ? Math.min(100, (box.total_paid / totalRequired) * 100) : 0;
+              
+              return (
+                <div key={box.id} className="bg-white rounded-xl border border-gray-200 p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-gray-900">{box.serial}</span>
+                        {getStatusBadge(box.status)}
+                      </div>
+                      {box.assigned_to_name && (
+                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                          <User size={12} />
+                          {box.assigned_to_name}
+                        </p>
+                      )}
+                    </div>
+                    {box.status === 'assigned' && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setShowPaymentModal(box.assigned_to)}
+                          className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold"
+                        >
+                          دفعة
+                        </button>
+                        <button
+                          onClick={() => handleReturnBox(box.assigned_to, 'good')}
+                          className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold"
+                        >
+                          استرجاع
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {box.assigned_to && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>المدفوع: {formatPrice(box.total_paid || 0)}</span>
+                        <span>{progress.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 

@@ -93,85 +93,66 @@ const LowStockTab = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-right p-3 text-xs font-bold text-gray-600">المنتج</th>
-                  <th className="text-right p-3 text-xs font-bold text-gray-600">المخزون</th>
-                  <th className="text-right p-3 text-xs font-bold text-gray-600">السعر</th>
-                  <th className="text-right p-3 text-xs font-bold text-gray-600">البائع</th>
-                  <th className="text-right p-3 text-xs font-bold text-gray-600">رقم الهاتف</th>
-                  <th className="text-center p-3 text-xs font-bold text-gray-600">إجراء</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data.products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={product.images?.[0] || 'https://via.placeholder.com/40'}
-                          alt={product.name}
-                          className="w-10 h-10 object-cover rounded"
-                        />
-                        <div>
-                          <p className="font-medium text-sm text-gray-900 truncate max-w-[150px]">
-                            {product.name}
-                          </p>
-                          <p className="text-xs text-gray-500">{product.category}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
-                        product.stock === 0
-                          ? 'bg-red-100 text-red-700'
-                          : product.stock <= 3
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {product.stock === 0 ? (
-                          <>
-                            <AlertTriangle size={12} />
-                            نفذ
-                          </>
-                        ) : (
-                          `${product.stock} قطع`
-                        )}
-                      </span>
-                    </td>
-                    <td className="p-3 text-sm text-gray-900 font-medium">
-                      {formatPrice(product.price)}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1 text-sm text-gray-700">
-                        <User size={14} className="text-gray-400" />
-                        {product.seller_info?.full_name || 'غير معروف'}
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1 text-sm text-gray-700">
-                        <Phone size={14} className="text-gray-400" />
-                        {product.seller_info?.phone || '-'}
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
+        <div className="space-y-2">
+          {data.products.map((product) => (
+            <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-3">
+              <div className="flex items-start gap-3">
+                <img
+                  src={product.images?.[0] || 'https://via.placeholder.com/48'}
+                  alt={product.name}
+                  className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-gray-900 truncate">{product.name}</h3>
+                      <p className="text-xs text-gray-500">{product.category}</p>
+                    </div>
+                    <span className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
+                      product.stock === 0
+                        ? 'bg-red-100 text-red-700'
+                        : product.stock <= 3
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {product.stock === 0 ? (
+                        <>
+                          <AlertTriangle size={10} />
+                          نفذ
+                        </>
+                      ) : (
+                        `${product.stock} قطع`
+                      )}
+                    </span>
+                  </div>
+                  
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-bold text-[#FF6B00]">{formatPrice(product.price)}</div>
                       <button
                         onClick={() => navigate(`/products/${product.id}`)}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-[#FF6B00] text-white rounded-lg text-xs font-medium hover:bg-[#E65000]"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200"
                         data-testid={`view-product-${product.id}`}
                       >
-                        <ExternalLink size={12} />
+                        <ExternalLink size={10} />
                         عرض
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <User size={10} />
+                        {product.seller_info?.full_name || 'غير معروف'}
+                      </span>
+                      <span className="flex items-center gap-1" dir="ltr">
+                        <Phone size={10} />
+                        {product.seller_info?.phone || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
