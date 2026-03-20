@@ -283,6 +283,20 @@ const MobileNav = () => {
                   </Link>
                 )}
 
+                {user.user_type === 'food_seller' && (
+                  <Link
+                    to="/food/dashboard"
+                    onClick={() => setShowAccountMenu(false)}
+                    className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                    data-testid="food-seller-dashboard-link"
+                  >
+                    <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+                      <Store size={20} className="text-green-500" />
+                    </div>
+                    <span className="font-medium text-gray-900">لوحة المتجر</span>
+                  </Link>
+                )}
+
                 {(user.user_type === 'admin' || user.user_type === 'sub_admin') && (
                   <Link
                     to="/admin"
