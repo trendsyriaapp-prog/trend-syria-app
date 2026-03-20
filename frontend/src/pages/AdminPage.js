@@ -124,7 +124,7 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/delivery/pending`),
         axios.get(`${API}/admin/delivery/all`),
         axios.get(`${API}/admin/food/stores?status=pending`),
-        axios.get(`${API}/admin/withdrawals?status=pending`)
+        axios.get(`${API}/payment/admin/withdrawals?status=pending`)
       ];
       
       if (user?.user_type === 'admin') {
