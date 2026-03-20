@@ -525,74 +525,73 @@ const FoodStoreDashboard = () => {
           <SellerAnalytics token={token} />
         )}
 
-        {/* Products Tab */}
+        {/* Products Tab - مصغر */}
         {activeTab === 'products' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <button
               onClick={() => {
                 setEditingProduct(null);
                 setShowAddProduct(true);
               }}
-              className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600"
+              className="w-full bg-green-500 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600"
             >
-              <Plus size={20} />
+              <Plus size={18} />
               إضافة منتج جديد
             </button>
 
             {products.length === 0 ? (
-              <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-                <Package size={48} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-600">لم تقم بإضافة أي منتجات بعد</p>
+              <div className="bg-white rounded-lg p-6 text-center border border-gray-100">
+                <Package size={36} className="mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-600 text-sm">لم تقم بإضافة أي منتجات بعد</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl p-4 border border-gray-100 flex items-center gap-4"
+                    className="bg-white rounded-lg p-3 border border-gray-100 flex items-center gap-3"
                   >
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       {product.images?.[0] ? (
                         <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Package size={24} className="text-gray-400" />
+                          <Package size={18} className="text-gray-400" />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 truncate">{product.name}</h4>
-                      <p className="text-green-600 font-bold">{product.price?.toLocaleString()} ل.س</p>
+                      <h4 className="font-bold text-sm text-gray-900 truncate">{product.name}</h4>
+                      <p className="text-green-600 font-bold text-sm">{product.price?.toLocaleString()} ل.س</p>
                       {commissionInfo && (
-                        <p className="text-xs text-gray-500">
-                          صافي ربحك: <span className="text-green-600 font-medium">
-                            {Math.round(product.price * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س
+                        <p className="text-[10px] text-gray-500">
+                          صافي: <span className="text-green-600 font-medium">
+                            {Math.round(product.price * (1 - commissionInfo.commission_rate)).toLocaleString()}
                           </span>
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleToggleAvailability(product.id, product.is_available)}
-                        className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
-                        title={product.is_available ? 'متاح' : 'غير متاح'}
+                        className={`p-1.5 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
                       >
-                        {product.is_available ? <Eye size={18} /> : <EyeOff size={18} />}
+                        {product.is_available ? <Eye size={14} /> : <EyeOff size={14} />}
                       </button>
                       <button
                         onClick={() => {
                           setEditingProduct(product);
                           setShowAddProduct(true);
                         }}
-                        className="p-2 rounded-lg bg-blue-100 text-blue-600"
+                        className="p-1.5 rounded-lg bg-blue-100 text-blue-600"
                       >
-                        <Edit size={18} />
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="p-2 rounded-lg bg-red-100 text-red-600"
+                        className="p-1.5 rounded-lg bg-red-100 text-red-600"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -628,21 +627,21 @@ const FoodStoreDashboard = () => {
           <StoreOrdersTab token={token} />
         )}
 
-        {/* Wallet Tab */}
+        {/* Wallet Tab - مصغر */}
         {activeTab === 'wallet' && (
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Wallet size={32} className="text-green-600" />
+          <div className="bg-white rounded-lg p-4 border border-gray-100">
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Wallet size={24} className="text-green-600" />
               </div>
-              <h3 className="font-bold text-xl text-gray-900">المحفظة</h3>
-              <p className="text-gray-500 text-sm">إدارة أرباحك وطلبات السحب</p>
+              <h3 className="font-bold text-base text-gray-900">المحفظة</h3>
+              <p className="text-gray-500 text-xs">إدارة أرباحك وطلبات السحب</p>
             </div>
             <button
               onClick={() => navigate('/wallet')}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors"
             >
-              <Wallet size={20} />
+              <Wallet size={18} />
               الذهاب للمحفظة
             </button>
           </div>
@@ -746,70 +745,70 @@ const StoreSettings = ({ store, token, onUpdate }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-4">
-      <h3 className="font-bold text-gray-900">إعدادات المتجر</h3>
+    <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-3">
+      <h3 className="font-bold text-sm text-gray-900">إعدادات المتجر</h3>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">اسم المتجر</label>
+        <label className="block text-xs font-medium text-gray-700 mb-1">اسم المتجر</label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+        <label className="block text-xs font-medium text-gray-700 mb-1">الوصف</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3"
+          rows={2}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">وقت التوصيل (دقيقة)</label>
+          <label className="block text-xs font-medium text-gray-700 mb-1">وقت التوصيل (د)</label>
           <input
             type="number"
             value={formData.delivery_time}
             onChange={(e) => setFormData({ ...formData, delivery_time: parseInt(e.target.value) })}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">الحد الأدنى للطلب</label>
+          <label className="block text-xs font-medium text-gray-700 mb-1">الحد الأدنى</label>
           <input
             type="number"
             value={formData.minimum_order}
             onChange={(e) => setFormData({ ...formData, minimum_order: parseInt(e.target.value) })}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
           />
         </div>
       </div>
 
-      {/* إعدادات التوصيل */}
-      <div className="border-t pt-4 mt-4">
-        <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Truck size={18} className="text-green-600" />
-          إعدادات التوصيل
+      {/* إعدادات التوصيل - مصغرة */}
+      <div className="border-t pt-3">
+        <h4 className="font-bold text-xs text-gray-900 mb-2 flex items-center gap-1">
+          <Truck size={14} className="text-green-600" />
+          التوصيل
         </h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التوصيل (ل.س)</label>
+            <label className="block text-xs text-gray-600 mb-1">رسوم التوصيل</label>
             <input
               type="number"
               value={formData.delivery_fee}
               onChange={(e) => setFormData({ ...formData, delivery_fee: parseInt(e.target.value) })}
               min="0"
               step="500"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">توصيل مجاني عند</label>
+            <label className="block text-xs text-gray-600 mb-1">توصيل مجاني عند</label>
             <input
               type="number"
               value={formData.free_delivery_minimum}
@@ -817,18 +816,10 @@ const StoreSettings = ({ store, token, onUpdate }) => {
               min="0"
               step="5000"
               placeholder="0 = معطل"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
             />
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          اترك "توصيل مجاني عند" على 0 لتعطيل التوصيل المجاني
-        </p>
-        {formData.free_delivery_minimum > 0 && (
-          <div className="mt-3 bg-green-50 rounded-lg p-3 text-sm text-green-700">
-            ✓ سيحصل العملاء على توصيل مجاني عند الطلب بقيمة {formData.free_delivery_minimum.toLocaleString()} ل.س أو أكثر
-          </div>
-        )}
       </div>
 
       {/* ساعات العمل */}
