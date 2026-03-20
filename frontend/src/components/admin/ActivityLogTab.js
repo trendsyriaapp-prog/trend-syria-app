@@ -115,10 +115,10 @@ const ActivityLogTab = () => {
   };
 
   return (
-    <div className="space-y-4" data-testid="activity-log-tab">
+    <div className="space-y-3" data-testid="activity-log-tab">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-xl">
+        <div className="bg-white p-4 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Activity size={20} className="text-blue-600" />
@@ -132,7 +132,7 @@ const ActivityLogTab = () => {
         
         {/* Top action types */}
         {stats?.by_type && Object.entries(stats.by_type).slice(0, 3).map(([type, count]) => (
-          <div key={type} className="bg-white p-4 rounded-xl">
+          <div key={type} className="bg-white p-4 rounded-lg">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${ACTION_TYPE_COLORS[type]?.split(' ')[0] || 'bg-gray-100'}`}>
                 <BarChart3 size={20} className={ACTION_TYPE_COLORS[type]?.split(' ')[1] || 'text-gray-600'} />
@@ -147,7 +147,7 @@ const ActivityLogTab = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl flex flex-wrap gap-3 items-center">
+      <div className="bg-white p-4 rounded-lg flex flex-wrap gap-3 items-center">
         <select
           value={filter.action_type}
           onChange={(e) => { setFilter({...filter, action_type: e.target.value}); setPage(1); }}
@@ -195,16 +195,16 @@ const ActivityLogTab = () => {
           <RefreshCw className="animate-spin text-green-500" size={32} />
         </div>
       ) : logs.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl">
+        <div className="text-center py-12 bg-white rounded-lg">
           <Activity size={48} className="mx-auto mb-3 text-gray-300" />
           <p className="text-gray-500">لا توجد أنشطة مسجلة</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl overflow-hidden">
+        <div className="bg-white rounded-lg overflow-hidden">
           <div className="divide-y divide-gray-100">
             {logs.map((log) => (
               <div key={log.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-2">
                   {/* Icon */}
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     ACTION_TYPE_COLORS[log.action_type] || 'bg-gray-100 text-gray-700'
@@ -287,7 +287,7 @@ const ActivityLogTab = () => {
 
       {/* Daily Chart */}
       {stats?.daily && stats.daily.length > 0 && (
-        <div className="bg-white rounded-xl p-4">
+        <div className="bg-white rounded-lg p-4">
           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Calendar size={20} className="text-green-500" />
             النشاط اليومي

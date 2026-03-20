@@ -125,10 +125,10 @@ const CouponsTab = ({ token }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-3 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Ticket size={18} />
             <span className="text-sm opacity-90">إجمالي الكوبونات</span>
@@ -136,7 +136,7 @@ const CouponsTab = ({ token }) => {
           <div className="text-2xl font-bold">{stats.total || 0}</div>
         </div>
         
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Check size={18} />
             <span className="text-sm opacity-90">نشطة</span>
@@ -144,7 +144,7 @@ const CouponsTab = ({ token }) => {
           <div className="text-2xl font-bold">{stats.active || 0}</div>
         </div>
         
-        <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg p-3 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Users size={18} />
             <span className="text-sm opacity-90">مرات الاستخدام</span>
@@ -152,12 +152,12 @@ const CouponsTab = ({ token }) => {
           <div className="text-2xl font-bold">{stats.total_uses || 0}</div>
         </div>
         
-        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-3 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Gift size={18} />
             <span className="text-sm opacity-90">إجمالي الخصومات</span>
           </div>
-          <div className="text-xl font-bold">{(stats.total_savings || 0).toLocaleString()}</div>
+          <div className="text-base font-bold">{(stats.total_savings || 0).toLocaleString()}</div>
         </div>
       </div>
 
@@ -168,7 +168,7 @@ const CouponsTab = ({ token }) => {
           setShowModal(true);
         }}
         data-testid="create-coupon-btn"
-        className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90"
+        className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90"
       >
         <Plus size={20} />
         إنشاء كوبون جديد
@@ -198,7 +198,7 @@ const CouponsTab = ({ token }) => {
 
       {/* Coupons List */}
       {coupons.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
           <Ticket size={48} className="mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500">لا توجد كوبونات</p>
         </div>
@@ -214,16 +214,16 @@ const CouponsTab = ({ token }) => {
                 key={coupon.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`bg-white rounded-xl border-2 overflow-hidden ${
+                className={`bg-white rounded-lg border-2 overflow-hidden ${
                   !coupon.is_active ? 'border-gray-200 opacity-60' :
                   expired ? 'border-red-200' : 'border-purple-200'
                 }`}
               >
-                <div className="p-4">
+                <div className="p-3">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl bg-${typeColor}-100 flex items-center justify-center`}>
+                      <div className={`w-12 h-12 rounded-lg bg-${typeColor}-100 flex items-center justify-center`}>
                         <TypeIcon size={24} className={`text-${typeColor}-600`} />
                       </div>
                       <div>
@@ -425,11 +425,11 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 flex items-center justify-between">
-          <h3 className="font-bold text-lg">
+          <h3 className="font-bold text-sm">
             {coupon ? 'تعديل الكوبون' : 'إنشاء كوبون جديد'}
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full">
@@ -437,7 +437,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* Code */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">كود الكوبون *</label>
@@ -447,13 +447,13 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 placeholder="مثال: WELCOME20"
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-2 font-mono uppercase"
+                className="flex-1 border border-gray-200 rounded-lg px-4 py-2 font-mono uppercase"
                 disabled={!!coupon}
               />
               {!coupon && (
                 <button
                   onClick={generateCode}
-                  className="px-4 py-2 bg-gray-100 rounded-xl text-sm hover:bg-gray-200"
+                  className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
                 >
                   توليد
                 </button>
@@ -469,7 +469,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="مثال: كوبون ترحيبي"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2"
             />
           </div>
 
@@ -481,7 +481,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                 <button
                   key={type.id}
                   onClick={() => setFormData({ ...formData, coupon_type: type.id })}
-                  className={`p-3 rounded-xl border-2 text-center ${
+                  className={`p-3 rounded-lg border-2 text-center ${
                     formData.coupon_type === type.id
                       ? `border-${type.color}-500 bg-${type.color}-50`
                       : 'border-gray-200'
@@ -505,7 +505,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                   onChange={(e) => setFormData({ ...formData, discount_percentage: Number(e.target.value) })}
                   min="1"
                   max="100"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2"
                 />
               </div>
               <div>
@@ -515,7 +515,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                   value={formData.max_discount}
                   onChange={(e) => setFormData({ ...formData, max_discount: e.target.value })}
                   placeholder="اختياري"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2"
                 />
               </div>
             </div>
@@ -528,7 +528,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                 type="number"
                 value={formData.discount_amount}
                 onChange={(e) => setFormData({ ...formData, discount_amount: Number(e.target.value) })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2"
               />
             </div>
           )}
@@ -541,7 +541,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
               value={formData.min_order_amount}
               onChange={(e) => setFormData({ ...formData, min_order_amount: Number(e.target.value) })}
               placeholder="0 = بدون حد أدنى"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2"
             />
           </div>
 
@@ -574,7 +574,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                 value={formData.max_uses}
                 onChange={(e) => setFormData({ ...formData, max_uses: e.target.value })}
                 placeholder="غير محدود"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2"
               />
             </div>
             <div>
@@ -584,7 +584,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
                 value={formData.max_uses_per_user}
                 onChange={(e) => setFormData({ ...formData, max_uses_per_user: Number(e.target.value) })}
                 min="1"
-                className="w-full border border-gray-200 rounded-xl px-4 py-2"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2"
               />
             </div>
           </div>
@@ -596,12 +596,12 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
               type="date"
               value={formData.end_date}
               onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2"
             />
           </div>
 
           {/* New Customers Only */}
-          <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl">
+          <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
             <div>
               <p className="font-medium text-gray-900">للعملاء الجدد فقط</p>
               <p className="text-sm text-gray-500">العملاء بدون طلبات سابقة</p>
@@ -622,7 +622,7 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

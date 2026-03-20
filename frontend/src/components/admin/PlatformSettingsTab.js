@@ -72,10 +72,10 @@ const GlobalFreeShippingPromo = () => {
   if (loading) return null;
 
   return (
-    <div className={`bg-gradient-to-r ${promo.is_active ? 'from-green-50 to-emerald-50 border-green-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+    <div className={`bg-gradient-to-r ${promo.is_active ? 'from-green-50 to-emerald-50 border-green-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg border-2 p-4 transition-all`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 ${promo.is_active ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+          <div className={`w-12 h-12 ${promo.is_active ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gray-400'} rounded-lg flex items-center justify-center`}>
             <Gift size={24} className="text-white" />
           </div>
           <div>
@@ -138,7 +138,7 @@ const GlobalFreeShippingPromo = () => {
               value={promo.end_date}
               onChange={(e) => setPromo({ ...promo, end_date: e.target.value })}
               min={new Date().toISOString().split('T')[0]}
-              className="border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
+              className="border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
             />
             <p className="text-xs text-gray-400 mt-1">اتركه فارغاً لعرض بدون تاريخ انتهاء (يدوي)</p>
           </div>
@@ -151,7 +151,7 @@ const GlobalFreeShippingPromo = () => {
               value={promo.message}
               onChange={(e) => setPromo({ ...promo, message: e.target.value })}
               placeholder="🎉 احتفالاً بالافتتاح - توصيل مجاني!"
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-green-500 focus:outline-none"
             />
           </div>
 
@@ -169,7 +169,7 @@ const GlobalFreeShippingPromo = () => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+        className={`mt-4 w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${
           promo.is_active 
             ? 'bg-green-500 hover:bg-green-600 text-white' 
             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -239,10 +239,10 @@ const ReferralProgramSettings = () => {
   if (loading) return null;
 
   return (
-    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-pink-50 to-rose-50 border-pink-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-pink-50 to-rose-50 border-pink-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg border-2 p-4 transition-all`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-pink-500 to-rose-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-pink-500 to-rose-600' : 'bg-gray-400'} rounded-lg flex items-center justify-center`}>
             <Users size={24} className="text-white" />
           </div>
           <div>
@@ -266,7 +266,7 @@ const ReferralProgramSettings = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="space-y-4"
+          className="space-y-3"
         >
           {/* مكافأة المُحيل */}
           <div>
@@ -277,7 +277,7 @@ const ReferralProgramSettings = () => {
               type="number"
               value={settings.referrer_reward}
               onChange={(e) => setSettings({ ...settings, referrer_reward: parseInt(e.target.value) || 0 })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="10000"
             />
             <p className="text-xs text-gray-500 mt-1">المبلغ الذي يحصل عليه المُحيل عند إتمام الإحالة</p>
@@ -294,7 +294,7 @@ const ReferralProgramSettings = () => {
               max="100"
               value={settings.referee_discount}
               onChange={(e) => setSettings({ ...settings, referee_discount: parseInt(e.target.value) || 0 })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="20"
             />
             <p className="text-xs text-gray-500 mt-1">نسبة الخصم التي يحصل عليها الصديق الجديد على أول طلب</p>
@@ -309,7 +309,7 @@ const ReferralProgramSettings = () => {
               type="number"
               value={settings.min_order_for_reward}
               onChange={(e) => setSettings({ ...settings, min_order_for_reward: parseInt(e.target.value) || 0 })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="30000"
             />
             <p className="text-xs text-gray-500 mt-1">الحد الأدنى لقيمة الطلب لاحتساب الإحالة كناجحة</p>
@@ -369,7 +369,7 @@ const ReferralProgramSettings = () => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+        className={`mt-4 w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${
           settings.is_active 
             ? 'bg-pink-500 hover:bg-pink-600 text-white' 
             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -459,10 +459,10 @@ const SurgePricingSettings = () => {
   if (loading) return null;
 
   return (
-    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-orange-50 to-red-50 border-orange-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-2xl border-2 p-4 transition-all`}>
+    <div className={`bg-gradient-to-r ${settings.is_active ? 'from-orange-50 to-red-50 border-orange-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg border-2 p-4 transition-all`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-orange-500 to-red-600' : 'bg-gray-400'} rounded-xl flex items-center justify-center`}>
+          <div className={`w-12 h-12 ${settings.is_active ? 'bg-gradient-to-br from-orange-500 to-red-600' : 'bg-gray-400'} rounded-lg flex items-center justify-center`}>
             <Zap size={24} className="text-white" />
           </div>
           <div>
@@ -486,7 +486,7 @@ const SurgePricingSettings = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="space-y-4"
+          className="space-y-3"
         >
           {/* سبب الزيادة */}
           <div>
@@ -496,7 +496,7 @@ const SurgePricingSettings = () => {
             <select
               value={settings.reason}
               onChange={(e) => setSettings({ ...settings, reason: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
             >
               <option value="زيادة الطلب">زيادة الطلب</option>
               <option value="ساعات الذروة">ساعات الذروة</option>
@@ -515,7 +515,7 @@ const SurgePricingSettings = () => {
               <select
                 value={settings.multiplier}
                 onChange={(e) => setSettings({ ...settings, multiplier: parseFloat(e.target.value), fixed_amount: 0 })}
-                className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 disabled={settings.fixed_amount > 0}
               >
                 <option value="1.25">25% زيادة</option>
@@ -535,7 +535,7 @@ const SurgePricingSettings = () => {
                 type="number"
                 value={settings.fixed_amount}
                 onChange={(e) => setSettings({ ...settings, fixed_amount: parseInt(e.target.value) || 0 })}
-                className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 placeholder="0 = استخدم النسبة"
               />
             </div>
@@ -549,7 +549,7 @@ const SurgePricingSettings = () => {
             <select
               value={settings.applies_to}
               onChange={(e) => setSettings({ ...settings, applies_to: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
             >
               <option value="all">جميع الطلبات</option>
               <option value="food_only">طلبات الطعام فقط</option>
@@ -566,14 +566,14 @@ const SurgePricingSettings = () => {
               type="number"
               value={settings.max_surge_amount}
               onChange={(e) => setSettings({ ...settings, max_surge_amount: parseInt(e.target.value) || 0 })}
-              className="w-full border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
               placeholder="0 = بدون حد"
             />
             <p className="text-xs text-gray-500 mt-1">حد أقصى للزيادة حتى لو كانت النسبة أكبر (0 = بدون حد)</p>
           </div>
 
           {/* مثال على الزيادة */}
-          <div className="bg-orange-100 rounded-xl p-3">
+          <div className="bg-orange-100 rounded-lg p-3">
             <p className="text-sm font-medium text-orange-800 mb-1">مثال على التطبيق:</p>
             <div className="flex items-center gap-2 text-orange-700">
               <span>رسوم توصيل {exampleFee.toLocaleString()} ل.س</span>
@@ -591,7 +591,7 @@ const SurgePricingSettings = () => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className={`mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+        className={`mt-4 w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${
           settings.is_active 
             ? 'bg-orange-500 hover:bg-orange-600 text-white' 
             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -676,7 +676,7 @@ const DriverCancelSettings = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 border-4 border-blue-500 animate-pulse" data-testid="driver-cancel-loading">
+      <div className="bg-white rounded-lg p-6 border-4 border-blue-500 animate-pulse" data-testid="driver-cancel-loading">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-20 bg-gray-100 rounded"></div>
         <p className="mt-2 text-gray-500 text-sm">جاري تحميل إعدادات إلغاء السائق...</p>
@@ -686,7 +686,7 @@ const DriverCancelSettings = () => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-red-200">
+      <div className="bg-white rounded-lg p-6 border border-red-200">
         <div className="flex items-center gap-3 text-red-600">
           <AlertCircle size={24} />
           <span>{error}</span>
@@ -696,9 +696,9 @@ const DriverCancelSettings = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 border-4 border-red-500" data-testid="driver-cancel-settings">
+    <div className="bg-white rounded-lg p-6 border-4 border-red-500" data-testid="driver-cancel-settings">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+        <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
           <AlertCircle className="text-red-600" size={24} />
         </div>
         <div>
@@ -708,7 +708,7 @@ const DriverCancelSettings = () => {
       </div>
 
       {/* تفعيل/إيقاف */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
         <div>
           <p className="font-bold text-gray-900">تفعيل إلغاء الطلب للسائقين</p>
           <p className="text-sm text-gray-500">السماح للسائقين بإلغاء الطلبات ضمن شروط</p>
@@ -726,7 +726,7 @@ const DriverCancelSettings = () => {
       </div>
 
       {settings.enabled && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* مهلة الإلغاء */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -736,7 +736,7 @@ const DriverCancelSettings = () => {
               type="number"
               value={settings.cancel_window_seconds}
               onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: parseInt(e.target.value) || 0 }))}
-              className="w-full p-3 border border-gray-200 rounded-xl"
+              className="w-full p-3 border border-gray-200 rounded-lg"
             />
             <p className="text-xs text-gray-500 mt-1">
               الوقت المسموح للسائق لإلغاء الطلب بعد قبوله ({Math.floor(settings.cancel_window_seconds / 60)} دقيقة و {settings.cancel_window_seconds % 60} ثانية)
@@ -744,7 +744,7 @@ const DriverCancelSettings = () => {
           </div>
 
           {/* نسبة الإلغاء القصوى */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 نسبة الإلغاء القصوى (%)
@@ -753,7 +753,7 @@ const DriverCancelSettings = () => {
                 type="number"
                 value={settings.max_cancel_rate}
                 onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-xl"
+                className="w-full p-3 border border-gray-200 rounded-lg"
               />
             </div>
             <div>
@@ -764,13 +764,13 @@ const DriverCancelSettings = () => {
                 type="number"
                 value={settings.lookback_orders}
                 onChange={(e) => setSettings(s => ({ ...s, lookback_orders: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-xl"
+                className="w-full p-3 border border-gray-200 rounded-lg"
               />
             </div>
           </div>
 
           {/* حدود التحذير والإيقاف */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ⚠️ نسبة التحذير (%)
@@ -779,7 +779,7 @@ const DriverCancelSettings = () => {
                 type="number"
                 value={settings.warning_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, warning_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-yellow-200 rounded-xl bg-yellow-50"
+                className="w-full p-3 border border-yellow-200 rounded-lg bg-yellow-50"
               />
             </div>
             <div>
@@ -790,14 +790,14 @@ const DriverCancelSettings = () => {
                 type="number"
                 value={settings.suspension_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-red-200 rounded-xl bg-red-50"
+                className="w-full p-3 border border-red-200 rounded-lg bg-red-50"
               />
             </div>
           </div>
 
           {/* إحصائيات */}
           {stats && (
-            <div className="bg-gray-50 rounded-xl p-4 mt-4">
+            <div className="bg-gray-50 rounded-lg p-4 mt-4">
               <h4 className="font-bold text-gray-900 mb-3">📊 إحصائيات الإلغاءات</h4>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="bg-white p-3 rounded-lg">
@@ -837,7 +837,7 @@ const DriverCancelSettings = () => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400"
+        className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-gray-400"
       >
         {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
         حفظ الإعدادات
@@ -1102,11 +1102,11 @@ const PlatformSettingsTab = () => {
   const currentTemplates = NOTIFICATION_TEMPLATES[notificationModal.settingKey] || [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center">
             <Settings size={20} className="text-white" />
           </div>
           <div>
@@ -1117,7 +1117,7 @@ const PlatformSettingsTab = () => {
         <button
           onClick={saveSettings}
           disabled={saving}
-          className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-green-600 disabled:opacity-50"
+          className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-600 disabled:opacity-50"
           data-testid="save-settings-btn"
         >
           {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
@@ -1137,13 +1137,13 @@ const PlatformSettingsTab = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`bg-white rounded-xl border-2 p-4 transition-all ${
+              className={`bg-white rounded-lg border-2 p-4 transition-all ${
                 isEnabled ? 'border-green-200' : 'border-gray-200 opacity-60'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 bg-gradient-to-br ${config.color} rounded-xl flex items-center justify-center`}>
+                  <div className={`w-12 h-12 bg-gradient-to-br ${config.color} rounded-lg flex items-center justify-center`}>
                     <Icon size={24} className="text-white" />
                   </div>
                   <div>
@@ -1199,7 +1199,7 @@ const PlatformSettingsTab = () => {
       </div>
 
       {/* Warning Note */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <p className="text-sm text-yellow-800">
           <strong>⚠️ ملاحظة:</strong> عند إيقاف أي قسم، سيختفي من التطبيق للمستخدمين ولكن البيانات ستبقى محفوظة. عند التفعيل، يمكنك إرسال إشعار للمستخدمين.
         </p>
@@ -1218,9 +1218,9 @@ const PlatformSettingsTab = () => {
       <SurgePricingSettings />
 
       {/* إعدادات الشحن المجاني */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
             <Truck size={20} className="text-white" />
           </div>
           <div>
@@ -1229,7 +1229,7 @@ const PlatformSettingsTab = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* حد الشحن المجاني للمنتجات */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -1240,7 +1240,7 @@ const PlatformSettingsTab = () => {
                 type="number"
                 value={productsFreeShipping}
                 onChange={(e) => handleProductsFreeShippingChange(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 placeholder="150000"
               />
               <span className="text-sm text-gray-500">ل.س</span>
@@ -1258,7 +1258,7 @@ const PlatformSettingsTab = () => {
                 type="number"
                 value={foodFreeDelivery}
                 onChange={(e) => handleFoodFreeDeliveryChange(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 placeholder="100000"
               />
               <span className="text-sm text-gray-500">ل.س</span>
@@ -1276,7 +1276,7 @@ const PlatformSettingsTab = () => {
                 type="number"
                 value={settings?.food_delivery_fee || 5000}
                 onChange={(e) => setSettings(prev => ({ ...prev, food_delivery_fee: parseInt(e.target.value) || 0 }))}
-                className="flex-1 border border-gray-300 rounded-xl py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
+                className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 placeholder="5000"
               />
               <span className="text-sm text-gray-500">ل.س</span>
@@ -1301,12 +1301,12 @@ const PlatformSettingsTab = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
               <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                     <Bell size={20} className="text-white" />
                   </div>
                   <div>
@@ -1322,9 +1322,9 @@ const PlatformSettingsTab = () => {
                 </button>
               </div>
 
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-3">
                 {/* خيار تخطي الإشعار */}
-                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                   <input
                     type="checkbox"
                     checked={skipNotification}
@@ -1346,7 +1346,7 @@ const PlatformSettingsTab = () => {
                         {currentTemplates.map((template, index) => (
                           <label
                             key={index}
-                            className={`block p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                            className={`block p-3 rounded-lg border-2 cursor-pointer transition-all ${
                               !useCustom && selectedTemplate === index
                                 ? 'border-green-500 bg-green-50'
                                 : 'border-gray-200 hover:border-gray-300'
@@ -1376,7 +1376,7 @@ const PlatformSettingsTab = () => {
                     {/* إشعار مخصص */}
                     <div className="space-y-2">
                       <label
-                        className={`block p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`block p-3 rounded-lg border-2 cursor-pointer transition-all ${
                           useCustom ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -1402,7 +1402,7 @@ const PlatformSettingsTab = () => {
                             value={customTitle}
                             onChange={(e) => setCustomTitle(e.target.value)}
                             placeholder="عنوان الإشعار..."
-                            className="w-full p-3 border border-gray-200 rounded-xl text-sm"
+                            className="w-full p-3 border border-gray-200 rounded-lg text-sm"
                             data-testid="custom-notification-title"
                           />
                           <textarea
@@ -1410,7 +1410,7 @@ const PlatformSettingsTab = () => {
                             onChange={(e) => setCustomMessage(e.target.value)}
                             placeholder="نص الإشعار..."
                             rows={3}
-                            className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none"
+                            className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none"
                             data-testid="custom-notification-message"
                           />
                         </motion.div>
@@ -1423,14 +1423,14 @@ const PlatformSettingsTab = () => {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setNotificationModal({ isOpen: false, settingKey: null, settingTitle: '' })}
-                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200"
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-200"
                   >
                     إلغاء
                   </button>
                   <button
                     onClick={confirmActivation}
                     disabled={saving || (!skipNotification && useCustom && (!customTitle || !customMessage))}
-                    className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-green-500 text-white rounded-lg font-bold text-sm hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
                     data-testid="confirm-activation-btn"
                   >
                     {saving ? (

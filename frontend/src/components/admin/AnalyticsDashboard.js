@@ -70,21 +70,21 @@ const AnalyticsDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
             <TrendingUp className="text-white" size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">لوحة التحليلات</h2>
+            <h2 className="text-base font-bold text-gray-900">لوحة التحليلات</h2>
             <p className="text-sm text-gray-500">إحصائيات شاملة عن أداء المتجر</p>
           </div>
         </div>
         <button
           onClick={fetchAllData}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
         >
           <RefreshCw size={18} />
           <span className="text-sm font-medium">تحديث</span>
@@ -92,12 +92,12 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {/* إجمالي الإيرادات */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white"
+          className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 text-white"
         >
           <div className="flex items-center justify-between mb-2">
             <DollarSign size={24} className="opacity-80" />
@@ -112,7 +112,7 @@ const AnalyticsDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 text-white"
+          className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-3 text-white"
         >
           <div className="flex items-center justify-between mb-2">
             <Calendar size={24} className="opacity-80" />
@@ -127,7 +127,7 @@ const AnalyticsDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white"
+          className="bg-gradient-to-br from-orange-500 to-red-500 rounded-lg p-3 text-white"
         >
           <div className="flex items-center justify-between mb-2">
             <ShoppingBag size={24} className="opacity-80" />
@@ -142,7 +142,7 @@ const AnalyticsDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-4 text-white"
+          className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg p-3 text-white"
         >
           <div className="flex items-center justify-between mb-2">
             <Users size={24} className="opacity-80" />
@@ -155,40 +155,40 @@ const AnalyticsDashboard = () => {
 
       {/* Secondary Stats */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Users size={20} className="mx-auto text-blue-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.users?.customers || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.users?.customers || 0}</p>
           <p className="text-xs text-gray-500">عملاء</p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Store size={20} className="mx-auto text-green-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.users?.sellers || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.users?.sellers || 0}</p>
           <p className="text-xs text-gray-500">بائعين</p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Truck size={20} className="mx-auto text-orange-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.users?.delivery || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.users?.delivery || 0}</p>
           <p className="text-xs text-gray-500">سائقين</p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Package size={20} className="mx-auto text-purple-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.products?.total || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.products?.total || 0}</p>
           <p className="text-xs text-gray-500">منتجات</p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Clock size={20} className="mx-auto text-yellow-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.orders?.pending || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.orders?.pending || 0}</p>
           <p className="text-xs text-gray-500">طلبات معلقة</p>
         </div>
-        <div className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
           <Flame size={20} className="mx-auto text-red-500 mb-1" />
-          <p className="text-lg font-bold text-gray-900">{stats?.food_orders?.today || 0}</p>
+          <p className="text-sm font-bold text-gray-900">{stats?.food_orders?.today || 0}</p>
           <p className="text-xs text-gray-500">طلبات طعام</p>
         </div>
       </div>
 
       {/* Charts Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4">
+      <div className="bg-white rounded-lg border border-gray-100 p-4">
         {/* Chart Tabs */}
         <div className="flex gap-2 mb-4 overflow-x-auto">
           {[
@@ -199,7 +199,7 @@ const AnalyticsDashboard = () => {
             <button
               key={tab.id}
               onClick={() => setActiveChart(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 activeChart === tab.id
                   ? 'bg-orange-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -283,9 +283,9 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Top Products & Sellers */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-2">
         {/* Top Products */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+        <div className="bg-white rounded-lg border border-gray-100 p-4">
           <div className="flex items-center gap-2 mb-4">
             <Award className="text-orange-500" size={20} />
             <h3 className="font-bold text-gray-900">أكثر المنتجات مبيعاً</h3>
@@ -320,7 +320,7 @@ const AnalyticsDashboard = () => {
         </div>
 
         {/* Top Sellers */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+        <div className="bg-white rounded-lg border border-gray-100 p-4">
           <div className="flex items-center gap-2 mb-4">
             <Store className="text-green-500" size={20} />
             <h3 className="font-bold text-gray-900">أفضل البائعين</h3>

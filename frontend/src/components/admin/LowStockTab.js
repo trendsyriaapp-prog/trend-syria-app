@@ -48,16 +48,16 @@ const LowStockTab = () => {
   }
 
   return (
-    <section className="space-y-4" data-testid="low-stock-tab">
+    <section className="space-y-3" data-testid="low-stock-tab">
       {/* Header */}
-      <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl p-4 text-white">
+      <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg p-3 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <AlertTriangle size={24} />
             </div>
             <div>
-              <h2 className="font-bold text-lg">تقرير المخزون المنخفض</h2>
+              <h2 className="font-bold text-sm">تقرير المخزون المنخفض</h2>
               <p className="text-sm opacity-90">
                 المنتجات التي وصل مخزونها إلى {data.threshold} قطع أو أقل
               </p>
@@ -85,7 +85,7 @@ const LowStockTab = () => {
 
       {/* Products List */}
       {data.products.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Package size={48} className="text-green-500 mx-auto mb-3" />
           <h3 className="font-bold text-gray-900 mb-1">لا توجد منتجات بمخزون منخفض</h3>
           <p className="text-sm text-gray-500">
@@ -95,7 +95,7 @@ const LowStockTab = () => {
       ) : (
         <div className="space-y-2">
           {data.products.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-3">
+            <div key={product.id} className="bg-white rounded-lg border border-gray-200 p-3">
               <div className="flex items-start gap-3">
                 <img
                   src={product.images?.[0] || 'https://via.placeholder.com/48'}
@@ -159,19 +159,19 @@ const LowStockTab = () => {
       {/* Summary Stats */}
       {data.products.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-red-600">
               {data.products.filter(p => p.stock === 0).length}
             </p>
             <p className="text-xs text-red-700">نفذ المخزون</p>
           </div>
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-orange-600">
               {data.products.filter(p => p.stock > 0 && p.stock <= 3).length}
             </p>
             <p className="text-xs text-orange-700">1-3 قطع</p>
           </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
             <p className="text-2xl font-bold text-yellow-600">
               {data.products.filter(p => p.stock > 3).length}
             </p>

@@ -68,9 +68,9 @@ const ChallengesTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <StatCard 
           icon={Target} 
           label="إجمالي التحديات" 
@@ -99,7 +99,7 @@ const ChallengesTab = () => {
 
       {/* Add Button */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold">قائمة التحديات</h2>
+        <h2 className="text-sm font-bold">قائمة التحديات</h2>
         <button
           onClick={() => { setEditingChallenge(null); setShowForm(true); }}
           className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -113,7 +113,7 @@ const ChallengesTab = () => {
       {/* Challenges List */}
       <div className="space-y-3">
         {challenges.length === 0 ? (
-          <div className="bg-gray-50 rounded-xl p-8 text-center">
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
             <Target size={48} className="mx-auto text-gray-300 mb-4" />
             <p className="text-gray-500">لا توجد تحديات بعد</p>
           </div>
@@ -151,12 +151,12 @@ const StatCard = ({ icon: Icon, label, value, color }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
       <div className={`w-10 h-10 rounded-lg ${colors[color]} flex items-center justify-center mb-2`}>
         <Icon size={20} />
       </div>
       <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-lg font-bold text-gray-900">{value}</p>
+      <p className="text-sm font-bold text-gray-900">{value}</p>
     </div>
   );
 };
@@ -173,7 +173,7 @@ const ChallengeRow = ({ challenge, onEdit, onDelete, onToggle }) => {
   const typeInfo = getTypeLabel(challenge.challenge_type);
 
   return (
-    <div className={`bg-white rounded-xl border p-4 ${challenge.is_active ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
+    <div className={`bg-white rounded-lg border p-4 ${challenge.is_active ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -188,7 +188,7 @@ const ChallengeRow = ({ challenge, onEdit, onDelete, onToggle }) => {
           </div>
           <h3 className="font-bold text-gray-900">{challenge.title}</h3>
           <p className="text-sm text-gray-500">{challenge.description}</p>
-          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <Target size={12} />
               {challenge.target_orders} طلب
@@ -268,9 +268,9 @@ const ChallengeForm = ({ challenge, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-md">
+      <div className="bg-white rounded-lg w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-bold text-lg">
+          <h3 className="font-bold text-sm">
             {challenge ? 'تعديل التحدي' : 'إضافة تحدي جديد'}
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -278,7 +278,7 @@ const ChallengeForm = ({ challenge, onClose, onSave }) => {
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
             <input
@@ -303,7 +303,7 @@ const ChallengeForm = ({ challenge, onClose, onSave }) => {
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
               <select

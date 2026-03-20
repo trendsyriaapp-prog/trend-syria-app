@@ -199,11 +199,11 @@ const DailyDealsTab = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
             <Flame size={20} className="text-white" />
           </div>
           <div>
@@ -213,7 +213,7 @@ const DailyDealsTab = () => {
         </div>
         <button
           onClick={() => openModal()}
-          className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
           data-testid="create-daily-deal-btn"
         >
           <Plus size={18} />
@@ -223,7 +223,7 @@ const DailyDealsTab = () => {
 
       {/* Deals List */}
       {deals.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Flame size={48} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">لا توجد صفقات يومية</p>
           <p className="text-gray-400 text-sm mt-1">أنشئ صفقة جديدة لجذب المزيد من المشترين</p>
@@ -235,13 +235,13 @@ const DailyDealsTab = () => {
               key={deal.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
               <div 
                 className="h-2" 
                 style={{ backgroundColor: deal.background_color || '#FF6B00' }}
               />
-              <div className="p-4">
+              <div className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -304,17 +304,17 @@ const DailyDealsTab = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden"
           >
             {/* Modal Header */}
             <div 
-              className="p-4 text-white"
+              className="p-3 text-white"
               style={{ background: `linear-gradient(135deg, ${form.background_color}, ${form.background_color}dd)` }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Flame size={24} />
-                  <h2 className="font-bold text-lg">
+                  <h2 className="font-bold text-sm">
                     {editingDeal ? 'تعديل الصفقة' : 'صفقة يوم جديدة'}
                   </h2>
                 </div>
@@ -328,7 +328,7 @@ const DailyDealsTab = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 overflow-y-auto max-h-[60vh] space-y-4">
+            <div className="p-4 overflow-y-auto max-h-[60vh] space-y-3">
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
@@ -337,7 +337,7 @@ const DailyDealsTab = () => {
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="صفقة اليوم الخاصة"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   data-testid="deal-title-input"
                 />
               </div>
@@ -350,7 +350,7 @@ const DailyDealsTab = () => {
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="عرض خاص لمدة محدودة"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -383,7 +383,7 @@ const DailyDealsTab = () => {
                     type="datetime-local"
                     value={form.start_time}
                     onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
                 <div>
@@ -392,7 +392,7 @@ const DailyDealsTab = () => {
                     type="datetime-local"
                     value={form.end_time}
                     onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -430,7 +430,7 @@ const DailyDealsTab = () => {
                 </div>
                 
                 {showProductSelector && (
-                  <div className="border border-gray-200 rounded-xl max-h-48 overflow-y-auto">
+                  <div className="border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
                     {products.map((product) => (
                       <label
                         key={product.id}
@@ -484,7 +484,7 @@ const DailyDealsTab = () => {
 
               {/* Send Notification Toggle */}
               {!editingDeal && (
-                <div className="flex items-center justify-between bg-blue-50 rounded-xl p-3">
+                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <Bell size={20} className="text-blue-600" />
@@ -512,14 +512,14 @@ const DailyDealsTab = () => {
             <div className="p-4 border-t border-gray-100 flex gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+                className="flex-1 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
               >
                 إلغاء
               </button>
               {!editingDeal && (
                 <button
                   onClick={handleQuickCreate}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-500 text-white rounded-lg font-bold hover:bg-purple-600"
                   data-testid="quick-create-deal-btn"
                 >
                   <Zap size={18} />
@@ -528,7 +528,7 @@ const DailyDealsTab = () => {
               )}
               <button
                 onClick={handleSubmit}
-                className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold hover:opacity-90 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2"
                 data-testid="submit-deal-btn"
               >
                 <Check size={18} />

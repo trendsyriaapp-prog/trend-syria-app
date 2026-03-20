@@ -123,9 +123,9 @@ const SupportTicketsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <StatCard
           icon={AlertCircle}
           label="قيد الانتظار"
@@ -161,7 +161,7 @@ const SupportTicketsTab = () => {
         {/* Rating Stats Card */}
         <button
           onClick={() => setShowRatings(!showRatings)}
-          className={`bg-white rounded-xl border p-4 text-right transition-all ${
+          className={`bg-white rounded-lg border p-4 text-right transition-all ${
             showRatings ? 'border-yellow-400 ring-2 ring-yellow-400/20' : 'border-gray-200 hover:border-gray-300'
           }`}
         >
@@ -225,9 +225,9 @@ const SupportTicketsTab = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Tickets List */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 overflow-hidden">
           {/* Header & Search */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
@@ -283,7 +283,7 @@ const SupportTicketsTab = () => {
         </div>
 
         {/* Ticket Details */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {selectedTicket ? (
             <TicketDetails
               ticket={selectedTicket}
@@ -314,7 +314,7 @@ const StatCard = ({ icon: Icon, label, value, color, onClick, active }) => {
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-xl border p-4 text-right transition-all ${
+      className={`bg-white rounded-lg border p-4 text-right transition-all ${
         active ? 'border-[#FF6B00] ring-2 ring-[#FF6B00]/20' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
@@ -450,7 +450,7 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
       {/* Message */}
       <div className="p-4 flex-1 overflow-y-auto">
         <h4 className="text-sm font-bold text-gray-700 mb-2">رسالة العميل:</h4>
-        <div className="bg-gray-100 rounded-xl p-4">
+        <div className="bg-gray-100 rounded-lg p-4">
           <p className="text-gray-800">{ticket.initial_message}</p>
         </div>
 
@@ -531,7 +531,7 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
             <p className="text-xs text-gray-500 mb-1">للتواصل مع العميل:</p>
             <a
               href={`tel:${ticket.user_phone}`}
-              className="text-[#FF6B00] font-bold text-lg hover:underline flex items-center gap-2"
+              className="text-[#FF6B00] font-bold text-sm hover:underline flex items-center gap-2"
             >
               <Phone size={18} />
               {ticket.user_phone}
@@ -548,13 +548,13 @@ const RatingStatsPanel = ({ stats }) => {
   const maxCount = Math.max(...Object.values(stats.rating_distribution || {}), 1);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
       <div className="flex items-center gap-2 mb-4">
         <Star size={20} className="text-yellow-500 fill-yellow-500" />
         <h3 className="font-bold text-gray-900">إحصائيات تقييمات العملاء</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Rating Distribution */}
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-3">توزيع التقييمات</h4>
@@ -646,52 +646,52 @@ const AnalyticsPanel = ({ analytics }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200 p-6">
       <div className="flex items-center gap-2 mb-6">
         <BarChart3 size={24} className="text-purple-600" />
         <h3 className="font-bold text-gray-900 text-lg">تحليلات الدعم المتقدمة</h3>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <Timer size={18} className="text-blue-500" />
             <span className="text-xs text-gray-500">متوسط وقت الرد</span>
           </div>
-          <p className="text-xl font-bold text-gray-900">
+          <p className="text-base font-bold text-gray-900">
             {formatResponseTime(analytics.avg_response_time_minutes)}
           </p>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <MessageCircle size={18} className="text-orange-500" />
             <span className="text-xs text-gray-500">إجمالي التذاكر</span>
           </div>
-          <p className="text-xl font-bold text-gray-900">{analytics.total_tickets}</p>
+          <p className="text-base font-bold text-gray-900">{analytics.total_tickets}</p>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle size={18} className="text-green-500" />
             <span className="text-xs text-gray-500">معدل الحل</span>
           </div>
-          <p className="text-xl font-bold text-green-600">{analytics.resolved_rate}%</p>
+          <p className="text-base font-bold text-green-600">{analytics.resolved_rate}%</p>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <Users size={18} className="text-purple-500" />
             <span className="text-xs text-gray-500">فريق الدعم</span>
           </div>
-          <p className="text-xl font-bold text-gray-900">{analytics.staff_performance?.length || 0}</p>
+          <p className="text-base font-bold text-gray-900">{analytics.staff_performance?.length || 0}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Peak Hours Chart */}
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
             <Clock size={16} className="text-blue-500" />
             أوقات الذروة
@@ -718,7 +718,7 @@ const AnalyticsPanel = ({ analytics }) => {
         </div>
 
         {/* Daily Tickets Chart */}
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
+        <div className="bg-white rounded-lg p-4 border border-gray-100">
           <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
             <Calendar size={16} className="text-green-500" />
             التذاكر اليومية (آخر 7 أيام)
@@ -748,7 +748,7 @@ const AnalyticsPanel = ({ analytics }) => {
 
       {/* Staff Performance Table */}
       {analytics.staff_performance?.length > 0 && (
-        <div className="mt-6 bg-white rounded-xl p-4 border border-gray-100">
+        <div className="mt-6 bg-white rounded-lg p-4 border border-gray-100">
           <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
             <Users size={16} className="text-purple-500" />
             أداء فريق الدعم

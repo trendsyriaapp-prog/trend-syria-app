@@ -190,8 +190,8 @@ const ProblemSolverTools = () => {
   ];
 
   return (
-    <div className="space-y-4" data-testid="problem-solver-tools">
-      <h2 className="text-lg font-bold text-gray-900">🛠️ أدوات حل المشاكل</h2>
+    <div className="space-y-3" data-testid="problem-solver-tools">
+      <h2 className="text-sm font-bold text-gray-900">🛠️ أدوات حل المشاكل</h2>
       
       {/* الأدوات */}
       <div className="grid grid-cols-2 gap-3">
@@ -201,7 +201,7 @@ const ProblemSolverTools = () => {
             <button
               key={tool.id}
               onClick={() => setActiveModal(tool.id)}
-              className={`bg-gradient-to-r ${tool.color} rounded-xl p-4 text-white text-right hover:opacity-90 transition-opacity`}
+              className={`bg-gradient-to-r ${tool.color} rounded-lg p-3 text-white text-right hover:opacity-90 transition-opacity`}
               data-testid={`tool-${tool.id}`}
             >
               <Icon size={24} className="mb-2" />
@@ -215,7 +215,7 @@ const ProblemSolverTools = () => {
       {/* Modal */}
       {activeModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
               <h3 className="font-bold text-gray-900">
@@ -237,7 +237,7 @@ const ProblemSolverTools = () => {
             )}
 
             {/* Content */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               {/* تعويض مستخدم */}
               {activeModal === 'compensate' && (
                 <>

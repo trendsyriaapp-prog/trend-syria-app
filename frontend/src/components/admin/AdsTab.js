@@ -93,7 +93,7 @@ const AdsTab = ({ user }) => {
   
   if (user.user_type !== 'admin') {
     return (
-      <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+      <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
         <Megaphone size={40} className="text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500">هذه الصفحة للمدير الرئيسي فقط</p>
       </div>
@@ -109,7 +109,7 @@ const AdsTab = ({ user }) => {
   }
   
   return (
-    <section className="space-y-4" data-testid="admin-ads-tab">
+    <section className="space-y-3" data-testid="admin-ads-tab">
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-5 gap-3">
@@ -120,11 +120,11 @@ const AdsTab = ({ user }) => {
             { icon: Eye, label: 'المشاهدات', value: stats.total_views.toLocaleString(), color: 'bg-blue-50 text-blue-600' },
             { icon: MousePointer, label: 'النقرات', value: stats.total_clicks.toLocaleString(), color: 'bg-purple-50 text-purple-600' },
           ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-xl p-3 border border-gray-200">
+            <div key={i} className="bg-white rounded-lg p-3 border border-gray-200">
               <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
                 <stat.icon size={16} />
               </div>
-              <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm font-bold text-gray-900">{stat.value}</p>
               <p className="text-xs text-gray-500">{stat.label}</p>
             </div>
           ))}
@@ -132,13 +132,13 @@ const AdsTab = ({ user }) => {
       )}
       
       {/* Ad Prices Settings */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <DollarSign size={18} className="text-[#FF6B00]" />
           <h3 className="font-bold text-gray-900">أسعار الإعلانات</h3>
         </div>
-        <div className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="p-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {/* Featured Product */}
             <div className="space-y-2">
               <h4 className="text-sm font-bold text-gray-700 flex items-center gap-1">
@@ -240,12 +240,12 @@ const AdsTab = ({ user }) => {
       
       {/* Ads List */}
       {ads.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Megaphone size={40} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">لا توجد إعلانات</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>

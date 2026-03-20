@@ -100,13 +100,13 @@ const WithdrawalsTab = () => {
     <section data-testid="withdrawals-tab">
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
           <p className="text-yellow-600 text-xs mb-1">طلبات معلقة</p>
           <p className="text-2xl font-bold text-yellow-700">{pendingCount}</p>
         </div>
-        <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+        <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
           <p className="text-orange-600 text-xs mb-1">إجمالي المعلق</p>
-          <p className="text-lg font-bold text-orange-700">{formatPrice(totalPending)}</p>
+          <p className="text-sm font-bold text-orange-700">{formatPrice(totalPending)}</p>
         </div>
       </div>
       
@@ -139,7 +139,7 @@ const WithdrawalsTab = () => {
       
       {/* Withdrawals List */}
       {withdrawals.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Banknote size={40} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500">لا توجد طلبات سحب</p>
         </div>
@@ -149,7 +149,7 @@ const WithdrawalsTab = () => {
             <motion.div
               key={w.id}
               layout
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
               <div 
                 className="p-4 cursor-pointer"

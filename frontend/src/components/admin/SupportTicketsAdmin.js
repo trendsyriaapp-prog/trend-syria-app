@@ -136,9 +136,9 @@ const SupportTicketsAdmin = () => {
     const StatusIcon = STATUS_CONFIG[selectedTicket.status]?.icon || AlertCircle;
     
     return (
-      <div className="space-y-4" data-testid="admin-ticket-detail">
+      <div className="space-y-3" data-testid="admin-ticket-detail">
         {/* Header */}
-        <div className="flex items-center gap-3 bg-white p-4 rounded-xl">
+        <div className="flex items-center gap-3 bg-white p-4 rounded-lg">
           <button
             onClick={() => setSelectedTicket(null)}
             className="p-2 hover:bg-gray-100 rounded-lg"
@@ -172,33 +172,33 @@ const SupportTicketsAdmin = () => {
 
         {/* Info */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white p-3 rounded-xl">
+          <div className="bg-white p-3 rounded-lg">
             <p className="text-xs text-gray-500">الفئة</p>
             <p className={`text-sm font-medium ${CATEGORIES[selectedTicket.category]?.color} px-2 py-1 rounded-lg inline-block mt-1`}>
               {CATEGORIES[selectedTicket.category]?.label}
             </p>
           </div>
-          <div className="bg-white p-3 rounded-xl">
+          <div className="bg-white p-3 rounded-lg">
             <p className="text-xs text-gray-500">الأولوية</p>
             <p className={`text-sm font-medium ${PRIORITY_CONFIG[selectedTicket.priority]?.color}`}>
               {PRIORITY_CONFIG[selectedTicket.priority]?.label}
             </p>
           </div>
-          <div className="bg-white p-3 rounded-xl">
+          <div className="bg-white p-3 rounded-lg">
             <p className="text-xs text-gray-500">نوع المستخدم</p>
             <p className="text-sm font-medium text-gray-700">{selectedTicket.user_type || 'عميل'}</p>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="bg-white rounded-xl p-4">
+        <div className="bg-white rounded-lg p-4">
           <h4 className="font-medium text-gray-900 mb-4">المحادثة</h4>
           <div className="max-h-[40vh] overflow-y-auto space-y-3">
             {selectedTicket.messages?.map((msg) => {
               const isAdmin = msg.sender_type === 'admin';
               return (
                 <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-xl px-4 py-2 ${
+                  <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     isAdmin ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-900'
                   }`}>
                     <p className={`text-xs mb-1 ${isAdmin ? 'text-white/80' : 'text-gray-500'}`}>
@@ -222,13 +222,13 @@ const SupportTicketsAdmin = () => {
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder="اكتب ردك..."
-                className="flex-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 onKeyPress={(e) => e.key === 'Enter' && sendReply()}
               />
               <button
                 onClick={sendReply}
                 disabled={!reply.trim() || sending}
-                className="px-6 py-3 bg-green-500 text-white rounded-xl disabled:opacity-50 font-medium"
+                className="px-4 py-2 bg-green-500 text-white rounded-lg disabled:opacity-50 font-medium"
               >
                 {sending ? 'إرسال...' : 'رد'}
               </button>
@@ -240,23 +240,23 @@ const SupportTicketsAdmin = () => {
   }
 
   return (
-    <div className="space-y-4" data-testid="admin-support-tickets">
+    <div className="space-y-3" data-testid="admin-support-tickets">
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-white p-4 rounded-xl border-r-4 border-yellow-500">
+          <div className="bg-white p-4 rounded-lg border-r-4 border-yellow-500">
             <p className="text-2xl font-bold text-gray-900">{stats.by_status?.open || 0}</p>
             <p className="text-sm text-gray-500">مفتوحة</p>
           </div>
-          <div className="bg-white p-4 rounded-xl border-r-4 border-blue-500">
+          <div className="bg-white p-4 rounded-lg border-r-4 border-blue-500">
             <p className="text-2xl font-bold text-gray-900">{stats.by_status?.in_progress || 0}</p>
             <p className="text-sm text-gray-500">قيد المعالجة</p>
           </div>
-          <div className="bg-white p-4 rounded-xl border-r-4 border-green-500">
+          <div className="bg-white p-4 rounded-lg border-r-4 border-green-500">
             <p className="text-2xl font-bold text-gray-900">{stats.by_status?.resolved || 0}</p>
             <p className="text-sm text-gray-500">تم الحل</p>
           </div>
-          <div className="bg-white p-4 rounded-xl border-r-4 border-red-500">
+          <div className="bg-white p-4 rounded-lg border-r-4 border-red-500">
             <p className="text-2xl font-bold text-gray-900">{stats.urgent || 0}</p>
             <p className="text-sm text-gray-500">عاجلة</p>
           </div>
@@ -264,7 +264,7 @@ const SupportTicketsAdmin = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl flex flex-wrap gap-3">
+      <div className="bg-white p-4 rounded-lg flex flex-wrap gap-3">
         <select
           value={filter.status}
           onChange={(e) => { setFilter({...filter, status: e.target.value}); setPage(1); }}
@@ -312,21 +312,21 @@ const SupportTicketsAdmin = () => {
           <RefreshCw className="animate-spin text-green-500" size={32} />
         </div>
       ) : tickets.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl">
+        <div className="text-center py-12 bg-white rounded-lg">
           <HelpCircle size={48} className="mx-auto mb-3 text-gray-300" />
           <p className="text-gray-500">لا توجد تذاكر</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl overflow-hidden">
+        <div className="bg-white rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">رقم</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">العنوان</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">المستخدم</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">الفئة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">الحالة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">التاريخ</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">رقم</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">العنوان</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">المستخدم</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">الفئة</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">الحالة</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">التاريخ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -338,8 +338,8 @@ const SupportTicketsAdmin = () => {
                     onClick={() => setSelectedTicket(ticket)}
                     className="hover:bg-gray-50 cursor-pointer"
                   >
-                    <td className="px-4 py-3 text-sm text-gray-900">#{ticket.ticket_number}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2 text-sm text-gray-900">#{ticket.ticket_number}</td>
+                    <td className="px-3 py-2">
                       <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{ticket.subject}</p>
                       {ticket.priority === 'urgent' && (
                         <span className="text-xs text-red-500 flex items-center gap-1">
@@ -347,19 +347,19 @@ const SupportTicketsAdmin = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{ticket.user_name}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2 text-sm text-gray-600">{ticket.user_name}</td>
+                    <td className="px-3 py-2">
                       <span className={`px-2 py-1 rounded-full text-xs ${CATEGORIES[ticket.category]?.color}`}>
                         {CATEGORIES[ticket.category]?.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <span className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 w-fit ${STATUS_CONFIG[ticket.status]?.color}`}>
                         <StatusIcon size={12} />
                         {STATUS_CONFIG[ticket.status]?.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{formatDate(ticket.updated_at)}</td>
+                    <td className="px-3 py-2 text-xs text-gray-500">{formatDate(ticket.updated_at)}</td>
                   </tr>
                 );
               })}

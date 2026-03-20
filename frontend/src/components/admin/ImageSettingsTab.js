@@ -69,11 +69,11 @@ const ImageSettingsTab = ({ token }) => {
   }
 
   return (
-    <div className="space-y-6" data-testid="image-settings-tab">
+    <div className="space-y-3" data-testid="image-settings-tab">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-orange-500 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-orange-500 rounded-lg flex items-center justify-center">
             <Camera className="text-white" size={20} />
           </div>
           <div>
@@ -92,26 +92,26 @@ const ImageSettingsTab = ({ token }) => {
 
       {/* إحصائيات الاستخدام */}
       {usage && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 size={18} className="text-blue-600" />
             <h3 className="font-bold text-blue-900">إحصائيات هذا الشهر</h3>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white rounded-xl p-3 text-center">
+            <div className="bg-white rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-blue-600">{usage.pro_images_used || 0}</p>
               <p className="text-xs text-gray-600">صور احترافية</p>
             </div>
-            <div className="bg-white rounded-xl p-3 text-center">
+            <div className="bg-white rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-green-600">{usage.food_images_used || 0}</p>
               <p className="text-xs text-gray-600">صور طعام</p>
             </div>
-            <div className="bg-white rounded-xl p-3 text-center">
+            <div className="bg-white rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-purple-600">{usage.remaining_pro_images || 50}</p>
               <p className="text-xs text-gray-600">متبقي (Pro)</p>
             </div>
-            <div className="bg-white rounded-xl p-3 text-center">
+            <div className="bg-white rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-orange-600">{usage.days_until_reset || 0}</p>
               <p className="text-xs text-gray-600">يوم للتجديد</p>
             </div>
@@ -137,11 +137,11 @@ const ImageSettingsTab = ({ token }) => {
       )}
 
       {/* الإعدادات */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         {/* حد الصور */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <Image size={20} className="text-purple-600" />
             </div>
             <div className="flex-1">
@@ -176,7 +176,7 @@ const ImageSettingsTab = ({ token }) => {
         {/* المعالجة الاحترافية */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <Package size={20} className="text-orange-600" />
             </div>
             <div className="flex-1">
@@ -210,9 +210,9 @@ const ImageSettingsTab = ({ token }) => {
         </div>
 
         {/* معالجة الطعام */}
-        <div className="p-4">
+        <div className="p-3">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <Utensils size={20} className="text-green-600" />
             </div>
             <div className="flex-1">
@@ -247,7 +247,7 @@ const ImageSettingsTab = ({ token }) => {
       </div>
 
       {/* ملاحظة */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div className="flex items-start gap-2">
           <AlertCircle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
@@ -263,7 +263,7 @@ const ImageSettingsTab = ({ token }) => {
 
       {/* رسالة النجاح/الخطأ */}
       {message && (
-        <div className={`p-3 rounded-xl flex items-center gap-2 ${
+        <div className={`p-3 rounded-lg flex items-center gap-2 ${
           message.type === 'success' 
             ? 'bg-green-100 text-green-700' 
             : 'bg-red-100 text-red-700'
@@ -277,7 +277,7 @@ const ImageSettingsTab = ({ token }) => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
+        className="w-full bg-gradient-to-r from-[#FF6B00] to-orange-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
       >
         {saving ? (
           <>

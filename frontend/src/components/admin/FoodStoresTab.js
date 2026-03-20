@@ -107,31 +107,31 @@ const FoodStoresTab = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <Store size={18} className="text-green-600" />
             <span className="text-sm text-gray-600">إجمالي المتاجر</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats?.total_stores || 0}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <Check size={18} className="text-blue-600" />
             <span className="text-sm text-gray-600">متاجر نشطة</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats?.active_stores || 0}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <Clock size={18} className="text-yellow-600" />
             <span className="text-sm text-gray-600">بانتظار الموافقة</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats?.pending_stores || 0}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <ShoppingBasket size={18} className="text-purple-600" />
             <span className="text-sm text-gray-600">المنتجات</span>
@@ -175,7 +175,7 @@ const FoodStoresTab = () => {
 
       {/* Stores List */}
       {stores.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Store size={48} className="mx-auto text-gray-400 mb-3" />
           <p className="text-gray-600">لا توجد متاجر طعام حالياً</p>
         </div>
@@ -187,10 +187,10 @@ const FoodStoresTab = () => {
             const typeName = STORE_TYPES[store.store_type]?.name || store.store_type;
 
             return (
-              <div key={store.id} className="bg-white rounded-xl p-4 border border-gray-200">
+              <div key={store.id} className="bg-white rounded-lg p-4 border border-gray-200">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div className={`w-12 h-12 ${typeColor} rounded-xl flex items-center justify-center text-white`}>
+                    <div className={`w-12 h-12 ${typeColor} rounded-lg flex items-center justify-center text-white`}>
                       <TypeIcon size={24} />
                     </div>
                     <div>
@@ -304,13 +304,13 @@ const FoodStoresTab = () => {
       {/* Commissions Modal */}
       {showCommissionsModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md">
+          <div className="bg-white rounded-lg w-full max-w-md">
             <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900">إدارة عمولات الطعام</h2>
+              <h2 className="text-sm font-bold text-gray-900">إدارة عمولات الطعام</h2>
               <p className="text-sm text-gray-500">تعديل نسب العمولات لكل نوع متجر</p>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               {Object.entries(STORE_TYPES).map(([key, { name, icon: Icon, color }]) => (
                 <div key={key} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

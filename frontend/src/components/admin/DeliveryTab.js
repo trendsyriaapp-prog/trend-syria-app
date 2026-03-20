@@ -222,7 +222,7 @@ const DeliveryTab = ({
       {/* نافذة عرض التفاصيل */}
       {selectedDriver && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedDriver(null)}>
-          <div className="bg-white rounded-xl max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">تفاصيل السائق</h3>
               <button onClick={() => setSelectedDriver(null)} className="p-1 hover:bg-gray-100 rounded-full">

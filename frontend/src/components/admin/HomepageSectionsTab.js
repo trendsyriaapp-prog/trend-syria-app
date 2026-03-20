@@ -121,11 +121,11 @@ const HomepageSectionsTab = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">أقسام الصفحة الرئيسية</h2>
+          <h2 className="text-sm font-bold text-gray-900">أقسام الصفحة الرئيسية</h2>
           <p className="text-xs text-gray-500">تحكم في ظهور الأقسام في الصفحة الرئيسية</p>
         </div>
         <div className="flex gap-2">
@@ -160,7 +160,7 @@ const HomepageSectionsTab = () => {
           return (
             <div 
               key={section.key}
-              className={`bg-white rounded-xl border-2 p-4 transition-all ${
+              className={`bg-white rounded-lg border-2 p-4 transition-all ${
                 isEnabled ? 'border-green-200' : 'border-gray-200 opacity-60'
               }`}
             >

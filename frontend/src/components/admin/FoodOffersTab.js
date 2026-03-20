@@ -136,9 +136,9 @@ const FoodOffersTab = ({ token }) => {
   }
 
   return (
-    <div className="space-y-6" data-testid="food-offers-tab">
+    <div className="space-y-3" data-testid="food-offers-tab">
       {/* Section Tabs */}
-      <div className="flex gap-2 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+      <div className="flex gap-2 bg-gray-100 p-1 rounded-lg overflow-x-auto">
         <button
           onClick={() => setActiveSection('offers')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
@@ -181,7 +181,7 @@ const FoodOffersTab = ({ token }) => {
 
       {/* Store Offers Section */}
       {activeSection === 'offers' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Filter */}
           <div className="flex gap-2">
             {['all', 'active', 'inactive'].map((f) => (
@@ -201,7 +201,7 @@ const FoodOffersTab = ({ token }) => {
 
           {/* Offers List */}
           {filteredOffers.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+            <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
               <Gift size={48} className="mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500">لا توجد عروض</p>
             </div>
@@ -212,7 +212,7 @@ const FoodOffersTab = ({ token }) => {
                   key={offer.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`bg-white rounded-xl p-4 border-2 ${
+                  className={`bg-white rounded-lg p-4 border-2 ${
                     offer.is_active ? 'border-green-200' : 'border-gray-200'
                   }`}
                 >
@@ -279,14 +279,14 @@ const FoodOffersTab = ({ token }) => {
 
       {/* Flash Sales Section */}
       {activeSection === 'flash' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Create Flash Sale Button */}
           <button
             onClick={() => {
               setEditingFlash(null);
               setShowFlashModal(true);
             }}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90"
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90"
           >
             <Plus size={20} />
             إنشاء عرض فلاش جديد
@@ -294,7 +294,7 @@ const FoodOffersTab = ({ token }) => {
 
           {/* Flash Sales List */}
           {flashSales.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+            <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
               <Zap size={48} className="mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500 mb-2">لا توجد عروض فلاش</p>
               <p className="text-sm text-gray-400">عروض الفلاش تظهر لجميع العملاء مع مؤقت عد تنازلي</p>
@@ -306,7 +306,7 @@ const FoodOffersTab = ({ token }) => {
                   key={flash.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`rounded-xl p-4 border-2 ${
+                  className={`rounded-lg p-4 border-2 ${
                     isFlashActive(flash) 
                       ? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-300' 
                       : 'bg-white border-gray-200'
@@ -486,18 +486,18 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
           <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
           <div className="text-xs text-yellow-700">قيد المراجعة</div>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
           <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
           <div className="text-xs text-green-700">تمت الموافقة</div>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
           <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
           <div className="text-xs text-red-700">مرفوض</div>
         </div>
@@ -527,7 +527,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
 
       {/* Requests List */}
       {filteredRequests.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
           <UserPlus size={48} className="mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500">لا توجد طلبات {filter !== 'all' ? getStatusBadge(filter).label : ''}</p>
         </div>
@@ -540,9 +540,9 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
                 key={req.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden"
               >
-                <div className="p-4">
+                <div className="p-3">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -558,7 +558,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
                       </p>
                     </div>
                     <div className="text-left">
-                      <div className="text-lg font-bold text-green-600">{req.fee_paid?.toLocaleString()} ل.س</div>
+                      <div className="text-sm font-bold text-green-600">{req.fee_paid?.toLocaleString()} ل.س</div>
                       <div className="text-xs text-gray-500">{req.products_count} منتج</div>
                     </div>
                   </div>
@@ -663,17 +663,17 @@ const RejectModal = ({ request, onReject, onClose, processing }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-md"
+        className="bg-white rounded-lg w-full max-w-md"
       >
-        <div className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">رفض طلب الانضمام</h3>
+        <div className="p-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-4">رفض طلب الانضمام</h3>
           
           <div className="space-y-3 mb-4">
             {reasons.map((r) => (
               <button
                 key={r}
                 onClick={() => setReason(r)}
-                className={`w-full text-right px-4 py-3 rounded-xl border ${
+                className={`w-full text-right px-3 py-2 rounded-lg border ${
                   reason === r
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-gray-200 hover:border-gray-300'
@@ -690,11 +690,11 @@ const RejectModal = ({ request, onReject, onClose, processing }) => {
               value={reason === 'سبب آخر' ? '' : reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 mb-4"
             />
           )}
 
-          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl mb-4">
+          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg mb-4">
             <input
               type="checkbox"
               id="refund"
@@ -710,14 +710,14 @@ const RejectModal = ({ request, onReject, onClose, processing }) => {
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 py-3 border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
             >
               إلغاء
             </button>
             <button
               onClick={() => onReject(request.id, reason, refund)}
               disabled={!reason || processing}
-              className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-red-500 text-white rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {processing ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -849,10 +849,10 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
       >
         <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h3 className="font-bold text-lg flex items-center gap-2">
+          <h3 className="font-bold text-sm flex items-center gap-2">
             <Zap size={20} />
             {flash?.id ? 'تعديل عرض فلاش' : 'عرض فلاش جديد'}
           </h3>
@@ -861,7 +861,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">اسم العرض *</label>
             <input
@@ -869,7 +869,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="مثال: تخفيضات نهاية الأسبوع"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
@@ -880,7 +880,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="وصف قصير للعرض"
               rows={2}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
@@ -893,20 +893,20 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
                 onChange={(e) => setFormData({ ...formData, discount_percentage: parseInt(e.target.value) })}
                 min="1"
                 max="90"
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-3"
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2"
               />
               <span className="text-2xl font-bold text-orange-500">%</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">وقت البداية *</label>
               <input
                 type="datetime-local"
                 value={formData.start_time}
                 onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2"
               />
             </div>
             <div>
@@ -915,7 +915,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
                 type="datetime-local"
                 value={formData.end_time}
                 onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2"
               />
             </div>
           </div>
@@ -960,7 +960,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
 
             {/* اختيار الفئات */}
             {formData.flash_type === 'categories' && (
-              <div className="flex flex-wrap gap-2 p-3 bg-orange-50 rounded-xl">
+              <div className="flex flex-wrap gap-2 p-3 bg-orange-50 rounded-lg">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
@@ -980,7 +980,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
 
             {/* اختيار المنتجات */}
             {formData.flash_type === 'products' && (
-              <div className="p-3 bg-purple-50 rounded-xl space-y-3">
+              <div className="p-3 bg-purple-50 rounded-lg space-y-3">
                 {/* شريط البحث */}
                 <div className="relative">
                   <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1070,7 +1070,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             <input
               type="checkbox"
               id="is_active"
@@ -1085,7 +1085,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
 
           {/* خيار إرسال الإشعار */}
           {!flash?.id && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <input
                 type="checkbox"
                 id="send_notification"
@@ -1105,7 +1105,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

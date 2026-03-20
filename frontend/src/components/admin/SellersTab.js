@@ -197,7 +197,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
       {/* نافذة عرض التفاصيل */}
       {selectedSeller && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedSeller(null)}>
-          <div className="bg-white rounded-xl max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">تفاصيل البائع</h3>
               <button onClick={() => setSelectedSeller(null)} className="p-1 hover:bg-gray-100 rounded-full">

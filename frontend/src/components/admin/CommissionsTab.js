@@ -188,7 +188,7 @@ const CommissionsTab = ({
     <section>
       {/* ===== قسم عمولات الطعام ===== */}
       {foodCommissions && (
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200 mb-4">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-200 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
               <Utensils size={16} className="text-white" />
@@ -277,28 +277,28 @@ const CommissionsTab = ({
       {/* ملخص العمولات */}
       {commissionsReport && (
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-white rounded-xl p-3 border border-gray-200">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <p className="text-[10px] text-gray-500">إجمالي المبيعات</p>
-            <p className="text-lg font-bold text-gray-900">{formatPrice(commissionsReport.summary.total_sales)}</p>
+            <p className="text-sm font-bold text-gray-900">{formatPrice(commissionsReport.summary.total_sales)}</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-200">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <p className="text-[10px] text-gray-500">إجمالي العمولات</p>
-            <p className="text-lg font-bold text-green-600">{formatPrice(commissionsReport.summary.total_commission)}</p>
+            <p className="text-sm font-bold text-green-600">{formatPrice(commissionsReport.summary.total_commission)}</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-200">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <p className="text-[10px] text-gray-500">حصة البائعين</p>
-            <p className="text-lg font-bold text-blue-600">{formatPrice(commissionsReport.summary.total_seller_amount)}</p>
+            <p className="text-sm font-bold text-blue-600">{formatPrice(commissionsReport.summary.total_seller_amount)}</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-200">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
             <p className="text-[10px] text-gray-500">عدد الطلبات</p>
-            <p className="text-lg font-bold text-gray-900">{commissionsReport.summary.orders_count}</p>
+            <p className="text-sm font-bold text-gray-900">{commissionsReport.summary.orders_count}</p>
           </div>
         </div>
       )}
       
       {/* نسب العمولات حسب الفئة */}
       {commissionRates && (
-        <div className="bg-white rounded-xl p-3 border border-gray-200 mb-4">
+        <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-bold text-xs text-gray-900 flex items-center gap-1">
               <Percent size={14} className="text-[#FF6B00]" />
@@ -500,7 +500,7 @@ const CommissionsTab = ({
       
       {/* العمولات حسب الفئة */}
       {commissionsReport?.by_category && Object.keys(commissionsReport.by_category).length > 0 && (
-        <div className="bg-white rounded-xl p-3 border border-gray-200 mb-4">
+        <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
           <h3 className="font-bold text-xs text-gray-900 mb-2">العمولات حسب الفئة</h3>
           <div className="space-y-2">
             {Object.entries(commissionsReport.by_category).map(([category, data]) => (
@@ -521,7 +521,7 @@ const CommissionsTab = ({
       
       {/* آخر الطلبات مع العمولات */}
       {commissionsReport?.recent_orders && commissionsReport.recent_orders.length > 0 && (
-        <div className="bg-white rounded-xl p-3 border border-gray-200">
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
           <h3 className="font-bold text-xs text-gray-900 mb-2">آخر الطلبات مع العمولات</h3>
           <div className="space-y-2">
             {commissionsReport.recent_orders.map((order) => (

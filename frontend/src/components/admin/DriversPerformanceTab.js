@@ -138,72 +138,72 @@ const DriversPerformanceTab = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* شريط الملخص */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Users size={18} className="text-blue-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">إجمالي السائقين</p>
-              <p className="text-lg font-bold text-gray-900">{summary.total_drivers || 0}</p>
+              <p className="text-sm font-bold text-gray-900">{summary.total_drivers || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle size={18} className="text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">طلبات مكتملة</p>
-              <p className="text-lg font-bold text-green-600">{summary.total_completed_orders || 0}</p>
+              <p className="text-sm font-bold text-green-600">{summary.total_completed_orders || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-purple-100 rounded-lg">
               <Clock size={18} className="text-purple-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">متوسط وقت التوصيل</p>
-              <p className="text-lg font-bold text-purple-600">{summary.avg_delivery_time || 0} د</p>
+              <p className="text-sm font-bold text-purple-600">{summary.avg_delivery_time || 0} د</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <Star size={18} className="text-yellow-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">متوسط التقييم</p>
-              <p className="text-lg font-bold text-yellow-600">{summary.avg_rating || 0} ⭐</p>
+              <p className="text-sm font-bold text-yellow-600">{summary.avg_rating || 0} ⭐</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-orange-100 rounded-lg">
               <DollarSign size={18} className="text-orange-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">إجمالي الأرباح</p>
-              <p className="text-lg font-bold text-orange-600">{formatCurrency(summary.total_earnings || 0)}</p>
+              <p className="text-sm font-bold text-orange-600">{formatCurrency(summary.total_earnings || 0)}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* شريط التحكم */}
-      <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           {/* فلتر الفترة */}
           <div className="flex items-center gap-2">
@@ -269,13 +269,13 @@ const DriversPerformanceTab = () => {
             <RefreshCw size={32} className="text-blue-600 animate-spin" />
           </div>
         ) : drivers.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+          <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
             <Users size={48} className="mx-auto mb-3 text-gray-300" />
             <p className="text-gray-500">لا يوجد سائقين</p>
           </div>
         ) : (
           drivers.map((driver, index) => (
-            <div key={driver.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div key={driver.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               {/* البطاقة الرئيسية */}
               <div 
                 className={`p-3 cursor-pointer transition-colors ${
@@ -436,9 +436,9 @@ const DriversPerformanceTab = () => {
       </div>
 
       {/* دليل الألوان */}
-      <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
         <p className="text-xs font-medium text-gray-600 mb-2">دليل الألوان:</p>
-        <div className="flex flex-wrap gap-4 text-xs">
+        <div className="flex flex-wrap gap-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-green-500" />
             <span className="text-gray-600">أداء ممتاز</span>

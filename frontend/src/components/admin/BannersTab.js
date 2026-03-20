@@ -90,9 +90,9 @@ const BannersTab = ({ token }) => {
   }
 
   return (
-    <div className="space-y-6" data-testid="banners-tab">
+    <div className="space-y-3" data-testid="banners-tab">
       {/* Section Tabs */}
-      <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+      <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
         <button
           onClick={() => setActiveSection('homepage')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-all ${
@@ -123,7 +123,7 @@ const BannersTab = ({ token }) => {
           setEditingBanner(null);
           setShowModal(true);
         }}
-        className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 ${
+        className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 ${
           activeSection === 'homepage'
             ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
             : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
@@ -135,7 +135,7 @@ const BannersTab = ({ token }) => {
 
       {/* Banners List */}
       {banners.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+        <div className="bg-white rounded-lg p-8 text-center border border-gray-100">
           <Image size={48} className="mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500 mb-2">لا توجد بانرات</p>
           <p className="text-sm text-gray-400">أضف بانرات لجذب انتباه العملاء</p>
@@ -147,7 +147,7 @@ const BannersTab = ({ token }) => {
               key={banner.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`bg-white rounded-xl overflow-hidden border-2 ${
+              className={`bg-white rounded-lg overflow-hidden border-2 ${
                 banner.is_active ? 'border-green-200' : 'border-gray-200'
               }`}
             >
@@ -164,7 +164,7 @@ const BannersTab = ({ token }) => {
                   />
                 ) : (
                   <div className="text-center text-white">
-                    <h4 className="font-bold text-lg">{banner.title}</h4>
+                    <h4 className="font-bold text-sm">{banner.title}</h4>
                     {banner.description && (
                       <p className="text-sm opacity-80">{banner.description}</p>
                     )}
@@ -315,14 +315,14 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
       >
         <div className={`sticky top-0 px-6 py-4 flex items-center justify-between rounded-t-2xl ${
           type === 'homepage' 
             ? 'bg-gradient-to-r from-blue-500 to-indigo-500' 
             : 'bg-gradient-to-r from-green-500 to-emerald-500'
         } text-white`}>
-          <h3 className="font-bold text-lg flex items-center gap-2">
+          <h3 className="font-bold text-sm flex items-center gap-2">
             <Image size={20} />
             {banner?.id ? 'تعديل البانر' : 'بانر جديد'}
           </h3>
@@ -331,10 +331,10 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-3">
           {/* Preview */}
           <div 
-            className="h-24 rounded-xl flex items-center justify-center p-4 mb-4"
+            className="h-24 rounded-lg flex items-center justify-center p-4 mb-4"
             style={{ backgroundColor: formData.background_color }}
           >
             {formData.image ? (
@@ -360,7 +360,7 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="عنوان البانر"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
@@ -371,7 +371,7 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="وصف قصير (اختياري)"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
@@ -382,7 +382,7 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
               value={formData.image}
               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               placeholder="https://..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
             <p className="text-xs text-gray-500 mt-1">اترك فارغاً لاستخدام العنوان والوصف</p>
           </div>
@@ -394,7 +394,7 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
               value={formData.link}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
               placeholder="/products"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
@@ -431,11 +431,11 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
               value={formData.order}
               onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
               min="0"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2"
             />
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             <input
               type="checkbox"
               id="is_active"
@@ -451,7 +451,7 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
           <button
             type="submit"
             disabled={saving}
-            className={`w-full py-3 rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2 ${
+            className={`w-full py-3 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2 ${
               type === 'homepage' 
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                 : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'

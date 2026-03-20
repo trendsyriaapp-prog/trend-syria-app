@@ -109,11 +109,11 @@ const RecordedCallsTab = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Phone className="text-green-500" />
             المكالمات المسجلة
           </h2>
@@ -153,13 +153,13 @@ const RecordedCallsTab = () => {
           <p>لا توجد مكالمات مسجلة</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredCalls.map((call) => (
             <motion.div
               key={call.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-800 rounded-xl p-4 border border-gray-700"
+              className="bg-gray-800 rounded-lg p-4 border border-gray-700"
             >
               {/* Call Header */}
               <div className="flex items-center justify-between mb-4">
@@ -234,7 +234,7 @@ const RecordedCallsTab = () => {
               )}
 
               {/* Participants Info */}
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-700 text-sm">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-700 text-sm">
                 <div className="flex items-center gap-1 text-gray-400">
                   {call.caller_type === 'driver' ? (
                     <Truck size={14} />
@@ -257,7 +257,7 @@ const RecordedCallsTab = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}

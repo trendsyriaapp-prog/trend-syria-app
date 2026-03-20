@@ -176,72 +176,72 @@ const DriversMapTab = () => {
   const driversWithLocation = displayedDrivers.filter(d => d.latitude && d.longitude);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* شريط الإحصائيات */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Users size={18} className="text-blue-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">إجمالي السائقين</p>
-              <p className="text-lg font-bold text-gray-900">{stats.total || 0}</p>
+              <p className="text-sm font-bold text-gray-900">{stats.total || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-green-100 rounded-lg">
               <Wifi size={18} className="text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">متصلين الآن</p>
-              <p className="text-lg font-bold text-green-600">{stats.online || 0}</p>
+              <p className="text-sm font-bold text-green-600">{stats.online || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <CheckCircle size={18} className="text-emerald-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">متاحين</p>
-              <p className="text-lg font-bold text-emerald-600">{stats.available || 0}</p>
+              <p className="text-sm font-bold text-emerald-600">{stats.available || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-orange-100 rounded-lg">
               <Truck size={18} className="text-orange-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">يوصلون طلبات</p>
-              <p className="text-lg font-bold text-orange-600">{stats.with_orders || 0}</p>
+              <p className="text-sm font-bold text-orange-600">{stats.with_orders || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-purple-100 rounded-lg">
               <MapPin size={18} className="text-purple-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">لهم موقع</p>
-              <p className="text-lg font-bold text-purple-600">{stats.with_location || 0}</p>
+              <p className="text-sm font-bold text-purple-600">{stats.with_location || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* شريط التحكم */}
-      <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           {/* فلتر المدينة */}
           <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ const DriversMapTab = () => {
       </div>
 
       {/* الخريطة */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
         <div className="h-[500px] relative">
           {loading && drivers.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
@@ -423,7 +423,7 @@ const DriversMapTab = () => {
       </div>
 
       {/* قائمة السائقين */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-3 border-b border-gray-100">
           <h3 className="font-bold text-gray-900">قائمة السائقين ({displayedDrivers.length})</h3>
         </div>
@@ -510,9 +510,9 @@ const DriversMapTab = () => {
       </div>
 
       {/* دليل الألوان */}
-      <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
         <p className="text-xs font-medium text-gray-600 mb-2">دليل الألوان:</p>
-        <div className="flex flex-wrap gap-4 text-xs">
+        <div className="flex flex-wrap gap-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-200" />
             <span className="text-gray-600">متصل ومتاح</span>

@@ -86,15 +86,15 @@ const FeaturedStoresTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* العنوان */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-xl">
+          <div className="p-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-lg">
             <Store className="text-white" size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">المتاجر المميزة</h2>
+            <h2 className="text-base font-bold text-gray-900">المتاجر المميزة</h2>
             <p className="text-sm text-gray-500">اختر 4 متاجر لعرضها في أعلى صفحة الطعام</p>
           </div>
         </div>
@@ -109,7 +109,7 @@ const FeaturedStoresTab = () => {
       </div>
 
       {/* تفعيل/إيقاف الميزة */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">تفعيل المتاجر المميزة</h3>
@@ -135,7 +135,7 @@ const FeaturedStoresTab = () => {
 
       {/* المتاجر المختارة */}
       {enabled && (
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <h3 className="font-bold text-gray-900 mb-3">المتاجر المختارة ({selectedStores.length}/4)</h3>
           
           {selectedStores.length === 0 ? (
@@ -198,7 +198,7 @@ const FeaturedStoresTab = () => {
 
       {/* قائمة جميع المتاجر */}
       {enabled && (
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3 mb-4">
             <h3 className="font-bold text-gray-900">جميع المتاجر</h3>
             <div className="flex-1 relative">
@@ -253,10 +253,10 @@ const FeaturedStoresTab = () => {
 
       {/* معاينة */}
       {enabled && selectedStores.length > 0 && (
-        <div className="bg-gray-100 rounded-xl p-4">
+        <div className="bg-gray-100 rounded-lg p-4">
           <h3 className="font-bold text-gray-900 mb-3">معاينة (كما ستظهر للعميل)</h3>
-          <div className="bg-white rounded-xl p-4">
-            <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-lg p-4">
+            <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
               المتاجر
               <span className="text-[10px] bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white px-2 py-0.5 rounded-full">
                 مميزة
@@ -267,7 +267,7 @@ const FeaturedStoresTab = () => {
                 const store = getStoreById(storeId);
                 if (!store) return null;
                 return (
-                  <div key={storeId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div key={storeId} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <img 
                       src={store.image || '/placeholder-store.png'} 
                       alt={store.name}

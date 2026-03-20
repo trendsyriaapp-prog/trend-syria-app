@@ -167,11 +167,11 @@ const CategoriesTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">إدارة الفئات</h2>
+          <h2 className="text-base font-bold text-gray-900">إدارة الفئات</h2>
           <p className="text-sm text-gray-500">إضافة وتعديل وحذف فئات المنتجات والطعام</p>
         </div>
       </div>
@@ -210,21 +210,21 @@ const CategoriesTab = () => {
       </button>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {filteredCategories.map((category, index) => (
           <motion.div
             key={category.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className={`bg-white rounded-xl border-2 p-4 ${
+            className={`bg-white rounded-lg border-2 p-4 ${
               category.is_active ? 'border-gray-200' : 'border-red-200 bg-red-50'
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-12 h-12 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: category.color + '20' }}
                 >
                   <IconComponent name={category.icon} size={24} style={{ color: category.color }} />
@@ -289,11 +289,11 @@ const CategoriesTab = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold">
+                <h3 className="text-sm font-bold">
                   {editingCategory ? 'تعديل الفئة' : 'إضافة فئة جديدة'}
                 </h3>
                 <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-full">
@@ -301,7 +301,7 @@ const CategoriesTab = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     اسم الفئة (عربي) *
@@ -413,11 +413,11 @@ const CategoriesTab = () => {
                 </div>
 
                 {/* Preview */}
-                <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 mb-2">معاينة:</p>
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      className="w-12 h-12 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: formData.color + '20' }}
                     >
                       <IconComponent name={formData.icon} size={24} style={{ color: formData.color }} />

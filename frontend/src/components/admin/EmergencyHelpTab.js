@@ -90,11 +90,11 @@ const EmergencyHelpTab = ({ token }) => {
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <AlertTriangle className="text-orange-500" />
             طلبات المساعدة الطارئة
           </h2>
@@ -112,7 +112,7 @@ const EmergencyHelpTab = ({ token }) => {
 
       {/* Stats */}
       {pendingCount > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700 font-bold flex items-center gap-2">
             <AlertTriangle size={18} />
             {pendingCount} طلب بانتظار الرد!
@@ -147,16 +147,16 @@ const EmergencyHelpTab = ({ token }) => {
           <Loader2 className="animate-spin mx-auto text-gray-400" size={32} />
         </div>
       ) : requests.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-xl">
+        <div className="text-center py-10 bg-gray-50 rounded-lg">
           <CheckCircle className="mx-auto text-green-500 mb-2" size={40} />
           <p className="text-gray-500">لا توجد طلبات مساعدة {filter === 'pending' ? 'بانتظار الرد' : ''}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {requests.map(req => (
             <div
               key={req.id}
-              className={`bg-white rounded-xl border-2 overflow-hidden ${
+              className={`bg-white rounded-lg border-2 overflow-hidden ${
                 req.status === 'pending' ? 'border-red-300 shadow-lg' : 'border-gray-200'
               }`}
             >
@@ -178,9 +178,9 @@ const EmergencyHelpTab = ({ token }) => {
                 </span>
               </div>
 
-              <div className="p-4">
+              <div className="p-3">
                 {/* Reason */}
-                <div className="mb-4 p-3 bg-orange-50 rounded-xl">
+                <div className="mb-4 p-3 bg-orange-50 rounded-lg">
                   <p className="text-sm font-bold text-orange-800">
                     📋 سبب الطلب: {req.reason_text}
                   </p>
@@ -191,9 +191,9 @@ const EmergencyHelpTab = ({ token }) => {
                   )}
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-2">
                   {/* Driver Info */}
-                  <div className="bg-blue-50 rounded-xl p-3">
+                  <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-xs font-bold text-blue-700 mb-2">🚗 معلومات السائق:</p>
                     <div className="space-y-1">
                       <p className="text-sm flex items-center gap-2">
@@ -213,7 +213,7 @@ const EmergencyHelpTab = ({ token }) => {
                   </div>
 
                   {/* Customer Info */}
-                  <div className="bg-green-50 rounded-xl p-3">
+                  <div className="bg-green-50 rounded-lg p-3">
                     <p className="text-xs font-bold text-green-700 mb-2">👤 معلومات العميل:</p>
                     <div className="space-y-1">
                       <p className="text-sm flex items-center gap-2">
@@ -244,7 +244,7 @@ const EmergencyHelpTab = ({ token }) => {
                   <div className="mt-4 flex gap-2">
                     <a
                       href={`tel:${req.customer_phone}`}
-                      className="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold text-center flex items-center justify-center gap-2"
+                      className="flex-1 py-3 bg-green-600 text-white rounded-lg font-bold text-center flex items-center justify-center gap-2"
                     >
                       <PhoneCall size={18} />
                       اتصل بالعميل
@@ -252,7 +252,7 @@ const EmergencyHelpTab = ({ token }) => {
                     <button
                       onClick={() => resolveRequest(req.id)}
                       disabled={resolving === req.id}
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {resolving === req.id ? (
                         <Loader2 size={18} className="animate-spin" />
@@ -265,7 +265,7 @@ const EmergencyHelpTab = ({ token }) => {
                 )}
 
                 {req.status === 'resolved' && req.resolved_at && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-xl">
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
                     <p className="text-xs text-green-700">
                       ✅ تم الحل في: {formatDate(req.resolved_at)}
                     </p>

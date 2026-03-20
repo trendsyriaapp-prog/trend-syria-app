@@ -144,11 +144,11 @@ const TickerMessagesTab = () => {
   }
 
   return (
-    <div className="space-y-6" data-testid="ticker-messages-tab">
+    <div className="space-y-3" data-testid="ticker-messages-tab">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <Sparkles className="text-[#FF6B00]" size={24} />
             إدارة شريط العروض
           </h2>
@@ -160,7 +160,7 @@ const TickerMessagesTab = () => {
         {/* Toggle Button */}
         <button
           onClick={handleToggleTicker}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
             isEnabled 
               ? 'bg-green-100 text-green-700 hover:bg-green-200' 
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -182,7 +182,7 @@ const TickerMessagesTab = () => {
       </div>
 
       {/* Preview */}
-      <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-2 rounded-xl overflow-hidden">
+      <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8533] to-[#FF6B00] text-white py-2 rounded-lg overflow-hidden">
         <div className="ticker-wrapper">
           <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap px-4">
             {messages.filter(m => m.is_active !== false).map((msg, i) => (
@@ -197,7 +197,7 @@ const TickerMessagesTab = () => {
       </div>
 
       {/* Add New Message */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
           <Plus size={18} className="text-[#FF6B00]" />
           إضافة رسالة جديدة
@@ -208,10 +208,10 @@ const TickerMessagesTab = () => {
             value={newMessage.text}
             onChange={(e) => setNewMessage({ ...newMessage, text: e.target.value })}
             placeholder="مثال: 🔥 خصم 50% على جميع المنتجات"
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF6B00]/20 focus:border-[#FF6B00] outline-none"
+            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF6B00]/20 focus:border-[#FF6B00] outline-none"
             data-testid="new-message-input"
           />
-          <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100">
+          <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
             <input
               type="checkbox"
               checked={newMessage.highlight}
@@ -223,7 +223,7 @@ const TickerMessagesTab = () => {
           </label>
           <button
             onClick={handleAddMessage}
-            className="px-4 py-2 bg-[#FF6B00] text-white rounded-xl font-medium hover:bg-[#E65000] transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg font-medium hover:bg-[#E65000] transition-colors flex items-center gap-2"
             data-testid="add-message-btn"
           >
             <Plus size={18} />
@@ -233,7 +233,7 @@ const TickerMessagesTab = () => {
       </div>
 
       {/* Messages List */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 bg-gray-50">
           <h3 className="font-bold text-gray-900">الرسائل الحالية ({messages.length})</h3>
         </div>
@@ -310,7 +310,7 @@ const TickerMessagesTab = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-3 bg-[#FF6B00] text-white rounded-xl font-bold hover:bg-[#E65000] transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg font-bold hover:bg-[#E65000] transition-colors flex items-center gap-2 disabled:opacity-50"
           data-testid="save-ticker-btn"
         >
           {saving ? (
@@ -323,7 +323,7 @@ const TickerMessagesTab = () => {
       </div>
 
       {/* Tips */}
-      <div className="bg-blue-50 rounded-xl p-4">
+      <div className="bg-blue-50 rounded-lg p-4">
         <h4 className="font-bold text-blue-800 mb-2">💡 نصائح:</h4>
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• استخدم الإيموجي لجعل الرسائل أكثر جاذبية (🔥⚡🎁💳)</li>

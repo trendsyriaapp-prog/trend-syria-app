@@ -194,7 +194,7 @@ const DeliveryBoxesTab = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Stats Cards */}
       <div className="grid grid-cols-5 gap-3">
         {[
@@ -204,16 +204,16 @@ const DeliveryBoxesTab = () => {
           { label: 'مُملّكة', value: stats.owned || 0, icon: DollarSign, color: 'bg-purple-100 text-purple-700' },
           { label: 'تالفة', value: stats.damaged || 0, icon: AlertTriangle, color: 'bg-red-100 text-red-700' },
         ].map((stat, i) => (
-          <div key={i} className={`rounded-xl p-3 ${stat.color}`}>
+          <div key={i} className={`rounded-lg p-3 ${stat.color}`}>
             <stat.icon size={18} className="mb-1" />
-            <p className="text-xl font-bold">{stat.value}</p>
+            <p className="text-base font-bold">{stat.value}</p>
             <p className="text-xs opacity-80">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-white rounded-xl p-1 border border-gray-200">
+      <div className="flex gap-2 bg-white rounded-lg p-1 border border-gray-200">
         {[
           { id: 'boxes', label: 'الصناديق', icon: Package },
           { id: 'assign', label: 'تعيين صندوق', icon: User },
@@ -238,7 +238,7 @@ const DeliveryBoxesTab = () => {
       {activeView === 'boxes' && (
         <div className="space-y-3">
           {/* Header */}
-          <div className="bg-white rounded-xl border border-gray-200 p-3">
+          <div className="bg-white rounded-lg border border-gray-200 p-3">
             <div className="flex items-center gap-2 mb-2">
               <input
                 type="text"
@@ -271,7 +271,7 @@ const DeliveryBoxesTab = () => {
 
           {/* Boxes Cards */}
           {filteredBoxes.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+            <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
               <Package size={40} className="text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">لا توجد صناديق</p>
             </div>
@@ -281,7 +281,7 @@ const DeliveryBoxesTab = () => {
               const progress = box.assigned_to ? Math.min(100, (box.total_paid / totalRequired) * 100) : 0;
               
               return (
-                <div key={box.id} className="bg-white rounded-xl border border-gray-200 p-3">
+                <div key={box.id} className="bg-white rounded-lg border border-gray-200 p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -336,13 +336,13 @@ const DeliveryBoxesTab = () => {
 
       {/* Assign Box View */}
       {activeView === 'assign' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Truck size={18} className="text-[#FF6B00]" />
             تعيين صندوق لموظف توصيل
           </h3>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">اختر الموظف</label>
               <select
@@ -401,28 +401,28 @@ const DeliveryBoxesTab = () => {
 
       {/* Settings View */}
       {activeView === 'settings' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Settings size={18} className="text-[#FF6B00]" />
             إعدادات الصناديق
           </h3>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-gray-50 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 mb-1">مبلغ الإيداع</p>
-              <p className="text-xl font-bold text-gray-900">{formatPrice(settings.deposit_amount)}</p>
+              <p className="text-base font-bold text-gray-900">{formatPrice(settings.deposit_amount)}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+            <div className="bg-gray-50 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 mb-1">القسط الشهري</p>
-              <p className="text-xl font-bold text-gray-900">{formatPrice(settings.monthly_installment)}</p>
+              <p className="text-base font-bold text-gray-900">{formatPrice(settings.monthly_installment)}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+            <div className="bg-gray-50 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 mb-1">عدد الأقساط للتملك</p>
-              <p className="text-xl font-bold text-gray-900">{settings.total_installments} شهر</p>
+              <p className="text-base font-bold text-gray-900">{settings.total_installments} شهر</p>
             </div>
           </div>
           
-          <div className="mt-4 p-4 bg-blue-50 rounded-xl">
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>إجمالي سعر الصندوق:</strong> {formatPrice(settings.deposit_amount + (settings.monthly_installment * settings.total_installments))}
             </p>
@@ -439,7 +439,7 @@ const DeliveryBoxesTab = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-4 w-full max-w-sm"
+            className="bg-white rounded-lg p-4 w-full max-w-sm"
           >
             <h3 className="font-bold text-gray-900 mb-4">تسجيل دفعة</h3>
             

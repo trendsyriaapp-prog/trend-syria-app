@@ -153,10 +153,10 @@ const PriceReportsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* إحصائيات */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <Flag size={20} className="text-blue-600" />
@@ -168,7 +168,7 @@ const PriceReportsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
               <Clock size={20} className="text-yellow-600" />
@@ -180,7 +180,7 @@ const PriceReportsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
               <AlertTriangle size={20} className="text-red-600" />
@@ -192,7 +192,7 @@ const PriceReportsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
               <MessageSquare size={20} className="text-orange-600" />
@@ -204,7 +204,7 @@ const PriceReportsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle size={20} className="text-green-600" />
@@ -271,13 +271,13 @@ const PriceReportsTab = () => {
           {/* قائمة البلاغات */}
           <div className="space-y-3">
             {reports.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
                 <Flag size={48} className="mx-auto text-gray-300 mb-3" />
                 <p className="text-gray-500">لا توجد بلاغات</p>
               </div>
             ) : (
               reports.map(report => (
-                <div key={report.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div key={report.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   {/* Header */}
                   <div 
                     className="p-4 cursor-pointer hover:bg-gray-50"
@@ -451,13 +451,13 @@ const PriceReportsTab = () => {
       {activeTab === 'sellers' && (
         <div className="space-y-3">
           {sellersWithViolations.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-xl">
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
               <UserCheck size={48} className="mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500">لا يوجد بائعون لديهم نقاط مخالفات</p>
             </div>
           ) : (
             sellersWithViolations.map(seller => (
-              <div key={seller.id} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div key={seller.id} className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${

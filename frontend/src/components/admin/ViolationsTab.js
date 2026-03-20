@@ -129,10 +129,10 @@ const ViolationsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* إحصائيات */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <AlertTriangle size={20} className="text-blue-600" />
@@ -144,7 +144,7 @@ const ViolationsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
               <Clock size={20} className="text-yellow-600" />
@@ -156,7 +156,7 @@ const ViolationsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
               <DollarSign size={20} className="text-red-600" />
@@ -168,13 +168,13 @@ const ViolationsTab = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
               <DollarSign size={20} className="text-orange-600" />
             </div>
             <div>
-              <p className="text-lg font-bold text-orange-600">{formatPrice(stats.total_amount || 0)}</p>
+              <p className="text-sm font-bold text-orange-600">{formatPrice(stats.total_amount || 0)}</p>
               <p className="text-xs text-gray-500">إجمالي الخصومات</p>
             </div>
           </div>
@@ -225,13 +225,13 @@ const ViolationsTab = () => {
       {/* قائمة المخالفات */}
       <div className="space-y-3">
         {filteredViolations.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl">
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
             <AlertTriangle size={48} className="mx-auto text-gray-300 mb-3" />
             <p className="text-gray-500">لا توجد مخالفات</p>
           </div>
         ) : (
           filteredViolations.map(violation => (
-            <div key={violation.id} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div key={violation.id} className="bg-white rounded-lg border border-gray-200 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">

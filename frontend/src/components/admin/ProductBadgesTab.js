@@ -154,10 +154,10 @@ const ProductBadgesTab = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">إعدادات شارات المنتجات</h2>
+        <h2 className="text-sm font-bold text-gray-900">إعدادات شارات المنتجات</h2>
         <button
           onClick={handleSave}
           disabled={saving}
@@ -169,7 +169,7 @@ const ProductBadgesTab = () => {
       </div>
 
       {/* التفعيل العام */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">تفعيل الشارات</h3>
@@ -185,7 +185,7 @@ const ProductBadgesTab = () => {
       </div>
 
       {/* سرعة الدوران */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <label className="block text-sm font-bold text-gray-900 mb-2">سرعة تبديل الرسائل (مللي ثانية)</label>
         <input
           type="number"
@@ -203,7 +203,7 @@ const ProductBadgesTab = () => {
       {badgeTypeConfig.map((config) => {
         const badgeType = settings.badge_types[config.key];
         return (
-          <div key={config.key} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div key={config.key} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className={`flex items-center justify-between p-4 bg-${config.color}-50 border-b border-${config.color}-100`}>
               <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ const ProductBadgesTab = () => {
 
             {/* Content */}
             {badgeType.enabled && (
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-3">
                 {/* Threshold */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -280,7 +280,7 @@ const ProductBadgesTab = () => {
       })}
 
       {/* الألوان */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex items-center gap-2 mb-3">
           <Palette size={18} className="text-gray-600" />
           <h3 className="font-bold text-gray-900">ألوان الشارات</h3>

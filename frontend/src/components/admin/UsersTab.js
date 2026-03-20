@@ -109,7 +109,7 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
       {/* نافذة عرض التفاصيل */}
       {selectedUser && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedUser(null)}>
-          <div className="bg-white rounded-xl max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">تفاصيل المستخدم</h3>
               <button onClick={() => setSelectedUser(null)} className="p-1 hover:bg-gray-100 rounded-full">

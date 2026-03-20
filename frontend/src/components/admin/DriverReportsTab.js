@@ -117,9 +117,9 @@ const DriverReportsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <StatCard
           icon={Clock}
           label="قيد المراجعة"
@@ -163,7 +163,7 @@ const DriverReportsTab = () => {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -172,12 +172,12 @@ const DriverReportsTab = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو الهاتف..."
-              className="w-full pr-10 pl-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
+              className="w-full pr-10 pl-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B00]"
             />
           </div>
           <button
             onClick={fetchReports}
-            className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200"
+            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200"
           >
             <RefreshCw size={18} className="text-gray-600" />
           </button>
@@ -187,7 +187,7 @@ const DriverReportsTab = () => {
       {/* Reports List */}
       <div className="space-y-3">
         {filteredReports.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <Shield size={48} className="text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">لا توجد بلاغات</p>
           </div>
@@ -235,7 +235,7 @@ const StatCard = ({ icon: Icon, label, value, color, onClick, active }) => {
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-xl border p-4 text-right transition-all ${
+      className={`bg-white rounded-lg border p-4 text-right transition-all ${
         active ? 'border-[#FF6B00] ring-2 ring-[#FF6B00]/20' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
@@ -256,7 +256,7 @@ const ReportCard = ({ report, onClick }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-3">
@@ -275,7 +275,7 @@ const ReportCard = ({ report, onClick }) => {
         </span>
       </div>
 
-      <div className="flex items-center gap-4 mb-2">
+      <div className="flex items-center gap-2 mb-2">
         <span className={`text-xs px-2 py-1 rounded-full ${CATEGORY_COLORS[report.category]}`}>
           {report.category_label}
         </span>
@@ -311,26 +311,26 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-l from-red-500 to-red-600 p-4 text-white sticky top-0">
+        <div className="bg-gradient-to-l from-red-500 to-red-600 p-3 text-white sticky top-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <AlertTriangle size={28} />
             </div>
             <div>
-              <h3 className="font-bold text-lg">تفاصيل البلاغ</h3>
+              <h3 className="font-bold text-sm">تفاصيل البلاغ</h3>
               <p className="text-xs text-white/80">#{report.id.slice(0, 8)}</p>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* Driver Info */}
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
               <User size={16} className="text-red-500" />
               موظف التوصيل المُبلَّغ عنه
@@ -350,7 +350,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
           </div>
 
           {/* Reporter Info */}
-          <div className="bg-blue-50 rounded-xl p-4">
+          <div className="bg-blue-50 rounded-lg p-4">
             <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
               <FileText size={16} className="text-blue-500" />
               مقدم البلاغ
@@ -370,7 +370,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
           </div>
 
           {/* Report Details */}
-          <div className="bg-red-50 rounded-xl p-4">
+          <div className="bg-red-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-bold text-gray-900">تفاصيل البلاغ</h4>
               <span className={`text-xs px-2 py-1 rounded-full ${CATEGORY_COLORS[report.category]}`}>
@@ -392,7 +392,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 placeholder="أضف ملاحظاتك هنا..."
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
                 rows={2}
               />
             </div>
@@ -402,7 +402,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
           {report.status === 'pending' ? (
             <div className="space-y-3 pt-2">
               {/* معلومات الخصم */}
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                 <p className="text-xs text-orange-700 font-medium">
                   💡 نقاط الخصم لهذا البلاغ: <span className="font-bold">{PENALTY_POINTS[report.category] || 10} نقطة</span>
                 </p>
@@ -413,7 +413,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 <button
                   onClick={() => onAction(report.id, 'dismiss')}
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                   رفض البلاغ
@@ -421,7 +421,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 <button
                   onClick={() => onAction(report.id, 'suspend')}
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 bg-yellow-500 text-white rounded-xl font-medium hover:bg-yellow-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 py-2.5 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
                   تعليق مؤقت
@@ -433,7 +433,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 <button
                   onClick={() => onAction(report.id, 'penalize')}
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <MinusCircle size={16} />}
                   خصم نقاط
@@ -441,7 +441,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
                 <button
                   onClick={() => onAction(report.id, 'terminate')}
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} />}
                   فصل فوري
@@ -449,7 +449,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
               </div>
             </div>
           ) : (
-            <div className={`p-4 rounded-xl ${
+            <div className={`p-4 rounded-lg ${
               report.status === 'dismissed' ? 'bg-green-50' : 
               report.status === 'suspended' ? 'bg-yellow-50' :
               report.status === 'penalized' ? 'bg-orange-50' : 'bg-red-50'
@@ -473,7 +473,7 @@ const ReportDetailsModal = ({ report, onClose, onAction, actionLoading, adminNot
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="w-full py-2.5 border border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50"
+            className="w-full py-2.5 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50"
           >
             إغلاق
           </button>
