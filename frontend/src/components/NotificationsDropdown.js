@@ -115,13 +115,19 @@ const NotificationsDropdown = () => {
     // إذا كان يتصفح كعميل
     if (viewAsCustomer) return 'customer';
     
+    // إذا كان في لوحة تحكم المدير
+    if (location.pathname.startsWith('/admin') && (user?.user_type === 'admin' || user?.user_type === 'sub_admin')) {
+      return 'admin';
+    }
+    
     // إذا كان في لوحة تحكم البائع
-    if (location.pathname === '/seller/dashboard' && user?.user_type === 'seller') {
+    if ((location.pathname === '/seller/dashboard' || location.pathname === '/food/dashboard') && 
+        (user?.user_type === 'seller' || user?.user_type === 'food_seller')) {
       return 'seller';
     }
     
     // إذا كان في لوحة تحكم التوصيل
-    if (location.pathname === '/delivery/dashboard' && user?.user_type === 'delivery') {
+    if (location.pathname.startsWith('/delivery') && user?.user_type === 'delivery') {
       return 'delivery';
     }
     

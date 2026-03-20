@@ -53,8 +53,11 @@ const Header = () => {
   // إخفاء الهيدر الكامل لموظف التوصيل في جميع صفحاته (إلا إذا كان يتصفح كعميل)
   const isDeliveryPage = user?.user_type === 'delivery' && !isViewingAsCustomer;
   
-  // إخفاء شريط البحث في صفحات الطعام وصفحة موظف التوصيل
-  const hideSearchBar = isFoodPage || isDeliveryPage;
+  // هل المدير في صفحات الإدارة؟
+  const isAdminPage = (user?.user_type === 'admin' || user?.user_type === 'sub_admin') && location.pathname.startsWith('/admin');
+  
+  // إخفاء شريط البحث في صفحات الطعام وصفحة موظف التوصيل وصفحة المدير
+  const hideSearchBar = isFoodPage || isDeliveryPage || isAdminPage;
 
   // جلب سجل البحث
   useEffect(() => {

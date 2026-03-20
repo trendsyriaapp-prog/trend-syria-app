@@ -37,6 +37,12 @@ const MobileNav = () => {
   
   // هل موظف التوصيل في أي صفحة من صفحاته؟
   const isDeliveryPage = user?.user_type === 'delivery' && user?.is_approved && !isViewingAsCustomer;
+  
+  // هل المدير في صفحات الإدارة؟
+  const isAdminPage = (user?.user_type === 'admin' || user?.user_type === 'sub_admin') && location.pathname.startsWith('/admin');
+  
+  // إخفاء شريط التنقل السفلي للمدير في لوحة التحكم
+  if (isAdminPage) return null;
 
   // تحديد رابط سلة الطعام بذكاء
   const getFoodCartPath = () => {

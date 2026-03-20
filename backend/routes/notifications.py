@@ -30,10 +30,18 @@ CUSTOMER_NOTIFICATION_TYPES = [
     'food_order', 'coupon', 'price_drop'
 ]
 
+# أنواع إشعارات المدير
+ADMIN_NOTIFICATION_TYPES = [
+    'new_seller_registration', 'new_driver_registration', 'withdrawal_request',
+    'seller_document_submitted', 'driver_document_submitted', 'report_submitted',
+    'support_ticket', 'system_alert', 'low_stock_alert', 'topup_request',
+    'admin_notification', 'seller_approved', 'seller_rejected', 'delivery_approved', 'delivery_rejected'
+]
+
 @router.get("")
 async def get_notifications(
     user: dict = Depends(get_current_user),
-    context: Optional[str] = Query(None, description="seller, delivery, or customer")
+    context: Optional[str] = Query(None, description="seller, delivery, customer, or admin")
 ):
     """جلب الإشعارات مع إمكانية الفلترة حسب السياق"""
     user_type = user.get("user_type", "buyer")
@@ -49,7 +57,7 @@ async def get_notifications(
     
     # إذا تم تحديد سياق معين، فلتر حسب أنواع الإشعارات
     if context:
-        if context == 'seller' and user_type == 'seller':
+        if context == 'seller' and user_type in ['seller', 'food_seller']:
             # إشعارات البائع فقط
             base_query = {"$and": [
                 base_query,
@@ -61,12 +69,24 @@ async def get_notifications(
                 base_query,
                 {"type": {"$in": DELIVERY_NOTIFICATION_TYPES}}
             ]}
+        elif context == 'admin' and user_type in ['admin', 'sub_admin']:
+            # إشعارات المدير فقط
+            base_query = {"$and": [
+                base_query,
+                {"type": {"$in": ADMIN_NOTIFICATION_TYPES}}
+            ]}
         elif context == 'customer':
             # إشعارات العميل فقط (للجميع عند التصفح كعميل)
             base_query = {"$and": [
                 base_query,
                 {"type": {"$in": CUSTOMER_NOTIFICATION_TYPES}}
             ]}
+    # إذا كان المدير بدون سياق محدد، نعرض إشعارات المدير فقط
+    elif user_type in ['admin', 'sub_admin']:
+        base_query = {"$and": [
+            base_query,
+            {"type": {"$in": ADMIN_NOTIFICATION_TYPES}}
+        ]}
     
     notifications = await db.notifications.find(
         base_query,
