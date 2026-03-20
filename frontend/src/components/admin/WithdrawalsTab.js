@@ -23,8 +23,8 @@ const WithdrawalsTab = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [expandedId, setExpandedId] = useState(null);
-  const [rejectModal, setRejectModal] = useState({ isOpen: false, withdrawalId: null, userName: '' });
-  const [rejectProcessing, setRejectProcessing] = useState(false);
+  const [approveModal, setApproveModal] = useState({ isOpen: false, withdrawalId: null, amount: 0, userName: '' });
+  const [approveProcessing, setApproveProcessing] = useState(false);
   
   useEffect(() => {
     fetchWithdrawals();
@@ -43,12 +43,12 @@ const WithdrawalsTab = () => {
     }
   };
   
-  const approveWithdrawal = async (withdrawalId) => {
-    if (!window.confirm('هل تريد الموافقة على هذا الطلب وتحويل المبلغ؟')) return;
-    
+  const handleApproveConfirm = async () => {
+    setApproveProcessing(true);
     try {
-      await axios.post(`${API}/api/payment/admin/withdrawals/${withdrawalId}/approve`);
+      await axios.post(`${API}/api/payment/admin/withdrawals/${approveModal.withdrawalId}/approve`);
       toast({ title: "تمت الموافقة", description: "تم تحويل المبلغ بنجاح" });
+      setApproveModal({ isOpen: false, withdrawalId: null, amount: 0, userName: '' });
       fetchWithdrawals();
     } catch (error) {
       toast({
@@ -56,7 +56,13 @@ const WithdrawalsTab = () => {
         description: error.response?.data?.detail || "فشل العملية",
         variant: "destructive"
       });
+    } finally {
+      setApproveProcessing(false);
     }
+  };
+  
+  const approveWithdrawal = (withdrawalId, amount, userName) => {
+    setApproveModal({ isOpen: true, withdrawalId, amount, userName });
   };
   
   const rejectWithdrawal = (withdrawalId, userName) => {
@@ -229,7 +235,7 @@ const WithdrawalsTab = () => {
                   {w.status === 'pending' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => approveWithdrawal(w.id)}
+                        onClick={() => approveWithdrawal(w.id, w.amount, w.user_name)}
                         className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                       >
                         <CheckCircle size={16} />
@@ -267,6 +273,55 @@ const WithdrawalsTab = () => {
         itemName={rejectModal.userName}
         processing={rejectProcessing}
       />
+
+      {/* Approve Modal */}
+      {approveModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle size={20} className="text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">تأكيد الموافقة</h3>
+                <p className="text-xs text-gray-500">طلب سحب من {approveModal.userName}</p>
+              </div>
+            </div>
+
+            <div className="bg-green-50 rounded-lg p-4 mb-4 text-center">
+              <p className="text-sm text-gray-600 mb-1">المبلغ المطلوب</p>
+              <p className="text-2xl font-bold text-green-600">{formatPrice(approveModal.amount)}</p>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من الموافقة على هذا الطلب وتحويل المبلغ؟
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setApproveModal({ isOpen: false, withdrawalId: null, amount: 0, userName: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleApproveConfirm}
+                disabled={approveProcessing}
+                className="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {approveProcessing ? (
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
+                    <Clock size={16} />
+                  </motion.div>
+                ) : (
+                  <CheckCircle size={16} />
+                )}
+                تأكيد التحويل
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
