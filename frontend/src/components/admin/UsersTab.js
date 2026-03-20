@@ -1,5 +1,5 @@
 // /app/frontend/src/components/admin/UsersTab.js
-import { Users } from 'lucide-react';
+import { Users, MapPin, Phone, Calendar } from 'lucide-react';
 
 const UsersTab = ({ allUsers }) => {
   return (
@@ -10,45 +10,39 @@ const UsersTab = ({ allUsers }) => {
           <p className="text-gray-500 text-sm">لا يوجد مستخدمين</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الاسم</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الهاتف</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">المدينة</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">العنوان الكامل</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">تاريخ التسجيل</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allUsers.map((u, i) => (
-                  <tr key={u.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="py-2 px-2 font-medium text-gray-900">{u.full_name || u.name}</td>
-                    <td className="py-2 px-2 text-gray-600">{u.phone}</td>
-                    <td className="py-2 px-2 text-gray-600">{u.city}</td>
-                    <td className="py-2 px-2 text-gray-600 text-[10px]">
-                      {u.addresses && u.addresses.length > 0 ? (
-                        <div>
-                          <p>{u.addresses[0].street}</p>
-                          {u.addresses[0].street_number && <span>شارع {u.addresses[0].street_number}</span>}
-                          {u.addresses[0].building_number && <span> - بناء {u.addresses[0].building_number}</span>}
-                          {u.addresses[0].house_number && <span> - منزل {u.addresses[0].house_number}</span>}
-                          <p className="text-gray-400">{u.addresses[0].city} - {u.addresses[0].country}</p>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">لا يوجد عنوان</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-2 text-gray-400 text-[10px]">
-                      {u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SY') : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-2">
+          {allUsers.map((u) => (
+            <div key={u.id} className="bg-white rounded-lg border border-gray-200 p-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm text-gray-900 truncate">{u.full_name || u.name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1" dir="ltr">
+                    <Phone size={10} />
+                    {u.phone}
+                  </p>
+                </div>
+                <div className="text-[10px] text-gray-400 flex items-center gap-1">
+                  <Calendar size={10} />
+                  {u.created_at ? new Date(u.created_at).toLocaleDateString('ar-SY') : '-'}
+                </div>
+              </div>
+              
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-start gap-1 text-xs text-gray-600">
+                  <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="font-medium">{u.city || 'غير محدد'}</span>
+                    {u.addresses && u.addresses.length > 0 && (
+                      <p className="text-[10px] text-gray-500 mt-0.5 truncate">
+                        {u.addresses[0].street}
+                        {u.addresses[0].building_number && ` - بناء ${u.addresses[0].building_number}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

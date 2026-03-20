@@ -115,41 +115,35 @@ const DeliveryTab = ({
           <p className="text-gray-500 text-sm">لا يوجد موظفي توصيل</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الاسم</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الهاتف</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">المدينة</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">رقم الهوية</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allDelivery.map((driver, i) => (
-                  <tr key={driver.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="py-2 px-2 font-medium text-gray-900">{driver.full_name || driver.name}</td>
-                    <td className="py-2 px-2 text-gray-600">{driver.phone}</td>
-                    <td className="py-2 px-2 text-gray-600">{driver.city}</td>
-                    <td className="py-2 px-2 text-gray-600">{driver.documents?.national_id || '-'}</td>
-                    <td className="py-2 px-2">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                        driver.documents?.status === 'approved' 
-                          ? 'bg-green-100 text-green-600' 
-                          : driver.documents?.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-600'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {driver.documents?.status === 'approved' ? 'معتمد' : driver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-2">
+          {allDelivery.map((driver) => (
+            <div key={driver.id} className="bg-white rounded-lg border border-gray-200 p-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm text-gray-900 truncate">{driver.full_name || driver.name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5" dir="ltr">{driver.phone}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-600">{driver.city || 'غير محدد'}</span>
+                    {driver.documents?.national_id && (
+                      <>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-xs text-gray-500">هوية: {driver.documents.national_id}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <span className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap ${
+                  driver.documents?.status === 'approved' 
+                    ? 'bg-green-100 text-green-600' 
+                    : driver.documents?.status === 'pending'
+                    ? 'bg-yellow-100 text-yellow-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {driver.documents?.status === 'approved' ? 'معتمد' : driver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

@@ -1,64 +1,59 @@
 // /app/frontend/src/components/admin/SellersTab.js
-import { Users } from 'lucide-react';
+import { Store, Phone, MapPin } from 'lucide-react';
 
 const SellersTab = ({ allSellers }) => {
   return (
     <section>
       {allSellers.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
-          <Users size={36} className="text-gray-300 mx-auto mb-3" />
+          <Store size={36} className="text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">لا يوجد بائعين</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الاسم</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">المتجر</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الهاتف</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">المدينة</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">العنوان الكامل</th>
-                  <th className="py-2 px-2 text-right font-bold text-gray-700">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allSellers.map((s, i) => (
-                  <tr key={s.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="py-2 px-2 font-medium text-gray-900">{s.full_name || s.name}</td>
-                    <td className="py-2 px-2 text-gray-600">{s.documents?.business_name || '-'}</td>
-                    <td className="py-2 px-2 text-gray-600">{s.phone}</td>
-                    <td className="py-2 px-2 text-gray-600">{s.city}</td>
-                    <td className="py-2 px-2 text-gray-600 text-[10px]">
-                      {s.addresses && s.addresses.length > 0 ? (
-                        <div>
-                          <p>{s.addresses[0].street}</p>
-                          {s.addresses[0].street_number && <span>شارع {s.addresses[0].street_number}</span>}
-                          {s.addresses[0].building_number && <span> - بناء {s.addresses[0].building_number}</span>}
-                          {s.addresses[0].house_number && <span> - منزل {s.addresses[0].house_number}</span>}
-                          <p className="text-gray-400">{s.addresses[0].city} - {s.addresses[0].country}</p>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">لا يوجد عنوان</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-2">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                        s.documents?.status === 'approved' 
-                          ? 'bg-green-100 text-green-600' 
-                          : s.documents?.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-600'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {s.documents?.status === 'approved' ? 'معتمد' : s.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-2">
+          {allSellers.map((s) => (
+            <div key={s.id} className="bg-white rounded-lg border border-gray-200 p-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm text-gray-900 truncate">{s.full_name || s.name}</h3>
+                  {s.documents?.business_name && (
+                    <p className="text-xs text-blue-600 mt-0.5 flex items-center gap-1">
+                      <Store size={10} />
+                      {s.documents.business_name}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1" dir="ltr">
+                    <Phone size={10} />
+                    {s.phone}
+                  </p>
+                </div>
+                <span className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap ${
+                  s.documents?.status === 'approved' 
+                    ? 'bg-green-100 text-green-600' 
+                    : s.documents?.status === 'pending'
+                    ? 'bg-yellow-100 text-yellow-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {s.documents?.status === 'approved' ? 'معتمد' : s.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
+                </span>
+              </div>
+              
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-start gap-1 text-xs text-gray-600">
+                  <MapPin size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="font-medium">{s.city || 'غير محدد'}</span>
+                    {s.addresses && s.addresses.length > 0 && (
+                      <p className="text-[10px] text-gray-500 mt-0.5 truncate">
+                        {s.addresses[0].street}
+                        {s.addresses[0].building_number && ` - بناء ${s.addresses[0].building_number}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>
