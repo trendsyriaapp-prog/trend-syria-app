@@ -290,74 +290,73 @@ const FoodStoreDashboard = () => {
         </motion.div>
       )}
 
-      {/* Header */}
-      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6 ${driverArrivingAlert ? 'mt-20' : ''}`}>
+      {/* Header - مصغر */}
+      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-3 py-4 ${driverArrivingAlert ? 'mt-20' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                 {store.logo ? (
-                  <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-lg object-cover" />
+                  <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover" />
                 ) : (
-                  <Store size={28} />
+                  <Store size={22} />
                 )}
               </div>
               <div>
-                <h1 className="text-xl font-bold">{store.name}</h1>
-                <p className="text-green-100 text-sm">{store.city}</p>
+                <h1 className="text-base font-bold">{store.name}</h1>
+                <p className="text-green-100 text-xs">{store.city}</p>
               </div>
             </div>
-            {/* زر الرجوع للصفحة الرئيسية */}
             <button
               onClick={() => navigate('/')}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               title="الصفحة الرئيسية"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="max-w-4xl mx-auto px-4 -mt-4">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <Package size={20} className="text-blue-500 mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{products.length}</p>
-            <p className="text-xs text-gray-500">المنتجات</p>
+      {/* Stats - مصغر */}
+      <div className="max-w-4xl mx-auto px-3 -mt-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
+            <Package size={16} className="text-blue-500 mx-auto mb-1" />
+            <p className="text-lg font-bold text-gray-900">{products.length}</p>
+            <p className="text-[10px] text-gray-500">المنتجات</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <ShoppingBag size={20} className="text-green-500 mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{store.orders_count || 0}</p>
-            <p className="text-xs text-gray-500">الطلبات</p>
+          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
+            <ShoppingBag size={16} className="text-green-500 mx-auto mb-1" />
+            <p className="text-lg font-bold text-gray-900">{store.orders_count || 0}</p>
+            <p className="text-[10px] text-gray-500">الطلبات</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <Star size={20} className="text-yellow-500 mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{store.rating?.toFixed(1) || '0.0'}</p>
-            <p className="text-xs text-gray-500">التقييم</p>
+          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
+            <Star size={16} className="text-yellow-500 mx-auto mb-1" />
+            <p className="text-lg font-bold text-gray-900">{store.rating?.toFixed(1) || '0.0'}</p>
+            <p className="text-[10px] text-gray-500">التقييم</p>
           </div>
         </div>
       </div>
 
-      {/* Tabs - الترتيب الجديد */}
-      <div className="max-w-4xl mx-auto px-4 mt-4">
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+      {/* Tabs - مصغر */}
+      <div className="max-w-4xl mx-auto px-3 mt-3">
+        <div className="flex gap-1 overflow-x-auto hide-scrollbar">
           {[
-            { id: 'overview', label: '🏠 نظرة عامة' },
-            { id: 'orders', label: '📋 الطلبات' },
-            { id: 'products', label: '🍔 القائمة' },
-            { id: 'wallet', label: '💰 المحفظة' },
-            { id: 'settings', label: '⚙️ الإعدادات' },
+            { id: 'overview', label: 'نظرة عامة' },
+            { id: 'orders', label: 'الطلبات' },
+            { id: 'products', label: 'القائمة' },
+            { id: 'wallet', label: 'المحفظة' },
+            { id: 'settings', label: 'الإعدادات' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-testid={`tab-${tab.id}`}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? 'bg-[#FF6B00] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               {tab.label}
@@ -367,38 +366,35 @@ const FoodStoreDashboard = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="max-w-4xl mx-auto px-3 py-3">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="space-y-4">
-            {/* بطاقة حالة المتجر - فتح/إغلاق */}
-            <div className={`rounded-xl p-4 border-2 ${
+          <div className="space-y-3">
+            {/* بطاقة حالة المتجر - مصغرة */}
+            <div className={`rounded-lg p-3 border ${
               store.manual_close 
                 ? 'bg-red-50 border-red-200' 
                 : 'bg-green-50 border-green-200'
             }`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                <div className="flex items-center gap-2">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                     store.manual_close ? 'bg-red-500' : 'bg-green-500'
                   }`}>
                     {store.manual_close ? (
-                      <EyeOff size={24} className="text-white" />
+                      <EyeOff size={18} className="text-white" />
                     ) : (
-                      <Store size={24} className="text-white" />
+                      <Store size={18} className="text-white" />
                     )}
                   </div>
                   <div>
-                    <h3 className={`font-bold text-lg ${
+                    <h3 className={`font-bold text-sm ${
                       store.manual_close ? 'text-red-800' : 'text-green-800'
                     }`}>
-                      {store.manual_close ? 'المتجر مغلق مؤقتاً' : 'المتجر مفتوح'}
+                      {store.manual_close ? 'المتجر مغلق' : 'المتجر مفتوح'}
                     </h3>
-                    {store.manual_close && store.manual_close_reason && (
-                      <p className="text-sm text-red-600">{store.manual_close_reason}</p>
-                    )}
                     {!store.manual_close && (
-                      <p className="text-sm text-green-600">العملاء يستطيعون الطلب الآن</p>
+                      <p className="text-xs text-green-600">العملاء يستطيعون الطلب</p>
                     )}
                   </div>
                 </div>
@@ -407,14 +403,14 @@ const FoodStoreDashboard = () => {
                   <button
                     onClick={() => toggleStoreStatus(false)}
                     disabled={togglingStore}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
                     {togglingStore ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Eye size={18} />
-                        فتح المتجر
+                        <Eye size={14} />
+                        فتح
                       </>
                     )}
                   </button>
@@ -422,10 +418,10 @@ const FoodStoreDashboard = () => {
                   <button
                     onClick={() => setShowCloseReason(true)}
                     disabled={togglingStore}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    <EyeOff size={18} />
-                    إغلاق المتجر
+                    <EyeOff size={14} />
+                    إغلاق
                   </button>
                 )}
               </div>
@@ -435,32 +431,26 @@ const FoodStoreDashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-4 pt-4 border-t border-gray-200"
+                  className="mt-3 pt-3 border-t border-gray-200"
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    سبب الإغلاق (اختياري)
-                  </label>
                   <input
                     type="text"
                     value={closeReason}
                     onChange={(e) => setCloseReason(e.target.value)}
-                    placeholder="مثال: إجازة، صيانة، نفاد المنتجات..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="سبب الإغلاق (اختياري)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500"
                   />
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => toggleStoreStatus(true, closeReason)}
                       disabled={togglingStore}
-                      className="flex-1 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+                      className="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs font-bold"
                     >
-                      {togglingStore ? 'جاري الإغلاق...' : 'تأكيد الإغلاق'}
+                      تأكيد
                     </button>
                     <button
-                      onClick={() => {
-                        setShowCloseReason(false);
-                        setCloseReason('');
-                      }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      onClick={() => { setShowCloseReason(false); setCloseReason(''); }}
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs"
                     >
                       إلغاء
                     </button>
@@ -469,83 +459,62 @@ const FoodStoreDashboard = () => {
               )}
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-3">إحصائيات سريعة</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <TrendingUp size={24} className="mx-auto text-green-500 mb-1" />
-                  <p className="text-lg font-bold text-gray-900">0</p>
-                  <p className="text-xs text-gray-500">طلبات اليوم</p>
+            {/* إحصائيات + معلومات في صف واحد */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <h3 className="font-bold text-xs text-gray-900 mb-2">إحصائيات اليوم</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">الطلبات</span>
+                    <span className="text-sm font-bold text-gray-900">0</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">المبيعات</span>
+                    <span className="text-sm font-bold text-green-600">0 ل.س</span>
+                  </div>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <DollarSign size={24} className="mx-auto text-blue-500 mb-1" />
-                  <p className="text-lg font-bold text-gray-900">0 ل.س</p>
-                  <p className="text-xs text-gray-500">مبيعات اليوم</p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <h3 className="font-bold text-xs text-gray-900 mb-2">معلومات التوصيل</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">الوقت</span>
+                    <span className="text-xs font-medium text-gray-900">{store.delivery_time} د</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">الرسوم</span>
+                    <span className="text-xs font-medium text-gray-900">{(store.delivery_fee || 5000).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-3">معلومات المتجر</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">وقت التوصيل</span>
-                  <span className="text-gray-900">{store.delivery_time} دقيقة</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">الحد الأدنى للطلب</span>
-                  <span className="text-gray-900">{store.minimum_order?.toLocaleString() || 0} ل.س</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">رسوم التوصيل</span>
-                  <span className="text-gray-900">{store.delivery_fee?.toLocaleString() || 5000} ل.س</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">توصيل مجاني عند</span>
-                  <span className="text-gray-900">
-                    {store.free_delivery_minimum > 0 
-                      ? `${store.free_delivery_minimum.toLocaleString()} ل.س` 
-                      : 'غير مفعل'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* بطاقة العمولة */}
+            {/* بطاقة العمولة - مصغرة */}
             {commissionInfo && (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
-                    <DollarSign size={16} className="text-white" />
-                  </div>
-                  <h3 className="font-bold text-amber-800">عمولة المنصة</h3>
-                </div>
-                
-                <div className="bg-white/60 rounded-lg p-3 mb-3">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-amber-600">{commissionInfo.commission_percentage}</p>
-                    <p className="text-sm text-amber-700">نسبة العمولة من كل طلب</p>
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                      <DollarSign size={12} className="text-white" />
+                    </div>
+                    <h3 className="font-bold text-xs text-amber-800">العمولة: {commissionInfo.commission_percentage}</h3>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                  <div className="bg-white/40 rounded-lg p-2">
-                    <p className="font-bold text-gray-800">{commissionInfo.orders_count}</p>
-                    <p className="text-xs text-gray-600">طلب مكتمل</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/50 rounded p-1.5">
+                    <p className="font-bold text-xs text-gray-800">{commissionInfo.orders_count}</p>
+                    <p className="text-[10px] text-gray-600">طلب</p>
                   </div>
-                  <div className="bg-white/40 rounded-lg p-2">
-                    <p className="font-bold text-red-600">{commissionInfo.total_commission_paid?.toLocaleString() || 0}</p>
-                    <p className="text-xs text-gray-600">عمولات مدفوعة</p>
+                  <div className="bg-white/50 rounded p-1.5">
+                    <p className="font-bold text-xs text-red-600">{(commissionInfo.total_commission_paid || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-600">عمولات</p>
                   </div>
-                  <div className="bg-white/40 rounded-lg p-2">
-                    <p className="font-bold text-green-600">{commissionInfo.total_earnings?.toLocaleString() || 0}</p>
-                    <p className="text-xs text-gray-600">صافي أرباحك</p>
+                  <div className="bg-white/50 rounded p-1.5">
+                    <p className="font-bold text-xs text-green-600">{(commissionInfo.total_earnings || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-600">أرباحك</p>
                   </div>
                 </div>
-                
-                <p className="mt-3 text-xs text-amber-700 text-center">
-                  💡 مثال: طلب بقيمة 100,000 ل.س = {(100000 * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س لك
-                </p>
               </div>
             )}
           </div>
