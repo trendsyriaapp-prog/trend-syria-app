@@ -677,11 +677,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={distanceSettings.base_fee}
+                value={distanceSettings.base_fee || ''}
                 onChange={(e) => setDistanceSettings({
                   ...distanceSettings,
-                  base_fee: parseInt(e.target.value) || 0
+                  base_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDistanceSettings({...distanceSettings, base_fee: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-green-300 rounded text-center text-sm font-bold"
                 min={0}
                 step={100}
@@ -701,11 +706,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={distanceSettings.price_per_km}
+                value={distanceSettings.price_per_km || ''}
                 onChange={(e) => setDistanceSettings({
                   ...distanceSettings,
-                  price_per_km: parseInt(e.target.value) || 0
+                  price_per_km: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDistanceSettings({...distanceSettings, price_per_km: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-blue-300 rounded text-center text-sm font-bold"
                 min={0}
                 step={50}
@@ -725,11 +735,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={distanceSettings.min_fee}
+                value={distanceSettings.min_fee || ''}
                 onChange={(e) => setDistanceSettings({
                   ...distanceSettings,
-                  min_fee: parseInt(e.target.value) || 0
+                  min_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDistanceSettings({...distanceSettings, min_fee: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-orange-300 rounded text-center text-sm font-bold"
                 min={0}
                 step={100}
@@ -828,8 +843,13 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={driverEarningsSettings.base_fee}
-                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, base_fee: parseInt(e.target.value) || 0})}
+                value={driverEarningsSettings.base_fee || ''}
+                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, base_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0})}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDriverEarningsSettings({...driverEarningsSettings, base_fee: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-orange-300 rounded text-center text-sm font-bold"
               />
               <p className="text-center text-[9px] text-orange-600 mt-0.5">ل.س</p>
@@ -845,8 +865,13 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={driverEarningsSettings.price_per_km}
-                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, price_per_km: parseInt(e.target.value) || 0})}
+                value={driverEarningsSettings.price_per_km || ''}
+                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, price_per_km: e.target.value === '' ? '' : parseInt(e.target.value) || 0})}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDriverEarningsSettings({...driverEarningsSettings, price_per_km: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-amber-300 rounded text-center text-sm font-bold"
               />
               <p className="text-center text-[9px] text-amber-600 mt-0.5">ل.س/كم</p>
@@ -862,8 +887,13 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={driverEarningsSettings.min_fee}
-                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, min_fee: parseInt(e.target.value) || 0})}
+                value={driverEarningsSettings.min_fee || ''}
+                onChange={(e) => setDriverEarningsSettings({...driverEarningsSettings, min_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0})}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setDriverEarningsSettings({...driverEarningsSettings, min_fee: 0});
+                  }
+                }}
                 className="w-full p-1.5 border border-yellow-300 rounded text-center text-sm font-bold"
               />
               <p className="text-center text-[9px] text-yellow-600 mt-0.5">ل.س</p>
