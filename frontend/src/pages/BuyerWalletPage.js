@@ -17,7 +17,7 @@ const formatPrice = (price) => {
 };
 
 const BuyerWalletPage = () => {
-  const navigate = useNavigate();
+  // Note: useNavigate was removed since back button is no longer needed
   const { user } = useAuth();
   const { toast } = useToast();
   
