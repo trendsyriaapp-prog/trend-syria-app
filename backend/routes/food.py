@@ -696,11 +696,12 @@ async def create_food_item(item_data: dict, user: dict = Depends(get_current_use
         "preparation_time": item_data.get("preparation_time", 15),
         "image": item_data.get("images", [None])[0] if item_data.get("images") else None,
         "is_available": True,
+        "is_approved": False,  # يحتاج موافقة المدير
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.food_items.insert_one(new_item)
-    return {"message": "تم إضافة الطبق بنجاح", "id": item_id}
+    return {"message": "تم إضافة الطبق بنجاح وينتظر موافقة الإدارة", "id": item_id}
 
 @router.put("/items/{item_id}/availability")
 async def toggle_food_item_availability(item_id: str, data: dict, user: dict = Depends(get_current_user)):
