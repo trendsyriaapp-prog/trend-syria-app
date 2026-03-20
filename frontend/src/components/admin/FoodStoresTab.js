@@ -18,13 +18,13 @@ const STORE_TYPES = {
   vegetables: { name: 'خضروات وفواكه', icon: Apple, color: 'bg-green-500' }
 };
 
-const FoodStoresTab = () => {
+const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh }) => {
   const { toast } = useToast();
   const [stores, setStores] = useState([]);
   const [stats, setStats] = useState(null);
   const [commissions, setCommissions] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, pending, approved
+  const [filter, setFilter] = useState(pendingOnly ? 'pending' : 'all'); // all, pending, approved
   const [typeFilter, setTypeFilter] = useState('all');
   const [showCommissionsModal, setShowCommissionsModal] = useState(false);
   const [editingCommissions, setEditingCommissions] = useState({});
@@ -32,8 +32,14 @@ const FoodStoresTab = () => {
   const [rejectProcessing, setRejectProcessing] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [filter, typeFilter]);
+    // إذا كان pendingOnly، استخدم البيانات الممررة
+    if (pendingOnly && pendingFoodStores.length > 0) {
+      setStores(pendingFoodStores);
+      setLoading(false);
+    } else {
+      fetchData();
+    }
+  }, [filter, typeFilter, pendingOnly, pendingFoodStores]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -64,6 +70,7 @@ const FoodStoresTab = () => {
       await axios.post(`${API}/admin/food/stores/${storeId}/approve`);
       toast({ title: "تمت الموافقة", description: "تم قبول المتجر بنجاح" });
       fetchData();
+      if (onRefresh) onRefresh();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في الموافقة على المتجر", variant: "destructive" });
     }
@@ -79,6 +86,7 @@ const FoodStoresTab = () => {
       await axios.post(`${API}/admin/food/stores/${rejectModal.storeId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض المتجر" });
       fetchData();
+      if (onRefresh) onRefresh();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في رفض المتجر", variant: "destructive" });
     } finally {

@@ -80,6 +80,7 @@ const AdminDashboardPage = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [pendingDelivery, setPendingDelivery] = useState([]);
   const [allDelivery, setAllDelivery] = useState([]);
+  const [pendingFoodStores, setPendingFoodStores] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
 
@@ -120,7 +121,8 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/orders`),
         axios.get(`${API}/admin/products/all`),
         axios.get(`${API}/admin/delivery/pending`),
-        axios.get(`${API}/admin/delivery/all`)
+        axios.get(`${API}/admin/delivery/all`),
+        axios.get(`${API}/admin/food/stores?status=pending`)
       ];
       
       if (user?.user_type === 'admin') {
@@ -138,9 +140,10 @@ const AdminDashboardPage = () => {
       setAllProducts(responses[7].data);
       setPendingDelivery(responses[8].data);
       setAllDelivery(responses[9].data);
+      setPendingFoodStores(responses[10]?.data || []);
       
-      if (user?.user_type === 'admin' && responses[10]) {
-        setSubAdmins(responses[10].data);
+      if (user?.user_type === 'admin' && responses[11]) {
+        setSubAdmins(responses[11].data);
       }
       
       // Fetch commissions data
@@ -309,6 +312,7 @@ const AdminDashboardPage = () => {
     'pending-products': 'المنتجات المعلقة',
     'pending-sellers': 'البائعين المعلقين',
     'pending-delivery': 'موظفي التوصيل المعلقين',
+    'pending-food-stores': 'متاجر الطعام المعلقة',
     'delivery': 'موظفي التوصيل',
     'notifications': 'الإشعارات',
     'sub-admins': 'المدراء التنفيذيين',
@@ -459,6 +463,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'food-stores' && (
               <FoodStoresTab />
             )}
+            {activeTab === 'pending-food-stores' && (
+              <FoodStoresTab pendingOnly={true} pendingFoodStores={pendingFoodStores} onRefresh={fetchData} />
+            )}
             
             {activeTab === 'featured-stores' && user.user_type === 'admin' && (
               <FeaturedStoresTab />
@@ -530,20 +537,59 @@ const AdminDashboardPage = () => {
               )}
             </div>
 
-            {/* تنبيهات المعلقات */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-              <p className="text-[10px] font-bold text-amber-700 mb-1.5 flex items-center gap-1">
-                <Clock size={12} /> الموافقات المعلقة
+            {/* تنبيهات المعلقات - تصميم جديد أكبر وأجمل */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 mb-4 shadow-sm">
+              <p className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+                <Clock size={18} className="text-amber-600" /> 
+                الموافقات المعلقة
               </p>
-              <div className="flex gap-1.5 flex-wrap">
-                <button onClick={() => setActiveTab('pending-sellers')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
-                  <Users size={10} /> بائعين ({stats?.pending_sellers || 0})
+              <div className="grid grid-cols-2 gap-3">
+                {/* بائعين منتجات */}
+                <button 
+                  onClick={() => setActiveTab('pending-sellers')} 
+                  className="bg-white border-2 border-amber-200 rounded-xl p-3 hover:border-amber-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                >
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Users size={24} className="text-amber-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">بائعين منتجات</span>
+                  <span className="text-lg font-bold text-amber-600">{stats?.pending_sellers || pendingSellers.length || 0}</span>
                 </button>
-                <button onClick={() => setActiveTab('pending-products')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
-                  <Package size={10} /> منتجات ({stats?.pending_products || 0})
+
+                {/* منتجات */}
+                <button 
+                  onClick={() => setActiveTab('pending-products')} 
+                  className="bg-white border-2 border-blue-200 rounded-xl p-3 hover:border-blue-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                >
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Package size={24} className="text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">منتجات</span>
+                  <span className="text-lg font-bold text-blue-600">{stats?.pending_products || pendingProducts.length || 0}</span>
                 </button>
-                <button onClick={() => setActiveTab('pending-delivery')} className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full hover:bg-amber-200 flex items-center gap-1">
-                  <Truck size={10} /> سائقين ({stats?.pending_delivery || 0})
+
+                {/* سائقين */}
+                <button 
+                  onClick={() => setActiveTab('pending-delivery')} 
+                  className="bg-white border-2 border-cyan-200 rounded-xl p-3 hover:border-cyan-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                >
+                  <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
+                    <Truck size={24} className="text-cyan-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">سائقين</span>
+                  <span className="text-lg font-bold text-cyan-600">{stats?.pending_delivery || pendingDelivery.length || 0}</span>
+                </button>
+
+                {/* متاجر طعام */}
+                <button 
+                  onClick={() => setActiveTab('pending-food-stores')} 
+                  className="bg-white border-2 border-green-200 rounded-xl p-3 hover:border-green-400 hover:shadow-md transition-all flex flex-col items-center gap-2"
+                >
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Store size={24} className="text-green-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">متاجر طعام</span>
+                  <span className="text-lg font-bold text-green-600">{pendingFoodStores.length || 0}</span>
                 </button>
               </div>
             </div>
