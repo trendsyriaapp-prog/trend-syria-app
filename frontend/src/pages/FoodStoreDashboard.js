@@ -21,7 +21,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const FoodStoreDashboard = () => {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [store, setStore] = useState(null);
@@ -29,6 +29,7 @@ const FoodStoreDashboard = () => {
   const [offers, setOffers] = useState([]);
   const [commissionInfo, setCommissionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   
@@ -138,15 +139,18 @@ const FoodStoreDashboard = () => {
   };
 
   useEffect(() => {
-    if (token) {
+    if (!authLoading && token) {
       fetchStoreData();
       checkDriverArrivingNotifications();
       
       // فحص الإشعارات كل 10 ثواني
       const interval = setInterval(checkDriverArrivingNotifications, 10000);
       return () => clearInterval(interval);
+    } else if (!authLoading && !token) {
+      // إذا لم يكن هناك توكن بعد انتهاء التحميل، توجيه لصفحة الدخول
+      setLoading(false);
     }
-  }, [token]);
+  }, [token, authLoading]);
 
   const fetchStoreData = async () => {
     try {
@@ -176,8 +180,10 @@ const FoodStoreDashboard = () => {
         // No store found
         setStore(null);
       }
+      console.error('Error fetching store:', error);
     } finally {
       setLoading(false);
+      setDataFetched(true);
     }
   };
 
@@ -207,7 +213,7 @@ const FoodStoreDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
@@ -215,8 +221,8 @@ const FoodStoreDashboard = () => {
     );
   }
 
-  // No store - redirect to registration
-  if (!store) {
+  // No store - redirect to registration (only after data is fetched)
+  if (!store && dataFetched) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full shadow-lg">
