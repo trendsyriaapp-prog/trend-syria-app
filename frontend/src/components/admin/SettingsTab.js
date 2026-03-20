@@ -166,7 +166,7 @@ const SettingsTab = ({ user }) => {
   
   if (user.user_type !== 'admin') {
     return (
-      <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+      <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
         <Settings size={40} className="text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500">هذه الصفحة للمدير الرئيسي فقط</p>
       </div>
@@ -182,10 +182,10 @@ const SettingsTab = ({ user }) => {
   }
   
   return (
-    <section className="space-y-4" data-testid="settings-tab">
+    <section className="space-y-3" data-testid="settings-tab">
       
       {/* Delivery Fees */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Truck size={18} className="text-[#FF6B00]" />
           <h3 className="font-bold text-gray-900">أسعار التوصيل</h3>
@@ -225,7 +225,7 @@ const SettingsTab = ({ user }) => {
       </div>
       
       {/* Withdrawal Limits */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Banknote size={18} className="text-green-500" />
           <h3 className="font-bold text-gray-900">حدود السحب الأدنى</h3>
@@ -275,12 +275,12 @@ const SettingsTab = ({ user }) => {
       </div>
       
       {/* Free Shipping Threshold - Products */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Package size={18} className="text-blue-500" />
           <h3 className="font-bold text-gray-900">حد الشحن المجاني - المنتجات</h3>
         </div>
-        <div className="p-4">
+        <div className="p-3">
           <p className="text-xs text-gray-500 mb-3">
             الحد الأدنى لقيمة الطلب للحصول على شحن مجاني للمنتجات
           </p>
@@ -306,12 +306,12 @@ const SettingsTab = ({ user }) => {
       </div>
 
       {/* Free Delivery Threshold - Food */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Truck size={18} className="text-green-500" />
           <h3 className="font-bold text-gray-900">حد التوصيل المجاني - الطعام</h3>
         </div>
-        <div className="p-4">
+        <div className="p-3">
           <p className="text-xs text-gray-500 mb-3">
             الحد الأدنى لقيمة الطلب للحصول على توصيل مجاني لجميع متاجر الطعام
           </p>
@@ -337,12 +337,12 @@ const SettingsTab = ({ user }) => {
       </div>
 
       {/* Low Stock Threshold */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <AlertTriangle size={18} className="text-yellow-500" />
           <h3 className="font-bold text-gray-900">حد تنبيه المخزون المنخفض</h3>
         </div>
-        <div className="p-4">
+        <div className="p-3">
           <p className="text-xs text-gray-500 mb-3">
             سيتم إرسال تنبيه للبائع عند وصول مخزون أي منتج إلى هذا الحد أو أقل
           </p>
@@ -448,7 +448,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
+      <div className="bg-white rounded-lg p-6 border border-gray-200 animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-20 bg-gray-100 rounded"></div>
         <p className="mt-2 text-gray-500 text-sm">جاري تحميل إعدادات إلغاء السائق...</p>
@@ -458,8 +458,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-red-200">
-        <div className="flex items-center gap-3 text-red-600">
+      <div className="bg-white rounded-lg p-6 border border-red-200">
+        <div className="flex items-center gap-2 text-red-600">
           <AlertCircle size={24} />
           <span>{error}</span>
         </div>
@@ -468,9 +468,9 @@ const DriverCancelSettingsSection = ({ toast }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200" data-testid="driver-cancel-settings">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+    <div className="bg-white rounded-lg p-6 border border-gray-200" data-testid="driver-cancel-settings">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
           <XCircle className="text-red-600" size={24} />
         </div>
         <div>
@@ -480,7 +480,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
       </div>
 
       {/* تفعيل/إيقاف */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
         <div>
           <p className="font-bold text-gray-900">تفعيل إلغاء الطلب للسائقين</p>
           <p className="text-sm text-gray-500">السماح للسائقين بإلغاء الطلبات ضمن شروط</p>
@@ -498,7 +498,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
       </div>
 
       {settings.enabled && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* مهلة الإلغاء */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -508,7 +508,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
               type="number"
               value={settings.cancel_window_seconds}
               onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: parseInt(e.target.value) || 0 }))}
-              className="w-full p-3 border border-gray-200 rounded-xl"
+              className="w-full p-3 border border-gray-200 rounded-lg"
             />
             <p className="text-xs text-gray-500 mt-1">
               الوقت المسموح للسائق لإلغاء الطلب بعد قبوله ({Math.floor(settings.cancel_window_seconds / 60)} دقيقة و {settings.cancel_window_seconds % 60} ثانية)
@@ -516,7 +516,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
           </div>
 
           {/* نسبة الإلغاء القصوى */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 نسبة الإلغاء القصوى (%)
@@ -525,7 +525,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
                 type="number"
                 value={settings.max_cancel_rate}
                 onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-xl"
+                className="w-full p-3 border border-gray-200 rounded-lg"
               />
             </div>
             <div>
@@ -536,13 +536,13 @@ const DriverCancelSettingsSection = ({ toast }) => {
                 type="number"
                 value={settings.lookback_orders}
                 onChange={(e) => setSettings(s => ({ ...s, lookback_orders: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-xl"
+                className="w-full p-3 border border-gray-200 rounded-lg"
               />
             </div>
           </div>
 
           {/* حدود التحذير والإيقاف */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ⚠️ نسبة التحذير (%)
@@ -551,7 +551,7 @@ const DriverCancelSettingsSection = ({ toast }) => {
                 type="number"
                 value={settings.warning_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, warning_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-yellow-200 rounded-xl bg-yellow-50"
+                className="w-full p-3 border border-yellow-200 rounded-lg bg-yellow-50"
               />
             </div>
             <div>
@@ -562,16 +562,16 @@ const DriverCancelSettingsSection = ({ toast }) => {
                 type="number"
                 value={settings.suspension_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-red-200 rounded-xl bg-red-50"
+                className="w-full p-3 border border-red-200 rounded-lg bg-red-50"
               />
             </div>
           </div>
 
           {/* إحصائيات */}
           {stats && (
-            <div className="bg-gray-50 rounded-xl p-4 mt-4">
+            <div className="bg-gray-50 rounded-lg p-4 mt-4">
               <h4 className="font-bold text-gray-900 mb-3">📊 إحصائيات الإلغاءات</h4>
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="bg-white p-3 rounded-lg">
                   <p className="text-2xl font-bold text-gray-900">{stats.total_cancellations}</p>
                   <p className="text-xs text-gray-500">إجمالي</p>
@@ -659,8 +659,8 @@ const DriverShortageAlertSettings = ({ toast }) => {
 
   return (
     <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
           <Bell size={20} className="text-white" />
         </div>
         <div>
@@ -670,7 +670,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
       </div>
 
       {/* تفعيل/تعطيل */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-4">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
         <div>
           <p className="font-medium text-gray-900">تفعيل الإشعارات التلقائية</p>
           <p className="text-xs text-gray-500">إرسال إشعار للمدراء عند نقص السائقين</p>
@@ -687,7 +687,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
       </div>
 
       {shortageAlert.enabled && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* الحد الأدنى للسائقين */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -700,7 +700,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
               max="20"
               value={shortageAlert.min_available_drivers}
               onChange={(e) => setShortageAlert(s => ({ ...s, min_available_drivers: parseInt(e.target.value) || 3 }))}
-              className="w-full p-3 border border-gray-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             />
             <p className="text-xs text-gray-500 mt-1">سيتم إرسال إشعار إذا انخفض العدد عن هذا الحد</p>
           </div>
@@ -716,7 +716,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
               max="180"
               value={shortageAlert.cooldown_minutes}
               onChange={(e) => setShortageAlert(s => ({ ...s, cooldown_minutes: parseInt(e.target.value) || 30 }))}
-              className="w-full p-3 border border-gray-200 rounded-xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
             />
             <p className="text-xs text-gray-500 mt-1">لن يتم إرسال إشعار جديد لنفس المدينة خلال هذه الفترة</p>
           </div>
@@ -736,7 +736,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
                 {availableCities.map(cityData => (
                   <label 
                     key={cityData.city}
-                    className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       shortageAlert.monitored_cities?.includes(cityData.city)
                         ? 'border-amber-500 bg-amber-50'
                         : 'border-gray-200 hover:border-amber-300'
@@ -765,7 +765,7 @@ const DriverShortageAlertSettings = ({ toast }) => {
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
             {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
             حفظ إعدادات الإشعارات
@@ -897,8 +897,8 @@ const AutoWeatherSettings = ({ toast }) => {
 
   return (
     <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
           <Cloud size={20} className="text-white" />
         </div>
         <div>
@@ -917,7 +917,7 @@ const AutoWeatherSettings = ({ toast }) => {
           value={settings.api_key}
           onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
           placeholder="أدخل مفتاح API..."
-          className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <p className="text-xs text-gray-500 mt-1">
           احصل على مفتاح مجاني من <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openweathermap.org</a>
@@ -925,7 +925,7 @@ const AutoWeatherSettings = ({ toast }) => {
       </div>
 
       {/* تفعيل التلقائي */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-4">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
         <div>
           <p className="font-medium text-gray-900">تفعيل الرسوم التلقائية</p>
           <p className="text-xs text-gray-500">فحص الطقس كل 30 دقيقة وتفعيل الرسوم عند الحاجة</p>
@@ -953,7 +953,7 @@ const AutoWeatherSettings = ({ toast }) => {
           step="1000"
           value={settings.base_amount}
           onChange={(e) => setSettings(prev => ({ ...prev, base_amount: e.target.value }))}
-          className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <p className="text-xs text-gray-500 mt-1">
           سيتم ضرب هذا المبلغ بمضاعف حسب شدة الطقس (مطر خفيف ×0.5، مطر ×1، عاصفة ×1.5، ثلج ×2)
@@ -992,7 +992,7 @@ const AutoWeatherSettings = ({ toast }) => {
         <button
           onClick={checkWeatherNow}
           disabled={checking || !settings.has_api_key}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
         >
           {checking ? <RefreshCw size={16} className="animate-spin" /> : <Thermometer size={16} />}
           فحص الطقس الآن
@@ -1000,7 +1000,7 @@ const AutoWeatherSettings = ({ toast }) => {
         <button
           onClick={triggerAutoCheck}
           disabled={checking || !settings.has_api_key}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
         >
           {checking ? <RefreshCw size={16} className="animate-spin" /> : <Cloud size={16} />}
           تشغيل الفحص التلقائي
@@ -1009,8 +1009,8 @@ const AutoWeatherSettings = ({ toast }) => {
 
       {/* عرض الطقس الحالي */}
       {currentWeather && (
-        <div className={`p-3 rounded-xl mb-4 ${currentWeather.is_bad_weather ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
-          <div className="flex items-center gap-3">
+        <div className={`p-3 rounded-lg mb-4 ${currentWeather.is_bad_weather ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
+          <div className="flex items-center gap-2">
             <img 
               src={`https://openweathermap.org/img/wn/${currentWeather.weather?.icon}@2x.png`}
               alt="weather"
@@ -1040,7 +1040,7 @@ const AutoWeatherSettings = ({ toast }) => {
       <button
         onClick={saveSettings}
         disabled={saving}
-        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
       >
         {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
         حفظ إعدادات الطقس

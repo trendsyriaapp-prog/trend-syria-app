@@ -505,9 +505,9 @@ const DeliverySettingsTab = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* فلتر التصنيفات */}
-      <div className="bg-white rounded-xl border border-gray-200 p-2 sticky top-0 z-10">
+      <div className="bg-white rounded-lg border border-gray-200 p-2 sticky top-0 z-10">
         <div className="flex gap-1 overflow-x-auto pb-1">
           {CATEGORIES.map((cat) => (
             <button
@@ -516,7 +516,7 @@ const DeliverySettingsTab = () => {
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat.id 
                   ? 'bg-orange-500 text-white shadow' 
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-gray-600 text-sm hover:bg-gray-100'
               }`}
             >
               <span>{cat.icon}</span>
@@ -526,38 +526,38 @@ const DeliverySettingsTab = () => {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-3">
       {/* Dispatch Status & Violations Report - حالة التوزيع التلقائي */}
       {(activeCategory === 'all' || activeCategory === 'orders' || activeCategory === 'penalties') && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {/* حالة التوزيع */}
         {(activeCategory === 'all' || activeCategory === 'orders') && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-l from-blue-500 to-indigo-500 p-4 text-white">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🚀</span>
-              <h2 className="font-bold text-lg">حالة التوزيع التلقائي</h2>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-blue-500 to-indigo-500 p-3 text-white">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🚀</span>
+              <h2 className="font-bold text-sm">حالة التوزيع التلقائي</h2>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-3">
             {dispatchStatus ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <span className="text-gray-600">النظام</span>
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">النظام</span>
                   <span className={`font-bold ${dispatchStatus.background_task_running ? 'text-green-600' : 'text-red-600'}`}>
                     {dispatchStatus.background_task_running ? '✅ يعمل' : '❌ متوقف'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-gray-600">السائقين المتاحين</span>
+                <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">السائقين المتاحين</span>
                   <span className="font-bold text-blue-600">{dispatchStatus.available_drivers}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                  <span className="text-gray-600">بانتظار التوزيع</span>
+                <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">بانتظار التوزيع</span>
                   <span className="font-bold text-orange-600">{dispatchStatus.pending_dispatch}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <span className="text-gray-600">تم توزيعها اليوم</span>
+                <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">تم توزيعها اليوم</span>
                   <span className="font-bold text-purple-600">{dispatchStatus.dispatched_today}</span>
                 </div>
               </div>
@@ -566,7 +566,7 @@ const DeliverySettingsTab = () => {
             )}
             <button
               onClick={fetchDispatchStatus}
-              className="mt-4 w-full bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2"
+              className="mt-4 w-full bg-blue-100 text-blue-700 py-1.5 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2"
             >
               <RefreshCw size={16} />
               تحديث
@@ -577,35 +577,35 @@ const DeliverySettingsTab = () => {
 
         {/* تقرير المخالفات */}
         {(activeCategory === 'all' || activeCategory === 'penalties') && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📊</span>
-              <h2 className="font-bold text-lg">تقرير المخالفات (30 يوم)</h2>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-l from-red-500 to-rose-500 p-3 text-white">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📊</span>
+              <h2 className="font-bold text-sm">تقرير المخالفات (30 يوم)</h2>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-3">
             {violationsReport ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                  <span className="text-gray-600">إجمالي المخالفات</span>
+                <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">إجمالي المخالفات</span>
                   <span className="font-bold text-red-600">{violationsReport.total_violations}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <span className="text-gray-600">إجمالي التعويضات</span>
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">إجمالي التعويضات</span>
                   <span className="font-bold text-green-600">{formatPrice(violationsReport.total_compensations)}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <span className="text-gray-600">متوسط وقت التأخير</span>
+                <div className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg">
+                  <span className="text-gray-600 text-sm">متوسط وقت التأخير</span>
                   <span className="font-bold text-yellow-600">{violationsReport.average_waiting_minutes} دقيقة</span>
                 </div>
                 {violationsReport.violating_stores?.length > 0 && (
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="p-2 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-700 mb-2">المتاجر المخالفة:</p>
                     <div className="space-y-1">
                       {violationsReport.violating_stores.slice(0, 3).map((store, i) => (
                         <div key={i} className="flex justify-between text-sm">
-                          <span className="text-gray-600">{store.name}</span>
+                          <span className="text-gray-600 text-sm">{store.name}</span>
                           <span className="text-red-600">{store.count} مخالفة</span>
                         </div>
                       ))}
@@ -618,7 +618,7 @@ const DeliverySettingsTab = () => {
             )}
             <button
               onClick={fetchViolationsReport}
-              className="mt-4 w-full bg-red-100 text-red-700 py-2 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2"
+              className="mt-4 w-full bg-red-100 text-red-700 py-1.5 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2"
             >
               <RefreshCw size={16} />
               تحديث
@@ -631,20 +631,20 @@ const DeliverySettingsTab = () => {
 
       {/* Distance Delivery Settings - إعدادات أجور التوصيل بالمسافة */}
       {(activeCategory === 'all' || activeCategory === 'prices') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-green-500 to-teal-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-green-500 to-teal-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <MapPin size={24} />
             <div>
-              <h2 className="font-bold text-lg">أجور التوصيل بالمسافة</h2>
+              <h2 className="font-bold text-sm">أجور التوصيل بالمسافة</h2>
               <p className="text-sm text-white/80">حساب رسوم التوصيل تلقائياً بناءً على المسافة بين المتجر والعميل</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-3">
           {/* صيغة الحساب */}
-          <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl border border-green-200">
+          <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
             <h4 className="font-bold text-gray-700 mb-2">📐 صيغة الحساب:</h4>
             <div className="text-center py-3 bg-white rounded-lg border-2 border-dashed border-green-300">
               <span className="text-lg font-bold text-gray-800">
@@ -656,9 +656,9 @@ const DeliverySettingsTab = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {/* الرسوم الأساسية */}
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">💰</span>
@@ -683,7 +683,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* سعر الكيلومتر */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">📏</span>
@@ -708,7 +708,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأدنى */}
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">⬇️</span>
@@ -734,8 +734,8 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* تفعيل النظام */}
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <label className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
               <input
                 type="checkbox"
                 checked={distanceSettings.enabled_for_food}
@@ -751,7 +751,7 @@ const DeliverySettingsTab = () => {
               </div>
             </label>
 
-            <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+            <label className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
               <input
                 type="checkbox"
                 checked={distanceSettings.enabled_for_products}
@@ -771,7 +771,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveDistanceSettings}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات أجور التوصيل
@@ -782,20 +782,20 @@ const DeliverySettingsTab = () => {
 
       {/* Driver Earnings Settings - إعدادات أرباح السائق */}
       {(activeCategory === 'all' || activeCategory === 'prices') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Truck size={24} />
             <div>
-              <h2 className="font-bold text-lg">أرباح السائق</h2>
+              <h2 className="font-bold text-sm">أرباح السائق</h2>
               <p className="text-sm text-white/80">تحديد ربح السائق بناءً على المسافة الكلية</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* توضيح المعادلة */}
-          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
             <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب ربح السائق:</h3>
             <p className="text-amber-700 font-mono text-sm">
               الربح = <span className="text-orange-600">{formatPrice(driverEarningsSettings.base_fee)}</span> + (المسافة الكلية × <span className="text-amber-600">{formatPrice(driverEarningsSettings.price_per_km)}</span>)
@@ -809,9 +809,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* الإعدادات */}
-          <div className="grid gap-4">
+          <div className="grid gap-2">
             {/* الأجرة الأساسية للسائق */}
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">💰</span>
@@ -833,7 +833,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* سعر الكيلومتر للسائق */}
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🛣️</span>
@@ -855,7 +855,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأدنى لربح السائق */}
-            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🛡️</span>
@@ -878,7 +878,7 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* مقارنة الأرباح */}
-          <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-xl p-4 border border-orange-200">
+          <div className="bg-gradient-to-l from-orange-100 to-amber-100 rounded-lg p-4 border border-orange-200">
             <h4 className="font-bold text-orange-800 mb-3">📊 أمثلة على الأرباح:</h4>
             <div className="grid grid-cols-3 gap-2 text-center">
               {[2, 5, 10].map(km => {
@@ -889,7 +889,7 @@ const DeliverySettingsTab = () => {
                 return (
                   <div key={km} className="bg-white rounded-lg p-3 shadow-sm">
                     <div className="text-2xl">🏍️</div>
-                    <div className="text-sm text-gray-600">{km} كم</div>
+                    <div className="text-sm text-gray-600 text-sm">{km} كم</div>
                     <div className="font-bold text-orange-600">{formatPrice(earnings)}</div>
                   </div>
                 );
@@ -900,7 +900,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveDriverEarningsSettings}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات أرباح السائق
@@ -911,19 +911,19 @@ const DeliverySettingsTab = () => {
 
       {/* Wait Time Settings - إعدادات وقت الانتظار */}
       {(activeCategory === 'all' || activeCategory === 'times') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-purple-500 to-pink-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-pink-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Clock size={24} />
             <div>
-              <h2 className="font-bold text-lg">وقت انتظار التوصيل</h2>
+              <h2 className="font-bold text-sm">وقت انتظار التوصيل</h2>
               <p className="text-sm text-white/80">الوقت الذي ينتظره السائق إذا لم يرد العميل</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+        <div className="p-3">
+          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-lg">⏱️</span>
@@ -933,7 +933,7 @@ const DeliverySettingsTab = () => {
                 <p className="text-xs text-gray-500">بعد هذا الوقت يمكن للسائق ترك الطلب عند الباب</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={waitTimeMinutes}
@@ -949,7 +949,7 @@ const DeliverySettingsTab = () => {
             </p>
           </div>
 
-          <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+          <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <h4 className="font-bold text-yellow-800 mb-2">⚠️ كيف يعمل النظام:</h4>
             <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside">
               <li>السائق يصل للعميل ويطلب كود التسليم</li>
@@ -963,7 +963,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveWaitTime}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ وقت الانتظار
@@ -974,20 +974,20 @@ const DeliverySettingsTab = () => {
 
       {/* Wait Compensation Settings - إعدادات تعويض انتظار السائق في المطعم */}
       {(activeCategory === 'all' || activeCategory === 'penalties') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">⏰</span>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-rose-500 p-3 text-white">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⏰</span>
             <div>
-              <h2 className="font-bold text-lg">تعويض انتظار السائق في المطعم</h2>
+              <h2 className="font-bold text-sm">تعويض انتظار السائق في المطعم</h2>
               <p className="text-sm text-white/80">حماية السائقين من تأخيرات المطاعم</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* توضيح النظام */}
-          <div className="bg-rose-50 rounded-xl p-4 border border-rose-200">
+          <div className="bg-rose-50 rounded-lg p-4 border border-rose-200">
             <h4 className="font-bold text-rose-800 mb-2">🛡️ كيف يعمل نظام حماية السائقين:</h4>
             <ol className="text-sm text-rose-700 space-y-1 list-decimal list-inside">
               <li>السائق يصل للمطعم ويضغط "وصلت للمطعم"</li>
@@ -997,9 +997,9 @@ const DeliverySettingsTab = () => {
             </ol>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {/* وقت الانتظار المسموح */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">⏱️</span>
@@ -1024,7 +1024,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* التعويض لكل 5 دقائق */}
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">💰</span>
@@ -1049,7 +1049,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأقصى للتعويض */}
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🔒</span>
@@ -1075,7 +1075,7 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* أمثلة على التعويضات */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border border-green-200">
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
             <h4 className="font-bold text-gray-700 mb-3">📊 أمثلة على التعويضات:</h4>
             <div className="grid grid-cols-4 gap-2 text-center">
               {[12, 15, 20, 30].map(minutes => {
@@ -1085,7 +1085,7 @@ const DeliverySettingsTab = () => {
                 return (
                   <div key={minutes} className="bg-white rounded-lg p-2 shadow-sm">
                     <div className="text-lg">⏱️</div>
-                    <div className="text-sm text-gray-600">{minutes} دقيقة</div>
+                    <div className="text-sm text-gray-600 text-sm">{minutes} دقيقة</div>
                     <div className={`font-bold ${comp > 0 ? 'text-green-600' : 'text-gray-400'}`}>
                       {comp > 0 ? `+${formatPrice(comp)}` : 'لا تعويض'}
                     </div>
@@ -1096,12 +1096,12 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* إعدادات Geofencing - التحقق من موقع السائق */}
-          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h4 className="font-bold text-blue-800 mb-3">📍 التحقق من موقع السائق (Geofencing):</h4>
             <p className="text-sm text-blue-600 mb-3">
               عند ضغط السائق "وصلت للمتجر"، يتم التحقق من أنه فعلاً قرب المتجر
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">المسافة المسموحة من المتجر</label>
                 <div className="flex items-center gap-2">
@@ -1120,7 +1120,7 @@ const DeliverySettingsTab = () => {
                   <span className="text-sm text-blue-600 font-medium">متر</span>
                 </div>
               </div>
-              <div className="text-center p-3 bg-white rounded-lg border border-blue-200">
+              <div className="text-center p-2 bg-white rounded-lg border border-blue-200">
                 <p className="text-xs text-gray-500">مثال</p>
                 <p className="text-lg font-bold text-blue-600">{waitCompensationSettings.geofencing_max_distance_meters}م</p>
                 <p className="text-xs text-gray-500">≈ {Math.round(waitCompensationSettings.geofencing_max_distance_meters / 80)} دقيقة مشي</p>
@@ -1132,9 +1132,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* نظام التحذيرات */}
-          <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+          <div className="bg-red-50 rounded-lg p-4 border border-red-200">
             <h4 className="font-bold text-red-800 mb-3">⚠️ نظام تحذيرات المطاعم:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل التحذير</label>
                 <input
@@ -1193,7 +1193,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveWaitCompensationSettings}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات تعويض الانتظار
@@ -1204,21 +1204,21 @@ const DeliverySettingsTab = () => {
 
       {/* Order Limits Section - إعدادات قبول الطلبات */}
       {(activeCategory === 'all' || activeCategory === 'orders') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-orange-500 to-red-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-orange-500 to-red-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Truck size={24} />
             <div>
-              <h2 className="font-bold text-lg">إعدادات قبول طلبات الطعام</h2>
+              <h2 className="font-bold text-sm">إعدادات قبول طلبات الطعام</h2>
               <p className="text-sm text-white/80">تحكم في عدد الطلبات والمسافة المسموحة للسائق</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* الحد الأقصى لطلبات الطعام */}
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🍔</span>
@@ -1245,7 +1245,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأقصى لطلبات الطعام الساخنة/الطازجة */}
-            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div className="bg-red-50 rounded-lg p-4 border border-red-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🔥</span>
@@ -1279,7 +1279,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأقصى لطلبات الطعام الباردة/الجافة */}
-            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">📦</span>
@@ -1310,7 +1310,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأقصى لطلبات المنتجات */}
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🛍️</span>
@@ -1337,7 +1337,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* المسافة القصوى */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <MapPin size={20} className="text-white" />
@@ -1366,9 +1366,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* شرح القواعد */}
-          <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h4 className="font-bold text-gray-700 mb-2">📋 كيف تعمل هذه القواعد:</h4>
-            <ul className="text-sm text-gray-600 space-y-2">
+            <ul className="text-sm text-gray-600 text-sm space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-red-500">🔥</span>
                 <span><strong>ساخن/طازج:</strong> السائق يستطيع قبول <strong>{settings.hot_fresh_limit || 2} طلبات</strong> (مطاعم، مقاهي، مخابز، مشروبات، حلويات) - لضمان وصول الطعام ساخناً</span>
@@ -1387,7 +1387,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={() => { handleSaveFoodDeliveryLimits(); handleSaveWaitCompensationSettings(); }}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات قبول الطلبات
@@ -1398,21 +1398,21 @@ const DeliverySettingsTab = () => {
 
       {/* Smart Order Limits - إعدادات الحدود الذكية */}
       {(activeCategory === 'all' || activeCategory === 'orders') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🧠</span>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-3 text-white">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🧠</span>
             <div>
-              <h2 className="font-bold text-lg">الحدود الذكية والأولوية</h2>
+              <h2 className="font-bold text-sm">الحدود الذكية والأولوية</h2>
               <p className="text-sm text-white/80">إعدادات متقدمة لتوزيع الطلبات بذكاء</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* تفعيل الأولوية الذكية */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+            <div className="flex items-center gap-2">
               <span className="text-2xl">⚡</span>
               <div>
                 <h3 className="font-bold text-gray-800">الأولوية الذكية</h3>
@@ -1433,9 +1433,9 @@ const DeliverySettingsTab = () => {
             </label>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {/* الحد من مطاعم مختلفة */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🏪</span>
@@ -1462,7 +1462,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد من نفس المطعم */}
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">🍔</span>
@@ -1490,7 +1490,7 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* مدة الأولوية */}
-          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-lg">⏱️</span>
@@ -1517,9 +1517,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* شرح القواعد الذكية */}
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
             <h4 className="font-bold text-purple-700 mb-2">🧠 كيف تعمل الحدود الذكية:</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
+            <ul className="text-sm text-gray-600 text-sm space-y-1">
               <li>• السائق يقبل حتى <strong className="text-blue-600">{smartOrderLimits.max_orders_different_stores} طلبات</strong> من مطاعم مختلفة</li>
               <li>• إذا كان الطلب من <strong className="text-green-600">نفس المطعم</strong> الذي يذهب إليه، يمكنه قبول حتى <strong className="text-green-600">{smartOrderLimits.max_orders_same_store} طلبات</strong></li>
               <li>• طلب من نفس المطعم يظهر <strong className="text-amber-600">للسائق الذاهب إليه أولاً</strong> لمدة {smartOrderLimits.priority_timeout_seconds} ثانية</li>
@@ -1530,7 +1530,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveSmartOrderLimits}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات الحدود الذكية
@@ -1541,30 +1541,30 @@ const DeliverySettingsTab = () => {
 
       {/* إعدادات وقت التوصيل والعقوبات */}
       {(activeCategory === 'all' || activeCategory === 'penalties') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-red-500 to-pink-500 p-4 text-white">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">⏱️</span>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-pink-500 p-3 text-white">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⏱️</span>
             <div>
-              <h2 className="font-bold text-lg">إعدادات وقت التوصيل والعقوبات</h2>
+              <h2 className="font-bold text-sm">إعدادات وقت التوصيل والعقوبات</h2>
               <p className="text-sm text-white/80">تحكم في وقت التوصيل ونظام العقوبات للتأخير</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* شرح النظام */}
-          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h4 className="font-bold text-blue-700 mb-2">ℹ️ كيف يعمل النظام:</h4>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 text-sm">
               عندما يستلم السائق الطلب من المطعم، يبدأ العداد. الوقت المسموح = وقت GPS + Buffer الإضافي.
               إذا تأخر السائق، يحصل على تحذيرات أولاً ثم خصومات.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {/* Buffer الإضافي */}
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">➕</span>
@@ -1594,7 +1594,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* التحذير قبل انتهاء الوقت */}
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg">⚠️</span>
@@ -1621,9 +1621,9 @@ const DeliverySettingsTab = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {/* عدد التحذيرات قبل الخصم */}
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm">🔔</span>
@@ -1647,7 +1647,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* مبلغ الخصم */}
-            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div className="bg-red-50 rounded-lg p-4 border border-red-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm">💸</span>
@@ -1672,7 +1672,7 @@ const DeliverySettingsTab = () => {
             </div>
 
             {/* الحد الأقصى للخصم اليومي */}
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm">🛡️</span>
@@ -1698,9 +1698,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* شرح آلية العقوبات */}
-          <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200">
+          <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
             <h4 className="font-bold text-red-700 mb-2">⚖️ آلية العقوبات:</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
+            <ul className="text-sm text-gray-600 text-sm space-y-1">
               <li>• التأخير الأول: <strong className="text-amber-600">تحذير 1/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
               <li>• التأخير الثاني: <strong className="text-amber-600">تحذير 2/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
               <li>• التأخير الثالث: <strong className="text-amber-600">تحذير 3/{deliveryTimeSettings.warnings_before_penalty}</strong></li>
@@ -1712,7 +1712,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveDeliveryTimeSettings}
             disabled={saving}
-            className="mt-4 w-full bg-gradient-to-l from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
+            className="mt-4 w-full bg-gradient-to-l from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات وقت التوصيل
@@ -1723,24 +1723,24 @@ const DeliverySettingsTab = () => {
 
       {/* Leaderboard Rewards Section */}
       {(activeCategory === 'all' || activeCategory === 'rewards') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Trophy size={24} />
             <div>
-              <h2 className="font-bold text-lg">جوائز لوحة الصدارة</h2>
+              <h2 className="font-bold text-sm">جوائز لوحة الصدارة</h2>
               <p className="text-sm text-white/80">حدد الجوائز الشهرية للمراكز الثلاثة الأولى</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="p-3">
+          <div className="grid grid-cols-3 gap-2 mb-4">
             <div className="text-center">
               <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-3xl mb-2">
                 🥇
               </div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الأول</label>
+              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الأول</label>
               <input
                 type="number"
                 value={leaderboard_rewards?.first || 50000}
@@ -1761,7 +1761,7 @@ const DeliverySettingsTab = () => {
               <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-3xl mb-2">
                 🥈
               </div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الثاني</label>
+              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثاني</label>
               <input
                 type="number"
                 value={leaderboard_rewards?.second || 30000}
@@ -1782,7 +1782,7 @@ const DeliverySettingsTab = () => {
               <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl mb-2">
                 🥉
               </div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">المركز الثالث</label>
+              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثالث</label>
               <input
                 type="number"
                 value={leaderboard_rewards?.third || 15000}
@@ -1801,7 +1801,7 @@ const DeliverySettingsTab = () => {
             </div>
           </div>
           
-          <div className="bg-amber-50 rounded-xl p-3 border border-amber-200 mb-4">
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-200 mb-4">
             <p className="text-sm text-amber-700 text-center">
               إجمالي الجوائز الشهرية: <strong>{formatPrice((leaderboard_rewards?.first || 50000) + (leaderboard_rewards?.second || 30000) + (leaderboard_rewards?.third || 15000))}</strong>
             </p>
@@ -1810,7 +1810,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveLeaderboardRewards}
             disabled={saving}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ جوائز الصدارة
@@ -1821,20 +1821,20 @@ const DeliverySettingsTab = () => {
 
       {/* Performance Levels Section */}
       {(activeCategory === 'all' || activeCategory === 'rewards') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Award size={24} />
             <div>
-              <h2 className="font-bold text-lg">مستويات أداء السائقين</h2>
+              <h2 className="font-bold text-sm">مستويات أداء السائقين</h2>
               <p className="text-sm text-white/80">حدد عدد الطلبات المطلوبة لكل مستوى</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {/* Level Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
             <LevelCard 
               icon="🌱"
               name="مبتدئ"
@@ -1873,11 +1873,11 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* Settings Inputs */}
-          <div className="bg-gray-50 rounded-xl p-4 mt-4">
+          <div className="bg-gray-50 rounded-lg p-4 mt-4">
             <h3 className="font-bold text-gray-700 mb-4">تعديل الحدود (عدد الطلبات الشهرية)</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-1">
                   مبتدئ (حتى)
                 </label>
                 <input
@@ -1895,7 +1895,7 @@ const DeliverySettingsTab = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-1">
                   برونزي (حتى)
                 </label>
                 <input
@@ -1913,7 +1913,7 @@ const DeliverySettingsTab = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-1">
                   فضي (حتى)
                 </label>
                 <input
@@ -1931,7 +1931,7 @@ const DeliverySettingsTab = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-1">
                   ذهبي (حتى)
                 </label>
                 <input
@@ -1953,7 +1953,7 @@ const DeliverySettingsTab = () => {
             <button
               onClick={handleSaveLevels}
               disabled={saving}
-              className="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
               حفظ مستويات الأداء
@@ -1965,20 +1965,20 @@ const DeliverySettingsTab = () => {
 
       {/* Working Hours Section */}
       {(activeCategory === 'all' || activeCategory === 'times') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-blue-500 to-cyan-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-blue-500 to-cyan-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Clock size={24} />
             <div>
-              <h2 className="font-bold text-lg">ساعات عمل التوصيل</h2>
+              <h2 className="font-bold text-sm">ساعات عمل التوصيل</h2>
               <p className="text-sm text-white/80">حدد أوقات العمل المسموحة للسائقين</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-3">
           {/* Enable/Disable Toggle */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
             <div>
               <h3 className="font-bold text-gray-700">تفعيل قيود ساعات العمل</h3>
               <p className="text-sm text-gray-500">
@@ -2005,9 +2005,9 @@ const DeliverySettingsTab = () => {
 
           {/* Hours Settings */}
           {working_hours.is_enabled && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                   ساعة البدء
                 </label>
                 <select
@@ -2026,7 +2026,7 @@ const DeliverySettingsTab = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                   ساعة الانتهاء
                 </label>
                 <select
@@ -2049,7 +2049,7 @@ const DeliverySettingsTab = () => {
 
           {/* Preview */}
           {working_hours.is_enabled && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2 text-blue-700">
                 <Clock size={18} />
                 <span className="font-bold">
@@ -2065,7 +2065,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveHours}
             disabled={saving}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ ساعات العمل
@@ -2076,27 +2076,27 @@ const DeliverySettingsTab = () => {
 
       {/* Product Delivery Hours Section */}
       {(activeCategory === 'all' || activeCategory === 'times') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Truck size={24} />
             <div>
-              <h2 className="font-bold text-lg">ساعات توصيل المنتجات</h2>
+              <h2 className="font-bold text-sm">ساعات توصيل المنتجات</h2>
               <p className="text-sm text-white/80">حدد الأوقات التي يُسمح فيها للسائق بتوصيل المنتجات للعميل</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+        <div className="p-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
             <p className="text-amber-800 text-sm">
               <strong>ملاحظة:</strong> السائق لن يستطيع تأكيد تسليم الطلب خارج هذه الساعات لعدم إزعاج العميل ليلاً أو صباحاً باكراً.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
+              <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                 أول وقت للتوصيل (صباحاً)
               </label>
               <div className="flex gap-2">
@@ -2117,7 +2117,7 @@ const DeliverySettingsTab = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
+              <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                 آخر وقت للتوصيل (مساءً)
               </label>
               <div className="flex gap-2">
@@ -2140,7 +2140,7 @@ const DeliverySettingsTab = () => {
           </div>
 
           {/* Preview */}
-          <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-200">
+          <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
             <div className="flex items-center gap-2 text-purple-700">
               <Clock size={18} />
               <span className="font-bold">
@@ -2155,7 +2155,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveProductDeliveryHours}
             disabled={saving}
-            className="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="mt-4 bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ ساعات التوصيل
@@ -2166,26 +2166,26 @@ const DeliverySettingsTab = () => {
 
       {/* Earnings Hold Settings Section */}
       {(activeCategory === 'all' || activeCategory === 'penalties') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-yellow-500 to-amber-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-yellow-500 to-amber-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <Clock size={24} />
             <div>
-              <h2 className="font-bold text-lg">⏳ تعليق الأرباح (Hold Period)</h2>
+              <h2 className="font-bold text-sm">⏳ تعليق الأرباح (Hold Period)</h2>
               <p className="text-sm text-white/80">تعليق الأرباح لفترة معينة قبل إضافتها للرصيد المتاح</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+        <div className="p-3">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
             <p className="text-amber-800 text-sm">
               <strong>الهدف:</strong> حماية المنصة من الإرجاعات - الأرباح تبقى معلقة حتى انتهاء فترة الإرجاع المسموحة للعميل.
             </p>
           </div>
 
           {/* Toggle */}
-          <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
+          <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
             <span className="font-medium text-gray-700">تفعيل نظام التعليق</span>
             <button
               onClick={() => setHoldSettings({ ...holdSettings, enabled: !holdSettings.enabled })}
@@ -2200,9 +2200,9 @@ const DeliverySettingsTab = () => {
           </div>
 
           {holdSettings.enabled && (
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                   🍔 فترة تعليق طلبات الطعام (ساعات)
                 </label>
                 <input
@@ -2216,7 +2216,7 @@ const DeliverySettingsTab = () => {
                 <p className="text-xs text-gray-500 mt-1">الأرباح تُضاف بعد {holdSettings.food_hold_hours} ساعة</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
                   📦 فترة تعليق طلبات المنتجات (ساعات)
                 </label>
                 <input
@@ -2234,9 +2234,9 @@ const DeliverySettingsTab = () => {
 
           {/* Summary */}
           {holdSummary && (
-            <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200 mb-4">
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-4">
               <h3 className="font-bold text-yellow-800 mb-3">📊 ملخص الأرباح المعلقة</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-2xl font-bold text-yellow-700">{holdSummary.count}</p>
                   <p className="text-xs text-yellow-600">عدد المعاملات</p>
@@ -2257,7 +2257,7 @@ const DeliverySettingsTab = () => {
               {holdSummary.total_held > 0 && (
                 <button
                   onClick={handleReleaseAllHeld}
-                  className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2"
+                  className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-sm flex items-center justify-center gap-2"
                 >
                   <CheckCircle size={16} />
                   إطلاق جميع الأرباح المعلقة الآن
@@ -2269,7 +2269,7 @@ const DeliverySettingsTab = () => {
           <button
             onClick={handleSaveHoldSettings}
             disabled={saving}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ إعدادات التعليق
@@ -2280,22 +2280,22 @@ const DeliverySettingsTab = () => {
 
       {/* Undelivered Orders Report Section */}
       {(activeCategory === 'all' || activeCategory === 'penalties') && (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-red-500 to-orange-500 p-4 text-white">
-          <div className="flex items-center gap-3">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-l from-red-500 to-orange-500 p-3 text-white">
+          <div className="flex items-center gap-2">
             <AlertCircle size={24} />
             <div>
-              <h2 className="font-bold text-lg">الطلبات غير المُسلّمة</h2>
+              <h2 className="font-bold text-sm">الطلبات غير المُسلّمة</h2>
               <p className="text-sm text-white/80">مراقبة وخصم قيمة الطلبات التي لم يسلمها السائقون</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-3">
           {undeliveredReport ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* طلبات اليوم */}
-              <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                 <h3 className="font-bold text-yellow-800 mb-2">طلبات اليوم (قيد التوصيل)</h3>
                 <div className="flex items-center justify-between">
                   <div>
@@ -2310,7 +2310,7 @@ const DeliverySettingsTab = () => {
               </div>
 
               {/* طلبات الأمس (تحتاج خصم) */}
-              <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                 <h3 className="font-bold text-red-800 mb-2">طلبات الأمس (تحتاج خصم)</h3>
                 <div className="flex items-center justify-between">
                   <div>
@@ -2327,7 +2327,7 @@ const DeliverySettingsTab = () => {
                   <button
                     onClick={handleProcessUndelivered}
                     disabled={saving}
-                    className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                    className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >
                     {saving ? <RefreshCw size={18} className="animate-spin" /> : <AlertCircle size={18} />}
                     خصم {formatPrice(undeliveredReport.yesterday_pending_penalty.total_value)} من رصيد السائقين
@@ -2359,7 +2359,7 @@ const DeliverySettingsTab = () => {
 
 const LevelCard = ({ icon, name, color, range, description }) => (
   <div 
-    className="p-3 rounded-xl text-center"
+    className="p-3 rounded-lg text-center"
     style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
   >
     <span className="text-2xl">{icon}</span>
