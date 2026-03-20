@@ -10,6 +10,7 @@ import {
   Loader2, ChevronDown, ChevronUp, Star, TrendingUp,
   BarChart3, Users, Timer, PieChart
 } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,6 +27,7 @@ const formatDate = (dateStr) => {
 };
 
 const SupportTicketsTab = () => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState([]);
   const [stats, setStats] = useState({ pending: 0, assigned: 0, resolved: 0 });
@@ -81,8 +83,9 @@ const SupportTicketsTab = () => {
       if (selectedTicket && selectedTicket.id === ticketId) {
         setSelectedTicket({ ...selectedTicket, status: newStatus });
       }
+      toast({ title: "تم بنجاح", description: "تم تحديث حالة التذكرة" });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     }
   };
 
@@ -290,6 +293,7 @@ const SupportTicketsTab = () => {
               chatHistory={chatHistory}
               onUpdateStatus={updateTicketStatus}
               onClose={() => setSelectedTicket(null)}
+              toast={toast}
             />
           ) : (
             <div className="p-8 text-center h-full flex flex-col items-center justify-center">
@@ -371,7 +375,7 @@ const TicketRow = ({ ticket, isSelected, onClick }) => {
   );
 };
 
-const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
+const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose, toast }) => {
   const [replyMessage, setReplyMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -398,9 +402,9 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose }) => {
         message: replyMessage
       });
       setReplyMessage('');
-      alert('تم إرسال الرد للعميل بنجاح!');
+      toast({ title: "تم بنجاح", description: "تم إرسال الرد للعميل" });
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ في إرسال الرد');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ في إرسال الرد', variant: "destructive" });
     } finally {
       setSending(false);
     }

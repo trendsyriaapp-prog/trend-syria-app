@@ -34,6 +34,7 @@ const DailyDealsTab = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingDeal, setEditingDeal] = useState(null);
   const [showProductSelector, setShowProductSelector] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, dealId: null, title: '' });
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -158,12 +159,13 @@ const DailyDealsTab = () => {
     }
   };
 
-  const deleteDeal = async (dealId) => {
-    if (!window.confirm('هل تريد حذف هذه الصفقة؟')) return;
+  const deleteDeal = async () => {
+    if (!deleteModal.dealId) return;
 
     try {
-      await axios.delete(`${API}/api/daily-deals/admin/${dealId}`);
+      await axios.delete(`${API}/api/daily-deals/admin/${deleteModal.dealId}`);
       toast({ title: "تم الحذف", description: "تم حذف الصفقة" });
+      setDeleteModal({ isOpen: false, dealId: null, title: '' });
       fetchDeals();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
@@ -284,7 +286,7 @@ const DailyDealsTab = () => {
                       <Edit2 size={16} className="text-gray-600" />
                     </button>
                     <button
-                      onClick={() => deleteDeal(deal.id)}
+                      onClick={() => setDeleteModal({ isOpen: true, dealId: deal.id, title: deal.title })}
                       className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
                       data-testid={`delete-deal-${deal.id}`}
                     >
@@ -536,6 +538,43 @@ const DailyDealsTab = () => {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">حذف الصفقة</h3>
+                <p className="text-xs text-gray-500">{deleteModal.title}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل تريد حذف هذه الصفقة؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, dealId: null, title: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={deleteDeal}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                حذف
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

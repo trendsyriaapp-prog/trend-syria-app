@@ -26,11 +26,13 @@ const ICON_MAP = {
 const AVAILABLE_ICONS = Object.keys(ICON_MAP);
 
 const CategoriesTab = () => {
+  const { toast } = useToast();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState('shopping');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, categoryId: null, name: '' });
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
@@ -83,14 +85,15 @@ const CategoriesTab = () => {
     }
   };
 
-  const handleDelete = async (categoryId) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذه الفئة؟')) return;
+  const handleDelete = async () => {
+    if (!deleteModal.categoryId) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/categories/${categoryId}`, {
+      await axios.delete(`${API}/api/categories/${deleteModal.categoryId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: 'نجاح', description: 'تم حذف الفئة بنجاح' });
+      setDeleteModal({ isOpen: false, categoryId: null, name: '' });
       fetchCategories();
     } catch (err) {
       toast({ title: 'خطأ', description: err.response?.data?.detail || 'فشل في حذف الفئة', variant: 'destructive' });
@@ -254,7 +257,7 @@ const CategoriesTab = () => {
                   <Edit2 size={16} />
                 </button>
                 <button
-                  onClick={() => handleDelete(category.id)}
+                  onClick={() => setDeleteModal({ isOpen: true, categoryId: category.id, name: category.name })}
                   className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   title="حذف"
                 >
@@ -450,6 +453,43 @@ const CategoriesTab = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">حذف الفئة</h3>
+                <p className="text-xs text-gray-500">{deleteModal.name}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من حذف هذه الفئة؟ قد يؤثر ذلك على المنتجات المرتبطة بها.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, categoryId: null, name: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                حذف
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

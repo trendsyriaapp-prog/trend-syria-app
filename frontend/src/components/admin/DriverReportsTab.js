@@ -10,6 +10,7 @@ import {
   Trash2, UserX, RefreshCw, MinusCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -49,6 +50,7 @@ const formatDate = (dateStr) => {
 
 const DriverReportsTab = () => {
   const { token } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState({ pending: 0, dismissed: 0, terminated: 0, total: 0 });
@@ -87,9 +89,10 @@ const DriverReportsTab = () => {
       await fetchReports();
       setSelectedReport(null);
       setAdminNotes('');
+      toast({ title: "تم بنجاح", description: "تم معالجة البلاغ" });
     } catch (error) {
       console.error('Error handling report:', error);
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     } finally {
       setActionLoading(false);
     }

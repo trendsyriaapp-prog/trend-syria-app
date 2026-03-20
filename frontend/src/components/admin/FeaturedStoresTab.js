@@ -4,10 +4,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Store, Check, X, Search, Star, GripVertical } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
 const FeaturedStoresTab = () => {
+  const { toast } = useToast();
   const [enabled, setEnabled] = useState(false);
   const [selectedStores, setSelectedStores] = useState([]);
   const [allStores, setAllStores] = useState([]);
@@ -43,9 +45,9 @@ const FeaturedStoresTab = () => {
         enabled,
         store_ids: selectedStores
       });
-      alert('تم حفظ الإعدادات بنجاح');
+      toast({ title: "تم بنجاح", description: "تم حفظ الإعدادات" });
     } catch (error) {
-      alert('فشل في حفظ الإعدادات');
+      toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -57,7 +59,7 @@ const FeaturedStoresTab = () => {
     } else if (selectedStores.length < 4) {
       setSelectedStores([...selectedStores, storeId]);
     } else {
-      alert('يمكنك اختيار 4 متاجر كحد أقصى');
+      toast({ title: "تنبيه", description: "يمكنك اختيار 4 متاجر كحد أقصى", variant: "destructive" });
     }
   };
 

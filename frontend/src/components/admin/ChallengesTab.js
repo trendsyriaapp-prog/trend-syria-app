@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Target, Plus, Edit, Trash2, Gift, Users, 
-  Trophy, Calendar, CheckCircle, X
+  Trophy, Calendar, CheckCircle, X, RefreshCw
 } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -15,11 +16,14 @@ const formatPrice = (price) => {
 };
 
 const ChallengesTab = () => {
+  const { toast } = useToast();
   const [challenges, setChallenges] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, title: '' });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchChallenges();
@@ -37,14 +41,18 @@ const ChallengesTab = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا التحدي؟')) return;
-    
+  const handleDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
     try {
-      await axios.delete(`${API}/api/challenges/admin/${id}`);
+      await axios.delete(`${API}/api/challenges/admin/${deleteModal.id}`);
+      toast({ title: "تم بنجاح", description: "تم حذف التحدي" });
+      setDeleteModal({ isOpen: false, id: null, title: '' });
       fetchChallenges();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -53,9 +61,10 @@ const ChallengesTab = () => {
       await axios.put(`${API}/api/challenges/admin/${challenge.id}`, {
         is_active: !challenge.is_active
       });
+      toast({ title: "تم بنجاح", description: challenge.is_active ? "تم إيقاف التحدي" : "تم تفعيل التحدي" });
       fetchChallenges();
     } catch (error) {
-      alert(error.response?.data?.detail || 'حدث خطأ');
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     }
   };
 
@@ -123,7 +132,7 @@ const ChallengesTab = () => {
               key={challenge.id}
               challenge={challenge}
               onEdit={() => { setEditingChallenge(challenge); setShowForm(true); }}
-              onDelete={() => handleDelete(challenge.id)}
+              onDelete={() => setDeleteModal({ isOpen: true, id: challenge.id, title: challenge.title })}
               onToggle={() => handleToggleActive(challenge)}
             />
           ))
@@ -137,6 +146,48 @@ const ChallengesTab = () => {
           onClose={() => setShowForm(false)}
           onSave={() => { setShowForm(false); fetchChallenges(); }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold">حذف التحدي</h3>
+                <p className="text-xs text-gray-500">{deleteModal.title}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              هل أنت متأكد من حذف هذا التحدي؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, id: null, title: '' })}
+                className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <Trash2 size={16} />
+                )}
+                حذف
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -36,6 +36,7 @@ const CouponsTab = ({ token }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, couponId: null, code: '' });
 
   useEffect(() => {
     fetchCoupons();
@@ -56,14 +57,15 @@ const CouponsTab = ({ token }) => {
     }
   };
 
-  const handleDelete = async (couponId) => {
-    if (!window.confirm('هل تريد حذف هذا الكوبون؟')) return;
+  const handleDelete = async () => {
+    if (!deleteModal.couponId) return;
     
     try {
-      await axios.delete(`${API}/api/coupons/admin/${couponId}`, {
+      await axios.delete(`${API}/api/coupons/admin/${deleteModal.couponId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الحذف", description: "تم حذف الكوبون بنجاح" });
+      setDeleteModal({ isOpen: false, couponId: null, code: '' });
       fetchCoupons();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حذف الكوبون", variant: "destructive" });
@@ -270,7 +272,7 @@ const CouponsTab = ({ token }) => {
                         {coupon.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                       </button>
                       <button
-                        onClick={() => handleDelete(coupon.id)}
+                        onClick={() => setDeleteModal({ isOpen: true, couponId: coupon.id, code: coupon.code })}
                         className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                       >
                         <Trash2 size={16} />
@@ -346,6 +348,14 @@ const CouponsTab = ({ token }) => {
           />
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={deleteModal.isOpen}
+        code={deleteModal.code}
+        onClose={() => setDeleteModal({ isOpen: false, couponId: null, code: '' })}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };
@@ -635,6 +645,47 @@ const CouponModal = ({ coupon, token, onClose, onSuccess }) => {
           </button>
         </div>
       </motion.div>
+    </div>
+  );
+};
+
+// Delete Confirmation Modal Component
+const DeleteModal = ({ isOpen, code, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <Trash2 size={20} className="text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-bold">حذف الكوبون</h3>
+            <p className="text-xs text-gray-500 font-mono">{code}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          هل تريد حذف هذا الكوبون؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            إلغاء
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+          >
+            <Trash2 size={16} />
+            حذف
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
