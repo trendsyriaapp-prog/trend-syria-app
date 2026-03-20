@@ -154,7 +154,7 @@ const DriversMapTab = () => {
   // جلب البيانات عند التحميل وعند تغيير الفلاتر
   useEffect(() => {
     fetchDrivers();
-  }, [selectedCity, availableOnly]);
+  }, [selectedCity, availableOnly, onlineOnly]);
 
   // التحديث التلقائي
   useEffect(() => {
@@ -166,7 +166,7 @@ const DriversMapTab = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [autoRefresh, selectedCity, availableOnly]);
+  }, [autoRefresh, selectedCity, availableOnly, onlineOnly]);
 
   // فلترة السائقين للعرض
   const displayedDrivers = onlineOnly 

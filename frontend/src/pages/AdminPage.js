@@ -530,26 +530,6 @@ const AdminDashboardPage = () => {
               )}
             </div>
 
-            {/* إحصائيات سريعة - شريط علوي مضغوط */}
-            <div className="grid grid-cols-4 gap-1.5 mb-3">
-              {[
-                { icon: Users, value: stats?.total_users || 0, label: 'مستخدم', color: 'text-blue-600 bg-blue-50', tab: 'users' },
-                { icon: Package, value: stats?.total_products || 0, label: 'منتج', color: 'text-green-600 bg-green-50', tab: 'products' },
-                { icon: ShoppingBag, value: stats?.total_orders || 0, label: 'طلب', color: 'text-orange-600 bg-orange-50', tab: 'orders' },
-                { icon: Truck, value: stats?.total_delivery || 0, label: 'سائق', color: 'text-cyan-600 bg-cyan-50', tab: 'delivery' },
-              ].map((stat, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setActiveTab(stat.tab)}
-                  className={`${stat.color} rounded-lg p-2 text-center hover:opacity-80 transition-all active:scale-95`}
-                >
-                  <stat.icon size={14} className="mx-auto mb-0.5" />
-                  <p className="text-sm font-bold">{stat.value}</p>
-                  <p className="text-[9px] opacity-70">{stat.label}</p>
-                </button>
-              ))}
-            </div>
-
             {/* تنبيهات المعلقات */}
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
               <p className="text-[10px] font-bold text-amber-700 mb-1.5 flex items-center gap-1">

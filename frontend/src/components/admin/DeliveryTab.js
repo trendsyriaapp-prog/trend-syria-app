@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/DeliveryTab.js
 import { useState } from 'react';
-import { Truck, Check, X } from 'lucide-react';
+import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin } from 'lucide-react';
 import RejectModal from './RejectModal';
 
 const DeliveryTab = ({ 
@@ -8,10 +8,14 @@ const DeliveryTab = ({
   pendingDelivery, 
   isPending = false,
   onApprove, 
-  onReject 
+  onReject,
+  onDeleteDriver,
+  onBanDriver
 }) => {
   const [rejectModal, setRejectModal] = useState({ isOpen: false, driverId: null, driverName: '' });
   const [processing, setProcessing] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [showMenu, setShowMenu] = useState(null);
 
   const handleRejectClick = (driverId, driverName) => {
     setRejectModal({ isOpen: true, driverId, driverName });
@@ -24,6 +28,21 @@ const DeliveryTab = ({
     } finally {
       setProcessing(false);
       setRejectModal({ isOpen: false, driverId: null, driverName: '' });
+    }
+  };
+
+  const handleAction = (action, driver) => {
+    setShowMenu(null);
+    if (action === 'view') {
+      setSelectedDriver(driver);
+    } else if (action === 'delete') {
+      if (window.confirm(`هل تريد حذف السائق "${driver.full_name || driver.name}"؟`)) {
+        onDeleteDriver?.(driver.id);
+      }
+    } else if (action === 'ban') {
+      if (window.confirm(`هل تريد حظر السائق "${driver.full_name || driver.name}"؟`)) {
+        onBanDriver?.(driver.id);
+      }
     }
   };
 
@@ -117,9 +136,12 @@ const DeliveryTab = ({
       ) : (
         <div className="space-y-2">
           {allDelivery.map((driver) => (
-            <div key={driver.id} className="bg-white rounded-lg border border-gray-200 p-3">
+            <div key={driver.id} className="bg-white rounded-lg border border-gray-200 p-3 relative">
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+                <div 
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => setSelectedDriver(driver)}
+                >
                   <h3 className="font-bold text-sm text-gray-900 truncate">{driver.full_name || driver.name}</h3>
                   <p className="text-xs text-gray-500 mt-0.5" dir="ltr">{driver.phone}</p>
                   <div className="flex items-center gap-2 mt-1">
@@ -132,18 +154,121 @@ const DeliveryTab = ({
                     )}
                   </div>
                 </div>
-                <span className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap ${
-                  driver.documents?.status === 'approved' 
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap ${
+                    driver.documents?.status === 'approved' 
+                      ? 'bg-green-100 text-green-600' 
+                      : driver.documents?.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-600'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {driver.documents?.status === 'approved' ? 'معتمد' : driver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
+                  </span>
+                  <button
+                    onClick={() => setShowMenu(showMenu === driver.id ? null : driver.id)}
+                    className="p-1 hover:bg-gray-100 rounded-full"
+                  >
+                    <MoreVertical size={16} className="text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* قائمة الخيارات */}
+              {showMenu === driver.id && (
+                <div className="absolute left-2 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[120px]">
+                  <button
+                    onClick={() => handleAction('view', driver)}
+                    className="w-full px-3 py-2 text-right text-xs hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <Eye size={14} className="text-blue-500" />
+                    عرض التفاصيل
+                  </button>
+                  <button
+                    onClick={() => handleAction('ban', driver)}
+                    className="w-full px-3 py-2 text-right text-xs hover:bg-gray-50 flex items-center gap-2 text-orange-600"
+                  >
+                    <Ban size={14} />
+                    حظر
+                  </button>
+                  <button
+                    onClick={() => handleAction('delete', driver)}
+                    className="w-full px-3 py-2 text-right text-xs hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                  >
+                    <Trash2 size={14} />
+                    حذف
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* نافذة عرض التفاصيل */}
+      {selectedDriver && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedDriver(null)}>
+          <div className="bg-white rounded-xl max-w-sm w-full p-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900">تفاصيل السائق</h3>
+              <button onClick={() => setSelectedDriver(null)} className="p-1 hover:bg-gray-100 rounded-full">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-gray-500">الاسم</p>
+                <p className="font-medium">{selectedDriver.full_name || selectedDriver.name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">رقم الهاتف</p>
+                <p className="font-medium flex items-center gap-1" dir="ltr">
+                  <Phone size={12} className="text-gray-400" />
+                  {selectedDriver.phone}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">المدينة</p>
+                <p className="font-medium flex items-center gap-1">
+                  <MapPin size={12} className="text-gray-400" />
+                  {selectedDriver.city || 'غير محدد'}
+                </p>
+              </div>
+              {selectedDriver.documents?.national_id && (
+                <div>
+                  <p className="text-xs text-gray-500">رقم الهوية</p>
+                  <p className="font-medium">{selectedDriver.documents.national_id}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-gray-500">الحالة</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  selectedDriver.documents?.status === 'approved' 
                     ? 'bg-green-100 text-green-600' 
-                    : driver.documents?.status === 'pending'
+                    : selectedDriver.documents?.status === 'pending'
                     ? 'bg-yellow-100 text-yellow-600'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {driver.documents?.status === 'approved' ? 'معتمد' : driver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
+                  {selectedDriver.documents?.status === 'approved' ? 'معتمد' : selectedDriver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
                 </span>
               </div>
             </div>
-          ))}
+            <div className="mt-4 pt-4 border-t flex gap-2">
+              <button
+                onClick={() => { handleAction('ban', selectedDriver); setSelectedDriver(null); }}
+                className="flex-1 py-2 bg-orange-100 text-orange-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+              >
+                <Ban size={14} />
+                حظر
+              </button>
+              <button
+                onClick={() => { handleAction('delete', selectedDriver); setSelectedDriver(null); }}
+                className="flex-1 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+              >
+                <Trash2 size={14} />
+                حذف
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
