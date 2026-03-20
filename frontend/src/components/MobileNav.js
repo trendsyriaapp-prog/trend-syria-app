@@ -70,11 +70,12 @@ const MobileNav = () => {
   // شريط خاص بالبائع في جميع صفحاته
   // تحديد مسار لوحة التحكم حسب نوع البائع
   const sellerDashboardPath = user?.user_type === 'food_seller' ? '/food/dashboard' : '/seller/dashboard';
+  const productsLabel = user?.user_type === 'food_seller' ? 'القائمة' : 'المنتجات';
   
   if (isSellerPage) {
     navItems = [
       { path: `${sellerDashboardPath}?tab=overview`, icon: Home, label: 'نظرة عامة' },
-      { path: `${sellerDashboardPath}?tab=orders`, icon: ClipboardList, label: 'الطلبات' },
+      { path: `${sellerDashboardPath}?tab=products`, icon: Package, label: productsLabel },
       { path: `${sellerDashboardPath}?tab=wallet`, icon: Wallet, label: 'المحفظة' },
       { path: `${sellerDashboardPath}?tab=settings`, icon: Settings, label: 'الإعدادات' }
     ];

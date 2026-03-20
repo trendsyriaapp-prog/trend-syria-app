@@ -31,11 +31,12 @@ const FoodStoreDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dataFetched, setDataFetched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  // الصفحة الرئيسية = الطلبات (orders)، باقي الصفحات من الشريط السفلي
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
-    if (activeTab === 'overview') {
+    if (activeTab === 'orders') {
       searchParams.delete('tab');
     } else {
       searchParams.set('tab', activeTab);
@@ -291,83 +292,79 @@ const FoodStoreDashboard = () => {
       )}
 
       {/* Header - مصغر */}
-      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-3 py-4 ${driverArrivingAlert ? 'mt-20' : ''}`}>
+      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-3 py-3 ${driverArrivingAlert ? 'mt-20' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            {/* زر الرجوع للطلبات عند التواجد في صفحة فرعية */}
+            {activeTab !== 'orders' ? (
+              <button
+                onClick={() => setActiveTab('orders')}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                title="الرجوع للطلبات"
+              >
+                <ChevronRight size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                title="الصفحة الرئيسية"
+              >
+                <ChevronRight size={18} />
+              </button>
+            )}
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                 {store.logo ? (
-                  <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-lg object-cover" />
+                  <img src={store.logo} alt={store.name} className="w-8 h-8 rounded-lg object-cover" />
                 ) : (
-                  <Store size={22} />
+                  <Store size={18} />
                 )}
               </div>
               <div>
-                <h1 className="text-base font-bold">{store.name}</h1>
-                <p className="text-green-100 text-xs">{store.city}</p>
+                <h1 className="text-sm font-bold">{store.name}</h1>
+                <div className="flex items-center gap-2 text-green-100 text-xs">
+                  <span>{store.city}</span>
+                  <span>•</span>
+                  <span className={store.manual_close ? 'text-red-200' : 'text-green-200'}>
+                    {store.manual_close ? 'مغلق' : 'مفتوح'}
+                  </span>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              title="الصفحة الرئيسية"
-            >
-              <ChevronRight size={18} />
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Stats - مصغر */}
-      <div className="max-w-4xl mx-auto px-3 -mt-3">
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
-            <Package size={16} className="text-blue-500 mx-auto mb-1" />
-            <p className="text-lg font-bold text-gray-900">{products.length}</p>
-            <p className="text-[10px] text-gray-500">المنتجات</p>
+      {/* إحصائيات سريعة في شريط صغير */}
+      <div className="max-w-4xl mx-auto px-3 py-2 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500">المنتجات: <strong className="text-gray-900">{products.length}</strong></span>
+            <span className="text-gray-500">التقييم: <strong className="text-yellow-600">{store.rating?.toFixed(1) || '0.0'}</strong></span>
           </div>
-          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
-            <ShoppingBag size={16} className="text-green-500 mx-auto mb-1" />
-            <p className="text-lg font-bold text-gray-900">{store.orders_count || 0}</p>
-            <p className="text-[10px] text-gray-500">الطلبات</p>
-          </div>
-          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-gray-100 text-center">
-            <Star size={16} className="text-yellow-500 mx-auto mb-1" />
-            <p className="text-lg font-bold text-gray-900">{store.rating?.toFixed(1) || '0.0'}</p>
-            <p className="text-[10px] text-gray-500">التقييم</p>
-          </div>
+          <button
+            onClick={() => toggleStoreStatus(!store.manual_close)}
+            disabled={togglingStore}
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              store.manual_close 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {store.manual_close ? 'فتح المتجر' : 'إغلاق المتجر'}
+          </button>
         </div>
       </div>
 
-      {/* Tabs - مصغر */}
-      <div className="max-w-4xl mx-auto px-3 mt-3">
-        <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-          {[
-            { id: 'overview', label: 'نظرة عامة' },
-            { id: 'orders', label: 'الطلبات' },
-            { id: 'products', label: 'القائمة' },
-            { id: 'wallet', label: 'المحفظة' },
-            { id: 'settings', label: 'الإعدادات' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              data-testid={`tab-${tab.id}`}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'bg-[#FF6B00] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
+      {/* Content - الطلبات هي الصفحة الرئيسية */}
       <div className="max-w-4xl mx-auto px-3 py-3">
-        {/* Overview Tab */}
+        {/* الطلبات - الصفحة الرئيسية */}
+        {activeTab === 'orders' && (
+          <StoreOrdersTab token={token} />
+        )}
+
+        {/* نظرة عامة */}
         {activeTab === 'overview' && (
           <div className="space-y-3">
             {/* بطاقة حالة المتجر - مصغرة */}
@@ -620,11 +617,6 @@ const FoodStoreDashboard = () => {
             products={products}
             token={token}
           />
-        )}
-
-        {/* Orders Tab */}
-        {activeTab === 'orders' && (
-          <StoreOrdersTab token={token} />
         )}
 
         {/* Wallet Tab - مصغر */}

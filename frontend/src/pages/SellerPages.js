@@ -573,8 +573,8 @@ const SellerDashboardPage = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
-  // قراءة التبويب من URL أو استخدام 'overview' كافتراضي
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  // قراءة التبويب من URL أو استخدام 'orders' كافتراضي (الطلبات هي الصفحة الرئيسية)
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
@@ -591,7 +591,7 @@ const SellerDashboardPage = () => {
 
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
-    if (activeTab === 'overview') {
+    if (activeTab === 'orders') {
       searchParams.delete('tab');
     } else {
       searchParams.set('tab', activeTab);
@@ -995,33 +995,29 @@ const SellerDashboardPage = () => {
           </div>
         </div>
 
-        {/* Tabs - الترتيب الجديد الموحد */}
-        <div className="flex gap-0.5 mb-3 bg-white rounded-lg p-0.5 border border-gray-200 overflow-x-auto no-scrollbar">
-          {[
-            { id: 'overview', icon: Home, label: 'نظرة عامة' },
-            { id: 'orders', icon: ShoppingBag, label: 'الطلبات' },
-            { id: 'products', icon: Package, label: 'المنتجات' },
-            { id: 'wallet', icon: Wallet, label: 'المحفظة' },
-            { id: 'settings', icon: Store, label: 'الإعدادات' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-0.5 py-1.5 rounded-md text-[9px] font-bold transition-all whitespace-nowrap px-1.5 min-w-fit ${
-                activeTab === tab.id 
-                  ? 'bg-[#FF6B00] text-white' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              data-testid={`tab-${tab.id}`}
-            >
-              <tab.icon size={10} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
+        {/* الصفحة الرئيسية = الطلبات (بدون تبويبات علوية) */}
         
+        {/* الطلبات - الصفحة الرئيسية */}
+        {activeTab === 'orders' && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-gray-900">
+              {isFoodSeller ? 'طلبات الطعام' : 'جميع الطلبات'}
+            </h2>
+            {isFoodSeller ? (
+              <FoodOrdersSection 
+                orders={foodOrders}
+                onStatusChange={handleFoodOrderStatus}
+              />
+            ) : (
+              <SellerOrdersSection 
+                orders={orders} 
+                onSellerAction={handleSellerAction} 
+                onPrintLabel={setPrintLabelOrder} 
+              />
+            )}
+          </div>
+        )}
+
         {/* تبويب نظرة عامة - Overview */}
         {activeTab === 'overview' && (
           <>
@@ -1088,27 +1084,6 @@ const SellerDashboardPage = () => {
               )}
             </div>
           </>
-        )}
-
-        {/* تبويب الطلبات - Orders */}
-        {activeTab === 'orders' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">
-              {isFoodSeller ? 'طلبات الطعام' : 'جميع الطلبات'}
-            </h2>
-            {isFoodSeller ? (
-              <FoodOrdersSection 
-                orders={foodOrders}
-                onStatusChange={handleFoodOrderStatus}
-              />
-            ) : (
-              <SellerOrdersSection 
-                orders={orders} 
-                onSellerAction={handleSellerAction} 
-                onPrintLabel={setPrintLabelOrder} 
-              />
-            )}
-          </div>
         )}
 
         {/* تبويب المنتجات - Products */}
