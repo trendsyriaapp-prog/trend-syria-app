@@ -508,66 +508,62 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* بانر الطعام الثابت مع تأثير النبض بألوان مختلفة */}
+      {/* أقسام الطعام والماركت */}
       {foodEnabled && (
-        <div className="h-14 md:h-16">
-          <Link to="/food" className="block h-full">
-            <motion.div 
-              className="relative h-full"
-              animate={{
-                background: [
-                  'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
-                  'linear-gradient(to right, #AD1457, #C2185B, #D81B60)',
-                  'linear-gradient(to right, #6A1B9A, #7B1FA2, #8E24AA)',
-                  'linear-gradient(to right, #B71C1C, #C62828, #D32F2F)',
-                  'linear-gradient(to right, #FF6F00, #FF8F00, #FFA000)',
-                  'linear-gradient(to right, #D84315, #E64A19, #F4511E)',
-                  'linear-gradient(to right, #E65100, #F57C00, #FF9800)',
-                ]
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-            >
-              {/* خلفية مزخرفة */}
-              <div className="absolute inset-0 opacity-15">
-                <div className="absolute top-1 right-8 text-2xl">🍕</div>
-                <div className="absolute bottom-1 left-10 text-xl">🍔</div>
-                <div className="absolute top-2 left-1/4 text-lg">🌮</div>
-              </div>
-              
-              {/* المحتوى */}
-              <div className="relative h-full flex items-center justify-between px-3 md:px-4 max-w-7xl mx-auto">
-                <div className="text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <motion.span 
-                      className="bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full text-[9px] font-bold"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      جديد ✨
-                    </motion.span>
-                  </div>
-                  <h3 className="text-sm md:text-base font-bold">قسم الطعام</h3>
-                  <p className="text-white text-[10px] md:text-xs font-medium">توصيل سريع من أفضل المطاعم</p>
+        <div className="px-3 py-4">
+          <div className="grid grid-cols-2 gap-3 max-w-7xl mx-auto">
+            {/* قسم الطعام */}
+            <Link to="/food?section=food" className="block">
+              <motion.div 
+                className="relative h-28 md:h-32 rounded-2xl overflow-hidden shadow-lg"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C00 50%, #FFA500 100%)'
+                }}
+              >
+                {/* أيقونات خلفية */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-2 right-3 text-3xl">🍔</div>
+                  <div className="absolute bottom-2 left-3 text-2xl">🍰</div>
+                  <div className="absolute top-3 left-1/2 text-xl">☕</div>
                 </div>
                 
-                {/* زر الطلب مع نبض */}
-                <motion.div 
-                  className="bg-white px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg"
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                    color: ['#E65100', '#AD1457', '#6A1B9A', '#B71C1C', '#FF6F00', '#D84315', '#E65100']
-                  }}
-                  transition={{ duration: 6, repeat: Infinity }}
-                >
-                  اطلب الآن
-                </motion.div>
-              </div>
-            </motion.div>
-          </Link>
+                {/* المحتوى */}
+                <div className="relative h-full flex flex-col justify-center items-center text-white p-3">
+                  <div className="text-4xl mb-2">🍔</div>
+                  <h3 className="text-lg font-bold">طعام</h3>
+                  <p className="text-xs text-white/80">مطاعم • حلويات • مشروبات</p>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* قسم الماركت */}
+            <Link to="/food?section=market" className="block">
+              <motion.div 
+                className="relative h-28 md:h-32 rounded-2xl overflow-hidden shadow-lg"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%)'
+                }}
+              >
+                {/* أيقونات خلفية */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-2 right-3 text-3xl">🛒</div>
+                  <div className="absolute bottom-2 left-3 text-2xl">🥬</div>
+                  <div className="absolute top-3 left-1/2 text-xl">🍎</div>
+                </div>
+                
+                {/* المحتوى */}
+                <div className="relative h-full flex flex-col justify-center items-center text-white p-3">
+                  <div className="text-4xl mb-2">🛒</div>
+                  <h3 className="text-lg font-bold">ماركت</h3>
+                  <p className="text-xs text-white/80">سوبرماركت • خضار وفواكه</p>
+                </div>
+              </motion.div>
+            </Link>
+          </div>
         </div>
       )}
 

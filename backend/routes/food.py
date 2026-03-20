@@ -509,6 +509,7 @@ async def get_store_status(store_id: str):
 @router.get("/products")
 async def get_food_products(
     category: Optional[str] = None,
+    main_category: Optional[str] = None,  # فلتر القسم الرئيسي (food/market)
     store_id: Optional[str] = None,
     city: Optional[str] = None,
     search: Optional[str] = None,
@@ -518,8 +519,21 @@ async def get_food_products(
     """جلب منتجات الطعام"""
     # أولاً نجلب المتاجر المعتمدة من الفئة المطلوبة والمدينة
     store_query = {"is_active": True, "is_approved": True}
+    
+    # فلتر بالقسم الرئيسي (food أو market)
+    if main_category and main_category != 'all':
+        # جلب أنواع المتاجر التي تنتمي لهذا القسم
+        matching_types = [
+            type_key for type_key, type_info in FOOD_STORE_TYPES.items()
+            if type_info.get("main_category") == main_category
+        ]
+        if matching_types:
+            store_query["store_type"] = {"$in": matching_types}
+    
+    # فلتر بالنوع الفرعي
     if category and category != 'all':
         store_query["store_type"] = category
+    
     if city:
         store_query["city"] = city
     
