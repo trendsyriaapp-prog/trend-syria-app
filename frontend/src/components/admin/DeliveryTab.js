@@ -266,6 +266,62 @@ const DeliveryTab = ({
                   {selectedDriver.documents?.status === 'approved' ? 'معتمد' : selectedDriver.documents?.status === 'pending' ? 'معلق' : 'غير مكتمل'}
                 </span>
               </div>
+
+              {/* المستندات المقدمة */}
+              {selectedDriver.documents && (
+                <div className="pt-3 border-t">
+                  <p className="text-xs text-gray-500 mb-2 font-medium">المستندات المقدمة:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedDriver.documents.personal_photo && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة شخصية</p>
+                        <img 
+                          src={selectedDriver.documents.personal_photo} 
+                          alt="صورة شخصية" 
+                          className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
+                          onClick={() => window.open(selectedDriver.documents.personal_photo, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {selectedDriver.documents.id_photo && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                        <img 
+                          src={selectedDriver.documents.id_photo} 
+                          alt="صورة الهوية" 
+                          className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
+                          onClick={() => window.open(selectedDriver.documents.id_photo, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {selectedDriver.documents.motorcycle_license && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">رخصة القيادة</p>
+                        <img 
+                          src={selectedDriver.documents.motorcycle_license} 
+                          alt="رخصة القيادة" 
+                          className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
+                          onClick={() => window.open(selectedDriver.documents.motorcycle_license, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {selectedDriver.documents.vehicle_photo && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة المركبة</p>
+                        <img 
+                          src={selectedDriver.documents.vehicle_photo} 
+                          alt="صورة المركبة" 
+                          className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
+                          onClick={() => window.open(selectedDriver.documents.vehicle_photo, '_blank')}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {!selectedDriver.documents.personal_photo && !selectedDriver.documents.id_photo && !selectedDriver.documents.motorcycle_license && (
+                    <p className="text-xs text-gray-400 italic">لم يتم تقديم مستندات</p>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mt-4 pt-4 border-t flex gap-2">
               <button
