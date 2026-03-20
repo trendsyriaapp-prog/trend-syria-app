@@ -638,13 +638,20 @@ const DeliverySettingsTab = () => {
           <div className="flex items-center gap-2">
             <MapPin size={24} />
             <div>
-              <h2 className="font-bold text-sm">أجور التوصيل بالمسافة</h2>
-              <p className="text-sm text-white/80">حساب رسوم التوصيل تلقائياً بناءً على المسافة بين المتجر والعميل</p>
+              <h2 className="font-bold text-sm">💳 رسوم التوصيل (يدفعها العميل)</h2>
+              <p className="text-sm text-white/80">المبلغ الذي يدفعه العميل كرسوم توصيل عند الطلب</p>
             </div>
           </div>
         </div>
         
         <div className="p-3">
+          {/* تنبيه توضيحي */}
+          <div className="mb-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+            <p className="text-sm text-green-800 font-medium">
+              💡 <strong>هذا المبلغ يظهر للعميل</strong> كـ "رسوم التوصيل" في صفحة الدفع ويُضاف لفاتورته.
+            </p>
+          </div>
+          
           {/* صيغة الحساب */}
           <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
             <h4 className="font-bold text-gray-700 mb-2">📐 صيغة الحساب:</h4>
@@ -789,13 +796,20 @@ const DeliverySettingsTab = () => {
           <div className="flex items-center gap-2">
             <Truck size={24} />
             <div>
-              <h2 className="font-bold text-sm">أرباح السائق</h2>
-              <p className="text-sm text-white/80">تحديد ربح السائق بناءً على المسافة الكلية</p>
+              <h2 className="font-bold text-sm">🛵 ربح السائق (تدفعه المنصة للسائق)</h2>
+              <p className="text-sm text-white/80">المبلغ الذي يستلمه السائق مقابل كل طلب يوصله</p>
             </div>
           </div>
         </div>
         
         <div className="p-4 space-y-3">
+          {/* تنبيه توضيحي */}
+          <div className="mb-1 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+            <p className="text-sm text-orange-800 font-medium">
+              💡 <strong>هذا المبلغ يُضاف لمحفظة السائق</strong> بعد إتمام التوصيل بنجاح. (لا يراه العميل)
+            </p>
+          </div>
+          
           {/* توضيح المعادلة */}
           <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
             <h3 className="font-bold text-amber-800 mb-2">📐 معادلة حساب ربح السائق:</h3>
