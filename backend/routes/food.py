@@ -11,26 +11,47 @@ from core.database import db, get_current_user, get_optional_user
 
 router = APIRouter(prefix="/food", tags=["Food Delivery"])
 
-# أنواع متاجر الطعام
-FOOD_STORE_TYPES = {
-    "restaurants": "وجبات سريعة",
-    "market": "ماركت", 
-    "vegetables": "خضار وفواكه",
-    "sweets": "حلويات"
+# ============== الأقسام الرئيسية ==============
+MAIN_CATEGORIES = {
+    "food": "طعام",
+    "market": "ماركت"
 }
+
+# ============== أنواع المتاجر الفرعية ==============
+FOOD_STORE_TYPES = {
+    # قسم الطعام
+    "restaurants": {"name": "وجبات سريعة", "main_category": "food", "icon": "🍔"},
+    "sweets": {"name": "حلويات", "main_category": "food", "icon": "🍰"},
+    "drinks": {"name": "مشروبات", "main_category": "food", "icon": "☕"},
+    # قسم الماركت
+    "supermarket": {"name": "سوبرماركت", "main_category": "market", "icon": "🛒"},
+    "vegetables": {"name": "خضار وفواكه", "main_category": "market", "icon": "🥬"},
+}
+
+# دالة للحصول على اسم النوع
+def get_store_type_name(store_type: str) -> str:
+    type_info = FOOD_STORE_TYPES.get(store_type, {})
+    return type_info.get("name", store_type) if isinstance(type_info, dict) else type_info
+
+# دالة للحصول على القسم الرئيسي
+def get_main_category(store_type: str) -> str:
+    type_info = FOOD_STORE_TYPES.get(store_type, {})
+    return type_info.get("main_category", "food") if isinstance(type_info, dict) else "food"
 
 # أوقات التحضير الافتراضية لكل نوع
 DEFAULT_PREPARATION_TIMES = {
     "restaurants": 20,  # دقيقة
-    "market": 10,
+    "sweets": 15,
+    "drinks": 10,
+    "supermarket": 10,
     "vegetables": 8,
-    "sweets": 15
 }
 
 # Models
 class FoodStoreCreate(BaseModel):
     name: str
-    store_type: str  # restaurants, market, vegetables, sweets
+    store_type: str  # restaurants, sweets, drinks, supermarket, vegetables
+    main_category: Optional[str] = None  # food or market (يُحسب تلقائياً)
     description: Optional[str] = None
     phone: str
     address: str
@@ -103,9 +124,53 @@ async def get_food_banners():
     
     return banners
 
+@router.get("/categories")
+async def get_food_categories():
+    """جلب الأقسام الرئيسية والفرعية"""
+    categories = []
+    
+    for main_key, main_name in MAIN_CATEGORIES.items():
+        sub_types = []
+        for type_key, type_info in FOOD_STORE_TYPES.items():
+            if type_info.get("main_category") == main_key:
+                # حساب عدد المتاجر في كل نوع
+                count = await db.food_stores.count_documents({
+                    "store_type": type_key,
+                    "is_active": True,
+                    "is_approved": True
+                })
+                sub_types.append({
+                    "id": type_key,
+                    "name": type_info.get("name"),
+                    "icon": type_info.get("icon"),
+                    "stores_count": count
+                })
+        
+        # حساب إجمالي المتاجر في القسم الرئيسي
+        total_stores = sum(t["stores_count"] for t in sub_types)
+        
+        categories.append({
+            "id": main_key,
+            "name": main_name,
+            "icon": "🍔" if main_key == "food" else "🛒",
+            "sub_types": sub_types,
+            "total_stores": total_stores
+        })
+    
+    return categories
+
+@router.get("/store-types")
+async def get_store_types():
+    """جلب أنواع المتاجر للاختيار عند التسجيل"""
+    return {
+        "main_categories": MAIN_CATEGORIES,
+        "store_types": FOOD_STORE_TYPES
+    }
+
 @router.get("/stores")
 async def get_food_stores(
     category: Optional[str] = None,
+    main_category: Optional[str] = None,  # فلتر القسم الرئيسي (food/market)
     city: Optional[str] = None,
     search: Optional[str] = None,
     skip: int = 0,
@@ -114,8 +179,20 @@ async def get_food_stores(
     """جلب متاجر الطعام مع حالة الفتح/الإغلاق"""
     query = {"is_active": True, "is_approved": True}
     
+    # فلتر بالقسم الرئيسي (food أو market)
+    if main_category and main_category != 'all':
+        # جلب أنواع المتاجر التي تنتمي لهذا القسم
+        matching_types = [
+            type_key for type_key, type_info in FOOD_STORE_TYPES.items()
+            if type_info.get("main_category") == main_category
+        ]
+        if matching_types:
+            query["store_type"] = {"$in": matching_types}
+    
+    # فلتر بالنوع الفرعي
     if category and category != 'all':
         query["store_type"] = category
+    
     if city:
         query["city"] = city
     if search:
@@ -138,7 +215,8 @@ async def get_food_stores(
     
     # إضافة اسم الفئة وحالة الفتح
     for store in stores:
-        store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
+        store["category_name"] = get_store_type_name(store.get("store_type", ""))
+        store["main_category"] = get_main_category(store.get("store_type", ""))
         
         # التحقق من الإغلاق اليدوي أولاً
         if store.get("manual_close", False):
@@ -220,7 +298,8 @@ async def get_food_store(store_id: str):
     if not store:
         raise HTTPException(status_code=404, detail="المتجر غير موجود")
     
-    store["category_name"] = FOOD_STORE_TYPES.get(store.get("store_type"), "")
+    store["category_name"] = get_store_type_name(store.get("store_type", ""))
+    store["main_category"] = get_main_category(store.get("store_type", ""))
     
     # التحقق من الإغلاق اليدوي أولاً
     if store.get("manual_close", False):
@@ -285,14 +364,19 @@ async def get_food_store(store_id: str):
 @router.post("/stores")
 async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_current_user)):
     """إنشاء متجر طعام جديد (للبائعين)"""
-    if user["user_type"] not in ["seller", "admin"]:
+    if user["user_type"] not in ["seller", "food_seller", "admin"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
     if store.store_type not in FOOD_STORE_TYPES:
         raise HTTPException(status_code=400, detail="نوع المتجر غير صالح")
     
+    # حساب القسم الرئيسي تلقائياً
+    main_category = get_main_category(store.store_type)
+    
     # التحقق من عدم وجود متجر سابق
-    existing = await db.food_stores.find_one({"owner_id": user["id"]})
+    existing = await db.food_stores.find_one({
+        "$or": [{"owner_id": user["id"]}, {"seller_id": user["id"]}]
+    })
     if existing:
         raise HTTPException(status_code=400, detail="لديك متجر طعام بالفعل")
     
@@ -300,10 +384,12 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
     store_doc = {
         "id": store_id,
         "owner_id": user["id"],
+        "seller_id": user["id"],
         "owner_name": user["name"],
         "owner_phone": user.get("phone", ""),
         "name": store.name,
         "store_type": store.store_type,
+        "main_category": main_category,
         "description": store.description,
         "phone": store.phone,
         "address": store.address,
@@ -491,7 +577,7 @@ async def get_food_products(
                         
                         if current_time < open_minutes or current_time > close_minutes:
                             product["store_is_open"] = False
-                    except:
+                    except Exception:
                         pass
     
     return products
@@ -677,7 +763,7 @@ async def get_my_store_commission(user: dict = Depends(get_current_user)):
     
     return {
         "store_type": store_type,
-        "store_type_name": FOOD_STORE_TYPES.get(store_type, store_type),
+        "store_type_name": get_store_type_name(store_type),
         "commission_rate": commission_rate,
         "commission_percentage": f"{int(commission_rate * 100)}%",
         "total_sales": total_sales,
