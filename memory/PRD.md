@@ -368,6 +368,28 @@
 
 - **تقرير الاختبار**: `/app/test_reports/iteration_96.json`
 
+### 🆕 20. توحيد باقي صفحات المدير للموبايل (Completed ✅) - 20 Mar 2026
+- **المهمة**: تحويل جميع صفحات المدير التي تستخدم جداول إلى بطاقات متناسقة
+
+- **الصفحات المُحولة**:
+  1. `LowStockTab.js` - تقرير المخزون المنخفض
+  2. `DeliveryBoxesTab.js` - صناديق التوصيل
+  3. `DriversPerformanceTab.js` - أداء السائقين
+
+- **الصفحات التي كانت تستخدم بطاقات أصلاً (لم تحتج تغيير)**:
+  - `WithdrawalsTab.js` ✅
+  - `ViolationsTab.js` ✅
+  - `CouponsTab.js` ✅
+  - `PriceReportsTab.js` ✅
+  - `CallRequestsTab.js` ✅
+  - `FoodOffersTab.js` ✅
+  - `SupportTicketsTab.js` ✅
+  - `AnalyticsDashboard.js` ✅
+
+- **فحص خريطة السائقين**: ✅ تعمل بشكل صحيح (من iteration_96)
+
+- **تقرير الاختبار**: `/app/test_reports/iteration_97.json`
+
 ---
 
 ### 🆕 15. إصلاح نظام الحماية من Brute Force (Completed ✅)
@@ -436,6 +458,7 @@
 - `/app/test_reports/iteration_94.json` - إصلاح 4 أخطاء في نظام التوصيل (14/14 Backend + Frontend ✅)
 - `/app/test_reports/iteration_95.json` - إصلاح واجهة صفحة المدير (3/3 Frontend ✅)
 - `/app/test_reports/iteration_96.json` - توحيد تنسيق صفحات المدير للموبايل (4/4 ✅)
+- `/app/test_reports/iteration_97.json` - توحيد باقي صفحات المدير للموبايل (3/3 ✅)
 
 ## Test Credentials
 - **Admin**: Phone: `0911111111`, Password: `admin123`
