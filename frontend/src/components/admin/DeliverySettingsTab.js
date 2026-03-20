@@ -528,8 +528,10 @@ const DeliverySettingsTab = () => {
 
       <div className="space-y-6">
       {/* Dispatch Status & Violations Report - حالة التوزيع التلقائي */}
+      {(activeCategory === 'all' || activeCategory === 'orders' || activeCategory === 'penalties') && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* حالة التوزيع */}
+        {(activeCategory === 'all' || activeCategory === 'orders') && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-l from-blue-500 to-indigo-500 p-4 text-white">
             <div className="flex items-center gap-3">
@@ -571,8 +573,10 @@ const DeliverySettingsTab = () => {
             </button>
           </div>
         </div>
+        )}
 
         {/* تقرير المخالفات */}
+        {(activeCategory === 'all' || activeCategory === 'penalties') && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
             <div className="flex items-center gap-3">
@@ -621,9 +625,12 @@ const DeliverySettingsTab = () => {
             </button>
           </div>
         </div>
+        )}
       </div>
+      )}
 
       {/* Distance Delivery Settings - إعدادات أجور التوصيل بالمسافة */}
+      {(activeCategory === 'all' || activeCategory === 'prices') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-green-500 to-teal-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -771,8 +778,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Driver Earnings Settings - إعدادات أرباح السائق */}
+      {(activeCategory === 'all' || activeCategory === 'prices') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-amber-500 to-orange-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -898,8 +907,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Wait Time Settings - إعدادات وقت الانتظار */}
+      {(activeCategory === 'all' || activeCategory === 'times') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-purple-500 to-pink-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -959,8 +970,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Wait Compensation Settings - إعدادات تعويض انتظار السائق في المطعم */}
+      {(activeCategory === 'all' || activeCategory === 'penalties') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-red-500 to-rose-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1187,8 +1200,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Order Limits Section - إعدادات قبول الطلبات */}
+      {(activeCategory === 'all' || activeCategory === 'orders') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-orange-500 to-red-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1379,8 +1394,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Smart Order Limits - إعدادات الحدود الذكية */}
+      {(activeCategory === 'all' || activeCategory === 'orders') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1520,8 +1537,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* إعدادات وقت التوصيل والعقوبات */}
+      {(activeCategory === 'all' || activeCategory === 'penalties') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-red-500 to-pink-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1700,8 +1719,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Leaderboard Rewards Section */}
+      {(activeCategory === 'all' || activeCategory === 'rewards') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1796,8 +1817,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Performance Levels Section */}
+      {(activeCategory === 'all' || activeCategory === 'rewards') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -1938,8 +1961,10 @@ const DeliverySettingsTab = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Working Hours Section */}
+      {(activeCategory === 'all' || activeCategory === 'times') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-blue-500 to-cyan-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -2047,8 +2072,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Product Delivery Hours Section */}
+      {(activeCategory === 'all' || activeCategory === 'times') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -2135,8 +2162,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Earnings Hold Settings Section */}
+      {(activeCategory === 'all' || activeCategory === 'penalties') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-yellow-500 to-amber-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -2247,8 +2276,10 @@ const DeliverySettingsTab = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Undelivered Orders Report Section */}
+      {(activeCategory === 'all' || activeCategory === 'penalties') && (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-l from-red-500 to-orange-500 p-4 text-white">
           <div className="flex items-center gap-3">
@@ -2320,6 +2351,7 @@ const DeliverySettingsTab = () => {
           )}
         </div>
       </div>
+      )}
       </div>
     </div>
   );

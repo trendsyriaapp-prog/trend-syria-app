@@ -131,6 +131,64 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                   </div>
                 </div>
               </div>
+
+              {/* الوثائق المقدمة - للطلبات المعلقة فقط */}
+              {s.documents?.status === 'pending' && s.documents && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 mb-2 font-medium">الوثائق المقدمة:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {s.documents.national_id && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                        <img 
+                          src={s.documents.national_id} 
+                          alt="صورة الهوية" 
+                          className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(s.documents.national_id, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {s.documents.commercial_registration && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">السجل التجاري</p>
+                        <img 
+                          src={s.documents.commercial_registration} 
+                          alt="السجل التجاري" 
+                          className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(s.documents.commercial_registration, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {s.documents.shop_photo && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">صورة المحل</p>
+                        <img 
+                          src={s.documents.shop_photo} 
+                          alt="صورة المحل" 
+                          className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(s.documents.shop_photo, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {s.documents.health_certificate && (
+                      <div>
+                        <p className="text-[10px] text-gray-400 mb-1">الشهادة الصحية</p>
+                        <img 
+                          src={s.documents.health_certificate} 
+                          alt="الشهادة الصحية" 
+                          className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(s.documents.health_certificate, '_blank')}
+                        />
+                      </div>
+                    )}
+                    {/* إذا لم توجد أي وثائق */}
+                    {!s.documents.national_id && !s.documents.commercial_registration && 
+                     !s.documents.shop_photo && !s.documents.health_certificate && (
+                      <p className="col-span-2 text-xs text-gray-400 italic">لم يتم تقديم أي وثائق</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

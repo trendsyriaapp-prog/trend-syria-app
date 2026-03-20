@@ -113,7 +113,8 @@ const MyOrdersList = ({
   onOpenETAModal,
   orderTypeFilter = 'all',
   theme = 'dark', // إضافة خاصية الثيم
-  onOrderCancelled // callback بعد إلغاء الطلب
+  onOrderCancelled, // callback بعد إلغاء الطلب
+  onRefresh // callback لتحديث البيانات
 }) => {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -299,10 +300,19 @@ const MyOrdersList = ({
       await axios.post(`${API}/food/orders/delivery/${orderId}/verify-code`, {
         delivery_code: deliveryCode
       });
+      // إغلاق المودال أولاً قبل أي شيء آخر
       setShowCodeModal(null);
       setDeliveryCode('');
-      alert('تم التسليم بنجاح! ✅');
-      window.location.reload();
+      setCodeError('');
+      // عرض رسالة النجاح
+      toast({
+        title: "تم التسليم بنجاح! ✅",
+        description: "تم تأكيد التسليم وإضافة أجرتك للمحفظة"
+      });
+      // تحديث البيانات بدل reload الصفحة
+      if (onRefresh) {
+        onRefresh();
+      }
     } catch (err) {
       setCodeError(err.response?.data?.detail || 'كود خاطئ');
     } finally {
@@ -323,10 +333,19 @@ const MyOrdersList = ({
       await axios.post(`${API}/food/orders/delivery/${orderId}/verify-pickup`, {
         code: code
       });
+      // إغلاق المودال أولاً
       setShowPickupCodeModal(null);
       setPickupCode(['', '', '', '']);
-      alert('تم تأكيد الاستلام من البائع بنجاح! ✅');
-      window.location.reload();
+      setPickupCodeError('');
+      // عرض رسالة النجاح
+      toast({
+        title: "تم تأكيد الاستلام! ✅",
+        description: "تم استلام الطلب من البائع بنجاح"
+      });
+      // تحديث البيانات بدل reload
+      if (onRefresh) {
+        onRefresh();
+      }
     } catch (err) {
       setPickupCodeError(err.response?.data?.detail || 'كود خاطئ');
     } finally {

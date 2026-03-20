@@ -90,19 +90,34 @@ const DeliveryTab = ({
                     <div>
                       <p className="text-[10px] text-gray-500 mb-1">صورة شخصية</p>
                       {doc.personal_photo && (
-                        <img src={doc.personal_photo} alt="صورة شخصية" className="w-full h-20 object-cover rounded-lg" />
+                        <img 
+                          src={doc.personal_photo} 
+                          alt="صورة شخصية" 
+                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(doc.personal_photo, '_blank')}
+                        />
                       )}
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 mb-1">صورة الهوية</p>
                       {doc.id_photo && (
-                        <img src={doc.id_photo} alt="صورة الهوية" className="w-full h-20 object-cover rounded-lg" />
+                        <img 
+                          src={doc.id_photo} 
+                          alt="صورة الهوية" 
+                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(doc.id_photo, '_blank')}
+                        />
                       )}
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 mb-1">رخصة الدراجة</p>
                       {doc.motorcycle_license && (
-                        <img src={doc.motorcycle_license} alt="رخصة الدراجة" className="w-full h-20 object-cover rounded-lg" />
+                        <img 
+                          src={doc.motorcycle_license} 
+                          alt="رخصة الدراجة" 
+                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(doc.motorcycle_license, '_blank')}
+                        />
                       )}
                     </div>
                   </div>

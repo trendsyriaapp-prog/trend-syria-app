@@ -1088,6 +1088,10 @@ const DeliveryDashboard = () => {
             onOpenETAModal={openETAModal}
             orderTypeFilter={orderTypeFilter}
             theme={currentTheme}
+            onRefresh={() => {
+              fetchOrders();
+              fetchWallet();
+            }}
           />
         )}
 
