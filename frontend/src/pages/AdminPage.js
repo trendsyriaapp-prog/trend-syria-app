@@ -601,7 +601,6 @@ const AdminDashboardPage = () => {
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
                     { icon: Users, label: 'المستخدمين', tab: 'users' },
-                    { icon: Users, label: 'البائعين', tab: 'sellers' },
                     { icon: Bell, label: 'الإشعارات', tab: 'notifications', badge: notifications.length },
                     { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
                     { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
@@ -652,6 +651,7 @@ const AdminDashboardPage = () => {
                 </div>
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
+                    { icon: Users, label: 'البائعين', tab: 'sellers' },
                     { icon: Package, label: 'المنتجات', tab: 'products' },
                     { icon: ShoppingBag, label: 'الطلبات', tab: 'orders' },
                     { icon: DollarSign, label: 'العمولات', tab: 'commissions' },
