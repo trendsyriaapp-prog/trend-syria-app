@@ -113,12 +113,16 @@ const WalletPage = () => {
     }
   };
   
-  const cancelWithdrawal = async (withdrawalId) => {
-    if (!window.confirm('هل تريد إلغاء طلب السحب؟')) return;
+  // Cancel withdrawal modal
+  const [cancelModal, setCancelModal] = useState({ isOpen: false, withdrawalId: null });
+  
+  const cancelWithdrawal = async () => {
+    if (!cancelModal.withdrawalId) return;
     
     try {
-      await axios.delete(`${API}/api/wallet/withdrawals/${withdrawalId}`);
+      await axios.delete(`${API}/api/wallet/withdrawals/${cancelModal.withdrawalId}`);
       toast({ title: "تم الإلغاء", description: "تم إلغاء طلب السحب" });
+      setCancelModal({ isOpen: false, withdrawalId: null });
       fetchWalletData();
     } catch (error) {
       toast({
@@ -371,7 +375,7 @@ const WalletPage = () => {
                   
                   {w.status === 'pending' && (
                     <button
-                      onClick={() => cancelWithdrawal(w.id)}
+                      onClick={() => setCancelModal({ isOpen: true, withdrawalId: w.id })}
                       className="mt-2 text-red-500 text-xs font-medium"
                     >
                       إلغاء الطلب
@@ -380,6 +384,42 @@ const WalletPage = () => {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Cancel Withdrawal Modal */}
+        {cancelModal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl w-full max-w-sm p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <XCircle size={20} className="text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold">إلغاء طلب السحب</h3>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                هل تريد إلغاء طلب السحب؟ سيتم إرجاع المبلغ لرصيدك.
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCancelModal({ isOpen: false, withdrawalId: null })}
+                  className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  رجوع
+                </button>
+                <button
+                  onClick={cancelWithdrawal}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <XCircle size={16} />
+                  إلغاء الطلب
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

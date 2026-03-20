@@ -216,7 +216,7 @@ const DeliveryHomePage = () => {
           <div className="grid grid-cols-4 gap-2">
             {[
               { to: '/delivery/dashboard', icon: TrendingUp, label: 'لوحة التحكم', color: 'text-[#FF6B00]' },
-              { to: '/delivery/wallet', icon: Wallet, label: 'المحفظة', color: 'text-green-500' },
+              { to: '/wallet', icon: Wallet, label: 'المحفظة', color: 'text-green-500' },
               { to: '/delivery/history', icon: Clock, label: 'السجل', color: 'text-blue-500' },
               { to: '/?view=customer', icon: ShoppingBag, label: 'تصفح كعميل', color: 'text-purple-500' }
             ].map((item, i) => (
