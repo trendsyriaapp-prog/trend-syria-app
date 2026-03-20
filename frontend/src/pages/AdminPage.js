@@ -56,6 +56,7 @@ import CallRequestsTab from '../components/admin/CallRequestsTab';
 import FeaturedStoresTab from '../components/admin/FeaturedStoresTab';
 import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
+import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -81,6 +82,7 @@ const AdminDashboardPage = () => {
   const [pendingDelivery, setPendingDelivery] = useState([]);
   const [allDelivery, setAllDelivery] = useState([]);
   const [pendingFoodStores, setPendingFoodStores] = useState([]);
+  const [pendingFoodItems, setPendingFoodItems] = useState([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
@@ -124,7 +126,8 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/delivery/pending`),
         axios.get(`${API}/admin/delivery/all`),
         axios.get(`${API}/admin/food/stores?status=pending`),
-        axios.get(`${API}/payment/admin/withdrawals?status=pending`)
+        axios.get(`${API}/payment/admin/withdrawals?status=pending`),
+        axios.get(`${API}/admin/food-items/pending`)
       ];
       
       if (user?.user_type === 'admin') {
@@ -144,9 +147,10 @@ const AdminDashboardPage = () => {
       setAllDelivery(responses[9].data);
       setPendingFoodStores(responses[10]?.data || []);
       setPendingWithdrawals(responses[11]?.data || []);
+      setPendingFoodItems(responses[12]?.data || []);
       
-      if (user?.user_type === 'admin' && responses[12]) {
-        setSubAdmins(responses[12].data);
+      if (user?.user_type === 'admin' && responses[13]) {
+        setSubAdmins(responses[13].data);
       }
       
       // Fetch commissions data
@@ -322,6 +326,7 @@ const AdminDashboardPage = () => {
     'pending-sellers': 'البائعين المعلقين',
     'pending-delivery': 'موظفي التوصيل المعلقين',
     'pending-food-stores': 'متاجر الطعام المعلقة',
+    'pending-food-items': 'الأطباق المعلقة',
     'delivery': 'موظفي التوصيل',
     'notifications': 'الإشعارات',
     'sub-admins': 'المدراء التنفيذيين',
@@ -475,6 +480,9 @@ const AdminDashboardPage = () => {
             {activeTab === 'pending-food-stores' && (
               <FoodStoresTab pendingOnly={true} pendingFoodStores={pendingFoodStores} onRefresh={fetchData} />
             )}
+            {activeTab === 'pending-food-items' && (
+              <PendingFoodItemsTab />
+            )}
             
             {activeTab === 'featured-stores' && user.user_type === 'admin' && (
               <FeaturedStoresTab />
@@ -546,66 +554,111 @@ const AdminDashboardPage = () => {
               )}
             </div>
 
-            {/* الموافقات المعلقة - تصميم مدمج بدون إطار */}
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {/* بائعين منتجات */}
+            {/* الموافقات المعلقة - 3 أيقونات رئيسية */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* طلبات الانضمام (بائعين + سائقين + متاجر طعام) */}
+              <div 
+                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => setActiveTab('pending-sellers')}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Users size={20} className="text-amber-600" />
+                  </div>
+                  <span className="text-xl font-bold text-amber-600">
+                    {(stats?.pending_sellers || pendingSellers.length || 0) + 
+                     (stats?.pending_delivery || pendingDelivery.length || 0) + 
+                     (pendingFoodStores.length || 0)}
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات الانضمام</h3>
+                <div className="flex flex-wrap gap-1">
+                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                    بائعين: {stats?.pending_sellers || pendingSellers.length || 0}
+                  </span>
+                  <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">
+                    سائقين: {stats?.pending_delivery || pendingDelivery.length || 0}
+                  </span>
+                  <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                    متاجر: {pendingFoodStores.length || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* العناصر المعلقة (منتجات + أطباق) */}
+              <div 
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => setActiveTab('pending-products')}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Package size={20} className="text-blue-600" />
+                  </div>
+                  <span className="text-xl font-bold text-blue-600">
+                    {(stats?.pending_products || pendingProducts.length || 0) + 
+                     (pendingFoodItems.length || 0)}
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-gray-800 mb-1">العناصر المعلقة</h3>
+                <div className="flex flex-wrap gap-1">
+                  <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                    منتجات: {stats?.pending_products || pendingProducts.length || 0}
+                  </span>
+                  <span className="text-[9px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                    أطباق: {pendingFoodItems.length || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* السحوبات */}
+              <div 
+                className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => setActiveTab('withdrawals')}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <DollarSign size={20} className="text-purple-600" />
+                  </div>
+                  <span className="text-xl font-bold text-purple-600">
+                    {pendingWithdrawals.length || 0}
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات السحب</h3>
+                <p className="text-[9px] text-gray-500">بانتظار الموافقة</p>
+              </div>
+            </div>
+
+            {/* الروابط السريعة للعناصر الفردية */}
+            <div className="grid grid-cols-5 gap-1.5 mb-4">
               <button 
                 onClick={() => setActiveTab('pending-sellers')} 
-                className="bg-amber-50 border border-amber-200 rounded-lg p-2 hover:bg-amber-100 transition-all flex flex-col items-center gap-1"
+                className="bg-amber-50 border border-amber-100 rounded-lg py-1.5 px-2 text-[10px] text-amber-700 hover:bg-amber-100"
               >
-                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                  <Users size={16} className="text-amber-600" />
-                </div>
-                <span className="text-[10px] text-gray-600">بائعين</span>
-                <span className="text-sm font-bold text-amber-600">{stats?.pending_sellers || pendingSellers.length || 0}</span>
+                بائعين ({stats?.pending_sellers || pendingSellers.length || 0})
               </button>
-
-              {/* منتجات */}
-              <button 
-                onClick={() => setActiveTab('pending-products')} 
-                className="bg-blue-50 border border-blue-200 rounded-lg p-2 hover:bg-blue-100 transition-all flex flex-col items-center gap-1"
-              >
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Package size={16} className="text-blue-600" />
-                </div>
-                <span className="text-[10px] text-gray-600">منتجات</span>
-                <span className="text-sm font-bold text-blue-600">{stats?.pending_products || pendingProducts.length || 0}</span>
-              </button>
-
-              {/* سائقين */}
               <button 
                 onClick={() => setActiveTab('pending-delivery')} 
-                className="bg-cyan-50 border border-cyan-200 rounded-lg p-2 hover:bg-cyan-100 transition-all flex flex-col items-center gap-1"
+                className="bg-cyan-50 border border-cyan-100 rounded-lg py-1.5 px-2 text-[10px] text-cyan-700 hover:bg-cyan-100"
               >
-                <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
-                  <Truck size={16} className="text-cyan-600" />
-                </div>
-                <span className="text-[10px] text-gray-600">سائقين</span>
-                <span className="text-sm font-bold text-cyan-600">{stats?.pending_delivery || pendingDelivery.length || 0}</span>
+                سائقين ({stats?.pending_delivery || pendingDelivery.length || 0})
               </button>
-
-              {/* متاجر طعام */}
               <button 
                 onClick={() => setActiveTab('pending-food-stores')} 
-                className="bg-green-50 border border-green-200 rounded-lg p-2 hover:bg-green-100 transition-all flex flex-col items-center gap-1"
+                className="bg-green-50 border border-green-100 rounded-lg py-1.5 px-2 text-[10px] text-green-700 hover:bg-green-100"
               >
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Store size={16} className="text-green-600" />
-                </div>
-                <span className="text-[10px] text-gray-600">متاجر</span>
-                <span className="text-sm font-bold text-green-600">{pendingFoodStores.length || 0}</span>
+                متاجر ({pendingFoodStores.length || 0})
               </button>
-
-              {/* طلبات السحب */}
               <button 
-                onClick={() => setActiveTab('withdrawals')} 
-                className="bg-purple-50 border border-purple-200 rounded-lg p-2 hover:bg-purple-100 transition-all flex flex-col items-center gap-1"
+                onClick={() => setActiveTab('pending-products')} 
+                className="bg-blue-50 border border-blue-100 rounded-lg py-1.5 px-2 text-[10px] text-blue-700 hover:bg-blue-100"
               >
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <DollarSign size={16} className="text-purple-600" />
-                </div>
-                <span className="text-[10px] text-gray-600">سحب</span>
-                <span className="text-sm font-bold text-purple-600">{pendingWithdrawals.length || 0}</span>
+                منتجات ({stats?.pending_products || pendingProducts.length || 0})
+              </button>
+              <button 
+                onClick={() => setActiveTab('pending-food-items')} 
+                className="bg-orange-50 border border-orange-100 rounded-lg py-1.5 px-2 text-[10px] text-orange-700 hover:bg-orange-100"
+              >
+                أطباق ({pendingFoodItems.length || 0})
               </button>
             </div>
 

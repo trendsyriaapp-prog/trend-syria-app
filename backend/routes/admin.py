@@ -1941,7 +1941,7 @@ async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_c
         await create_notification_for_user(
             user_id=store["owner_id"],
             title="✅ تمت الموافقة على طلب الانضمام للفلاش",
-            message=f"تمت الموافقة على منتجاتك للانضمام لعرض الفلاش",
+            message="تمت الموافقة على منتجاتك للانضمام لعرض الفلاش",
             notification_type="flash_request_approved"
         )
     
@@ -2918,3 +2918,126 @@ async def admin_delete_product(
     })
     
     return {"message": "تم حذف المنتج بنجاح", "product_id": product_id}
+
+
+
+# ============== إدارة أطباق الطعام المعلقة ==============
+
+@router.get("/food-items/pending")
+async def get_pending_food_items(user: dict = Depends(get_current_user)):
+    """جلب الأطباق المعلقة التي تنتظر الموافقة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    items = await db.food_items.find(
+        {"is_approved": False},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # إضافة معلومات المتجر والبائع
+    for item in items:
+        store = await db.food_stores.find_one(
+            {"id": item.get("store_id")},
+            {"_id": 0, "name": 1, "owner_name": 1, "owner_id": 1, "store_type": 1}
+        )
+        if store:
+            item["store_name"] = store.get("name", "")
+            item["owner_name"] = store.get("owner_name", "")
+            item["store_type"] = store.get("store_type", "")
+    
+    return items
+
+@router.get("/food-items/stats")
+async def get_food_items_stats(user: dict = Depends(get_current_user)):
+    """إحصائيات الأطباق"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    pending_count = await db.food_items.count_documents({"is_approved": False})
+    approved_count = await db.food_items.count_documents({"is_approved": True})
+    total_count = await db.food_items.count_documents({})
+    
+    return {
+        "pending": pending_count,
+        "approved": approved_count,
+        "total": total_count
+    }
+
+@router.post("/food-items/{item_id}/approve")
+async def approve_food_item(item_id: str, user: dict = Depends(get_current_user)):
+    """الموافقة على طبق جديد"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    item = await db.food_items.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="الطبق غير موجود")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.food_items.update_one(
+        {"id": item_id},
+        {
+            "$set": {
+                "is_approved": True,
+                "approved_by": user["id"],
+                "approved_at": now
+            }
+        }
+    )
+    
+    # إشعار صاحب المتجر
+    seller_id = item.get("seller_id")
+    if seller_id:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": "✅ تمت الموافقة على الطبق",
+            "message": f"تمت الموافقة على طبق '{item.get('name', '')}' وأصبح ظاهراً للعملاء",
+            "type": "food_item_approved",
+            "data": {"item_id": item_id, "item_name": item.get("name", "")},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {"message": "تمت الموافقة على الطبق بنجاح"}
+
+@router.post("/food-items/{item_id}/reject")
+async def reject_food_item(
+    item_id: str, 
+    data: dict = None, 
+    user: dict = Depends(get_current_user)
+):
+    """رفض طبق مع سبب الرفض (اختياري)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    item = await db.food_items.find_one({"id": item_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="الطبق غير موجود")
+    
+    reason = data.get("reason", "").strip() if data else ""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حذف الطبق أو تحديد حالة الرفض
+    await db.food_items.delete_one({"id": item_id})
+    
+    # إشعار صاحب المتجر
+    seller_id = item.get("seller_id")
+    if seller_id:
+        message = f"تم رفض طبق '{item.get('name', '')}'."
+        if reason:
+            message += f"\n📝 سبب الرفض: {reason}"
+        
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "title": "❌ تم رفض الطبق",
+            "message": message,
+            "type": "food_item_rejected",
+            "data": {"item_name": item.get("name", ""), "reason": reason},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {"message": "تم رفض الطبق", "reason": reason if reason else None}
