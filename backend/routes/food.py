@@ -634,7 +634,11 @@ async def delete_food_item(item_id: str, user: dict = Depends(get_current_user))
 @router.get("/my-store")
 async def get_my_store(user: dict = Depends(get_current_user)):
     """جلب متجر المستخدم الحالي"""
-    store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
+    # البحث بـ seller_id أو owner_id للتوافق
+    store = await db.food_stores.find_one(
+        {"$or": [{"seller_id": user["id"]}, {"owner_id": user["id"]}]}, 
+        {"_id": 0}
+    )
     if not store:
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
@@ -647,7 +651,10 @@ async def get_my_store(user: dict = Depends(get_current_user)):
 @router.get("/my-store/commission")
 async def get_my_store_commission(user: dict = Depends(get_current_user)):
     """جلب نسبة العمولة لمتجر البائع"""
-    store = await db.food_stores.find_one({"owner_id": user["id"]}, {"_id": 0})
+    store = await db.food_stores.find_one(
+        {"$or": [{"seller_id": user["id"]}, {"owner_id": user["id"]}]}, 
+        {"_id": 0}
+    )
     if not store:
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
@@ -683,7 +690,9 @@ async def get_my_store_commission(user: dict = Depends(get_current_user)):
 @router.put("/my-store")
 async def update_my_store(update_data: dict, user: dict = Depends(get_current_user)):
     """تحديث معلومات متجر المستخدم"""
-    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    store = await db.food_stores.find_one(
+        {"$or": [{"seller_id": user["id"]}, {"owner_id": user["id"]}]}
+    )
     if not store:
         raise HTTPException(status_code=404, detail="لا يوجد متجر مرتبط بحسابك")
     
@@ -708,7 +717,7 @@ async def update_food_product(product_id: str, update_data: dict, user: dict = D
     
     # التحقق من ملكية المتجر
     store = await db.food_stores.find_one({"id": product["store_id"]})
-    if store["owner_id"] != user["id"] and user["user_type"] != "admin":
+    if store.get("seller_id") != user["id"] and store.get("owner_id") != user["id"] and user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # الحقول المسموح بتعديلها

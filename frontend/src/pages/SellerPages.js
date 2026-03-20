@@ -6,7 +6,7 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
-  Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX
+  Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -559,7 +559,7 @@ const SellerDocumentsPage = () => {
 const SellerDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { toast } = useToast();
 
   // تحديد نوع البائع (منتجات أو طعام)
@@ -966,6 +966,19 @@ const SellerDashboardPage = () => {
                 </button>
               )}
               <NotificationsDropdown />
+              {/* زر تسجيل الخروج */}
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                  toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+                }}
+                className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                title="تسجيل الخروج"
+                data-testid="logout-btn"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
           {/* أزرار الإجراءات - شريط ممتلئ */}

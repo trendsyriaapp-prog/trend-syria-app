@@ -30,6 +30,8 @@ const LoginPage = () => {
         navigate('/admin');
       } else if (userType === 'seller') {
         navigate('/seller/dashboard');
+      } else if (userType === 'food_seller') {
+        navigate('/food/dashboard');
       } else if (userType === 'delivery') {
         navigate('/delivery/dashboard');
       } else {

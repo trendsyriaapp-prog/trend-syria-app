@@ -9,7 +9,8 @@ import {
   Store, Package, ShoppingBag, Plus, Edit, Trash2, 
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
-  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3
+  ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
+  LogOut, Settings, User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -20,7 +21,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const FoodStoreDashboard = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { toast } = useToast();
 
   const [store, setStore] = useState(null);
@@ -267,17 +268,41 @@ const FoodStoreDashboard = () => {
       {/* Header */}
       <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-4 py-6 ${driverArrivingAlert ? 'mt-20' : ''}`}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-              {store.logo ? (
-                <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-lg object-cover" />
-              ) : (
-                <Store size={28} />
-              )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                {store.logo ? (
+                  <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-lg object-cover" />
+                ) : (
+                  <Store size={28} />
+                )}
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">{store.name}</h1>
+                <p className="text-green-100 text-sm">{store.city}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold">{store.name}</h1>
-              <p className="text-green-100 text-sm">{store.city}</p>
+            {/* أزرار الإعدادات وتسجيل الخروج */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                title="الصفحة الرئيسية"
+              >
+                <ChevronRight size={20} />
+              </button>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                  toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+                }}
+                className="p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
+                title="تسجيل الخروج"
+                data-testid="logout-btn"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           </div>
         </div>
