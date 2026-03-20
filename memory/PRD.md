@@ -536,7 +536,27 @@
 - **الحالة**: معلقة - تحتاج خطوات إعادة إنتاج من المستخدم
 - **الوصف**: الصفحات أحياناً تبدأ من المنتصف بدلاً من الأعلى
 
+### ✅ P0: إضافة أدوات التحكم للمدير (Completed) - 20 Mar 2026
+- **الوصف**: إضافة Backend APIs وتحسين Frontend لإدارة الطلبات والمنتجات
+
+#### Backend APIs الجديدة (admin.py):
+1. `POST /api/admin/orders/{id}/cancel` - إلغاء طلب مع إشعارات للعميل والبائع والسائق
+2. `POST /api/admin/orders/{id}/status` - تغيير حالة الطلب (confirmed, processing, ready, on_the_way, delivered)
+3. `POST /api/admin/orders/{id}/refund` - استرداد كامل المبلغ للعميل (يُضاف للمحفظة)
+4. `POST /api/admin/products/{id}/toggle-visibility` - إخفاء/إظهار المنتج
+5. `DELETE /api/admin/products/{id}` - حذف المنتج نهائياً (مع إزالته من المفضلات والسلات)
+
+#### تحسينات Frontend:
+- **OrdersTab.js**: فلاتر الحالة + modal تفاصيل الطلب + modal إلغاء + modal تغيير الحالة
+- **ProductsTab.js**: فلاتر (الكل/مخفي/مخزون منخفض) + قائمة إجراءات + modal تأكيد الحذف
+- **PriceReportsTab.js**: استبدال `window.confirm` بـ modals للتعليق/إلغاء التعليق
+- **ViolationsTab.js**: استبدال `window.confirm` بـ modals لتطبيق/إلغاء المخالفات
+
+- **الاختبار**: ✅ 100% (17/17 Backend tests + Frontend tests)
+- **تقرير الاختبار**: `/app/test_reports/iteration_102.json`
+
 ---
 
 ## Test Reports
 - `/app/test_reports/iteration_101.json` - اختبار التصفية ومستندات البائعين والسائقين (100% ✅)
+- `/app/test_reports/iteration_102.json` - اختبار APIs الطلبات والمنتجات للمدير (100% ✅)
