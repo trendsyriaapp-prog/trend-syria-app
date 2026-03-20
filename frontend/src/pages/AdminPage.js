@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -81,6 +81,7 @@ const AdminDashboardPage = () => {
   const [pendingDelivery, setPendingDelivery] = useState([]);
   const [allDelivery, setAllDelivery] = useState([]);
   const [pendingFoodStores, setPendingFoodStores] = useState([]);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
 
@@ -122,7 +123,8 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/admin/products/all`),
         axios.get(`${API}/admin/delivery/pending`),
         axios.get(`${API}/admin/delivery/all`),
-        axios.get(`${API}/admin/food/stores?status=pending`)
+        axios.get(`${API}/admin/food/stores?status=pending`),
+        axios.get(`${API}/admin/withdrawals?status=pending`)
       ];
       
       if (user?.user_type === 'admin') {
@@ -141,9 +143,10 @@ const AdminDashboardPage = () => {
       setPendingDelivery(responses[8].data);
       setAllDelivery(responses[9].data);
       setPendingFoodStores(responses[10]?.data || []);
+      setPendingWithdrawals(responses[11]?.data || []);
       
-      if (user?.user_type === 'admin' && responses[11]) {
-        setSubAdmins(responses[11].data);
+      if (user?.user_type === 'admin' && responses[12]) {
+        setSubAdmins(responses[12].data);
       }
       
       // Fetch commissions data
@@ -242,11 +245,16 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleDeleteSubAdmin = async (subAdminId) => {
-    if (!window.confirm('هل تريد حذف هذا المدير التنفيذي؟')) return;
+  // Delete modals
+  const [deleteSubAdminModal, setDeleteSubAdminModal] = useState({ isOpen: false, id: null });
+  const [deleteNotificationModal, setDeleteNotificationModal] = useState({ isOpen: false, id: null });
+
+  const handleDeleteSubAdmin = async () => {
+    if (!deleteSubAdminModal.id) return;
     try {
-      await axios.delete(`${API}/admin/sub-admins/${subAdminId}`);
+      await axios.delete(`${API}/admin/sub-admins/${deleteSubAdminModal.id}`);
       toast({ title: "تم الحذف", description: "تم حذف المدير التنفيذي" });
+      setDeleteSubAdminModal({ isOpen: false, id: null });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حذف المدير التنفيذي", variant: "destructive" });
@@ -263,11 +271,12 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleDeleteNotification = async (notificationId) => {
-    if (!window.confirm('هل تريد حذف هذا الإشعار؟')) return;
+  const handleDeleteNotification = async () => {
+    if (!deleteNotificationModal.id) return;
     try {
-      await axios.delete(`${API}/admin/notifications/${notificationId}`);
+      await axios.delete(`${API}/admin/notifications/${deleteNotificationModal.id}`);
       toast({ title: "تم الحذف", description: "تم حذف الإشعار" });
+      setDeleteNotificationModal({ isOpen: false, id: null });
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حذف الإشعار", variant: "destructive" });
@@ -404,7 +413,7 @@ const AdminDashboardPage = () => {
               <SubAdminsTab 
                 subAdmins={subAdmins} 
                 onAdd={handleAddSubAdmin} 
-                onDelete={handleDeleteSubAdmin} 
+                onDelete={(id) => setDeleteSubAdminModal({ isOpen: true, id })} 
               />
             )}
             {activeTab === 'commissions' && (
@@ -421,7 +430,7 @@ const AdminDashboardPage = () => {
               <NotificationsTab 
                 notifications={notifications} 
                 onSend={handleSendNotification} 
-                onDelete={handleDeleteNotification} 
+                onDelete={(id) => setDeleteNotificationModal({ isOpen: true, id })} 
               />
             )}
             {activeTab === 'withdrawals' && (
@@ -538,7 +547,7 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* الموافقات المعلقة - تصميم مدمج بدون إطار */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-5 gap-2 mb-4">
               {/* بائعين منتجات */}
               <button 
                 onClick={() => setActiveTab('pending-sellers')} 
@@ -585,6 +594,18 @@ const AdminDashboardPage = () => {
                 </div>
                 <span className="text-[10px] text-gray-600">متاجر</span>
                 <span className="text-sm font-bold text-green-600">{pendingFoodStores.length || 0}</span>
+              </button>
+
+              {/* طلبات السحب */}
+              <button 
+                onClick={() => setActiveTab('withdrawals')} 
+                className="bg-purple-50 border border-purple-200 rounded-lg p-2 hover:bg-purple-100 transition-all flex flex-col items-center gap-1"
+              >
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <DollarSign size={16} className="text-purple-600" />
+                </div>
+                <span className="text-[10px] text-gray-600">سحب</span>
+                <span className="text-sm font-bold text-purple-600">{pendingWithdrawals.length || 0}</span>
               </button>
             </div>
 
@@ -655,7 +676,6 @@ const AdminDashboardPage = () => {
                     { icon: Package, label: 'المنتجات', tab: 'products' },
                     { icon: ShoppingBag, label: 'الطلبات', tab: 'orders' },
                     { icon: DollarSign, label: 'العمولات', tab: 'commissions' },
-                    { icon: DollarSign, label: 'السحب', tab: 'withdrawals' },
                     { icon: UtensilsCrossed, label: 'المطاعم', tab: 'food-stores' },
                     { icon: Store, label: 'المتاجر المميزة', tab: 'featured-stores' },
                     { icon: AlertTriangle, label: 'المخزون', tab: 'low-stock' },
@@ -757,6 +777,70 @@ const AdminDashboardPage = () => {
               </div>
             </Link>
           </>
+        )}
+
+        {/* Delete Sub-Admin Modal */}
+        {deleteSubAdminModal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl w-full max-w-sm p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 size={20} className="text-red-600" />
+                </div>
+                <h3 className="font-bold">حذف المدير التنفيذي</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                هل تريد حذف هذا المدير التنفيذي؟ لا يمكن التراجع عن هذا الإجراء.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteSubAdminModal({ isOpen: false, id: null })}
+                  className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleDeleteSubAdmin}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  حذف
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Notification Modal */}
+        {deleteNotificationModal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl w-full max-w-sm p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 size={20} className="text-red-600" />
+                </div>
+                <h3 className="font-bold">حذف الإشعار</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                هل تريد حذف هذا الإشعار؟
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteNotificationModal({ isOpen: false, id: null })}
+                  className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleDeleteNotification}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  حذف
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
