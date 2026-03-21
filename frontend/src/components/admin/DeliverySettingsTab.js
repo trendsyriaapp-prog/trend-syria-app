@@ -40,10 +40,7 @@ const DeliverySettingsTab = () => {
     },
     // إعدادات قبول الطلبات
     max_food_orders_per_driver: 3,
-    food_orders_max_distance_km: 5,
-    // إعدادات حدود التوصيل الجديدة (ساخن/طازج vs بارد/جاف)
-    hot_fresh_limit: 2,
-    cold_dry_limit: 5
+    food_orders_max_distance_km: 5
   });
 
   // التصنيف النشط للفلتر
@@ -145,10 +142,7 @@ const DeliverySettingsTab = () => {
         ...res.data,
         leaderboard_rewards: res.data.leaderboard_rewards || settings.leaderboard_rewards,
         max_food_orders_per_driver: res.data.max_food_orders_per_driver || 3,
-        food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5,
-        // إعدادات حدود التوصيل الجديدة
-        hot_fresh_limit: res.data.food_delivery_limits?.hot_fresh_limit || 2,
-        cold_dry_limit: res.data.food_delivery_limits?.cold_dry_limit || 5
+        food_orders_max_distance_km: res.data.food_orders_max_distance_km || 5
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -399,14 +393,12 @@ const DeliverySettingsTab = () => {
     }
   };
 
-  // حفظ إعدادات حدود توصيل الطعام الجديدة (ساخن/طازج vs بارد/جاف)
+  // حفظ إعدادات حدود توصيل الطعام
   const handleSaveFoodDeliveryLimits = async () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/api/settings/food-delivery-limits`, {
-        hot_fresh_limit: settings.hot_fresh_limit || 2,
-        cold_dry_limit: settings.cold_dry_limit || 5,
         max_distance_km: settings.food_orders_max_distance_km || 5
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -1266,71 +1258,6 @@ const DeliverySettingsTab = () => {
               </p>
             </div>
 
-            {/* الحد الأقصى لطلبات الطعام الساخنة/الطازجة */}
-            <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">🔥</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">ساخن / طازج</h3>
-                  <p className="text-xs text-gray-500">مطاعم، مقاهي، مخابز، مشروبات، حلويات</p>
-                </div>
-              </div>
-              <input
-                type="number"
-                value={settings.hot_fresh_limit || 2}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  hot_fresh_limit: parseInt(e.target.value) || 2
-                })}
-                className="w-full p-3 border border-red-300 rounded-lg text-center text-sm font-bold"
-                min={1}
-                max={5}
-              />
-              <p className="text-center text-sm text-red-600 mt-2">
-                {settings.hot_fresh_limit || 2} طلبات كحد أقصى
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1 justify-center">
-                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🍔 وجبات</span>
-                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">☕ مقاهي</span>
-                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🥐 مخابز</span>
-                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🥤 مشروبات</span>
-                <span className="text-xs bg-red-100 px-2 py-0.5 rounded">🍰 حلويات</span>
-              </div>
-            </div>
-
-            {/* الحد الأقصى لطلبات الطعام الباردة/الجافة */}
-            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">📦</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">بارد / جاف</h3>
-                  <p className="text-xs text-gray-500">ماركت، خضار وفواكه</p>
-                </div>
-              </div>
-              <input
-                type="number"
-                value={settings.cold_dry_limit || 5}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  cold_dry_limit: parseInt(e.target.value) || 5
-                })}
-                className="w-full p-3 border border-emerald-300 rounded-lg text-center text-sm font-bold"
-                min={1}
-                max={10}
-              />
-              <p className="text-center text-sm text-emerald-600 mt-2">
-                {settings.cold_dry_limit || 5} طلبات كحد أقصى
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1 justify-center">
-                <span className="text-xs bg-emerald-100 px-2 py-0.5 rounded">🛒 ماركت</span>
-                <span className="text-xs bg-emerald-100 px-2 py-0.5 rounded">🥬 خضار</span>
-              </div>
-            </div>
-
             {/* الحد الأقصى لطلبات المنتجات */}
             <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
               <div className="flex items-center gap-2 mb-1.5">
@@ -1392,16 +1319,16 @@ const DeliverySettingsTab = () => {
             <h4 className="font-bold text-gray-700 mb-2">📋 كيف تعمل هذه القواعد:</h4>
             <ul className="text-sm text-gray-600 text-sm space-y-2">
               <li className="flex items-start gap-2">
-                <span className="text-red-500">🔥</span>
-                <span><strong>ساخن/طازج:</strong> السائق يستطيع قبول <strong>{settings.hot_fresh_limit || 2} طلبات</strong> (مطاعم، مقاهي، مخابز، مشروبات، حلويات) - لضمان وصول الطعام ساخناً</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500">📦</span>
-                <span><strong>بارد/جاف:</strong> السائق يستطيع قبول <strong>{settings.cold_dry_limit || 5} طلبات</strong> (ماركت، خضار) - هذه المنتجات تتحمل الانتظار</span>
+                <span className="text-orange-500">🍔</span>
+                <span><strong>طلبات الطعام:</strong> السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات</strong> طعام في نفس الوقت</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">🛍️</span>
-                <span><strong>المنتجات:</strong> السائق يستطيع قبول <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> (التوصيل نفس اليوم)</span>
+                <span><strong>طلبات المنتجات:</strong> السائق يستطيع قبول حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> منتجات (التوصيل نفس اليوم)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500">📍</span>
+                <span><strong>المسافة:</strong> يجب ألا تزيد المسافة بين عملاء الطعام عن <strong>{food_orders_max_distance_km} كم</strong></span>
               </li>
             </ul>
           </div>
