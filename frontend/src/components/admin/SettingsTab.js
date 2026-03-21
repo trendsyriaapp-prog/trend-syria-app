@@ -227,15 +227,15 @@ const SettingsTab = ({ user }) => {
   }
   
   return (
-    <section className="space-y-3" data-testid="settings-tab">
+    <section className="space-y-2" data-testid="settings-tab">
       
       {/* نظام التوصيل بالمحافظات */}
-      <div className={`bg-white rounded-lg border-2 overflow-hidden transition-all ${governorateDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+      <div className={`bg-white rounded-lg border overflow-hidden transition-all ${governorateDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
+        <div className="p-3 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MapPin size={18} className="text-blue-500" />
+            <MapPin size={16} className="text-blue-500" />
             <div>
-              <h3 className="font-bold text-gray-900">🗺️ نظام التوصيل بالمحافظات</h3>
+              <h3 className="font-bold text-gray-900 text-sm">🗺️ نظام التوصيل بالمحافظات</h3>
               <p className="text-xs text-gray-500">أسعار ثابتة حسب بعد المحافظة (للمنتجات)</p>
             </div>
           </div>
@@ -243,11 +243,11 @@ const SettingsTab = ({ user }) => {
             onClick={toggleGovernorateDelivery}
             className={`p-1 rounded-lg transition-colors ${governorateDeliveryEnabled ? 'text-green-500' : 'text-gray-400'}`}
           >
-            {governorateDeliveryEnabled ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
+            {governorateDeliveryEnabled ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
           </button>
         </div>
         {governorateDeliveryEnabled && (
-          <div className="p-4 space-y-3">
+          <div className="p-3 space-y-2">
             {[
               { key: 'same_city', label: 'نفس المحافظة' },
               { key: 'nearby', label: 'محافظة قريبة' },
@@ -255,8 +255,8 @@ const SettingsTab = ({ user }) => {
               { key: 'far', label: 'محافظة بعيدة' },
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between">
-                <label className="text-sm text-gray-600">{item.label}</label>
-                <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600">{item.label}</label>
+                <div className="flex items-center gap-1">
                   <input
                     type="number"
                     value={deliveryFees[item.key]}
@@ -264,7 +264,7 @@ const SettingsTab = ({ user }) => {
                       ...deliveryFees,
                       [item.key]: parseInt(e.target.value) || 0
                     })}
-                    className="w-24 p-2 border border-gray-300 rounded-lg text-sm text-left"
+                    className="w-20 p-1.5 border border-gray-300 rounded text-xs text-left"
                   />
                   <span className="text-xs text-gray-400">ل.س</span>
                 </div>
@@ -273,62 +273,59 @@ const SettingsTab = ({ user }) => {
             <button
               onClick={saveDeliveryFees}
               disabled={saving}
-              className="w-full bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+              className="w-full bg-blue-500 text-white py-1.5 rounded font-bold text-xs flex items-center justify-center gap-1 mt-2 disabled:opacity-50"
             >
-              <Save size={16} />
-              حفظ أسعار المحافظات
+              <Save size={14} />
+              حفظ
             </button>
           </div>
         )}
         {!governorateDeliveryEnabled && (
-          <div className="p-4 bg-gray-50 text-center">
-            <p className="text-sm text-gray-500">⏸️ هذا النظام معطّل حالياً</p>
-            <p className="text-xs text-gray-400 mt-1">اضغط على زر التفعيل لاستخدامه</p>
+          <div className="p-2 bg-gray-50 text-center">
+            <p className="text-xs text-gray-500">⏸️ معطّل - اضغط للتفعيل</p>
           </div>
         )}
       </div>
 
       {/* نظام التوصيل بالكيلومتر */}
-      <div className={`bg-white rounded-lg border-2 overflow-hidden transition-all ${kmDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+      <div className={`bg-white rounded-lg border overflow-hidden transition-all ${kmDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
+        <div className="p-3 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Truck size={18} className="text-[#FF6B00]" />
+            <Truck size={16} className="text-[#FF6B00]" />
             <div>
-              <h3 className="font-bold text-gray-900">🔢 نظام التوصيل بالكيلومتر</h3>
-              <p className="text-xs text-gray-500">أجرة = رسوم أساسية + (مسافة × سعر/كم) - للطعام</p>
+              <h3 className="font-bold text-gray-900 text-sm">🔢 نظام التوصيل بالكيلومتر</h3>
+              <p className="text-xs text-gray-500">للطعام - الإعدادات في: إعدادات التوصيل</p>
             </div>
           </div>
           <button
             onClick={toggleKmDelivery}
             className={`p-1 rounded-lg transition-colors ${kmDeliveryEnabled ? 'text-green-500' : 'text-gray-400'}`}
           >
-            {kmDeliveryEnabled ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
+            {kmDeliveryEnabled ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
           </button>
         </div>
         {kmDeliveryEnabled && (
-          <div className="p-4 bg-orange-50 text-center">
-            <p className="text-sm text-gray-700">✅ هذا النظام مفعّل</p>
-            <p className="text-xs text-gray-500 mt-1">الإعدادات التفصيلية في: <strong>إعدادات التوصيل ← نظام الكيلومتر</strong></p>
+          <div className="p-2 bg-orange-50 text-center">
+            <p className="text-xs text-green-600">✅ مفعّل</p>
           </div>
         )}
         {!kmDeliveryEnabled && (
-          <div className="p-4 bg-gray-50 text-center">
-            <p className="text-sm text-gray-500">⏸️ هذا النظام معطّل حالياً</p>
-            <p className="text-xs text-gray-400 mt-1">اضغط على زر التفعيل لاستخدامه</p>
+          <div className="p-2 bg-gray-50 text-center">
+            <p className="text-xs text-gray-500">⏸️ معطّل - اضغط للتفعيل</p>
           </div>
         )}
       </div>
       
       {/* Withdrawal Limits */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-          <Banknote size={18} className="text-green-500" />
-          <h3 className="font-bold text-gray-900">حدود السحب الأدنى</h3>
+        <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+          <Banknote size={16} className="text-green-500" />
+          <h3 className="font-bold text-gray-900 text-sm">حدود السحب الأدنى</h3>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm text-gray-600">للبائعين</label>
-            <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600">للبائعين</label>
+            <div className="flex items-center gap-1">
               <input
                 type="number"
                 value={withdrawalLimits.seller}
@@ -336,15 +333,15 @@ const SettingsTab = ({ user }) => {
                   ...withdrawalLimits,
                   seller: parseInt(e.target.value) || 0
                 })}
-                className="w-28 p-2 border border-gray-300 rounded-lg text-sm text-left"
+                className="w-24 p-1.5 border border-gray-300 rounded text-xs text-left"
                 step="10000"
               />
               <span className="text-xs text-gray-400">ل.س</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm text-gray-600">لموظفي التوصيل</label>
-            <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600">لموظفي التوصيل</label>
+            <div className="flex items-center gap-1">
               <input
                 type="number"
                 value={withdrawalLimits.delivery}
@@ -352,7 +349,7 @@ const SettingsTab = ({ user }) => {
                   ...withdrawalLimits,
                   delivery: parseInt(e.target.value) || 0
                 })}
-                className="w-28 p-2 border border-gray-300 rounded-lg text-sm text-left"
+                className="w-24 p-1.5 border border-gray-300 rounded text-xs text-left"
                 step="10000"
               />
               <span className="text-xs text-gray-400">ل.س</span>
@@ -361,106 +358,94 @@ const SettingsTab = ({ user }) => {
           <button
             onClick={saveWithdrawalLimits}
             disabled={saving}
-            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+            className="w-full bg-green-500 text-white py-1.5 rounded font-bold text-xs flex items-center justify-center gap-1 mt-2 disabled:opacity-50"
           >
-            <Save size={16} />
-            حفظ حدود السحب
+            <Save size={14} />
+            حفظ
           </button>
         </div>
       </div>
       
       {/* Free Shipping Threshold - Products */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-          <Package size={18} className="text-blue-500" />
-          <h3 className="font-bold text-gray-900">حد الشحن المجاني - المنتجات</h3>
+        <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+          <Package size={16} className="text-blue-500" />
+          <h3 className="font-bold text-gray-900 text-sm">حد الشحن المجاني - المنتجات</h3>
         </div>
         <div className="p-3">
-          <p className="text-xs text-gray-500 mb-3">
-            الحد الأدنى لقيمة الطلب للحصول على شحن مجاني للمنتجات
-          </p>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               value={freeShipping}
               onChange={(e) => setFreeShipping(parseInt(e.target.value) || 0)}
-              className="flex-1 p-2 border border-gray-300 rounded-lg text-left"
+              className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               step="10000"
             />
-            <span className="text-sm text-gray-400">ل.س</span>
+            <span className="text-xs text-gray-400">ل.س</span>
+            <button
+              onClick={saveFreeShipping}
+              disabled={saving}
+              className="bg-blue-500 text-white px-3 py-1.5 rounded font-bold text-xs disabled:opacity-50"
+            >
+              <Save size={14} />
+            </button>
           </div>
-          <button
-            onClick={saveFreeShipping}
-            disabled={saving}
-            className="w-full bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Save size={16} />
-            حفظ
-          </button>
         </div>
       </div>
 
       {/* Free Delivery Threshold - Food */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-          <Truck size={18} className="text-green-500" />
-          <h3 className="font-bold text-gray-900">حد التوصيل المجاني - الطعام</h3>
+        <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+          <Truck size={16} className="text-green-500" />
+          <h3 className="font-bold text-gray-900 text-sm">حد التوصيل المجاني - الطعام</h3>
         </div>
         <div className="p-3">
-          <p className="text-xs text-gray-500 mb-3">
-            الحد الأدنى لقيمة الطلب للحصول على توصيل مجاني لجميع متاجر الطعام
-          </p>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               value={foodFreeDelivery}
               onChange={(e) => setFoodFreeDelivery(parseInt(e.target.value) || 0)}
-              className="flex-1 p-2 border border-gray-300 rounded-lg text-left"
+              className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               step="10000"
             />
-            <span className="text-sm text-gray-400">ل.س</span>
+            <span className="text-xs text-gray-400">ل.س</span>
+            <button
+              onClick={saveFoodFreeDelivery}
+              disabled={saving}
+              className="bg-green-500 text-white px-3 py-1.5 rounded font-bold text-xs disabled:opacity-50"
+            >
+              <Save size={14} />
+            </button>
           </div>
-          <button
-            onClick={saveFoodFreeDelivery}
-            disabled={saving}
-            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Save size={16} />
-            حفظ
-          </button>
         </div>
       </div>
 
       {/* Low Stock Threshold */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-          <AlertTriangle size={18} className="text-yellow-500" />
-          <h3 className="font-bold text-gray-900">حد تنبيه المخزون المنخفض</h3>
+        <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+          <AlertTriangle size={16} className="text-yellow-500" />
+          <h3 className="font-bold text-gray-900 text-sm">حد تنبيه المخزون المنخفض</h3>
         </div>
         <div className="p-3">
-          <p className="text-xs text-gray-500 mb-3">
-            سيتم إرسال تنبيه للبائع عند وصول مخزون أي منتج إلى هذا الحد أو أقل
-          </p>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               value={lowStockThreshold}
               onChange={(e) => setLowStockThreshold(parseInt(e.target.value) || 1)}
-              className="flex-1 p-2 border border-gray-300 rounded-lg text-left"
+              className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               min="1"
               data-testid="low-stock-threshold-input"
             />
-            <span className="text-sm text-gray-400">قطعة</span>
+            <span className="text-xs text-gray-400">قطعة</span>
+            <button
+              onClick={saveLowStockThreshold}
+              disabled={saving}
+              className="bg-yellow-500 text-white px-3 py-1.5 rounded font-bold text-xs disabled:opacity-50"
+              data-testid="save-low-stock-btn"
+            >
+              <Save size={14} />
+            </button>
           </div>
-          <button
-            onClick={saveLowStockThreshold}
-            disabled={saving}
-            className="w-full bg-yellow-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-            data-testid="save-low-stock-btn"
-          >
-            <Save size={16} />
-            حفظ
-          </button>
         </div>
       </div>
       
@@ -563,125 +548,118 @@ const DriverCancelSettingsSection = ({ toast }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-gray-200" data-testid="driver-cancel-settings">
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-          <XCircle className="text-red-600" size={24} />
+    <div className="bg-white rounded-lg p-3 border border-gray-200" data-testid="driver-cancel-settings">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+          <XCircle className="text-red-600" size={16} />
         </div>
         <div>
-          <h3 className="font-bold text-gray-900">إعدادات إلغاء الطلب (السائق)</h3>
-          <p className="text-sm text-gray-500">التحكم في قدرة السائقين على إلغاء الطلبات</p>
+          <h3 className="font-bold text-gray-900 text-sm">إعدادات إلغاء الطلب (السائق)</h3>
         </div>
       </div>
 
       {/* تفعيل/إيقاف */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg mb-3">
         <div>
-          <p className="font-bold text-gray-900">تفعيل إلغاء الطلب للسائقين</p>
-          <p className="text-sm text-gray-500">السماح للسائقين بإلغاء الطلبات ضمن شروط</p>
+          <p className="font-bold text-gray-900 text-xs">تفعيل إلغاء الطلب للسائقين</p>
         </div>
         <button
           onClick={() => setSettings(s => ({ ...s, enabled: !s.enabled }))}
-          className={`w-14 h-7 rounded-full transition-colors ${
+          className={`w-12 h-6 rounded-full transition-colors ${
             settings.enabled ? 'bg-red-500' : 'bg-gray-300'
           }`}
         >
-          <div className={`w-6 h-6 bg-white rounded-full shadow transform transition-transform ${
-            settings.enabled ? 'translate-x-7' : 'translate-x-0.5'
+          <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+            settings.enabled ? 'translate-x-6' : 'translate-x-0.5'
           }`} />
         </button>
       </div>
 
       {settings.enabled && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* مهلة الإلغاء */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              مهلة الإلغاء (بالثواني)
-            </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-gray-600">مهلة الإلغاء (ثانية)</label>
             <input
               type="number"
               value={settings.cancel_window_seconds}
               onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: parseInt(e.target.value) || 0 }))}
-              className="w-full p-3 border border-gray-200 rounded-lg"
+              className="w-20 p-1.5 border border-gray-200 rounded text-xs text-left"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              الوقت المسموح للسائق لإلغاء الطلب بعد قبوله ({Math.floor(settings.cancel_window_seconds / 60)} دقيقة و {settings.cancel_window_seconds % 60} ثانية)
-            </p>
           </div>
 
           {/* نسبة الإلغاء القصوى */}
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                نسبة الإلغاء القصوى (%)
-              </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gray-600">نسبة القصوى %</label>
               <input
                 type="number"
                 value={settings.max_cancel_rate}
                 onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-lg"
+                className="w-16 p-1.5 border border-gray-200 rounded text-xs text-left"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                عدد الطلبات للحساب
-              </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gray-600">طلبات الحساب</label>
               <input
                 type="number"
                 value={settings.lookback_orders}
                 onChange={(e) => setSettings(s => ({ ...s, lookback_orders: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-gray-200 rounded-lg"
+                className="w-16 p-1.5 border border-gray-200 rounded text-xs text-left"
               />
             </div>
           </div>
 
           {/* حدود التحذير والإيقاف */}
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ⚠️ نسبة التحذير (%)
-              </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-yellow-600">⚠️ تحذير %</label>
               <input
                 type="number"
                 value={settings.warning_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, warning_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-yellow-200 rounded-lg bg-yellow-50"
+                className="w-16 p-1.5 border border-yellow-200 rounded text-xs bg-yellow-50 text-left"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                🔴 نسبة الإيقاف (%)
-              </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-red-600">🔴 إيقاف %</label>
               <input
                 type="number"
                 value={settings.suspension_threshold}
                 onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: parseInt(e.target.value) || 0 }))}
-                className="w-full p-3 border border-red-200 rounded-lg bg-red-50"
+                className="w-16 p-1.5 border border-red-200 rounded text-xs bg-red-50 text-left"
               />
             </div>
           </div>
 
           {/* إحصائيات */}
           {stats && (
-            <div className="bg-gray-50 rounded-lg p-4 mt-4">
-              <h4 className="font-bold text-gray-900 mb-3">📊 إحصائيات الإلغاءات</h4>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_cancellations}</p>
+            <div className="bg-gray-50 rounded p-2 mt-2">
+              <div className="grid grid-cols-3 gap-1 text-center">
+                <div className="bg-white p-2 rounded">
+                  <p className="text-lg font-bold text-gray-900">{stats.total_cancellations}</p>
                   <p className="text-xs text-gray-500">إجمالي</p>
                 </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{stats.today_cancellations}</p>
+                <div className="bg-white p-2 rounded">
+                  <p className="text-lg font-bold text-blue-600">{stats.today_cancellations}</p>
                   <p className="text-xs text-gray-500">اليوم</p>
                 </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <p className="text-2xl font-bold text-purple-600">{stats.week_cancellations}</p>
+                <div className="bg-white p-2 rounded">
+                  <p className="text-lg font-bold text-purple-600">{stats.week_cancellations}</p>
                   <p className="text-xs text-gray-500">الأسبوع</p>
                 </div>
               </div>
             </div>
           )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-red-500 text-white py-1.5 rounded font-bold text-xs flex items-center justify-center gap-1 mt-2 disabled:opacity-50"
+          >
+            <Save size={14} />
+            حفظ
+          </button>
         </div>
       )}
     </div>
@@ -753,23 +731,17 @@ const DriverShortageAlertSettings = ({ toast }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
-          <Bell size={20} className="text-white" />
+    <div className="bg-white rounded-lg p-3 border border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-1.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded">
+          <Bell size={14} className="text-white" />
         </div>
-        <div>
-          <h3 className="font-bold text-gray-900">إشعارات نقص السائقين</h3>
-          <p className="text-xs text-gray-500">إشعار تلقائي عند انخفاض عدد السائقين المتاحين</p>
-        </div>
+        <h3 className="font-bold text-gray-900 text-sm">إشعارات نقص السائقين</h3>
       </div>
 
       {/* تفعيل/تعطيل */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
-        <div>
-          <p className="font-medium text-gray-900">تفعيل الإشعارات التلقائية</p>
-          <p className="text-xs text-gray-500">إرسال إشعار للمدراء عند نقص السائقين</p>
-        </div>
+      <div className="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+        <p className="text-xs text-gray-900">تفعيل الإشعارات</p>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
@@ -777,93 +749,75 @@ const DriverShortageAlertSettings = ({ toast }) => {
             onChange={(e) => setShortageAlert(s => ({ ...s, enabled: e.target.checked }))}
             className="sr-only peer"
           />
-          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+          <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
         </label>
       </div>
 
       {shortageAlert.enabled && (
-        <div className="space-y-3">
-          {/* الحد الأدنى للسائقين */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Users size={16} className="text-amber-500" />
-              الحد الأدنى للسائقين المتصلين
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={shortageAlert.min_available_drivers}
-              onChange={(e) => setShortageAlert(s => ({ ...s, min_available_drivers: parseInt(e.target.value) || 3 }))}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">سيتم إرسال إشعار إذا انخفض العدد عن هذا الحد</p>
-          </div>
-
-          {/* فترة الانتظار */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              فترة الانتظار بين الإشعارات (بالدقائق)
-            </label>
-            <input
-              type="number"
-              min="5"
-              max="180"
-              value={shortageAlert.cooldown_minutes}
-              onChange={(e) => setShortageAlert(s => ({ ...s, cooldown_minutes: parseInt(e.target.value) || 30 }))}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">لن يتم إرسال إشعار جديد لنفس المدينة خلال هذه الفترة</p>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gray-600">حد أدنى سائقين</label>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={shortageAlert.min_available_drivers}
+                onChange={(e) => setShortageAlert(s => ({ ...s, min_available_drivers: parseInt(e.target.value) || 3 }))}
+                className="w-14 p-1 border border-gray-200 rounded text-xs text-left"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-gray-600">انتظار (دقيقة)</label>
+              <input
+                type="number"
+                min="5"
+                max="180"
+                value={shortageAlert.cooldown_minutes}
+                onChange={(e) => setShortageAlert(s => ({ ...s, cooldown_minutes: parseInt(e.target.value) || 30 }))}
+                className="w-14 p-1 border border-gray-200 rounded text-xs text-left"
+              />
+            </div>
           </div>
 
           {/* المدن المراقبة */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <MapPin size={16} className="text-amber-500" />
-              المدن المراقبة
-            </label>
-            <p className="text-xs text-gray-500 mb-3">اختر المدن التي تريد مراقبتها (اتركها فارغة لمراقبة جميع المدن)</p>
+            <label className="text-xs text-gray-600 mb-1 block">المدن المراقبة:</label>
             
             {availableCities.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">لا توجد مدن بها سائقين</p>
+              <p className="text-xs text-gray-400 text-center py-2">لا توجد مدن</p>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-wrap gap-1">
                 {availableCities.map(cityData => (
                   <label 
                     key={cityData.city}
-                    className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs ${
                       shortageAlert.monitored_cities?.includes(cityData.city)
                         ? 'border-amber-500 bg-amber-50'
-                        : 'border-gray-200 hover:border-amber-300'
+                        : 'border-gray-200'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={shortageAlert.monitored_cities?.includes(cityData.city)}
-                        onChange={() => toggleCity(cityData.city)}
-                        className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500"
-                      />
-                      <span className="font-medium text-gray-900">{cityData.city}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">{cityData.total_drivers} سائق</p>
-                      <p className="text-xs text-green-600">{cityData.available_drivers} متاح</p>
-                    </div>
+                    <input
+                      type="checkbox"
+                      checked={shortageAlert.monitored_cities?.includes(cityData.city)}
+                      onChange={() => toggleCity(cityData.city)}
+                      className="w-3 h-3"
+                    />
+                    <span>{cityData.city}</span>
+                    <span className="text-green-600">({cityData.available_drivers})</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
 
-          {/* زر حفظ إعدادات النقص */}
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            className="w-full bg-amber-500 text-white py-1.5 rounded font-bold text-xs flex items-center justify-center gap-1 disabled:opacity-50"
           >
-            {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            حفظ إعدادات الإشعارات
+            <Save size={14} />
+            حفظ
           </button>
         </div>
       )}
@@ -991,90 +945,72 @@ const AutoWeatherSettings = ({ toast }) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
-          <Cloud size={20} className="text-white" />
+    <div className="bg-white rounded-lg p-3 border border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded">
+          <Cloud size={14} className="text-white" />
         </div>
-        <div>
-          <h3 className="font-bold text-gray-900">الطقس التلقائي</h3>
-          <p className="text-xs text-gray-500">تفعيل رسوم الطقس السيء تلقائياً</p>
-        </div>
+        <h3 className="font-bold text-gray-900 text-sm">الطقس التلقائي</h3>
       </div>
 
       {/* مفتاح API */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          مفتاح OpenWeatherMap API
-        </label>
-        <input
-          type="text"
-          value={settings.api_key}
-          onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
-          placeholder="أدخل مفتاح API..."
-          className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          احصل على مفتاح مجاني من <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openweathermap.org</a>
-        </p>
-      </div>
-
-      {/* تفعيل التلقائي */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
-        <div>
-          <p className="font-medium text-gray-900">تفعيل الرسوم التلقائية</p>
-          <p className="text-xs text-gray-500">فحص الطقس كل 30 دقيقة وتفعيل الرسوم عند الحاجة</p>
-        </div>
-        <label className="relative inline-flex items-center cursor-pointer">
+      <div className="mb-2">
+        <div className="flex items-center gap-2">
           <input
-            type="checkbox"
-            checked={settings.enabled}
-            onChange={(e) => setSettings(prev => ({ ...prev, enabled: e.target.checked }))}
-            className="sr-only peer"
-            disabled={!settings.has_api_key && !settings.api_key}
+            type="text"
+            value={settings.api_key}
+            onChange={(e) => setSettings(prev => ({ ...prev, api_key: e.target.value }))}
+            placeholder="مفتاح OpenWeatherMap API..."
+            className="flex-1 p-1.5 border border-gray-200 rounded text-xs"
           />
-          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-disabled:opacity-50"></div>
-        </label>
+        </div>
       </div>
 
-      {/* المبلغ الأساسي */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          المبلغ الأساسي للرسوم (ل.س)
-        </label>
-        <input
-          type="number"
-          min="1000"
-          step="1000"
-          value={settings.base_amount}
-          onChange={(e) => setSettings(prev => ({ ...prev, base_amount: e.target.value }))}
-          className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          سيتم ضرب هذا المبلغ بمضاعف حسب شدة الطقس (مطر خفيف ×0.5، مطر ×1، عاصفة ×1.5، ثلج ×2)
-        </p>
+      {/* تفعيل + المبلغ */}
+      <div className="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+        <div className="flex items-center gap-2">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.enabled}
+              onChange={(e) => setSettings(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="sr-only peer"
+              disabled={!settings.has_api_key && !settings.api_key}
+            />
+            <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-disabled:opacity-50"></div>
+          </label>
+          <span className="text-xs">تلقائي</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            min="1000"
+            step="1000"
+            value={settings.base_amount}
+            onChange={(e) => setSettings(prev => ({ ...prev, base_amount: e.target.value }))}
+            className="w-20 p-1 border border-gray-200 rounded text-xs text-left"
+          />
+          <span className="text-xs text-gray-400">ل.س</span>
+        </div>
       </div>
 
-      {/* المدن المراقبة */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          المدن المراقبة
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {availableCities.map(city => (
+      {/* المدن */}
+      <div className="mb-2">
+        <div className="flex flex-wrap gap-1">
+          {availableCities.slice(0, 6).map(city => (
             <label
               key={city}
-              className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all text-sm ${
+              className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs ${
                 settings.monitored_cities?.includes(city)
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-300'
+                  : 'border-gray-200'
               }`}
             >
               <input
                 type="checkbox"
                 checked={settings.monitored_cities?.includes(city)}
                 onChange={() => toggleCity(city)}
-                className="w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
+                className="w-3 h-3"
               />
               <span>{city}</span>
             </label>
@@ -1083,63 +1019,31 @@ const AutoWeatherSettings = ({ toast }) => {
       </div>
 
       {/* أزرار */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1">
         <button
           onClick={checkWeatherNow}
           disabled={checking || !settings.has_api_key}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 text-gray-700 rounded text-xs disabled:opacity-50"
         >
-          {checking ? <RefreshCw size={16} className="animate-spin" /> : <Thermometer size={16} />}
-          فحص الطقس الآن
+          {checking ? <RefreshCw size={12} className="animate-spin" /> : <Thermometer size={12} />}
+          فحص
         </button>
         <button
-          onClick={triggerAutoCheck}
-          disabled={checking || !settings.has_api_key}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
+          onClick={saveSettings}
+          disabled={saving}
+          className="flex-1 bg-blue-500 text-white py-1.5 rounded font-bold text-xs flex items-center justify-center gap-1 disabled:opacity-50"
         >
-          {checking ? <RefreshCw size={16} className="animate-spin" /> : <Cloud size={16} />}
-          تشغيل الفحص التلقائي
+          <Save size={12} />
+          حفظ
         </button>
       </div>
 
-      {/* عرض الطقس الحالي */}
-      {currentWeather && (
-        <div className={`p-3 rounded-lg mb-4 ${currentWeather.is_bad_weather ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
-          <div className="flex items-center gap-2">
-            <img 
-              src={`https://openweathermap.org/img/wn/${currentWeather.weather?.icon}@2x.png`}
-              alt="weather"
-              className="w-12 h-12"
-            />
-            <div>
-              <p className="font-bold text-gray-900">{currentWeather.weather?.city}</p>
-              <p className="text-sm text-gray-600">{currentWeather.weather?.condition_ar}</p>
-              <p className="text-sm text-gray-500">{currentWeather.weather?.temperature}°C</p>
-            </div>
-            <div className="mr-auto text-left">
-              {currentWeather.is_bad_weather ? (
-                <>
-                  <p className="text-orange-600 font-bold">⚠️ طقس سيء</p>
-                  <p className="text-sm text-orange-600">{currentWeather.bad_reason}</p>
-                  <p className="text-xs text-gray-500">رسوم مقترحة: {currentWeather.suggested_surcharge} ل.س</p>
-                </>
-              ) : (
-                <p className="text-green-600 font-bold">✅ طقس جيد</p>
-              )}
-            </div>
-          </div>
+      {/* الطقس الحالي */}
+      {currentWeather?.weather && (
+        <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+          <span className="font-bold">{currentWeather.weather.city}:</span> {currentWeather.weather.condition_ar} ({currentWeather.weather.temp}°C)
         </div>
       )}
-
-      {/* زر الحفظ */}
-      <button
-        onClick={saveSettings}
-        disabled={saving}
-        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-      >
-        {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-        حفظ إعدادات الطقس
-      </button>
     </div>
   );
 };
