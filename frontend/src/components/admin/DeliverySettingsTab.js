@@ -1244,11 +1244,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={max_food_orders_per_driver}
+                value={max_food_orders_per_driver || ''}
                 onChange={(e) => setSettings({
                   ...settings,
-                  max_food_orders_per_driver: parseInt(e.target.value) || 1
+                  max_food_orders_per_driver: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                    setSettings({...settings, max_food_orders_per_driver: 1});
+                  }
+                }}
                 className="w-full p-3 border border-orange-300 rounded-lg text-center text-sm font-bold"
                 min={1}
                 max={10}
@@ -1271,11 +1276,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={waitCompensationSettings.max_product_orders_per_driver || 7}
+                value={waitCompensationSettings.max_product_orders_per_driver || ''}
                 onChange={(e) => setWaitCompensationSettings({
                   ...waitCompensationSettings,
-                  max_product_orders_per_driver: parseInt(e.target.value) || 7
+                  max_product_orders_per_driver: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                    setWaitCompensationSettings({...waitCompensationSettings, max_product_orders_per_driver: 1});
+                  }
+                }}
                 className="w-full p-3 border border-purple-300 rounded-lg text-center text-sm font-bold"
                 min={1}
                 max={15}
@@ -1298,11 +1308,16 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={food_orders_max_distance_km}
+                value={food_orders_max_distance_km || ''}
                 onChange={(e) => setSettings({
                   ...settings,
-                  food_orders_max_distance_km: parseFloat(e.target.value) || 5
+                  food_orders_max_distance_km: e.target.value === '' ? '' : parseFloat(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseFloat(e.target.value) < 1) {
+                    setSettings({...settings, food_orders_max_distance_km: 1});
+                  }
+                }}
                 className="w-full p-3 border border-blue-300 rounded-lg text-center text-sm font-bold"
                 min={1}
                 max={20}
