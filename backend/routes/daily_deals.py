@@ -276,8 +276,22 @@ async def create_deal_request(data: dict, user: dict = Depends(get_current_user)
     # جلب معلومات المنتج
     product = await db.products.find_one({"id": data["product_id"], "seller_id": user["id"]})
     if not product:
-        # محاولة البحث في منتجات الطعام
-        product = await db.food_items.find_one({"id": data["product_id"], "store_id": user.get("store_id")})
+        # محاولة البحث في منتجات الطعام بعدة طرق
+        # أولاً: البحث باستخدام store_id من المستخدم
+        store_id = user.get("store_id")
+        
+        # إذا لم يكن store_id في المستخدم، نبحث عن المتجر الخاص به
+        if not store_id:
+            store = await db.food_stores.find_one({"owner_id": user["id"]})
+            if store:
+                store_id = store["id"]
+        
+        if store_id:
+            # البحث في food_products أولاً (الجدول الأساسي لمنتجات الطعام)
+            product = await db.food_products.find_one({"id": data["product_id"], "store_id": store_id})
+            if not product:
+                # البحث في food_items كبديل
+                product = await db.food_items.find_one({"id": data["product_id"], "store_id": store_id})
     
     if not product:
         raise HTTPException(status_code=404, detail="المنتج غير موجود أو لا تملك صلاحية له")

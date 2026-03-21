@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User
+  LogOut, Settings, User, Flame
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -58,6 +58,8 @@ const FoodStoreDashboard = () => {
   const [togglingStore, setTogglingStore] = useState(false);
   const [showCloseReason, setShowCloseReason] = useState(false);
   const [closeReason, setCloseReason] = useState('');
+  const [showDailyDealModal, setShowDailyDealModal] = useState(false);
+  const [selectedProductForDeal, setSelectedProductForDeal] = useState(null);
   
   // مرجع لصوت الإشعار
   const audioRef = useRef(null);
@@ -237,6 +239,15 @@ const FoodStoreDashboard = () => {
             إنشاء متجر طعام
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Wait for store data before checking approval
+  if (!store) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -569,6 +580,17 @@ const FoodStoreDashboard = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
+                      {/* زر طلب عرض يومي */}
+                      <button
+                        onClick={() => {
+                          setSelectedProductForDeal(product);
+                          setShowDailyDealModal(true);
+                        }}
+                        className="p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200"
+                        title="طلب عرض يومي"
+                      >
+                        <Flame size={14} />
+                      </button>
                       <button
                         onClick={() => handleToggleAvailability(product.id, product.is_available)}
                         className={`p-1.5 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
@@ -660,6 +682,22 @@ const FoodStoreDashboard = () => {
             setShowAddProduct(false);
             setEditingProduct(null);
             fetchStoreData();
+          }}
+        />
+      )}
+
+      {/* Daily Deal Request Modal */}
+      {showDailyDealModal && selectedProductForDeal && (
+        <DailyDealRequestModal
+          product={selectedProductForDeal}
+          token={token}
+          onClose={() => {
+            setShowDailyDealModal(false);
+            setSelectedProductForDeal(null);
+          }}
+          onSuccess={() => {
+            setShowDailyDealModal(false);
+            setSelectedProductForDeal(null);
           }}
         />
       )}
@@ -2374,6 +2412,183 @@ const JoinFlashSaleModal = ({ flashSale, products, settings, token, onClose, onS
               </>
             )}
           </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+
+// Daily Deal Request Modal - طلب عرض يومي
+const DailyDealRequestModal = ({ product, token, onClose, onSuccess }) => {
+  const { toast } = useToast();
+  const [discountPercentage, setDiscountPercentage] = useState(20);
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const originalPrice = product.discount_price || product.price;
+  const discountedPrice = Math.round(originalPrice * (1 - discountPercentage / 100));
+
+  const handleSubmit = async () => {
+    if (discountPercentage < 5 || discountPercentage > 90) {
+      toast({ 
+        title: "تنبيه", 
+        description: "نسبة الخصم يجب أن تكون بين 5% و 90%", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/daily-deals/requests/create`, {
+        product_id: product.id,
+        discount_percentage: discountPercentage,
+        message: message
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast({ 
+        title: "تم إرسال الطلب بنجاح! 🎉", 
+        description: "سيقوم المدير بمراجعة طلبك والرد عليك قريباً" 
+      });
+      onSuccess();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل إرسال الطلب", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl w-full max-w-md overflow-hidden"
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold flex items-center gap-2">
+              <Flame size={20} />
+              طلب عرض يومي
+            </h3>
+            <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full">
+              <X size={20} />
+            </button>
+          </div>
+          <p className="text-sm opacity-90 mt-1">قدّم منتجك لصفقات اليوم المميزة</p>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* معلومات المنتج */}
+          <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
+            <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+              {product.images?.[0] || product.image ? (
+                <img 
+                  src={product.images?.[0] || product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package size={24} className="text-gray-400" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-900">{product.name}</h4>
+              <p className="text-sm text-gray-500">السعر الأصلي: {originalPrice.toLocaleString()} ل.س</p>
+            </div>
+          </div>
+
+          {/* نسبة الخصم */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              نسبة الخصم المقترحة
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="5"
+                max="70"
+                step="5"
+                value={discountPercentage}
+                onChange={(e) => setDiscountPercentage(parseInt(e.target.value))}
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+              />
+              <span className="w-16 text-center font-bold text-orange-600 text-xl">
+                {discountPercentage}%
+              </span>
+            </div>
+          </div>
+
+          {/* معاينة السعر */}
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">السعر بعد الخصم:</span>
+              <div className="text-left">
+                <span className="text-gray-400 line-through text-sm mr-2">
+                  {originalPrice.toLocaleString()}
+                </span>
+                <span className="text-green-600 font-bold text-lg">
+                  {discountedPrice.toLocaleString()} ل.س
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-orange-600 mt-2">
+              💡 سيتم عرض المنتج في قسم "صفقات اليوم" على الصفحة الرئيسية
+            </p>
+          </div>
+
+          {/* رسالة اختيارية */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              رسالة للإدارة (اختياري)
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="مثال: منتج جديد نريد الترويج له..."
+              rows={2}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
+            />
+          </div>
+
+          {/* ملاحظة */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            <strong>ملاحظة:</strong> هذه الخدمة مجانية! سيقوم فريق الإدارة بمراجعة طلبك والموافقة عليه خلال 24 ساعة.
+          </div>
+
+          {/* أزرار */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Flame size={18} />
+                  إرسال الطلب
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

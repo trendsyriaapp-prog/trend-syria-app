@@ -1622,6 +1622,64 @@ async def admin_delete_food_offer(offer_id: str, user: dict = Depends(get_curren
     
     return {"message": "تم حذف العرض"}
 
+# ============== إنشاء عرض "اشتري X واحصل على Y" من الأدمن ==============
+
+@router.post("/food-offers/create")
+async def admin_create_food_offer(data: dict, user: dict = Depends(get_current_user)):
+    """إنشاء عرض 'اشتري X واحصل على Y' من الأدمن مباشرة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # التحقق من البيانات المطلوبة
+    if not data.get("name"):
+        raise HTTPException(status_code=400, detail="اسم العرض مطلوب")
+    if not data.get("offer_type"):
+        raise HTTPException(status_code=400, detail="نوع العرض مطلوب")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    offer_id = str(uuid.uuid4())
+    
+    offer_doc = {
+        "id": offer_id,
+        "name": data["name"],
+        "offer_type": data["offer_type"],  # buy_x_get_y, percentage, fixed_discount
+        "buy_quantity": data.get("buy_quantity", 2),
+        "get_quantity": data.get("get_quantity", 1),
+        "discount_percentage": data.get("discount_percentage"),
+        "discount_amount": data.get("discount_amount"),
+        "min_order_amount": data.get("min_order_amount"),
+        "applicable_products": data.get("applicable_products", []),
+        "applicable_stores": data.get("applicable_stores", []),  # متاجر محددة
+        "apply_to_all": data.get("apply_to_all", True),  # يطبق على جميع المتاجر
+        "store_id": data.get("store_id"),  # إذا كان لمتجر محدد
+        "is_active": data.get("is_active", True),
+        "admin_approved": True,
+        "created_by_admin": True,
+        "created_by": user["id"],
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.food_offers.insert_one(offer_doc)
+    offer_doc.pop("_id", None)
+    
+    return {"message": "تم إنشاء العرض بنجاح", "offer": offer_doc}
+
+
+@router.get("/food-stores/list")
+async def get_food_stores_list(user: dict = Depends(get_current_user)):
+    """جلب قائمة متاجر الطعام للاختيار منها"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    stores = await db.food_stores.find(
+        {"is_approved": True},
+        {"_id": 0, "id": 1, "name": 1, "store_type": 1, "owner_name": 1}
+    ).sort("name", 1).to_list(500)
+    
+    return stores
+
+
 # ============== عروض الفلاش (Flash Sales) ==============
 
 @router.post("/flash-sales")
