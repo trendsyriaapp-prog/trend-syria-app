@@ -643,40 +643,6 @@ const AdminDashboardPage = () => {
               </div>
             </div>
 
-            {/* الروابط السريعة للعناصر الفردية */}
-            <div className="grid grid-cols-5 gap-1.5 mb-4">
-              <button 
-                onClick={() => setActiveTab('pending-sellers')} 
-                className="bg-amber-50 border border-amber-100 rounded-lg py-1.5 px-2 text-[10px] text-amber-700 hover:bg-amber-100"
-              >
-                بائعين ({stats?.pending_sellers || pendingSellers.length || 0})
-              </button>
-              <button 
-                onClick={() => setActiveTab('pending-delivery')} 
-                className="bg-cyan-50 border border-cyan-100 rounded-lg py-1.5 px-2 text-[10px] text-cyan-700 hover:bg-cyan-100"
-              >
-                سائقين ({stats?.pending_delivery || pendingDelivery.length || 0})
-              </button>
-              <button 
-                onClick={() => setActiveTab('pending-food-stores')} 
-                className="bg-green-50 border border-green-100 rounded-lg py-1.5 px-2 text-[10px] text-green-700 hover:bg-green-100"
-              >
-                متاجر ({pendingFoodStores.length || 0})
-              </button>
-              <button 
-                onClick={() => setActiveTab('pending-products')} 
-                className="bg-blue-50 border border-blue-100 rounded-lg py-1.5 px-2 text-[10px] text-blue-700 hover:bg-blue-100"
-              >
-                منتجات ({stats?.pending_products || pendingProducts.length || 0})
-              </button>
-              <button 
-                onClick={() => setActiveTab('pending-food-items')} 
-                className="bg-orange-50 border border-orange-100 rounded-lg py-1.5 px-2 text-[10px] text-orange-700 hover:bg-orange-100"
-              >
-                أطباق ({pendingFoodItems.length || 0})
-              </button>
-            </div>
-
             {/* ======== الأقسام المجمّعة ======== */}
             <div className="space-y-3">
               
