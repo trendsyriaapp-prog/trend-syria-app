@@ -368,6 +368,11 @@ async def get_product_badge_settings():
                     "messages": ["🚚 شحن مجاني", "💰 وفّرت التوصيل", "⚡ توصيل مجاني"],
                     "threshold": 50000
                 },
+                "buy_2_free_shipping": {
+                    "enabled": True,
+                    "messages": ["🚚 اشترِ 2 = شحن مجاني", "✨ قطعتين = توصيل مجاني", "🎁 2 قطع = شحن 0"],
+                    "quantity": 2
+                },
                 "best_seller": {
                     "enabled": True,
                     "messages": ["🔥 الأكثر مبيعاً", "⭐ منتج مميز", "💎 الأعلى طلباً"],
@@ -384,6 +389,14 @@ async def get_product_badge_settings():
         }
         await db.product_badge_settings.insert_one(settings)
         settings.pop("_id", None)
+    
+    # إضافة شارة اشتري 2 إذا لم تكن موجودة
+    if "buy_2_free_shipping" not in settings.get("badge_types", {}):
+        settings["badge_types"]["buy_2_free_shipping"] = {
+            "enabled": True,
+            "messages": ["🚚 اشترِ 2 = شحن مجاني", "✨ قطعتين = توصيل مجاني", "🎁 2 قطع = شحن 0"],
+            "quantity": 2
+        }
     
     return settings
 

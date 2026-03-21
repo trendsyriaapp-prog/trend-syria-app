@@ -42,6 +42,11 @@ const ProductBadgesTab = () => {
             messages: ['🚚 شحن مجاني', '💰 وفّرت التوصيل', '⚡ توصيل مجاني'],
             threshold: 50000
           },
+          buy_2_free_shipping: {
+            enabled: true,
+            messages: ['🚚 اشترِ 2 = شحن مجاني', '✨ قطعتين = توصيل مجاني', '🎁 2 قطع = شحن 0'],
+            quantity: 2
+          },
           best_seller: {
             enabled: true,
             messages: ['🔥 الأكثر مبيعاً', '⭐ منتج مميز', '💎 الأعلى طلباً'],
@@ -130,14 +135,25 @@ const ProductBadgesTab = () => {
     {
       key: 'free_shipping',
       title: 'شارة الشحن المجاني',
+      description: 'تظهر على المنتجات التي سعرها يصل لحد الشحن المجاني',
       icon: Truck,
       color: 'blue',
       thresholdLabel: 'حد السعر (ل.س)',
       thresholdField: 'threshold'
     },
     {
+      key: 'buy_2_free_shipping',
+      title: 'شارة اشترِ 2 = شحن مجاني',
+      description: 'تظهر على المنتجات التي عند شراء X منها يصل السعر لحد الشحن المجاني',
+      icon: Truck,
+      color: 'green',
+      thresholdLabel: 'عدد القطع المطلوبة',
+      thresholdField: 'quantity'
+    },
+    {
       key: 'best_seller',
       title: 'شارة الأكثر مبيعاً',
+      description: 'تظهر على المنتجات الأكثر مبيعاً',
       icon: Flame,
       color: 'orange',
       thresholdLabel: 'الحد الأدنى للمبيعات',
@@ -146,6 +162,7 @@ const ProductBadgesTab = () => {
     {
       key: 'most_viewed',
       title: 'شارة الأكثر زيارة',
+      description: 'تظهر على المنتجات الأكثر مشاهدة',
       icon: Eye,
       color: 'purple',
       thresholdLabel: 'الحد الأدنى للمشاهدات',
@@ -208,7 +225,12 @@ const ProductBadgesTab = () => {
             <div className={`flex items-center justify-between p-4 bg-${config.color}-50 border-b border-${config.color}-100`}>
               <div className="flex items-center gap-2">
                 <config.icon size={20} className={`text-${config.color}-500`} />
-                <h3 className="font-bold text-gray-900">{config.title}</h3>
+                <div>
+                  <h3 className="font-bold text-gray-900">{config.title}</h3>
+                  {config.description && (
+                    <p className="text-xs text-gray-500">{config.description}</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => toggleBadgeType(config.key)}

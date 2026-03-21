@@ -27,28 +27,22 @@
 
 ### Session: March 2026 (Latest - 21 Mar)
 
-#### 🆕 18. إنشاء عروض "اشتري X واحصل Y" من الأدمن + طلب عروض يومية من البائع (Completed ✅) - 21 Mar 2026
-- **الوصف**: ميزتان جديدتان لنظام العروض
+#### 🆕 18. شارة "اشتري 2 = شحن مجاني" في قسم الشارات (Completed ✅) - 21 Mar 2026
+- **الوصف**: نقل ميزة "اشتري X واحصل على شحن مجاني" من قسم العروض إلى قسم الشارات
 - **الميزات**:
-  1. **للأدمن**: إمكانية إنشاء عروض "اشتري X واحصل على Y مجاناً" مباشرة من لوحة التحكم
-     - نافذة إنشاء عرض جديد مع اختيار نوع العرض (اشتري واحصل، خصم نسبة، خصم ثابت)
-     - تحديد الكمية للشراء والكمية المجانية
-     - اختيار النطاق (جميع المتاجر أو متجر محدد)
-  2. **للبائع**: إمكانية طلب عرض يومي لمنتجاته
-     - زر 🔥 (Flame) بجانب كل منتج في لوحة البائع
-     - نافذة لتحديد نسبة الخصم المقترحة (5%-70%)
-     - معاينة السعر بعد الخصم
-     - إرسال الطلب للأدمن للموافقة
-- **Backend APIs الجديدة**:
-  - `POST /api/admin/food-offers/create` - إنشاء عرض من الأدمن
-  - `GET /api/admin/food-stores/list` - قائمة المتاجر للاختيار
-  - `POST /api/daily-deals/requests/create` - إنشاء طلب عرض يومي من البائع
+  - شارة تظهر تلقائياً على المنتجات التي عند شراء X منها يصل السعر لحد الشحن المجاني
+  - مثال: حد الشحن = 100,000 | سعر المنتج = 55,000 ← تظهر شارة "اشترِ 2 = شحن مجاني"
+  - إعدادات قابلة للتعديل: عدد القطع المطلوبة، نصوص الشارة
+- **التغييرات**:
+  - إزالة زر "إنشاء عرض اشتري X واحصل Y" من FoodOffersTab
+  - إضافة شارة `buy_2_free_shipping` في ProductBadgesTab
+  - تحديث ProductBadge.js لعرض الشارة على المنتجات المؤهلة
+- **الموقع**: لوحة الأدمن ← شارات المنتجات
 - **الملفات المعدلة**:
-  - `/app/frontend/src/components/admin/FoodOffersTab.js` - AdminCreateOfferModal
-  - `/app/frontend/src/pages/FoodStoreDashboard.js` - DailyDealRequestModal + Flame button
-  - `/app/backend/routes/admin.py` - API لإنشاء العرض
-  - `/app/backend/routes/daily_deals.py` - تحسين البحث عن المنتجات
-- **الاختبار**: ✅ 100% backend + 95% frontend (testing_agent iteration_106)
+  - `/app/frontend/src/components/admin/FoodOffersTab.js` - إزالة الموديل والزر
+  - `/app/frontend/src/components/admin/ProductBadgesTab.js` - إضافة شارة جديدة
+  - `/app/frontend/src/components/ProductBadge.js` - تحديث منطق العرض
+  - `/app/backend/routes/settings.py` - إضافة الشارة الجديدة
 
 #### 🆕 17. نظام تسجيل متاجر الطعام الجديد (Completed ✅) - 21 Mar 2026
 - **الوصف**: إعادة تصميم صفحة التسجيل كبائع طعام بنظام جديد

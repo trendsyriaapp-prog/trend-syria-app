@@ -20,8 +20,10 @@ const ProductBadge = ({
     }
 
     const { badge_types } = badgeSettings;
+    const price = product.price || 0;
+    const freeShippingThreshold = badge_types.free_shipping?.threshold || 50000;
     
-    // أولوية الشارات: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
+    // أولوية الشارات: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني > اشتري X = شحن مجاني
     if (badge_types.best_seller?.enabled && product.sales_count >= (badge_types.best_seller.min_sales || 10)) {
       setActiveBadge({
         type: 'best_seller',
@@ -32,29 +34,23 @@ const ProductBadge = ({
         type: 'most_viewed',
         messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة']
       });
-    } else if (badge_types.free_shipping?.enabled) {
-      const threshold = badge_types.free_shipping.threshold || 50000;
-      const price = product.price || 0;
-      
-      if (price >= threshold) {
+    } else if (badge_types.free_shipping?.enabled && price >= freeShippingThreshold) {
+      // المنتج يستحق شحن مجاني مباشر
+      setActiveBadge({
+        type: 'free_shipping',
+        messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني']
+      });
+    } else if (badge_types.buy_2_free_shipping?.enabled) {
+      // شارة "اشتري X = شحن مجاني"
+      const quantity = badge_types.buy_2_free_shipping.quantity || 2;
+      // تظهر الشارة إذا سعر X قطع يصل لحد الشحن المجاني
+      if (price * quantity >= freeShippingThreshold && price < freeShippingThreshold) {
         setActiveBadge({
-          type: 'free_shipping',
-          messages: badge_types.free_shipping.messages || ['🚚 شحن مجاني']
+          type: 'buy_x_free_shipping',
+          messages: badge_types.buy_2_free_shipping.messages || [`🚚 اشترِ ${quantity} = شحن مجاني`]
         });
       } else {
-        const unitsNeeded = Math.ceil(threshold / price);
-        if (unitsNeeded >= 2 && unitsNeeded <= 3) {
-          setActiveBadge({
-            type: 'free_shipping_qty',
-            messages: [
-              `🛒 اشترِ ${unitsNeeded} = شحن مجاني`,
-              `📦 ${unitsNeeded} قطع = توصيل مجاني`,
-              `✨ وفّر التوصيل بـ ${unitsNeeded} قطع`
-            ]
-          });
-        } else {
-          setActiveBadge(null);
-        }
+        setActiveBadge(null);
       }
     } else {
       setActiveBadge(null);
