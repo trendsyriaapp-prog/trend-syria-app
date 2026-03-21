@@ -1,5 +1,5 @@
 // /app/frontend/src/components/admin/ProductsTab.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Package, Eye, EyeOff, Trash2, Edit, X, MoreVertical,
@@ -20,6 +20,18 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
+
+  // منع التمرير في الخلفية عند فتح المربع
+  useEffect(() => {
+    if (selectedProduct || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedProduct, showDeleteModal]);
 
   const filteredProducts = filter === 'all' 
     ? allProducts 
@@ -173,107 +185,107 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
       {/* نافذة تفاصيل المنتج */}
       {selectedProduct && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedProduct(null)}
         >
           <div 
-            className="bg-white rounded-t-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
+            className="bg-white rounded-xl w-full max-w-xs max-h-[70vh] overflow-y-auto overscroll-contain"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
-              <h3 className="font-bold text-base">تفاصيل المنتج</h3>
-              <button onClick={() => setSelectedProduct(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                <X size={20} />
+            <div className="sticky top-0 bg-white border-b px-3 py-2 flex items-center justify-between z-10">
+              <h3 className="font-bold text-sm">تفاصيل المنتج</h3>
+              <button onClick={() => setSelectedProduct(null)} className="p-1.5 hover:bg-gray-100 rounded-full">
+                <X size={18} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3">
+            <div className="p-3 space-y-2">
               {/* الصورة */}
               <img 
                 src={selectedProduct.images?.[0] || 'https://via.placeholder.com/300'} 
                 alt={selectedProduct.name}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-32 object-cover rounded-lg"
               />
 
               {/* الاسم والسعر */}
               <div>
-                <h2 className="font-bold text-lg">{selectedProduct.name}</h2>
-                <p className="text-[#FF6B00] font-bold text-xl">{formatPrice(selectedProduct.price)}</p>
+                <h2 className="font-bold text-sm">{selectedProduct.name}</h2>
+                <p className="text-[#FF6B00] font-bold text-base">{formatPrice(selectedProduct.price)}</p>
               </div>
 
               {/* الحالة */}
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 flex-wrap">
                 {selectedProduct.is_hidden ? (
-                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full flex items-center gap-1">
-                    <EyeOff size={12} /> مخفي
+                  <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full flex items-center gap-1">
+                    <EyeOff size={10} /> مخفي
                   </span>
                 ) : (
-                  <span className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded-full flex items-center gap-1">
-                    <CheckCircle size={12} /> مرئي
+                  <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-600 rounded-full flex items-center gap-1">
+                    <CheckCircle size={10} /> مرئي
                   </span>
                 )}
                 {selectedProduct.stock < 10 && (
-                  <span className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded-full">
-                    مخزون منخفض: {selectedProduct.stock}
+                  <span className="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full">
+                    مخزون: {selectedProduct.stock}
                   </span>
                 )}
               </div>
 
               {/* أزرار الإجراءات */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => handleToggleVisibility(selectedProduct.id, selectedProduct.is_hidden)}
                   disabled={processing}
-                  className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium transition-colors ${
                     selectedProduct.is_hidden 
                       ? 'bg-green-50 text-green-600 hover:bg-green-100'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {selectedProduct.is_hidden ? <Eye size={16} /> : <EyeOff size={16} />}
-                  {selectedProduct.is_hidden ? 'إظهار المنتج' : 'إخفاء المنتج'}
+                  {selectedProduct.is_hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {selectedProduct.is_hidden ? 'إظهار' : 'إخفاء'}
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(selectedProduct)}
-                  className="flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                  className="flex items-center justify-center gap-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors"
                 >
-                  <Trash2 size={16} />
-                  حذف المنتج
+                  <Trash2 size={14} />
+                  حذف
                 </button>
               </div>
 
               {/* المعلومات */}
-              <div className="space-y-2">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">البائع</p>
-                  <p className="text-sm font-medium flex items-center gap-1">
-                    <Store size={14} className="text-gray-400" />
-                    {selectedProduct.seller_name || 'غير محدد'}
-                  </p>
+              <div className="space-y-1.5">
+                <div className="bg-gray-50 rounded-lg p-2 flex items-center gap-2">
+                  <Store size={14} className="text-gray-400" />
+                  <div>
+                    <p className="text-[10px] text-gray-400">البائع</p>
+                    <p className="text-xs font-medium">{selectedProduct.seller_name || 'غير محدد'}</p>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">التصنيف</p>
-                  <p className="text-sm font-medium flex items-center gap-1">
-                    <Tag size={14} className="text-gray-400" />
-                    {selectedProduct.category || 'غير محدد'}
-                  </p>
+                <div className="bg-gray-50 rounded-lg p-2 flex items-center gap-2">
+                  <Tag size={14} className="text-gray-400" />
+                  <div>
+                    <p className="text-[10px] text-gray-400">التصنيف</p>
+                    <p className="text-xs font-medium">{selectedProduct.category || 'غير محدد'}</p>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">المخزون</p>
-                  <p className="text-sm font-medium flex items-center gap-1">
-                    <Layers size={14} className="text-gray-400" />
-                    {selectedProduct.stock} قطعة
-                  </p>
+                <div className="bg-gray-50 rounded-lg p-2 flex items-center gap-2">
+                  <Layers size={14} className="text-gray-400" />
+                  <div>
+                    <p className="text-[10px] text-gray-400">المخزون</p>
+                    <p className="text-xs font-medium">{selectedProduct.stock} قطعة</p>
+                  </div>
                 </div>
 
                 {selectedProduct.description && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">الوصف</p>
-                    <p className="text-sm text-gray-700">{selectedProduct.description}</p>
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-[10px] text-gray-400 mb-1">الوصف</p>
+                    <p className="text-xs text-gray-700 line-clamp-3">{selectedProduct.description}</p>
                   </div>
                 )}
               </div>
