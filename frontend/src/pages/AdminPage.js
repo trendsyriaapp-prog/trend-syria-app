@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -318,7 +318,7 @@ const AdminDashboardPage = () => {
 
   // Tab titles map
   const tabTitles = {
-    'users': 'جميع المستخدمين',
+    'users': 'عملاء',
     'sellers': 'جميع البائعين',
     'products': 'جميع المنتجات',
     'orders': 'جميع الطلبات',
@@ -680,21 +680,41 @@ const AdminDashboardPage = () => {
             {/* ======== الأقسام المجمّعة ======== */}
             <div className="space-y-3">
               
-              {/* 👥 المستخدمين والدعم */}
+              {/* 👥 المستخدمين */}
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="bg-blue-50 px-3 py-1.5 border-b border-blue-100">
                   <h3 className="text-xs font-bold text-blue-700 flex items-center gap-1.5">
-                    <Users size={12} /> المستخدمين والدعم
+                    <Users size={12} /> المستخدمين
                   </h3>
                 </div>
                 <div className="grid grid-cols-3 gap-px bg-gray-100">
                   {[
-                    { icon: Users, label: 'المستخدمين', tab: 'users' },
-                    { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
-                    { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
+                    { icon: User, label: 'عملاء', tab: 'users' },
+                    { icon: Store, label: 'بائعين', tab: 'sellers' },
+                    { icon: Truck, label: 'سائقين', tab: 'delivery' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
                       <item.icon size={16} className="text-blue-600" />
+                      <span className="text-[10px] text-gray-600">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 🎧 الدعم الفني */}
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="bg-indigo-50 px-3 py-1.5 border-b border-indigo-100">
+                  <h3 className="text-xs font-bold text-indigo-700 flex items-center gap-1.5">
+                    <Headphones size={12} /> الدعم الفني
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-px bg-gray-100">
+                  {[
+                    { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
+                    { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
+                  ].map((item, i) => (
+                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
+                      <item.icon size={16} className="text-indigo-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
                   ))}
@@ -705,12 +725,11 @@ const AdminDashboardPage = () => {
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="bg-cyan-50 px-3 py-1.5 border-b border-cyan-100">
                   <h3 className="text-xs font-bold text-cyan-700 flex items-center gap-1.5">
-                    <Truck size={12} /> التوصيل والسائقين
+                    <Truck size={12} /> إعدادات التوصيل
                   </h3>
                 </div>
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
-                    { icon: Truck, label: 'السائقين', tab: 'delivery' },
                     { icon: Map, label: 'الخريطة', tab: 'drivers-map' },
                     { icon: BarChart2, label: 'الأداء', tab: 'drivers-performance' },
                     { icon: Settings, label: 'الإعدادات', tab: 'delivery-settings' },
@@ -729,16 +748,15 @@ const AdminDashboardPage = () => {
                 </div>
               </div>
 
-              {/* 🏪 البائعين والمنتجات */}
+              {/* 🏪 المتاجر والمنتجات */}
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="bg-purple-50 px-3 py-1.5 border-b border-purple-100">
                   <h3 className="text-xs font-bold text-purple-700 flex items-center gap-1.5">
-                    <Package size={12} /> البائعين والمنتجات
+                    <Package size={12} /> المتاجر والمنتجات
                   </h3>
                 </div>
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
-                    { icon: Users, label: 'البائعين', tab: 'sellers' },
                     { icon: Package, label: 'المنتجات', tab: 'products' },
                     { icon: ShoppingBag, label: 'الطلبات', tab: 'orders' },
                     { icon: DollarSign, label: 'العمولات', tab: 'commissions' },
