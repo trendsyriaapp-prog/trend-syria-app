@@ -1124,8 +1124,13 @@ const DeliverySettingsTab = () => {
                     value={waitCompensationSettings.geofencing_max_distance_meters || ''}
                     onChange={(e) => setWaitCompensationSettings({
                       ...waitCompensationSettings,
-                      geofencing_max_distance_meters: parseInt(e.target.value) || 150
+                      geofencing_max_distance_meters: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                     })}
+                    onBlur={(e) => {
+                      if (e.target.value === '' || parseInt(e.target.value) < 50) {
+                        setWaitCompensationSettings({...waitCompensationSettings, geofencing_max_distance_meters: 150});
+                      }
+                    }}
                     className="w-24 p-2 border border-blue-300 rounded text-center text-sm font-bold"
                     min={50}
                     max={500}
@@ -1169,8 +1174,13 @@ const DeliverySettingsTab = () => {
                   value={waitCompensationSettings.warnings_before_final || ''}
                   onChange={(e) => setWaitCompensationSettings({
                     ...waitCompensationSettings,
-                    warnings_before_final: parseInt(e.target.value) || 7
+                    warnings_before_final: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setWaitCompensationSettings({...waitCompensationSettings, warnings_before_final: 7});
+                    }
+                  }}
                   className="w-full p-2 border border-gray-300 rounded-lg text-center"
                   min={1}
                 />
@@ -1462,8 +1472,13 @@ const DeliverySettingsTab = () => {
                 value={deliveryTimeSettings.buffer_minutes || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
-                  buffer_minutes: parseInt(e.target.value) || 5
+                  buffer_minutes: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 3) {
+                    setDeliveryTimeSettings({...deliveryTimeSettings, buffer_minutes: 5});
+                  }
+                }}
                 className="w-full p-3 border border-green-300 rounded-lg text-center text-sm font-bold"
                 min={3}
                 max={20}
@@ -1492,8 +1507,13 @@ const DeliverySettingsTab = () => {
                 value={deliveryTimeSettings.warning_before_minutes || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
-                  warning_before_minutes: parseInt(e.target.value) || 3
+                  warning_before_minutes: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                    setDeliveryTimeSettings({...deliveryTimeSettings, warning_before_minutes: 3});
+                  }
+                }}
                 className="w-full p-3 border border-amber-300 rounded-lg text-center text-sm font-bold"
                 min={1}
                 max={10}
@@ -1542,8 +1562,13 @@ const DeliverySettingsTab = () => {
                 value={deliveryTimeSettings.penalty_amount || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
-                  penalty_amount: parseInt(e.target.value) || 500
+                  penalty_amount: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 100) {
+                    setDeliveryTimeSettings({...deliveryTimeSettings, penalty_amount: 500});
+                  }
+                }}
                 className="w-full p-2 border border-red-300 rounded-lg text-center text-sm font-bold"
                 min={100}
                 max={5000}
@@ -1567,8 +1592,13 @@ const DeliverySettingsTab = () => {
                 value={deliveryTimeSettings.max_penalty_per_day || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
-                  max_penalty_per_day: parseInt(e.target.value) || 2000
+                  max_penalty_per_day: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 500) {
+                    setDeliveryTimeSettings({...deliveryTimeSettings, max_penalty_per_day: 2000});
+                  }
+                }}
                 className="w-full p-2 border border-purple-300 rounded-lg text-center text-sm font-bold"
                 min={500}
                 max={10000}
@@ -1631,9 +1661,14 @@ const DeliverySettingsTab = () => {
                   ...settings,
                   leaderboard_rewards: {
                     ...leaderboard_rewards,
-                    first: parseInt(e.target.value) || 0
+                    first: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   }
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, first: 0}});
+                  }
+                }}
                 className="w-full p-2 border rounded-lg text-center"
                 min={0}
                 step={5000}
@@ -1652,9 +1687,14 @@ const DeliverySettingsTab = () => {
                   ...settings,
                   leaderboard_rewards: {
                     ...leaderboard_rewards,
-                    second: parseInt(e.target.value) || 0
+                    second: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   }
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, second: 0}});
+                  }
+                }}
                 className="w-full p-2 border rounded-lg text-center"
                 min={0}
                 step={5000}
@@ -1673,9 +1713,14 @@ const DeliverySettingsTab = () => {
                   ...settings,
                   leaderboard_rewards: {
                     ...leaderboard_rewards,
-                    third: parseInt(e.target.value) || 0
+                    third: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   }
                 })}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, third: 0}});
+                  }
+                }}
                 className="w-full p-2 border rounded-lg text-center"
                 min={0}
                 step={5000}
@@ -1770,9 +1815,14 @@ const DeliverySettingsTab = () => {
                     ...settings,
                     performance_levels: {
                       ...performance_levels,
-                      beginner_max: parseInt(e.target.value) || 0
+                      beginner_max: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                     }
                   })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setSettings({...settings, performance_levels: {...performance_levels, beginner_max: 9}});
+                    }
+                  }}
                   className="w-full p-2 border rounded-lg"
                   min={1}
                 />
@@ -1788,9 +1838,14 @@ const DeliverySettingsTab = () => {
                     ...settings,
                     performance_levels: {
                       ...performance_levels,
-                      bronze_max: parseInt(e.target.value) || 0
+                      bronze_max: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                     }
                   })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setSettings({...settings, performance_levels: {...performance_levels, bronze_max: 29}});
+                    }
+                  }}
                   className="w-full p-2 border rounded-lg"
                   min={performance_levels.beginner_max + 1}
                 />
@@ -1806,9 +1861,14 @@ const DeliverySettingsTab = () => {
                     ...settings,
                     performance_levels: {
                       ...performance_levels,
-                      silver_max: parseInt(e.target.value) || 0
+                      silver_max: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                     }
                   })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setSettings({...settings, performance_levels: {...performance_levels, silver_max: 59}});
+                    }
+                  }}
                   className="w-full p-2 border rounded-lg"
                   min={performance_levels.bronze_max + 1}
                 />
@@ -1824,9 +1884,14 @@ const DeliverySettingsTab = () => {
                     ...settings,
                     performance_levels: {
                       ...performance_levels,
-                      gold_max: parseInt(e.target.value) || 0
+                      gold_max: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                     }
                   })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setSettings({...settings, performance_levels: {...performance_levels, gold_max: 99}});
+                    }
+                  }}
                   className="w-full p-2 border rounded-lg"
                   min={performance_levels.silver_max + 1}
                 />
@@ -2007,8 +2072,13 @@ const DeliverySettingsTab = () => {
                 </label>
                 <input
                   type="number"
-                  value={holdSettings.food_hold_hours}
-                  onChange={(e) => setHoldSettings({ ...holdSettings, food_hold_hours: parseInt(e.target.value) || 1 })}
+                  value={holdSettings.food_hold_hours || ''}
+                  onChange={(e) => setHoldSettings({ ...holdSettings, food_hold_hours: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setHoldSettings({ ...holdSettings, food_hold_hours: 1 });
+                    }
+                  }}
                   min="1"
                   max="72"
                   className="w-full p-3 border rounded-lg text-lg"
@@ -2021,8 +2091,13 @@ const DeliverySettingsTab = () => {
                 </label>
                 <input
                   type="number"
-                  value={holdSettings.products_hold_hours}
-                  onChange={(e) => setHoldSettings({ ...holdSettings, products_hold_hours: parseInt(e.target.value) || 24 })}
+                  value={holdSettings.products_hold_hours || ''}
+                  onChange={(e) => setHoldSettings({ ...holdSettings, products_hold_hours: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                      setHoldSettings({ ...holdSettings, products_hold_hours: 24 });
+                    }
+                  }}
                   min="1"
                   max="168"
                   className="w-full p-3 border rounded-lg text-lg"
