@@ -76,7 +76,7 @@ const JoinAsFoodSellerPage = () => {
   const { user, token } = useAuth();
   const { toast } = useToast();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // تبدأ من 0 (شاشة الترحيب)
   const [loading, setLoading] = useState(false);
   const [sameHoursAllDays, setSameHoursAllDays] = useState(true);
   const [mainType, setMainType] = useState(''); // food or market
@@ -152,7 +152,7 @@ const JoinAsFoodSellerPage = () => {
       delivery_fee: defaults?.default_delivery_fee || 5000,
       free_delivery_minimum: defaults?.default_free_delivery || 0
     });
-    setStep(2); // الانتقال لاختيار الأصناف
+    setStep(2); // الانتقال لاختيار الأصناف (كانت 2، الآن 2 أيضاً لكن step يبدأ من 0)
   };
 
   // اختيار/إلغاء صنف فرعي
@@ -180,7 +180,7 @@ const JoinAsFoodSellerPage = () => {
       ...formData,
       sub_categories: selectedCategories
     });
-    setStep(3); // الانتقال لإدخال معلومات المتجر
+    setStep(4); // الانتقال لإدخال معلومات المتجر
   };
 
   const handleTypeSelect = (typeId) => {
@@ -230,7 +230,7 @@ const JoinAsFoodSellerPage = () => {
         title: "تم التسجيل بنجاح! 🎉", 
         description: "سيتم مراجعة طلبك من قبل الإدارة" 
       });
-      setStep(5); // Success step
+      setStep(6); // Success step
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -275,19 +275,19 @@ const JoinAsFoodSellerPage = () => {
       <div className="bg-gradient-to-b from-[#E65000] to-[#FF6B00] text-white px-4 py-6">
         <div className="max-w-2xl mx-auto">
           <button
-            onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
+            onClick={() => step > 0 ? setStep(step - 1) : navigate(-1)}
             className="flex items-center gap-2 text-white/80 hover:text-white mb-4"
           >
             <ArrowLeft size={20} />
             رجوع
           </button>
-          <h1 className="text-2xl font-bold">انضم كمتجر طعام</h1>
-          <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في ترند سورية</p>
+          <h1 className="text-2xl font-bold">{step === 0 ? 'انضم لعائلة ترند سورية' : 'انضم كمتجر طعام'}</h1>
+          <p className="text-orange-100 text-sm mt-1">{step === 0 ? 'ابدأ رحلتك في عالم التجارة الإلكترونية' : 'ابدأ ببيع منتجاتك في ترند سورية'}</p>
           
           {/* Progress */}
-          {step < 5 && (
+          {step > 0 && step < 6 && (
             <div className="flex gap-2 mt-4">
-              {[1, 2, 3, 4].map((s) => (
+              {[1, 2, 3, 4, 5].map((s) => (
                 <div
                   key={s}
                   className={`flex-1 h-1.5 rounded-full ${s <= step ? 'bg-white' : 'bg-white/30'}`}
@@ -299,6 +299,108 @@ const JoinAsFoodSellerPage = () => {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Step 0: Welcome Screen */}
+        {step === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Welcome Message */}
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Store size={40} className="text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">مرحباً بك!</h2>
+              <p className="text-gray-600">اختر النوع المناسب لنشاطك التجاري</p>
+            </div>
+
+            {/* Food Type Card */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border-2 border-orange-200"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-14 h-14 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow">
+                  <UtensilsCrossed size={28} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-orange-800">قسم الطعام</h3>
+                  <p className="text-sm text-orange-600">مطاعم، كافيهات، حلويات</p>
+                </div>
+              </div>
+              <div className="space-y-2 mr-2">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">وصول لآلاف العملاء الجائعين</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">نظام طلبات متكامل وسهل</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">توصيل سريع خلال 30 دقيقة</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Market Type Card */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border-2 border-blue-200"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow">
+                  <ShoppingCart size={28} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-blue-800">قسم الماركت</h3>
+                  <p className="text-sm text-blue-600">متاجر، محلات، بقالة</p>
+                </div>
+              </div>
+              <div className="space-y-2 mr-2">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">بيع المنتجات المتنوعة (لحوم، ألبان، مخبوزات)</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">إدارة المخزون بسهولة</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">عمولة مناسبة على المبيعات</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CTA Button */}
+            <button
+              onClick={() => setStep(1)}
+              className="w-full bg-gradient-to-l from-[#E65000] to-[#FF6B00] text-white py-4 rounded-xl font-bold text-lg hover:from-[#D14500] hover:to-[#E65000] transition-all shadow-lg"
+            >
+              ابدأ التسجيل الآن
+            </button>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3 mt-6">
+              <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                <p className="text-2xl font-bold text-[#FF6B00]">+500</p>
+                <p className="text-[10px] text-gray-500">متجر نشط</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                <p className="text-2xl font-bold text-[#FF6B00]">+10K</p>
+                <p className="text-[10px] text-gray-500">طلب شهرياً</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                <p className="text-2xl font-bold text-[#FF6B00]">24/7</p>
+                <p className="text-[10px] text-gray-500">دعم فني</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Step 1: Select Main Type (Food or Market) */}
         {step === 1 && (
           <motion.div
@@ -383,8 +485,8 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 3: Basic Info */}
-        {step === 3 && (
+        {/* Step 4: Basic Info */}
+        {step === 4 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -476,7 +578,7 @@ const JoinAsFoodSellerPage = () => {
                 type="button"
                 onClick={() => {
                   if (formData.name && formData.phone && formData.city && formData.address && formData.latitude && formData.longitude) {
-                    setStep(4);
+                    setStep(5);
                   } else if (!formData.latitude || !formData.longitude) {
                     toast({ title: "تنبيه", description: "يرجى تحديد موقع المتجر على الخريطة", variant: "destructive" });
                   } else {
@@ -491,8 +593,8 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 4: Additional Info & Images */}
-        {step === 4 && (
+        {/* Step 5: Additional Info & Images */}
+        {step === 5 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -718,8 +820,8 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 5: Success */}
-        {step === 5 && (
+        {/* Step 6: Success */}
+        {step === 6 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
