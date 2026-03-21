@@ -38,31 +38,58 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
     if (pendingOnly && pendingFoodStores.length > 0) {
       setStores(pendingFoodStores);
       setLoading(false);
-    } else {
+    } else if (!pendingOnly) {
       fetchData();
+    } else {
+      setLoading(false);
     }
-  }, [filter, typeFilter, pendingOnly, pendingFoodStores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, typeFilter, pendingOnly]);
 
   const fetchData = async () => {
+    console.log('FoodStoresTab: fetchData started');
     setLoading(true);
     try {
       const params = {};
       if (filter !== 'all') params.status = filter;
       if (typeFilter !== 'all') params.store_type = typeFilter;
 
+      console.log('FoodStoresTab: Fetching data with params:', params);
+      
+      // جلب البيانات مع معالجة الأخطاء لكل طلب
       const [storesRes, statsRes, commissionsRes] = await Promise.all([
-        axios.get(`${API}/admin/food/stores`, { params }),
-        axios.get(`${API}/admin/food/stats`),
-        axios.get(`${API}/admin/food/commissions`)
+        axios.get(`${API}/admin/food/stores`, { params }).catch(e => {
+          console.error('FoodStoresTab: Error fetching stores:', e);
+          return { data: [] };
+        }),
+        axios.get(`${API}/admin/food/stats`).catch(e => {
+          console.error('FoodStoresTab: Error fetching stats:', e);
+          return { data: null };
+        }),
+        axios.get(`${API}/admin/food/commissions`).catch(e => {
+          console.error('FoodStoresTab: Error fetching commissions:', e);
+          return { data: null };
+        })
       ]);
+
+      console.log('FoodStoresTab: Data fetched successfully', {
+        stores: storesRes.data?.length || 0,
+        stats: statsRes.data,
+        commissions: commissionsRes.data
+      });
 
       setStores(storesRes.data || []);
       setStats(statsRes.data);
       setCommissions(commissionsRes.data);
       setEditingCommissions(commissionsRes.data?.commissions || {});
     } catch (error) {
-      console.error('Error fetching food data:', error);
+      console.error('FoodStoresTab: Error in fetchData:', error);
+      // في حالة الخطأ، نضع قيم فارغة
+      setStores([]);
+      setStats(null);
+      setCommissions(null);
     } finally {
+      console.log('FoodStoresTab: fetchData finished, setting loading to false');
       setLoading(false);
     }
   };
