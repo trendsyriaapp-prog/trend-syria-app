@@ -6,7 +6,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
   Flame, Plus, Trash2, Edit2, Clock, Package, 
-  Calendar, Percent, X, Check, Zap, ChevronDown, Bell
+  Calendar, Percent, X, Check, Zap, ChevronDown, Bell,
+  Search, Filter, Store, CheckCircle, XCircle, Eye
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -35,6 +36,16 @@ const DailyDealsTab = () => {
   const [editingDeal, setEditingDeal] = useState(null);
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, dealId: null, title: '' });
+  
+  // البحث والتصفية
+  const [productSearch, setProductSearch] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('all');
+  
+  // طلبات البائعين
+  const [dealRequests, setDealRequests] = useState([]);
+  const [showRequests, setShowRequests] = useState(false);
+  const [activeTab, setActiveTab] = useState('deals'); // deals | requests
+  
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -49,6 +60,7 @@ const DailyDealsTab = () => {
   useEffect(() => {
     fetchDeals();
     fetchProducts();
+    fetchDealRequests();
   }, []);
 
   const fetchDeals = async () => {
@@ -78,6 +90,51 @@ const DailyDealsTab = () => {
       }
     }
   };
+
+  // جلب طلبات البائعين
+  const fetchDealRequests = async () => {
+    try {
+      const response = await axios.get(`${API}/api/daily-deals/requests`);
+      setDealRequests(response.data.requests || []);
+    } catch (error) {
+      console.error('Error fetching deal requests:', error);
+    }
+  };
+
+  // قبول طلب بائع
+  const approveRequest = async (requestId) => {
+    try {
+      await axios.post(`${API}/api/daily-deals/requests/${requestId}/approve`);
+      toast({ title: "تم قبول الطلب", description: "تمت إضافة المنتج لصفقات اليوم" });
+      fetchDealRequests();
+      fetchDeals();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل في قبول الطلب", variant: "destructive" });
+    }
+  };
+
+  // رفض طلب بائع
+  const rejectRequest = async (requestId, reason = '') => {
+    try {
+      await axios.post(`${API}/api/daily-deals/requests/${requestId}/reject`, { reason });
+      toast({ title: "تم رفض الطلب", description: "تم إعلام البائع" });
+      fetchDealRequests();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل في رفض الطلب", variant: "destructive" });
+    }
+  };
+
+  // تصفية المنتجات
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = !productSearch || 
+      product.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      product.seller_name?.toLowerCase().includes(productSearch.toLowerCase());
+    const matchesSeller = sellerFilter === 'all' || product.seller_id === sellerFilter;
+    return matchesSearch && matchesSeller;
+  });
+
+  // الحصول على قائمة البائعين الفريدة
+  const uniqueSellers = [...new Map(products.map(p => [p.seller_id, { id: p.seller_id, name: p.seller_name }])).values()].filter(s => s.id && s.name);
 
   const openModal = (deal = null) => {
     if (deal) {
@@ -208,6 +265,9 @@ const DailyDealsTab = () => {
     );
   }
 
+  // عدد الطلبات المعلقة
+  const pendingRequestsCount = dealRequests.filter(r => r.status === 'pending').length;
+
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -231,7 +291,116 @@ const DailyDealsTab = () => {
         </button>
       </div>
 
-      {/* Deals List */}
+      {/* Tabs: صفقات | طلبات البائعين */}
+      <div className="flex gap-2 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('deals')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'deals' 
+              ? 'border-orange-500 text-orange-600' 
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Flame size={16} className="inline ml-1" />
+          الصفقات النشطة
+        </button>
+        <button
+          onClick={() => setActiveTab('requests')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors relative ${
+            activeTab === 'requests' 
+              ? 'border-orange-500 text-orange-600' 
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Store size={16} className="inline ml-1" />
+          طلبات البائعين
+          {pendingRequestsCount > 0 && (
+            <span className="absolute -top-1 -left-1 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
+              {pendingRequestsCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* طلبات البائعين */}
+      {activeTab === 'requests' && (
+        <div className="space-y-3">
+          {dealRequests.length === 0 ? (
+            <div className="text-center py-10 bg-gray-50 rounded-xl">
+              <Store size={40} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500">لا توجد طلبات من البائعين</p>
+              <p className="text-xs text-gray-400 mt-1">عندما يطلب بائع إضافة منتجه لصفقات اليوم، سيظهر هنا</p>
+            </div>
+          ) : (
+            dealRequests.map((request) => (
+              <div 
+                key={request.id}
+                className={`bg-white rounded-xl border p-4 ${
+                  request.status === 'pending' ? 'border-orange-200' : 
+                  request.status === 'approved' ? 'border-green-200' : 'border-red-200'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <img 
+                    src={request.product_image || 'https://via.placeholder.com/60'} 
+                    alt={request.product_name}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-gray-900">{request.product_name}</h4>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        request.status === 'pending' ? 'bg-orange-100 text-orange-600' :
+                        request.status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                      }`}>
+                        {request.status === 'pending' ? 'معلق' : request.status === 'approved' ? 'مقبول' : 'مرفوض'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                      <Store size={12} />
+                      {request.seller_name}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      <span className="text-gray-600">
+                        السعر: <span className="line-through text-gray-400">{formatPrice(request.original_price)}</span>
+                      </span>
+                      <span className="text-green-600 font-bold">
+                        بعد الخصم: {formatPrice(request.discounted_price)}
+                      </span>
+                      <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold">
+                        -{request.discount_percentage}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {request.status === 'pending' && (
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => approveRequest(request.id)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-600"
+                    >
+                      <CheckCircle size={16} />
+                      قبول
+                    </button>
+                    <button
+                      onClick={() => rejectRequest(request.id)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-600"
+                    >
+                      <XCircle size={16} />
+                      رفض
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* الصفقات النشطة */}
+      {activeTab === 'deals' && (
+        <>      {/* Deals List */}
       {deals.length === 0 ? (
         <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
           <Flame size={48} className="text-gray-300 mx-auto mb-3" />
@@ -306,6 +475,8 @@ const DailyDealsTab = () => {
             </motion.div>
           ))}
         </div>
+      )}
+      </>
       )}
 
       {/* Modal */}
@@ -440,29 +611,76 @@ const DailyDealsTab = () => {
                 </div>
                 
                 {showProductSelector && (
-                  <div className="border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
-                    {products.map((product) => (
-                      <label
-                        key={product.id}
-                        className="flex items-center gap-3 p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
-                      >
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Search and Filter */}
+                    <div className="p-2 bg-gray-50 border-b border-gray-200 space-y-2">
+                      <div className="relative">
+                        <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
-                          type="checkbox"
-                          checked={form.product_ids.includes(product.id)}
-                          onChange={() => toggleProduct(product.id)}
-                          className="w-4 h-4 text-orange-500 rounded"
+                          type="text"
+                          value={productSearch}
+                          onChange={(e) => setProductSearch(e.target.value)}
+                          placeholder="ابحث عن منتج أو بائع..."
+                          className="w-full pr-9 pl-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
-                        <img
-                          src={product.images?.[0] || 'https://via.placeholder.com/40'}
-                          alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-gray-500">{formatPrice(product.price)}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={sellerFilter}
+                          onChange={(e) => setSellerFilter(e.target.value)}
+                          className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="all">جميع البائعين</option>
+                          {uniqueSellers.map(seller => (
+                            <option key={seller.id} value={seller.id}>{seller.name}</option>
+                          ))}
+                        </select>
+                        <span className="text-xs text-gray-500 self-center">
+                          {filteredProducts.length} منتج
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Products List */}
+                    <div className="max-h-64 overflow-y-auto">
+                      {filteredProducts.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 text-sm">
+                          لا توجد منتجات مطابقة
                         </div>
-                      </label>
-                    ))}
+                      ) : (
+                        filteredProducts.map((product) => (
+                          <label
+                            key={product.id}
+                            className="flex items-center gap-3 p-2 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-0"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.product_ids.includes(product.id)}
+                              onChange={() => toggleProduct(product.id)}
+                              className="w-4 h-4 text-orange-500 rounded"
+                            />
+                            <img
+                              src={product.images?.[0] || 'https://via.placeholder.com/40'}
+                              alt={product.name}
+                              className="w-12 h-12 rounded-lg object-cover"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs text-gray-500">{formatPrice(product.price)}</span>
+                                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                  <Store size={10} />
+                                  {product.seller_name || 'غير محدد'}
+                                </span>
+                              </div>
+                            </div>
+                            {form.product_ids.includes(product.id) && (
+                              <CheckCircle size={18} className="text-green-500" />
+                            )}
+                          </label>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
 

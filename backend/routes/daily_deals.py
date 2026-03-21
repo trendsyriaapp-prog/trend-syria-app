@@ -243,3 +243,201 @@ async def quick_create_daily_deal(data: dict, user: dict = Depends(get_current_u
         await send_deal_notification(deal)
     
     return {"message": "تم إنشاء صفقة اليوم (24 ساعة)", "deal": deal}
+
+
+# ============ طلبات البائعين ============
+
+@router.get("/requests")
+async def get_deal_requests(user: dict = Depends(get_current_user)):
+    """جلب طلبات البائعين للمشاركة في صفقات اليوم (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    requests = await db.deal_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"requests": requests}
+
+
+@router.post("/requests/create")
+async def create_deal_request(data: dict, user: dict = Depends(get_current_user)):
+    """إنشاء طلب للمشاركة في صفقات اليوم (للبائعين)"""
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    # التحقق من البيانات المطلوبة
+    if not data.get("product_id"):
+        raise HTTPException(status_code=400, detail="معرف المنتج مطلوب")
+    if not data.get("discount_percentage"):
+        raise HTTPException(status_code=400, detail="نسبة الخصم مطلوبة")
+    
+    discount = data["discount_percentage"]
+    if discount < 5 or discount > 90:
+        raise HTTPException(status_code=400, detail="نسبة الخصم يجب أن تكون بين 5% و 90%")
+    
+    # جلب معلومات المنتج
+    product = await db.products.find_one({"id": data["product_id"], "seller_id": user["id"]})
+    if not product:
+        # محاولة البحث في منتجات الطعام
+        product = await db.food_items.find_one({"id": data["product_id"], "store_id": user.get("store_id")})
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود أو لا تملك صلاحية له")
+    
+    # التحقق من عدم وجود طلب معلق سابق لنفس المنتج
+    existing = await db.deal_requests.find_one({
+        "product_id": data["product_id"],
+        "status": "pending"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="يوجد طلب معلق بالفعل لهذا المنتج")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    original_price = product.get("discount_price") or product.get("price", 0)
+    discounted_price = int(original_price * (1 - discount / 100))
+    
+    request_doc = {
+        "id": str(uuid.uuid4()),
+        "seller_id": user["id"],
+        "seller_name": user.get("name", "بائع"),
+        "product_id": data["product_id"],
+        "product_name": product.get("name", "منتج"),
+        "product_image": product.get("images", [None])[0] if isinstance(product.get("images"), list) else product.get("image"),
+        "original_price": original_price,
+        "discount_percentage": discount,
+        "discounted_price": discounted_price,
+        "message": data.get("message", ""),
+        "status": "pending",  # pending, approved, rejected
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.deal_requests.insert_one(request_doc)
+    
+    # إنشاء إشعار للمدير
+    admin_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": "admin",
+        "title": "طلب جديد لصفقات اليوم",
+        "message": f"{user.get('name', 'بائع')} يطلب إضافة {product.get('name', 'منتج')} بخصم {discount}%",
+        "type": "deal_request",
+        "data": {"request_id": request_doc["id"]},
+        "is_read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {"message": "تم إرسال طلبك بنجاح", "request_id": request_doc["id"]}
+
+
+@router.post("/requests/{request_id}/approve")
+async def approve_deal_request(request_id: str, user: dict = Depends(get_current_user)):
+    """قبول طلب بائع (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    request = await db.deal_requests.find_one({"id": request_id})
+    if not request:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الطلب تم معالجته مسبقاً")
+    
+    now = datetime.now(timezone.utc)
+    
+    # تحديث حالة الطلب
+    await db.deal_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "approved", "updated_at": now.isoformat(), "approved_by": user["id"]}}
+    )
+    
+    # إنشاء صفقة يوم جديدة لهذا المنتج (24 ساعة)
+    deal = {
+        "id": str(uuid.uuid4()),
+        "title": f"عرض خاص: {request['product_name']}",
+        "description": f"خصم {request['discount_percentage']}% من {request['seller_name']}",
+        "discount_percentage": request["discount_percentage"],
+        "start_time": now.isoformat(),
+        "end_time": (now + timedelta(hours=24)).isoformat(),
+        "product_ids": [request["product_id"]],
+        "food_item_ids": [],
+        "banner_image": request.get("product_image", ""),
+        "background_color": "#FF6B00",
+        "is_active": True,
+        "created_by": user["id"],
+        "from_request": request_id,
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    await db.daily_deals.insert_one(deal)
+    
+    # إشعار البائع
+    seller_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": request["seller_id"],
+        "title": "تم قبول طلبك! 🎉",
+        "message": f"تمت إضافة {request['product_name']} لصفقات اليوم لمدة 24 ساعة",
+        "type": "deal_request_approved",
+        "data": {"deal_id": deal["id"]},
+        "is_read": False,
+        "created_at": now.isoformat()
+    }
+    await db.notifications.insert_one(seller_notification)
+    
+    return {"message": "تم قبول الطلب وإنشاء الصفقة"}
+
+
+@router.post("/requests/{request_id}/reject")
+async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(get_current_user)):
+    """رفض طلب بائع (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    request = await db.deal_requests.find_one({"id": request_id})
+    if not request:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if request["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الطلب تم معالجته مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    reason = data.get("reason", "")
+    
+    # تحديث حالة الطلب
+    await db.deal_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": "rejected", 
+            "updated_at": now, 
+            "rejected_by": user["id"],
+            "rejection_reason": reason
+        }}
+    )
+    
+    # إشعار البائع
+    seller_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": request["seller_id"],
+        "title": "تم رفض طلبك",
+        "message": f"عذراً، تم رفض طلب إضافة {request['product_name']} لصفقات اليوم" + (f". السبب: {reason}" if reason else ""),
+        "type": "deal_request_rejected",
+        "data": {"request_id": request_id},
+        "is_read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(seller_notification)
+    
+    return {"message": "تم رفض الطلب"}
+
+
+@router.get("/seller/my-requests")
+async def get_my_deal_requests(user: dict = Depends(get_current_user)):
+    """جلب طلباتي للمشاركة في صفقات اليوم (للبائع)"""
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    requests = await db.deal_requests.find(
+        {"seller_id": user["id"]}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return {"requests": requests}
+
