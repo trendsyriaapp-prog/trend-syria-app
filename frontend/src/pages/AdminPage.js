@@ -549,9 +549,24 @@ const AdminDashboardPage = () => {
               <h1 className="text-lg font-bold text-gray-900">
                 {user.user_type === 'admin' ? 'لوحة التحكم' : 'لوحة المدير التنفيذي'}
               </h1>
-              {user.user_type === 'sub_admin' && (
-                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
-              )}
+              <div className="flex items-center gap-2">
+                {user.user_type === 'sub_admin' && (
+                  <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
+                )}
+                {/* أيقونة الإشعارات */}
+                <button
+                  onClick={() => setActiveTab('notifications')}
+                  className="relative p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                  title="الإشعارات"
+                >
+                  <Bell size={20} className="text-gray-600" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {notifications.length > 9 ? '9+' : notifications.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* الموافقات المعلقة - 3 أيقونات رئيسية */}
@@ -672,17 +687,15 @@ const AdminDashboardPage = () => {
                     <Users size={12} /> المستخدمين والدعم
                   </h3>
                 </div>
-                <div className="grid grid-cols-4 gap-px bg-gray-100">
+                <div className="grid grid-cols-3 gap-px bg-gray-100">
                   {[
                     { icon: Users, label: 'المستخدمين', tab: 'users' },
-                    { icon: Bell, label: 'الإشعارات', tab: 'notifications', badge: notifications.length },
                     { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
                     { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
                       <item.icon size={16} className="text-blue-600" />
                       <span className="text-[10px] text-gray-600">{item.label}</span>
-                      {item.badge > 0 && <span className="text-[8px] bg-red-500 text-white px-1 rounded-full">{item.badge}</span>}
                     </button>
                   ))}
                 </div>
