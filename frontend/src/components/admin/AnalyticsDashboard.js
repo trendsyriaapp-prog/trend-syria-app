@@ -27,6 +27,8 @@ const AnalyticsDashboard = () => {
   const [activeChart, setActiveChart] = useState('sales');
 
   useEffect(() => {
+    // التمرير للأعلى عند فتح الصفحة
+    window.scrollTo(0, 0);
     fetchAllData();
   }, []);
 

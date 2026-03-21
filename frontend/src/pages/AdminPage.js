@@ -89,8 +89,12 @@ const AdminDashboardPage = () => {
   const [callRequestsCount, setCallRequestsCount] = useState(0);
   const [emergencyCount, setEmergencyCount] = useState(0);
 
-  // تحديث URL عند تغيير التبويب
+  // تحديث URL عند تغيير التبويب + التمرير للأعلى
   useEffect(() => {
+    // التمرير للأعلى عند تغيير التبويب
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0; // للمتصفحات القديمة
+    
     if (activeTab === 'overview') {
       searchParams.delete('tab');
     } else {
