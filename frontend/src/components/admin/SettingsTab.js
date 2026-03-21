@@ -259,10 +259,10 @@ const SettingsTab = ({ user }) => {
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
-                    value={deliveryFees[item.key]}
+                    value={deliveryFees[item.key] === 0 ? '' : deliveryFees[item.key]}
                     onChange={(e) => setDeliveryFees({
                       ...deliveryFees,
-                      [item.key]: parseInt(e.target.value) || 0
+                      [item.key]: e.target.value === '' ? 0 : parseInt(e.target.value)
                     })}
                     className="w-20 p-1.5 border border-gray-300 rounded text-xs text-left"
                   />
@@ -328,10 +328,10 @@ const SettingsTab = ({ user }) => {
             <div className="flex items-center gap-1">
               <input
                 type="number"
-                value={withdrawalLimits.seller}
+                value={withdrawalLimits.seller === 0 ? '' : withdrawalLimits.seller}
                 onChange={(e) => setWithdrawalLimits({
                   ...withdrawalLimits,
-                  seller: parseInt(e.target.value) || 0
+                  seller: e.target.value === '' ? 0 : parseInt(e.target.value)
                 })}
                 className="w-24 p-1.5 border border-gray-300 rounded text-xs text-left"
                 step="10000"
@@ -344,10 +344,10 @@ const SettingsTab = ({ user }) => {
             <div className="flex items-center gap-1">
               <input
                 type="number"
-                value={withdrawalLimits.delivery}
+                value={withdrawalLimits.delivery === 0 ? '' : withdrawalLimits.delivery}
                 onChange={(e) => setWithdrawalLimits({
                   ...withdrawalLimits,
-                  delivery: parseInt(e.target.value) || 0
+                  delivery: e.target.value === '' ? 0 : parseInt(e.target.value)
                 })}
                 className="w-24 p-1.5 border border-gray-300 rounded text-xs text-left"
                 step="10000"
@@ -376,8 +376,8 @@ const SettingsTab = ({ user }) => {
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={freeShipping}
-              onChange={(e) => setFreeShipping(parseInt(e.target.value) || 0)}
+              value={freeShipping === 0 ? '' : freeShipping}
+              onChange={(e) => setFreeShipping(e.target.value === '' ? 0 : parseInt(e.target.value))}
               className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               step="10000"
             />
@@ -403,8 +403,8 @@ const SettingsTab = ({ user }) => {
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={foodFreeDelivery}
-              onChange={(e) => setFoodFreeDelivery(parseInt(e.target.value) || 0)}
+              value={foodFreeDelivery === 0 ? '' : foodFreeDelivery}
+              onChange={(e) => setFoodFreeDelivery(e.target.value === '' ? 0 : parseInt(e.target.value))}
               className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               step="10000"
             />
@@ -430,8 +430,8 @@ const SettingsTab = ({ user }) => {
           <div className="flex items-center gap-2">
             <input
               type="number"
-              value={lowStockThreshold}
-              onChange={(e) => setLowStockThreshold(parseInt(e.target.value) || 1)}
+              value={lowStockThreshold === 0 ? '' : lowStockThreshold}
+              onChange={(e) => setLowStockThreshold(e.target.value === '' ? 1 : parseInt(e.target.value))}
               className="flex-1 p-1.5 border border-gray-300 rounded text-xs text-left"
               min="1"
               data-testid="low-stock-threshold-input"
@@ -582,8 +582,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
             <label className="text-xs text-gray-600">مهلة الإلغاء (ثانية)</label>
             <input
               type="number"
-              value={settings.cancel_window_seconds}
-              onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: parseInt(e.target.value) || 0 }))}
+              value={settings.cancel_window_seconds === 0 ? '' : settings.cancel_window_seconds}
+              onChange={(e) => setSettings(s => ({ ...s, cancel_window_seconds: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
               className="w-20 p-1.5 border border-gray-200 rounded text-xs text-left"
             />
           </div>
@@ -594,8 +594,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
               <label className="text-xs text-gray-600">نسبة القصوى %</label>
               <input
                 type="number"
-                value={settings.max_cancel_rate}
-                onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: parseInt(e.target.value) || 0 }))}
+                value={settings.max_cancel_rate === 0 ? '' : settings.max_cancel_rate}
+                onChange={(e) => setSettings(s => ({ ...s, max_cancel_rate: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
                 className="w-16 p-1.5 border border-gray-200 rounded text-xs text-left"
               />
             </div>
@@ -603,8 +603,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
               <label className="text-xs text-gray-600">طلبات الحساب</label>
               <input
                 type="number"
-                value={settings.lookback_orders}
-                onChange={(e) => setSettings(s => ({ ...s, lookback_orders: parseInt(e.target.value) || 0 }))}
+                value={settings.lookback_orders === 0 ? '' : settings.lookback_orders}
+                onChange={(e) => setSettings(s => ({ ...s, lookback_orders: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
                 className="w-16 p-1.5 border border-gray-200 rounded text-xs text-left"
               />
             </div>
@@ -616,8 +616,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
               <label className="text-xs text-yellow-600">⚠️ تحذير %</label>
               <input
                 type="number"
-                value={settings.warning_threshold}
-                onChange={(e) => setSettings(s => ({ ...s, warning_threshold: parseInt(e.target.value) || 0 }))}
+                value={settings.warning_threshold === 0 ? '' : settings.warning_threshold}
+                onChange={(e) => setSettings(s => ({ ...s, warning_threshold: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
                 className="w-16 p-1.5 border border-yellow-200 rounded text-xs bg-yellow-50 text-left"
               />
             </div>
@@ -625,8 +625,8 @@ const DriverCancelSettingsSection = ({ toast }) => {
               <label className="text-xs text-red-600">🔴 إيقاف %</label>
               <input
                 type="number"
-                value={settings.suspension_threshold}
-                onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: parseInt(e.target.value) || 0 }))}
+                value={settings.suspension_threshold === 0 ? '' : settings.suspension_threshold}
+                onChange={(e) => setSettings(s => ({ ...s, suspension_threshold: e.target.value === '' ? 0 : parseInt(e.target.value) }))}
                 className="w-16 p-1.5 border border-red-200 rounded text-xs bg-red-50 text-left"
               />
             </div>
