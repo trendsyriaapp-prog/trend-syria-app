@@ -13,13 +13,36 @@ const formatPrice = (price) => {
 
 // أسماء أنواع المتاجر بالعربي
 const FOOD_STORE_TYPE_NAMES = {
-  restaurants: 'مطاعم',
+  // طعام
+  restaurants: 'وجبات سريعة',
   fast_food: 'وجبات سريعة',
-  market: 'ماركت',
-  vegetables: 'خضار وفواكه',
+  hot_drinks: 'مشروبات ساخنة',
   sweets: 'حلويات',
+  // ماركت
+  market: 'ماركت',
+  supermarket: 'سوبرماركت',
+  bakery: 'مخابز',
+  butcher: 'ملاحم',
+  dairy: 'ألبان وأجبان',
+  vegetables: 'خضار وفواكه',
   groceries: 'مواد غذائية',
   default: 'افتراضي'
+};
+
+// أيقونات الأصناف
+const STORE_TYPE_ICONS = {
+  restaurants: '🍔',
+  fast_food: '🍔',
+  hot_drinks: '☕',
+  sweets: '🍰',
+  market: '🛒',
+  supermarket: '🛒',
+  bakery: '🥖',
+  butcher: '🍖',
+  dairy: '🧀',
+  vegetables: '🥬',
+  groceries: '🥫',
+  default: '📦'
 };
 
 const CommissionsTab = ({ 
@@ -207,13 +230,7 @@ const CommissionsTab = ({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">
-                    {storeType === 'restaurants' && '🍽️'}
-                    {storeType === 'fast_food' && '🍔'}
-                    {storeType === 'market' && '🛒'}
-                    {storeType === 'vegetables' && '🥬'}
-                    {storeType === 'sweets' && '🍰'}
-                    {storeType === 'groceries' && '🥫'}
-                    {storeType === 'default' && '📦'}
+                    {STORE_TYPE_ICONS[storeType] || '📦'}
                   </span>
                   <span className="font-medium text-gray-800 text-sm">
                     {FOOD_STORE_TYPE_NAMES[storeType] || storeType}

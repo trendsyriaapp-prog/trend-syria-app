@@ -21,10 +21,15 @@ MAIN_CATEGORIES = {
 FOOD_STORE_TYPES = {
     # قسم الطعام
     "restaurants": {"name": "وجبات سريعة", "main_category": "food", "icon": "🍔"},
+    "hot_drinks": {"name": "مشروبات ساخنة", "main_category": "food", "icon": "☕"},
     "sweets": {"name": "حلويات", "main_category": "food", "icon": "🍰"},
-    "drinks": {"name": "مشروبات", "main_category": "food", "icon": "☕"},
+    "drinks": {"name": "مشروبات", "main_category": "food", "icon": "🥤"},  # للتوافق القديم
     # قسم الماركت
     "supermarket": {"name": "سوبرماركت", "main_category": "market", "icon": "🛒"},
+    "market": {"name": "ماركت", "main_category": "market", "icon": "🛒"},  # للتوافق القديم
+    "bakery": {"name": "مخابز", "main_category": "market", "icon": "🥖"},
+    "butcher": {"name": "ملاحم", "main_category": "market", "icon": "🍖"},
+    "dairy": {"name": "ألبان وأجبان", "main_category": "market", "icon": "🧀"},
     "vegetables": {"name": "خضار وفواكه", "main_category": "market", "icon": "🥬"},
 }
 
@@ -41,16 +46,22 @@ def get_main_category(store_type: str) -> str:
 # أوقات التحضير الافتراضية لكل نوع
 DEFAULT_PREPARATION_TIMES = {
     "restaurants": 20,  # دقيقة
+    "hot_drinks": 10,
     "sweets": 15,
     "drinks": 10,
     "supermarket": 10,
+    "market": 10,
+    "bakery": 15,
+    "butcher": 15,
+    "dairy": 10,
     "vegetables": 8,
 }
 
 # Models
 class FoodStoreCreate(BaseModel):
     name: str
-    store_type: str  # restaurants, sweets, drinks, supermarket, vegetables
+    store_type: str  # food or market (النوع الرئيسي)
+    sub_categories: Optional[List[str]] = []  # الأصناف الفرعية المختارة
     main_category: Optional[str] = None  # food or market (يُحسب تلقائياً)
     description: Optional[str] = None
     phone: str
@@ -367,11 +378,15 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
     if user["user_type"] not in ["seller", "food_seller", "admin"]:
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
-    if store.store_type not in FOOD_STORE_TYPES:
+    # التحقق من النوع الرئيسي (food أو market)
+    if store.store_type not in ["food", "market"] and store.store_type not in FOOD_STORE_TYPES:
         raise HTTPException(status_code=400, detail="نوع المتجر غير صالح")
     
-    # حساب القسم الرئيسي تلقائياً
-    main_category = get_main_category(store.store_type)
+    # حساب القسم الرئيسي
+    if store.store_type in ["food", "market"]:
+        main_category = store.store_type
+    else:
+        main_category = get_main_category(store.store_type)
     
     # التحقق من عدم وجود متجر سابق
     existing = await db.food_stores.find_one({
@@ -389,6 +404,7 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
         "owner_phone": user.get("phone", ""),
         "name": store.name,
         "store_type": store.store_type,
+        "sub_categories": store.sub_categories or [],  # الأصناف الفرعية
         "main_category": main_category,
         "description": store.description,
         "phone": store.phone,
@@ -401,6 +417,8 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
         "free_delivery_minimum": store.free_delivery_minimum,
         "delivery_fee": store.delivery_fee,
         "working_hours": store.working_hours,
+        "latitude": store.latitude,
+        "longitude": store.longitude,
         "rating": 0,
         "reviews_count": 0,
         "orders_count": 0,

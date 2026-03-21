@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Store, MapPin, 
-  Phone, Clock, ArrowLeft, CheckCircle, Upload, Image, Cake
+  Phone, Clock, ArrowLeft, CheckCircle, Upload, Image, Cake,
+  Coffee, Croissant, Beef, Milk
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -15,53 +16,55 @@ import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-// أنواع المتاجر مع الإعدادات الافتراضية
-const STORE_TYPES = [
+// الأنواع الرئيسية
+const MAIN_TYPES = [
   { 
-    id: 'restaurants', 
-    name: 'وجبات سريعة', 
+    id: 'food', 
+    name: 'طعام', 
     icon: UtensilsCrossed, 
-    color: 'bg-red-500', 
-    description: 'مطاعم، شاورما، بيتزا، برغر، سندويشات',
-    default_delivery_time: 20,
-    default_minimum_order: 15000,
-    default_delivery_fee: 5000,
-    default_free_delivery: 50000
+    color: 'bg-orange-500',
+    description: 'مطاعم، كافيهات، حلويات'
   },
   { 
     id: 'market', 
     name: 'ماركت', 
     icon: ShoppingCart, 
-    color: 'bg-blue-500', 
-    description: 'سوبرماركت، بقالة، مواد استهلاكية',
-    default_delivery_time: 10,
-    default_minimum_order: 20000,
-    default_delivery_fee: 5000,
-    default_free_delivery: 75000
+    color: 'bg-blue-500',
+    description: 'متاجر، محلات، بقالة'
   },
-  { 
-    id: 'vegetables', 
-    name: 'خضار وفواكه', 
-    icon: Apple, 
-    color: 'bg-emerald-500', 
-    description: 'خضار طازجة، فواكه موسمية، أعشاب',
-    default_delivery_time: 8,
-    default_minimum_order: 10000,
-    default_delivery_fee: 3000,
-    default_free_delivery: 40000
-  },
-  { 
-    id: 'sweets', 
-    name: 'حلويات', 
-    icon: Cake, 
-    color: 'bg-pink-500', 
-    description: 'حلويات شرقية وغربية، معجنات، آيس كريم',
-    default_delivery_time: 15,
+];
+
+// الأصناف الفرعية حسب النوع الرئيسي
+const SUB_CATEGORIES = {
+  food: [
+    { id: 'restaurants', name: 'وجبات سريعة', icon: '🍔', description: 'شاورما، برغر، بيتزا، سندويشات' },
+    { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: '☕', description: 'قهوة، شاي، نسكافيه' },
+    { id: 'sweets', name: 'حلويات', icon: '🍰', description: 'حلويات شرقية وغربية، كيك' },
+  ],
+  market: [
+    { id: 'supermarket', name: 'سوبرماركت', icon: '🛒', description: 'مواد غذائية، مستلزمات منزلية' },
+    { id: 'bakery', name: 'مخابز', icon: '🥖', description: 'خبز، معجنات، فطائر' },
+    { id: 'butcher', name: 'ملاحم', icon: '🍖', description: 'لحوم، دجاج، أسماك' },
+    { id: 'dairy', name: 'ألبان وأجبان', icon: '🧀', description: 'حليب، لبن، أجبان' },
+    { id: 'vegetables', name: 'خضار وفواكه', icon: '🥬', description: 'خضار طازجة، فواكه موسمية' },
+  ]
+};
+
+// الإعدادات الافتراضية حسب النوع الرئيسي
+const DEFAULT_SETTINGS = {
+  food: {
+    default_delivery_time: 25,
     default_minimum_order: 15000,
     default_delivery_fee: 5000,
     default_free_delivery: 50000
   },
-];
+  market: {
+    default_delivery_time: 15,
+    default_minimum_order: 20000,
+    default_delivery_fee: 5000,
+    default_free_delivery: 60000
+  }
+};
 
 const CITIES = [
   'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
@@ -76,6 +79,8 @@ const JoinAsFoodSellerPage = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [sameHoursAllDays, setSameHoursAllDays] = useState(true);
+  const [mainType, setMainType] = useState(''); // food or market
+  const [selectedCategories, setSelectedCategories] = useState([]); // الأصناف المختارة
   
   // ساعات العمل الافتراضية
   const defaultWorkingHours = {
@@ -90,6 +95,7 @@ const JoinAsFoodSellerPage = () => {
   
   const [formData, setFormData] = useState({
     store_type: '',
+    sub_categories: [],
     name: '',
     description: '',
     phone: user?.phone || '',
@@ -132,18 +138,54 @@ const JoinAsFoodSellerPage = () => {
     setFormData({ ...formData, working_hours: newHours });
   };
 
-  const handleTypeSelect = (typeId) => {
-    // جلب الإعدادات الافتراضية حسب نوع المتجر
-    const selectedType = STORE_TYPES.find(t => t.id === typeId);
+  // اختيار النوع الرئيسي (طعام أو ماركت)
+  const handleMainTypeSelect = (typeId) => {
+    setMainType(typeId);
+    setSelectedCategories([]);
+    const defaults = DEFAULT_SETTINGS[typeId];
     setFormData({ 
       ...formData, 
       store_type: typeId,
-      delivery_time: selectedType?.default_delivery_time || 30,
-      minimum_order: selectedType?.default_minimum_order || 0,
-      delivery_fee: selectedType?.default_delivery_fee || 5000,
-      free_delivery_minimum: selectedType?.default_free_delivery || 0
+      sub_categories: [],
+      delivery_time: defaults?.default_delivery_time || 30,
+      minimum_order: defaults?.default_minimum_order || 0,
+      delivery_fee: defaults?.default_delivery_fee || 5000,
+      free_delivery_minimum: defaults?.default_free_delivery || 0
     });
-    setStep(2);
+    setStep(2); // الانتقال لاختيار الأصناف
+  };
+
+  // اختيار/إلغاء صنف فرعي
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  // تأكيد الأصناف والانتقال للخطوة التالية
+  const handleCategoriesConfirm = () => {
+    if (selectedCategories.length === 0) {
+      toast({
+        title: "اختر صنفاً واحداً على الأقل",
+        description: "يجب اختيار صنف واحد على الأقل للمتابعة",
+        variant: "destructive"
+      });
+      return;
+    }
+    setFormData({
+      ...formData,
+      sub_categories: selectedCategories
+    });
+    setStep(3); // الانتقال لإدخال معلومات المتجر
+  };
+
+  const handleTypeSelect = (typeId) => {
+    // للتوافق مع الكود القديم
+    handleMainTypeSelect(typeId);
   };
 
   const handleInputChange = (e) => {
@@ -188,7 +230,7 @@ const JoinAsFoodSellerPage = () => {
         title: "تم التسجيل بنجاح! 🎉", 
         description: "سيتم مراجعة طلبك من قبل الإدارة" 
       });
-      setStep(4); // Success step
+      setStep(5); // Success step
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -243,9 +285,9 @@ const JoinAsFoodSellerPage = () => {
           <p className="text-orange-100 text-sm mt-1">ابدأ ببيع منتجاتك في ترند سورية</p>
           
           {/* Progress */}
-          {step < 4 && (
+          {step < 5 && (
             <div className="flex gap-2 mt-4">
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3, 4].map((s) => (
                 <div
                   key={s}
                   className={`flex-1 h-1.5 rounded-full ${s <= step ? 'bg-white' : 'bg-white/30'}`}
@@ -257,7 +299,7 @@ const JoinAsFoodSellerPage = () => {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Step 1: Select Type */}
+        {/* Step 1: Select Main Type (Food or Market) */}
         {step === 1 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -265,19 +307,19 @@ const JoinAsFoodSellerPage = () => {
             className="space-y-4"
           >
             <h2 className="text-lg font-bold text-gray-900 mb-4">اختر نوع متجرك</h2>
-            {STORE_TYPES.map((type) => (
+            {MAIN_TYPES.map((type) => (
               <motion.button
                 key={type.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleTypeSelect(type.id)}
-                className="w-full bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-4 text-right"
+                onClick={() => handleMainTypeSelect(type.id)}
+                className="w-full bg-white rounded-xl p-5 border-2 border-gray-200 hover:border-[#FF6B00] transition-all flex items-center gap-4 text-right"
               >
-                <div className={`w-14 h-14 ${type.color} rounded-xl flex items-center justify-center text-white`}>
-                  <type.icon size={28} />
+                <div className={`w-16 h-16 ${type.color} rounded-xl flex items-center justify-center text-white`}>
+                  <type.icon size={32} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">{type.name}</h3>
+                  <h3 className="font-bold text-xl text-gray-900">{type.name}</h3>
                   <p className="text-sm text-gray-500">{type.description}</p>
                 </div>
               </motion.button>
@@ -285,8 +327,64 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 2: Basic Info */}
+        {/* Step 2: Select Sub-Categories */}
         {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h2 className="text-lg font-bold text-gray-900 mb-2">اختر أصناف متجرك</h2>
+            <p className="text-sm text-gray-500 mb-4">يمكنك اختيار أكثر من صنف</p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {SUB_CATEGORIES[mainType]?.map((category) => (
+                <motion.button
+                  key={category.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleCategoryToggle(category.id)}
+                  className={`bg-white rounded-xl p-4 border-2 transition-all text-center ${
+                    selectedCategories.includes(category.id)
+                      ? 'border-[#FF6B00] bg-orange-50 ring-2 ring-orange-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-4xl mb-2">{category.icon}</div>
+                  <h3 className="font-bold text-gray-900 text-sm">{category.name}</h3>
+                  <p className="text-[10px] text-gray-500 mt-1">{category.description}</p>
+                  {selectedCategories.includes(category.id) && (
+                    <div className="mt-2">
+                      <CheckCircle size={20} className="mx-auto text-[#FF6B00]" />
+                    </div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+
+            {selectedCategories.length > 0 && (
+              <div className="mt-4 p-3 bg-orange-50 rounded-xl border border-orange-200">
+                <p className="text-sm text-orange-800">
+                  <span className="font-bold">الأصناف المختارة: </span>
+                  {selectedCategories.map(id => {
+                    const cat = SUB_CATEGORIES[mainType]?.find(c => c.id === id);
+                    return cat?.name;
+                  }).join('، ')}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleCategoriesConfirm}
+              disabled={selectedCategories.length === 0}
+              className="w-full mt-6 bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              متابعة ({selectedCategories.length} صنف مختار)
+            </button>
+          </motion.div>
+        )}
+
+        {/* Step 3: Basic Info */}
+        {step === 3 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -378,7 +476,7 @@ const JoinAsFoodSellerPage = () => {
                 type="button"
                 onClick={() => {
                   if (formData.name && formData.phone && formData.city && formData.address && formData.latitude && formData.longitude) {
-                    setStep(3);
+                    setStep(4);
                   } else if (!formData.latitude || !formData.longitude) {
                     toast({ title: "تنبيه", description: "يرجى تحديد موقع المتجر على الخريطة", variant: "destructive" });
                   } else {
@@ -393,8 +491,8 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 3: Additional Info & Images */}
-        {step === 3 && (
+        {/* Step 4: Additional Info & Images */}
+        {step === 4 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -620,8 +718,8 @@ const JoinAsFoodSellerPage = () => {
           </motion.div>
         )}
 
-        {/* Step 4: Success */}
-        {step === 4 && (
+        {/* Step 5: Success */}
+        {step === 5 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
