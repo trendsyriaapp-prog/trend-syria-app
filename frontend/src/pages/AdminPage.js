@@ -730,10 +730,9 @@ const AdminDashboardPage = () => {
                     <Headphones size={12} /> الدعم الفني
                   </h3>
                 </div>
-                <div className="grid grid-cols-2 gap-px bg-gray-100">
+                <div className="grid grid-cols-1 gap-px bg-gray-100">
                   {[
                     { icon: MessageCircle, label: 'محادثات الدعم', tab: 'support-tickets' },
-                    { icon: Phone, label: 'طلبات الاتصال', tab: 'support-management' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                       <item.icon size={16} className="text-indigo-600" />
@@ -752,19 +751,16 @@ const AdminDashboardPage = () => {
                 </div>
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
-                    { icon: Map, label: 'الخريطة', tab: 'drivers-map' },
                     { icon: BarChart2, label: 'الأداء', tab: 'drivers-performance' },
                     { icon: Settings, label: 'الإعدادات', tab: 'delivery-settings' },
                     { icon: Package, label: 'الصناديق', tab: 'delivery-boxes' },
                     { icon: AlertTriangle, label: 'المخالفات', tab: 'violations' },
                     { icon: DollarSign, label: 'التحديات', tab: 'challenges' },
-                    { icon: AlertTriangle, label: 'طوارئ', tab: 'emergency-help', urgent: true },
-                    { icon: Phone, label: 'طلبات اتصال', tab: 'call-requests', urgent: true },
                     { icon: Phone, label: 'المكالمات المسجلة', tab: 'recorded-calls' },
                   ].map((item, i) => (
-                    <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors ${item.urgent ? 'bg-red-50' : ''}`}>
-                      <item.icon size={16} className={item.urgent ? 'text-red-500' : 'text-cyan-600'} />
-                      <span className={`text-[10px] ${item.urgent ? 'text-red-600 font-bold' : 'text-gray-600'}`}>{item.label}</span>
+                    <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-cyan-50 transition-colors">
+                      <item.icon size={16} className="text-cyan-600" />
+                      <span className="text-[10px] text-gray-600">{item.label}</span>
                     </button>
                   ))}
                 </div>
