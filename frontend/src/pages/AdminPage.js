@@ -170,13 +170,15 @@ const AdminDashboardPage = () => {
       // Fetch call requests and emergency counts
       try {
         const [callRes, emergencyRes] = await Promise.all([
-          axios.get(`${API}/delivery/call-requests?status=pending`),
-          axios.get(`${API}/delivery/emergency-help?status=pending`)
+          axios.get(`${API}/admin/call-requests/count`).catch(() => ({ data: { count: 0 } })),
+          axios.get(`${API}/admin/emergency-help/count`).catch(() => ({ data: { count: 0 } }))
         ]);
-        setCallRequestsCount(callRes.data?.length || 0);
-        setEmergencyCount(emergencyRes.data?.length || 0);
+        setCallRequestsCount(callRes.data?.count || 0);
+        setEmergencyCount(emergencyRes.data?.count || 0);
       } catch (err) {
         console.log('Call requests or emergency data not available');
+        setCallRequestsCount(0);
+        setEmergencyCount(0);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);

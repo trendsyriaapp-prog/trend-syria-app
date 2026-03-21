@@ -155,6 +155,28 @@ async def send_platform_activation_notification(platform: str, title: str, messa
     
     return len(notifications)
 
+
+# ============== أعداد طلبات الاتصال والطوارئ ==============
+
+@router.get("/call-requests/count")
+async def get_call_requests_count(user: dict = Depends(get_current_user)):
+    """جلب عدد طلبات الاتصال المعلقة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    count = await db.call_requests.count_documents({"status": "pending"})
+    return {"count": count}
+
+@router.get("/emergency-help/count")
+async def get_emergency_help_count(user: dict = Depends(get_current_user)):
+    """جلب عدد طلبات الطوارئ المعلقة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للإدارة فقط")
+    
+    count = await db.emergency_help.count_documents({"status": "pending"})
+    return {"count": count}
+
+
 @router.get("/settings/public")
 async def get_public_settings():
     """جلب الإعدادات العامة (بدون تسجيل دخول)"""
