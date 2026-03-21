@@ -199,8 +199,8 @@ const Header = () => {
     }
   };
 
-  // إخفاء الهيدر الكامل للبائع وموظف التوصيل (إلا إذا كان يتصفح كعميل)
-  if (isSellerPage || isDeliveryPage) return null;
+  // إخفاء الهيدر الكامل للبائع وموظف التوصيل والمدير (إلا إذا كان يتصفح كعميل)
+  if (isSellerPage || isDeliveryPage || isAdminPage) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
