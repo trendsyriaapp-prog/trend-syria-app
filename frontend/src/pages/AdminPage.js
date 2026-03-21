@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -628,6 +628,16 @@ const AdminDashboardPage = () => {
                     </span>
                   )}
                 </button>
+
+                {/* أيقونة حل المشاكل */}
+                <button
+                  onClick={() => setActiveTab('problem-solver')}
+                  className="relative p-2 bg-purple-100 hover:bg-purple-200 rounded-full transition-colors"
+                  title="حل المشاكل"
+                  data-testid="problem-solver-icon"
+                >
+                  <Wrench size={20} className="text-purple-600" />
+                </button>
               </div>
             </div>
 
@@ -858,11 +868,10 @@ const AdminDashboardPage = () => {
                       <TrendingUp size={12} /> التقارير والتحليلات
                     </h3>
                   </div>
-                  <div className="grid grid-cols-4 gap-px bg-gray-100">
+                  <div className="grid grid-cols-2 gap-px bg-gray-100">
                     {[
                       { icon: TrendingUp, label: 'التحليلات', tab: 'analytics' },
                       { icon: Clock, label: 'سجل النشاط', tab: 'activity-log' },
-                      { icon: AlertTriangle, label: 'حل المشاكل', tab: 'problem-solver' },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                         <item.icon size={16} className="text-indigo-600" />
