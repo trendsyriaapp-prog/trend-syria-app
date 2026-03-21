@@ -64,10 +64,18 @@ const DailyDealsTab = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API}/api/products?limit=100`);
-      setProducts(response.data.products || []);
+      // جلب المنتجات للأدمن (جميع المنتجات بما فيها غير المعتمدة)
+      const response = await axios.get(`${API}/api/admin/products/all`);
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
+      // محاولة جلب من المسار العادي كبديل
+      try {
+        const fallbackRes = await axios.get(`${API}/api/products?limit=100`);
+        setProducts(fallbackRes.data.products || []);
+      } catch (e) {
+        console.error('Fallback fetch also failed:', e);
+      }
     }
   };
 
