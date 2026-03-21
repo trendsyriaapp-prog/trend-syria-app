@@ -1294,39 +1294,6 @@ const DeliverySettingsTab = () => {
                 {waitCompensationSettings.max_product_orders_per_driver || 7} طلبات منتجات
               </p>
             </div>
-
-            {/* المسافة القصوى */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <MapPin size={16} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">المسافة القصوى</h3>
-                  <p className="text-xs text-gray-500">بين عملاء الطعام</p>
-                </div>
-              </div>
-              <input
-                type="number"
-                value={food_orders_max_distance_km || ''}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  food_orders_max_distance_km: e.target.value === '' ? '' : parseFloat(e.target.value) || 0
-                })}
-                onBlur={(e) => {
-                  if (e.target.value === '' || parseFloat(e.target.value) < 1) {
-                    setSettings({...settings, food_orders_max_distance_km: 1});
-                  }
-                }}
-                className="w-full p-3 border border-blue-300 rounded-lg text-center text-sm font-bold"
-                min={1}
-                max={20}
-                step={0.5}
-              />
-              <p className="text-center text-sm text-blue-600 mt-2">
-                {food_orders_max_distance_km} كم
-              </p>
-            </div>
           </div>
 
           {/* شرح القواعد */}
@@ -1342,8 +1309,8 @@ const DeliverySettingsTab = () => {
                 <span><strong>طلبات المنتجات:</strong> السائق يستطيع قبول حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> منتجات (التوصيل نفس اليوم)</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-blue-500">📍</span>
-                <span><strong>المسافة:</strong> يجب ألا تزيد المسافة بين عملاء الطعام عن <strong>{food_orders_max_distance_km} كم</strong></span>
+                <span className="text-amber-500">📦</span>
+                <span><strong>طلب تجميعي:</strong> عند قبول طلب تجميعي، السائق لا يستطيع قبول طلبات أخرى حتى ينتهي</span>
               </li>
             </ul>
           </div>

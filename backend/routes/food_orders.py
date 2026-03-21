@@ -1949,6 +1949,18 @@ async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_us
             detail="يجب تعيين حالتك إلى 'متاح' قبل قبول الطلبات"
         )
     
+    # التحقق من أن السائق ليس لديه طلبات حالية - الطلب التجميعي يقفل السائق
+    current_orders = await db.food_orders.find({
+        "driver_id": user["id"],
+        "status": "out_for_delivery"
+    }).to_list(length=10)
+    
+    if current_orders:
+        raise HTTPException(
+            status_code=400,
+            detail=f"⚠️ لديك {len(current_orders)} طلب قيد التوصيل. أكمل توصيلها أولاً قبل قبول طلب تجميعي."
+        )
+    
     # جلب جميع طلبات الدفعة الجاهزة
     orders = await db.food_orders.find({
         "batch_id": batch_id,
@@ -2212,6 +2224,15 @@ async def accept_food_order(
         "driver_id": user["id"],
         "status": "out_for_delivery"
     }).to_list(length=100)
+    
+    # التحقق إذا كان السائق لديه طلب تجميعي - لا يمكنه قبول طلبات أخرى
+    has_batch_order = any(o.get("batch_id") for o in current_orders)
+    if has_batch_order:
+        batch_count = len([o for o in current_orders if o.get("batch_id")])
+        raise HTTPException(
+            status_code=400,
+            detail=f"📦 لديك طلب تجميعي ({batch_count} متجر). أكمل توصيله أولاً قبل قبول طلبات جديدة."
+        )
     
     # تصنيف الطلبات الحالية حسب نوع المتجر
     hot_fresh_count = 0
