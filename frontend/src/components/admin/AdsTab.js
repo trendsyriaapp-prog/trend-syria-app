@@ -133,82 +133,88 @@ const AdsTab = ({ user }) => {
       
       {/* Ad Prices Settings */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+        <div className="p-3 border-b border-gray-100 flex items-center gap-2">
           <DollarSign size={18} className="text-[#FF6B00]" />
-          <h3 className="font-bold text-gray-900">أسعار الإعلانات</h3>
+          <h3 className="font-bold text-gray-900 text-sm">أسعار الإعلانات</h3>
         </div>
         <div className="p-3">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="space-y-4">
             {/* Featured Product */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-bold text-gray-700 flex items-center gap-1">
-                <Star size={14} className="text-yellow-500" />
+            <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+              <h4 className="text-sm font-bold text-yellow-800 flex items-center gap-2 mb-3">
+                <Star size={16} className="text-yellow-500" />
                 منتج مميز
               </h4>
-              {['day', 'week', 'month'].map(d => (
-                <div key={d} className="flex items-center gap-2">
-                  <label className="text-xs text-gray-500 w-12">
-                    {d === 'day' ? 'يوم' : d === 'week' ? 'أسبوع' : 'شهر'}
-                  </label>
-                  <input
-                    type="number"
-                    value={prices[`featured_product_${d}`] || 0}
-                    onChange={(e) => setPrices({
-                      ...prices,
-                      [`featured_product_${d}`]: parseInt(e.target.value) || 0
-                    })}
-                    className="flex-1 p-1.5 border border-gray-300 rounded text-sm text-left"
-                  />
-                </div>
-              ))}
+              <div className="grid grid-cols-3 gap-2">
+                {['day', 'week', 'month'].map(d => (
+                  <div key={d} className="text-center">
+                    <label className="block text-[10px] text-gray-500 mb-1">
+                      {d === 'day' ? 'يوم' : d === 'week' ? 'أسبوع' : 'شهر'}
+                    </label>
+                    <input
+                      type="number"
+                      value={prices[`featured_product_${d}`] || 0}
+                      onChange={(e) => setPrices({
+                        ...prices,
+                        [`featured_product_${d}`]: parseInt(e.target.value) || 0
+                      })}
+                      className="w-full p-2 border border-yellow-300 rounded-lg text-sm text-center font-bold"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Banner */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-bold text-gray-700 flex items-center gap-1">
-                <ImageIcon size={14} className="text-purple-500" />
+            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <h4 className="text-sm font-bold text-purple-800 flex items-center gap-2 mb-3">
+                <ImageIcon size={16} className="text-purple-500" />
                 بانر الرئيسية
               </h4>
-              {['day', 'week'].map(d => (
-                <div key={d} className="flex items-center gap-2">
-                  <label className="text-xs text-gray-500 w-12">
-                    {d === 'day' ? 'يوم' : 'أسبوع'}
-                  </label>
-                  <input
-                    type="number"
-                    value={prices[`banner_${d}`] || 0}
-                    onChange={(e) => setPrices({
-                      ...prices,
-                      [`banner_${d}`]: parseInt(e.target.value) || 0
-                    })}
-                    className="flex-1 p-1.5 border border-gray-300 rounded text-sm text-left"
-                  />
-                </div>
-              ))}
+              <div className="grid grid-cols-2 gap-2">
+                {['day', 'week'].map(d => (
+                  <div key={d} className="text-center">
+                    <label className="block text-[10px] text-gray-500 mb-1">
+                      {d === 'day' ? 'يوم' : 'أسبوع'}
+                    </label>
+                    <input
+                      type="number"
+                      value={prices[`banner_${d}`] || 0}
+                      onChange={(e) => setPrices({
+                        ...prices,
+                        [`banner_${d}`]: parseInt(e.target.value) || 0
+                      })}
+                      className="w-full p-2 border border-purple-300 rounded-lg text-sm text-center font-bold"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Search Top */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-bold text-gray-700 flex items-center gap-1">
-                <Search size={14} className="text-blue-500" />
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2 mb-3">
+                <Search size={16} className="text-blue-500" />
                 أول البحث
               </h4>
-              {['day', 'week'].map(d => (
-                <div key={d} className="flex items-center gap-2">
-                  <label className="text-xs text-gray-500 w-12">
-                    {d === 'day' ? 'يوم' : 'أسبوع'}
-                  </label>
-                  <input
-                    type="number"
-                    value={prices[`search_top_${d}`] || 0}
-                    onChange={(e) => setPrices({
-                      ...prices,
-                      [`search_top_${d}`]: parseInt(e.target.value) || 0
-                    })}
-                    className="flex-1 p-1.5 border border-gray-300 rounded text-sm text-left"
-                  />
-                </div>
-              ))}
+              <div className="grid grid-cols-2 gap-2">
+                {['day', 'week'].map(d => (
+                  <div key={d} className="text-center">
+                    <label className="block text-[10px] text-gray-500 mb-1">
+                      {d === 'day' ? 'يوم' : 'أسبوع'}
+                    </label>
+                    <input
+                      type="number"
+                      value={prices[`search_top_${d}`] || 0}
+                      onChange={(e) => setPrices({
+                        ...prices,
+                        [`search_top_${d}`]: parseInt(e.target.value) || 0
+                      })}
+                      className="w-full p-2 border border-blue-300 rounded-lg text-sm text-center font-bold"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           
