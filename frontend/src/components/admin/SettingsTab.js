@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users, Cloud, Thermometer } from 'lucide-react';
+import { Settings, Truck, Banknote, Package, Save, AlertTriangle, AlertCircle, RefreshCw, XCircle, Bell, MapPin, Users, Cloud, Thermometer, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -27,6 +27,8 @@ const SettingsTab = ({ user }) => {
     medium: 8000,
     far: 12000
   });
+  const [governorateDeliveryEnabled, setGovernorateDeliveryEnabled] = useState(false);
+  const [kmDeliveryEnabled, setKmDeliveryEnabled] = useState(true);
   const [withdrawalLimits, setWithdrawalLimits] = useState({
     seller: 50000,
     delivery: 25000
@@ -46,6 +48,12 @@ const SettingsTab = ({ user }) => {
       
       if (res.data.delivery_fees) {
         setDeliveryFees(res.data.delivery_fees);
+      }
+      if (res.data.governorate_delivery_enabled !== undefined) {
+        setGovernorateDeliveryEnabled(res.data.governorate_delivery_enabled);
+      }
+      if (res.data.km_delivery_enabled !== undefined) {
+        setKmDeliveryEnabled(res.data.km_delivery_enabled);
       }
       if (res.data.min_seller_withdrawal) {
         setWithdrawalLimits({
@@ -72,7 +80,10 @@ const SettingsTab = ({ user }) => {
   const saveDeliveryFees = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/api/settings/delivery-fees`, deliveryFees);
+      await axios.put(`${API}/api/settings/delivery-fees`, {
+        ...deliveryFees,
+        governorate_delivery_enabled: governorateDeliveryEnabled
+      });
       toast({ title: "تم الحفظ", description: "تم تحديث أسعار التوصيل" });
     } catch (error) {
       toast({
@@ -82,6 +93,40 @@ const SettingsTab = ({ user }) => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleGovernorateDelivery = async () => {
+    const newValue = !governorateDeliveryEnabled;
+    setGovernorateDeliveryEnabled(newValue);
+    try {
+      await axios.put(`${API}/api/settings/delivery-system`, {
+        governorate_delivery_enabled: newValue
+      });
+      toast({ 
+        title: newValue ? "تم التفعيل" : "تم الإيقاف", 
+        description: newValue ? "نظام التوصيل بالمحافظات مفعّل الآن" : "نظام التوصيل بالمحافظات معطّل" 
+      });
+    } catch (error) {
+      setGovernorateDeliveryEnabled(!newValue);
+      toast({ title: "خطأ", description: "فشل تحديث الإعداد", variant: "destructive" });
+    }
+  };
+
+  const toggleKmDelivery = async () => {
+    const newValue = !kmDeliveryEnabled;
+    setKmDeliveryEnabled(newValue);
+    try {
+      await axios.put(`${API}/api/settings/delivery-system`, {
+        km_delivery_enabled: newValue
+      });
+      toast({ 
+        title: newValue ? "تم التفعيل" : "تم الإيقاف", 
+        description: newValue ? "نظام التوصيل بالكيلومتر مفعّل الآن" : "نظام التوصيل بالكيلومتر معطّل" 
+      });
+    } catch (error) {
+      setKmDeliveryEnabled(!newValue);
+      toast({ title: "خطأ", description: "فشل تحديث الإعداد", variant: "destructive" });
     }
   };
   
@@ -184,44 +229,94 @@ const SettingsTab = ({ user }) => {
   return (
     <section className="space-y-3" data-testid="settings-tab">
       
-      {/* Delivery Fees */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-          <Truck size={18} className="text-[#FF6B00]" />
-          <h3 className="font-bold text-gray-900">أسعار التوصيل</h3>
-        </div>
-        <div className="p-4 space-y-3">
-          {[
-            { key: 'same_city', label: 'نفس المحافظة' },
-            { key: 'nearby', label: 'محافظة قريبة' },
-            { key: 'medium', label: 'محافظة متوسطة البعد' },
-            { key: 'far', label: 'محافظة بعيدة' },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <label className="text-sm text-gray-600">{item.label}</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={deliveryFees[item.key]}
-                  onChange={(e) => setDeliveryFees({
-                    ...deliveryFees,
-                    [item.key]: parseInt(e.target.value) || 0
-                  })}
-                  className="w-24 p-2 border border-gray-300 rounded-lg text-sm text-left"
-                />
-                <span className="text-xs text-gray-400">ل.س</span>
-              </div>
+      {/* نظام التوصيل بالمحافظات */}
+      <div className={`bg-white rounded-lg border-2 overflow-hidden transition-all ${governorateDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin size={18} className="text-blue-500" />
+            <div>
+              <h3 className="font-bold text-gray-900">🗺️ نظام التوصيل بالمحافظات</h3>
+              <p className="text-xs text-gray-500">أسعار ثابتة حسب بعد المحافظة (للمنتجات)</p>
             </div>
-          ))}
+          </div>
           <button
-            onClick={saveDeliveryFees}
-            disabled={saving}
-            className="w-full bg-[#FF6B00] text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+            onClick={toggleGovernorateDelivery}
+            className={`p-1 rounded-lg transition-colors ${governorateDeliveryEnabled ? 'text-green-500' : 'text-gray-400'}`}
           >
-            <Save size={16} />
-            حفظ أسعار التوصيل
+            {governorateDeliveryEnabled ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
           </button>
         </div>
+        {governorateDeliveryEnabled && (
+          <div className="p-4 space-y-3">
+            {[
+              { key: 'same_city', label: 'نفس المحافظة' },
+              { key: 'nearby', label: 'محافظة قريبة' },
+              { key: 'medium', label: 'محافظة متوسطة البعد' },
+              { key: 'far', label: 'محافظة بعيدة' },
+            ].map((item) => (
+              <div key={item.key} className="flex items-center justify-between">
+                <label className="text-sm text-gray-600">{item.label}</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={deliveryFees[item.key]}
+                    onChange={(e) => setDeliveryFees({
+                      ...deliveryFees,
+                      [item.key]: parseInt(e.target.value) || 0
+                    })}
+                    className="w-24 p-2 border border-gray-300 rounded-lg text-sm text-left"
+                  />
+                  <span className="text-xs text-gray-400">ل.س</span>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={saveDeliveryFees}
+              disabled={saving}
+              className="w-full bg-blue-500 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+            >
+              <Save size={16} />
+              حفظ أسعار المحافظات
+            </button>
+          </div>
+        )}
+        {!governorateDeliveryEnabled && (
+          <div className="p-4 bg-gray-50 text-center">
+            <p className="text-sm text-gray-500">⏸️ هذا النظام معطّل حالياً</p>
+            <p className="text-xs text-gray-400 mt-1">اضغط على زر التفعيل لاستخدامه</p>
+          </div>
+        )}
+      </div>
+
+      {/* نظام التوصيل بالكيلومتر */}
+      <div className={`bg-white rounded-lg border-2 overflow-hidden transition-all ${kmDeliveryEnabled ? 'border-green-300' : 'border-gray-200 opacity-75'}`}>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Truck size={18} className="text-[#FF6B00]" />
+            <div>
+              <h3 className="font-bold text-gray-900">🔢 نظام التوصيل بالكيلومتر</h3>
+              <p className="text-xs text-gray-500">أجرة = رسوم أساسية + (مسافة × سعر/كم) - للطعام</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleKmDelivery}
+            className={`p-1 rounded-lg transition-colors ${kmDeliveryEnabled ? 'text-green-500' : 'text-gray-400'}`}
+          >
+            {kmDeliveryEnabled ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
+          </button>
+        </div>
+        {kmDeliveryEnabled && (
+          <div className="p-4 bg-orange-50 text-center">
+            <p className="text-sm text-gray-700">✅ هذا النظام مفعّل</p>
+            <p className="text-xs text-gray-500 mt-1">الإعدادات التفصيلية في: <strong>إعدادات التوصيل ← نظام الكيلومتر</strong></p>
+          </div>
+        )}
+        {!kmDeliveryEnabled && (
+          <div className="p-4 bg-gray-50 text-center">
+            <p className="text-sm text-gray-500">⏸️ هذا النظام معطّل حالياً</p>
+            <p className="text-xs text-gray-400 mt-1">اضغط على زر التفعيل لاستخدامه</p>
+          </div>
+        )}
       </div>
       
       {/* Withdrawal Limits */}

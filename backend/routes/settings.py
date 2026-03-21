@@ -109,38 +109,74 @@ async def update_withdrawal_limits(
 
 @router.put("/delivery-fees")
 async def update_delivery_fees(
-    fees: DeliveryFees,
+    fees: dict,
     user: dict = Depends(get_current_user)
 ):
     """تحديث أسعار التوصيل"""
     if user["user_type"] != "admin":
         raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     
+    update_data = {
+        "delivery_fees": {
+            "same_city": fees.get("same_city", 3000),
+            "nearby": fees.get("nearby", 5000),
+            "medium": fees.get("medium", 8000),
+            "far": fees.get("far", 12000)
+        },
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": user["id"]
+    }
+    
+    # إذا تم إرسال حالة التفعيل
+    if "governorate_delivery_enabled" in fees:
+        update_data["governorate_delivery_enabled"] = fees["governorate_delivery_enabled"]
+    
     await db.platform_settings.update_one(
         {"id": "main"},
-        {
-            "$set": {
-                "delivery_fees": {
-                    "same_city": fees.same_city,
-                    "nearby": fees.nearby,
-                    "medium": fees.medium,
-                    "far": fees.far
-                },
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-                "updated_by": user["id"]
-            }
-        },
+        {"$set": update_data},
         upsert=True
     )
     
     return {
         "message": "تم تحديث أسعار التوصيل بنجاح",
-        "delivery_fees": {
-            "same_city": fees.same_city,
-            "nearby": fees.nearby,
-            "medium": fees.medium,
-            "far": fees.far
-        }
+        **update_data
+    }
+
+@router.put("/delivery-system")
+async def update_delivery_system(
+    data: dict,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث حالة أنظمة التوصيل (تفعيل/إيقاف)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": user["id"]
+    }
+    
+    if "governorate_delivery_enabled" in data:
+        update_data["governorate_delivery_enabled"] = data["governorate_delivery_enabled"]
+    
+    if "km_delivery_enabled" in data:
+        update_data["km_delivery_enabled"] = data["km_delivery_enabled"]
+        # تحديث إعدادات الكيلومتر أيضاً
+        if "driver_km_settings" not in update_data:
+            current = await db.platform_settings.find_one({"id": "main"})
+            km_settings = current.get("driver_km_settings", {}) if current else {}
+            km_settings["enabled"] = data["km_delivery_enabled"]
+            update_data["driver_km_settings"] = km_settings
+    
+    await db.platform_settings.update_one(
+        {"id": "main"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {
+        "message": "تم تحديث نظام التوصيل بنجاح",
+        **update_data
     }
 
 @router.put("/free-shipping")
