@@ -429,6 +429,29 @@ const FoodBatchCheckoutPage = () => {
           </p>
         </div>
         
+        {/* تحذير الطلبات التجميعية - يظهر عند أكثر من متجرين */}
+        {stores.length > 2 && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={24} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-amber-800 mb-1">⚠️ تنبيه هام</h3>
+                <p className="text-sm text-amber-700 mb-2">
+                  طلبك يشمل <strong>{stores.length} متاجر</strong> مختلفة، مما قد يؤثر على جودة الطعام:
+                </p>
+                <ul className="text-sm text-amber-700 space-y-1 mr-2">
+                  <li>🔥 <strong>الطعام الساخن:</strong> قد يبرد أثناء جمع الطلبات</li>
+                  <li>❄️ <strong>الطعام البارد:</strong> قد يفقد برودته</li>
+                  <li>⏱️ <strong>وقت التوصيل:</strong> سيكون أطول من المعتاد</li>
+                </ul>
+                <p className="text-xs text-amber-600 mt-2 font-medium">
+                  💡 نصيحة: للحصول على طعام طازج، يُفضل الطلب من متجر أو متجرين فقط
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* عنوان التوصيل */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
