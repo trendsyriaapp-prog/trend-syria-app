@@ -2225,13 +2225,14 @@ async def accept_food_order(
         "status": "out_for_delivery"
     }).to_list(length=100)
     
-    # التحقق إذا كان السائق لديه طلب تجميعي - لا يمكنه قبول طلبات أخرى
-    has_batch_order = any(o.get("batch_id") for o in current_orders)
-    if has_batch_order:
+    # التحقق إذا كان السائق لديه طلب تجميعي طعام - لا يمكنه قبول طلبات أخرى
+    # ملاحظة: طلبات الطعام التجميعية فقط تقفل السائق (لأن الطعام يبرد)
+    has_food_batch_order = any(o.get("batch_id") and o.get("order_source") != "products" for o in current_orders)
+    if has_food_batch_order:
         batch_count = len([o for o in current_orders if o.get("batch_id")])
         raise HTTPException(
             status_code=400,
-            detail=f"📦 لديك طلب تجميعي ({batch_count} متجر). أكمل توصيله أولاً قبل قبول طلبات جديدة."
+            detail=f"🔥 لديك طلب طعام تجميعي ({batch_count} متجر). أكمل توصيله أولاً لضمان وصول الطعام طازجاً."
         )
     
     # تصنيف الطلبات الحالية حسب نوع المتجر

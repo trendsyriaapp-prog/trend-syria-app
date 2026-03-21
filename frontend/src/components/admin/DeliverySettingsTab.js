@@ -1294,6 +1294,39 @@ const DeliverySettingsTab = () => {
                 {waitCompensationSettings.max_product_orders_per_driver || 7} طلبات منتجات
               </p>
             </div>
+
+            {/* المسافة القصوى للطعام */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <MapPin size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">المسافة القصوى (طعام)</h3>
+                  <p className="text-xs text-gray-500">بين عملاء طلبات الطعام</p>
+                </div>
+              </div>
+              <input
+                type="number"
+                value={food_orders_max_distance_km || ''}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  food_orders_max_distance_km: e.target.value === '' ? '' : parseFloat(e.target.value) || 0
+                })}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseFloat(e.target.value) < 1) {
+                    setSettings({...settings, food_orders_max_distance_km: 5});
+                  }
+                }}
+                className="w-full p-3 border border-blue-300 rounded-lg text-center text-sm font-bold"
+                min={1}
+                max={20}
+                step={0.5}
+              />
+              <p className="text-center text-sm text-blue-600 mt-2">
+                {food_orders_max_distance_km || 5} كم
+              </p>
+            </div>
           </div>
 
           {/* شرح القواعد */}
@@ -1302,15 +1335,19 @@ const DeliverySettingsTab = () => {
             <ul className="text-sm text-gray-600 text-sm space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-orange-500">🍔</span>
-                <span><strong>طلبات الطعام:</strong> السائق يستطيع قبول حتى <strong>{max_food_orders_per_driver} طلبات</strong> طعام في نفس الوقت</span>
+                <span><strong>طلبات الطعام:</strong> حتى <strong>{max_food_orders_per_driver} طلبات</strong>، المسافة بين العملاء لا تزيد عن <strong>{food_orders_max_distance_km || 5} كم</strong></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500">🛍️</span>
-                <span><strong>طلبات المنتجات:</strong> السائق يستطيع قبول حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> منتجات (التوصيل نفس اليوم)</span>
+                <span><strong>طلبات المنتجات:</strong> حتى <strong>{waitCompensationSettings.max_product_orders_per_driver || 7} طلبات</strong> (بدون حد للمسافة)</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-500">📦</span>
-                <span><strong>طلب تجميعي:</strong> عند قبول طلب تجميعي، السائق لا يستطيع قبول طلبات أخرى حتى ينتهي</span>
+                <span className="text-red-500">🔥</span>
+                <span><strong>طلب طعام تجميعي:</strong> يقفل السائق حتى ينتهي (لضمان جودة الطعام)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500">📦</span>
+                <span><strong>طلب منتجات تجميعي:</strong> لا يقفل السائق (المنتجات لا تتلف)</span>
               </li>
             </ul>
           </div>
