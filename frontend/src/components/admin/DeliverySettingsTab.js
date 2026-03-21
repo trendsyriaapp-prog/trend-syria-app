@@ -1920,12 +1920,19 @@ const DeliverySettingsTab = () => {
             <Clock size={18} />
             <div>
               <h2 className="font-bold text-sm">ساعات عمل التوصيل</h2>
-              <p className="text-sm text-white/80">حدد أوقات العمل المسموحة للسائقين</p>
+              <p className="text-sm text-white/80">يشمل توصيل الطعام والمنتجات</p>
             </div>
           </div>
         </div>
         
         <div className="p-2">
+          {/* ملاحظة توضيحية */}
+          <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-[10px] text-blue-800">
+              💡 هذا الإعداد يحدد متى يستطيع السائق قبول وتوصيل الطلبات (طعام + منتجات)
+            </p>
+          </div>
+          
           {/* Enable/Disable Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-2">
             <div>
@@ -2018,96 +2025,6 @@ const DeliverySettingsTab = () => {
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
             حفظ ساعات العمل
-          </button>
-        </div>
-      </div>
-      )}
-
-      {/* Product Delivery Hours Section */}
-      {(activeCategory === 'all' || activeCategory === 'times') && (
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-purple-500 to-indigo-500 p-2 text-white">
-          <div className="flex items-center gap-2">
-            <Truck size={18} />
-            <div>
-              <h2 className="font-bold text-sm">ساعات توصيل المنتجات</h2>
-              <p className="text-sm text-white/80">حدد الأوقات التي يُسمح فيها للسائق بتوصيل المنتجات للعميل</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-2">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-2">
-            <p className="text-amber-800 text-sm">
-              <strong>ملاحظة:</strong> السائق لن يستطيع تأكيد تسليم الطلب خارج هذه الساعات لعدم إزعاج العميل ليلاً أو صباحاً باكراً.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
-                أول وقت للتوصيل (صباحاً)
-              </label>
-              <div className="flex gap-2">
-                <select
-                  value={productDeliveryHours.start_hour}
-                  onChange={(e) => setProductDeliveryHours({
-                    ...productDeliveryHours,
-                    start_hour: parseInt(e.target.value)
-                  })}
-                  className="flex-1 p-3 border rounded-lg"
-                >
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option key={i} value={i}>
-                      {i === 0 ? '12' : i > 12 ? i - 12 : i}:00 {i < 12 ? 'صباحاً' : 'مساءً'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 text-sm mb-2">
-                آخر وقت للتوصيل (مساءً)
-              </label>
-              <div className="flex gap-2">
-                <select
-                  value={productDeliveryHours.end_hour}
-                  onChange={(e) => setProductDeliveryHours({
-                    ...productDeliveryHours,
-                    end_hour: parseInt(e.target.value)
-                  })}
-                  className="flex-1 p-3 border rounded-lg"
-                >
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option key={i} value={i}>
-                      {i === 0 ? '12' : i > 12 ? i - 12 : i}:00 {i < 12 ? 'صباحاً' : 'مساءً'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="mt-2 p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div className="flex items-center gap-2 text-purple-700">
-              <Clock size={18} />
-              <span className="font-bold">
-                التوصيل مسموح من {productDeliveryHours.start_hour}:00 إلى {productDeliveryHours.end_hour}:00
-              </span>
-            </div>
-            <p className="text-sm text-purple-600 mt-1">
-              خارج هذه الأوقات، السائق لن يستطيع تأكيد التسليم
-            </p>
-          </div>
-
-          <button
-            onClick={handleSaveProductDeliveryHours}
-            disabled={saving}
-            className="mt-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-1.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-          >
-            {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            حفظ ساعات التوصيل
           </button>
         </div>
       </div>
