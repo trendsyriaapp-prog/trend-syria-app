@@ -86,6 +86,8 @@ const AdminDashboardPage = () => {
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
+  const [callRequestsCount, setCallRequestsCount] = useState(0);
+  const [emergencyCount, setEmergencyCount] = useState(0);
 
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
@@ -163,6 +165,18 @@ const AdminDashboardPage = () => {
         setCommissionRates(ratesRes.data);
       } catch (err) {
         console.log('Commission data not available yet');
+      }
+      
+      // Fetch call requests and emergency counts
+      try {
+        const [callRes, emergencyRes] = await Promise.all([
+          axios.get(`${API}/delivery/call-requests?status=pending`),
+          axios.get(`${API}/delivery/emergency-help?status=pending`)
+        ]);
+        setCallRequestsCount(callRes.data?.length || 0);
+        setEmergencyCount(emergencyRes.data?.length || 0);
+      } catch (err) {
+        console.log('Call requests or emergency data not available');
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -553,11 +567,53 @@ const AdminDashboardPage = () => {
                 {user.user_type === 'sub_admin' && (
                   <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">مدير تنفيذي</span>
                 )}
+                
+                {/* أيقونة الخريطة */}
+                <button
+                  onClick={() => setActiveTab('drivers-map')}
+                  className="relative p-2 bg-green-50 hover:bg-green-100 rounded-full transition-colors"
+                  title="خريطة السائقين"
+                  data-testid="map-icon"
+                >
+                  <Map size={20} className="text-green-600" />
+                </button>
+                
+                {/* أيقونة طلبات الاتصال */}
+                <button
+                  onClick={() => setActiveTab('call-requests')}
+                  className="relative p-2 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors"
+                  title="طلبات الاتصال"
+                  data-testid="call-requests-icon"
+                >
+                  <Phone size={20} className="text-blue-600" />
+                  {callRequestsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {callRequestsCount > 9 ? '9+' : callRequestsCount}
+                    </span>
+                  )}
+                </button>
+                
+                {/* أيقونة الطوارئ */}
+                <button
+                  onClick={() => setActiveTab('emergency-help')}
+                  className={`relative p-2 rounded-full transition-colors ${emergencyCount > 0 ? 'bg-red-100 hover:bg-red-200 animate-pulse' : 'bg-red-50 hover:bg-red-100'}`}
+                  title="طلبات الطوارئ"
+                  data-testid="emergency-icon"
+                >
+                  <Headphones size={20} className={emergencyCount > 0 ? 'text-red-600' : 'text-red-500'} />
+                  {emergencyCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce">
+                      {emergencyCount > 9 ? '9+' : emergencyCount}
+                    </span>
+                  )}
+                </button>
+                
                 {/* أيقونة الإشعارات */}
                 <button
                   onClick={() => setActiveTab('notifications')}
                   className="relative p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                   title="الإشعارات"
+                  data-testid="notifications-icon"
                 >
                   <Bell size={20} className="text-gray-600" />
                   {notifications.length > 0 && (
