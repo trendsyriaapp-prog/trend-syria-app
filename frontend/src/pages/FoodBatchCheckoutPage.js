@@ -435,18 +435,15 @@ const FoodBatchCheckoutPage = () => {
             <div className="flex items-start gap-3">
               <AlertCircle size={24} className="text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-bold text-amber-800 mb-1">⚠️ تنبيه هام</h3>
+                <h3 className="font-bold text-amber-800 mb-1">⚠️ تنبيه</h3>
                 <p className="text-sm text-amber-700 mb-2">
-                  طلبك يشمل <strong>{stores.length} متاجر</strong> مختلفة، مما قد يؤثر على جودة الطعام:
+                  طلبك يشمل <strong>{stores.length} متاجر</strong> مختلفة:
                 </p>
                 <ul className="text-sm text-amber-700 space-y-1 mr-2">
-                  <li>🔥 <strong>الطعام الساخن:</strong> قد يبرد أثناء جمع الطلبات</li>
-                  <li>❄️ <strong>الطعام البارد:</strong> قد يفقد برودته</li>
-                  <li>⏱️ <strong>وقت التوصيل:</strong> سيكون أطول من المعتاد</li>
+                  <li>🔥 الطعام الساخن قد يبرد</li>
+                  <li>❄️ الطعام البارد قد يسخن</li>
+                  <li>⏱️ وقت التوصيل سيكون أطول</li>
                 </ul>
-                <p className="text-xs text-amber-600 mt-2 font-medium">
-                  💡 نصيحة: للحصول على طعام طازج، يُفضل الطلب من متجر أو متجرين فقط
-                </p>
               </div>
             </div>
           </div>
