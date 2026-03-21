@@ -177,82 +177,82 @@ const DriversMapTab = () => {
 
   return (
     <div className="space-y-3">
-      {/* شريط الإحصائيات */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users size={18} className="text-blue-600" />
+      {/* شريط الإحصائيات - مصغر */}
+      <div className="grid grid-cols-5 gap-1.5">
+        <div className="bg-white rounded-lg p-2 border border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-blue-100 rounded">
+              <Users size={12} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">إجمالي السائقين</p>
-              <p className="text-sm font-bold text-gray-900">{stats.total || 0}</p>
+              <p className="text-[9px] text-gray-500">الكل</p>
+              <p className="text-xs font-bold text-gray-900">{stats.total || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Wifi size={18} className="text-green-600" />
+        <div className="bg-white rounded-lg p-2 border border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-green-100 rounded">
+              <Wifi size={12} className="text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">متصلين الآن</p>
-              <p className="text-sm font-bold text-green-600">{stats.online || 0}</p>
+              <p className="text-[9px] text-gray-500">متصلين</p>
+              <p className="text-xs font-bold text-green-600">{stats.online || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <CheckCircle size={18} className="text-emerald-600" />
+        <div className="bg-white rounded-lg p-2 border border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-emerald-100 rounded">
+              <CheckCircle size={12} className="text-emerald-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">متاحين</p>
-              <p className="text-sm font-bold text-emerald-600">{stats.available || 0}</p>
+              <p className="text-[9px] text-gray-500">متاحين</p>
+              <p className="text-xs font-bold text-emerald-600">{stats.available || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Truck size={18} className="text-orange-600" />
+        <div className="bg-white rounded-lg p-2 border border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-orange-100 rounded">
+              <Truck size={12} className="text-orange-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">يوصلون طلبات</p>
-              <p className="text-sm font-bold text-orange-600">{stats.with_orders || 0}</p>
+              <p className="text-[9px] text-gray-500">يوصلون</p>
+              <p className="text-xs font-bold text-orange-600">{stats.with_orders || 0}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <MapPin size={18} className="text-purple-600" />
+        <div className="bg-white rounded-lg p-2 border border-gray-100">
+          <div className="flex items-center gap-1.5">
+            <div className="p-1 bg-purple-100 rounded">
+              <MapPin size={12} className="text-purple-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">لهم موقع</p>
-              <p className="text-sm font-bold text-purple-600">{stats.with_location || 0}</p>
+              <p className="text-[9px] text-gray-500">بموقع</p>
+              <p className="text-xs font-bold text-purple-600">{stats.with_location || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* شريط التحكم */}
-      <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* شريط التحكم - مصغر */}
+      <div className="bg-white rounded-lg p-2 border border-gray-100">
+        <div className="flex flex-wrap items-center gap-2">
           {/* فلتر المدينة */}
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-gray-400" />
+          <div className="flex items-center gap-1">
+            <Filter size={12} className="text-gray-400" />
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
+              className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
               data-testid="city-filter"
             >
-              <option value="">جميع المدن</option>
+              <option value="">كل المدن</option>
               {cities.map(city => (
                 <option key={city} value={city}>{city}</option>
               ))}
@@ -260,58 +260,50 @@ const DriversMapTab = () => {
           </div>
 
           {/* فلتر المتاحين */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={availableOnly}
               onChange={(e) => setAvailableOnly(e.target.checked)}
-              className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+              className="w-3 h-3 text-green-600 rounded"
             />
-            <span className="text-sm text-gray-600">المتاحين فقط</span>
+            <span className="text-[10px] text-gray-600">متاحين</span>
           </label>
 
           {/* فلتر المتصلين */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={onlineOnly}
               onChange={(e) => setOnlineOnly(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              className="w-3 h-3 text-blue-600 rounded"
             />
-            <span className="text-sm text-gray-600">المتصلين فقط</span>
+            <span className="text-[10px] text-gray-600">متصلين</span>
           </label>
 
           <div className="flex-1" />
 
           {/* التحديث التلقائي */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              className="w-3 h-3 text-blue-600 rounded"
             />
-            <span className="text-sm text-gray-600">تحديث تلقائي</span>
+            <span className="text-[10px] text-gray-600">تلقائي</span>
           </label>
 
           {/* زر التحديث */}
           <button
             onClick={fetchDrivers}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
-            data-testid="refresh-map"
+            className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded text-[10px] hover:bg-blue-600 disabled:opacity-50"
+            data-testid="refresh-map-btn"
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={10} className={loading ? 'animate-spin' : ''} />
             تحديث
           </button>
-
-          {/* آخر تحديث */}
-          {lastUpdate && (
-            <span className="text-xs text-gray-400 flex items-center gap-1">
-              <Clock size={12} />
-              {lastUpdate.toLocaleTimeString('ar-SY')}
-            </span>
-          )}
         </div>
       </div>
 
