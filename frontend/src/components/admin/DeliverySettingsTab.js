@@ -1634,114 +1634,71 @@ const DeliverySettingsTab = () => {
       </div>
       )}
 
-      {/* Leaderboard Rewards Section */}
+      {/* Diamond Level Monthly Reward Section */}
       {(activeCategory === 'all' || activeCategory === 'rewards') && (
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-l from-amber-500 to-yellow-500 p-2 text-white">
+        <div className="bg-gradient-to-l from-purple-600 to-violet-600 p-2 text-white">
           <div className="flex items-center gap-2">
-            <Trophy size={18} />
+            <Diamond size={18} />
             <div>
-              <h2 className="font-bold text-sm">جوائز لوحة الصدارة</h2>
-              <p className="text-sm text-white/80">حدد الجوائز الشهرية للمراكز الثلاثة الأولى</p>
+              <h2 className="font-bold text-sm">مكافأة السائقين الماسيين</h2>
+              <p className="text-sm text-white/80">جائزة شهرية لكل سائق يصل لمستوى ماسي</p>
             </div>
           </div>
         </div>
         
         <div className="p-2">
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-3xl mb-2">
-                🥇
-              </div>
-              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الأول</label>
-              <input
-                type="number"
-                value={leaderboard_rewards?.first || ''}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  leaderboard_rewards: {
-                    ...leaderboard_rewards,
-                    first: e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                  }
-                })}
-                onBlur={(e) => {
-                  if (e.target.value === '') {
-                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, first: 0}});
-                  }
-                }}
-                className="w-full p-2 border rounded-lg text-center"
-                min={0}
-                step={5000}
-              />
-              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.first || 50000)}</p>
+          <div className="flex flex-col items-center mb-3">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-violet-600 rounded-full flex items-center justify-center text-4xl mb-2 shadow-lg">
+              💎
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-3xl mb-2">
-                🥈
-              </div>
-              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثاني</label>
-              <input
-                type="number"
-                value={leaderboard_rewards?.second || ''}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  leaderboard_rewards: {
-                    ...leaderboard_rewards,
-                    second: e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                  }
-                })}
-                onBlur={(e) => {
-                  if (e.target.value === '') {
-                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, second: 0}});
-                  }
-                }}
-                className="w-full p-2 border rounded-lg text-center"
-                min={0}
-                step={5000}
-              />
-              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.second || 30000)}</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl mb-2">
-                🥉
-              </div>
-              <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثالث</label>
-              <input
-                type="number"
-                value={leaderboard_rewards?.third || ''}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  leaderboard_rewards: {
-                    ...leaderboard_rewards,
-                    third: e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                  }
-                })}
-                onBlur={(e) => {
-                  if (e.target.value === '') {
-                    setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, third: 0}});
-                  }
-                }}
-                className="w-full p-2 border rounded-lg text-center"
-                min={0}
-                step={5000}
-              />
-              <p className="text-xs text-gray-500 mt-1">{formatPrice(leaderboard_rewards?.third || 15000)}</p>
-            </div>
+            <h3 className="font-bold text-purple-800 text-lg">مستوى ماسي</h3>
+            <p className="text-sm text-gray-500">نخبة السائقين</p>
           </div>
-          
-          <div className="bg-amber-50 rounded-lg p-3 border border-amber-200 mb-2">
-            <p className="text-sm text-amber-700 text-center">
-              إجمالي الجوائز الشهرية: <strong>{formatPrice((leaderboard_rewards?.first || 50000) + (leaderboard_rewards?.second || 30000) + (leaderboard_rewards?.third || 15000))}</strong>
+
+          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200 mb-3">
+            <label className="block text-sm font-medium text-purple-800 mb-2 text-center">المكافأة الشهرية</label>
+            <input
+              type="number"
+              value={leaderboard_rewards?.diamond || ''}
+              onChange={(e) => setSettings({
+                ...settings,
+                leaderboard_rewards: {
+                  ...leaderboard_rewards,
+                  diamond: e.target.value === '' ? '' : parseInt(e.target.value) || 0
+                }
+              })}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setSettings({...settings, leaderboard_rewards: {...leaderboard_rewards, diamond: 0}});
+                }
+              }}
+              className="w-full p-3 border border-purple-300 rounded-lg text-center text-lg font-bold"
+              min={0}
+              step={5000}
+              placeholder="حدد المبلغ..."
+            />
+            <p className="text-center text-sm text-purple-600 mt-2">
+              {leaderboard_rewards?.diamond ? formatPrice(leaderboard_rewards.diamond) : 'لم يُحدد بعد'}
             </p>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
+            <h4 className="font-bold text-gray-700 text-sm mb-2">📋 كيف يعمل النظام:</h4>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• كل سائق يصل لمستوى <strong>ماسي</strong> يحصل على المكافأة</li>
+              <li>• المكافأة تُصرف <strong>شهرياً</strong> طالما السائق في المستوى الماسي</li>
+              <li>• المستوى الماسي = أكثر من <strong>{performance_levels.gold_max}</strong> طلب شهرياً</li>
+            </ul>
           </div>
 
           <button
             onClick={handleSaveLeaderboardRewards}
             disabled={saving}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            className="w-full bg-gradient-to-l from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 font-bold"
           >
             {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            حفظ جوائز الصدارة
+            حفظ مكافأة الماسيين
           </button>
         </div>
       </div>
