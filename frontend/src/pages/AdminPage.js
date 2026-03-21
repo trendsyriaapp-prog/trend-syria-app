@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -340,7 +340,7 @@ const AdminDashboardPage = () => {
     'delivery-settings': 'إعدادات التوصيل',
     'violations': 'مخالفات السائقين',
     'price-reports': 'بلاغات الأسعار',
-    'support-tickets': 'تذاكر الدعم الفني',
+    'support-tickets': 'محادثات الدعم',
     'emergency-help': 'طلبات المساعدة الطارئة',
     'driver-reports': 'البلاغات الأخلاقية',
     'food-stores': 'متاجر الطعام',
@@ -354,7 +354,7 @@ const AdminDashboardPage = () => {
     'drivers-map': 'خريطة السائقين',
     'drivers-performance': 'أداء السائقين',
     'activity-log': 'سجل النشاط',
-    'support-management': 'إدارة الدعم',
+    'support-management': 'طلبات الاتصال',
     'problem-solver': 'حل المشاكل',
     'ticker-messages': 'شريط العروض المتحرك',
     'image-settings': 'إعدادات الصور',
@@ -676,8 +676,8 @@ const AdminDashboardPage = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-px bg-gray-100">
                   {[
-                    { icon: Ticket, label: 'تذاكر الدعم', tab: 'support-tickets' },
-                    { icon: ShieldCheck, label: 'إدارة الدعم', tab: 'support-management' },
+                    { icon: MessageCircle, label: 'محادثات الدعم', tab: 'support-tickets' },
+                    { icon: Phone, label: 'طلبات الاتصال', tab: 'support-management' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                       <item.icon size={16} className="text-indigo-600" />
