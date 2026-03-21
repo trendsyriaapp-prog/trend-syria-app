@@ -414,26 +414,26 @@ const DriversMapTab = () => {
         </div>
       </div>
 
-      {/* قائمة السائقين */}
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-3 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900">قائمة السائقين ({displayedDrivers.length})</h3>
+      {/* قائمة السائقين - مصغرة */}
+      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+        <div className="p-2 border-b border-gray-100">
+          <h3 className="font-bold text-xs text-gray-900">قائمة السائقين ({displayedDrivers.length})</h3>
         </div>
         
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[200px] overflow-y-auto">
           {displayedDrivers.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              لا يوجد سائقين بالفلاتر المحددة
+            <div className="p-4 text-center text-gray-500 text-xs">
+              لا يوجد سائقين
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-[10px]">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                  <th className="py-2 px-3 text-right font-medium text-gray-600">السائق</th>
-                  <th className="py-2 px-3 text-right font-medium text-gray-600">المدينة</th>
-                  <th className="py-2 px-3 text-right font-medium text-gray-600">الحالة</th>
-                  <th className="py-2 px-3 text-right font-medium text-gray-600">الطلبات</th>
-                  <th className="py-2 px-3 text-right font-medium text-gray-600">الموقع</th>
+                  <th className="py-1.5 px-2 text-right font-medium text-gray-600">السائق</th>
+                  <th className="py-1.5 px-2 text-right font-medium text-gray-600">المدينة</th>
+                  <th className="py-1.5 px-2 text-right font-medium text-gray-600">الحالة</th>
+                  <th className="py-1.5 px-2 text-right font-medium text-gray-600">طلبات</th>
+                  <th className="py-1.5 px-2 text-right font-medium text-gray-600">موقع</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -448,46 +448,31 @@ const DriversMapTab = () => {
                       }
                     }}
                   >
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${driver.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        <div>
-                          <p className="font-medium text-gray-900">{driver.name}</p>
-                          <p className="text-xs text-gray-500" dir="ltr">{driver.phone}</p>
-                        </div>
+                    <td className="py-1 px-2">
+                      <div className="flex items-center gap-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${driver.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        <span className="font-medium text-gray-900 truncate max-w-[80px]">{driver.name}</span>
                       </div>
                     </td>
-                    <td className="py-2 px-3 text-gray-600">{driver.city || '-'}</td>
-                    <td className="py-2 px-3">
+                    <td className="py-1 px-2 text-gray-600">{driver.city || '-'}</td>
+                    <td className="py-1 px-2">
                       {driver.is_available ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs">
-                          <CheckCircle size={12} />
-                          متاح
-                        </span>
+                        <span className="text-green-600 text-[9px]">متاح</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full text-xs">
-                          <XCircle size={12} />
-                          غير متاح
-                        </span>
+                        <span className="text-gray-400 text-[9px]">-</span>
                       )}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-1 px-2">
                       {driver.active_orders_count > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full text-xs">
-                          <Package size={12} />
-                          {driver.active_orders_count}
-                        </span>
+                        <span className="text-orange-600 font-bold">{driver.active_orders_count}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-1 px-2">
                       {driver.latitude ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                          driver.is_stale ? 'text-yellow-600 bg-yellow-50' : 'text-purple-600 bg-purple-50'
-                        }`}>
-                          <MapPin size={12} />
-                          {driver.is_stale ? 'قديم' : 'متاح'}
+                        <span className={`text-[9px] ${driver.is_stale ? 'text-yellow-600' : 'text-purple-600'}`}>
+                          {driver.is_stale ? 'قديم' : '✓'}
                         </span>
                       ) : (
                         <span className="text-gray-400">-</span>
@@ -501,24 +486,23 @@ const DriversMapTab = () => {
         </div>
       </div>
 
-      {/* دليل الألوان */}
-      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-        <p className="text-xs font-medium text-gray-600 mb-2">دليل الألوان:</p>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-200" />
-            <span className="text-gray-600">متصل ومتاح</span>
+      {/* دليل الألوان - مصغر */}
+      <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+        <div className="flex flex-wrap gap-3 text-[9px]">
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <span className="text-gray-600">متاح</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-orange-500 border-2 border-orange-200" />
-            <span className="text-gray-600">يوصل طلبات</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+            <span className="text-gray-600">يوصل</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-gray-500 border-2 border-gray-200" />
-            <span className="text-gray-600">متصل غير متاح</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />
+            <span className="text-gray-600">غير متاح</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-100" />
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
             <span className="text-gray-600">غير متصل</span>
           </div>
         </div>
