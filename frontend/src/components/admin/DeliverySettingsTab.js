@@ -950,8 +950,8 @@ const DeliverySettingsTab = () => {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={waitTimeMinutes}
-                onChange={(e) => setWaitTimeMinutes(parseInt(e.target.value) || 10)}
+                value={waitTimeMinutes || ''}
+                onChange={(e) => setWaitTimeMinutes(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} onBlur={(e) => { if (e.target.value === '' || parseInt(e.target.value) < 1) setWaitTimeMinutes(10); }}
                 className="flex-1 p-3 border border-purple-300 rounded-lg text-center text-sm font-bold"
                 min={1}
                 max={60}
@@ -1025,10 +1025,10 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={waitCompensationSettings.max_waiting_time_minutes}
+                value={waitCompensationSettings.max_waiting_time_minutes || ''}
                 onChange={(e) => setWaitCompensationSettings({
                   ...waitCompensationSettings,
-                  max_waiting_time_minutes: parseInt(e.target.value) || 10
+                  max_waiting_time_minutes: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
                 className="w-full p-3 border border-blue-300 rounded-lg text-center text-sm font-bold"
                 min={5}
@@ -1050,10 +1050,10 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={waitCompensationSettings.compensation_per_5_minutes}
+                value={waitCompensationSettings.compensation_per_5_minutes || ''}
                 onChange={(e) => setWaitCompensationSettings({
                   ...waitCompensationSettings,
-                  compensation_per_5_minutes: parseInt(e.target.value) || 500
+                  compensation_per_5_minutes: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
                 className="w-full p-3 border border-green-300 rounded-lg text-center text-sm font-bold"
                 min={100}
@@ -1075,10 +1075,10 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={waitCompensationSettings.max_compensation_per_order}
+                value={waitCompensationSettings.max_compensation_per_order || ''}
                 onChange={(e) => setWaitCompensationSettings({
                   ...waitCompensationSettings,
-                  max_compensation_per_order: parseInt(e.target.value) || 2000
+                  max_compensation_per_order: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
                 className="w-full p-3 border border-amber-300 rounded-lg text-center text-sm font-bold"
                 min={500}
@@ -1121,7 +1121,7 @@ const DeliverySettingsTab = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    value={waitCompensationSettings.geofencing_max_distance_meters}
+                    value={waitCompensationSettings.geofencing_max_distance_meters || ''}
                     onChange={(e) => setWaitCompensationSettings({
                       ...waitCompensationSettings,
                       geofencing_max_distance_meters: parseInt(e.target.value) || 150
@@ -1153,10 +1153,10 @@ const DeliverySettingsTab = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل التحذير</label>
                 <input
                   type="number"
-                  value={waitCompensationSettings.warnings_before_alert}
+                  value={waitCompensationSettings.warnings_before_alert || ''}
                   onChange={(e) => setWaitCompensationSettings({
                     ...waitCompensationSettings,
-                    warnings_before_alert: parseInt(e.target.value) || 3
+                    warnings_before_alert: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   })}
                   className="w-full p-2 border border-gray-300 rounded-lg text-center"
                   min={1}
@@ -1166,7 +1166,7 @@ const DeliverySettingsTab = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل التحذير الأخير</label>
                 <input
                   type="number"
-                  value={waitCompensationSettings.warnings_before_final}
+                  value={waitCompensationSettings.warnings_before_final || ''}
                   onChange={(e) => setWaitCompensationSettings({
                     ...waitCompensationSettings,
                     warnings_before_final: parseInt(e.target.value) || 7
@@ -1179,10 +1179,10 @@ const DeliverySettingsTab = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">مخالفات قبل الإيقاف</label>
                 <input
                   type="number"
-                  value={waitCompensationSettings.warnings_before_suspend}
+                  value={waitCompensationSettings.warnings_before_suspend || ''}
                   onChange={(e) => setWaitCompensationSettings({
                     ...waitCompensationSettings,
-                    warnings_before_suspend: parseInt(e.target.value) || 10
+                    warnings_before_suspend: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                   })}
                   className="w-full p-2 border border-gray-300 rounded-lg text-center"
                   min={1}
@@ -1193,10 +1193,10 @@ const DeliverySettingsTab = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">مدة الإيقاف (ساعات)</label>
               <input
                 type="number"
-                value={waitCompensationSettings.suspend_duration_hours}
+                value={waitCompensationSettings.suspend_duration_hours || ''}
                 onChange={(e) => setWaitCompensationSettings({
                   ...waitCompensationSettings,
-                  suspend_duration_hours: parseInt(e.target.value) || 24
+                  suspend_duration_hours: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
                 className="w-32 p-2 border border-gray-300 rounded-lg text-center"
                 min={1}
@@ -1455,7 +1455,7 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={deliveryTimeSettings.buffer_minutes}
+                value={deliveryTimeSettings.buffer_minutes || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
                   buffer_minutes: parseInt(e.target.value) || 5
@@ -1485,7 +1485,7 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={deliveryTimeSettings.warning_before_minutes}
+                value={deliveryTimeSettings.warning_before_minutes || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
                   warning_before_minutes: parseInt(e.target.value) || 3
@@ -1511,10 +1511,10 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={deliveryTimeSettings.warnings_before_penalty}
+                value={deliveryTimeSettings.warnings_before_penalty || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
-                  warnings_before_penalty: parseInt(e.target.value) || 3
+                  warnings_before_penalty: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                 })}
                 className="w-full p-2 border border-orange-300 rounded-lg text-center text-sm font-bold"
                 min={1}
@@ -1535,7 +1535,7 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={deliveryTimeSettings.penalty_amount}
+                value={deliveryTimeSettings.penalty_amount || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
                   penalty_amount: parseInt(e.target.value) || 500
@@ -1560,7 +1560,7 @@ const DeliverySettingsTab = () => {
               </div>
               <input
                 type="number"
-                value={deliveryTimeSettings.max_penalty_per_day}
+                value={deliveryTimeSettings.max_penalty_per_day || ''}
                 onChange={(e) => setDeliveryTimeSettings({
                   ...deliveryTimeSettings,
                   max_penalty_per_day: parseInt(e.target.value) || 2000
@@ -1622,7 +1622,7 @@ const DeliverySettingsTab = () => {
               <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الأول</label>
               <input
                 type="number"
-                value={leaderboard_rewards?.first || 50000}
+                value={leaderboard_rewards?.first || ''}
                 onChange={(e) => setSettings({
                   ...settings,
                   leaderboard_rewards: {
@@ -1643,7 +1643,7 @@ const DeliverySettingsTab = () => {
               <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثاني</label>
               <input
                 type="number"
-                value={leaderboard_rewards?.second || 30000}
+                value={leaderboard_rewards?.second || ''}
                 onChange={(e) => setSettings({
                   ...settings,
                   leaderboard_rewards: {
@@ -1664,7 +1664,7 @@ const DeliverySettingsTab = () => {
               <label className="block text-sm font-medium text-gray-600 text-sm mb-1">المركز الثالث</label>
               <input
                 type="number"
-                value={leaderboard_rewards?.third || 15000}
+                value={leaderboard_rewards?.third || ''}
                 onChange={(e) => setSettings({
                   ...settings,
                   leaderboard_rewards: {
@@ -1761,7 +1761,7 @@ const DeliverySettingsTab = () => {
                 </label>
                 <input
                   type="number"
-                  value={performance_levels.beginner_max}
+                  value={performance_levels.beginner_max || ''}
                   onChange={(e) => setSettings({
                     ...settings,
                     performance_levels: {
@@ -1779,7 +1779,7 @@ const DeliverySettingsTab = () => {
                 </label>
                 <input
                   type="number"
-                  value={performance_levels.bronze_max}
+                  value={performance_levels.bronze_max || ''}
                   onChange={(e) => setSettings({
                     ...settings,
                     performance_levels: {
@@ -1797,7 +1797,7 @@ const DeliverySettingsTab = () => {
                 </label>
                 <input
                   type="number"
-                  value={performance_levels.silver_max}
+                  value={performance_levels.silver_max || ''}
                   onChange={(e) => setSettings({
                     ...settings,
                     performance_levels: {
