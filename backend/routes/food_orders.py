@@ -1951,6 +1951,16 @@ async def get_available_food_orders(
         {"_id": 0}
     ).sort("created_at", 1).to_list(None)
     
+    # جلب الطلبات التي طلب البائع فيها سائقاً (نظام التنسيق الجديد)
+    driver_requested_orders = await db.food_orders.find(
+        {
+            "driver_requested": True,
+            "driver_status": {"$in": ["waiting_for_acceptance", "waiting_for_driver"]},
+            "driver_id": None
+        },
+        {"_id": 0}
+    ).sort("driver_requested_at", -1).to_list(None)
+    
     # دالة حساب المسافة
     def calculate_distance(lat1, lon1, lat2, lon2):
         if not all([lat1, lon1, lat2, lon2]):
@@ -2076,11 +2086,54 @@ async def get_available_food_orders(
         single_orders.sort(key=lambda x: x.get("driver_distance_km", 9999))
         batch_list.sort(key=lambda x: min([o.get("driver_distance_km", 9999) for o in x.get("orders", [])]) if x.get("orders") else 9999)
     
-    # إرجاع الطلبات الفردية + الدفعات المجمعة
+    # معالجة الطلبات المطلوب فيها سائق (نظام التنسيق الجديد)
+    requested_orders = []
+    for order in driver_requested_orders:
+        order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
+        order["is_driver_request"] = True  # علامة لتمييزها في الفرونت إند
+        
+        # إضافة إحداثيات المتجر
+        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0, "latitude": 1, "longitude": 1, "address": 1, "city": 1, "name": 1})
+        if store:
+            order["store_latitude"] = store.get("latitude")
+            order["store_longitude"] = store.get("longitude")
+            order["store_address"] = store.get("address")
+            
+            # حساب المسافة بين السائق والمتجر
+            if driver_lat and driver_lng:
+                driver_to_store_km = calculate_distance(
+                    driver_lat, driver_lng,
+                    store.get("latitude"), store.get("longitude")
+                )
+                order["driver_distance_km"] = round(driver_to_store_km, 2)
+                order["driver_eta_minutes"] = round((driver_to_store_km / 25) * 60)
+                
+                # تصنيف القرب
+                if driver_to_store_km <= 1:
+                    order["proximity_label"] = "قريب جداً 🟢"
+                    order["proximity_level"] = 1
+                elif driver_to_store_km <= 3:
+                    order["proximity_label"] = "قريب 🟡"
+                    order["proximity_level"] = 2
+                elif driver_to_store_km <= 5:
+                    order["proximity_label"] = "متوسط 🟠"
+                    order["proximity_level"] = 3
+                else:
+                    order["proximity_label"] = "بعيد 🔴"
+                    order["proximity_level"] = 4
+        
+        requested_orders.append(order)
+    
+    # ترتيب الطلبات المطلوب فيها سائق حسب القرب
+    if driver_lat and driver_lng:
+        requested_orders.sort(key=lambda x: x.get("driver_distance_km", 9999))
+    
+    # إرجاع الطلبات الفردية + الدفعات المجمعة + الطلبات المطلوب فيها سائق
     return {
         "single_orders": single_orders,
         "batch_orders": batch_list,
-        "total_count": len(single_orders) + len(batch_list),
+        "driver_requested_orders": requested_orders,  # الطلبات التي يطلب البائع سائقاً
+        "total_count": len(single_orders) + len(batch_list) + len(requested_orders),
         "sorted_by_proximity": driver_lat is not None and driver_lng is not None
     }
 

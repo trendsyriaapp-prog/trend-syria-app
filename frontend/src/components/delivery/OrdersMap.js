@@ -1807,7 +1807,11 @@ const OrdersMap = ({
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-xl">📍</span>
-                          <span className="text-sm text-black/70 truncate">{priorityOrder.delivery_address}</span>
+                          <span className="text-sm text-black/70 truncate">
+                            {typeof priorityOrder.delivery_address === 'object' 
+                              ? [priorityOrder.delivery_address?.area, priorityOrder.delivery_address?.street, priorityOrder.delivery_address?.building].filter(Boolean).join(', ')
+                              : priorityOrder.delivery_address}
+                          </span>
                         </div>
                       </div>
 
@@ -2010,7 +2014,11 @@ const OrdersMap = ({
                             <>
                               {/* معلومات التواصل */}
                               <div className="text-[10px] text-gray-600 mb-2 bg-gray-50 rounded p-1.5">
-                                <p className="font-medium truncate mb-1">📍 {marker.order.delivery_address || marker.order.address}</p>
+                                <p className="font-medium truncate mb-1">📍 {
+                                  typeof (marker.order.delivery_address || marker.order.address) === 'object'
+                                    ? [(marker.order.delivery_address || marker.order.address)?.area, (marker.order.delivery_address || marker.order.address)?.street, (marker.order.delivery_address || marker.order.address)?.building].filter(Boolean).join(', ')
+                                    : (marker.order.delivery_address || marker.order.address)
+                                }</p>
                                 {(marker.order.customer_phone || marker.order.delivery_phone) && (
                                   <p className="text-blue-600">
                                     📞 العميل: {marker.order.customer_phone || marker.order.delivery_phone}
@@ -2215,7 +2223,9 @@ const OrdersMap = ({
                                       <p className="text-red-600 font-medium">🚚 تسليم الطلب</p>
                                     )}
                                     <p className="truncate">
-                                      {stop.order.delivery_address || stop.order.address}
+                                      {typeof (stop.order.delivery_address || stop.order.address) === 'object'
+                                        ? [(stop.order.delivery_address || stop.order.address)?.area, (stop.order.delivery_address || stop.order.address)?.street, (stop.order.delivery_address || stop.order.address)?.building].filter(Boolean).join(', ')
+                                        : (stop.order.delivery_address || stop.order.address)}
                                     </p>
                                     {stop.order.total && (
                                       <p className="text-orange-600 font-bold">

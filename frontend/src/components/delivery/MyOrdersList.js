@@ -753,7 +753,9 @@ const MyOrdersList = ({
                 </p>
                 <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <MapPin size={12} className="inline ml-1" />
-                  {order.address || order.delivery_address}, {order.city || order.delivery_city}
+                  {order.address || (typeof order.delivery_address === 'object' 
+                    ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ')
+                    : order.delivery_address)}, {order.city || order.delivery_city}
                 </p>
                 
                 {/* أزرار الخرائط */}
@@ -953,7 +955,11 @@ const MyOrdersList = ({
                 isDark ? 'bg-[#252525] border border-[#333]' : 'bg-yellow-50'
               }`}>
                 <p className={`text-xs font-bold mb-1 ${isDark ? 'text-green-400' : 'text-yellow-700'}`}>🏠 إلى: {order.customer_name}</p>
-                <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{order.delivery_address}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {typeof order.delivery_address === 'object' 
+                    ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ')
+                    : order.delivery_address}
+                </p>
               </div>
 
               {/* المنتجات */}

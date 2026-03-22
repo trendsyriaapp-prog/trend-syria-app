@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
-  Car, Bike, Check
+  Car, Bike, Check, MapPin
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -501,6 +501,7 @@ const DeliveryDashboard = () => {
   // Food orders states
   const [availableFoodOrders, setAvailableFoodOrders] = useState([]);
   const [myFoodOrders, setMyFoodOrders] = useState([]);
+  const [driverRequestedOrders, setDriverRequestedOrders] = useState([]); // طلبات من نظام التنسيق الجديد
   const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food' - الافتراضي الكل
   
   // State لعرض الخريطة مع مسار طلب معين
@@ -663,6 +664,10 @@ const DeliveryDashboard = () => {
       );
       setAvailableFoodOrders(uniqueFoodOrders);
       
+      // طلبات نظام التنسيق الجديد (طلبات سائق من البائع)
+      const requestedOrders = foodData.driver_requested_orders || [];
+      setDriverRequestedOrders(requestedOrders);
+      
       setMyFoodOrders(myFoodRes.data || []);
     } catch (error) {
       console.error(error);
@@ -712,6 +717,44 @@ const DeliveryDashboard = () => {
       fetchOrders();
     } catch (error) {
       // عند الفشل، لا نغير شيء - الطلب يبقى كما هو
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // قبول طلب من نظام التنسيق (البائع طلب سائق)
+  const handleAcceptDriverRequest = async (order) => {
+    try {
+      const res = await axios.post(`${API}/food/orders/driver/orders/${order.id}/accept`);
+      toast({
+        title: "تم القبول! ✅",
+        description: `تم إبلاغ المطعم. انتظر حتى يحدد وقت التحضير`
+      });
+      // إزالة من القائمة
+      setDriverRequestedOrders(prev => prev.filter(o => o.id !== order.id));
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // رفض طلب من نظام التنسيق
+  const handleRejectDriverRequest = async (orderId) => {
+    try {
+      await axios.post(`${API}/food/orders/driver/orders/${orderId}/reject`);
+      toast({
+        title: "تم رفض الطلب",
+        description: "سيتم إرساله لسائق آخر"
+      });
+      setDriverRequestedOrders(prev => prev.filter(o => o.id !== orderId));
+    } catch (error) {
       toast({
         title: "خطأ",
         description: error.response?.data?.detail || "حدث خطأ",
@@ -1064,16 +1107,129 @@ const DeliveryDashboard = () => {
             
             {/* الطلبات المتاحة - تظهر فقط عندما يكون السائق متاح */}
             {isAvailable && (
-              <AvailableOrdersList
-                orders={orderTypeFilter === 'food' ? [] : availableOrders}
-                foodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
-                isWorkingHours={() => true}
-                onTakeOrder={(order) => setShowPickupChecklist(order)}
-                onTakeFoodOrder={handleTakeFoodOrder}
-                orderTypeFilter={orderTypeFilter}
-                theme={currentTheme}
-                onShowRouteForOrder={(order, type) => setShowRouteMapForOrder({ order, type })}
-              />
+              <>
+                {/* طلبات التنسيق الجديدة - البائعين يطلبون سائق */}
+                {driverRequestedOrders.length > 0 && (
+                  <div className={`mb-6 rounded-2xl overflow-hidden border-2 ${
+                    currentTheme === 'dark' ? 'bg-[#1a1a1a] border-orange-500/50' : 'bg-orange-50 border-orange-300'
+                  }`}>
+                    <div className={`px-4 py-3 ${
+                      currentTheme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                        <span className={`font-bold ${currentTheme === 'dark' ? 'text-orange-400' : 'text-orange-700'}`}>
+                          🔔 طلبات جديدة تنتظر قبولك ({driverRequestedOrders.length})
+                        </span>
+                      </div>
+                      <p className={`text-xs mt-1 ${currentTheme === 'dark' ? 'text-orange-300/70' : 'text-orange-600'}`}>
+                        مطاعم تطلب سائق لتوصيل طلباتها
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 space-y-3">
+                      {driverRequestedOrders.map((order) => (
+                        <div 
+                          key={order.id}
+                          className={`rounded-xl p-4 border ${
+                            currentTheme === 'dark' ? 'bg-[#252525] border-[#333]' : 'bg-white border-orange-200'
+                          }`}
+                        >
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-bold ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                #{order.order_number || order.id?.slice(0, 8)}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                currentTheme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-700'
+                              }`}>
+                                طلب سائق
+                              </span>
+                            </div>
+                            <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+                              currentTheme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                            }`}>
+                              {order.total?.toLocaleString()} ل.س
+                            </span>
+                          </div>
+                          
+                          {/* معلومات المتجر */}
+                          <div className={`rounded-lg p-3 mb-3 ${
+                            currentTheme === 'dark' ? 'bg-[#1a2e1a] border border-green-900' : 'bg-green-50 border border-green-200'
+                          }`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
+                                <Navigation size={12} className="text-white" />
+                              </div>
+                              <span className={`font-medium text-sm ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                {order.store_name}
+                              </span>
+                            </div>
+                            {order.proximity_label && (
+                              <div className={`text-xs mt-2 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                📍 {order.proximity_label} - {order.driver_distance_km} كم ({order.driver_eta_minutes} دقيقة)
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* معلومات العميل */}
+                          <div className={`rounded-lg p-3 mb-3 ${
+                            currentTheme === 'dark' ? 'bg-[#1a1a2e] border border-blue-900' : 'bg-blue-50 border border-blue-200'
+                          }`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                                <MapPin size={12} className="text-white" />
+                              </div>
+                              <span className={`font-medium text-sm ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                {typeof order.delivery_address === 'object' 
+                                  ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ') || order.delivery_city
+                                  : order.delivery_address}
+                              </span>
+                            </div>
+                            <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {order.customer_name} - {order.delivery_city}
+                            </p>
+                          </div>
+                          
+                          {/* أزرار القبول والرفض */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleAcceptDriverRequest(order)}
+                              data-testid={`accept-driver-request-${order.id}`}
+                              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                            >
+                              ✅ قبول التوصيل
+                            </button>
+                            <button
+                              onClick={() => handleRejectDriverRequest(order.id)}
+                              data-testid={`reject-driver-request-${order.id}`}
+                              className={`px-4 py-3 rounded-xl font-bold text-sm ${
+                                currentTheme === 'dark' 
+                                  ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                                  : 'bg-red-50 text-red-600 border border-red-200'
+                              }`}
+                            >
+                              ❌
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <AvailableOrdersList
+                  orders={orderTypeFilter === 'food' ? [] : availableOrders}
+                  foodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
+                  isWorkingHours={() => true}
+                  onTakeOrder={(order) => setShowPickupChecklist(order)}
+                  onTakeFoodOrder={handleTakeFoodOrder}
+                  orderTypeFilter={orderTypeFilter}
+                  theme={currentTheme}
+                  onShowRouteForOrder={(order, type) => setShowRouteMapForOrder({ order, type })}
+                />
+              </>
             )}
           </>
         )}

@@ -307,7 +307,11 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
               <Popup>
                 <div className="text-center">
                   <span className="font-bold">🏠 موقع التسليم</span>
-                  <p className="text-xs text-gray-500">{locationData.delivery_address}</p>
+                  <p className="text-xs text-gray-500">
+                    {typeof locationData.delivery_address === 'object' 
+                      ? [locationData.delivery_address?.area, locationData.delivery_address?.street, locationData.delivery_address?.building].filter(Boolean).join(', ')
+                      : locationData.delivery_address}
+                  </p>
                 </div>
               </Popup>
             </Marker>

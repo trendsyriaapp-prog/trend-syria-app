@@ -346,7 +346,11 @@ const FoodOrderTracking = () => {
             <MapPin size={18} className="text-green-600" />
             عنوان التوصيل
           </h3>
-          <p className="text-gray-900">{order.delivery_address}</p>
+          <p className="text-gray-900">
+            {typeof order.delivery_address === 'object' 
+              ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ')
+              : order.delivery_address}
+          </p>
           <p className="text-gray-500">{order.delivery_city}</p>
           <div className="flex items-center gap-2 text-gray-600">
             <Phone size={16} />
@@ -355,7 +359,10 @@ const FoodOrderTracking = () => {
           {/* زر فتح في خرائط Google */}
           <button
             onClick={() => {
-              const fullAddress = `${order.delivery_address}, ${order.delivery_city}, سوريا`;
+              const addressStr = typeof order.delivery_address === 'object' 
+                ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ')
+                : order.delivery_address;
+              const fullAddress = `${addressStr}, ${order.delivery_city}, سوريا`;
               const encodedAddress = encodeURIComponent(fullAddress);
               window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
             }}

@@ -1703,6 +1703,12 @@ const StoreOrdersTab = ({ token }) => {
   const [showPrepModal, setShowPrepModal] = useState(null);
   const [prepTime, setPrepTime] = useState(15);
   const [prepSubmitting, setPrepSubmitting] = useState(false);
+  
+  // حالة طلب السائق الجديدة
+  const [requestingDriver, setRequestingDriver] = useState(null);
+  const [showSetPrepTimeModal, setShowSetPrepTimeModal] = useState(null);
+  const [newPrepTime, setNewPrepTime] = useState(15);
+  const [settingPrepTime, setSettingPrepTime] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -1818,6 +1824,87 @@ const StoreOrdersTab = ({ token }) => {
     return Math.max(0, diffMinutes);
   };
 
+  // طلب سائق للطلب
+  const requestDriver = async (orderId) => {
+    setRequestingDriver(orderId);
+    try {
+      const res = await axios.post(
+        `${API}/food/orders/store/orders/${orderId}/request-driver`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (res.data.warning) {
+        toast({
+          title: "تم الإرسال",
+          description: res.data.warning,
+        });
+      } else {
+        toast({
+          title: "تم طلب السائق",
+          description: `تم إرسال الطلب إلى ${res.data.drivers_notified} سائق`
+        });
+      }
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل طلب السائق",
+        variant: "destructive"
+      });
+    } finally {
+      setRequestingDriver(null);
+    }
+  };
+
+  // تحديد وقت التحضير بعد قبول السائق
+  const setPreparationTime = async (orderId) => {
+    setSettingPrepTime(true);
+    try {
+      const res = await axios.post(
+        `${API}/food/orders/store/orders/${orderId}/set-preparation-time`,
+        { preparation_time_minutes: newPrepTime },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: "تم تحديد وقت التحضير",
+        description: `سيتم إبلاغ السائق. كود الاستلام: ${res.data.pickup_code}`
+      });
+      setShowSetPrepTimeModal(null);
+      setNewPrepTime(15);
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل تحديد وقت التحضير",
+        variant: "destructive"
+      });
+    } finally {
+      setSettingPrepTime(false);
+    }
+  };
+
+  // جلب حالة السائق للطلب
+  const getDriverStatusText = (order) => {
+    if (!order.driver_requested) return null;
+    
+    switch (order.driver_status) {
+      case 'waiting_for_driver':
+        return { text: 'بانتظار اتصال السائقين...', color: 'text-yellow-600', bg: 'bg-yellow-50' };
+      case 'waiting_for_acceptance':
+        return { text: 'بانتظار قبول السائق...', color: 'text-blue-600', bg: 'bg-blue-50' };
+      case 'driver_accepted':
+        return { 
+          text: `✅ السائق ${order.driver_name || ''} قبل - سيصل خلال ${order.driver_estimated_arrival_minutes || '?'} دقيقة`, 
+          color: 'text-green-600', 
+          bg: 'bg-green-50' 
+        };
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -1921,14 +2008,63 @@ const StoreOrdersTab = ({ token }) => {
                   )}
 
                   {order.status === 'confirmed' && (
-                    <button
-                      onClick={() => setShowPrepModal(order)}
-                      data-testid={`start-prep-${order.id}`}
-                      className="w-full bg-orange-500 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-orange-600"
-                    >
-                      <ChefHat size={18} />
-                      بدء التحضير
-                    </button>
+                    <div className="space-y-3">
+                      {/* حالة السائق */}
+                      {order.driver_requested && (
+                        <div className={`${getDriverStatusText(order)?.bg || 'bg-gray-50'} border rounded-lg p-3`}>
+                          <div className="flex items-center gap-2">
+                            <Truck size={16} className={getDriverStatusText(order)?.color || 'text-gray-600'} />
+                            <span className={`text-sm font-medium ${getDriverStatusText(order)?.color || 'text-gray-600'}`}>
+                              {getDriverStatusText(order)?.text}
+                            </span>
+                          </div>
+                          
+                          {/* إذا قبل السائق - يطلب تحديد وقت التحضير */}
+                          {order.driver_status === 'driver_accepted' && order.waiting_for_preparation_time && (
+                            <button
+                              onClick={() => {
+                                setShowSetPrepTimeModal(order);
+                                setNewPrepTime(15);
+                              }}
+                              data-testid={`set-prep-time-${order.id}`}
+                              className="mt-3 w-full bg-orange-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-orange-600"
+                            >
+                              <Timer size={16} />
+                              حدد وقت التحضير
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* إذا لم يُطلب سائق بعد */}
+                      {!order.driver_requested && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => requestDriver(order.id)}
+                            disabled={requestingDriver === order.id}
+                            data-testid={`request-driver-${order.id}`}
+                            className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-50"
+                          >
+                            {requestingDriver === order.id ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <Truck size={16} />
+                                طلب سائق
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setShowPrepModal(order)}
+                            data-testid={`start-prep-${order.id}`}
+                            className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-orange-600"
+                          >
+                            <ChefHat size={16} />
+                            بدء التحضير
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {order.status === 'preparing' && (
@@ -2148,6 +2284,118 @@ const StoreOrdersTab = ({ token }) => {
                 <>
                   <ChefHat size={20} />
                   بدء التحضير الآن
+                </>
+              )}
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Modal تحديد وقت التحضير (بعد قبول السائق) */}
+      {showSetPrepTimeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            className="bg-white rounded-t-3xl w-full max-w-lg p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">تحديد وقت التحضير</h3>
+              <button 
+                onClick={() => setShowSetPrepTimeModal(null)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="bg-green-50 rounded-xl p-4 mb-4">
+              <p className="text-sm text-green-700 mb-2 font-medium flex items-center gap-2">
+                <Check size={16} />
+                السائق {showSetPrepTimeModal.driver_name} قبل الطلب!
+              </p>
+              <p className="text-xs text-green-600">
+                سيصل السائق خلال {showSetPrepTimeModal.driver_estimated_arrival_minutes || '?'} دقيقة
+              </p>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-blue-700">
+                <strong>الخطوة التالية:</strong> حدد كم دقيقة تحتاج لتحضير الطلب #{showSetPrepTimeModal.order_number}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                سيتم إبلاغ السائق بالوقت المناسب للذهاب للمتجر
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                وقت التحضير المطلوب
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {[5, 10, 15, 20, 25, 30, 45, 60].map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setNewPrepTime(time)}
+                    data-testid={`new-prep-time-${time}`}
+                    className={`py-3 rounded-xl text-sm font-medium transition-all ${
+                      newPrepTime === time
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {time} د
+                  </button>
+                ))}
+              </div>
+              
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  type="number"
+                  value={newPrepTime}
+                  onChange={(e) => setNewPrepTime(parseInt(e.target.value) || 15)}
+                  min={3}
+                  max={120}
+                  className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-center"
+                />
+                <span className="text-sm text-gray-500">دقيقة</span>
+              </div>
+            </div>
+
+            {/* معاينة الجدول الزمني */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <p className="text-xs text-gray-500 mb-2">الجدول الزمني المتوقع:</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">وصول السائق للمتجر:</span>
+                  <span className="font-medium">{showSetPrepTimeModal.driver_estimated_arrival_minutes || '?'} دقيقة</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">جاهزية الطلب:</span>
+                  <span className="font-medium text-green-600">{newPrepTime} دقيقة</span>
+                </div>
+                {newPrepTime > (showSetPrepTimeModal.driver_estimated_arrival_minutes || 0) && (
+                  <div className="flex justify-between text-blue-600">
+                    <span>سيُبلغ السائق بالانتظار:</span>
+                    <span className="font-medium">{newPrepTime - (showSetPrepTimeModal.driver_estimated_arrival_minutes || 0)} دقيقة</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setPreparationTime(showSetPrepTimeModal.id)}
+              disabled={settingPrepTime}
+              data-testid="confirm-set-prep-time"
+              className="w-full bg-blue-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-50"
+            >
+              {settingPrepTime ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Timer size={20} />
+                  تأكيد وبدء التحضير
                 </>
               )}
             </button>

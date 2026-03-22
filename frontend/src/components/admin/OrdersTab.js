@@ -269,7 +269,13 @@ const OrdersTab = ({ allOrders, onRefresh }) => {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">{selectedOrder.city || 'غير محدد'}</p>
                   {selectedOrder.address && <p className="text-xs text-gray-600">{selectedOrder.address}</p>}
-                  {selectedOrder.delivery_address && <p className="text-xs text-gray-600">{selectedOrder.delivery_address}</p>}
+                  {selectedOrder.delivery_address && (
+                    <p className="text-xs text-gray-600">
+                      {typeof selectedOrder.delivery_address === 'object' 
+                        ? [selectedOrder.delivery_address?.area, selectedOrder.delivery_address?.street, selectedOrder.delivery_address?.building].filter(Boolean).join(', ')
+                        : selectedOrder.delivery_address}
+                    </p>
+                  )}
                 </div>
               </div>
 

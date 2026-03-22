@@ -159,7 +159,11 @@ const DeliveryHomePage = () => {
                     </div>
                     <div className="flex items-center gap-1 text-[10px] text-gray-600">
                       <MapPin size={10} />
-                      <span className="truncate">{order.buyer_address?.address || order.delivery_address}</span>
+                      <span className="truncate">
+                        {order.buyer_address?.address || (typeof order.delivery_address === 'object' 
+                          ? [order.delivery_address?.area, order.delivery_address?.street, order.delivery_address?.building].filter(Boolean).join(', ')
+                          : order.delivery_address)}
+                      </span>
                     </div>
                   </div>
                 </Link>

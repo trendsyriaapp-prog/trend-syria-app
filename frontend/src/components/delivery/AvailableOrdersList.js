@@ -307,7 +307,11 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى ({order.buyer_address?.name || 'العميل'})</span>
                     </div>
                     <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.address}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {typeof order.buyer_address?.address === 'object'
+                          ? [order.buyer_address?.address?.area, order.buyer_address?.address?.street, order.buyer_address?.address?.building].filter(Boolean).join(', ')
+                          : order.buyer_address?.address}
+                      </p>
                       <p>{order.buyer_address?.city}</p>
                       <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}
@@ -467,7 +471,11 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                       <span className={`text-sm font-bold ${isDark ? 'text-yellow-400' : 'text-amber-700'}`}>إلى ({order.buyer_address?.name || 'المشتري'})</span>
                     </div>
                     <div className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{order.buyer_address?.address}</p>
+                      <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {typeof order.buyer_address?.address === 'object'
+                          ? [order.buyer_address?.address?.area, order.buyer_address?.address?.street, order.buyer_address?.address?.building].filter(Boolean).join(', ')
+                          : order.buyer_address?.address}
+                      </p>
                       <p>{order.buyer_address?.city}</p>
                       <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
                         <Phone size={12} /> {order.buyer_address?.phone}

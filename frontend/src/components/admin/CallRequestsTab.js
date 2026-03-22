@@ -229,7 +229,11 @@ const CallRequestsTab = () => {
                 {/* Address */}
                 <div className="flex items-center gap-1 text-[11px] text-gray-500 mb-2">
                   <MapPin size={12} />
-                  <span className="truncate">{request.delivery_address}</span>
+                  <span className="truncate">
+                    {typeof request.delivery_address === 'object' 
+                      ? [request.delivery_address?.area, request.delivery_address?.street, request.delivery_address?.building].filter(Boolean).join(', ')
+                      : request.delivery_address}
+                  </span>
                 </div>
                 
                 {/* Reason/Notes - Compact */}
