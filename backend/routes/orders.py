@@ -510,12 +510,14 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    # التأكد أن البائع صاحب المنتج
-    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+    # التأكد أن البائع صاحب المنتج (تدعم seller_id في الطلب أو في items)
+    is_seller_order = order.get("seller_id") == user["id"]
+    is_seller_item = any(item.get("seller_id") == user["id"] for item in order.get("items", []))
+    if not is_seller_order and not is_seller_item:
         raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
     
-    if order.get("status") != "paid":
-        raise HTTPException(status_code=400, detail="الطلب لم يتم دفعه بعد")
+    if order.get("status") not in ["paid", "pending"]:
+        raise HTTPException(status_code=400, detail="الطلب لم يتم دفعه بعد أو تم معالجته مسبقاً")
     
     await db.orders.update_one(
         {"id": order_id},
@@ -536,13 +538,16 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
         }
     )
     
-    await create_notification_for_user(
-        user_id=order["user_id"],
-        title=f"✅ تم تأكيد طلبك #{order_id[:8]}",
-        message=f"البائع: {user.get('full_name', 'المتجر')}\nسيبدأ التحضير قريباً",
-        notification_type="order_status",
-        order_id=order_id
-    )
+    # إرسال إشعار للعميل
+    customer_id = order.get("user_id") or order.get("buyer_id")
+    if customer_id:
+        await create_notification_for_user(
+            user_id=customer_id,
+            title=f"✅ تم تأكيد طلبك #{order_id[:8]}",
+            message=f"البائع: {user.get('full_name', 'المتجر')}\nسيبدأ التحضير قريباً",
+            notification_type="order_status",
+            order_id=order_id
+        )
     
     return {"message": "تم تأكيد الطلب"}
 
@@ -556,7 +561,10 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+    # التأكد أن البائع صاحب المنتج (تدعم seller_id في الطلب أو في items)
+    is_seller_order = order.get("seller_id") == user["id"]
+    is_seller_item = any(item.get("seller_id") == user["id"] for item in order.get("items", []))
+    if not is_seller_order and not is_seller_item:
         raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
     
     await db.orders.update_one(
@@ -583,13 +591,16 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
     if len(order.get("items", [])) > 2:
         products_text += f" و{len(order.get('items', [])) - 2} أخرى"
     
-    await create_notification_for_user(
-        user_id=order["user_id"],
-        title=f"📦 جاري تحضير طلبك #{order_id[:8]}",
-        message=f"المنتجات: {products_text}\nالوقت المتوقع للشحن: اليوم",
-        notification_type="order_status",
-        order_id=order_id
-    )
+    # إرسال إشعار للعميل (user_id أو buyer_id)
+    customer_id = order.get("user_id") or order.get("buyer_id")
+    if customer_id:
+        await create_notification_for_user(
+            user_id=customer_id,
+            title=f"📦 جاري تحضير طلبك #{order_id[:8]}",
+            message=f"المنتجات: {products_text}\nالوقت المتوقع للشحن: اليوم",
+            notification_type="order_status",
+            order_id=order_id
+        )
     
     return {"message": "تم تحديث حالة الطلب"}
 
@@ -605,7 +616,10 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    if not any(item["seller_id"] == user["id"] for item in order.get("items", [])):
+    # التأكد أن البائع صاحب المنتج (تدعم seller_id في الطلب أو في items)
+    is_seller_order = order.get("seller_id") == user["id"]
+    is_seller_item = any(item.get("seller_id") == user["id"] for item in order.get("items", []))
+    if not is_seller_order and not is_seller_item:
         raise HTTPException(status_code=403, detail="هذا الطلب لا يخصك")
     
     # إنشاء كود استلام من البائع (4 أرقام)
@@ -643,13 +657,15 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     )
     
     # إشعار العميل مع موعد التوصيل
-    await create_notification_for_user(
-        user_id=order["user_id"],
-        title=f"🚚 تم شحن طلبك #{order_id[:8]}",
-        message=f"طلبك جاهز وسيصلك اليوم قبل الساعة {closing_hour}:00\nسيتم إعلامك فور استلام موظف التوصيل",
-        notification_type="order_status",
-        order_id=order_id
-    )
+    customer_id = order.get("user_id") or order.get("buyer_id")
+    if customer_id:
+        await create_notification_for_user(
+            user_id=customer_id,
+            title=f"🚚 تم شحن طلبك #{order_id[:8]}",
+            message=f"طلبك جاهز وسيصلك اليوم قبل الساعة {closing_hour}:00\nسيتم إعلامك فور استلام موظف التوصيل",
+            notification_type="order_status",
+            order_id=order_id
+        )
     
     # إشعار موظفي التوصيل
     await create_notification_for_role(
