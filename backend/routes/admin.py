@@ -686,6 +686,86 @@ async def get_all_orders(user: dict = Depends(get_current_user)):
 
 # ============== Commission Management ==============
 
+# ============== Platform Wallet (محفظة المنصة) ==============
+
+PLATFORM_WALLET_ID = "platform_admin_wallet"
+
+@router.get("/platform-wallet")
+async def get_platform_wallet(user: dict = Depends(get_current_user)):
+    """جلب محفظة المنصة - للمدير فقط"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID}, {"_id": 0})
+    if not wallet:
+        wallet = {
+            "id": PLATFORM_WALLET_ID,
+            "balance": 0,
+            "total_commission_products": 0,
+            "total_commission_food": 0,
+            "total_withdrawn": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.platform_wallet.insert_one(wallet)
+    
+    return wallet
+
+@router.get("/platform-wallet/transactions")
+async def get_platform_wallet_transactions(
+    user: dict = Depends(get_current_user),
+    limit: int = 50
+):
+    """جلب معاملات محفظة المنصة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    transactions = await db.platform_wallet_transactions.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return transactions
+
+@router.post("/platform-wallet/withdraw")
+async def withdraw_from_platform_wallet(
+    amount: int,
+    note: str = "",
+    user: dict = Depends(get_current_user)
+):
+    """سحب من محفظة المنصة"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID})
+    if not wallet or wallet.get("balance", 0) < amount:
+        raise HTTPException(status_code=400, detail="رصيد غير كافٍ")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث الرصيد
+    await db.platform_wallet.update_one(
+        {"id": PLATFORM_WALLET_ID},
+        {
+            "$inc": {"balance": -amount, "total_withdrawn": amount},
+            "$set": {"updated_at": now}
+        }
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "type": "withdrawal",
+        "amount": -amount,
+        "created_at": now,
+        "withdrawn_by": user["id"],
+        "note": note,
+        "description": "سحب من محفظة المنصة"
+    }
+    await db.platform_wallet_transactions.insert_one(transaction)
+    
+    return {"message": "تم السحب بنجاح", "amount": amount, "new_balance": wallet["balance"] - amount}
+
 @router.get("/commissions")
 async def get_commissions_report(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:

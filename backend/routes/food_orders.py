@@ -114,6 +114,42 @@ ORDER_STATUSES = {
     "cancelled": "ملغي"
 }
 
+# ============== Platform Wallet Helper ==============
+
+PLATFORM_WALLET_ID = "platform_admin_wallet"
+
+async def add_commission_to_platform_wallet_food(order_id: str, commission_amount: float, order_number: str = ""):
+    """إضافة عمولة طلبات الطعام لمحفظة المنصة"""
+    if commission_amount <= 0:
+        return
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث رصيد المحفظة
+    await db.platform_wallet.update_one(
+        {"id": PLATFORM_WALLET_ID},
+        {
+            "$inc": {
+                "balance": commission_amount,
+                "total_commission_food": commission_amount
+            },
+            "$set": {"updated_at": now}
+        },
+        upsert=True
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "type": "commission",
+        "order_type": "food",
+        "amount": commission_amount,
+        "order_id": order_id,
+        "created_at": now,
+        "description": f"عمولة طلب طعام #{order_number or order_id[:8]}"
+    }
+    await db.platform_wallet_transactions.insert_one(transaction)
+
 # ============== حساب المسافة والتحذير الذكي ==============
 
 class DistanceCheckRequest(BaseModel):
@@ -3538,6 +3574,10 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
         await add_earnings_directly(driver, driver_earning, order, "delivery")
         if store and store.get("owner_id") and seller_earning > 0:
             await add_seller_earnings_directly(store["owner_id"], seller_earning, order)
+    
+    # إضافة العمولة لمحفظة المنصة (الأدمن)
+    if platform_commission > 0:
+        await add_commission_to_platform_wallet_food(order["id"], platform_commission, order.get("order_number", ""))
     
     # إشعار العميل
     await db.notifications.insert_one({

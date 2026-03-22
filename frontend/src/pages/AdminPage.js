@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench, LogOut
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench, LogOut, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -58,6 +58,7 @@ import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
 import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
+import PlatformWalletTab from '../components/admin/PlatformWalletTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -383,7 +384,8 @@ const AdminDashboardPage = () => {
     'categories': 'إدارة الفئات',
     'call-requests': 'طلبات الاتصال',
     'recorded-calls': 'المكالمات المسجلة',
-    'payment-settings': 'إعدادات الدفع'
+    'payment-settings': 'إعدادات الدفع',
+    'platform-wallet': 'محفظة المنصة'
   };
 
   return (
@@ -565,6 +567,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'payment-settings' && user.user_type === 'admin' && (
               <PaymentSettingsTab />
+            )}
+            {activeTab === 'platform-wallet' && user.user_type === 'admin' && (
+              <PlatformWalletTab />
             )}
           </>
         ) : (
@@ -855,6 +860,7 @@ const AdminDashboardPage = () => {
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },
                       { icon: Package, label: 'الفئات', tab: 'categories' },
                       { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
+                      { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors">
                         <item.icon size={16} className="text-gray-600" />

@@ -725,8 +725,12 @@ const SellerDashboardPage = () => {
 
   // التحقق من الطلبات الجديدة وتشغيل الصوت
   useEffect(() => {
-    if (isFoodSeller && soundEnabled) {
-      const pendingCount = foodOrders.filter(o => o.status === 'pending').length;
+    if (soundEnabled) {
+      // للطعام أو المنتجات
+      const currentOrders = isFoodSeller ? foodOrders : orders;
+      const pendingStatuses = isFoodSeller ? ['pending'] : ['pending', 'paid'];
+      const pendingCount = currentOrders.filter(o => pendingStatuses.includes(o.status)).length;
+      
       if (pendingCount > previousPendingCountRef.current && previousPendingCountRef.current !== 0) {
         // هناك طلب جديد!
         playSound();
@@ -737,17 +741,17 @@ const SellerDashboardPage = () => {
       }
       previousPendingCountRef.current = pendingCount;
     }
-  }, [foodOrders, isFoodSeller, soundEnabled, playSound, toast]);
+  }, [foodOrders, orders, isFoodSeller, soundEnabled, playSound, toast]);
 
-  // تحديث الطلبات كل 30 ثانية لبائع الطعام
+  // تحديث الطلبات كل 30 ثانية لجميع البائعين
   useEffect(() => {
-    if (isFoodSeller && user?.is_approved) {
+    if (user?.is_approved) {
       const interval = setInterval(() => {
         fetchData();
       }, 30000); // كل 30 ثانية
       return () => clearInterval(interval);
     }
-  }, [isFoodSeller, user?.is_approved]);
+  }, [user?.is_approved]);
 
   useEffect(() => {
     if (user?.user_type === 'seller' || user?.user_type === 'food_seller') {

@@ -79,6 +79,95 @@ async def calculate_commission(price: float, category: str) -> dict:
         "seller_amount": seller_amount
     }
 
+# ============== Platform Wallet (محفظة المنصة) ==============
+
+PLATFORM_WALLET_ID = "platform_admin_wallet"
+
+async def get_or_create_platform_wallet():
+    """جلب أو إنشاء محفظة المنصة"""
+    wallet = await db.platform_wallet.find_one({"id": PLATFORM_WALLET_ID}, {"_id": 0})
+    if not wallet:
+        wallet = {
+            "id": PLATFORM_WALLET_ID,
+            "balance": 0,
+            "total_commission_products": 0,  # عمولات المنتجات
+            "total_commission_food": 0,       # عمولات الطعام
+            "total_withdrawn": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.platform_wallet.insert_one(wallet)
+    return wallet
+
+async def add_commission_to_platform_wallet(order_id: str, commission_amount: float, order_type: str = "products"):
+    """إضافة عمولة لمحفظة المنصة"""
+    if commission_amount <= 0:
+        return
+    
+    commission_field = f"total_commission_{order_type}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث رصيد المحفظة
+    await db.platform_wallet.update_one(
+        {"id": PLATFORM_WALLET_ID},
+        {
+            "$inc": {
+                "balance": commission_amount,
+                commission_field: commission_amount
+            },
+            "$set": {"updated_at": now}
+        },
+        upsert=True
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "type": "commission",
+        "order_type": order_type,
+        "amount": commission_amount,
+        "order_id": order_id,
+        "created_at": now,
+        "description": f"عمولة طلب #{order_id[:8]} ({order_type})"
+    }
+    await db.platform_wallet_transactions.insert_one(transaction)
+
+async def distribute_seller_earnings(order: dict):
+    """توزيع أرباح البائعين بعد إتمام الطلب"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تجميع الأرباح حسب البائع
+    seller_earnings = {}
+    for item in order.get("items", []):
+        seller_id = item.get("seller_id")
+        seller_amount = item.get("seller_amount", 0)
+        if seller_id and seller_amount > 0:
+            if seller_id not in seller_earnings:
+                seller_earnings[seller_id] = 0
+            seller_earnings[seller_id] += seller_amount
+    
+    # إضافة الأرباح لمحفظة كل بائع
+    for seller_id, amount in seller_earnings.items():
+        await db.wallets.update_one(
+            {"user_id": seller_id},
+            {
+                "$inc": {"balance": amount, "total_earned": amount},
+                "$set": {"updated_at": now}
+            },
+            upsert=True
+        )
+        
+        # تسجيل المعاملة
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": seller_id,
+            "type": "sale_earning",
+            "amount": amount,
+            "order_id": order.get("id"),
+            "created_at": now,
+            "description": f"أرباح مبيعات طلب #{order.get('id', '')[:8]}"
+        })
+
 # ============== Orders ==============
 
 @router.post("/orders")
@@ -1171,6 +1260,14 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
         },
         upsert=True
     )
+    
+    # إضافة العمولة لمحفظة المنصة (الأدمن)
+    total_commission = order.get("total_commission", 0)
+    if total_commission > 0:
+        await add_commission_to_platform_wallet(order_id, total_commission, "products")
+    
+    # إضافة أرباح البائعين لمحفظاتهم
+    await distribute_seller_earnings(order)
     
     return {"message": "تم تأكيد التسليم", "delivery_fee": delivery_fee}
 
