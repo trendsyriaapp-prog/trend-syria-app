@@ -400,6 +400,16 @@ async def background_dispatch_loop():
                 except Exception as e:
                     logger.error(f"Error cleaning up VoIP recordings: {e}")
             
+            # معالجة الطلبات المتأخرة وحماية العميل كل دقيقة
+            if shortage_counter == 0:  # نفس توقيت فحص نقص السائقين
+                try:
+                    from services.violation_system import process_delayed_orders
+                    result = await process_delayed_orders()
+                    if result.get("processed", 0) > 0:
+                        logger.info(f"Processed {result['processed']} delayed orders for customer protection")
+                except Exception as e:
+                    logger.error(f"Error processing delayed orders: {e}")
+            
         except Exception as e:
             logger.error(f"Error in dispatch loop: {e}")
         

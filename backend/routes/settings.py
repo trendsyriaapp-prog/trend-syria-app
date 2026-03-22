@@ -2129,3 +2129,57 @@ async def track_image_usage(image_type: str = "pro"):
         },
         upsert=True
     )
+
+
+
+# ============== إعدادات حماية العميل ==============
+
+class CustomerProtectionSettings(BaseModel):
+    customer_protection_enabled: bool = True
+    delay_notification_minutes: int = 5
+    free_cancel_delay_minutes: int = 15
+    compensation_coupon_delay_minutes: int = 20
+    compensation_coupon_percent: int = 10
+    max_coupon_value: int = 15000
+    seller_compensation_on_cancel_percent: int = 50
+
+@router.get("/customer-protection")
+async def get_customer_protection_settings():
+    """جلب إعدادات حماية العميل"""
+    settings = await db.customer_protection_settings.find_one({"id": "main"}, {"_id": 0})
+    
+    if not settings:
+        # إعدادات افتراضية
+        return {
+            "customer_protection_enabled": True,
+            "delay_notification_minutes": 5,
+            "free_cancel_delay_minutes": 15,
+            "compensation_coupon_delay_minutes": 20,
+            "compensation_coupon_percent": 10,
+            "max_coupon_value": 15000,
+            "seller_compensation_on_cancel_percent": 50
+        }
+    
+    return settings
+
+@router.put("/customer-protection")
+async def update_customer_protection_settings(
+    data: CustomerProtectionSettings,
+    user: dict = Depends(get_current_user)
+):
+    """تحديث إعدادات حماية العميل"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    settings_data = data.dict()
+    settings_data["id"] = "main"
+    settings_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    settings_data["updated_by"] = user["id"]
+    
+    await db.customer_protection_settings.update_one(
+        {"id": "main"},
+        {"$set": settings_data},
+        upsert=True
+    )
+    
+    return {"message": "تم حفظ إعدادات حماية العميل بنجاح"}
