@@ -343,17 +343,18 @@ const Header = () => {
               </button>
             )}
             
-            {/* المساعد الذكي */}
+            {/* المساعد الذكي AI */}
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
               className="p-1.5 hover:bg-violet-50 rounded-full transition-colors text-violet-600 relative group"
-              title="المساعد الذكي"
+              title="المساعد الذكي AI"
               data-testid="chatbot-icon"
             >
-              <Sparkles size={18} />
-              {/* نبضة بنفسجية */}
-              <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-20"></span>
+              <div className="relative">
+                <Bot size={18} />
+                <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-violet-600 text-white px-1 rounded">AI</span>
+              </div>
             </button>
             
             {/* الإشعارات */}
