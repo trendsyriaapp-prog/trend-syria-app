@@ -1198,31 +1198,33 @@ const SellerDashboardPage = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-              <Bell size={18} className="text-[#FF6B00]" />
-              الإعدادات
-            </h3>
-            <Link
-              to="/?view=customer"
-              className="flex items-center justify-between bg-gray-50 rounded-xl p-4"
-            >
-              <div className="flex items-center gap-3">
-                <Home size={20} className="text-gray-500" />
-                <span className="font-medium">تصفح كعميل</span>
-              </div>
-              <ChevronRight size={20} className="text-gray-400" />
-            </Link>
-            <button
-              onClick={() => navigate('/packaging-guide')}
-              className="w-full flex items-center justify-between bg-gray-50 rounded-xl p-4"
-            >
-              <div className="flex items-center gap-3">
-                <BookOpen size={20} className="text-gray-500" />
-                <span className="font-medium">إرشادات التغليف</span>
-              </div>
-              <ChevronRight size={20} className="text-gray-400" />
-            </button>
+          <div className="space-y-4">
+            {/* إعدادات المتجر */}
+            <StoreSettingsTab />
+            
+            {/* روابط إضافية */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+              <Link
+                to="/?view=customer"
+                className="flex items-center justify-between bg-gray-50 rounded-xl p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Home size={20} className="text-gray-500" />
+                  <span className="font-medium">تصفح كعميل</span>
+                </div>
+                <ChevronRight size={20} className="text-gray-400" />
+              </Link>
+              <button
+                onClick={() => navigate('/packaging-guide')}
+                className="w-full flex items-center justify-between bg-gray-50 rounded-xl p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen size={20} className="text-gray-500" />
+                  <span className="font-medium">إرشادات التغليف</span>
+                </div>
+                <ChevronRight size={20} className="text-gray-400" />
+              </button>
+            </div>
           </div>
         )}
       </div>

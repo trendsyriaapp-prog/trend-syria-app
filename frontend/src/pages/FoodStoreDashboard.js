@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame
+  LogOut, Settings, User, Flame, Camera
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -759,6 +759,8 @@ const StoreSettings = ({ store, token, onUpdate }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [sameHoursAllDays, setSameHoursAllDays] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [storeLogo, setStoreLogo] = useState(store.logo || null);
   
   const defaultWorkingHours = {
     sunday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
@@ -788,6 +790,52 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     working_hours: store.working_hours || defaultWorkingHours,
   });
   const [saving, setSaving] = useState(false);
+  
+  // رفع صورة المتجر
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // التحقق من نوع الملف
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "خطأ", description: "يرجى اختيار صورة", variant: "destructive" });
+      return;
+    }
+    
+    // التحقق من حجم الملف (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "خطأ", description: "حجم الصورة يجب أن يكون أقل من 2 ميجابايت", variant: "destructive" });
+      return;
+    }
+    
+    setUploadingLogo(true);
+    try {
+      // تحويل الصورة إلى base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const imageDataUrl = event.target.result;
+        
+        try {
+          // تحديث صورة المتجر
+          await axios.put(`${API}/food/my-store`, { logo: imageDataUrl }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          setStoreLogo(imageDataUrl);
+          toast({ title: "تم", description: "تم تحديث صورة المتجر" });
+          onUpdate();
+        } catch (error) {
+          toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
+        } finally {
+          setUploadingLogo(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل قراءة الصورة", variant: "destructive" });
+      setUploadingLogo(false);
+    }
+  };
   
   const handleWorkingHoursChange = (day, field, value) => {
     const newHours = { ...formData.working_hours };
@@ -822,6 +870,43 @@ const StoreSettings = ({ store, token, onUpdate }) => {
   return (
     <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-3">
       <h3 className="font-bold text-sm text-gray-900">إعدادات المتجر</h3>
+      
+      {/* صورة المتجر */}
+      <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+        <div className="relative">
+          {storeLogo ? (
+            <img 
+              src={storeLogo} 
+              alt="صورة المتجر" 
+              className="w-20 h-20 rounded-xl object-cover border-2 border-white shadow"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-xl bg-green-100 flex items-center justify-center border-2 border-white shadow">
+              <Store size={32} className="text-green-600" />
+            </div>
+          )}
+          {uploadingLogo && (
+            <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900 text-sm">صورة المتجر</p>
+          <p className="text-xs text-gray-500 mb-2">PNG, JPG (أقصى 2 ميجابايت)</p>
+          <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium cursor-pointer hover:bg-green-600 transition-colors">
+            <Camera size={14} />
+            {uploadingLogo ? 'جاري الرفع...' : 'تغيير الصورة'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+              disabled={uploadingLogo}
+            />
+          </label>
+        </div>
+      </div>
       
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">اسم المتجر</label>
