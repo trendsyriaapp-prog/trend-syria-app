@@ -1800,22 +1800,27 @@ const StoreOrdersTab = ({ token }) => {
 
                   {/* Actions based on status */}
                   {order.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => updateStatus(order.id, 'confirmed')}
-                        data-testid={`confirm-order-${order.id}`}
-                        className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
-                      >
-                        <Check size={16} />
-                        تأكيد الطلب
-                      </button>
-                      <button
-                        onClick={() => updateStatus(order.id, 'cancelled')}
-                        data-testid={`reject-order-${order.id}`}
-                        className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                      >
-                        رفض
-                      </button>
+                    <div className="space-y-3">
+                      {/* مكون حالة السائقين */}
+                      <DriverAvailabilityCheck orderId={order.id} token={token} />
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => updateStatus(order.id, 'confirmed')}
+                          data-testid={`confirm-order-${order.id}`}
+                          className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                        >
+                          <Check size={16} />
+                          تأكيد الطلب
+                        </button>
+                        <button
+                          onClick={() => updateStatus(order.id, 'cancelled')}
+                          data-testid={`reject-order-${order.id}`}
+                          className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                        >
+                          رفض
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -2591,6 +2596,88 @@ const DailyDealRequestModal = ({ product, token, onClose, onSuccess }) => {
           </div>
         </div>
       </motion.div>
+    </div>
+  );
+};
+
+// ============== مكون فحص توفر السائقين ==============
+const DriverAvailabilityCheck = ({ orderId, token }) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        const res = await axios.get(`${API}/food/orders/check-drivers-availability/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setData(res.data);
+      } catch (error) {
+        console.error('Error checking driver availability:', error);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAvailability();
+    // تحديث كل 30 ثانية
+    const interval = setInterval(checkAvailability, 30000);
+    return () => clearInterval(interval);
+  }, [orderId, token]);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm text-gray-500">جاري فحص توفر السائقين...</span>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const bgColor = {
+    none: 'bg-green-50 border-green-200',
+    low: 'bg-green-50 border-green-200',
+    medium: 'bg-orange-50 border-orange-200',
+    high: 'bg-red-50 border-red-200',
+    error: 'bg-gray-50 border-gray-200'
+  }[data.warning_level] || 'bg-gray-50 border-gray-200';
+
+  const textColor = {
+    none: 'text-green-700',
+    low: 'text-green-700',
+    medium: 'text-orange-700',
+    high: 'text-red-700',
+    error: 'text-gray-700'
+  }[data.warning_level] || 'text-gray-700';
+
+  const subTextColor = {
+    none: 'text-green-600',
+    low: 'text-green-600',
+    medium: 'text-orange-600',
+    high: 'text-red-600',
+    error: 'text-gray-600'
+  }[data.warning_level] || 'text-gray-600';
+
+  return (
+    <div className={`${bgColor} border rounded-lg p-3`}>
+      <div className="flex items-start gap-2">
+        <Truck size={18} className={textColor} />
+        <div className="flex-1">
+          <p className={`text-sm font-medium ${textColor}`}>{data.message}</p>
+          {data.sub_message && (
+            <p className={`text-xs ${subTextColor} mt-0.5`}>{data.sub_message}</p>
+          )}
+          {data.recommendation && data.warning_level !== 'none' && data.warning_level !== 'low' && (
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <AlertTriangle size={12} />
+              {data.recommendation}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

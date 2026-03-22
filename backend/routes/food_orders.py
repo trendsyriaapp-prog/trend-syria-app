@@ -121,6 +121,162 @@ class DistanceCheckRequest(BaseModel):
     customer_lat: float
     customer_lng: float
 
+@router.get("/check-drivers-availability/{order_id}")
+async def check_drivers_availability_for_order(order_id: str, user: dict = Depends(get_current_user)):
+    """
+    فحص توفر السائقين القريبين للطلب
+    يُستخدم من البائع قبل قبول الطلب لمعرفة حالة التوصيل
+    """
+    # جلب الطلب
+    order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # جلب المتجر
+    store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+    if not store:
+        return {
+            "available": False,
+            "drivers_count": 0,
+            "warning_level": "error",
+            "message": "خطأ في بيانات المتجر"
+        }
+    
+    store_lat = store.get("latitude", 33.5138)
+    store_lon = store.get("longitude", 36.2765)
+    store_city = store.get("city", order.get("delivery_city"))
+    
+    # جلب السائقين المتاحين في نفس المدينة
+    available_docs = await db.delivery_documents.find({
+        "status": "approved",
+        "is_available": True,
+        "city": store_city
+    }, {"_id": 0, "user_id": 1, "driver_id": 1, "delivery_id": 1}).to_list(50)
+    
+    if not available_docs:
+        return {
+            "available": False,
+            "drivers_count": 0,
+            "nearest_driver_km": None,
+            "estimated_arrival_minutes": None,
+            "warning_level": "high",
+            "warning_color": "red",
+            "message": "⚠️ لا يوجد سائقين متاحين حالياً في المنطقة",
+            "recommendation": "يُنصح بالانتظار أو رفض الطلب"
+        }
+    
+    driver_ids = [doc.get("user_id") or doc.get("driver_id") or doc.get("delivery_id") for doc in available_docs]
+    driver_ids = [d for d in driver_ids if d]
+    
+    # جلب مواقع السائقين الحالية (آخر تحديث خلال 5 دقائق)
+    five_min_ago = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    
+    driver_locations = await db.driver_locations.find({
+        "driver_id": {"$in": driver_ids},
+        "updated_at": {"$gte": five_min_ago}
+    }, {"_id": 0}).to_list(50)
+    
+    if not driver_locations:
+        return {
+            "available": False,
+            "drivers_count": len(driver_ids),
+            "online_count": 0,
+            "nearest_driver_km": None,
+            "estimated_arrival_minutes": None,
+            "warning_level": "medium",
+            "warning_color": "orange",
+            "message": f"⚠️ يوجد {len(driver_ids)} سائق معتمد لكن لا أحد متصل حالياً",
+            "recommendation": "قد يتأخر قبول الطلب من السائقين"
+        }
+    
+    # حساب المسافات لكل سائق متصل
+    drivers_with_distance = []
+    for loc in driver_locations:
+        distance = calculate_distance_km(
+            store_lat, store_lon,
+            loc.get("latitude", 0), loc.get("longitude", 0)
+        )
+        drivers_with_distance.append({
+            "driver_id": loc["driver_id"],
+            "distance_km": round(distance, 2),
+            "latitude": loc.get("latitude"),
+            "longitude": loc.get("longitude")
+        })
+    
+    # ترتيب حسب المسافة
+    drivers_with_distance.sort(key=lambda x: x["distance_km"])
+    
+    nearest = drivers_with_distance[0] if drivers_with_distance else None
+    nearest_km = nearest["distance_km"] if nearest else None
+    
+    # حساب الوقت المتوقع للوصول (متوسط سرعة 20-30 كم/ساعة في المدينة)
+    avg_speed = 25  # كم/ساعة
+    arrival_minutes = round((nearest_km / avg_speed) * 60) if nearest_km else None
+    
+    # تحديد مستوى التحذير
+    nearby_drivers = [d for d in drivers_with_distance if d["distance_km"] <= 5]  # أقل من 5 كم
+    
+    if len(nearby_drivers) >= 2:
+        # ممتاز - يوجد أكثر من سائق قريب
+        return {
+            "available": True,
+            "drivers_count": len(driver_ids),
+            "online_count": len(driver_locations),
+            "nearby_count": len(nearby_drivers),
+            "nearest_driver_km": nearest_km,
+            "estimated_arrival_minutes": arrival_minutes,
+            "warning_level": "none",
+            "warning_color": "green",
+            "message": f"✅ يوجد {len(nearby_drivers)} سائق على بُعد أقل من 5 كم",
+            "sub_message": f"الوقت المتوقع للاستلام: {arrival_minutes} دقيقة" if arrival_minutes else None,
+            "recommendation": "يمكن قبول الطلب بثقة"
+        }
+    elif len(nearby_drivers) == 1:
+        # جيد - يوجد سائق واحد قريب
+        return {
+            "available": True,
+            "drivers_count": len(driver_ids),
+            "online_count": len(driver_locations),
+            "nearby_count": 1,
+            "nearest_driver_km": nearest_km,
+            "estimated_arrival_minutes": arrival_minutes,
+            "warning_level": "low",
+            "warning_color": "green",
+            "message": f"✅ يوجد سائق على بُعد {nearest_km} كم",
+            "sub_message": f"الوقت المتوقع للاستلام: {arrival_minutes} دقيقة",
+            "recommendation": "يمكن قبول الطلب"
+        }
+    elif nearest_km and nearest_km <= 8:
+        # متوسط - السائق ليس قريباً جداً
+        return {
+            "available": True,
+            "drivers_count": len(driver_ids),
+            "online_count": len(driver_locations),
+            "nearby_count": 0,
+            "nearest_driver_km": nearest_km,
+            "estimated_arrival_minutes": arrival_minutes,
+            "warning_level": "medium",
+            "warning_color": "orange",
+            "message": f"📍 أقرب سائق على بُعد {nearest_km} كم",
+            "sub_message": f"الوقت المتوقع للاستلام: {arrival_minutes} دقيقة",
+            "recommendation": "قد يتأخر استلام الطلب قليلاً"
+        }
+    else:
+        # سيء - السائق بعيد جداً
+        return {
+            "available": True,
+            "drivers_count": len(driver_ids),
+            "online_count": len(driver_locations),
+            "nearby_count": 0,
+            "nearest_driver_km": nearest_km,
+            "estimated_arrival_minutes": arrival_minutes,
+            "warning_level": "high",
+            "warning_color": "red",
+            "message": f"⚠️ أقرب سائق على بُعد {nearest_km} كم",
+            "sub_message": f"الوقت المتوقع للاستلام: {arrival_minutes} دقيقة - قد يبرد الطعام!",
+            "recommendation": "يُنصح بتأجيل قبول الطلب أو تحذير العميل"
+        }
+
 @router.post("/check-distance")
 async def check_delivery_distance(data: DistanceCheckRequest):
     """
