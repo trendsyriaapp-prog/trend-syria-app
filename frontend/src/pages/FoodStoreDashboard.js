@@ -543,7 +543,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     name: store.name || '',
     description: store.description || '',
     phone: store.phone || '',
-    delivery_time: store.delivery_time || 30,
+    delivery_time: store.delivery_time || 15, // يُعرض كـ "وقت التحضير"
     working_hours: store.working_hours || defaultWorkingHours,
   });
   const [saving, setSaving] = useState(false);
@@ -603,14 +603,15 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">وقت التوصيل (دقيقة)</label>
+        <label className="block text-xs font-medium text-gray-700 mb-1">وقت التحضير (دقيقة)</label>
         <input
           type="number"
           value={formData.delivery_time}
           onChange={(e) => setFormData({ ...formData, delivery_time: parseInt(e.target.value) })}
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          placeholder="مثال: 30"
+          placeholder="مثال: 15"
         />
+        <p className="text-[10px] text-gray-400 mt-1">الوقت اللازم لتحضير الطلب قبل التوصيل</p>
       </div>
 
       {/* ساعات العمل */}
