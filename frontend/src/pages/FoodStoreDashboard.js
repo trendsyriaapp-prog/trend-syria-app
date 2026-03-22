@@ -2249,15 +2249,45 @@ const StoreOrdersTab = ({ token }) => {
                         </div>
                       )}
                       
-                      {/* معلومات السائق */}
+                      {/* معلومات السائق مع الصورة */}
                       {order.driver_name && (
-                        <div className="mt-3 p-2 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-blue-700">
-                            🏍️ موظف التوصيل: <span className="font-bold">{order.driver_name}</span>
-                          </p>
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-3">
+                            {/* صورة موظف التوصيل */}
+                            {order.driver_image ? (
+                              <img 
+                                src={order.driver_image} 
+                                alt={order.driver_name}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-blue-400"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-full bg-blue-200 flex items-center justify-center border-2 border-blue-400">
+                                <span className="text-2xl">🏍️</span>
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm text-blue-800 font-bold">
+                                {order.driver_name}
+                              </p>
+                              <p className="text-[10px] text-blue-600">موظف التوصيل</p>
+                              {order.driver_phone && (
+                                <p className="text-[11px] text-gray-600 font-mono" dir="ltr">
+                                  {order.driver_phone}
+                                </p>
+                              )}
+                            </div>
+                            {order.driver_phone && (
+                              <a 
+                                href={`tel:${order.driver_phone}`}
+                                className="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
+                              >
+                                📞 اتصال
+                              </a>
+                            )}
+                          </div>
                           {order.driver_arrived_at && (
                             <>
-                              <p className="text-xs text-blue-600 mt-1">
+                              <p className="text-xs text-green-600 mt-2 font-bold">
                                 ✅ وصل للمتجر
                               </p>
                               {/* زر الإبلاغ عن وصول كاذب */}
@@ -2272,14 +2302,6 @@ const StoreOrdersTab = ({ token }) => {
                               )}
                             </>
                           )}
-                          {order.driver_phone && (
-                            <a 
-                              href={`tel:${order.driver_phone}`}
-                              className="text-xs text-blue-600 hover:underline"
-                            >
-                              📞 {order.driver_phone}
-                            </a>
-                          )}
                         </div>
                       )}
                     </div>
@@ -2287,15 +2309,38 @@ const StoreOrdersTab = ({ token }) => {
 
                   {order.status === 'out_for_delivery' && (
                     <div className="space-y-2">
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                        <p className="text-purple-700 text-sm font-medium flex items-center justify-center gap-2">
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                        <p className="text-purple-700 text-sm font-medium flex items-center justify-center gap-2 mb-3">
                           <Navigation size={16} className="animate-pulse" />
                           جاري التوصيل للعميل
                         </p>
+                        {/* معلومات السائق مع الصورة */}
                         {order.driver_name && (
-                          <p className="text-xs text-purple-600 mt-1">
-                            🏍️ بواسطة: {order.driver_name}
-                          </p>
+                          <div className="flex items-center gap-3 bg-white rounded-lg p-2">
+                            {order.driver_image ? (
+                              <img 
+                                src={order.driver_image} 
+                                alt={order.driver_name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-purple-400"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center border-2 border-purple-400">
+                                <span className="text-xl">🏍️</span>
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm text-purple-800 font-bold">{order.driver_name}</p>
+                              <p className="text-[10px] text-purple-600">في الطريق للعميل</p>
+                            </div>
+                            {order.driver_phone && (
+                              <a 
+                                href={`tel:${order.driver_phone}`}
+                                className="bg-purple-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-purple-600"
+                              >
+                                📞 اتصال
+                              </a>
+                            )}
+                          </div>
                         )}
                       </div>
                       
