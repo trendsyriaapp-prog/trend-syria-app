@@ -32,7 +32,7 @@ const FoodStoreDashboard = () => {
   const [dataFetched, setDataFetched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   // الصفحة الرئيسية = الطلبات (orders)، باقي الصفحات من الشريط السفلي
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   
   // تحديث URL عند تغيير التبويب
   useEffect(() => {

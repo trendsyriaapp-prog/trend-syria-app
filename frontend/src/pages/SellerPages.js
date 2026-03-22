@@ -574,7 +574,7 @@ const SellerDashboardPage = () => {
   const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
   // قراءة التبويب من URL أو استخدام 'orders' كافتراضي (الطلبات هي الصفحة الرئيسية)
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
