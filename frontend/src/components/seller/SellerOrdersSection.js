@@ -36,9 +36,9 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
     const colors = {
       'pending': 'bg-yellow-100 text-yellow-700',
       'paid': 'bg-blue-100 text-blue-700',
-      'confirmed': 'bg-indigo-100 text-indigo-700',
-      'preparing': 'bg-purple-100 text-purple-700',
-      'ready_for_pickup': 'bg-orange-100 text-orange-700',
+      'confirmed': 'bg-orange-100 text-orange-700',
+      'preparing': 'bg-amber-100 text-amber-700',
+      'ready_for_pickup': 'bg-lime-100 text-lime-700',
       'shipped': 'bg-green-100 text-green-700',
       'out_for_delivery': 'bg-teal-100 text-teal-700',
       'delivered': 'bg-emerald-100 text-emerald-700',
@@ -99,32 +99,53 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                 </div>
               )}
               
-              {/* معلومات موظف التوصيل */}
+              {/* معلومات موظف التوصيل مع الصورة */}
               {hasDeliveryDriver && (
-                <div className="bg-emerald-50 rounded-lg p-2 mb-2 border border-emerald-200">
+                <div className="bg-emerald-50 rounded-lg p-3 mb-2 border border-emerald-200">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Truck size={14} className="text-emerald-600" />
-                      <span className="text-[10px] text-emerald-700 font-bold">
-                        {order.delivery_driver_name}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      {/* صورة موظف التوصيل */}
+                      {order.delivery_driver_image ? (
+                        <img 
+                          src={order.delivery_driver_image} 
+                          alt={order.delivery_driver_name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center border-2 border-emerald-400">
+                          <Truck size={20} className="text-emerald-600" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm text-emerald-800 font-bold">
+                          {order.delivery_driver_name}
+                        </p>
+                        <p className="text-[10px] text-emerald-600">
+                          موظف التوصيل
+                        </p>
+                        {order.delivery_driver_phone && (
+                          <p className="text-[11px] text-gray-600 font-mono" dir="ltr">
+                            {order.delivery_driver_phone}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-col gap-1">
                       {order.delivery_driver_phone && (
                         <a
                           href={`tel:${order.delivery_driver_phone}`}
-                          className="flex items-center gap-1 bg-emerald-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold"
+                          className="flex items-center justify-center gap-1 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-emerald-600"
                         >
-                          <Phone size={10} />
+                          <Phone size={12} />
                           اتصال
                         </a>
                       )}
                       <button
                         onClick={() => handleReportClick(order)}
-                        className="flex items-center gap-1 bg-red-100 text-red-600 px-2 py-1 rounded-lg text-[10px] font-bold hover:bg-red-200"
+                        className="flex items-center justify-center gap-1 bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-red-200"
                         data-testid={`report-driver-${order.id}`}
                       >
-                        <AlertTriangle size={10} />
+                        <AlertTriangle size={12} />
                         بلاغ
                       </button>
                     </div>
@@ -165,7 +186,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                 {canPrepare && (
                   <button
                     onClick={() => onSellerAction(order.id, 'preparing')}
-                    className="flex-1 text-[10px] bg-purple-500 text-white py-1.5 rounded-lg font-medium hover:bg-purple-600"
+                    className="flex-1 text-[10px] bg-orange-500 text-white py-1.5 rounded-lg font-medium hover:bg-orange-600"
                     data-testid={`prepare-order-${order.id}`}
                   >
                     بدء التحضير
