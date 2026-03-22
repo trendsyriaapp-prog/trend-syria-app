@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy, Sparkles } from 'lucide-react';
+import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy, Sparkles, Lightbulb } from 'lucide-react';
+import axios from 'axios';
 import PhotoGuideModal from './PhotoGuideModal';
 import ImageBackgroundSelector from './ImageBackgroundSelector';
 import ProImageProcessor from './ProImageProcessor';
@@ -10,6 +11,8 @@ import CameraGuideModal from './CameraGuideModal';
 import ProductPreviewModal from './ProductPreviewModal';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { CATEGORIES } from '../../utils/constants';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const AddProductModal = ({ 
   isOpen, 
@@ -87,6 +90,51 @@ const AddProductModal = ({
   const [showProductPreview, setShowProductPreview] = useState(false);
   const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3); // الحد الأقصى من الإعدادات
   const [showTemplateSelector, setShowTemplateSelector] = useState(false); // قوالب 3D
+  
+  // اقتراح تصنيف جديد
+  const [showSuggestCategory, setShowSuggestCategory] = useState(false);
+  const [suggestingCategory, setSuggestingCategory] = useState(false);
+  const [newCategorySuggestion, setNewCategorySuggestion] = useState({ name: '', name_en: '', description: '' });
+
+  // دالة اقتراح تصنيف جديد
+  const handleSuggestCategory = async () => {
+    if (!newCategorySuggestion.name.trim()) {
+      toast?.({
+        title: "خطأ",
+        description: "يرجى إدخال اسم التصنيف",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSuggestingCategory(true);
+    try {
+      await axios.post(`${API}/api/categories/suggest`, {
+        name: newCategorySuggestion.name,
+        name_en: newCategorySuggestion.name_en || null,
+        description: newCategorySuggestion.description || null,
+        type: isFoodSeller ? "food" : "shopping"
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast?.({
+        title: "تم الإرسال ✅",
+        description: "تم إرسال اقتراحك للإدارة. سنراجعه قريباً!",
+      });
+
+      setShowSuggestCategory(false);
+      setNewCategorySuggestion({ name: '', name_en: '', description: '' });
+    } catch (error) {
+      toast?.({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في إرسال الاقتراح",
+        variant: "destructive"
+      });
+    } finally {
+      setSuggestingCategory(false);
+    }
+  };
 
   // جلب إعدادات الصور من السيرفر
   useEffect(() => {
@@ -536,8 +584,92 @@ const AddProductModal = ({
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
+                    {/* زر اقتراح تصنيف جديد */}
+                    <button
+                      type="button"
+                      onClick={() => setShowSuggestCategory(true)}
+                      className="mt-1 text-[10px] text-violet-600 hover:text-violet-700 flex items-center gap-1"
+                    >
+                      <Lightbulb size={12} />
+                      <span>لم تجد التصنيف؟ اقترح تصنيفاً جديداً</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* نموذج اقتراح تصنيف جديد */}
+                {showSuggestCategory && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-violet-50 border border-violet-200 rounded-lg p-3"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold text-violet-700 flex items-center gap-1">
+                        <Lightbulb size={14} />
+                        اقتراح تصنيف جديد
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setShowSuggestCategory(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={newCategorySuggestion.name}
+                        onChange={(e) => setNewCategorySuggestion({ ...newCategorySuggestion, name: e.target.value })}
+                        placeholder="اسم التصنيف بالعربية *"
+                        className="w-full bg-white border border-violet-200 rounded-lg py-1.5 px-2 text-xs focus:border-violet-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={newCategorySuggestion.name_en}
+                        onChange={(e) => setNewCategorySuggestion({ ...newCategorySuggestion, name_en: e.target.value })}
+                        placeholder="اسم التصنيف بالإنجليزية (اختياري)"
+                        className="w-full bg-white border border-violet-200 rounded-lg py-1.5 px-2 text-xs focus:border-violet-500 focus:outline-none"
+                        dir="ltr"
+                      />
+                      <textarea
+                        value={newCategorySuggestion.description}
+                        onChange={(e) => setNewCategorySuggestion({ ...newCategorySuggestion, description: e.target.value })}
+                        placeholder="وصف مختصر للتصنيف (اختياري)"
+                        className="w-full bg-white border border-violet-200 rounded-lg py-1.5 px-2 text-xs focus:border-violet-500 focus:outline-none resize-none"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSuggestCategory}
+                          disabled={suggestingCategory || !newCategorySuggestion.name.trim()}
+                          className="flex-1 bg-violet-600 text-white py-1.5 rounded-lg text-xs font-medium hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-1"
+                        >
+                          {suggestingCategory ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <>
+                              <Plus size={12} />
+                              إرسال الاقتراح
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowSuggestCategory(false)}
+                          className="px-3 bg-gray-200 text-gray-700 py-1.5 rounded-lg text-xs hover:bg-gray-300"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-violet-600 mt-2">
+                      💡 سيتم مراجعة اقتراحك من قبل الإدارة وإخطارك بالنتيجة
+                    </p>
+                  </motion.div>
+                )}
 
                 {/* أبعاد المنتج */}
                 <div>

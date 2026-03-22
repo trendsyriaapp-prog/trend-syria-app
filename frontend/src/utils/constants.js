@@ -19,6 +19,7 @@ export const CATEGORIES = [
   { id: 'gifts', name: 'هدايا' },
   { id: 'medicines', name: 'أدوية' },
   { id: 'cars', name: 'سيارات' },
+  { id: 'other', name: 'أخرى / منتجات متنوعة' },
 ];
 
 export const SYRIAN_CITIES = [

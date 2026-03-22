@@ -9,7 +9,8 @@ import {
   Smartphone, Laptop, Shirt, Footprints, Watch, Sparkles, Home,
   Sofa, SprayCan, Dumbbell, Gamepad2, BookOpen, Gift, Pill, Car,
   UtensilsCrossed, Coffee, Cake, ShoppingBasket, Apple, GlassWater,
-  ShoppingCart, Package, X, Save, Croissant, Refrigerator
+  ShoppingCart, Package, X, Save, Croissant, Refrigerator, Lightbulb,
+  Check, XCircle, Clock, User
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -42,10 +43,61 @@ const CategoriesTab = () => {
     order: 0,
     is_active: true
   });
+  
+  // اقتراحات التصنيفات
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+  
+  // جلب اقتراحات التصنيفات
+  const fetchSuggestions = async () => {
+    setLoadingSuggestions(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/categories/suggestions/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuggestions(res.data);
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+  
+  // قبول اقتراح
+  const handleApproveSuggestion = async (suggestionId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: 'تم القبول ✅', description: 'تم إنشاء التصنيف الجديد' });
+      fetchSuggestions();
+      fetchCategories();
+    } catch (err) {
+      toast({ title: 'خطأ', description: err.response?.data?.detail || 'فشل في قبول الاقتراح', variant: 'destructive' });
+    }
+  };
+  
+  // رفض اقتراح
+  const handleRejectSuggestion = async (suggestionId) => {
+    const reason = prompt('سبب الرفض (اختياري):');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/api/categories/suggestions/${suggestionId}/reject?reason=${encodeURIComponent(reason || '')}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: 'تم الرفض', description: 'تم رفض الاقتراح وإخطار البائع' });
+      fetchSuggestions();
+    } catch (err) {
+      toast({ title: 'خطأ', description: 'فشل في رفض الاقتراح', variant: 'destructive' });
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -200,7 +252,111 @@ const CategoriesTab = () => {
         >
           فئات الطعام ({categories.filter(c => c.type === 'food').length})
         </button>
+        <button
+          onClick={() => {
+            setShowSuggestions(!showSuggestions);
+            if (!showSuggestions) fetchSuggestions();
+          }}
+          className={`px-4 py-2 font-medium transition-colors flex items-center gap-1 ${
+            showSuggestions
+              ? 'text-violet-600 border-b-2 border-violet-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Lightbulb size={16} />
+          اقتراحات البائعين
+          {suggestions.filter(s => s.status === 'pending').length > 0 && (
+            <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full mr-1">
+              {suggestions.filter(s => s.status === 'pending').length}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* قسم اقتراحات التصنيفات */}
+      {showSuggestions && (
+        <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
+          <h3 className="text-sm font-bold text-violet-700 mb-3 flex items-center gap-2">
+            <Lightbulb size={18} />
+            اقتراحات تصنيفات جديدة من البائعين
+          </h3>
+          
+          {loadingSuggestions ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto"></div>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">لا توجد اقتراحات</p>
+          ) : (
+            <div className="space-y-2">
+              {suggestions.map(suggestion => (
+                <div
+                  key={suggestion.id}
+                  className={`bg-white rounded-lg p-3 border ${
+                    suggestion.status === 'pending' ? 'border-yellow-200' :
+                    suggestion.status === 'approved' ? 'border-green-200' : 'border-red-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900">{suggestion.name}</span>
+                        {suggestion.name_en && (
+                          <span className="text-xs text-gray-500">({suggestion.name_en})</span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          suggestion.type === 'shopping' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {suggestion.type === 'shopping' ? 'تسوق' : 'طعام'}
+                        </span>
+                      </div>
+                      {suggestion.description && (
+                        <p className="text-xs text-gray-600 mt-1">{suggestion.description}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <User size={12} />
+                          {suggestion.suggested_by_name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {new Date(suggestion.created_at).toLocaleDateString('ar-SY')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {suggestion.status === 'pending' ? (
+                        <>
+                          <button
+                            onClick={() => handleApproveSuggestion(suggestion.id)}
+                            className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
+                            title="قبول"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleRejectSuggestion(suggestion.id)}
+                            className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                            title="رفض"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          suggestion.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {suggestion.status === 'approved' ? 'تم القبول ✓' : 'مرفوض'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Button */}
       <button

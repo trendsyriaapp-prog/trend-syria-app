@@ -49,6 +49,7 @@ DEFAULT_CATEGORIES = [
     {"id": "gifts", "name": "هدايا", "name_en": "Gifts", "icon": "Gift", "type": "shopping", "color": "#E11D48", "order": 15},
     {"id": "medicines", "name": "أدوية", "name_en": "Medicines", "icon": "Pill", "type": "shopping", "color": "#22C55E", "order": 16},
     {"id": "cars", "name": "سيارات", "name_en": "Cars", "icon": "Car", "type": "shopping", "color": "#64748B", "order": 17},
+    {"id": "other", "name": "أخرى / منتجات متنوعة", "name_en": "Other", "icon": "Package", "type": "shopping", "color": "#9CA3AF", "order": 99},
     # قسم الطعام
     {"id": "restaurants", "name": "مطاعم", "name_en": "Restaurants", "icon": "UtensilsCrossed", "type": "food", "color": "#FF6B00", "order": 1},
     {"id": "cafes", "name": "مقاهي", "name_en": "Cafes", "icon": "Coffee", "type": "food", "color": "#8B4513", "order": 2},
@@ -215,3 +216,209 @@ async def reorder_categories(orders: List[dict], user: dict = Depends(get_curren
     # حذف الكاش
     
     return {"message": "تم إعادة ترتيب الفئات بنجاح"}
+
+# ========== اقتراحات التصنيفات الجديدة ==========
+
+class CategorySuggestion(BaseModel):
+    name: str
+    name_en: Optional[str] = None
+    description: Optional[str] = None
+    type: str = "shopping"  # shopping أو food
+
+@router.post("/suggest")
+async def suggest_category(suggestion: CategorySuggestion, user: dict = Depends(get_current_user)):
+    """اقتراح تصنيف جديد من البائع"""
+    
+    # التحقق من أن المستخدم بائع
+    if user["user_type"] not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="هذه الخدمة للبائعين فقط")
+    
+    # التحقق من عدم وجود تصنيف بنفس الاسم
+    existing = await db.categories.find_one({"name": suggestion.name})
+    if existing:
+        raise HTTPException(status_code=400, detail="يوجد تصنيف بنفس الاسم بالفعل")
+    
+    # التحقق من عدم وجود اقتراح مشابه معلق
+    pending = await db.category_suggestions.find_one({
+        "name": suggestion.name,
+        "status": "pending"
+    })
+    if pending:
+        raise HTTPException(status_code=400, detail="يوجد اقتراح مشابه قيد المراجعة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    new_suggestion = {
+        "id": str(uuid.uuid4()),
+        "name": suggestion.name,
+        "name_en": suggestion.name_en,
+        "description": suggestion.description,
+        "type": suggestion.type,
+        "suggested_by": user["id"],
+        "suggested_by_name": user.get("full_name") or user.get("name") or user.get("store_name", "بائع"),
+        "suggested_by_phone": user.get("phone"),
+        "status": "pending",  # pending, approved, rejected
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.category_suggestions.insert_one(new_suggestion)
+    
+    # إنشاء إشعار للأدمن
+    admin_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": "admin",
+        "title": "اقتراح تصنيف جديد",
+        "message": f"اقترح {new_suggestion['suggested_by_name']} إضافة تصنيف: {suggestion.name}",
+        "type": "category_suggestion",
+        "reference_id": new_suggestion["id"],
+        "is_read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {
+        "message": "تم إرسال اقتراحك بنجاح! سنراجعه قريباً",
+        "suggestion_id": new_suggestion["id"]
+    }
+
+@router.get("/suggestions/my")
+async def get_my_suggestions(user: dict = Depends(get_current_user)):
+    """جلب اقتراحات البائع"""
+    
+    suggestions = await db.category_suggestions.find(
+        {"suggested_by": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return suggestions
+
+@router.get("/suggestions/all")
+async def get_all_suggestions(status: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """جلب جميع اقتراحات التصنيفات (للأدمن)"""
+    
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    suggestions = await db.category_suggestions.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return suggestions
+
+@router.post("/suggestions/{suggestion_id}/approve")
+async def approve_suggestion(suggestion_id: str, user: dict = Depends(get_current_user)):
+    """قبول اقتراح تصنيف وإنشاءه"""
+    
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    suggestion = await db.category_suggestions.find_one({"id": suggestion_id})
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="الاقتراح غير موجود")
+    
+    if suggestion["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الاقتراح تمت معالجته مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # إنشاء التصنيف الجديد
+    category_id = suggestion.get("name_en", "").lower().replace(" ", "_") or str(uuid.uuid4())[:8]
+    
+    # جلب أعلى ترتيب حالي
+    max_order = await db.categories.find_one(
+        {"type": suggestion["type"]},
+        sort=[("order", -1)]
+    )
+    new_order = (max_order.get("order", 0) if max_order else 0) + 1
+    
+    new_category = {
+        "id": category_id,
+        "name": suggestion["name"],
+        "name_en": suggestion.get("name_en") or suggestion["name"],
+        "icon": "Package",
+        "type": suggestion["type"],
+        "color": "#6B7280",
+        "order": new_order,
+        "is_active": True,
+        "created_at": now,
+        "created_by": user["id"],
+        "suggested_by": suggestion["suggested_by"]
+    }
+    
+    await db.categories.insert_one(new_category)
+    
+    # تحديث حالة الاقتراح
+    await db.category_suggestions.update_one(
+        {"id": suggestion_id},
+        {"$set": {
+            "status": "approved",
+            "approved_by": user["id"],
+            "approved_at": now,
+            "category_id": category_id
+        }}
+    )
+    
+    # إشعار البائع
+    seller_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": suggestion["suggested_by"],
+        "title": "تمت الموافقة على اقتراحك! 🎉",
+        "message": f"تمت إضافة التصنيف '{suggestion['name']}' الذي اقترحته. يمكنك الآن إضافة منتجات فيه.",
+        "type": "suggestion_approved",
+        "is_read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(seller_notification)
+    
+    return {
+        "message": f"تم إنشاء التصنيف '{suggestion['name']}' بنجاح",
+        "category": {k: v for k, v in new_category.items() if k != "_id"}
+    }
+
+@router.post("/suggestions/{suggestion_id}/reject")
+async def reject_suggestion(suggestion_id: str, reason: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """رفض اقتراح تصنيف"""
+    
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    suggestion = await db.category_suggestions.find_one({"id": suggestion_id})
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="الاقتراح غير موجود")
+    
+    if suggestion["status"] != "pending":
+        raise HTTPException(status_code=400, detail="هذا الاقتراح تمت معالجته مسبقاً")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديث حالة الاقتراح
+    await db.category_suggestions.update_one(
+        {"id": suggestion_id},
+        {"$set": {
+            "status": "rejected",
+            "rejected_by": user["id"],
+            "rejected_at": now,
+            "rejection_reason": reason or "لا يتناسب مع سياسة المنصة"
+        }}
+    )
+    
+    # إشعار البائع
+    seller_notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": suggestion["suggested_by"],
+        "title": "تم رفض اقتراحك",
+        "message": f"تم رفض اقتراح التصنيف '{suggestion['name']}'. السبب: {reason or 'لا يتناسب مع سياسة المنصة'}",
+        "type": "suggestion_rejected",
+        "is_read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(seller_notification)
+    
+    return {"message": "تم رفض الاقتراح"}
+
