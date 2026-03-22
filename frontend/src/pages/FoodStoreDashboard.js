@@ -275,7 +275,7 @@ const FoodStoreDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-36">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* إشعار اقتراب السائق */}
       {driverArrivingAlert && (
         <motion.div 
@@ -302,350 +302,133 @@ const FoodStoreDashboard = () => {
         </motion.div>
       )}
 
-      {/* Header - مصغر مع النجوم */}
-      <div className={`bg-white border-b border-gray-200 px-4 py-3 ${driverArrivingAlert ? 'mt-20' : ''}`}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              <ChevronRight size={18} className="text-gray-600" />
-            </button>
-            {store.logo ? (
-              <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-xl object-cover border border-gray-200" />
-            ) : (
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                <Store size={18} className="text-green-600" />
-              </div>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-gray-900">{store.name}</h1>
-                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded">
-                  <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                  <span className="text-xs font-bold text-yellow-700">{store.rating?.toFixed(1) || '0.0'}</span>
+      {/* Header - ثابت مع اسم المطعم والنجوم */}
+      <div className={`bg-white border-b border-gray-200 sticky top-0 z-40 ${driverArrivingAlert ? 'mt-20' : ''}`}>
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {store.logo ? (
+                <img src={store.logo} alt={store.name} className="w-12 h-12 rounded-xl object-cover border border-gray-200" />
+              ) : (
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Store size={20} className="text-green-600" />
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold text-gray-900">{store.name}</h1>
+                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
+                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-xs font-bold text-yellow-700">{store.rating?.toFixed(1) || '0.0'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs mt-0.5">
+                  <span className={`flex items-center gap-1 ${store.manual_close ? 'text-red-600' : 'text-green-600'}`}>
+                    <span className={`w-2 h-2 rounded-full ${store.manual_close ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                    {store.manual_close ? 'مغلق' : 'مفتوح'}
+                  </span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-500">{products.length} طبق</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className={`flex items-center gap-1 ${store.manual_close ? 'text-red-600' : 'text-green-600'}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${store.manual_close ? 'bg-red-500' : 'bg-green-500'}`}></span>
-                  {store.manual_close ? 'مغلق' : 'مفتوح'}
-                </span>
-              </div>
             </div>
+            <button
+              onClick={() => toggleStoreStatus(!store.manual_close)}
+              disabled={togglingStore}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                store.manual_close 
+                  ? 'bg-green-500 text-white hover:bg-green-600' 
+                  : 'bg-red-100 text-red-600 hover:bg-red-200'
+              }`}
+            >
+              {togglingStore ? '...' : (store.manual_close ? 'فتح المتجر' : 'إغلاق')}
+            </button>
           </div>
-          <button
-            onClick={() => toggleStoreStatus(!store.manual_close)}
-            disabled={togglingStore}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-              store.manual_close 
-                ? 'bg-green-500 text-white' 
-                : 'bg-red-100 text-red-600'
-            }`}
-          >
-            {togglingStore ? '...' : (store.manual_close ? 'فتح' : 'إغلاق')}
-          </button>
         </div>
       </div>
 
-      {/* Content - الطلبات مباشرة */}
-      <div className="max-w-4xl mx-auto px-3 py-3">
-        {/* الطلبات - الصفحة الرئيسية */}
-        {activeTab === 'orders' && (
+      {/* المحتوى الرئيسي - صفحة واحدة */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        
+        {/* قسم الطلبات - دائماً في الأعلى */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <ShoppingBag size={20} className="text-green-600" />
+            الطلبات
+          </h2>
           <StoreOrdersTab token={token} />
-        )}
+        </div>
 
-        {/* نظرة عامة */}
-        {activeTab === 'overview' && (
-          <div className="space-y-3">
-            {/* بطاقة حالة المتجر - مصغرة */}
-            <div className={`rounded-lg p-3 border ${
-              store.manual_close 
-                ? 'bg-red-50 border-red-200' 
-                : 'bg-green-50 border-green-200'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    store.manual_close ? 'bg-red-500' : 'bg-green-500'
-                  }`}>
-                    {store.manual_close ? (
-                      <EyeOff size={18} className="text-white" />
-                    ) : (
-                      <Store size={18} className="text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-sm ${
-                      store.manual_close ? 'text-red-800' : 'text-green-800'
-                    }`}>
-                      {store.manual_close ? 'المتجر مغلق' : 'المتجر مفتوح'}
-                    </h3>
-                    {!store.manual_close && (
-                      <p className="text-xs text-green-600">العملاء يستطيعون الطلب</p>
-                    )}
-                  </div>
-                </div>
-                
-                {store.manual_close ? (
+        {/* التبويبات الأفقية */}
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {/* شريط التبويبات */}
+          <div className="flex border-b border-gray-200 overflow-x-auto hide-scrollbar">
+            {[
+              { id: 'menu', label: 'القائمة', icon: ChefHat },
+              { id: 'wallet', label: 'المحفظة', icon: Wallet },
+              { id: 'analytics', label: 'الإحصائيات', icon: BarChart3 },
+              { id: 'settings', label: 'الإعدادات', icon: Settings },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-green-600 border-b-2 border-green-500 bg-green-50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* محتوى التبويب */}
+          <div className="p-4">
+            {/* القائمة - الأطباق */}
+            {activeTab === 'menu' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-gray-900">أطباق المطعم ({products.length})</h3>
                   <button
-                    onClick={() => toggleStoreStatus(false)}
-                    disabled={togglingStore}
-                    className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    onClick={() => setShowAddProduct(true)}
+                    className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-600"
                   >
-                    {togglingStore ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Eye size={14} />
-                        فتح
-                      </>
-                    )}
+                    <Plus size={16} />
+                    إضافة طبق
                   </button>
-                ) : (
-                  <button
-                    onClick={() => setShowCloseReason(true)}
-                    disabled={togglingStore}
-                    className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    <EyeOff size={14} />
-                    إغلاق
-                  </button>
-                )}
-              </div>
-              
-              {/* نافذة سبب الإغلاق */}
-              {showCloseReason && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-3 pt-3 border-t border-gray-200"
-                >
-                  <input
-                    type="text"
-                    value={closeReason}
-                    onChange={(e) => setCloseReason(e.target.value)}
-                    placeholder="سبب الإغلاق (اختياري)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500"
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => toggleStoreStatus(true, closeReason)}
-                      disabled={togglingStore}
-                      className="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs font-bold"
-                    >
-                      تأكيد
-                    </button>
-                    <button
-                      onClick={() => { setShowCloseReason(false); setCloseReason(''); }}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs"
-                    >
-                      إلغاء
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
-            {/* إحصائيات + معلومات في صف واحد */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white rounded-lg p-3 border border-gray-100">
-                <h3 className="font-bold text-xs text-gray-900 mb-2">إحصائيات اليوم</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">الطلبات</span>
-                    <span className="text-sm font-bold text-gray-900">0</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">المبيعات</span>
-                    <span className="text-sm font-bold text-green-600">0 ل.س</span>
-                  </div>
                 </div>
-              </div>
-              
-              <div className="bg-white rounded-lg p-3 border border-gray-100">
-                <h3 className="font-bold text-xs text-gray-900 mb-2">معلومات التوصيل</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">الوقت</span>
-                    <span className="text-xs font-medium text-gray-900">{store.delivery_time} د</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">الرسوم</span>
-                    <span className="text-xs font-medium text-gray-900">{(store.delivery_fee || 5000).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* بطاقة العمولة - مصغرة */}
-            {commissionInfo && (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-                      <DollarSign size={12} className="text-white" />
-                    </div>
-                    <h3 className="font-bold text-xs text-amber-800">العمولة: {commissionInfo.commission_percentage}</h3>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-white/50 rounded p-1.5">
-                    <p className="font-bold text-xs text-gray-800">{commissionInfo.orders_count}</p>
-                    <p className="text-[10px] text-gray-600">طلب</p>
-                  </div>
-                  <div className="bg-white/50 rounded p-1.5">
-                    <p className="font-bold text-xs text-red-600">{(commissionInfo.total_commission_paid || 0).toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-600">عمولات</p>
-                  </div>
-                  <div className="bg-white/50 rounded p-1.5">
-                    <p className="font-bold text-xs text-green-600">{(commissionInfo.total_earnings || 0).toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-600">أرباحك</p>
-                  </div>
-                </div>
+                <StoreMenuTab 
+                  products={products} 
+                  onEdit={setEditingProduct}
+                  onDelete={handleDeleteProduct}
+                  onToggleAvailability={handleToggleAvailability}
+                  token={token}
+                />
               </div>
             )}
-          </div>
-        )}
 
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <SellerAnalytics token={token} />
-        )}
+            {/* المحفظة */}
+            {activeTab === 'wallet' && (
+              <StoreWalletTab token={token} />
+            )}
 
-        {/* Products Tab - مصغر */}
-        {activeTab === 'products' && (
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setEditingProduct(null);
-                setShowAddProduct(true);
-              }}
-              className="w-full bg-green-500 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-green-600"
-            >
-              <Plus size={18} />
-              إضافة منتج جديد
-            </button>
+            {/* الإحصائيات */}
+            {activeTab === 'analytics' && (
+              <SellerAnalytics storeId={store.id} token={token} />
+            )}
 
-            {products.length === 0 ? (
-              <div className="bg-white rounded-lg p-6 text-center border border-gray-100">
-                <Package size={36} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-600 text-sm">لم تقم بإضافة أي منتجات بعد</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white rounded-lg p-3 border border-gray-100 flex items-center gap-3"
-                  >
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={18} className="text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-sm text-gray-900 truncate">{product.name}</h4>
-                      <p className="text-green-600 font-bold text-sm">{product.price?.toLocaleString()} ل.س</p>
-                      {commissionInfo && (
-                        <p className="text-[10px] text-gray-500">
-                          صافي: <span className="text-green-600 font-medium">
-                            {Math.round(product.price * (1 - commissionInfo.commission_rate)).toLocaleString()}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {/* زر طلب عرض يومي */}
-                      <button
-                        onClick={() => {
-                          setSelectedProductForDeal(product);
-                          setShowDailyDealModal(true);
-                        }}
-                        className="p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200"
-                        title="طلب عرض يومي"
-                      >
-                        <Flame size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleToggleAvailability(product.id, product.is_available)}
-                        className={`p-1.5 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
-                      >
-                        {product.is_available ? <Eye size={14} /> : <EyeOff size={14} />}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setShowAddProduct(true);
-                        }}
-                        className="p-1.5 rounded-lg bg-blue-100 text-blue-600"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="p-1.5 rounded-lg bg-red-100 text-red-600"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* الإعدادات */}
+            {activeTab === 'settings' && (
+              <StoreSettingsContent 
+                store={store} 
+                onUpdate={fetchStoreData}
+                token={token}
+              />
             )}
           </div>
-        )}
-
-        {/* Offers Tab */}
-        {activeTab === 'offers' && (
-          <OffersTab 
-            offers={offers} 
-            products={products}
-            token={token} 
-            onUpdate={fetchStoreData}
-            showAddOffer={showAddOffer}
-            setShowAddOffer={setShowAddOffer}
-          />
-        )}
-
-        {/* Flash Sales Tab */}
-        {activeTab === 'flash' && (
-          <FlashSalesTab 
-            store={store}
-            products={products}
-            token={token}
-          />
-        )}
-
-        {/* Wallet Tab - مصغر */}
-        {activeTab === 'wallet' && (
-          <div className="bg-white rounded-lg p-4 border border-gray-100">
-            <div className="text-center mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Wallet size={24} className="text-green-600" />
-              </div>
-              <h3 className="font-bold text-base text-gray-900">المحفظة</h3>
-              <p className="text-gray-500 text-xs">إدارة أرباحك وطلبات السحب</p>
-            </div>
-            <button
-              onClick={() => navigate('/wallet')}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-colors"
-            >
-              <Wallet size={18} />
-              الذهاب للمحفظة
-            </button>
-          </div>
-        )}
-
-        {/* Settings Tab */}
-        {activeTab === 'settings' && (
-          <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
-        )}
+        </div>
       </div>
 
       {/* Add/Edit Product Modal */}
@@ -666,7 +449,6 @@ const FoodStoreDashboard = () => {
           }}
         />
       )}
-
       {/* Daily Deal Request Modal */}
       {showDailyDealModal && selectedProductForDeal && (
         <DailyDealRequestModal
