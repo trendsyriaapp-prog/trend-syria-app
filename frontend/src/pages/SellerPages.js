@@ -925,7 +925,9 @@ const SellerDashboardPage = () => {
         'shipped': `/orders/${orderId}/seller/shipped`
       };
       
-      await axios.post(`${API}${endpoints[action]}`);
+      await axios.post(`${API}${endpoints[action]}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       const messages = {
         'confirm': 'تم تأكيد الطلب',
@@ -952,6 +954,8 @@ const SellerDashboardPage = () => {
     try {
       await axios.put(`${API}/products/${productId}`, {
         is_available: !currentStatus
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({
@@ -963,7 +967,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل تحديث حالة المنتج",
+        description: getErrorMessage(error, "فشل تحديث حالة المنتج"),
         variant: "destructive"
       });
     }
