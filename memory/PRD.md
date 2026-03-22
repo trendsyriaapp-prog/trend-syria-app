@@ -27,7 +27,19 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ## What's Been Implemented
 
-### ✅ COMPLETED (March 2026)
+### ✅ COMPLETED (March 22, 2026)
+
+#### Platform Wallet for Admin
+- New collection `platform_wallet` to store platform earnings
+- API endpoints: GET /api/admin/platform-wallet, GET /api/admin/platform-wallet/transactions, POST /api/admin/platform-wallet/withdraw
+- UI component: PlatformWalletTab.js showing balance, commissions breakdown, transactions log
+- Auto-collection of commissions when orders are completed (both products and food)
+
+#### Sound Notifications for All Sellers
+- Modified SellerPages.js to enable sound notifications for product sellers (was only food sellers)
+- Auto-refresh every 30 seconds for all seller types
+
+### ✅ COMPLETED (Earlier March 2026)
 
 #### Driver-Seller Coordination Flow
 - Backend APIs for driver request/accept workflow
