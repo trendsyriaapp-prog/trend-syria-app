@@ -16,8 +16,16 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 import SellerAnalytics from '../components/seller/SellerAnalytics';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+// المدن السورية
+const SYRIAN_CITIES = [
+  'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
+  'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 
+  'القنيطرة', 'إدلب', 'ريف دمشق'
+];
 
 // مكون نموذج طلب السحب
 const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
@@ -814,6 +822,10 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     name: store.name || '',
     description: store.description || '',
     phone: store.phone || '',
+    address: store.address || '',
+    city: store.city || 'دمشق',
+    latitude: store.latitude || null,
+    longitude: store.longitude || null,
     delivery_time: store.delivery_time || 15, // يُعرض كـ "وقت التحضير"
     working_hours: store.working_hours || defaultWorkingHours,
   });
@@ -966,6 +978,69 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           placeholder="مثال: 15"
         />
         <p className="text-[10px] text-gray-400 mt-1">الوقت اللازم لتحضير الطلب قبل التوصيل</p>
+      </div>
+
+      {/* العنوان والموقع */}
+      <div className="border-t pt-4 mt-4">
+        <h4 className="font-bold text-gray-900 flex items-center gap-2 mb-3">
+          <MapPin size={18} className="text-blue-500" />
+          العنوان والموقع
+        </h4>
+        
+        <div className="space-y-3">
+          {/* المدينة */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">المدينة</label>
+            <select
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            >
+              {SYRIAN_CITIES.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* العنوان */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">عنوان المتجر</label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              placeholder="الحي، الشارع، رقم البناء"
+            />
+          </div>
+          
+          {/* الخريطة */}
+          <div>
+            <GoogleMapsLocationPicker
+              label="📍 موقع المتجر على الخريطة (إجباري)"
+              required={true}
+              currentLocation={formData.latitude ? { 
+                latitude: formData.latitude, 
+                longitude: formData.longitude 
+              } : null}
+              onLocationSelect={(location) => {
+                if (location) {
+                  setFormData({ 
+                    ...formData, 
+                    latitude: location.latitude, 
+                    longitude: location.longitude 
+                  });
+                } else {
+                  setFormData({ 
+                    ...formData, 
+                    latitude: null, 
+                    longitude: null 
+                  });
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ساعات العمل */}
