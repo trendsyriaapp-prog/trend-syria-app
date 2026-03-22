@@ -497,35 +497,63 @@ const FoodStoreDashboard = () => {
             ) : (
               <div className="space-y-2">
                 {products.map((product) => (
-                  <div key={product.id} className={`bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'opacity-60' : ''}`}>
+                  <div key={product.id} className={`relative bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'border-2 border-dashed border-gray-300' : ''}`}>
+                    {/* شارة "مخفي" على الطبق */}
+                    {!product.is_available && (
+                      <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full z-10">
+                        مخفي عن العملاء
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
-                      {product.images?.[0] ? (
-                        <img src={product.images[0]} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
-                      ) : (
-                        <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Package size={20} className="text-gray-400" />
-                        </div>
-                      )}
+                      <div className="relative">
+                        {product.images?.[0] ? (
+                          <img 
+                            src={product.images[0]} 
+                            alt={product.name} 
+                            className={`w-14 h-14 rounded-lg object-cover ${!product.is_available ? 'grayscale opacity-50' : ''}`} 
+                          />
+                        ) : (
+                          <div className={`w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center ${!product.is_available ? 'opacity-50' : ''}`}>
+                            <Package size={20} className="text-gray-400" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-gray-900">{product.name}</h4>
-                        <p className="text-green-600 font-bold text-sm">{(product.price || 0).toLocaleString()} ل.س</p>
+                        <h4 className={`font-bold ${!product.is_available ? 'text-gray-400' : 'text-gray-900'}`}>{product.name}</h4>
+                        <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-green-600'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
                       <div className="flex items-center gap-1">
+                        {/* زر إظهار/إخفاء واضح */}
                         <button
                           onClick={() => handleToggleAvailability(product.id, product.is_available)}
-                          className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}
+                          data-testid={`toggle-availability-${product.id}`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            product.is_available 
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                              : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                          }`}
                         >
-                          {product.is_available ? <Eye size={16} /> : <EyeOff size={16} />}
+                          {product.is_available ? (
+                            <>
+                              <Eye size={14} />
+                              <span>متاح</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff size={14} />
+                              <span>إظهار</span>
+                            </>
+                          )}
                         </button>
                         <button
                           onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg"
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg"
+                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                         >
                           <Trash2 size={16} />
                         </button>
