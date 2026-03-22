@@ -43,6 +43,10 @@ const MobileNav = () => {
   
   // إخفاء شريط التنقل السفلي للمدير في لوحة التحكم
   if (isAdminPage) return null;
+  
+  // إخفاء الشريط السفلي لبائع الطعام في لوحة تحكم المطعم (لديه شريط خاص به)
+  const isFoodStoreDashboard = location.pathname === '/food/dashboard';
+  if (isFoodStoreDashboard && user?.user_type === 'food_seller') return null;
 
   // تحديد رابط سلة الطعام بذكاء
   const getFoodCartPath = () => {

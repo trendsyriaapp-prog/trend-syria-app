@@ -275,7 +275,7 @@ const FoodStoreDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
       {/* إشعار اقتراب السائق */}
       {driverArrivingAlert && (
         <motion.div 
@@ -348,7 +348,7 @@ const FoodStoreDashboard = () => {
       </div>
 
       {/* المحتوى الرئيسي - صفحة واحدة */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="max-w-4xl mx-auto px-4 py-4 pb-24">
         
         {/* قسم الطلبات - دائماً في الأعلى */}
         <div className="mb-6">
@@ -359,123 +359,134 @@ const FoodStoreDashboard = () => {
           <StoreOrdersTab token={token} />
         </div>
 
-        {/* التبويبات الأفقية */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {/* شريط التبويبات */}
-          <div className="flex border-b border-gray-200 overflow-x-auto hide-scrollbar">
-            {[
-              { id: 'menu', label: 'القائمة', icon: ChefHat },
-              { id: 'wallet', label: 'المحفظة', icon: Wallet },
-              { id: 'analytics', label: 'الإحصائيات', icon: BarChart3 },
-              { id: 'settings', label: 'الإعدادات', icon: Settings },
-            ].map((tab) => (
+        {/* محتوى التبويب المختار */}
+        {activeTab === 'menu' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <ChefHat size={18} className="text-green-600" />
+                أطباق المطعم ({products.length})
+              </h3>
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'text-green-600 border-b-2 border-green-500 bg-green-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
+                onClick={() => setShowAddProduct(true)}
+                className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-600"
               >
-                <tab.icon size={16} />
-                {tab.label}
+                <Plus size={16} />
+                إضافة طبق
               </button>
-            ))}
-          </div>
-
-          {/* محتوى التبويب */}
-          <div className="p-4">
-            {/* القائمة - الأطباق */}
-            {activeTab === 'menu' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-gray-900">أطباق المطعم ({products.length})</h3>
-                  <button
-                    onClick={() => setShowAddProduct(true)}
-                    className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-600"
-                  >
-                    <Plus size={16} />
-                    إضافة طبق
-                  </button>
-                </div>
-                {/* قائمة الأطباق */}
-                {products.length === 0 ? (
-                  <div className="bg-gray-50 rounded-xl p-8 text-center">
-                    <Package size={40} className="mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">لم تقم بإضافة أي أطباق بعد</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {products.map((product) => (
-                      <div key={product.id} className={`bg-white rounded-xl p-3 border ${!product.is_available ? 'opacity-60' : 'border-gray-100'}`}>
-                        <div className="flex items-center gap-3">
-                          {product.images?.[0] ? (
-                            <img src={product.images[0]} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
-                          ) : (
-                            <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Package size={20} className="text-gray-400" />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <h4 className="font-bold text-gray-900">{product.name}</h4>
-                            <p className="text-green-600 font-bold text-sm">{(product.price || 0).toLocaleString()} ل.س</p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleToggleAvailability(product)}
-                              className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
-                            >
-                              {product.is_available ? <Eye size={16} /> : <EyeOff size={16} />}
-                            </button>
-                            <button
-                              onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                              className="p-2 bg-blue-100 text-blue-600 rounded-lg"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="p-2 bg-red-100 text-red-600 rounded-lg"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
+            </div>
+            {products.length === 0 ? (
+              <div className="bg-gray-50 rounded-xl p-8 text-center">
+                <Package size={40} className="mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500">لم تقم بإضافة أي أطباق بعد</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {products.map((product) => (
+                  <div key={product.id} className={`bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      {product.images?.[0] ? (
+                        <img src={product.images[0]} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Package size={20} className="text-gray-400" />
                         </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900">{product.name}</h4>
+                        <p className="text-green-600 font-bold text-sm">{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleToggleAvailability(product)}
+                          className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                          {product.is_available ? <Eye size={16} /> : <EyeOff size={16} />}
+                        </button>
+                        <button
+                          onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 bg-red-100 text-red-600 rounded-lg"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
-            )}
-
-            {/* المحفظة */}
-            {activeTab === 'wallet' && (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
-                  <p className="text-white/80 text-sm">رصيد المحفظة</p>
-                  <p className="text-2xl font-bold">0 ل.س</p>
-                </div>
-                <button
-                  onClick={() => navigate('/seller/dashboard?tab=wallet')}
-                  className="w-full py-3 bg-green-100 text-green-700 rounded-xl font-bold flex items-center justify-center gap-2"
-                >
-                  <Wallet size={18} />
-                  إدارة المحفظة
-                </button>
-              </div>
-            )}
-
-            {/* الإحصائيات */}
-            {activeTab === 'analytics' && (
-              <SellerAnalytics storeId={store.id} token={token} />
-            )}
-
-            {/* الإعدادات */}
-            {activeTab === 'settings' && (
-              <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
             )}
           </div>
+        )}
+
+        {activeTab === 'wallet' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <Wallet size={18} className="text-green-600" />
+              المحفظة
+            </h3>
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+              <p className="text-white/80 text-sm">رصيد المحفظة</p>
+              <p className="text-2xl font-bold">0 ل.س</p>
+            </div>
+            <button
+              onClick={() => navigate('/seller/dashboard?tab=wallet')}
+              className="w-full py-3 bg-green-100 text-green-700 rounded-xl font-bold flex items-center justify-center gap-2"
+            >
+              <Wallet size={18} />
+              إدارة المحفظة الكاملة
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <BarChart3 size={18} className="text-green-600" />
+              الإحصائيات
+            </h3>
+            <SellerAnalytics storeId={store.id} token={token} />
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <Settings size={18} className="text-green-600" />
+              الإعدادات
+            </h3>
+            <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
+          </div>
+        )}
+      </div>
+
+      {/* الشريط السفلي الثابت */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="max-w-4xl mx-auto flex">
+          {[
+            { id: 'menu', label: 'القائمة', icon: ChefHat },
+            { id: 'wallet', label: 'المحفظة', icon: Wallet },
+            { id: 'analytics', label: 'الإحصائيات', icon: BarChart3 },
+            { id: 'settings', label: 'الإعدادات', icon: Settings },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex flex-col items-center justify-center py-3 transition-all ${
+                activeTab === tab.id
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <tab.icon size={20} />
+              <span className="text-xs mt-1 font-medium">{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
