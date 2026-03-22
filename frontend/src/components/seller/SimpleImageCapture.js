@@ -296,21 +296,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
           </div>
         )}
 
-        {/* Step 2: Preview - Full Screen */}
+        {/* Step 2: Preview - Full Screen Mobile */}
         {step === 'preview' && capturedImage && (
           <img 
             src={capturedImage} 
             alt="Preview" 
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
           />
         )}
 
-        {/* Step 3: Processed Image - Full Screen */}
+        {/* Step 3: Processed Image - Full Screen Mobile */}
         {step === 'edit' && processedImage && (
           <img 
             src={processedImage} 
             alt="Processed" 
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             style={{
               filter: `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%) saturate(${adjustments.saturation}%)`
             }}
