@@ -1,12 +1,30 @@
 import { motion } from 'framer-motion';
 import { X, Eye, ShoppingCart, Star, Heart, ChevronLeft } from 'lucide-react';
 
-const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPrice }) => {
+const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPrice, productDescription, productCategory, storeName }) => {
   if (!isOpen || !images || images.length === 0) return null;
 
   const mainImage = images[0];
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ar-SY').format(price || 0) + ' ل.س';
+  };
+
+  // تسميات التصنيفات
+  const categoryLabels = {
+    'electronics': 'إلكترونيات',
+    'fashion': 'أزياء',
+    'home': 'منزل وحديقة',
+    'beauty': 'جمال وعناية',
+    'sports': 'رياضة',
+    'toys': 'ألعاب',
+    'books': 'كتب',
+    'food': 'طعام',
+    'other': 'أخرى',
+    'main': 'طبق رئيسي',
+    'appetizer': 'مقبلات',
+    'drinks': 'مشروبات',
+    'dessert': 'حلويات',
+    'sides': 'أطباق جانبية'
   };
 
   return (
@@ -60,10 +78,34 @@ const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPric
 
             {/* Product Info */}
             <div className="p-4">
+              {/* Store Name */}
+              {storeName && (
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{storeName.charAt(0)}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{storeName}</span>
+                </div>
+              )}
+
+              {/* Category Badge */}
+              {productCategory && (
+                <span className="inline-block text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full mb-2">
+                  {categoryLabels[productCategory] || productCategory}
+                </span>
+              )}
+
               {/* Title */}
               <h3 className="font-bold text-gray-900 text-lg mb-1 line-clamp-2">
                 {productName || 'اسم المنتج'}
               </h3>
+
+              {/* Description */}
+              {productDescription && (
+                <p className="text-sm text-gray-500 line-clamp-2 mb-2">
+                  {productDescription}
+                </p>
+              )}
               
               {/* Rating */}
               <div className="flex items-center gap-1 mb-2">

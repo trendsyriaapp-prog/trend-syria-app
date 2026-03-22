@@ -1102,6 +1102,9 @@ const AddProductModal = ({
         images={newProduct.images}
         productName={newProduct.name}
         productPrice={newProduct.price}
+        productDescription={newProduct.description}
+        productCategory={newProduct.category}
+        storeName={isFoodSeller ? "متجرك" : "متجرك"}
       />
     </>
   );
