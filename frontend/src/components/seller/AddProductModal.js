@@ -23,8 +23,13 @@ const AddProductModal = ({
   isFoodSeller = false,
   commissionInfo = null,
   initialData = null, // بيانات المنتج المنسوخ
+  product = null, // المنتج المراد تعديله
+  onSuccess = null, // callback عند النجاح
   token = null // توكن البائع
 }) => {
+  // تحديد إذا كان تعديل أو إضافة أو نسخ
+  const isEditing = product && !initialData;
+  const isDuplicating = !!initialData;
   const getDefaultProduct = () => ({
     name: '',
     description: '',
@@ -49,32 +54,60 @@ const AddProductModal = ({
   const [newProduct, setNewProduct] = useState(getDefaultProduct());
   const [isDuplicate, setIsDuplicate] = useState(false);
   
-  // تحميل بيانات المنتج المنسوخ عند فتح الـ Modal
+  // تحميل بيانات المنتج عند فتح الـ Modal (تعديل أو نسخ)
   useEffect(() => {
-    if (isOpen && initialData) {
-      setNewProduct({
-        ...getDefaultProduct(),
-        name: initialData.name || '',
-        description: initialData.description || '',
-        price: initialData.price?.toString() || '',
-        category: initialData.category || (isFoodSeller ? 'main' : 'electronics'),
-        stock: initialData.stock?.toString() || '',
-        images: initialData.images || [],
-        length_cm: initialData.length_cm?.toString() || '',
-        width_cm: initialData.width_cm?.toString() || '',
-        height_cm: initialData.height_cm?.toString() || '',
-        weight_kg: initialData.weight_kg?.toString() || '',
-        size_type: initialData.size_type || 'none',
-        available_sizes: initialData.available_sizes || [],
-        max_per_customer: initialData.max_per_customer?.toString() || '',
-        weight_variants: initialData.weight_variants || [],
-      });
-      setIsDuplicate(true);
-    } else if (isOpen && !initialData) {
-      setNewProduct(getDefaultProduct());
-      setIsDuplicate(false);
+    if (isOpen) {
+      // حالة التعديل
+      if (product && !initialData) {
+        setNewProduct({
+          ...getDefaultProduct(),
+          name: product.name || '',
+          description: product.description || '',
+          price: product.price?.toString() || '',
+          category: product.category || (isFoodSeller ? 'main' : 'electronics'),
+          stock: product.stock?.toString() || '',
+          images: product.images || [],
+          video: product.video || null,
+          length_cm: product.length_cm?.toString() || '',
+          width_cm: product.width_cm?.toString() || '',
+          height_cm: product.height_cm?.toString() || '',
+          weight_kg: product.weight_kg?.toString() || '',
+          size_type: product.size_type || 'none',
+          available_sizes: product.available_sizes || [],
+          max_per_customer: product.max_per_customer?.toString() || '',
+          weight_variants: product.weight_variants || [],
+          is_available: product.is_available !== false,
+        });
+        setIsDuplicate(false);
+      }
+      // حالة النسخ
+      else if (initialData) {
+        setNewProduct({
+          ...getDefaultProduct(),
+          name: initialData.name || '',
+          description: initialData.description || '',
+          price: initialData.price?.toString() || '',
+          category: initialData.category || (isFoodSeller ? 'main' : 'electronics'),
+          stock: initialData.stock?.toString() || '',
+          images: initialData.images || [],
+          length_cm: initialData.length_cm?.toString() || '',
+          width_cm: initialData.width_cm?.toString() || '',
+          height_cm: initialData.height_cm?.toString() || '',
+          weight_kg: initialData.weight_kg?.toString() || '',
+          size_type: initialData.size_type || 'none',
+          available_sizes: initialData.available_sizes || [],
+          max_per_customer: initialData.max_per_customer?.toString() || '',
+          weight_variants: initialData.weight_variants || [],
+        });
+        setIsDuplicate(true);
+      }
+      // حالة الإضافة الجديدة
+      else {
+        setNewProduct(getDefaultProduct());
+        setIsDuplicate(false);
+      }
     }
-  }, [isOpen, initialData, isFoodSeller]);
+  }, [isOpen, initialData, product, isFoodSeller]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
@@ -295,7 +328,30 @@ const AddProductModal = ({
       weight_variants: newProduct.weight_variants.length > 0 ? newProduct.weight_variants : null
     };
 
-    await onSave(submitData);
+    try {
+      // حالة التعديل - استخدام API التحديث
+      if (isEditing && product?.id) {
+        await axios.put(`${API}/api/products/${product.id}`, submitData, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        toast({
+          title: "تم التعديل",
+          description: isFoodSeller ? "تم تعديل الطبق بنجاح" : "تم تعديل المنتج بنجاح"
+        });
+        if (onSuccess) onSuccess();
+      }
+      // حالة الإضافة أو النسخ
+      else if (onSave) {
+        await onSave(submitData);
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ أثناء الحفظ",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Reset form
     setNewProduct({
@@ -319,25 +375,25 @@ const AddProductModal = ({
     });
   };
 
-  // التسميات حسب نوع البائع وحالة النسخ
+  // التسميات حسب نوع البائع وحالة التعديل/النسخ/الإضافة
   const labels = isFoodSeller ? {
-    title: isDuplicate ? 'نسخ طبق' : 'إضافة طبق جديد',
+    title: isEditing ? 'تعديل الطبق' : (isDuplicating ? 'نسخ طبق' : 'إضافة طبق جديد'),
     nameLabel: 'اسم الطبق',
     namePlaceholder: 'مثال: شاورما دجاج',
     descLabel: 'وصف الطبق',
     descPlaceholder: 'وصف قصير للطبق ومكوناته',
     priceLabel: 'السعر (ل.س)',
     categoryLabel: 'تصنيف الطبق',
-    submitButton: isDuplicate ? 'حفظ النسخة' : 'إضافة الطبق'
+    submitButton: isEditing ? 'حفظ التعديلات' : (isDuplicating ? 'حفظ النسخة' : 'إضافة الطبق')
   } : {
-    title: isDuplicate ? 'نسخ منتج' : 'إضافة منتج جديد',
+    title: isEditing ? 'تعديل المنتج' : (isDuplicating ? 'نسخ منتج' : 'إضافة منتج جديد'),
     nameLabel: 'اسم المنتج',
     namePlaceholder: '',
     descLabel: 'الوصف',
     descPlaceholder: '',
     priceLabel: 'السعر (ل.س)',
     categoryLabel: 'الفئة',
-    submitButton: isDuplicate ? 'حفظ النسخة' : 'إضافة المنتج'
+    submitButton: isEditing ? 'حفظ التعديلات' : (isDuplicating ? 'حفظ النسخة' : 'إضافة المنتج')
   };
 
   // أصناف الطعام

@@ -1397,6 +1397,9 @@ const SellerDashboardPage = () => {
           setEditingProduct(null);
         }}
         product={editingProduct}
+        token={token}
+        toast={toast}
+        onSave={handleAddProduct}
         onSuccess={() => {
           setShowAddProduct(false);
           setEditingProduct(null);
