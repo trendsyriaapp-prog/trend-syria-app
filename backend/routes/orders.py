@@ -633,6 +633,7 @@ async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_u
         {"id": order_id},
         {
             "$set": {
+                "status": "confirmed",
                 "delivery_status": "confirmed",
                 "confirmed_at": datetime.now(timezone.utc).isoformat(),
                 "confirmed_by": user["id"]
@@ -681,6 +682,7 @@ async def seller_preparing_order(order_id: str, user: dict = Depends(get_current
         {"id": order_id},
         {
             "$set": {
+                "status": "preparing",
                 "delivery_status": "preparing",
                 "preparing_at": datetime.now(timezone.utc).isoformat()
             },
@@ -740,6 +742,7 @@ async def seller_ship_order(order_id: str, tracking_number: Optional[str] = None
     closing_hour = settings.get("closing_hour", 21) if settings else 21  # الافتراضي 9 مساءً
     
     update_data = {
+        "status": "shipped",
         "delivery_status": "shipped",
         "shipped_at": datetime.now(timezone.utc).isoformat(),
         "pickup_code": pickup_code,
