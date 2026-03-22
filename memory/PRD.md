@@ -1,856 +1,98 @@
-# ترند سورية - PRD (Product Requirements Document)
+# Trend Syria - Multi-Vendor E-Commerce & Food Delivery Platform
 
 ## Original Problem Statement
-تطبيق تجارة إلكترونية متكامل للسوق السوري يتضمن:
-- منصة تسوق للمنتجات العامة
-- منصة توصيل طعام
-- نظام محافظ إلكترونية
-- نظام توصيل متكامل
-- لوحة تحكم للبائعين والإدارة
-
-## User Personas
-1. **المشتري**: يتصفح المنتجات، يضيفها للسلة، يشتري، يتتبع الطلبات
-2. **البائع**: يدير منتجاته، يتابع المبيعات، يتواصل مع العملاء
-3. **السائق**: يستلم الطلبات، يوصلها، يتتبع أرباحه
-4. **الإدارة**: تدير المستخدمين، تراقب النظام، تضبط الإعدادات
+Build a multi-vendor e-commerce and food delivery application with a sophisticated coordination system between sellers and drivers.
 
 ## Core Requirements
-- تصفح المنتجات مع فلاتر متعددة (السعر، المحافظة، التصنيف)
-- نظام سلة تسوق ودفع
-- تتبع الطلبات في الوقت الحقيقي
-- نظام رسائل بين المشتري والبائع
-- محفظة إلكترونية للدفع
+1. **Syrian Payment Provider Integration**: Transition from sandbox to real payment (Sham Cash, Bank Cards) - DEFERRED
+2. **Wallet Top-Up Automation**: Automate wallet top-ups via transaction ID verification
+3. **Currency Update**: Adjust hardcoded amounts to the new Syrian currency
+4. **Seller Dashboard UI/UX Overhaul**: Redesign seller dashboards into single, integrated pages
+5. **Driver-Seller Coordination**: Workflow for food orders where seller requests driver, driver accepts, seller sets prep time
+
+## User Personas
+- **Buyers**: Browse products, place orders, track deliveries
+- **Product Sellers**: Manage inventory, process orders, track earnings
+- **Food Sellers**: Manage menu items, coordinate with drivers for delivery
+- **Drivers**: Accept delivery requests, navigate to pickup/delivery locations
+- **Admins**: Manage users, oversee platform operations
+
+## Tech Stack
+- **Frontend**: React with Tailwind CSS, Shadcn UI components
+- **Backend**: FastAPI (Python)
+- **Database**: MongoDB
+- **Auth**: JWT-based authentication
 
 ---
 
 ## What's Been Implemented
 
-### Session: March 2026 (Latest - 22 Mar)
+### ✅ COMPLETED (March 2026)
 
-#### 🆕 23. نظام التنسيق بين البائع والسائق (Completed ✅) - 22 Mar 2026
-- **الوصف**: نظام ذكي لتنسيق استلام طلبات الطعام بين البائعين والسائقين
-- **الميزات الجديدة**:
-  - **للبائع**:
-    - زر "طلب سائق" على الطلبات المؤكدة
-    - عرض حالة السائق (بانتظار قبول / قبول)
-    - إدخال وقت التحضير بعد قبول السائق
-    - عرض ETA السائق للمتجر
-  - **للسائق**:
-    - قسم "طلبات جديدة تنتظر قبولك" مميز
-    - معلومات الطلب (المتجر، العنوان، المسافة)
-    - أزرار قبول/رفض
-    - إشعار بموعد الذهاب للمتجر
-- **الـ APIs الجديدة** (food_orders.py):
-  - `POST /api/food/orders/store/orders/{order_id}/request-driver` - طلب سائق
-  - `POST /api/food/orders/driver/orders/{order_id}/accept` - قبول من السائق
-  - `POST /api/food/orders/driver/orders/{order_id}/reject` - رفض من السائق
-  - `POST /api/food/orders/store/orders/{order_id}/set-preparation-time` - تحديد وقت التحضير
-  - `GET /api/food/orders/store/orders/{order_id}/driver-status` - حالة السائق
-- **تحديث API الطلبات المتاحة**:
-  - `GET /api/food/orders/delivery/available` يُرجع الآن `driver_requested_orders` array
-- **حقول جديدة في food_orders**:
-  - `driver_requested` - هل طُلب سائق؟
-  - `driver_status` - حالة السائق (waiting_for_acceptance, driver_accepted)
-  - `driver_estimated_arrival_minutes` - وقت وصول السائق المتوقع
-  - `waiting_for_preparation_time` - هل ينتظر تحديد وقت التحضير؟
-  - `preparation_time_minutes` - وقت التحضير
-  - `expected_ready_at` - موعد جاهزية الطلب
-  - `pickup_code` - كود الاستلام
-- **إصلاحات إضافية**:
-  - إصلاح عرض `delivery_address` في 9 مكونات (كان object بدل string)
+#### Driver-Seller Coordination Flow
+- Backend APIs for driver request/accept workflow
+- Frontend UIs for sellers and drivers
+- Preparation time synchronization
 
-#### 🆕 21. نظام الدفع الفعلي - شام كاش + بطاقات بنكية (Completed ✅) - 22 Mar 2026
-- **الوصف**: تجهيز البنية التحتية للدفع الفعلي عبر شام كاش وبطاقات Visa/Mastercard
-- **المكونات الجديدة**:
-  - `/app/backend/services/payment_providers.py` - مزودي الدفع (ShamCash, Syriatel, BankCard)
-  - `/app/backend/routes/payment_v2.py` - APIs الدفع الجديدة
-  - `/app/frontend/src/components/admin/PaymentSettingsTab.js` - واجهة إعدادات الدفع
-- **الميزات**:
-  - ✅ **شام كاش**: تكامل كامل مع API Syria (apisyria.com)
-    - التحقق من التحويلات الواردة
-    - البحث عن رقم العملية
-    - مطابقة المبالغ تلقائياً
-  - ✅ **سيرياتيل كاش**: نفس البنية مع API Syria
-  - ⏳ **بطاقات بنكية**: جاهز للتكامل عند توفر API (Visa/Mastercard شراكة ديسمبر 2025)
-  - ✅ **وضع Sandbox/Production**: تبديل سهل بين التجريبي والفعلي
-- **الـ APIs الجديدة**:
-  - `GET /api/payment/v2/status` - حالة نظام الدفع
-  - `POST /api/payment/v2/verify` - التحقق من الدفع برقم العملية
-  - `GET /api/payment/v2/instructions/{method}` - تعليمات الدفع للعميل
-  - `GET /api/payment/v2/admin/settings` - إعدادات الدفع (للمدير)
-  - `PUT /api/payment/v2/admin/settings` - تحديث إعدادات الدفع
-  - `GET /api/payment/v2/provider/{provider}/balance` - رصيد حساب التاجر
-- **المتغيرات البيئية الجديدة** (backend/.env):
-  - `PAYMENT_MODE` - sandbox أو production
-  - `APISYRIA_API_KEY` - مفتاح API Syria
-  - `SHAMCASH_ACCOUNT_ADDRESS` - عنوان حساب شام كاش
-  - `SYRIATEL_MERCHANT_GSM` - رقم سيرياتيل كاش
-- **كيفية التفعيل**:
-  1. سجّل في apisyria.com
-  2. اربط حسابات شام كاش/سيرياتيل
-  3. أضف API Key والعناوين في .env
-  4. غيّر PAYMENT_MODE إلى production
+#### Seller Dashboard Overhaul
+- Separated "Orders" and "Products/Dishes" into distinct tabs
+- "Orders" is the default view for both seller types
+- Added "Packaging Guidelines" tab for product sellers
 
-#### 🆕 22. تحسين شحن المحفظة للعملاء (Completed ✅) - 22 Mar 2026
-- **الوصف**: إعادة تصميم نموذج شحن المحفظة ليكون على 3 خطوات مع تحقق تلقائي
-- **الخطوات الجديدة**:
-  1. **اختيار المبلغ وطريقة الدفع**: شام كاش، سيرياتيل كاش، MTN كاش
-  2. **تعليمات الدفع**: عرض حساب المنصة وخطوات التحويل
-  3. **تأكيد التحويل**: إدخال رقم العملية للتحقق التلقائي
-- **الـ APIs الجديدة**:
-  - `POST /api/wallet/topup/verify` - التحقق من رقم العملية وإضافة الرصيد تلقائياً
-- **تحسينات UX**:
-  - مؤشر خطوات بصري (1-2-3)
-  - زر نسخ لعنوان الحساب
-  - رسالة تأكيد فورية بعد الشحن
-  - كود طلب للدعم
+#### UI/UX Enhancements
+- **Availability Toggle**: Clear text ("متاح"/"إظهار"), distinct colors, badge for hidden items
+- **Mandatory Location Fields**: Address and map location required in settings
+- **Edit Product Modal**: Fixed to correctly load data and show proper title
+- **Product Preview Modal**: Shows description, store name, and category
 
-#### 🆕 20. شات بوت ذكي بالذكاء الاصطناعي (Completed ✅) - 22 Mar 2026
-- **الوصف**: ترقية الشات بوت من نظام كلمات مفتاحية إلى شات بوت ذكي باستخدام OpenAI GPT-4o
-- **الميزات الجديدة**:
-  - فهم الأسئلة الطبيعية بأي صياغة
-  - جلب سياق العميل تلقائياً (آخر طلباته، رصيد محفظته)
-  - إجابات مخصصة وذكية باللغة العربية
-  - ردود سريعة مقترحة بناءً على السياق
-  - إمكانية طلب تحويل للدعم البشري
-- **الـ API الجديدة**:
-  - `POST /api/ai-chatbot/send` - إرسال رسالة للشات بوت الذكي
-  - `GET /api/ai-chatbot/history` - جلب سجل المحادثات
-  - `GET /api/ai-chatbot/quick-questions` - الأسئلة السريعة الشائعة
-  - `POST /api/ai-chatbot/request-support` - طلب دعم بشري
-  - `DELETE /api/ai-chatbot/clear-session/{session_id}` - مسح جلسة محادثة
-- **الملفات الجديدة**:
-  - `/app/backend/routes/ai_chatbot.py` - الشات بوت الذكي الجديد
-- **التكامل**: OpenAI GPT-4o عبر emergentintegrations library
+#### Bug Fixes
+- Fixed login issues (database name mismatch)
+- Fixed React runtime error with centralized error handling
+- Added missing Authorization headers to all API calls
+- Fixed backend order status update logic
+- Created new endpoint `GET /orders/seller/my-orders`
 
-#### 🆕 19. عرض المتاجر المعلقة مع شارة "متوقف مؤقتاً" (Completed ✅) - 22 Mar 2026
-- **الوصف**: تحسين عرض المتاجر المعلقة للعملاء
-- **الميزات**:
-  - إضافة حقل `is_suspended` لجميع المتاجر في API
-  - عرض شارة "متوقف مؤقتاً" برتقالية على المتاجر المعلقة
-  - منع الطلب من المتاجر المعلقة (غير قابلة للنقر)
-  - ترتيب المتاجر: المفتوحة أولاً، المغلقة ثانياً، المعلقة أخيراً
-- **التغييرات**:
-  - `/app/backend/routes/food.py` - إضافة فحص التعليق للمتاجر
-  - `/app/frontend/src/pages/FoodPage.js` - تحديث StoreCard لعرض شارة التعليق
-- **الاختبار**: ✅ 100% (18/18 tests passed)
-
-#### 🆕 18. شارة "اشتري 2 = شحن مجاني" في قسم الشارات (Completed ✅) - 21 Mar 2026
-- **الوصف**: نقل ميزة "اشتري X واحصل على شحن مجاني" من قسم العروض إلى قسم الشارات
-- **الميزات**:
-  - شارة تظهر تلقائياً على المنتجات التي عند شراء X منها يصل السعر لحد الشحن المجاني
-  - مثال: حد الشحن = 100,000 | سعر المنتج = 55,000 ← تظهر شارة "اشترِ 2 = شحن مجاني"
-  - إعدادات قابلة للتعديل: عدد القطع المطلوبة، نصوص الشارة
-- **التغييرات**:
-  - إزالة زر "إنشاء عرض اشتري X واحصل Y" من FoodOffersTab
-  - إضافة شارة `buy_2_free_shipping` في ProductBadgesTab
-  - تحديث ProductBadge.js لعرض الشارة على المنتجات المؤهلة
-- **الموقع**: لوحة الأدمن ← شارات المنتجات
-- **الملفات المعدلة**:
-  - `/app/frontend/src/components/admin/FoodOffersTab.js` - إزالة الموديل والزر
-  - `/app/frontend/src/components/admin/ProductBadgesTab.js` - إضافة شارة جديدة
-  - `/app/frontend/src/components/ProductBadge.js` - تحديث منطق العرض
-  - `/app/backend/routes/settings.py` - إضافة الشارة الجديدة
-
-#### 🆕 17. نظام تسجيل متاجر الطعام الجديد (Completed ✅) - 21 Mar 2026
-- **الوصف**: إعادة تصميم صفحة التسجيل كبائع طعام بنظام جديد
-- **التغييرات**:
-  - **الخطوة 1**: اختيار النوع الرئيسي (🍽️ طعام أو 🛒 ماركت)
-  - **الخطوة 2**: اختيار الأصناف الفرعية (اختيار متعدد)
-  - **الخطوة 3-4**: معلومات المتجر والإعدادات
-  - **الخطوة 5**: النجاح
-- **الأصناف الجديدة المضافة**:
-  - طعام: وجبات سريعة، ☕ مشروبات ساخنة، حلويات
-  - ماركت: سوبرماركت، 🥖 مخابز، 🍖 ملاحم، 🧀 ألبان وأجبان، خضار وفواكه
-- **العمولة**: حسب النوع الرئيسي (طعام أو ماركت) للبساطة
-- **الملفات المعدلة**:
-  - `/app/frontend/src/pages/JoinAsFoodSellerPage.js`
-  - `/app/frontend/src/components/admin/CommissionsTab.js`
-  - `/app/backend/routes/food.py`
-
-#### 🆕 16. إصلاح مشكلة حقول الأرقام في إعدادات التوصيل (Completed ✅) - 21 Mar 2026
-- **الوصف**: إصلاح مشكلة عدم استجابة حقول الأرقام عند المسح (كانت تبقي القيمة الافتراضية بدلاً من السماح بالمسح)
-- **المشكلة**: في ملف `DeliverySettingsTab.js`، كانت حقول الأرقام تستخدم `parseInt(e.target.value) || X` مما يمنع المستخدم من مسح الحقل لإدخال قيمة جديدة
-- **الحل**: تم تعديل جميع حقول الأرقام لتستخدم:
-  - `e.target.value === '' ? '' : parseInt(e.target.value) || 0` في `onChange`
-  - `onBlur` للتحقق من القيمة وإرجاع القيمة الافتراضية إذا كان الحقل فارغاً
-- **الحقول المُصلحة** (18 حقل):
-  - نظام تحذيرات المطاعم: مخالفات قبل التحذير، مخالفات قبل التحذير الأخير، مخالفات قبل الإيقاف
-  - Geofencing: المسافة المسموحة من المتجر
-  - وقت التوصيل: Buffer، تحذير قبل الانتهاء، مبلغ الخصم، حد الخصم اليومي
-  - جوائز الصدارة: المركز الأول، الثاني، الثالث
-  - مستويات الأداء: مبتدئ، برونزي، فضي، ذهبي
-  - تعليق الأرباح: طلبات الطعام، طلبات المنتجات
-- **الاختبار**: ✅ تم التحقق من أن الحقول تسمح بالمسح ثم إدخال قيمة جديدة
-
-### Session: March 2026 (20 Mar)
-
-#### 🆕 15. نظام الموافقة على الأطباق + تنظيم لوحة التحكم (Completed ✅) - 20 Mar 2026
-- **الوصف**: إضافة نظام موافقة للأطباق الجديدة من المطاعم + إعادة تنظيم أيقونات الموافقات المعلقة
-- **Backend APIs الجديدة**:
-  - `GET /api/admin/food-items/pending` - جلب الأطباق المعلقة مع معلومات المتجر
-  - `GET /api/admin/food-items/stats` - إحصائيات الأطباق (pending, approved, total)
-  - `POST /api/admin/food-items/{id}/approve` - الموافقة على طبق + إشعار البائع
-  - `POST /api/admin/food-items/{id}/reject` - رفض طبق مع سبب + حذفه + إشعار البائع
-- **تعديل إضافة الأطباق**:
-  - `POST /api/food/items` الآن يضيف الطبق بـ `is_approved: false` افتراضياً
-  - الأطباق الجديدة تنتظر موافقة المدير قبل الظهور للعملاء
-- **Frontend - إعادة تنظيم لوحة التحكم**:
-  - **3 أيقونات رئيسية ملخصة** بدلاً من 5:
-    1. **طلبات الانضمام** 🟠 = بائعين + سائقين + متاجر طعام
-    2. **العناصر المعلقة** 🔵 = منتجات + أطباق
-    3. **طلبات السحب** 🟣 = السحوبات المعلقة
-  - **5 روابط سريعة** أسفل الأيقونات للوصول المباشر
-  - مكون جديد `PendingFoodItemsTab.js` لإدارة الأطباق المعلقة
-- **الاختبار**: ✅ 100% (14/14 backend + frontend tests passed)
-
-### Session: March 2026 (19 Mar)
-
-#### 🆕 14. نظام التوصيل الذكي (Completed ✅) - 19 Mar 2026
-- **الوصف**: أولوية للسائقين القريبين + إخبار البائع بوقت وصول السائق + اقتراح تأخير التحضير
-- **الميزات**:
-  1. **ترتيب الطلبات حسب القرب**: الطلبات الأقرب للسائق تظهر أولاً
-  2. **تصنيف القرب**: 🟢 قريب جداً (≤1كم) | 🟡 قريب (≤3كم) | 🟠 متوسط (≤5كم) | 🔴 بعيد (>5كم)
-  3. **إشعار البائع عند قبول السائق**:
-     - إذا السائق بعيد: "السائق يصل بعد 25 دقيقة - ابدأ التحضير بعد 10 دقائق"
-     - إذا السائق قريب: "ابدأ التحضير الآن"
-     - إذا السائق قريب جداً: "السائق قريب! جهّز الطلب فوراً!"
-- **API المعدّلة**:
-  - `GET /api/food/orders/delivery/available?driver_lat=X&driver_lng=Y` - ترتيب حسب القرب
-  - `POST /api/food/orders/{id}/accept?driver_lat=X&driver_lng=Y` - حساب ETA وإشعار البائع
-- **الاختبار**: ✅ الطلبات تظهر مرتبة حسب القرب مع تصنيف ملون
-
-#### 🆕 13. نظام وثائق البائعين المحسّن (Completed ✅) - 19 Mar 2026
-- **الوصف**: تصنيف البائعين حسب نوع النشاط مع وثائق مختلفة لكل نوع
-- **أنواع البائعين**:
-  | النوع | الوثائق المطلوبة |
-  |-------|-----------------|
-  | 🏪 متجر تقليدي | هوية + سجل تجاري + صورة المحل |
-  | 🍳 مطعم/طعام | هوية + سجل تجاري + شهادة صحية |
-- **Backend**:
-  - `GET /api/seller/seller-types` - جلب أنواع البائعين
-  - تعديل `POST /api/seller/documents` للتحقق من الوثائق حسب النوع
-  - حقول جديدة: `seller_type`, `seller_type_name`, `national_id`, `commercial_registration`, `shop_photo`, `health_certificate`
-- **Frontend**:
-  - واجهة اختيار نوع النشاط
-  - عرض الحقول المطلوبة ديناميكياً حسب النوع المختار
-- **الاختبار**: ✅
-  - مطعم بدون شهادة صحية: رُفض ✓
-  - متجر بدون صورة المحل: رُفض ✓
-  - متجر مع كل الوثائق: نجح ✓
-
-#### 🆕 12. دعم أنواع المركبات المتعددة للسائقين (Completed ✅) - 19 Mar 2026
-- **الوصف**: إضافة خيار نوع المركبة عند تسجيل السائق، مع جعل الرخصة اختيارية لبعض الأنواع
-- **أنواع المركبات**:
-  | النوع | الرخصة |
-  |-------|--------|
-  | 🚗 سيارة | ✅ مطلوبة |
-  | 🏍️ دراجة نارية | ✅ مطلوبة |
-  | 🛵 سكوتر كهربائي | ❌ غير مطلوبة |
-  | 🚲 دراجة هوائية | ❌ غير مطلوبة |
-- **Backend**:
-  - `GET /api/delivery/vehicle-types` - جلب أنواع المركبات المتاحة
-  - تعديل `POST /api/delivery/documents` للتحقق من نوع المركبة والرخصة
-  - حقول جديدة: `vehicle_type`, `vehicle_type_name`, `requires_license`, `vehicle_photo`
-- **Frontend**:
-  - اختيار نوع المركبة بأيقونات واضحة
-  - حقل الرخصة يظهر/يختفي بناءً على نوع المركبة
-  - حقل صورة المركبة (اختياري)
-- **الاختبار**: ✅ 
-  - دراجة هوائية بدون رخصة: نجح
-  - سيارة بدون رخصة: رُفض "رخصة القيادة مطلوبة لـالسيارة"
-
-#### 🆕 11. إشعارات ذكية للتوصيل الطويل (Completed ✅) - 19 Mar 2026
-- **الوصف**: إرسال Push Notification للعميل مع الوقت المتوقع عند إنشاء الطلب واستلام السائق
-- **الإشعار الأول** (عند إنشاء الطلب):
-  - عنوان: "⏰ تم استلام طلبك!" أو "🍔 تم استلام طلبك!"
-  - يظهر المسافة والوقت المتوقع إذا > 45 دقيقة
-  - مثال: "الوقت المتوقع: ~48 دقيقة (المطعم يبعد 11.9 كم)"
-- **الإشعار الثاني** (عند استلام السائق):
-  - عنوان: "🛵 طلبك في الطريق!" أو "🚀 طلبك في الطريق!"
-  - يحسب الوقت المتبقي بناءً على المسافة
-- **الملفات المعدلة**:
-  - `backend/routes/food_orders.py` - إضافة الإشعارات
-  - استخدام `services/notification_helper.py` للإرسال
-- **البيانات المحفوظة في الطلب**:
-  - `distance_km`: المسافة بين المتجر والعميل
-  - `estimated_total_time`: الوقت المتوقع الكامل (تحضير + توصيل)
-- **الاختبار**: ✅ تم إنشاء طلب تجريبي والتحقق من الإشعار
-
-#### 🆕 9. منطق توصيل الطعام الجديد (Completed ✅) - 19 Mar 2026
-- **الوصف**: تبسيط منطق مناطق التوصيل - عرض جميع المطاعم في المدينة مع تحذير ذكي للبعيدة
-- **Backend**:
-  - `POST /api/food/orders/check-distance` - حساب المسافة والتحذير الذكي
-  - إزالة قيد المسافة القصوى (5 كم) عند إنشاء الطلب
-  - حساب المسافة للتسعير فقط بدون رفض الطلب
-- **Frontend**:
-  - تحذير ذكي في صفحة السلة `FoodCartPage.js` بألوان مختلفة:
-    - أحمر (HIGH): > 10 كم - "قد يصل الطعام بارداً"
-    - أصفر (MEDIUM): 5-10 كم
-    - أزرق (LOW): 3-5 كم
-  - يعرض المسافة والوقت المتوقع للتوصيل
-- **الاختبار**: ✅ 100% (8/8 tests passed)
-
-#### 🆕 10. إصلاح أيقونات الفئات (Completed ✅) - 19 Mar 2026
-- **الوصف**: إضافة جميع ترجمات وأيقونات الفئات المفقودة في الصفحة الرئيسية
-- **الملف**: `HomePage.js`
-- **التغييرات**:
-  - إضافة أيقونة `Package` للـ iconMap كـ fallback
-  - توسيع قائمة `getCategoryNameAr` لتشمل الفئات العربية والإنجليزية
-  - توسيع قائمة `getCategoryIcon` لتشمل جميع الفئات
-- **الفئات المضافة**: مواد غذائية، مطاعم، مقاهي، حلويات، مخابز، مشروبات، خضار وفواكه
-
-#### 🆕 7. محفظة العميل (Completed ✅) - 19 Mar 2026
-- **الوصف**: إضافة محفظة إلكترونية للعملاء للشحن والدفع
-- **Backend**:
-  - `POST /api/wallet/topup/request` - طلب شحن رصيد
-  - `GET /api/wallet/topup/history` - سجل طلبات الشحن
-  - `DELETE /api/wallet/topup/{id}` - إلغاء طلب شحن
-  - `GET /api/wallet/admin/topup-requests` - جميع طلبات الشحن (للأدمن)
-  - `POST /api/wallet/admin/topup/{id}/approve` - الموافقة على شحن
-  - `POST /api/wallet/admin/topup/{id}/reject` - رفض طلب شحن
-  - `POST /api/payment/wallet/pay` - الدفع من المحفظة
-- **Frontend**:
-  - `BuyerWalletPage.js` - صفحة محفظة العميل `/my-wallet`
-  - إضافة خيار "المحفظة" في طرق الدفع `CheckoutPage.js`
-  - إضافة رابط المحفظة في قائمة حسابي `MobileNav.js`
-- **القيود**:
-  - الحد الأدنى للشحن: 10,000 ل.س
-  - الحد الأقصى للشحن: 5,000,000 ل.س
-  - الرصيد للشراء فقط (لا يمكن السحب)
-- **الاختبار**: ✅ APIs تعمل بنجاح
-
-#### 🆕 8. إصلاح التحقق من موقع السائق (Completed ✅) - 19 Mar 2026
-- **الوصف**: إصلاح ثغرة كانت تسمح للسائق بتسجيل الوصول بدون إرسال موقعه
-- **التغييرات**:
-  - `latitude` و `longitude` أصبحت **إجبارية** في `POST /food/orders/delivery/{id}/arrived`
-  - الحد الافتراضي: **100 متر** (بدلاً من 150)
-  - إذا لم يُرسل السائق موقعه ← خطأ "Field required"
-  - إذا كان بعيداً ← خطأ "يجب أن تكون قرب المتجر..."
-- **الاختبار**: ✅ 
-  - بدون إحداثيات: `Field required` ✓
-  - بعيد 700م: `يجب أن تكون قرب المتجر... 761 متر` ✓
-  - قريب 15م: `تم تسجيل وصولك` ✓
-
-#### 1. ميزة التحكم اليدوي بحالة المتجر (Completed ✅)
-- **الوصف**: يستطيع بائع الطعام الآن فتح أو إغلاق متجره بضغطة زر واحدة
-- **Backend**: 
-  - `POST /api/food/stores/{store_id}/toggle-status` - تبديل حالة المتجر
-  - `GET /api/food/stores/{store_id}/status` - جلب حالة المتجر
-  - حقل جديد `manual_close` في `food_stores` collection
-- **Frontend**: 
-  - بطاقة حالة المتجر في لوحة تحكم البائع (`FoodStoreDashboard.js`)
-  - زر تبديل مع تأكيد للإغلاق
-  - ألوان ديناميكية (أخضر=مفتوح، أحمر=مغلق)
-- **الاختبار**: ✅ 18/18 اختبار ناجح (100%)
-
-#### 2. تحسينات أداء الصفحة الرئيسية (Completed ✅)
-- **الوصف**: تقليل عدد طلبات الشبكة من ~10 إلى 1 طلب واحد
-- **Backend**:
-  - `GET /api/products/homepage-data` - API موحد يجمع كل بيانات الصفحة الرئيسية
-  - Caching على مستوى الخادم لمدة 60 ثانية
-  - جلب متوازي للبيانات باستخدام `asyncio.gather`
-- **البيانات المجمعة**: categories, ads, sponsored_products, flash_sale, flash_products, best_sellers, new_arrivals, extra_products, settings
-- **الاختبار**: ✅ تم التحقق من عمل الـ caching
-
-#### 3. Lazy Loading للصور والأقسام (Completed ✅)
-- **الوصف**: تحميل الصور والأقسام فقط عندما تصبح مرئية للمستخدم
-- **المكونات الجديدة**:
-  - `LazyImage.js` - مكون صورة مع Intersection Observer + blur placeholder + shimmer effect
-  - `LazySection.js` - مكون قسم يؤجل تحميل المحتوى حتى الظهور
-- **التطبيق على الصفحة الرئيسية**:
-  - جميع أقسام المنتجات (مروّج، فلاش، شحن مجاني، الأكثر مبيعاً، جديد، المزيد)
-  - صور المنتجات في كل قسم
-- **الفوائد**:
-  - تقليل استهلاك الذاكرة
-  - تسريع العرض الأولي (First Contentful Paint)
-  - توفير bandwidth للمستخدم
-
-#### 4. تحسين قسم المتاجر في صفحة الطعام (Completed ✅)
-- **التغييرات**:
-  - تحويل من شبكة 2×2 إلى **تمرير أفقي** (swipe يميناً/يساراً)
-  - إضافة زر **"عرض الكل"** → يفتح `/food/stores`
-  - عرض **جميع المتاجر** بدلاً من 4 فقط
-  - إضافة `snap-x snap-mandatory` للتمرير السلس
-  - تمرير **لليسار فقط** (اتجاه واحد في RTL)
-- **صفحة جديدة**: `AllFoodStoresPage.js` على المسار `/food/stores`
-  - شبكة 2 عمود لجميع المتاجر
-  - بحث عن المتاجر
-  - ترتيب حسب (التقييم، سرعة التوصيل، الحد الأدنى)
-  - عرض حالة المتجر (مفتوح/مغلق مؤقتاً)
-
-#### 5. نظام كود التسليم لقسم التسوق (Completed ✅)
-- **الوصف**: إضافة نفس نظام كود التسليم الموجود في قسم الطعام إلى قسم التسوق
-- **Backend**:
-  - `delivery_code` (4 أرقام) يُولّد عند إنشاء الطلب
-  - `POST /api/orders/{order_id}/delivery/verify-code` - التحقق من الكود
-  - `delivery_code_verified` يجب أن يكون `true` قبل إتمام التسليم
-- **Frontend**:
-  - `OrderTrackingPage.js` - يعرض الكود للعميل عندما يكون الطلب "في الطريق"
-  - `DeliveryPages.js` - نافذة إدخال الكود لموظف التوصيل
-- **الاختبار**: ✅ 9/9 اختبار ناجح
-
-#### 6. تحسين صفحة جميع المنتجات (Completed ✅) - 19 Mar 2026
-- **الوصف**: إصلاح مشكلتين في صفحة `/category/all`
-- **الإصلاحات**:
-  1. ❌ → ✅ إزالة سهم الرجوع من الهيدر (كان يشوش على الواجهة)
-  2. ❌ → ✅ إصلاح التأخير عند التنقل باستخدام نظام Cache على مستوى الـ module
-- **التقنيات المستخدمة**:
-  - `productsCache` object مع TTL لمدة 2 دقيقة
-  - `useMemo` للترتيب والتصفية لتحسين الأداء
-  - عرض البيانات من الـ cache فوراً + تحديث في الخلفية
-- **النتائج**:
-  - تحسن سرعة التحميل بنسبة **65%** (من 2100ms إلى 735ms)
-  - واجهة أنظف بدون سهم رجوع غير ضروري
-- **الملف المعدل**: `/app/frontend/src/pages/AllProductsPage.js`
-
----
-
-### Session: December 2025 (19 Dec)
-
-#### إصلاح مشكلة القفز عند استعادة التمرير (Completed ✅)
-- **المشكلة**: عند الضغط على زر الرجوع من صفحة المنتجات، كانت الصفحة الرئيسية تقفز قبل أن تستقر
-- **السبب الجذري**: متغير `isNavigating` لم يُلغى بعد اكتمال استعادة التمرير في حالة POP
-- **الإصلاحات**:
-  - تحديث `ScrollContext.js` لإضافة `isNavigating.current = false` عند اكتمال الاستعادة
-  - إزالة استدعاءات `window.scrollTo(0, 0)` غير الضرورية من صفحات المنتجات
-  - تحسين منطق حفظ التمرير لمنع الكتابة فوق القيم أثناء التنقل
-- **الملفات المعدلة**:
-  - `/app/frontend/src/context/ScrollContext.js`
-  - `/app/frontend/src/pages/FlashSaleProductsPage.js`
-  - `/app/frontend/src/pages/BestSellersPage.js`
-  - `/app/frontend/src/pages/FreeShippingProductsPage.js`
-  - `/app/frontend/src/pages/NewArrivalsPage.js`
-  - `/app/frontend/src/pages/SponsoredProductsPage.js`
-- **الاختبار**: ✅ نجح اختبار التمرير للأسفل والأعلى مع استعادة صحيحة
-
-### Session: December 2025
-
-#### 1. تحسين إرشادات إشعارات PWA (Completed - Latest)
-- **مكون جديد**: `NotificationGuide.js` - دليل تفصيلي لتفعيل الإشعارات
-- **تبويب جديد**: "الإشعارات" في صفحة الإعدادات
-- **دعم العملاء**: تحديث `PushNotificationPrompt.js` ليدعم العملاء (buyer)
-- **رسائل مخصصة** حسب نوع المستخدم:
-  - العميل: "تتبع طلبك لحظة بلحظة"
-  - السائق: "استلم طلبات جديدة فوراً"
-  - البائع: "لا يفوتك أي طلب"
-- **خطوات تفعيل** لكل متصفح: Chrome Mobile, Chrome Desktop, Safari, Android PWA
-
-#### 2. اختبار E2E شامل للنظام (Completed)
-- **سيناريو البائع**: تسجيل ← موافقة الأدمن ← إعداد المتجر ✅
-- **سيناريو السائق**: تسجيل ← موافقة الأدمن ← إعداد الموقع ✅
-- **سيناريو العميل**: تسجيل ← عنوان ← سلة ← طلب ✅
-- **الأخطاء المصلحة**:
-  - إصلاح حفظ موقع منزل السائق (auth.py)
-  - إصلاح خطأ datetime في إنشاء الطلبات (orders.py)
-
-#### 3. نظام المتاجر المميزة (Completed)
-- تبديل بين المتاجر المختارة يدوياً أو الأعلى تقييماً
-- لوحة تحكم في صفحة الأدمن
-
-#### 4. إلزامية تحديد الموقع على الخريطة (Completed)
-- للعملاء: عند إضافة عنوان
-- للبائعين: عند إعداد المتجر
-- للسائقين: عند تحديد موقع المنزل
-
-#### 5. تحسينات واجهة المستخدم (Completed)
-- إصلاح مشكلة التمرير في صفحة المنتجات
-- تبسيط شبكة المتاجر (2×2 ثابتة)
-- توحيد حساب الشحن المجاني
-- إضافة قسم "المزيد من المنتجات" في الصفحة الرئيسية
+#### Test Data
+- Created 8 test orders with various statuses for product seller
 
 ---
 
 ## Prioritized Backlog
 
-### P0 - Critical (Current Sprint)
-- لا يوجد مهام حرجة حالياً ✅
+### P0 - Critical
+- None currently
 
 ### P1 - High Priority
-- **نظام العروض والصفقات للطعام**: "عروض اليوم"، "الأكثر طلباً"، "جديد"
-- **التسوق عبر المحافظات**: السماح بالشراء من متاجر في محافظات أخرى
+- [ ] Live payment verification for Sham Cash (waiting for account details)
 
 ### P2 - Medium Priority
-- زر اتصال العميل بالسائق (VoIP)
-- نظام تقييم المكالمات (1-5 نجوم)
-- تحسين عرض الأسعار (مثال: 9.3K بدل 9,375)
+- [ ] Cross-Governorate Shopping
+- [ ] VoIP call button for customer-driver communication
+- [ ] Improve price display (e.g., `9.4K` instead of `9,375`)
 
-### P3 - Low Priority
-- إضافة مزيد من اللغات
-
-### ✅ Completed (Previously P1)
-- **تكامل بوابة الدفع السورية**: تم تجهيز البنية لشام كاش وبطاقات بنكية - 22 Mar 2026
+### P3 - Future
+- [ ] Convert web app to mobile app for app stores
 
 ---
 
-## Latest Session Updates - March 2026 (20 Mar)
+## Key API Endpoints
+- `GET /api/orders/seller/my-orders` - Fetch seller's orders
+- `POST /api/store/orders/{order_id}/request-driver` - Request driver for order
+- `POST /api/driver/orders/{order_id}/accept` - Driver accepts order
+- `POST /api/store/orders/{order_id}/set-preparation-time` - Set prep time
+- `POST /api/orders/{order_id}/seller/{action}` - Order status actions
+- `PUT /api/products/{product_id}` - Update product
 
-### 🆕 17. إصلاح 4 أخطاء في نظام التوصيل (Completed ✅) - 20 Mar 2026
-- **P0 - خطأ توفر السائق**:
-  - **المشكلة**: عند إعادة تحميل صفحة السائق، كانت الطلبات تختفي والحالة تتحول لـ "غير متاح"
-  - **السبب**: لم تكن `delivery_documents` موجودة لبعض السائقين مما يسبب خطأ 404
-  - **الحل**: إضافة إنشاء تلقائي لـ `delivery_documents` عند عدم وجودها في `delivery.py`
-  - **الاختبار**: ✅ التبديل يعمل، الطلبات تستمر بعد إعادة التحميل
-
-- **P1 - خطأ اختيار نغمة الرنين**:
-  - **المشكلة**: خطأ عند محاولة تشغيل صوت التنبيه
-  - **الحل**: إضافة معالجة أخطاء لـ `AudioContext` في `useNotificationSound.js`
-  - **الاختبار**: ✅ لا توجد أخطاء في الكونسول
-
-- **P2 - شريط البحث في صفحة السائق**:
-  - **المشكلة**: شريط البحث يظهر في لوحة تحكم السائق
-  - **الحل**: إضافة `isDeliveryPage` للتحقق في `Header.js`
-  - **الاختبار**: ✅ شريط البحث مخفي في `/delivery/dashboard`
-
-- **P2 - إشعارات الموافقة/الرفض المفقودة**:
-  - **المشكلة**: البائعون والسائقون لا يتلقون إشعارات عند الموافقة/الرفض
-  - **الحل**: إضافة إنشاء إشعارات في `admin.py` (approve_seller, reject_seller, approve_delivery_driver, reject_delivery_driver)
-  - **الاختبار**: ✅ تم التحقق من الكود
-
-- **الملفات المعدلة**:
-  - `backend/routes/delivery.py` - سطور 389-399، 417-433
-  - `backend/routes/admin.py` - سطور 365-377، 546-556
-  - `frontend/src/components/Header.js` - سطر 54، 57
-  - `frontend/src/hooks/useNotificationSound.js` - سطور 133-153، 173-189
-
-- **تقرير الاختبار**: `/app/test_reports/iteration_94.json`
-
-### 🆕 18. إصلاح واجهة صفحة المدير (Completed ✅) - 20 Mar 2026
-- **المشاكل المُصلحة**:
-  1. **شريط البحث**: كان يظهر في صفحة المدير - تم إخفاؤه
-  2. **شريط التنقل السفلي**: كان يظهر (سلة، أصناف، إلخ) - تم إخفاؤه
-  3. **إشعارات الطلبات**: كانت تظهر للمدير - تم فلترتها لتظهر فقط إشعارات المدير
-
-- **الحل التقني**:
-  - إضافة `isAdminPage` check في `Header.js` و `MobileNav.js`
-  - إضافة `ADMIN_NOTIFICATION_TYPES` في `notifications.py`
-  - إضافة فلترة `context='admin'` في `NotificationsDropdown.js`
-
-- **الملفات المعدلة**:
-  - `frontend/src/components/Header.js` - سطر 55-60
-  - `frontend/src/components/MobileNav.js` - سطور 41-45
-  - `frontend/src/components/NotificationsDropdown.js` - سطور 117-122
-  - `backend/routes/notifications.py` - سطور 28-38، 50-80
-
-- **تقرير الاختبار**: `/app/test_reports/iteration_95.json`
-
-### 🆕 19. توحيد تنسيق صفحات المدير للموبايل (Completed ✅) - 20 Mar 2026
-- **المشكلة**: ظهور شريط تمرير أفقي برتقالي في بعض صفحات المدير على الموبايل (overflow)
-- **السبب**: الجداول ذات الأعمدة المتعددة تتجاوز عرض الشاشة
-
-- **الحل**: تحويل الجداول إلى بطاقات (cards) متجاوبة مع الموبايل
-  - `DeliveryTab.js`: تحويل من جدول 5 أعمدة إلى بطاقات
-  - `UsersTab.js`: تحويل من جدول 5 أعمدة إلى بطاقات
-  - `SellersTab.js`: تحويل من جدول 6 أعمدة إلى بطاقات
-
-- **فحص خريطة السائقين**: ✅ تعمل بشكل صحيح
-  - تعرض الإحصائيات (إجمالي، متصلين، متاحين، يوصلون طلبات، لهم موقع)
-  - تعرض الخريطة مع مواقع السائقين
-  - الفلاتر تعمل (المدينة، المتاحين فقط، المتصلين فقط)
-
-- **تقرير الاختبار**: `/app/test_reports/iteration_96.json`
-
-### 🆕 20. توحيد باقي صفحات المدير للموبايل (Completed ✅) - 20 Mar 2026
-- **المهمة**: تحويل جميع صفحات المدير التي تستخدم جداول إلى بطاقات متناسقة
-
-- **الصفحات المُحولة**:
-  1. `LowStockTab.js` - تقرير المخزون المنخفض
-  2. `DeliveryBoxesTab.js` - صناديق التوصيل
-  3. `DriversPerformanceTab.js` - أداء السائقين
-
-- **الصفحات التي كانت تستخدم بطاقات أصلاً (لم تحتج تغيير)**:
-  - `WithdrawalsTab.js` ✅
-  - `ViolationsTab.js` ✅
-  - `CouponsTab.js` ✅
-  - `PriceReportsTab.js` ✅
-  - `CallRequestsTab.js` ✅
-  - `FoodOffersTab.js` ✅
-  - `SupportTicketsTab.js` ✅
-  - `AnalyticsDashboard.js` ✅
-
-- **فحص خريطة السائقين**: ✅ تعمل بشكل صحيح (من iteration_96)
-
-- **تقرير الاختبار**: `/app/test_reports/iteration_97.json`
-
-### 🆕 21. إزالة أسهم الرجوع من جميع التطبيق (Reverted ↩️) - 20 Mar 2026
-- **تم إزالة أسهم الرجوع** ثم **تم إرجاعها** بناءً على طلب المستخدم
-- **السبب**: للبائعين والمستخدمين العاديين، أسهم الرجوع أفضل لتجربة المستخدم
-- **الحالة النهائية**: ✅ جميع أسهم الرجوع موجودة وتعمل
-
-### 🆕 22. إصلاح لوحة تحكم المدير (Completed ✅) - 20 Mar 2026
-- **المشاكل المُصلحة**:
-  1. **فلاتر الخريطة لا تستجيب**: تمت إضافة `onlineOnly` إلى dependencies في useEffect
-  2. **4 أيقونات مكررة**: تم إزالة grid الإحصائيات السريعة (كانت مكررة مع التبويبات)
-  3. **خيارات عند الضغط على الاسم**: تمت إضافة قائمة (عرض، حظر، حذف) + نافذة تفاصيل
-
-- **الملفات المعدلة**:
-  - `DriversMapTab.js` - إصلاح الفلاتر
-  - `AdminPage.js` - إزالة الأيقونات الـ 4
-  - `UsersTab.js` - قائمة إجراءات + نافذة تفاصيل
-  - `SellersTab.js` - قائمة إجراءات + نافذة تفاصيل
-  - `DeliveryTab.js` - قائمة إجراءات + نافذة تفاصيل
-
-- **تقرير الاختبار**: `/app/test_reports/iteration_99.json`
-
----
-
-### 🆕 15. إصلاح نظام الحماية من Brute Force (Completed ✅)
-- **المشكلة**: نظام brute force كان يقفل الحساب بسرعة كبيرة (5 محاولات) مما يسبب مشاكل في الاختبار والاستخدام
-- **الحل**:
-  - رفع حد المحاولات من 5 إلى **10 محاولات**
-  - تقليل مدة القفل من 15 إلى **5 دقائق**
-  - إضافة نافذة زمنية 10 دقائق (إعادة تعيين العداد بعدها)
-  - تنظيف تلقائي للسجلات القديمة (> 30 دقيقة)
-  - رفع rate limit لـ login من 5/minute إلى **15/minute**
-- **الملفات المعدلة**:
-  - `backend/core/security.py` - `check_brute_force()`, `_cleanup_old_attempts()`
-  - `backend/routes/auth.py` - rate limit decorator
-- **الاختبار**: ✅ 13/13 اختبار ناجح
-
-### 🆕 16. منع تجميع الطلبات الباردة البعيدة (Completed ✅)
-- **الوصف**: منع السائق من قبول طلبات "باردة/جافة" متعددة إذا كانت مواقع التسليم بعيدة
-- **القاعدة الجديدة**: الحد الأقصى للمسافة بين مواقع تسليم الطلبات الباردة = **3 كم**
-- **أنواع المتاجر الباردة**: `market`, `vegetables` (سوبر ماركت، خضار وفواكه)
-- **أنواع المتاجر الساخنة**: `restaurants`, `cafes`, `bakery`, `drinks`, `sweets`
-- **رسالة الرفض**: "موقع تسليم هذا الطلب بعيد عن طلباتك الأخرى (X كم). للطلبات الباردة، يجب أن تكون مواقع التسليم قريبة (≤ 3 كم)"
-- **الملف المعدل**: `backend/routes/food_orders.py` - `accept_food_order()` خط 2249-2277
-- **الاختبار**: ✅ تم اختباره يدوياً وعبر testing agent
-
----
-
-## Technical Architecture
-
-### Frontend
-- React.js with Tailwind CSS
-- Shadcn/UI components
-- Framer Motion for animations
-- React Router for navigation
-
-### Backend
-- FastAPI (Python)
-- MongoDB database
-- WebSocket for real-time features
-
-### Key Files (Session Updates)
-```
-/app/
-├── backend/
-│   └── routes/
-│       └── auth.py        # تم إضافة حقول موقع منزل السائق
-├── frontend/src/
-│   ├── App.js             # أضيف BuyerNotificationPrompt
-│   ├── components/
-│   │   ├── NotificationGuide.js      # جديد - دليل الإشعارات
-│   │   └── PushNotificationPrompt.js # تحديث - دعم العملاء
-│   └── pages/
-│       ├── SettingsPage.js            # أضيف تبويب الإشعارات
-│       ├── ProductsPage.js            # أضيف قسم "شحنها مجاني"
-│       └── FoodPage.js                # أضيف قسم "توصيلها مجاني"
-```
-
----
-
-## Test Reports
-- `/app/test_reports/iteration_83.json` - سيناريو البائع (13/13 ✅)
-- `/app/test_reports/iteration_84.json` - سيناريو السائق (20/20 ✅)
-- `/app/test_reports/iteration_85.json` - سيناريو العميل (25/25 ✅)
-- `/app/test_reports/iteration_91.json` - محفظة العميل ✅
-- `/app/test_reports/iteration_92.json` - منطق توصيل الطعام الجديد (8/8 ✅)
-- `/app/test_reports/iteration_93.json` - إصلاح Brute Force + منع تجميع الطلبات البعيدة (13/13 ✅)
-- `/app/test_reports/iteration_94.json` - إصلاح 4 أخطاء في نظام التوصيل (14/14 Backend + Frontend ✅)
-- `/app/test_reports/iteration_95.json` - إصلاح واجهة صفحة المدير (3/3 Frontend ✅)
-- `/app/test_reports/iteration_96.json` - توحيد تنسيق صفحات المدير للموبايل (4/4 ✅)
-- `/app/test_reports/iteration_97.json` - توحيد باقي صفحات المدير للموبايل (3/3 ✅)
-- `/app/test_reports/iteration_99.json` - إصلاح لوحة تحكم المدير (فلاتر الخريطة + إزالة الأيقونات + قوائم الإجراءات) (100% ✅)
+## Key Database Schema
+- **food_orders**: `driver_request_status`, `driver_accepted_at`, `accepted_by_driver_id`, `seller_prep_time_minutes`, `estimated_ready_at`
+- **products**: `is_available` boolean field
+- **orders**: Handles both `buyer_id` and `user_id` for compatibility
+- **stores**: Requires `address`, `latitude`, `longitude`
 
 ## Test Credentials
-- **Admin**: Phone: `0911111111`, Password: `Admin@123`
-- **Customer**: Phone: `0933333333`, Password: `buyer123`
-- **Driver**: Phone: `0955555555`, Password: `test1234`
-- **Food Seller**: Phone: `0966666666`, Password: `test1234`
-- **Product Seller**: Phone: `0922222222`, Password: `seller123`
+- **Product Seller**: Phone: `0922222222`, Password: `test123456`
 
----
-
-## Session Update: 20 March 2026 (Latest)
-
-### ✅ P0: إكمال تصفية صفحة إعدادات التوصيل (Completed)
-- **الملف**: `/app/frontend/src/components/admin/DeliverySettingsTab.js`
-- **المشكلة**: الواجهة كانت تحتوي على 16+ قسم إعدادات مما جعلها مزدحمة
-- **الحل**: إضافة نظام تصفية يعرض الأقسام حسب التصنيف المحدد
-- **التصنيفات**:
-  - 📋 **الكل**: يعرض جميع الأقسام
-  - 💰 **الأسعار**: أجور التوصيل بالمسافة، أرباح السائق
-  - ⏰ **الأوقات**: وقت انتظار التوصيل، ساعات العمل، ساعات توصيل المنتجات
-  - 🚚 **الطلبات**: حالة التوزيع التلقائي، إعدادات قبول الطلبات، الحدود الذكية
-  - ⚠️ **العقوبات**: تقرير المخالفات، تعويض الانتظار، وقت التوصيل والعقوبات، تعليق الأرباح، الطلبات غير المُسلّمة
-  - 🏆 **المكافآت**: جوائز الصدارة، مستويات أداء السائقين
-- **الاختبار**: ✅ تم التحقق من عمل كل فلتر بشكل صحيح
-
-### ✅ P1: إصلاح مشكلة كود تأكيد التوصيل (Completed)
-- **الملفات**: 
-  - `/app/frontend/src/components/delivery/MyOrdersList.js`
-  - `/app/frontend/src/pages/DeliveryPages.js`
-- **المشكلة**: عند إدخال كود التسليم الصحيح، كانت تظهر رسالة خطأ قبل رسالة النجاح
-- **الحل**: 
-  - استبدال `alert()` و `window.location.reload()` بـ `toast()` و `onRefresh` callback
-  - إضافة prop جديد `onRefresh` في `MyOrdersList` component
-  - تمرير `fetchOrders` و `fetchWallet` كـ callback من `DeliveryPages`
-- **الفائدة**: تجربة مستخدم أفضل بدون إعادة تحميل الصفحة
-
-### ✅ P2: عرض مستندات بائعي المنتجات المعلقين (Completed)
-- **الملف**: `/app/frontend/src/components/admin/SellersTab.js`
-- **المشكلة**: لم تكن المستندات تظهر عند مراجعة طلبات البائعين المعلقة
-- **الحل**: إضافة قسم عرض المستندات للطلبات ذات حالة `pending`
-- **المستندات المعروضة**:
-  - صورة الهوية (`national_id`)
-  - السجل التجاري (`commercial_registration`)
-  - صورة المحل (`shop_photo`) - اختياري
-  - الشهادة الصحية (`health_certificate`) - اختياري
-- **الاختبار**: ✅ تم التحقق من الكود (لا يوجد بائعين معلقين حالياً)
-
-### ✅ P2: تحسين عرض مستندات السائقين المعلقين (Completed)
-- **الملف**: `/app/frontend/src/components/admin/DeliveryTab.js`
-- **التحسين**: إضافة `cursor-pointer` و `onClick` للصور لفتحها في تبويب جديد
-- **الاختبار**: ✅ تم التحقق من الكود (لا يوجد سائقين معلقين حالياً)
-
-### ⏸️ مشكلة استعادة موضع التمرير (Blocked)
-- **الحالة**: معلقة - تحتاج خطوات إعادة إنتاج من المستخدم
-- **الوصف**: الصفحات أحياناً تبدأ من المنتصف بدلاً من الأعلى
-
-### ✅ P0: إضافة أدوات التحكم للمدير (Completed) - 20 Mar 2026
-- **الوصف**: إضافة Backend APIs وتحسين Frontend لإدارة الطلبات والمنتجات
-
-#### Backend APIs الجديدة (admin.py):
-1. `POST /api/admin/orders/{id}/cancel` - إلغاء طلب مع إشعارات للعميل والبائع والسائق
-2. `POST /api/admin/orders/{id}/status` - تغيير حالة الطلب (confirmed, processing, ready, on_the_way, delivered)
-3. `POST /api/admin/orders/{id}/refund` - استرداد كامل المبلغ للعميل (يُضاف للمحفظة)
-4. `POST /api/admin/products/{id}/toggle-visibility` - إخفاء/إظهار المنتج
-5. `DELETE /api/admin/products/{id}` - حذف المنتج نهائياً (مع إزالته من المفضلات والسلات)
-
-#### تحسينات Frontend:
-- **OrdersTab.js**: فلاتر الحالة + modal تفاصيل الطلب + modal إلغاء + modal تغيير الحالة
-- **ProductsTab.js**: فلاتر (الكل/مخفي/مخزون منخفض) + قائمة إجراءات + modal تأكيد الحذف
-- **PriceReportsTab.js**: استبدال `window.confirm` بـ modals للتعليق/إلغاء التعليق
-- **ViolationsTab.js**: استبدال `window.confirm` بـ modals لتطبيق/إلغاء المخالفات
-
-- **الاختبار**: ✅ 100% (17/17 Backend tests + Frontend tests)
-- **تقرير الاختبار**: `/app/test_reports/iteration_102.json`
-
-### ✅ P0: استبدال window.confirm بـ modals (COMPLETED) - 20 Mar 2026
-- **الوصف**: تحسين تجربة المستخدم باستبدال `window.confirm` و `alert` بـ modals حديثة
-- **الحالة**: ✅ مكتمل - تم استبدال جميع الـ `window.confirm` و `alert` في كل ملفات admin
-
-#### جميع الملفات المُحسّنة ✅:
-- `SupportTicketsTab.js` - تذاكر الدعم
-- `FeaturedStoresTab.js` - المتاجر المميزة
-- `ChallengesTab.js` - التحديات
-- `DailyDealsTab.js` - صفقات اليوم
-- `CouponsTab.js` - الكوبونات
-- `BannersTab.js` - البانرات
-- `DriverReportsTab.js` - بلاغات السائقين
-- `CategoriesTab.js` - الفئات
-- `DeliverySettingsTab.js` - إعدادات التوصيل (30 alert + 1 confirm → toasts + modal)
-- `DeliveryBoxesTab.js` - صناديق التوصيل
-- `FoodOffersTab.js` - عروض الطعام
-- `SellersTab.js` - البائعين
-- `UsersTab.js` - المستخدمين
-- `DeliveryTab.js` - السائقين
-- `SupportTicketsAdmin.js` - إدارة التذاكر
-- `PriceReportsTab.js` - بلاغات الأسعار
-- `ViolationsTab.js` - المخالفات
-- `WithdrawalsTab.js` - السحوبات
-
----
-
-## Test Reports
-- `/app/test_reports/iteration_101.json` - اختبار التصفية ومستندات البائعين والسائقين (100% ✅)
-- `/app/test_reports/iteration_102.json` - اختبار APIs الطلبات والمنتجات للمدير (100% ✅)
-
----
-
-## Session Update: 22 March 2026 (Latest)
-
-### ✅ P0: إصلاح لوحة تحكم بائع المنتجات (Completed) - 22 Mar 2026
-- **المشكلة**: صفحة `/seller/dashboard` كانت تعطي أخطاء runtime بسبب:
-  - `fetchProducts()` غير موجودة (يجب أن تكون `fetchData()`)
-  - `WithdrawModal` غير معرّف
-  - `PrintLabelModal` غير معرّف
-- **الحل**:
-  - تصحيح `fetchProducts()` → `fetchData()`
-  - إضافة مكون `WithdrawModal` داخل الملف
-  - استبدال `PrintLabelModal` بـ `OrderLabelPrint` الموجود
-- **النتيجة**: صفحة لوحة تحكم بائع المنتجات تعمل بشكل كامل مع:
-  - قسم الطلبات في الأعلى
-  - شريط سفلي (المنتجات | المحفظة | الإحصائيات | الإعدادات)
-  - زر إضافة منتج
-  - قائمة المنتجات مع أزرار التعديل والحذف
-- **الملف المعدل**: `/app/frontend/src/pages/SellerPages.js`
-
-### ✅ P1: إزالة إعدادات التوصيل من صفحات البائعين (Completed) - 22 Mar 2026
-- **الوصف**: إعدادات التوصيل يجب أن تكون على مستوى المنصة فقط وليس البائع
-- **الحقول المُزالة من إعدادات بائع الطعام**:
-  - ❌ `minimum_order` (الحد الأدنى للطلب)
-  - ❌ `delivery_fee` (رسوم التوصيل)
-  - ❌ `free_delivery_minimum` (توصيل مجاني عند)
-- **الحقول المتبقية**:
-  - ✅ اسم المتجر
-  - ✅ الوصف
-  - ✅ وقت التوصيل (دقيقة)
-  - ✅ ساعات العمل
-- **الملف المعدل**: `/app/frontend/src/pages/FoodStoreDashboard.js`
-
-### قاعدة جديدة:
-| الإعداد | أين يكون؟ |
-|---------|-----------|
-| حد أدنى للطلبات | ❌ لا يوجد |
-| حد أدنى للشحن المجاني | ✅ إعداد المنصة (الأدمن فقط) |
-| رسوم التوصيل | ✅ إعداد المنصة (حسب المسافة) |
-
----
-
-## Upcoming Tasks
-- 🔵 P1: تفعيل منطق التحقق الفعلي من شام كاش في `payment_providers.py`
-
-## Future Tasks
-- التسوق عبر المحافظات
-- زر VoIP للاتصال بالسائق
-- تحسين عرض الأسعار (9.3K بدل 9,375)
-
----
-
-## Session Update: 22 March 2026 (Continued)
-
-### ✅ P1: إضافة واجهة إعادة تعيين كلمة المرور للأدمن (Completed)
-- **APIs المضافة**:
-  - `GET /api/auth/admin/user-auth-status/{phone}` - فحص حالة مصادقة مستخدم
-  - `POST /api/auth/admin/reset-user-password/{phone}` - إعادة تعيين كلمة المرور
-- **واجهة Frontend** في `UsersTab.js`:
-  - زر "إعادة تعيين كلمة المرور" في قائمة خيارات المستخدم
-  - Modal تأكيد مع عرض كلمة المرور الجديدة (test1234)
-- **الملفات المعدلة**:
-  - `/app/backend/routes/auth.py`
-  - `/app/frontend/src/components/admin/UsersTab.js`
-
-### ✅ تحويل "وقت التوصيل" إلى "وقت التحضير" للمطاعم (Completed)
-- **التغييرات**:
-  - تغيير النص من "وقت التوصيل (دقيقة)" → "وقت التحضير (دقيقة)"
-  - تغيير placeholder من 30 → 15 دقيقة
-  - إضافة نص توضيحي: "الوقت اللازم لتحضير الطلب قبل التوصيل"
-- **الملف المعدل**: `/app/frontend/src/pages/FoodStoreDashboard.js`
-
-### ✅ P2: Bank Card Placeholder (Completed)
-- **الوصف**: إضافة خيار "بطاقة بنكية" مع علامة "قريباً" (غير مفعّل)
-- **الملفات المعدلة**:
-  - `/app/frontend/src/pages/BuyerWalletPage.js` - شحن المحفظة
-  - `/app/frontend/src/pages/CheckoutPage.js` - إتمام الشراء
-  - `/app/frontend/src/pages/FoodCartPage.js` - سلة الطعام
-- **التصميم**:
-  - علامة "قريباً" زرقاء في زاوية الزر
-  - الزر معطل (disabled) - لا يمكن اختياره
-  - عند المحاولة: رسالة "الدفع بالبطاقة البنكية سيتوفر قريباً"
-
-### قاعدة بيانات المصادقة:
-- كلمات المرور مشفرة بـ bcrypt (تبدأ بـ $2)
-- عند إعادة تعيين كلمة المرور → كلمة مرور افتراضية: `test1234`
-- `force_password_change: true` لإجبار المستخدم على تغييرها
+## Critical Implementation Notes
+- Always include `Authorization: Bearer ${token}` in API calls
+- Use `getErrorMessage` from `/app/frontend/src/utils/errorHelpers.js` for error handling
+- Backend handles both `user_id` and `buyer_id` for compatibility
