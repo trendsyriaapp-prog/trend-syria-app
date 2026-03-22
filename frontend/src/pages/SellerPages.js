@@ -34,6 +34,15 @@ import StatDetailsModal from '../components/seller/StatDetailsModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// دالة مساعدة لاستخراج رسالة الخطأ من الـ API
+const getErrorMessage = (error, defaultMsg = "حدث خطأ") => {
+  const detail = error?.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map(d => d.msg || d).join(', ');
+  if (detail?.msg) return detail.msg;
+  return defaultMsg;
+};
+
 // مكون عرض أطباق الطعام
 const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
   const [showStatusMenu, setShowStatusMenu] = useState(null);
@@ -276,7 +285,7 @@ const WithdrawModal = ({ balance, onClose, onSuccess }) => {
       toast({ title: "تم الإرسال", description: "تم إرسال طلب السحب بنجاح" });
       onSuccess();
     } catch (error) {
-      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل إرسال الطلب", variant: "destructive" });
+      toast({ title: "خطأ", description: getErrorMessage(error, "فشل إرسال الطلب"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -450,7 +459,7 @@ const SellerDocumentsPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        description: getErrorMessage(error, "حدث خطأ"),
         variant: "destructive"
       });
     } finally {
@@ -814,7 +823,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        description: getErrorMessage(error, "حدث خطأ"),
         variant: "destructive"
       });
     } finally {
@@ -900,7 +909,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "فشل تحديث المنتج",
+        description: getErrorMessage(error, "فشل تحديث المنتج"),
         variant: "destructive"
       });
     } finally {
@@ -932,7 +941,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "فشل في تنفيذ الإجراء",
+        description: getErrorMessage(error, "فشل في تنفيذ الإجراء"),
         variant: "destructive"
       });
     }
@@ -980,7 +989,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "فشل في تغيير حالة الطبق",
+        description: getErrorMessage(error, "فشل في تغيير حالة الطبق"),
         variant: "destructive"
       });
     }
@@ -1011,7 +1020,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "فشل في تحديث الطلب",
+        description: getErrorMessage(error, "فشل في تحديث الطلب"),
         variant: "destructive"
       });
     }

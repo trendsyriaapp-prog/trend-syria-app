@@ -11,6 +11,7 @@ import CameraGuideModal from './CameraGuideModal';
 import ProductPreviewModal from './ProductPreviewModal';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { CATEGORIES } from '../../utils/constants';
+import { getErrorMessage } from '../../utils/errorHelpers';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -347,7 +348,7 @@ const AddProductModal = ({
     } catch (error) {
       toast({
         title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ أثناء الحفظ",
+        description: getErrorMessage(error, "حدث خطأ أثناء الحفظ"),
         variant: "destructive"
       });
       return;
