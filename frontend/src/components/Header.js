@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Search, User, Menu, X, Home, Grid3X3, 
   Bot, Package, LogOut, Settings, Store, Bell, Share2, ArrowRight,
-  Clock, Trash2, Mic, MicOff, Camera
+  Clock, Trash2, Mic, MicOff, Camera, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -343,15 +343,17 @@ const Header = () => {
               </button>
             )}
             
-            {/* المجيب الآلي */}
+            {/* المساعد الذكي */}
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('openChatbot'))}
-              className="p-1.5 hover:bg-orange-50 rounded-full transition-colors text-[#FF6B00]"
-              title="المجيب الآلي"
+              className="p-1.5 hover:bg-violet-50 rounded-full transition-colors text-violet-600 relative group"
+              title="المساعد الذكي"
               data-testid="chatbot-icon"
             >
-              <Bot size={18} />
+              <Sparkles size={18} />
+              {/* نبضة بنفسجية */}
+              <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-20"></span>
             </button>
             
             {/* الإشعارات */}

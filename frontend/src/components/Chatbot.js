@@ -400,28 +400,6 @@ const Chatbot = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Floating Button */}
-      {!isOpen && (
-        <motion.button
-          onClick={() => {
-            userOpenedRef.current = true;
-            setIsOpen(true);
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="fixed bottom-20 left-4 w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-700 rounded-full shadow-lg flex items-center justify-center text-white z-40 group"
-          data-testid="chatbot-floating-btn"
-        >
-          <Sparkles size={24} />
-          {/* Tooltip */}
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-            المساعد الذكي ⚡
-          </span>
-          {/* Pulse Effect */}
-          <span className="absolute inset-0 rounded-full bg-violet-500 animate-ping opacity-25"></span>
-        </motion.button>
-      )}
     </>
   );
 };
