@@ -374,121 +374,115 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
 
         {/* === أدوات التحرير === */}
         {(step === 'preview' || step === 'edit') && (
-          <div className="bg-gradient-to-t from-black via-black/90 to-transparent pt-8">
+          <div className="bg-gradient-to-t from-black/70 to-transparent pt-4">
             
             {/* زر إظهار/إخفاء الأدوات */}
             <button
               onClick={() => setShowTools(!showTools)}
-              className="mx-auto mb-2 flex items-center gap-1 px-4 py-1 bg-white/20 rounded-full text-white text-xs"
+              className="mx-auto mb-1 flex items-center gap-1 px-3 py-0.5 bg-white/30 backdrop-blur-sm rounded-full text-white text-[10px]"
             >
-              {showTools ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-              {showTools ? 'إخفاء الأدوات' : 'إظهار الأدوات'}
+              {showTools ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+              {showTools ? 'إخفاء' : 'أدوات'}
             </button>
 
             {showTools && step === 'edit' && (
-              <div className="px-4 space-y-3">
-                {/* تبويبات الأدوات */}
+              <div className="px-2 space-y-1">
+                {/* تبويبات الأدوات - أصغر */}
                 <div className="flex gap-1 justify-center">
                   <button
                     onClick={() => setActiveTab('colors')}
-                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
                       activeTab === 'colors' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <Palette size={12} />
                     الخلفية
                   </button>
                   <button
                     onClick={() => setActiveTab('shadows')}
-                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
                       activeTab === 'shadows' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <Sun size={12} />
                     الظلال
                   </button>
                   <button
                     onClick={() => setActiveTab('templates')}
-                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
                       activeTab === 'templates' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <Box size={12} />
                     القوالب
                   </button>
                   <button
                     onClick={() => setActiveTab('adjustments')}
-                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
                       activeTab === 'adjustments' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <SlidersHorizontal size={12} />
                     تعديل
                   </button>
                 </div>
 
-                {/* محتوى التبويب النشط */}
-                <div className="bg-black/40 rounded-xl p-3 max-h-40 overflow-y-auto">
+                {/* محتوى التبويب النشط - أصغر */}
+                <div className="bg-black/30 backdrop-blur-sm rounded-lg p-2 max-h-20 overflow-x-auto">
                   
-                  {/* ألوان الخلفية */}
+                  {/* ألوان الخلفية - صف أفقي */}
                   {activeTab === 'colors' && (
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="flex gap-2">
                       {BACKGROUND_COLORS.map(bg => (
                         <button
                           key={bg.id}
                           onClick={() => changeBackground(bg.id)}
                           disabled={processing}
-                          className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center ${
+                          className={`w-10 h-10 flex-shrink-0 rounded-lg border-2 transition-all flex items-center justify-center ${
                             selectedBackground === bg.id 
-                              ? 'border-[#FF6B00] ring-2 ring-[#FF6B00]/50 scale-105' 
+                              ? 'border-[#FF6B00] scale-110' 
                               : 'border-white/30'
                           } ${processing ? 'opacity-50' : ''}`}
                           style={{ backgroundColor: bg.color }}
-                          title={bg.name}
                         >
                           {selectedBackground === bg.id && (
-                            <Check size={18} className={bg.id === 'premium_dark' ? 'text-white' : 'text-[#FF6B00]'} />
+                            <Check size={14} className={bg.id === 'premium_dark' ? 'text-white' : 'text-[#FF6B00]'} />
                           )}
                         </button>
                       ))}
                     </div>
                   )}
 
-                  {/* الظلال */}
+                  {/* الظلال - صف أفقي */}
                   {activeTab === 'shadows' && (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="flex gap-2 justify-center">
                       {SHADOW_TYPES.map(shadow => (
                         <button
                           key={shadow.id}
                           onClick={() => changeShadow(shadow.id)}
                           disabled={processing}
-                          className={`aspect-square rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+                          className={`w-14 h-12 flex-shrink-0 rounded-lg border-2 transition-all flex flex-col items-center justify-center ${
                             selectedShadow === shadow.id 
-                              ? 'border-[#FF6B00] bg-[#FF6B00]/20 scale-105' 
+                              ? 'border-[#FF6B00] bg-[#FF6B00]/30' 
                               : 'border-white/30 bg-white/10'
                           } ${processing ? 'opacity-50' : ''}`}
-                          data-testid={`shadow-${shadow.id}`}
                         >
-                          <span className="text-lg font-bold text-white">{shadow.icon}</span>
-                          <span className="text-[10px] text-white font-bold">{shadow.name}</span>
+                          <span className="text-sm font-bold text-white">{shadow.icon}</span>
+                          <span className="text-[8px] text-white">{shadow.name}</span>
                         </button>
                       ))}
                     </div>
                   )}
 
-                  {/* القوالب */}
+                  {/* القوالب - صف أفقي */}
                   {activeTab === 'templates' && (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="flex gap-2">
                       {/* بدون قالب */}
                       <button
                         onClick={removeTemplate}
                         disabled={applyingTemplate || processing}
-                        className={`aspect-square rounded-lg border-2 flex flex-col items-center justify-center ${
+                        className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 flex flex-col items-center justify-center ${
                           !selectedTemplate ? 'border-[#FF6B00] bg-[#FF6B00]/20' : 'border-white/30 bg-white/10'
                         } disabled:opacity-50`}
                       >
-                        <X size={16} className="text-white/60" />
-                        <span className="text-[9px] text-white/80 mt-0.5">بدون</span>
+                        <X size={12} className="text-white/60" />
+                        <span className="text-[7px] text-white/80">بدون</span>
                       </button>
                       
                       {templates.slice(0, 11).map(template => (
@@ -496,81 +490,65 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
                           key={template.id}
                           onClick={() => applyTemplate(template)}
                           disabled={applyingTemplate || processing}
-                          className={`aspect-square rounded-lg border-2 overflow-hidden flex flex-col items-center justify-center ${
+                          className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 overflow-hidden flex flex-col items-center justify-center ${
                             selectedTemplate === template.id 
-                              ? 'border-[#FF6B00] ring-2 ring-[#FF6B00]/50' 
+                              ? 'border-[#FF6B00]' 
                               : 'border-white/30'
                           } disabled:opacity-50`}
                           style={{
                             background: `linear-gradient(135deg, ${template.colors.primary}, ${template.colors.secondary})`
                           }}
-                          title={template.name}
                         >
-                          <span className="text-lg">{template.icon}</span>
-                          <span className="text-[8px] text-white font-bold truncate px-0.5">{template.name}</span>
+                          <span className="text-sm">{template.icon}</span>
                         </button>
                       ))}
                     </div>
                   )}
 
-                  {/* التعديلات */}
+                  {/* التعديلات - مضغوطة */}
                   {activeTab === 'adjustments' && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {/* السطوع */}
-                      <div>
-                        <div className="flex justify-between text-xs text-white mb-1">
-                          <span>السطوع</span>
-                          <span>{adjustments.brightness}%</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-white w-12">السطوع</span>
                         <input
                           type="range"
                           min="50"
                           max="150"
                           value={adjustments.brightness}
                           onChange={(e) => setAdjustments(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
-                          className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
+                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
                         />
+                        <span className="text-[10px] text-white w-8">{adjustments.brightness}%</span>
                       </div>
                       
                       {/* التباين */}
-                      <div>
-                        <div className="flex justify-between text-xs text-white mb-1">
-                          <span>التباين</span>
-                          <span>{adjustments.contrast}%</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-white w-12">التباين</span>
                         <input
                           type="range"
                           min="50"
                           max="150"
                           value={adjustments.contrast}
                           onChange={(e) => setAdjustments(prev => ({ ...prev, contrast: parseInt(e.target.value) }))}
-                          className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
+                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
                         />
+                        <span className="text-[10px] text-white w-8">{adjustments.contrast}%</span>
                       </div>
                       
                       {/* التشبع */}
-                      <div>
-                        <div className="flex justify-between text-xs text-white mb-1">
-                          <span>التشبع</span>
-                          <span>{adjustments.saturation}%</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-white w-12">التشبع</span>
                         <input
                           type="range"
                           min="50"
                           max="150"
                           value={adjustments.saturation}
                           onChange={(e) => setAdjustments(prev => ({ ...prev, saturation: parseInt(e.target.value) }))}
-                          className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
+                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
                         />
+                        <span className="text-[10px] text-white w-8">{adjustments.saturation}%</span>
                       </div>
-                      
-                      {/* زر إعادة التعيين */}
-                      <button
-                        onClick={() => setAdjustments({ brightness: 100, contrast: 100, saturation: 100 })}
-                        className="w-full py-2 bg-white/10 text-white/70 rounded-lg text-xs hover:bg-white/20"
-                      >
-                        إعادة التعيين
-                      </button>
                     </div>
                   )}
                 </div>
@@ -578,30 +556,26 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
             )}
 
             {/* === أزرار التحكم === */}
-            <div className="p-4 space-y-3">
+            <div className="p-2 space-y-2">
               
               {/* وضع المعاينة - قبل إزالة الخلفية */}
               {step === 'preview' && (
                 <>
                   {/* اختيار لون الخلفية */}
                   {showTools && (
-                    <div className="bg-black/40 rounded-xl p-3">
-                      <p className="text-white text-xs font-bold mb-2 flex items-center gap-2">
-                        <Palette size={14} />
-                        اختر لون الخلفية قبل المعالجة
-                      </p>
-                      <div className="flex gap-2 overflow-x-auto pb-1">
+                    <div className="bg-black/30 backdrop-blur-sm rounded-lg p-2">
+                      <p className="text-white text-[10px] font-bold mb-1">اختر لون الخلفية:</p>
+                      <div className="flex gap-2 overflow-x-auto">
                         {BACKGROUND_COLORS.map(bg => (
                           <button
                             key={bg.id}
                             onClick={() => setSelectedBackground(bg.id)}
-                            className={`w-10 h-10 flex-shrink-0 rounded-full border-2 transition-all ${
+                            className={`w-8 h-8 flex-shrink-0 rounded-full border-2 ${
                               selectedBackground === bg.id 
                                 ? 'border-[#FF6B00] scale-110' 
                                 : 'border-white/30'
                             }`}
                             style={{ backgroundColor: bg.color }}
-                            title={bg.name}
                           />
                         ))}
                       </div>
@@ -611,27 +585,27 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
                   <button
                     onClick={() => processImage(selectedBackground)}
                     disabled={processing}
-                    className="w-full py-4 bg-[#FF6B00] text-white rounded-xl font-bold flex items-center justify-center gap-2 text-lg"
+                    className="w-full py-3 bg-[#FF6B00] text-white rounded-xl font-bold flex items-center justify-center gap-2"
                     data-testid="remove-bg-btn"
                   >
                     {processing ? (
-                      <><Loader2 size={22} className="animate-spin" /> جاري إزالة الخلفية...</>
+                      <><Loader2 size={18} className="animate-spin" /> جاري المعالجة...</>
                     ) : (
-                      <><Sparkles size={22} /> إزالة الخلفية</>
+                      <><Sparkles size={18} /> إزالة الخلفية</>
                     )}
                   </button>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button 
                       onClick={() => handleUseImage(capturedImage)} 
                       disabled={processing} 
-                      className="flex-1 py-3 bg-white/20 text-white rounded-xl font-bold"
+                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
                     >
-                      استخدم الأصلية
+                      الأصلية
                     </button>
                     <button 
                       onClick={retake} 
                       disabled={processing} 
-                      className="flex-1 py-3 bg-white/20 text-white rounded-xl font-bold"
+                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
                     >
                       إعادة
                     </button>
@@ -645,21 +619,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
                   <button
                     onClick={() => handleUseImage(processedImage)}
                     disabled={applyingTemplate || processing}
-                    className="w-full py-4 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 text-lg disabled:opacity-50"
+                    className="w-full py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                     data-testid="use-image-btn"
                   >
-                    <Check size={22} /> استخدام الصورة
+                    <Check size={18} /> استخدام الصورة
                   </button>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button 
                       onClick={() => handleUseImage(capturedImage)} 
-                      className="flex-1 py-3 bg-white/20 text-white rounded-xl font-bold"
+                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
                     >
                       الأصلية
                     </button>
                     <button 
                       onClick={retake} 
-                      className="flex-1 py-3 bg-white/20 text-white rounded-xl font-bold"
+                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
                     >
                       إعادة
                     </button>
