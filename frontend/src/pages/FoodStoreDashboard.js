@@ -150,6 +150,7 @@ const FoodStoreDashboard = () => {
   const [selectedProductForDeal, setSelectedProductForDeal] = useState(null);
   const [walletData, setWalletData] = useState({ balance: 0, pending: 0, total_earned: 0, transactions: [] });
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showStoreToggleConfirm, setShowStoreToggleConfirm] = useState(false);
   
   // مرجع لصوت الإشعار
   const audioRef = useRef(null);
@@ -444,7 +445,7 @@ const FoodStoreDashboard = () => {
               </div>
             </div>
             <button
-              onClick={() => toggleStoreStatus(!store.manual_close)}
+              onClick={() => setShowStoreToggleConfirm(true)}
               disabled={togglingStore}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                 store.manual_close 
@@ -694,6 +695,57 @@ const FoodStoreDashboard = () => {
               }}
               token={token}
             />
+          </div>
+        </div>
+      )}
+      
+      {/* Modal تأكيد إغلاق/فتح المتجر */}
+      {showStoreToggleConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowStoreToggleConfirm(false)}>
+          <div 
+            className="bg-white rounded-2xl p-6 w-full max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                store.manual_close ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {store.manual_close ? (
+                  <Store size={32} className="text-green-600" />
+                ) : (
+                  <X size={32} className="text-red-600" />
+                )}
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {store.manual_close ? 'فتح المتجر' : 'إغلاق المتجر'}
+              </h2>
+              <p className="text-sm text-gray-500 mt-2">
+                {store.manual_close 
+                  ? 'هل تريد فتح المتجر واستقبال الطلبات؟'
+                  : 'هل تريد إغلاق المتجر؟ لن تستقبل طلبات جديدة.'
+                }
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowStoreToggleConfirm(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={() => {
+                  toggleStoreStatus(!store.manual_close);
+                  setShowStoreToggleConfirm(false);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-white ${
+                  store.manual_close ? 'bg-green-500' : 'bg-red-500'
+                }`}
+              >
+                {store.manual_close ? 'نعم، افتح المتجر' : 'نعم، أغلق المتجر'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1446,7 +1498,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 type="number"
                 value={formData.original_price}
                 onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                placeholder="مثال: إذا السعر 80,000 والأصلي 100,000 = خصم 20%"
+                placeholder="ضع السعر القديم هنا لإظهار الخصم"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3"
               />
               {formData.original_price && formData.price && Number(formData.original_price) > Number(formData.price) && (
