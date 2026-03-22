@@ -1080,23 +1080,25 @@ const SellerDashboardPage = () => {
       {/* المحتوى الرئيسي */}
       <div className="max-w-4xl mx-auto px-4 py-4 pb-32">
         
-        {/* قسم الطلبات - دائماً في الأعلى */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <ShoppingBag size={20} className="text-[#FF6B00]" />
-            الطلبات
-            {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length} جديد
-              </span>
-            )}
-          </h2>
-          <SellerOrdersSection 
-            orders={orders} 
-            onSellerAction={handleSellerAction} 
-            onPrintLabel={setPrintLabelOrder} 
-          />
-        </div>
+        {/* قسم الطلبات - يظهر فقط في تبويب المنتجات */}
+        {activeTab === 'products' && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <ShoppingBag size={20} className="text-[#FF6B00]" />
+              الطلبات
+              {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length} جديد
+                </span>
+              )}
+            </h2>
+            <SellerOrdersSection 
+              orders={orders} 
+              onSellerAction={handleSellerAction} 
+              onPrintLabel={setPrintLabelOrder} 
+            />
+          </div>
+        )}
 
         {/* محتوى التبويب المختار */}
         {activeTab === 'products' && (

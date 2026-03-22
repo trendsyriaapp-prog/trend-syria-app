@@ -512,7 +512,7 @@ const FoodStoreDashboard = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => handleToggleAvailability(product)}
+                          onClick={() => handleToggleAvailability(product.id, product.is_available)}
                           className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}
                         >
                           {product.is_available ? <Eye size={16} /> : <EyeOff size={16} />}
