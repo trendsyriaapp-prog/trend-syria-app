@@ -43,12 +43,12 @@ const BuyerWalletPage = () => {
   // إعدادات الدفع
   const [paymentSettings, setPaymentSettings] = useState(null);
   
-  // الحدود
-  const MIN_TOPUP = 10000;
-  const MAX_TOPUP = 5000000;
+  // الحدود (بالعملة الجديدة - بعد إزالة صفرين)
+  const MIN_TOPUP = 100;      // 100 ل.س جديدة (= 10,000 قديمة)
+  const MAX_TOPUP = 50000;    // 50,000 ل.س جديدة (= 5,000,000 قديمة)
   
-  // مبالغ سريعة للشحن
-  const quickAmounts = [25000, 50000, 100000, 250000, 500000];
+  // مبالغ سريعة للشحن (بالعملة الجديدة)
+  const quickAmounts = [250, 500, 1000, 2500, 5000];
   
   // طرق الدفع
   const paymentMethods = [
@@ -369,7 +369,7 @@ const BuyerWalletPage = () => {
                       type="number"
                       value={topupAmount}
                       onChange={(e) => setTopupAmount(e.target.value)}
-                      placeholder="مثال: 100000"
+                    placeholder="مثال: 1000"
                       className="w-full p-3 border border-gray-300 rounded-xl text-lg"
                       min={MIN_TOPUP}
                       max={MAX_TOPUP}
