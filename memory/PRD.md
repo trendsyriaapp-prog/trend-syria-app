@@ -27,6 +27,38 @@
 
 ### Session: March 2026 (Latest - 22 Mar)
 
+#### 🆕 23. نظام التنسيق بين البائع والسائق (Completed ✅) - 22 Mar 2026
+- **الوصف**: نظام ذكي لتنسيق استلام طلبات الطعام بين البائعين والسائقين
+- **الميزات الجديدة**:
+  - **للبائع**:
+    - زر "طلب سائق" على الطلبات المؤكدة
+    - عرض حالة السائق (بانتظار قبول / قبول)
+    - إدخال وقت التحضير بعد قبول السائق
+    - عرض ETA السائق للمتجر
+  - **للسائق**:
+    - قسم "طلبات جديدة تنتظر قبولك" مميز
+    - معلومات الطلب (المتجر، العنوان، المسافة)
+    - أزرار قبول/رفض
+    - إشعار بموعد الذهاب للمتجر
+- **الـ APIs الجديدة** (food_orders.py):
+  - `POST /api/food/orders/store/orders/{order_id}/request-driver` - طلب سائق
+  - `POST /api/food/orders/driver/orders/{order_id}/accept` - قبول من السائق
+  - `POST /api/food/orders/driver/orders/{order_id}/reject` - رفض من السائق
+  - `POST /api/food/orders/store/orders/{order_id}/set-preparation-time` - تحديد وقت التحضير
+  - `GET /api/food/orders/store/orders/{order_id}/driver-status` - حالة السائق
+- **تحديث API الطلبات المتاحة**:
+  - `GET /api/food/orders/delivery/available` يُرجع الآن `driver_requested_orders` array
+- **حقول جديدة في food_orders**:
+  - `driver_requested` - هل طُلب سائق؟
+  - `driver_status` - حالة السائق (waiting_for_acceptance, driver_accepted)
+  - `driver_estimated_arrival_minutes` - وقت وصول السائق المتوقع
+  - `waiting_for_preparation_time` - هل ينتظر تحديد وقت التحضير؟
+  - `preparation_time_minutes` - وقت التحضير
+  - `expected_ready_at` - موعد جاهزية الطلب
+  - `pickup_code` - كود الاستلام
+- **إصلاحات إضافية**:
+  - إصلاح عرض `delivery_address` في 9 مكونات (كان object بدل string)
+
 #### 🆕 21. نظام الدفع الفعلي - شام كاش + بطاقات بنكية (Completed ✅) - 22 Mar 2026
 - **الوصف**: تجهيز البنية التحتية للدفع الفعلي عبر شام كاش وبطاقات Visa/Mastercard
 - **المكونات الجديدة**:
