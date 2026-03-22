@@ -3,13 +3,9 @@ import { motion } from 'framer-motion';
 import { Plus, X, Loader2, Upload, Camera, Info, AlertTriangle, Edit3, Eye, Copy, Sparkles, Lightbulb } from 'lucide-react';
 import axios from 'axios';
 import PhotoGuideModal from './PhotoGuideModal';
-import ImageBackgroundSelector from './ImageBackgroundSelector';
-import ProImageProcessor from './ProImageProcessor';
+import SimpleImageCapture from './SimpleImageCapture';
 import TemplateSelector from './TemplateSelector';
-import ImageEditorModal from './ImageEditorModal';
-import CameraGuideModal from './CameraGuideModal';
 import ProductPreviewModal from './ProductPreviewModal';
-import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { CATEGORIES } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/errorHelpers';
 
@@ -115,15 +111,11 @@ const AddProductModal = ({
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', price: '' });
   const [imageWarnings, setImageWarnings] = useState([]);
-  const [pendingImage, setPendingImage] = useState(null);
-  const [showImageProcessor, setShowImageProcessor] = useState(false);
-  const [showProProcessor, setShowProProcessor] = useState(false); // المعالج الاحترافي الجديد
-  const [showCameraGuide, setShowCameraGuide] = useState(false);
-  const [showImageEditor, setShowImageEditor] = useState(false);
-  const [editingImageIndex, setEditingImageIndex] = useState(null);
+  const [showImageCapture, setShowImageCapture] = useState(false);
+  const [imageCaptureMode, setImageCaptureMode] = useState('camera'); // 'camera' or 'gallery'
   const [showProductPreview, setShowProductPreview] = useState(false);
-  const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3); // الحد الأقصى من الإعدادات
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false); // قوالب 3D
+  const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   
   // اقتراح تصنيف جديد
   const [showSuggestCategory, setShowSuggestCategory] = useState(false);
@@ -227,26 +219,6 @@ const AddProductModal = ({
     } finally {
       setUploadingImage(false);
     }
-  };
-
-  const handleProcessedImage = (processedImageUrl) => {
-    setNewProduct(prev => ({
-      ...prev,
-      images: [...prev.images, processedImageUrl]
-    }));
-    setShowImageProcessor(false);
-    setShowProProcessor(false);
-    setPendingImage(null);
-    toast({
-      title: "تم إضافة الصورة",
-      description: "تمت معالجة الصورة بنجاح ✨"
-    });
-  };
-
-  const handleCancelImageProcess = () => {
-    setShowImageProcessor(false);
-    setShowProProcessor(false);
-    setPendingImage(null);
   };
 
   const handleVideoUpload = (e) => {
@@ -807,7 +779,10 @@ const AddProductModal = ({
                 <div className="flex gap-2 mb-2">
                   <button
                     type="button"
-                    onClick={() => setShowCameraGuide(true)}
+                    onClick={() => {
+                      setImageCaptureMode('camera');
+                      setShowImageCapture(true);
+                    }}
                     disabled={uploadingImage}
                     className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E55A00] transition-colors disabled:opacity-50"
                     data-testid="camera-capture-btn"
@@ -823,7 +798,10 @@ const AddProductModal = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => document.getElementById('product-images').click()}
+                    onClick={() => {
+                      setImageCaptureMode('gallery');
+                      setShowImageCapture(true);
+                    }}
                     disabled={uploadingImage}
                     className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
                     data-testid="gallery-upload-btn"
@@ -1013,69 +991,20 @@ const AddProductModal = ({
 
       <PhotoGuideModal isOpen={showPhotoGuide} onClose={() => setShowPhotoGuide(false)} />
       
-      <ImageBackgroundSelector
-        imageDataUrl={pendingImage}
-        onProcessed={handleProcessedImage}
-        onCancel={handleCancelImageProcess}
-        isOpen={showImageProcessor}
-      />
-      
-      {/* المعالج الاحترافي الجديد - مثل Trendyol */}
-      <ProImageProcessor
-        imageDataUrl={pendingImage}
-        onProcessed={handleProcessedImage}
-        onCancel={handleCancelImageProcess}
-        isOpen={showProProcessor}
-        isFoodSeller={isFoodSeller}
-        token={token}
-        onOpenTemplates={() => {
-          setShowProProcessor(false);
-          setShowTemplateSelector(true);
-        }}
-      />
-      
-      {/* قوالب 3D */}
-      <TemplateSelector
-        imageDataUrl={pendingImage}
-        onProcessed={handleProcessedImage}
-        onCancel={() => {
-          setShowTemplateSelector(false);
-          setPendingImage(null);
-        }}
-        isOpen={showTemplateSelector}
-        token={token}
-      />
-      
-      {/* كاميرا مع إطار توجيهي */}
-      <CameraGuideModal 
-        isOpen={showCameraGuide} 
-        onClose={() => setShowCameraGuide(false)}
-        onCapture={async (file, dataUrl) => {
-          // فتح المعالج الاحترافي بدلاً من إضافة الصورة مباشرة
-          setPendingImage(dataUrl);
-          setShowCameraGuide(false);
-          setShowProProcessor(true);
-        }}
-      />
-      
-      {/* محرر الصور */}
-      <ImageEditorModal
-        isOpen={showImageEditor}
-        onClose={() => {
-          setShowImageEditor(false);
-          setEditingImageIndex(null);
-        }}
-        imageUrl={editingImageIndex !== null ? newProduct.images[editingImageIndex] : null}
-        onSave={(file, dataUrl) => {
-          if (editingImageIndex !== null) {
-            const newImages = [...newProduct.images];
-            newImages[editingImageIndex] = dataUrl;
-            setNewProduct(prev => ({ ...prev, images: newImages }));
-            toast?.({
-              title: "تم الحفظ",
-              description: "تم حفظ التعديلات بنجاح"
-            });
-          }
+      {/* مكون التقاط الصور البسيط */}
+      <SimpleImageCapture
+        isOpen={showImageCapture}
+        onClose={() => setShowImageCapture(false)}
+        mode={imageCaptureMode}
+        onImageReady={(imageUrl) => {
+          setNewProduct(prev => ({
+            ...prev,
+            images: [...prev.images, imageUrl].slice(0, maxImagesPerProduct)
+          }));
+          toast?.({
+            title: "تم بنجاح ✨",
+            description: "تم إضافة الصورة"
+          });
         }}
       />
       
