@@ -131,6 +131,10 @@ async def login(request: Request, credentials: UserLogin):
     # 🔒 التحقق من كلمة المرور (يدعم bcrypt و SHA256 القديم)
     if not verify_password(credentials.password, user["password"]):
         record_failed_login(credentials.phone, client_ip)
+        # 📝 Log للتحقيق في مشاكل تسجيل الدخول
+        import logging
+        auth_logger = logging.getLogger("auth")
+        auth_logger.warning(f"Failed login for {credentials.phone} - password hash type: {'bcrypt' if user['password'].startswith('$2') else 'legacy'}")
         log_suspicious_activity(
             "failed_login",
             f"Failed login attempt for {credentials.phone}",
@@ -1289,3 +1293,59 @@ async def get_emergency_phone(user: dict = Depends(get_current_user)):
     """جلب رقم الطوارئ للمستخدم"""
     user_data = await db.users.find_one({"id": user["id"]}, {"_id": 0, "emergency_phone": 1})
     return {"emergency_phone": user_data.get("emergency_phone", "")}
+
+
+
+# === Admin: تشخيص مشاكل تسجيل الدخول ===
+@router.get("/admin/user-auth-status/{phone}")
+async def get_user_auth_status(phone: str, admin: dict = Depends(get_current_user)):
+    """التحقق من حالة مصادقة مستخدم - للأدمن فقط"""
+    if admin.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    user = await db.users.find_one({"phone": phone}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    password = user.get("password", "")
+    return {
+        "phone": phone,
+        "full_name": user.get("full_name", "N/A"),
+        "user_type": user.get("user_type", "N/A"),
+        "is_approved": user.get("is_approved", False),
+        "is_verified": user.get("is_verified", False),
+        "password_hash_type": "bcrypt" if password.startswith("$2") else "legacy_sha256" if len(password) == 64 else "unknown",
+        "password_hash_length": len(password),
+        "force_password_change": user.get("force_password_change", False),
+        "password_changed_at": user.get("password_changed_at", "N/A"),
+        "created_at": user.get("created_at", "N/A"),
+    }
+
+
+@router.post("/admin/reset-user-password/{phone}")
+async def admin_reset_user_password(phone: str, admin: dict = Depends(get_current_user)):
+    """إعادة تعيين كلمة مرور مستخدم للقيمة الافتراضية - للأدمن فقط"""
+    if admin.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    user = await db.users.find_one({"phone": phone}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # كلمة مرور افتراضية
+    default_password = "test1234"
+    new_hash = hash_password_secure(default_password)
+    
+    await db.users.update_one(
+        {"phone": phone},
+        {"$set": {
+            "password": new_hash,
+            "force_password_change": True,  # إجبار تغيير كلمة المرور
+            "password_changed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": f"تم إعادة تعيين كلمة مرور {phone} إلى: {default_password}",
+        "force_password_change": True
+    }
