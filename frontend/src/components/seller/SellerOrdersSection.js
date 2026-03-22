@@ -24,7 +24,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
       'confirmed': 'مؤكد',
       'preparing': 'قيد التحضير',
       'ready_for_pickup': 'جاهز للاستلام',
-      'shipped': 'تم الشحن',
+      'shipped': 'جاهز - بانتظار السائق',
       'out_for_delivery': 'في الطريق',
       'delivered': 'تم التسليم',
       'cancelled': 'ملغي'
@@ -39,9 +39,9 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
       'confirmed': 'bg-indigo-100 text-indigo-700',
       'preparing': 'bg-purple-100 text-purple-700',
       'ready_for_pickup': 'bg-orange-100 text-orange-700',
-      'shipped': 'bg-cyan-100 text-cyan-700',
+      'shipped': 'bg-green-100 text-green-700',
       'out_for_delivery': 'bg-teal-100 text-teal-700',
-      'delivered': 'bg-green-100 text-green-700',
+      'delivered': 'bg-emerald-100 text-emerald-700',
       'cancelled': 'bg-red-100 text-red-700'
     };
     return colors[status] || DELIVERY_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
@@ -177,7 +177,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                     className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600"
                     data-testid={`ship-order-${order.id}`}
                   >
-                    تم الشحن
+                    الطلب جاهز ✓
                   </button>
                 )}
                 {!canConfirm && !canPrepare && !canShip && orderStatus !== 'delivered' && orderStatus !== 'cancelled' && (

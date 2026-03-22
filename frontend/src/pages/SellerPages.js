@@ -807,7 +807,11 @@ const SellerDashboardPage = () => {
           axios.get(`${API}/orders/seller/my-orders`, { headers })
         ]);
         setProducts(productsRes.data || []);
-        setOrders(ordersRes.data || []);
+        // فلترة الطلبات: لا تظهر الطلبات بانتظار الدفع - فقط المدفوعة فما فوق
+        const paidOrders = (ordersRes.data || []).filter(order => 
+          order.status !== 'pending' && order.delivery_status !== 'pending'
+        );
+        setOrders(paidOrders);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
