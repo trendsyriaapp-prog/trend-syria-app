@@ -3927,3 +3927,429 @@ async def get_support_phone():
     """جلب رقم الدعم"""
     setting = await db.settings.find_one({"key": "support_phone"})
     return {"phone": setting["value"] if setting else "0911111111"}
+
+
+
+# ============== نظام إرسال الطلب للسائق بالتأكيد ==============
+
+class RequestDriverData(BaseModel):
+    """بيانات طلب سائق"""
+    pass
+
+class AcceptOrderData(BaseModel):
+    """بيانات قبول الطلب من السائق"""
+    pass
+
+class SetPreparationTimeData(BaseModel):
+    """بيانات تحديد وقت التحضير"""
+    preparation_time_minutes: int
+
+
+@router.post("/store/orders/{order_id}/request-driver")
+async def request_driver_for_order(
+    order_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    البائع يطلب سائق للطلب
+    - يُرسل إشعار لجميع السائقين المتاحين
+    - السائق يمكنه قبول أو رفض
+    """
+    if user["user_type"] not in ["food_seller", "admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # جلب المتجر
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    # جلب الطلب
+    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("status") not in ["pending", "confirmed"]:
+        raise HTTPException(status_code=400, detail="لا يمكن طلب سائق لهذا الطلب")
+    
+    if order.get("driver_requested"):
+        raise HTTPException(status_code=400, detail="تم طلب سائق مسبقاً لهذا الطلب")
+    
+    now = datetime.now(timezone.utc)
+    
+    # جلب السائقين المتاحين
+    store_lat = store.get("latitude") or store.get("location", {}).get("lat", 33.5138)
+    store_lon = store.get("longitude") or store.get("location", {}).get("lng", 36.2765)
+    
+    # جلب السائقين المتصلين
+    five_min_ago = (now - timedelta(minutes=5)).isoformat()
+    driver_locations = await db.driver_locations.find({
+        "updated_at": {"$gte": five_min_ago},
+        "is_online": True
+    }).to_list(50)
+    
+    if not driver_locations:
+        # لا يوجد سائقين متصلين - تحديث الطلب وإخبار البائع
+        await db.food_orders.update_one(
+            {"id": order_id},
+            {"$set": {
+                "driver_requested": True,
+                "driver_requested_at": now.isoformat(),
+                "driver_status": "waiting_for_driver",
+                "updated_at": now.isoformat()
+            }}
+        )
+        
+        return {
+            "success": True,
+            "message": "تم إرسال طلب السائق",
+            "drivers_notified": 0,
+            "warning": "⚠️ لا يوجد سائقين متصلين حالياً. سيتم إشعارهم عند اتصالهم."
+        }
+    
+    # حساب المسافة لكل سائق
+    drivers_with_distance = []
+    for loc in driver_locations:
+        driver_lat = loc.get("latitude", 0)
+        driver_lon = loc.get("longitude", 0)
+        distance = calculate_distance_km(store_lat, store_lon, driver_lat, driver_lon)
+        
+        drivers_with_distance.append({
+            "driver_id": loc["driver_id"],
+            "distance_km": round(distance, 2),
+            "estimated_arrival_minutes": max(3, int(distance * 2))  # 2 دقيقة لكل كم، حد أدنى 3 دقائق
+        })
+    
+    # ترتيب حسب المسافة
+    drivers_with_distance.sort(key=lambda x: x["distance_km"])
+    nearest_driver = drivers_with_distance[0] if drivers_with_distance else None
+    
+    # تحديث الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "driver_requested": True,
+            "driver_requested_at": now.isoformat(),
+            "driver_status": "waiting_for_acceptance",
+            "available_drivers": drivers_with_distance,
+            "nearest_driver_distance_km": nearest_driver["distance_km"] if nearest_driver else None,
+            "updated_at": now.isoformat()
+        }}
+    )
+    
+    # إرسال إشعارات للسائقين
+    for driver_info in drivers_with_distance:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": driver_info["driver_id"],
+            "title": "🚗 طلب توصيل جديد!",
+            "message": f"طلب من {store.get('name')} - على بُعد {driver_info['distance_km']} كم",
+            "type": "new_delivery_request",
+            "order_id": order_id,
+            "order_type": "food",
+            "store_name": store.get("name"),
+            "distance_km": driver_info["distance_km"],
+            "is_read": False,
+            "requires_action": True,
+            "created_at": now.isoformat()
+        })
+    
+    return {
+        "success": True,
+        "message": "تم إرسال الطلب للسائقين",
+        "drivers_notified": len(drivers_with_distance),
+        "nearest_driver": nearest_driver
+    }
+
+
+@router.post("/driver/orders/{order_id}/accept")
+async def driver_accept_order(
+    order_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    السائق يقبل الطلب
+    - يُحسب وقت وصول السائق للمتجر
+    - يُرسل إشعار للبائع مع وقت الوصول المتوقع
+    """
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # جلب الطلب
+    order = await db.food_orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order.get("driver_id"):
+        raise HTTPException(status_code=400, detail="الطلب مُعيَّن لسائق آخر بالفعل")
+    
+    if order.get("driver_status") not in ["waiting_for_acceptance", "waiting_for_driver"]:
+        raise HTTPException(status_code=400, detail="لا يمكن قبول هذا الطلب")
+    
+    now = datetime.now(timezone.utc)
+    
+    # جلب موقع السائق
+    driver_location = await db.driver_locations.find_one({"driver_id": user["id"]})
+    driver_lat = driver_location.get("latitude", 33.52) if driver_location else 33.52
+    driver_lon = driver_location.get("longitude", 36.28) if driver_location else 36.28
+    
+    # جلب موقع المتجر
+    store = await db.food_stores.find_one({"id": order["store_id"]})
+    store_lat = store.get("latitude") or store.get("location", {}).get("lat", 33.5138)
+    store_lon = store.get("longitude") or store.get("location", {}).get("lng", 36.2765)
+    
+    # حساب المسافة والوقت المتوقع
+    distance_km = calculate_distance_km(driver_lat, driver_lon, store_lat, store_lon)
+    estimated_arrival_minutes = max(3, int(distance_km * 2))  # 2 دقيقة لكل كم
+    estimated_arrival_at = now + timedelta(minutes=estimated_arrival_minutes)
+    
+    # تحديث الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "driver_id": user["id"],
+            "driver_name": user.get("full_name", "السائق"),
+            "driver_phone": user.get("phone", ""),
+            "driver_status": "driver_accepted",
+            "driver_accepted_at": now.isoformat(),
+            "driver_distance_km": round(distance_km, 2),
+            "driver_estimated_arrival_minutes": estimated_arrival_minutes,
+            "driver_estimated_arrival_at": estimated_arrival_at.isoformat(),
+            "waiting_for_preparation_time": True,  # ينتظر البائع لتحديد وقت التحضير
+            "updated_at": now.isoformat()
+        },
+        "$push": {
+            "status_history": {
+                "status": "driver_accepted",
+                "timestamp": now.isoformat(),
+                "note": f"السائق {user.get('full_name')} قبل الطلب - سيصل خلال {estimated_arrival_minutes} دقيقة",
+                "driver_id": user["id"]
+            }
+        }}
+    )
+    
+    # إشعار للبائع
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": store.get("owner_id"),
+        "title": "✅ السائق قبل الطلب!",
+        "message": f"السائق {user.get('full_name')} قبل الطلب #{order['order_number']} - سيصل خلال {estimated_arrival_minutes} دقيقة",
+        "type": "driver_accepted_order",
+        "order_id": order_id,
+        "driver_name": user.get("full_name"),
+        "driver_phone": user.get("phone"),
+        "driver_distance_km": round(distance_km, 2),
+        "driver_estimated_arrival_minutes": estimated_arrival_minutes,
+        "requires_action": True,
+        "action_type": "set_preparation_time",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    # إلغاء الإشعارات للسائقين الآخرين
+    await db.notifications.update_many(
+        {
+            "order_id": order_id,
+            "type": "new_delivery_request",
+            "user_id": {"$ne": user["id"]}
+        },
+        {"$set": {
+            "is_cancelled": True,
+            "cancelled_reason": "تم قبول الطلب من سائق آخر"
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": "تم قبول الطلب بنجاح",
+        "order_number": order["order_number"],
+        "store_name": store.get("name"),
+        "store_address": store.get("address"),
+        "store_location": {"lat": store_lat, "lng": store_lon},
+        "distance_km": round(distance_km, 2),
+        "estimated_arrival_minutes": estimated_arrival_minutes,
+        "waiting_for_preparation_time": True,
+        "message_for_driver": "انتظر البائع ليحدد وقت التحضير"
+    }
+
+
+@router.post("/driver/orders/{order_id}/reject")
+async def driver_reject_order(
+    order_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """السائق يرفض الطلب"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # تحديث إشعار السائق فقط
+    await db.notifications.update_one(
+        {
+            "order_id": order_id,
+            "user_id": user["id"],
+            "type": "new_delivery_request"
+        },
+        {"$set": {
+            "is_rejected": True,
+            "rejected_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "تم رفض الطلب"}
+
+
+@router.post("/store/orders/{order_id}/set-preparation-time")
+async def set_order_preparation_time(
+    order_id: str,
+    data: SetPreparationTimeData,
+    user: dict = Depends(get_current_user)
+):
+    """
+    البائع يحدد وقت تحضير الطلب بعد قبول السائق
+    - يتم إشعار السائق بوقت جاهزية الطلب
+    """
+    if user["user_type"] not in ["food_seller", "admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # جلب المتجر
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    # جلب الطلب
+    order = await db.food_orders.find_one({"id": order_id, "store_id": store["id"]})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if not order.get("driver_id"):
+        raise HTTPException(status_code=400, detail="لم يتم تعيين سائق بعد")
+    
+    if not order.get("waiting_for_preparation_time"):
+        raise HTTPException(status_code=400, detail="تم تحديد وقت التحضير مسبقاً")
+    
+    now = datetime.now(timezone.utc)
+    prep_time = data.preparation_time_minutes
+    expected_ready_at = now + timedelta(minutes=prep_time)
+    
+    # توليد كود الاستلام
+    import random
+    pickup_code = str(random.randint(1000, 9999))
+    
+    # تحديث الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {"$set": {
+            "status": "preparing",
+            "status_label": "جاري التحضير",
+            "preparation_started_at": now.isoformat(),
+            "preparation_time_minutes": prep_time,
+            "expected_ready_at": expected_ready_at.isoformat(),
+            "waiting_for_preparation_time": False,
+            "pickup_code": pickup_code,
+            "pickup_code_verified": False,
+            "updated_at": now.isoformat()
+        },
+        "$push": {
+            "status_history": {
+                "status": "preparing",
+                "timestamp": now.isoformat(),
+                "note": f"بدأ التحضير - الطلب جاهز خلال {prep_time} دقيقة",
+                "updated_by": user["id"]
+            }
+        }}
+    )
+    
+    # إشعار السائق بوقت الجاهزية
+    driver_estimated_arrival = order.get("driver_estimated_arrival_minutes", 5)
+    
+    # حساب الفرق - متى يجب أن يذهب السائق؟
+    if prep_time > driver_estimated_arrival:
+        # الطلب يحتاج وقت أكثر من وصول السائق
+        wait_minutes = prep_time - driver_estimated_arrival
+        driver_message = f"الطلب جاهز خلال {prep_time} دقيقة. اذهب للمتجر بعد {wait_minutes} دقيقة"
+        go_to_store_at = now + timedelta(minutes=wait_minutes)
+    else:
+        # السائق يحتاج للذهاب الآن
+        driver_message = f"الطلب جاهز خلال {prep_time} دقيقة. اذهب للمتجر الآن!"
+        go_to_store_at = now
+    
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["driver_id"],
+        "title": "⏱️ وقت تحضير الطلب",
+        "message": driver_message,
+        "type": "preparation_time_set",
+        "order_id": order_id,
+        "order_number": order["order_number"],
+        "preparation_time_minutes": prep_time,
+        "expected_ready_at": expected_ready_at.isoformat(),
+        "go_to_store_at": go_to_store_at.isoformat(),
+        "store_name": store.get("name"),
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    # تحديث موقع السائق بمعلومات الطلب
+    await db.driver_locations.update_one(
+        {"driver_id": order["driver_id"]},
+        {"$set": {
+            "current_order_id": order_id,
+            "go_to_store_at": go_to_store_at.isoformat(),
+            "order_ready_at": expected_ready_at.isoformat()
+        }}
+    )
+    
+    # إشعار العميل
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": order["customer_id"],
+        "title": "🍳 جاري تحضير طلبك",
+        "message": f"طلبك #{order['order_number']} قيد التحضير - جاهز خلال {prep_time} دقيقة",
+        "type": "order_preparing",
+        "is_read": False,
+        "created_at": now.isoformat()
+    })
+    
+    return {
+        "success": True,
+        "message": "تم تحديد وقت التحضير وإبلاغ السائق",
+        "preparation_time_minutes": prep_time,
+        "expected_ready_at": expected_ready_at.isoformat(),
+        "pickup_code": pickup_code,
+        "driver_notified": True,
+        "driver_go_time": go_to_store_at.isoformat()
+    }
+
+
+@router.get("/store/orders/{order_id}/driver-status")
+async def get_order_driver_status(
+    order_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """جلب حالة السائق للطلب"""
+    if user["user_type"] not in ["food_seller", "admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    store = await db.food_stores.find_one({"owner_id": user["id"]})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    order = await db.food_orders.find_one(
+        {"id": order_id, "store_id": store["id"]},
+        {"_id": 0}
+    )
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    return {
+        "order_id": order_id,
+        "driver_requested": order.get("driver_requested", False),
+        "driver_status": order.get("driver_status"),
+        "driver_id": order.get("driver_id"),
+        "driver_name": order.get("driver_name"),
+        "driver_phone": order.get("driver_phone"),
+        "driver_distance_km": order.get("driver_distance_km"),
+        "driver_estimated_arrival_minutes": order.get("driver_estimated_arrival_minutes"),
+        "waiting_for_preparation_time": order.get("waiting_for_preparation_time", False),
+        "preparation_time_minutes": order.get("preparation_time_minutes"),
+        "expected_ready_at": order.get("expected_ready_at")
+    }
