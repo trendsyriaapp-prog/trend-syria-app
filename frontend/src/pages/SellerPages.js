@@ -256,7 +256,7 @@ const FoodOrdersSection = ({ orders, onStatusChange }) => {
 };
 
 // WithdrawModal - مكون طلب السحب
-const WithdrawModal = ({ balance, onClose, onSuccess }) => {
+const WithdrawModal = ({ balance, onClose, onSuccess, token }) => {
   const { toast } = useToast();
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [shamcashPhone, setShamcashPhone] = useState('');
@@ -281,6 +281,8 @@ const WithdrawModal = ({ balance, onClose, onSuccess }) => {
       await axios.post(`${API}/wallet/withdraw`, {
         amount,
         shamcash_phone: shamcashPhone
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الإرسال", description: "تم إرسال طلب السحب بنجاح" });
       onSuccess();
@@ -355,7 +357,7 @@ const WithdrawModal = ({ balance, onClose, onSuccess }) => {
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
   const navigate = useNavigate();
-  const { user, fetchUser } = useAuth();
+  const { user, fetchUser, token } = useAuth();
   const { toast } = useToast();
 
   const [businessName, setBusinessName] = useState('');
@@ -393,7 +395,9 @@ const SellerDocumentsPage = () => {
 
   const checkStatus = async () => {
     try {
-      const res = await axios.get(`${API}/seller/documents/status`);
+      const res = await axios.get(`${API}/seller/documents/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setStatus(res.data.status);
       if (res.data.business_name) {
         setBusinessName(res.data.business_name);
@@ -449,6 +453,8 @@ const SellerDocumentsPage = () => {
         commercial_registration: commercialReg,
         shop_photo: shopPhoto,
         health_certificate: healthCert
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast({
@@ -754,7 +760,9 @@ const SellerDashboardPage = () => {
   const fetchCommissionInfo = async () => {
     try {
       const endpoint = isFoodSeller ? '/food/my-store/commission' : '/orders/seller/commission';
-      const res = await axios.get(`${API}${endpoint}`);
+      const res = await axios.get(`${API}${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCommissionInfo(res.data);
     } catch (error) {
       console.log('Commission info not available');
@@ -763,7 +771,9 @@ const SellerDashboardPage = () => {
 
   const fetchWallet = async () => {
     try {
-      const res = await axios.get(`${API}/wallet/balance`);
+      const res = await axios.get(`${API}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setWalletBalance(res.data.balance || 0);
       setPendingBalance(res.data.pending_balance || 0);
       setTotalEarned(res.data.total_earned || 0);
@@ -776,22 +786,24 @@ const SellerDashboardPage = () => {
 
   const fetchData = async () => {
     try {
+      const headers = { Authorization: `Bearer ${token}` };
+      
       if (isFoodSeller) {
         // بائع طعام - جلب الأطباق وطلبات الطعام
         const [menuRes, foodOrdersRes] = await Promise.all([
-          axios.get(`${API}/food/my-items`),
-          axios.get(`${API}/food/orders/seller`)
+          axios.get(`${API}/food/my-items`, { headers }),
+          axios.get(`${API}/food/orders/seller`, { headers })
         ]);
         setFoodItems(menuRes.data || []);
         setFoodOrders(foodOrdersRes.data || []);
       } else {
         // بائع منتجات - جلب المنتجات والطلبات
         const [productsRes, ordersRes] = await Promise.all([
-          axios.get(`${API}/seller/my-products`),
-          axios.get(`${API}/orders`)
+          axios.get(`${API}/seller/my-products`, { headers }),
+          axios.get(`${API}/orders/seller/my-orders`, { headers })
         ]);
-        setProducts(productsRes.data);
-        setOrders(ordersRes.data);
+        setProducts(productsRes.data || []);
+        setOrders(ordersRes.data || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -803,16 +815,18 @@ const SellerDashboardPage = () => {
   const handleAddProduct = async (productData) => {
     setSaving(true);
     try {
+      const headers = { Authorization: `Bearer ${token}` };
+      
       if (isFoodSeller) {
         // إضافة طبق جديد
-        await axios.post(`${API}/food/items`, productData);
+        await axios.post(`${API}/food/items`, productData, { headers });
         toast({
           title: "تم الإضافة",
           description: "تمت إضافة الطبق بنجاح"
         });
       } else {
         // إضافة منتج جديد
-        await axios.post(`${API}/products`, productData);
+        await axios.post(`${API}/products`, productData, { headers });
         toast({
           title: "تم الإضافة",
           description: "تمت إضافة المنتج بنجاح"
@@ -836,10 +850,12 @@ const SellerDashboardPage = () => {
     if (!window.confirm(`هل تريد حذف هذا ${itemName}؟`)) return;
 
     try {
+      const headers = { Authorization: `Bearer ${token}` };
+      
       if (isFoodSeller) {
-        await axios.delete(`${API}/food/items/${productId}`);
+        await axios.delete(`${API}/food/items/${productId}`, { headers });
       } else {
-        await axios.delete(`${API}/products/${productId}`);
+        await axios.delete(`${API}/products/${productId}`, { headers });
       }
       toast({
         title: "تم الحذف",
@@ -849,7 +865,7 @@ const SellerDashboardPage = () => {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: `فشل حذف ${itemName}`,
+        description: getErrorMessage(error, `فشل حذف ${itemName}`),
         variant: "destructive"
       });
     }
@@ -897,6 +913,8 @@ const SellerDashboardPage = () => {
       await axios.put(`${API}/products/${editingProduct.id}`, {
         price: parseFloat(editPrice),
         stock: parseInt(editStock)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast({
@@ -1007,7 +1025,9 @@ const SellerDashboardPage = () => {
 
   const handleFoodOrderStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`${API}/food-orders/${orderId}/status`, { status: newStatus });
+      await axios.put(`${API}/food-orders/${orderId}/status`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       const statusMessages = {
         'accepted': 'تم قبول الطلب',
@@ -1424,6 +1444,7 @@ const SellerDashboardPage = () => {
       {showWithdrawModal && (
         <WithdrawModal
           balance={walletBalance}
+          token={token}
           onClose={() => setShowWithdrawModal(false)}
           onSuccess={() => {
             setShowWithdrawModal(false);

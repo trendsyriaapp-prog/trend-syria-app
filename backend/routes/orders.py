@@ -500,6 +500,27 @@ async def update_delivery_note(order_id: str, note: CustomerNoteUpdate, user: di
 
 # ============== Seller Order Management ==============
 
+@router.get("/orders/seller/my-orders")
+async def get_seller_orders(user: dict = Depends(get_current_user)):
+    """جلب جميع طلبات البائع"""
+    if user["user_type"] != "seller":
+        raise HTTPException(status_code=403, detail="للبائعين فقط")
+    
+    seller_id = user["id"]
+    
+    # البحث عن الطلبات حيث seller_id مطابق أو في items
+    orders = await db.orders.find(
+        {
+            "$or": [
+                {"seller_id": seller_id},
+                {"items.seller_id": seller_id}
+            ]
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return orders
+
 @router.post("/orders/{order_id}/seller/confirm")
 async def seller_confirm_order(order_id: str, user: dict = Depends(get_current_user)):
     """البائع يؤكد استلام الطلب"""
