@@ -27,7 +27,25 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ## What's Been Implemented
 
-### ✅ COMPLETED (March 22, 2026)
+### ✅ COMPLETED (March 22, 2026 - Latest Session)
+
+#### Product Image Capture & Editing Component (SimpleImageCapture.js)
+- **Complete Rewrite**: Replaced old complex multi-modal system with single, streamlined component
+- **Features Implemented**:
+  - Camera capture with front/back switching
+  - Gallery upload support
+  - 10 background color options (white, light_gray, soft_blue, soft_pink, soft_gold, elegant_gray, premium_dark, fashion_beige, tech_silver, nature_green)
+  - Background color picker with visual preview
+  - 12 pre-built 3D templates with icons and gradient colors
+  - Image adjustment sliders (brightness, contrast, saturation)
+  - Background removal via Remove.bg API or local rembg fallback
+  - Image quality improvement with auto_color_correct and sharpening
+- **Key Fixes**:
+  - Background color now applies to entire image canvas (not just border)
+  - 3D templates display with template.icon and gradient colors (not preview_url)
+  - Enabled auto_color_correct=true and sharpen=true for better quality
+  - Fixed ESLint hook naming issue (useImage → handleUseImage)
+- **Files Modified**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
 
 #### Platform Wallet for Admin
 - New collection `platform_wallet` to store platform earnings
@@ -76,6 +94,10 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### P1 - High Priority
 - [ ] Live payment verification for Sham Cash (waiting for account details)
+- [ ] Delete old unused image components after confirming SimpleImageCapture is stable:
+  - `/app/frontend/src/components/seller/CameraGuideModal.js`
+  - `/app/frontend/src/components/seller/ImageEditorModal.js`
+  - `/app/frontend/src/components/seller/ProImageProcessor.js`
 
 ### P2 - Medium Priority
 - [ ] Cross-Governorate Shopping
@@ -94,6 +116,9 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 - `POST /api/store/orders/{order_id}/set-preparation-time` - Set prep time
 - `POST /api/orders/{order_id}/seller/{action}` - Order status actions
 - `PUT /api/products/{product_id}` - Update product
+- `POST /api/image/process-pro` - Professional image processing with background removal
+- `GET /api/templates/list` - Get available 3D templates
+- `POST /api/templates/apply-free` - Apply free 3D template to image
 
 ## Key Database Schema
 - **food_orders**: `driver_request_status`, `driver_accepted_at`, `accepted_by_driver_id`, `seller_prep_time_minutes`, `estimated_ready_at`
