@@ -19,6 +19,94 @@ import SellerAnalytics from '../components/seller/SellerAnalytics';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// مكون نموذج طلب السحب
+const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
+  const { toast } = useToast();
+  const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const minWithdrawal = 50000;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const withdrawAmount = parseInt(amount);
+    
+    if (withdrawAmount < minWithdrawal) {
+      toast({ title: "خطأ", description: `الحد الأدنى للسحب ${minWithdrawal.toLocaleString()} ل.س`, variant: "destructive" });
+      return;
+    }
+    if (withdrawAmount > balance) {
+      toast({ title: "خطأ", description: "المبلغ أكبر من الرصيد المتاح", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/wallet/withdraw`, {
+        amount: withdrawAmount,
+        shamcash_phone: phone
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الإرسال", description: "تم إرسال طلب السحب بنجاح" });
+      onSuccess();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل إرسال الطلب", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm text-gray-600 mb-1">المبلغ (ل.س)</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="مثال: 100000"
+          className="w-full p-3 border border-gray-300 rounded-xl text-lg"
+          required
+          min={minWithdrawal}
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          الحد الأدنى: {minWithdrawal.toLocaleString()} ل.س | المتاح: {balance.toLocaleString()} ل.س
+        </p>
+      </div>
+      
+      <div>
+        <label className="block text-sm text-gray-600 mb-1">رقم شام كاش</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="09XXXXXXXX"
+          className="w-full p-3 border border-gray-300 rounded-xl"
+          required
+        />
+      </div>
+      
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl disabled:opacity-50"
+        >
+          {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl"
+        >
+          إلغاء
+        </button>
+      </div>
+    </form>
+  );
+};
+
 const FoodStoreDashboard = () => {
   const navigate = useNavigate();
   const { user, token, logout, loading: authLoading } = useAuth();
@@ -60,6 +148,8 @@ const FoodStoreDashboard = () => {
   const [closeReason, setCloseReason] = useState('');
   const [showDailyDealModal, setShowDailyDealModal] = useState(false);
   const [selectedProductForDeal, setSelectedProductForDeal] = useState(null);
+  const [walletData, setWalletData] = useState({ balance: 0, pending: 0, total_earned: 0, transactions: [] });
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   
   // مرجع لصوت الإشعار
   const audioRef = useRef(null);
@@ -141,6 +231,24 @@ const FoodStoreDashboard = () => {
     }
   };
 
+  // جلب بيانات المحفظة
+  const fetchWalletData = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${API}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWalletData({
+        balance: res.data.balance || 0,
+        pending: res.data.pending_balance || 0,
+        total_earned: res.data.total_earned || 0,
+        transactions: res.data.transactions || []
+      });
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && token) {
       fetchStoreData();
@@ -178,6 +286,9 @@ const FoodStoreDashboard = () => {
       } catch (e) {
         console.log('Commission info not available');
       }
+      
+      // جلب بيانات المحفظة
+      await fetchWalletData();
     } catch (error) {
       if (error.response?.status === 404) {
         // No store found
@@ -350,14 +461,16 @@ const FoodStoreDashboard = () => {
       {/* المحتوى الرئيسي - صفحة واحدة */}
       <div className="max-w-4xl mx-auto px-4 py-4 pb-32">
         
-        {/* قسم الطلبات - دائماً في الأعلى */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <ShoppingBag size={20} className="text-green-600" />
-            الطلبات
-          </h2>
-          <StoreOrdersTab token={token} />
-        </div>
+        {/* قسم الطلبات - يظهر فقط في القائمة */}
+        {activeTab === 'menu' && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <ShoppingBag size={20} className="text-green-600" />
+              الطلبات
+            </h2>
+            <StoreOrdersTab token={token} />
+          </div>
+        )}
 
         {/* محتوى التبويب المختار */}
         {activeTab === 'menu' && (
@@ -425,22 +538,76 @@ const FoodStoreDashboard = () => {
         )}
 
         {activeTab === 'wallet' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-              <Wallet size={18} className="text-green-600" />
-              المحفظة
-            </h3>
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
-              <p className="text-white/80 text-sm">رصيد المحفظة</p>
-              <p className="text-2xl font-bold">0 ل.س</p>
+          <div className="space-y-4">
+            {/* بطاقات الرصيد */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+                <p className="text-white/80 text-xs">رصيد المحفظة</p>
+                <p className="text-2xl font-bold">{walletData.balance?.toLocaleString() || 0} ل.س</p>
+              </div>
+              <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-xl p-4 text-white">
+                <p className="text-white/80 text-xs">أرباح معلقة</p>
+                <p className="text-2xl font-bold">{walletData.pending?.toLocaleString() || 0} ل.س</p>
+              </div>
             </div>
+            
+            {/* إجمالي الأرباح */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500">إجمالي الأرباح</p>
+                  <p className="text-xl font-bold text-gray-900">{walletData.total_earned?.toLocaleString() || 0} ل.س</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <TrendingUp size={24} className="text-green-600" />
+                </div>
+              </div>
+            </div>
+            
+            {/* زر طلب سحب */}
             <button
-              onClick={() => navigate('/seller/dashboard?tab=wallet')}
-              className="w-full py-3 bg-green-100 text-green-700 rounded-xl font-bold flex items-center justify-center gap-2"
+              onClick={() => setShowWithdrawModal(true)}
+              disabled={walletData.balance < 50000}
+              className="w-full py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Wallet size={18} />
-              إدارة المحفظة الكاملة
+              طلب سحب
             </button>
+            {walletData.balance < 50000 && (
+              <p className="text-xs text-center text-gray-400">الحد الأدنى للسحب 50,000 ل.س</p>
+            )}
+            
+            {/* سجل العمليات */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <h4 className="font-bold text-gray-900 mb-3">سجل العمليات</h4>
+              {walletData.transactions && walletData.transactions.length > 0 ? (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {walletData.transactions.slice(0, 10).map((tx, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                        }`}>
+                          {tx.type === 'credit' ? '+' : '-'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{tx.description}</p>
+                          <p className="text-xs text-gray-400">{new Date(tx.created_at).toLocaleDateString('ar-SY')}</p>
+                        </div>
+                      </div>
+                      <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.type === 'credit' ? '+' : '-'}{tx.amount?.toLocaleString()} ل.س
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-400">
+                  <Wallet size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">لا توجد عمليات حتى الآن</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -507,6 +674,28 @@ const FoodStoreDashboard = () => {
             fetchStoreData();
           }}
         />
+      )}
+      
+      {/* Modal طلب سحب */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowWithdrawModal(false)}>
+          <div 
+            className="bg-white rounded-2xl p-6 w-full max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900 mb-4">طلب سحب</h2>
+            
+            <WithdrawForm 
+              balance={walletData.balance}
+              onClose={() => setShowWithdrawModal(false)}
+              onSuccess={() => {
+                setShowWithdrawModal(false);
+                fetchWalletData();
+              }}
+              token={token}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1249,14 +1438,22 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">السعر قبل الخصم</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                السعر الأصلي قبل الخصم
+                <span className="text-gray-400 text-xs mr-1">(اختياري - للعروض)</span>
+              </label>
               <input
                 type="number"
                 value={formData.original_price}
                 onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                placeholder="اختياري"
+                placeholder="مثال: إذا السعر 80,000 والأصلي 100,000 = خصم 20%"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3"
               />
+              {formData.original_price && formData.price && Number(formData.original_price) > Number(formData.price) && (
+                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  ✅ سيظهر للمشتري: خصم {Math.round((1 - Number(formData.price) / Number(formData.original_price)) * 100)}%
+                </p>
+              )}
             </div>
           </div>
 
