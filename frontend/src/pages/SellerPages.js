@@ -576,6 +576,9 @@ const SellerDashboardPage = () => {
   // قراءة التبويب من URL أو استخدام 'orders' كافتراضي (الطلبات هي الصفحة الرئيسية)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [pendingBalance, setPendingBalance] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
@@ -655,10 +658,14 @@ const SellerDashboardPage = () => {
     try {
       const res = await axios.get(`${API}/wallet/balance`);
       setWalletBalance(res.data.balance || 0);
+      setPendingBalance(res.data.pending_balance || 0);
+      setTotalEarned(res.data.total_earned || 0);
     } catch (error) {
       console.error('Error fetching wallet:', error);
     }
   };
+  
+  const fetchWalletData = fetchWallet;
 
   const fetchData = async () => {
     try {
@@ -932,280 +939,260 @@ const SellerDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-36 md:pb-10 bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header - مصغر مع النجوم */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              <ChevronRight size={18} className="text-gray-600" />
-            </button>
-            <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center">
-              {isFoodSeller ? (
-                <Store size={18} className="text-[#FF6B00]" />
-              ) : (
-                <Package size={18} className="text-[#FF6B00]" />
-              )}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-gray-900">{labels.dashboardTitle}</h1>
-                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded">
-                  <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                  <span className="text-xs font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center">
+                <Package size={20} className="text-[#FF6B00]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold text-gray-900">{user?.name || 'متجري'}</h1>
+                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
+                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-xs font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs mt-0.5">
+                  <span className="text-gray-500">{displayItems.length} منتج</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    نشط
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                {isFoodSeller ? (
-                  <span className="text-orange-600">مطعم</span>
-                ) : (
-                  <span>{displayItems.length} منتج</span>
-                )}
-                <span>•</span>
-                <span className="text-green-600">نشط</span>
-              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isFoodSeller && (
+            <div className="flex items-center gap-2">
+              <NotificationsDropdown />
               <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`p-1.5 rounded-lg ${soundEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}
-                title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
+                onClick={() => setShowAddProduct(true)}
+                className="flex items-center gap-1.5 bg-[#FF6B00] text-white px-3 py-2 rounded-xl text-sm font-bold"
               >
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                <Plus size={16} />
+                إضافة
               </button>
-            )}
-            <NotificationsDropdown />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
-        {/* أزرار الإجراءات السريعة */}
-        <div className="flex gap-2 mb-4">
-          <Link
-            to="/?view=customer"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 py-2.5 rounded-lg text-xs hover:bg-gray-200 transition-colors"
-          >
-            <Home size={14} />
-            <span>تصفح كعميل</span>
-          </Link>
-          <button
-            onClick={() => setShowAddProduct(true)}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-[#FF6B00] text-white font-bold py-2.5 rounded-lg text-xs"
-            data-testid="add-product-btn"
-          >
-            <Plus size={14} />
-            <span>{labels.addButton}</span>
-          </button>
+      {/* المحتوى الرئيسي */}
+      <div className="max-w-4xl mx-auto px-4 py-4 pb-32">
+        
+        {/* قسم الطلبات - دائماً في الأعلى */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <ShoppingBag size={20} className="text-[#FF6B00]" />
+            الطلبات
+            {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length} جديد
+              </span>
+            )}
+          </h2>
+          <SellerOrdersSection 
+            orders={orders} 
+            onSellerAction={handleSellerAction} 
+            onPrintLabel={setPrintLabelOrder} 
+          />
         </div>
 
-        {/* الطلبات - الصفحة الرئيسية */}
-        {activeTab === 'orders' && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <ShoppingBag size={16} className="text-[#FF6B00]" />
-              {isFoodSeller ? 'طلبات الطعام' : 'الطلبات'}
-              {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length} جديد
-                </span>
-              )}
-            </h2>
-            {isFoodSeller ? (
-              <FoodOrdersSection 
-                orders={foodOrders}
-                onStatusChange={handleFoodOrderStatus}
-              />
-            ) : (
-              <SellerOrdersSection 
-                orders={orders} 
-                onSellerAction={handleSellerAction} 
-                onPrintLabel={setPrintLabelOrder} 
-              />
-            )}
-          </div>
-        )}
-
-        {/* تبويب نظرة عامة - Overview */}
-        {activeTab === 'overview' && (
-          <>
-            {/* Wallet Quick Access Card */}
-            <div 
-              onClick={() => setActiveTab('wallet')}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 mb-4 cursor-pointer hover:shadow-lg transition-all"
-              data-testid="wallet-quick-access"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <Wallet size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-[10px]">رصيد المحفظة</p>
-                    <p className="text-white font-bold text-lg">{formatPrice(walletBalance)}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/wallet');
-                  }}
-                  className="bg-white text-green-600 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-green-50"
-                  data-testid="withdraw-quick-btn"
-                >
-                  <DollarSign size={14} />
-                  طلب سحب
-                </button>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <SellerStatsCard 
-              products={displayItems} 
-              orders={displayOrders} 
-              onStatClick={setActiveStatView}
-              isFoodSeller={isFoodSeller}
-            />
-
-            {/* Quick Access to Orders */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-gray-900">أحدث الطلبات</h3>
-                <button 
-                  onClick={() => setActiveTab('orders')}
-                  className="text-[#FF6B00] text-sm font-medium"
-                >
-                  عرض الكل ←
-                </button>
-              </div>
-              {isFoodSeller ? (
-                <FoodOrdersSection 
-                  orders={foodOrders.slice(0, 3)}
-                  onStatusChange={handleFoodOrderStatus}
-                />
-              ) : (
-                <SellerOrdersSection 
-                  orders={orders.slice(0, 3)} 
-                  onSellerAction={handleSellerAction} 
-                  onPrintLabel={setPrintLabelOrder} 
-                />
-              )}
-            </div>
-          </>
-        )}
-
-        {/* تبويب المنتجات - Products */}
+        {/* محتوى التبويب المختار */}
         {activeTab === 'products' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">
-              {isFoodSeller ? 'قائمة الطعام' : 'منتجاتي'}
-            </h2>
-            {isFoodSeller ? (
-              <FoodItemsGrid 
-                items={foodItems} 
-                onEdit={handleEditProduct} 
-                onDelete={handleDeleteProduct}
-                onChangeAvailability={handleChangeFoodAvailability}
-              />
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <Package size={18} className="text-[#FF6B00]" />
+                منتجاتي ({displayItems.length})
+              </h3>
+              <button
+                onClick={() => setShowAddProduct(true)}
+                className="flex items-center gap-2 bg-[#FF6B00] text-white px-4 py-2 rounded-xl text-sm font-bold"
+              >
+                <Plus size={16} />
+                إضافة منتج
+              </button>
+            </div>
+            {displayItems.length === 0 ? (
+              <div className="bg-gray-50 rounded-xl p-8 text-center">
+                <Package size={40} className="mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500">لم تقم بإضافة أي منتجات بعد</p>
+              </div>
             ) : (
-              <SellerProductsGrid 
-                products={products} 
-                onEdit={handleEditProduct} 
-                onDelete={handleDeleteProduct}
-                onDuplicate={handleDuplicateProduct}
-              />
+              <div className="space-y-2">
+                {displayItems.map((product) => (
+                  <div key={product.id} className={`bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      {product.images?.[0] ? (
+                        <img src={product.images[0]} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Package size={20} className="text-gray-400" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">{product.name}</h4>
+                        <p className="text-[#FF6B00] font-bold text-sm">{(product.price || 0).toLocaleString()} ل.س</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 bg-red-100 text-red-600 rounded-lg"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
 
-        {/* تبويب المحفظة - Wallet */}
         {activeTab === 'wallet' && (
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white">
-              <div className="text-center mb-4">
-                <Wallet size={48} className="mx-auto mb-2 opacity-80" />
-                <p className="text-white/80 text-sm">رصيدك الحالي</p>
-                <p className="text-3xl font-bold">{formatPrice(walletBalance)}</p>
-              </div>
-              <button
-                onClick={() => navigate('/wallet')}
-                className="w-full bg-white text-green-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-50"
-              >
-                <DollarSign size={20} />
-                إدارة المحفظة وطلب سحب
-              </button>
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <Wallet size={18} className="text-[#FF6B00]" />
+              المحفظة
+            </h3>
+            <div className="bg-gradient-to-r from-[#FF6B00] to-orange-500 rounded-xl p-4 text-white">
+              <p className="text-white/80 text-sm">رصيد المحفظة</p>
+              <p className="text-2xl font-bold">{formatPrice(walletBalance)}</p>
             </div>
-            <SellerAdAnalytics />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500">أرباح معلقة</p>
+                <p className="font-bold text-gray-900">{formatPrice(pendingBalance)}</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="text-xs text-gray-500">إجمالي الأرباح</p>
+                <p className="font-bold text-green-600">{formatPrice(totalEarned)}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWithdrawModal(true)}
+              disabled={walletBalance < 50000}
+              className="w-full py-3 bg-[#FF6B00] text-white rounded-xl font-bold disabled:opacity-50"
+            >
+              طلب سحب
+            </button>
           </div>
         )}
 
-        {/* تبويب الإعدادات - Settings */}
+        {activeTab === 'analytics' && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <TrendingUp size={18} className="text-[#FF6B00]" />
+              الإحصائيات
+            </h3>
+            <SellerAnalytics token={token} />
+          </div>
+        )}
+
         {activeTab === 'settings' && (
-          <StoreSettingsTab isFoodSeller={isFoodSeller} />
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <Bell size={18} className="text-[#FF6B00]" />
+              الإعدادات
+            </h3>
+            <Link
+              to="/?view=customer"
+              className="flex items-center justify-between bg-gray-50 rounded-xl p-4"
+            >
+              <div className="flex items-center gap-3">
+                <Home size={20} className="text-gray-500" />
+                <span className="font-medium">تصفح كعميل</span>
+              </div>
+              <ChevronRight size={20} className="text-gray-400" />
+            </Link>
+            <button
+              onClick={() => navigate('/packaging-guide')}
+              className="w-full flex items-center justify-between bg-gray-50 rounded-xl p-4"
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen size={20} className="text-gray-500" />
+                <span className="font-medium">إرشادات التغليف</span>
+              </div>
+              <ChevronRight size={20} className="text-gray-400" />
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Add Product Modal */}
+      {/* الشريط السفلي الثابت */}
+      <div className="fixed bottom-8 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg">
+        <div className="max-w-4xl mx-auto flex">
+          {[
+            { id: 'products', label: 'المنتجات', icon: Package },
+            { id: 'wallet', label: 'المحفظة', icon: Wallet },
+            { id: 'analytics', label: 'الإحصائيات', icon: TrendingUp },
+            { id: 'settings', label: 'الإعدادات', icon: Bell },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex flex-col items-center justify-center py-3 transition-all ${
+                activeTab === tab.id
+                  ? 'text-[#FF6B00] bg-orange-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <tab.icon size={20} />
+              <span className="text-xs mt-1 font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Modal إضافة/تعديل منتج */}
       <AddProductModal
         isOpen={showAddProduct}
         onClose={() => {
           setShowAddProduct(false);
-          setDuplicatingProduct(null); // مسح بيانات النسخ عند الإغلاق
+          setEditingProduct(null);
         }}
-        onSave={handleAddProduct}
-        saving={saving}
-        toast={toast}
-        isFoodSeller={isFoodSeller}
-        commissionInfo={commissionInfo}
-        initialData={duplicatingProduct} // تمرير بيانات المنتج المنسوخ
-        token={token} // تمرير التوكن لقوالب 3D
-      />
-
-      {/* Edit Product Modal */}
-      <EditProductModal
         product={editingProduct}
-        editPrice={editPrice}
-        setEditPrice={setEditPrice}
-        editStock={editStock}
-        setEditStock={setEditStock}
-        onSave={handleSaveEdit}
-        onClose={() => setEditingProduct(null)}
-        saving={savingEdit}
-        commissionInfo={commissionInfo}
+        onSuccess={() => {
+          setShowAddProduct(false);
+          setEditingProduct(null);
+          fetchProducts();
+        }}
       />
 
-      {/* Stat Details Modal */}
-      <StatDetailsModal
-        activeStatView={activeStatView}
-        onClose={() => setActiveStatView(null)}
-        products={products}
-        orders={orders}
-        totalSales={totalSales}
-        paidOrders={paidOrders}
-      />
-
-      {/* Print Label Modal */}
-      {printLabelOrder && (
-        <OrderLabelPrint
-          order={printLabelOrder}
-          onClose={() => setPrintLabelOrder(null)}
+      {/* Modal طلب سحب */}
+      {showWithdrawModal && (
+        <WithdrawModal
+          balance={walletBalance}
+          onClose={() => setShowWithdrawModal(false)}
+          onSuccess={() => {
+            setShowWithdrawModal(false);
+            fetchWalletData();
+          }}
         />
       )}
 
-      {/* Popup طلب تفعيل الإشعارات - فقط لبائع الطعام */}
-      {isFoodSeller && (
-        <PushNotificationPrompt 
-          userType="food_seller" 
-          userName={user?.store_name || user?.full_name || 'المطعم'} 
+      {/* Modal طباعة الملصق */}
+      {printLabelOrder && (
+        <PrintLabelModal
+          order={printLabelOrder}
+          onClose={() => setPrintLabelOrder(null)}
         />
       )}
     </div>
   );
 };
+
+export default SellerDashboardPage;
 
 export { SellerDocumentsPage, SellerDashboardPage };
