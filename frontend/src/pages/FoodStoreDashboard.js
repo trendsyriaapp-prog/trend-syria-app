@@ -462,9 +462,9 @@ const FoodStoreDashboard = () => {
       {/* المحتوى الرئيسي - صفحة واحدة */}
       <div className="max-w-4xl mx-auto px-4 py-4 pb-32">
         
-        {/* قسم الطلبات - يظهر فقط في القائمة */}
-        {activeTab === 'menu' && (
-          <div className="mb-6">
+        {/* قسم الطلبات - تبويب منفصل */}
+        {activeTab === 'orders' && (
+          <div>
             <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
               <ShoppingBag size={20} className="text-green-600" />
               الطلبات
@@ -473,7 +473,7 @@ const FoodStoreDashboard = () => {
           </div>
         )}
 
-        {/* محتوى التبويب المختار */}
+        {/* محتوى الأطباق */}
         {activeTab === 'menu' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
             <div className="flex items-center justify-between">
@@ -665,9 +665,9 @@ const FoodStoreDashboard = () => {
       <div className="fixed bottom-8 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg">
         <div className="max-w-4xl mx-auto flex">
           {[
-            { id: 'menu', label: 'القائمة', icon: ChefHat },
+            { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
+            { id: 'menu', label: 'الأطباق', icon: ChefHat },
             { id: 'wallet', label: 'المحفظة', icon: Wallet },
-            { id: 'analytics', label: 'الإحصائيات', icon: BarChart3 },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
