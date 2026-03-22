@@ -544,8 +544,12 @@ async def process_image(
     - **use_premium**: استخدام Remove.bg API (true) أو المعالجة المحلية (false)
     """
     
-    if not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    # التحقق من نوع الملف
+    content_type = file.content_type or ""
+    if not content_type.startswith('image/'):
+        filename = file.filename or ""
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
     
     # قراءة الصورة
     image_data = await file.read()
@@ -770,8 +774,13 @@ async def process_image_professional(
     9. إنشاء أحجام متعددة (اختياري)
     """
     
-    if not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    # التحقق من نوع الملف
+    content_type = file.content_type or ""
+    if not content_type.startswith('image/'):
+        # محاولة التعرف على نوع الملف من الاسم
+        filename = file.filename or ""
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
     
     image_data = await file.read()
     
@@ -904,8 +913,11 @@ async def analyze_image(file: UploadFile = File(...)):
     """
     تحليل جودة الصورة قبل المعالجة
     """
-    if not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    content_type = file.content_type or ""
+    if not content_type.startswith('image/'):
+        filename = file.filename or ""
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
     
     image_data = await file.read()
     
@@ -1048,8 +1060,11 @@ async def process_food_image(
     - مجانية 100% (لا تستخدم Remove.bg)
     """
     
-    if not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    content_type = file.content_type or ""
+    if not content_type.startswith('image/'):
+        filename = file.filename or ""
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
     
     image_data = await file.read()
     
