@@ -1,12 +1,14 @@
 // /app/frontend/src/components/Chatbot.js
 // Chatbot للدعم الفني - أيقونة عائمة + نافذة دردشة
+// يستخدم الشات بوت الذكي (AI) افتراضياً
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, X, Send, User, Bot, 
-  Headphones, ChevronDown, Loader2, HeadphonesIcon, Star, ArrowRight
+  Headphones, ChevronDown, Loader2, HeadphonesIcon, Star, ArrowRight,
+  Sparkles, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,9 +27,13 @@ const Chatbot = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [pendingRatingTicket, setPendingRatingTicket] = useState(null);
+  const [useAI, setUseAI] = useState(true); // استخدام الشات بوت الذكي افتراضياً
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
-  const userOpenedRef = useRef(false); // للتأكد من أن المستخدم فتح الشات بوت بنفسه
+  const userOpenedRef = useRef(false);
+
+  // تحديد الـ API بناءً على نوع الشات بوت
+  const chatbotAPI = useAI ? '/api/ai-chatbot' : '/api/chatbot';
 
   // الاستماع لحدث فتح الدردشة من الأيقونة في شريط البحث
   useEffect(() => {
@@ -58,21 +64,19 @@ const Chatbot = () => {
       fetchQuickQuestions();
     }
     // التحقق من وجود تذكرة تحتاج تقييم عند فتح الدردشة
-    if (isOpen && token) {
+    if (isOpen && token && !useAI) {
       checkPendingRating();
-      // التحقق من التذكيرات (للتذاكر القديمة)
       checkRatingReminder();
     }
-  }, [isOpen]);
+  }, [isOpen, useAI]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Polling للتحقق من ردود الدعم الجديدة
+  // Polling للتحقق من ردود الدعم الجديدة (للشات بوت العادي فقط)
   useEffect(() => {
-    if (hasSupportRequest && sessionId && isOpen) {
-      // بدء Polling كل 5 ثواني
+    if (hasSupportRequest && sessionId && isOpen && !useAI) {
       pollingRef.current = setInterval(checkForNewReplies, 5000);
       return () => {
         if (pollingRef.current) {
@@ -80,10 +84,10 @@ const Chatbot = () => {
         }
       };
     }
-  }, [hasSupportRequest, sessionId, isOpen, messageCount]);
+  }, [hasSupportRequest, sessionId, isOpen, messageCount, useAI]);
 
   const checkForNewReplies = useCallback(async () => {
-    if (!sessionId || !token) return;
+    if (!sessionId || !token || useAI) return;
     
     try {
       const res = await axios.get(
@@ -92,14 +96,13 @@ const Chatbot = () => {
       );
       
       if (res.data.has_new && res.data.new_messages?.length > 0) {
-        // إضافة الرسائل الجديدة
         setMessages(prev => [...prev, ...res.data.new_messages]);
         setMessageCount(res.data.total_count);
       }
     } catch (error) {
       console.error('Error checking for new replies:', error);
     }
-  }, [sessionId, messageCount, token]);
+  }, [sessionId, messageCount, token, useAI]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -107,7 +110,7 @@ const Chatbot = () => {
 
   const fetchQuickQuestions = async () => {
     try {
-      const res = await axios.get(`${API}/api/chatbot/quick-questions`);
+      const res = await axios.get(`${API}${chatbotAPI}/quick-questions`);
       setQuickQuestions(res.data.questions);
     } catch (error) {
       console.error('Error fetching quick questions:', error);
@@ -124,7 +127,7 @@ const Chatbot = () => {
     setShowQuickQuestions(false);
 
     try {
-      const res = await axios.post(`${API}/api/chatbot/send`, {
+      const res = await axios.post(`${API}${chatbotAPI}/send`, {
         message: text,
         session_id: sessionId
       }, {
@@ -132,10 +135,10 @@ const Chatbot = () => {
       });
 
       setSessionId(res.data.session_id);
-      setMessageCount(prev => prev + 2); // رسالة المستخدم + رد البوت
+      setMessageCount(prev => prev + 2);
 
       const botMessage = {
-        sender: 'bot',
+        sender: useAI ? 'ai' : 'bot',
         message: res.data.response,
         quick_replies: res.data.quick_replies,
         needs_human: res.data.needs_human,
@@ -146,7 +149,7 @@ const Chatbot = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, {
-        sender: 'bot',
+        sender: useAI ? 'ai' : 'bot',
         message: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.',
         created_at: new Date().toISOString()
       }]);
@@ -159,7 +162,7 @@ const Chatbot = () => {
     if (!sessionId) return;
 
     try {
-      const res = await axios.post(`${API}/api/chatbot/request-support`, {
+      const res = await axios.post(`${API}${chatbotAPI}/request-support`, {
         message: messages.length > 0 ? messages[messages.length - 1].message : 'طلب دعم',
         session_id: sessionId
       }, {
@@ -205,8 +208,16 @@ const Chatbot = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (error) {
-      // صامت - لا نريد إزعاج المستخدم بأخطاء التذكير
+      // صامت
     }
+  };
+  
+  // مسح المحادثة وبدء جلسة جديدة
+  const clearChat = () => {
+    setMessages([]);
+    setSessionId(null);
+    setShowQuickQuestions(true);
+    setHasSupportRequest(false);
   };
 
   // لا تظهر للمستخدمين غير المسجلين
@@ -240,7 +251,7 @@ const Chatbot = () => {
             style={{ maxHeight: 'calc(100vh - 120px)', height: '500px' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-l from-[#FF6B00] to-orange-600 p-4 text-white">
+            <div className={`p-4 text-white ${useAI ? 'bg-gradient-to-l from-violet-600 to-purple-700' : 'bg-gradient-to-l from-[#FF6B00] to-orange-600'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {/* سهم الرجوع */}
@@ -252,11 +263,17 @@ const Chatbot = () => {
                     <ArrowRight size={18} />
                   </button>
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <Bot size={24} />
+                    {useAI ? <Sparkles size={24} /> : <Bot size={24} />}
                   </div>
                   <div>
-                    <h3 className="font-bold">المجيب الآلي</h3>
-                    <p className="text-xs text-white/80">نحن هنا لمساعدتك</p>
+                    <h3 className="font-bold flex items-center gap-1">
+                      {useAI ? (
+                        <>المساعد الذكي <Zap size={14} className="text-yellow-300" /></>
+                      ) : 'المجيب الآلي'}
+                    </h3>
+                    <p className="text-xs text-white/80">
+                      {useAI ? 'مدعوم بالذكاء الاصطناعي' : 'نحن هنا لمساعدتك'}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -274,11 +291,20 @@ const Chatbot = () => {
               {/* Welcome Message */}
               {messages.length === 0 && (
                 <div className="text-center py-4">
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Bot size={32} className="text-[#FF6B00]" />
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 ${useAI ? 'bg-violet-100' : 'bg-orange-100'}`}>
+                    {useAI ? (
+                      <Sparkles size={32} className="text-violet-600" />
+                    ) : (
+                      <Bot size={32} className="text-[#FF6B00]" />
+                    )}
                   </div>
                   <h4 className="font-bold text-gray-900 mb-1">مرحباً {user?.name}! 👋</h4>
-                  <p className="text-sm text-gray-500">كيف يمكنني مساعدتك اليوم؟</p>
+                  <p className="text-sm text-gray-500">
+                    {useAI ? 'أنا مساعدك الذكي، اسألني أي شيء!' : 'كيف يمكنني مساعدتك اليوم؟'}
+                  </p>
+                  {useAI && (
+                    <p className="text-xs text-violet-500 mt-1">مدعوم بـ GPT-4o ⚡</p>
+                  )}
                 </div>
               )}
 
@@ -291,7 +317,11 @@ const Chatbot = () => {
                       <button
                         key={i}
                         onClick={() => handleQuickReply(q.text)}
-                        className="bg-white border border-gray-200 rounded-full px-3 py-1.5 text-sm hover:border-[#FF6B00] hover:text-[#FF6B00] transition-colors flex items-center gap-1"
+                        className={`bg-white border border-gray-200 rounded-full px-3 py-1.5 text-sm transition-colors flex items-center gap-1 ${
+                          useAI 
+                            ? 'hover:border-violet-500 hover:text-violet-600' 
+                            : 'hover:border-[#FF6B00] hover:text-[#FF6B00]'
+                        }`}
                       >
                         <span>{q.icon}</span>
                         <span>{q.text}</span>
@@ -309,10 +339,10 @@ const Chatbot = () => {
               {/* Loading */}
               {loading && (
                 <div className="flex items-center gap-2 text-gray-500">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <Loader2 size={16} className="text-[#FF6B00] animate-spin" />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${useAI ? 'bg-violet-100' : 'bg-orange-100'}`}>
+                    <Loader2 size={16} className={`animate-spin ${useAI ? 'text-violet-600' : 'text-[#FF6B00]'}`} />
                   </div>
-                  <span className="text-sm">جاري الكتابة...</span>
+                  <span className="text-sm">{useAI ? 'يفكر...' : 'جاري الكتابة...'}</span>
                 </div>
               )}
 
@@ -321,13 +351,21 @@ const Chatbot = () => {
 
             {/* Request Support Button */}
             {messages.length > 0 && (
-              <div className="px-4 py-2 bg-gray-100 border-t border-gray-200">
+              <div className="px-4 py-2 bg-gray-100 border-t border-gray-200 flex items-center justify-between">
                 <button
                   onClick={requestSupport}
-                  className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-[#FF6B00] transition-colors"
+                  className={`flex items-center gap-2 text-sm transition-colors ${
+                    useAI ? 'text-gray-600 hover:text-violet-600' : 'text-gray-600 hover:text-[#FF6B00]'
+                  }`}
                 >
                   <Headphones size={16} />
                   التحدث مع موظف دعم
+                </button>
+                <button
+                  onClick={clearChat}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  مسح المحادثة
                 </button>
               </div>
             )}
@@ -342,14 +380,18 @@ const Chatbot = () => {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="اكتب سؤالك هنا..."
-                  className="flex-1 p-3 bg-gray-100 rounded-xl border-0 focus:ring-2 focus:ring-[#FF6B00] focus:outline-none text-sm"
+                  placeholder={useAI ? "اسألني أي شيء..." : "اكتب سؤالك هنا..."}
+                  className={`flex-1 p-3 bg-gray-100 rounded-xl border-0 focus:ring-2 focus:outline-none text-sm ${
+                    useAI ? 'focus:ring-violet-500' : 'focus:ring-[#FF6B00]'
+                  }`}
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="w-10 h-10 bg-[#FF6B00] rounded-xl flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors"
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                    useAI ? 'bg-violet-600 hover:bg-violet-700' : 'bg-[#FF6B00] hover:bg-orange-600'
+                  }`}
                 >
                   <Send size={18} />
                 </button>
@@ -358,6 +400,28 @@ const Chatbot = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Button */}
+      {!isOpen && (
+        <motion.button
+          onClick={() => {
+            userOpenedRef.current = true;
+            setIsOpen(true);
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-20 left-4 w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-700 rounded-full shadow-lg flex items-center justify-center text-white z-40 group"
+          data-testid="chatbot-floating-btn"
+        >
+          <Sparkles size={24} />
+          {/* Tooltip */}
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+            المساعد الذكي ⚡
+          </span>
+          {/* Pulse Effect */}
+          <span className="absolute inset-0 rounded-full bg-violet-500 animate-ping opacity-25"></span>
+        </motion.button>
+      )}
     </>
   );
 };
@@ -366,6 +430,7 @@ const MessageBubble = ({ message, onQuickReply }) => {
   const isUser = message.sender === 'user';
   const isSystem = message.sender === 'system';
   const isSupport = message.sender === 'support';
+  const isAI = message.sender === 'ai';
 
   return (
     <motion.div
@@ -374,13 +439,15 @@ const MessageBubble = ({ message, onQuickReply }) => {
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       <div className={`max-w-[85%] ${isUser ? 'order-1' : 'order-2'}`}>
-        {/* أيقونة البوت أو الدعم */}
+        {/* أيقونة البوت أو الدعم أو AI */}
         {!isUser && !isSystem && (
           <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
-            isSupport ? 'bg-green-100' : 'bg-orange-100'
+            isSupport ? 'bg-green-100' : isAI ? 'bg-violet-100' : 'bg-orange-100'
           }`}>
             {isSupport ? (
               <HeadphonesIcon size={14} className="text-green-600" />
+            ) : isAI ? (
+              <Sparkles size={14} className="text-violet-600" />
             ) : (
               <Bot size={14} className="text-[#FF6B00]" />
             )}
@@ -394,6 +461,13 @@ const MessageBubble = ({ message, onQuickReply }) => {
           </span>
         )}
         
+        {/* عنوان AI */}
+        {isAI && (
+          <span className="text-xs text-violet-500 font-medium mb-1 block flex items-center gap-1">
+            <Zap size={10} /> المساعد الذكي
+          </span>
+        )}
+        
         <div
           className={`rounded-2xl px-4 py-2.5 ${
             isUser
@@ -402,7 +476,9 @@ const MessageBubble = ({ message, onQuickReply }) => {
                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
                 : isSupport
                   ? 'bg-green-100 text-green-800 border border-green-200 rounded-bl-none'
-                  : 'bg-white text-gray-800 shadow-sm rounded-bl-none'
+                  : isAI
+                    ? 'bg-gradient-to-br from-violet-50 to-purple-50 text-gray-800 border border-violet-100 shadow-sm rounded-bl-none'
+                    : 'bg-white text-gray-800 shadow-sm rounded-bl-none'
           }`}
         >
           <p className="text-sm whitespace-pre-line">{message.message}</p>
@@ -415,7 +491,11 @@ const MessageBubble = ({ message, onQuickReply }) => {
               <button
                 key={i}
                 onClick={() => onQuickReply(reply)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-full transition-colors"
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  isAI 
+                    ? 'bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200' 
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
               >
                 {reply}
               </button>
