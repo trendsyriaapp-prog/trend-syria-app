@@ -1051,26 +1051,10 @@ const AddProductModal = ({
         isOpen={showCameraGuide} 
         onClose={() => setShowCameraGuide(false)}
         onCapture={async (file, dataUrl) => {
-          setUploadingImage(true);
-          try {
-            // إضافة الصورة مباشرة
-            setNewProduct(prev => ({
-              ...prev,
-              images: [...prev.images, dataUrl].slice(0, maxImagesPerProduct)
-            }));
-            toast?.({
-              title: "تم التصوير",
-              description: "تم إضافة الصورة بنجاح"
-            });
-          } catch (error) {
-            toast?.({
-              title: "خطأ",
-              description: "فشل في إضافة الصورة",
-              variant: "destructive"
-            });
-          } finally {
-            setUploadingImage(false);
-          }
+          // فتح المعالج الاحترافي بدلاً من إضافة الصورة مباشرة
+          setPendingImage(dataUrl);
+          setShowCameraGuide(false);
+          setShowProProcessor(true);
         }}
       />
       
