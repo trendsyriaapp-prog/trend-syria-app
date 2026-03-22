@@ -893,6 +893,16 @@ const StoreSettings = ({ store, token, onUpdate }) => {
   };
 
   const handleSave = async () => {
+    // التحقق من الحقول الإجبارية
+    if (!formData.address || formData.address.trim() === '') {
+      toast({ title: "خطأ", description: "يرجى كتابة عنوان المتجر (إجباري)", variant: "destructive" });
+      return;
+    }
+    if (!formData.latitude || !formData.longitude) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
+    
     setSaving(true);
     try {
       await axios.put(`${API}/food/my-store`, formData, {
@@ -1004,13 +1014,16 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           
           {/* العنوان */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">عنوان المتجر</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              عنوان المتجر <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="الحي، الشارع، رقم البناء"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              placeholder="الحي، الشارع، رقم البناء (إجباري)"
+              required
             />
           </div>
           

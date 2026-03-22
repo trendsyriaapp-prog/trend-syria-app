@@ -121,6 +121,11 @@ const StoreSettingsTab = () => {
   };
 
   const handleSaveSettings = async () => {
+    // التحقق من العنوان
+    if (!storeSettings.store_address || storeSettings.store_address.trim() === '') {
+      toast({ title: "خطأ", description: "يرجى كتابة عنوان المتجر (إجباري)", variant: "destructive" });
+      return;
+    }
     // التحقق من تحديد الموقع
     if (!storeSettings.store_latitude || !storeSettings.store_longitude) {
       toast({ title: "خطأ", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
@@ -287,13 +292,16 @@ const StoreSettingsTab = () => {
 
           {/* العنوان */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">عنوان المتجر</label>
+            <label className="block text-[10px] font-bold text-gray-600 mb-1">
+              عنوان المتجر <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={storeSettings.store_address}
               onChange={(e) => setStoreSettings({...storeSettings, store_address: e.target.value})}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="الحي، الشارع، رقم البناء"
+              placeholder="الحي، الشارع، رقم البناء (إجباري)"
+              required
             />
           </div>
 
