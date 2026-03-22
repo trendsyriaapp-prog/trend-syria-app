@@ -95,6 +95,7 @@ class ProductUpdate(BaseModel):
     available_sizes: Optional[List[str]] = None
     max_per_customer: Optional[int] = None
     weight_variants: Optional[List[WeightVariant]] = None  # خيارات الوزن مع الأسعار
+    is_available: Optional[bool] = None  # حالة توفر المنتج
 
 class ProductApproval(BaseModel):
     approved: bool

@@ -1256,6 +1256,81 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
+        {/* تبويب إرشادات التغليف */}
+        {activeTab === 'packaging' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+                <Gift size={18} className="text-[#FF6B00]" />
+                إرشادات التغليف
+              </h3>
+              
+              <div className="space-y-4">
+                {/* إرشادات عامة */}
+                <div className="bg-orange-50 rounded-xl p-4">
+                  <h4 className="font-bold text-orange-800 mb-2 flex items-center gap-2">
+                    <Package size={16} />
+                    إرشادات عامة
+                  </h4>
+                  <ul className="text-sm text-orange-700 space-y-2">
+                    <li>• استخدم صناديق قوية ومناسبة لحجم المنتج</li>
+                    <li>• تأكد من إغلاق الصندوق بشكل محكم</li>
+                    <li>• ضع ملصق "قابل للكسر" على المنتجات الحساسة</li>
+                    <li>• لا تترك فراغات داخل الصندوق</li>
+                  </ul>
+                </div>
+
+                {/* حسب نوع المنتج */}
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                    📦 حسب نوع المنتج
+                  </h4>
+                  <div className="space-y-3 text-sm text-blue-700">
+                    <div>
+                      <p className="font-medium">الإلكترونيات:</p>
+                      <p className="text-xs">استخدم فلين أو فقاعات هوائية للحماية</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">الملابس:</p>
+                      <p className="text-xs">ضعها في كيس شفاف ثم في صندوق</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">الأواني الزجاجية:</p>
+                      <p className="text-xs">لف كل قطعة بشكل منفصل + ضع علامة "قابل للكسر"</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* نصائح مهمة */}
+                <div className="bg-green-50 rounded-xl p-4">
+                  <h4 className="font-bold text-green-800 mb-2 flex items-center gap-2">
+                    ✅ نصائح مهمة
+                  </h4>
+                  <ul className="text-sm text-green-700 space-y-2">
+                    <li>• ضع الفاتورة داخل الصندوق</li>
+                    <li>• اكتب رقم الطلب على الصندوق من الخارج</li>
+                    <li>• صوّر المنتج قبل التغليف للتوثيق</li>
+                    <li>• تأكد من وضوح عنوان التوصيل</li>
+                  </ul>
+                </div>
+
+                {/* الأخطاء الشائعة */}
+                <div className="bg-red-50 rounded-xl p-4">
+                  <h4 className="font-bold text-red-800 mb-2 flex items-center gap-2">
+                    ⚠️ تجنب هذه الأخطاء
+                  </h4>
+                  <ul className="text-sm text-red-700 space-y-2">
+                    <li>• لا تستخدم صناديق تالفة أو مستعملة</li>
+                    <li>• لا ترسل المنتج بدون حماية كافية</li>
+                    <li>• لا تنسَ إرفاق الملحقات (شاحن، كتيب...)</li>
+                    <li>• لا تغلق الصندوق قبل التأكد من المحتويات</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'settings' && (
           <div className="space-y-4">
             {/* إعدادات المتجر */}
@@ -1294,6 +1369,7 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
+            { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'wallet', label: 'المحفظة', icon: Wallet },
             { id: 'settings', label: 'الإعدادات', icon: Bell },
           ].map((tab) => (

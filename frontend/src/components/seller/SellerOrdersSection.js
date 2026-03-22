@@ -18,11 +18,33 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
   }
 
   const getStatusLabel = (status) => {
-    return ORDER_STATUSES[status] || status;
+    const labels = {
+      'pending': 'بانتظار الدفع',
+      'paid': 'مدفوع - بانتظار التأكيد',
+      'confirmed': 'مؤكد',
+      'preparing': 'قيد التحضير',
+      'ready_for_pickup': 'جاهز للاستلام',
+      'shipped': 'تم الشحن',
+      'out_for_delivery': 'في الطريق',
+      'delivered': 'تم التسليم',
+      'cancelled': 'ملغي'
+    };
+    return labels[status] || ORDER_STATUSES[status] || status;
   };
 
   const getStatusColor = (status) => {
-    return DELIVERY_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
+    const colors = {
+      'pending': 'bg-yellow-100 text-yellow-700',
+      'paid': 'bg-blue-100 text-blue-700',
+      'confirmed': 'bg-indigo-100 text-indigo-700',
+      'preparing': 'bg-purple-100 text-purple-700',
+      'ready_for_pickup': 'bg-orange-100 text-orange-700',
+      'shipped': 'bg-cyan-100 text-cyan-700',
+      'out_for_delivery': 'bg-teal-100 text-teal-700',
+      'delivered': 'bg-green-100 text-green-700',
+      'cancelled': 'bg-red-100 text-red-700'
+    };
+    return colors[status] || DELIVERY_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
   };
 
   const handleReportClick = (order) => {
@@ -34,21 +56,23 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
     <>
       <div className="space-y-2">
         {orders.slice(0, 10).map((order) => {
-          const canConfirm = order.status === 'paid' && order.delivery_status === 'pending';
-          const canPrepare = order.delivery_status === 'confirmed';
-          const canShip = order.delivery_status === 'preparing';
+          // استخدام status بدلاً من delivery_status
+          const orderStatus = order.status || order.delivery_status || 'pending';
+          const canConfirm = orderStatus === 'paid';
+          const canPrepare = orderStatus === 'confirmed';
+          const canShip = orderStatus === 'preparing';
           const hasDeliveryDriver = order.delivery_driver_id && order.delivery_driver_name;
           
           return (
             <div key={order.id} className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-[11px] text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</span>
+                <span className="font-bold text-[11px] text-gray-900">#{order.order_number || order.id.slice(0, 8).toUpperCase()}</span>
                 <span className="text-[#FF6B00] font-bold text-xs">{formatPrice(order.total)}</span>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] text-gray-500">{order.user_name} - {order.city}</span>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full ${getStatusColor(order.delivery_status)}`}>
-                  {getStatusLabel(order.delivery_status)}
+                <span className="text-[10px] text-gray-500">{order.customer_name || order.user_name} - {order.delivery_city || order.city}</span>
+                <span className={`text-[9px] px-2 py-0.5 rounded-full ${getStatusColor(orderStatus)}`}>
+                  {getStatusLabel(orderStatus)}
                 </span>
               </div>
               
@@ -123,8 +147,20 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                     تم الشحن
                   </button>
                 )}
-                {!canConfirm && !canPrepare && !canShip && order.delivery_status !== 'delivered' && (
-                  <span className="text-[9px] text-gray-400 italic">بانتظار {order.status === 'pending_payment' ? 'الدفع' : 'الخطوة التالية'}</span>
+                {!canConfirm && !canPrepare && !canShip && orderStatus !== 'delivered' && orderStatus !== 'cancelled' && (
+                  <span className="text-[9px] text-gray-400 italic">
+                    {orderStatus === 'pending' ? 'بانتظار الدفع' : 
+                     orderStatus === 'shipped' ? 'بانتظار التوصيل' :
+                     orderStatus === 'out_for_delivery' ? 'في الطريق للعميل' :
+                     orderStatus === 'ready_for_pickup' ? 'بانتظار السائق' :
+                     'بانتظار الخطوة التالية'}
+                  </span>
+                )}
+                {orderStatus === 'delivered' && (
+                  <span className="text-[9px] text-green-600 font-medium">✅ تم التسليم</span>
+                )}
+                {orderStatus === 'cancelled' && (
+                  <span className="text-[9px] text-red-600 font-medium">❌ ملغي</span>
                 )}
               </div>
             </div>
