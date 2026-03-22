@@ -187,8 +187,15 @@ async def get_food_stores(
     skip: int = 0,
     limit: int = 20
 ):
-    """جلب متاجر الطعام مع حالة الفتح/الإغلاق"""
+    """جلب متاجر الطعام مع حالة الفتح/الإغلاق والتعليق"""
     query = {"is_active": True, "is_approved": True}
+    
+    # جلب قائمة البائعين المعلقين
+    suspended_sellers = await db.users.find(
+        {"is_suspended": True},
+        {"_id": 0, "id": 1}
+    ).to_list(None)
+    suspended_seller_ids = [s["id"] for s in suspended_sellers]
     
     # فلتر بالقسم الرئيسي (food أو market)
     if main_category and main_category != 'all':
@@ -224,12 +231,22 @@ async def get_food_stores(
     day_names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
     current_day_name = day_names[current_day]
     
-    # إضافة اسم الفئة وحالة الفتح
+    # إضافة اسم الفئة وحالة الفتح والتعليق
     for store in stores:
         store["category_name"] = get_store_type_name(store.get("store_type", ""))
         store["main_category"] = get_main_category(store.get("store_type", ""))
         
-        # التحقق من الإغلاق اليدوي أولاً
+        # التحقق من تعليق البائع أولاً
+        if store.get("owner_id") in suspended_seller_ids:
+            store["is_suspended"] = True
+            store["is_open"] = False
+            store["open_status"] = "متوقف مؤقتاً"
+            store["suspension_reason"] = "تم تعليق هذا المتجر من قبل الإدارة"
+            continue
+        else:
+            store["is_suspended"] = False
+        
+        # التحقق من الإغلاق اليدوي
         if store.get("manual_close", False):
             store["is_open"] = False
             store["open_status"] = "مغلق مؤقتاً"
@@ -277,8 +294,10 @@ async def get_food_stores(
                     store["open_status"] = "مغلق الآن"
                     store["next_open_time"] = _get_next_open_time(working_hours, current_day)
     
-    # ترتيب: المتاجر المفتوحة أولاً
-    stores.sort(key=lambda x: (0 if x.get("is_open", True) else 1))
+    # ترتيب: المتاجر المفتوحة أولاً، المعلقة في النهاية
+    stores.sort(key=lambda x: (
+        2 if x.get("is_suspended", False) else (0 if x.get("is_open", True) else 1)
+    ))
     
     return stores
 
@@ -312,7 +331,23 @@ async def get_food_store(store_id: str):
     store["category_name"] = get_store_type_name(store.get("store_type", ""))
     store["main_category"] = get_main_category(store.get("store_type", ""))
     
-    # التحقق من الإغلاق اليدوي أولاً
+    # التحقق من تعليق البائع أولاً
+    owner_id = store.get("owner_id")
+    if owner_id:
+        owner = await db.users.find_one({"id": owner_id}, {"_id": 0, "is_suspended": 1, "suspension_reason": 1})
+        if owner and owner.get("is_suspended"):
+            store["is_suspended"] = True
+            store["is_open"] = False
+            store["open_status"] = "متوقف مؤقتاً"
+            store["suspension_reason"] = "تم تعليق هذا المتجر من قبل الإدارة"
+            store["next_open_time"] = None
+            # لا نجلب المنتجات للمتجر المعلق
+            store["products"] = []
+            return store
+    
+    store["is_suspended"] = False
+    
+    # التحقق من الإغلاق اليدوي
     if store.get("manual_close", False):
         store["is_open"] = False
         store["open_status"] = "مغلق مؤقتاً"

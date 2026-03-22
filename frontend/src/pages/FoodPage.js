@@ -666,16 +666,27 @@ const StoreCard = ({ store }) => {
   const categoryConfig = CATEGORY_CONFIG[store.store_type] || CATEGORY_CONFIG.restaurants;
   const CategoryIcon = categoryConfig.icon;
   const isOpen = store.is_open !== false; // افتراضياً مفتوح إذا لم يُحدد
+  const isSuspended = store.is_suspended === true; // متجر معلق
   
   const cardContent = (
     <motion.div
-      whileHover={isOpen ? { scale: 1.02 } : {}}
-      whileTap={isOpen ? { scale: 0.98 } : {}}
+      whileHover={isOpen && !isSuspended ? { scale: 1.02 } : {}}
+      whileTap={isOpen && !isSuspended ? { scale: 0.98 } : {}}
       className={`bg-white rounded-xl border-2 ${store.store_type ? categoryConfig.borderColor : 'border-gray-200'} overflow-hidden transition-shadow relative
-        ${isOpen ? 'hover:shadow-md' : 'grayscale opacity-70'}`}
+        ${isOpen && !isSuspended ? 'hover:shadow-md' : 'grayscale opacity-70'}`}
     >
+      {/* شارة معلق */}
+      {isSuspended && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 rounded-xl">
+          <div className="bg-orange-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+            <Store size={16} />
+            <span>متوقف مؤقتاً</span>
+          </div>
+        </div>
+      )}
+      
       {/* شارة مغلق */}
-      {!isOpen && (
+      {!isOpen && !isSuspended && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 rounded-xl">
           <div className="bg-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
             <Clock size={16} />
@@ -729,8 +740,13 @@ const StoreCard = ({ store }) => {
             </div>
           )}
         </div>
-        {/* حالة الفتح/الإغلاق */}
-        {!isOpen && store.open_status && (
+        {/* حالة الفتح/الإغلاق/التعليق */}
+        {isSuspended && (
+          <div className="mt-2 text-xs text-orange-600 font-medium">
+            متوقف مؤقتاً
+          </div>
+        )}
+        {!isOpen && !isSuspended && store.open_status && (
           <div className="mt-2 text-xs text-red-600 font-medium">
             {store.open_status}
             {store.next_open_time && (
@@ -742,7 +758,11 @@ const StoreCard = ({ store }) => {
     </motion.div>
   );
   
-  // إذا كان المتجر مغلقاً، لا نجعله رابطاً قابلاً للنقر
+  // إذا كان المتجر معلق أو مغلقاً، لا نجعله رابطاً قابلاً للنقر
+  if (isSuspended) {
+    return <div className="cursor-not-allowed" data-testid={`store-card-suspended-${store.id}`}>{cardContent}</div>;
+  }
+  
   if (!isOpen) {
     return <div className="cursor-not-allowed" data-testid={`store-card-closed-${store.id}`}>{cardContent}</div>;
   }

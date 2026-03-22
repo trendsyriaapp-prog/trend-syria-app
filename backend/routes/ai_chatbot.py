@@ -1,0 +1,336 @@
+# /app/backend/routes/ai_chatbot.py
+# شات بوت ذكي بالذكاء الاصطناعي للدعم الفني
+
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import Optional, List
+from datetime import datetime, timezone
+import uuid
+import os
+from dotenv import load_dotenv
+
+from core.database import db, get_current_user, create_notification_for_user
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+load_dotenv()
+
+router = APIRouter(prefix="/ai-chatbot", tags=["AI Chatbot"])
+
+# إعداد مفتاح API
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
+
+# رسالة النظام للشات بوت
+SYSTEM_MESSAGE = """أنت مساعد ذكي لخدمة العملاء في تطبيق "ترند سورية" - منصة توصيل طعام ومنتجات في سوريا.
+
+🎯 مهمتك:
+- مساعدة العملاء بإجابات دقيقة ومفيدة باللغة العربية
+- الإجابة على أسئلة الطلبات، الإرجاع، الدفع، الشحن، والتسجيل
+- التحلي بالود والاحترافية
+
+📋 معلومات مهمة عن المنصة:
+
+【الطلبات】
+- يمكن للعميل تتبع طلبه من صفحة "طلباتي"
+- يمكن إلغاء الطلب إذا كان "قيد الانتظار" أو "جاري التجهيز"
+- لا يمكن إلغاء الطلب بعد خروجه للتوصيل
+- التواصل مع موظف التوصيل متاح من صفحة تتبع الطلب
+
+【سياسة الإرجاع】
+⚠️ مهم جداً:
+- الإرجاع متاح فقط عند لحظة التسليم أمام موظف التوصيل
+- بعد التوقيع على الاستلام، لا يمكن الإرجاع
+- حالات الإرجاع المقبولة: منتج تالف، مختلف عن الوصف، مقاس/لون خاطئ، نقص بالكمية
+
+【طرق الدفع】
+- المحفظة الإلكترونية (تعطي نقاط ولاء)
+- شام كاش
+
+【الشحن والتوصيل】
+- نفس المدينة: 1-2 يوم، 3,000-5,000 ل.س
+- مدينة قريبة: 2-3 أيام، 5,000-8,000 ل.س
+- مدينة بعيدة: 3-5 أيام، 8,000-15,000 ل.س
+- شحن مجاني للطلبات فوق 100,000 ل.س
+- أوقات التوصيل: 8 صباحاً - 6 مساءً
+
+【التسجيل كبائع】
+- يحتاج: هوية شخصية + سجل تجاري (اختياري)
+- العمولة: 7-12% حسب الصنف
+- لا رسوم اشتراك شهرية
+
+【التسجيل كموظف توصيل】
+- يحتاج: هوية + رخصة قيادة
+- الربح: 5,000 ل.س لكل طلب
+- ساعات مرنة
+
+【نقاط الولاء】
+- 1 نقطة لكل 1000 ل.س مشتريات
+- 100 نقطة = 5000 ل.س خصم
+
+📞 للتواصل المباشر: 0900000000
+
+قواعد الرد:
+1. استخدم إيموجي مناسبة لتوضيح الردود
+2. قدم إجابات مختصرة ومفيدة
+3. إذا لم تعرف الإجابة، اقترح التواصل مع فريق الدعم
+4. كن ودوداً ومساعداً دائماً
+5. لا تخترع معلومات غير موجودة"""
+
+# تخزين جلسات المحادثة في الذاكرة (للـ session)
+chat_sessions = {}
+
+class ChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class SupportRequest(BaseModel):
+    message: str
+    session_id: str
+
+def get_or_create_chat(session_id: str, user_id: str) -> LlmChat:
+    """الحصول على جلسة محادثة موجودة أو إنشاء جديدة"""
+    cache_key = f"{user_id}_{session_id}"
+    
+    if cache_key not in chat_sessions:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=cache_key,
+            system_message=SYSTEM_MESSAGE
+        ).with_model("openai", "gpt-4o")
+        chat_sessions[cache_key] = chat
+    
+    return chat_sessions[cache_key]
+
+@router.post("/send")
+async def send_ai_message(data: ChatMessage, user: dict = Depends(get_current_user)):
+    """إرسال رسالة للشات بوت الذكي"""
+    
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="مفتاح API غير متوفر")
+    
+    session_id = data.session_id or str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ رسالة المستخدم في قاعدة البيانات
+    await db.ai_chat_messages.insert_one({
+        "session_id": session_id,
+        "user_id": user["id"],
+        "sender": "user",
+        "message": data.message,
+        "created_at": now
+    })
+    
+    try:
+        # جلب سياق إضافي عن العميل (طلباته الأخيرة)
+        user_context = await _get_user_context(user["id"])
+        
+        # إنشاء الرسالة مع السياق
+        full_message = data.message
+        if user_context:
+            full_message = f"[معلومات العميل: {user_context}]\n\nسؤال العميل: {data.message}"
+        
+        # الحصول على جلسة المحادثة
+        chat = get_or_create_chat(session_id, user["id"])
+        
+        # إرسال الرسالة للـ AI
+        user_message = UserMessage(text=full_message)
+        ai_response = await chat.send_message(user_message)
+        
+        # حفظ رد البوت
+        await db.ai_chat_messages.insert_one({
+            "session_id": session_id,
+            "user_id": user["id"],
+            "sender": "ai",
+            "message": ai_response,
+            "created_at": now
+        })
+        
+        # تحديد إذا كان الرد يحتاج تدخل بشري
+        needs_human = _check_needs_human(data.message, ai_response)
+        
+        return {
+            "session_id": session_id,
+            "response": ai_response,
+            "quick_replies": _generate_quick_replies(data.message),
+            "category": "ai_response",
+            "needs_human": needs_human
+        }
+        
+    except Exception as e:
+        print(f"AI Chatbot Error: {str(e)}")
+        # رد احتياطي في حالة الخطأ
+        fallback_response = "عذراً، حدث خطأ تقني. يرجى المحاولة مرة أخرى أو التواصل مع فريق الدعم على 0900000000 📞"
+        
+        await db.ai_chat_messages.insert_one({
+            "session_id": session_id,
+            "user_id": user["id"],
+            "sender": "system",
+            "message": fallback_response,
+            "error": str(e),
+            "created_at": now
+        })
+        
+        return {
+            "session_id": session_id,
+            "response": fallback_response,
+            "quick_replies": ["التواصل مع الدعم", "المحاولة مرة أخرى"],
+            "category": "error",
+            "needs_human": True
+        }
+
+async def _get_user_context(user_id: str) -> str:
+    """جلب سياق عن العميل لتحسين الردود"""
+    context_parts = []
+    
+    # جلب آخر 3 طلبات للعميل
+    recent_orders = await db.food_orders.find(
+        {"customer_id": user_id},
+        {"_id": 0, "id": 1, "status": 1, "total": 1, "created_at": 1, "store_name": 1}
+    ).sort("created_at", -1).limit(3).to_list(3)
+    
+    if recent_orders:
+        orders_info = []
+        status_map = {
+            "pending": "قيد الانتظار",
+            "preparing": "جاري التجهيز", 
+            "ready": "جاهز للتوصيل",
+            "delivering": "في الطريق",
+            "delivered": "تم التوصيل",
+            "cancelled": "ملغي"
+        }
+        for order in recent_orders:
+            status = status_map.get(order.get("status"), order.get("status"))
+            orders_info.append(f"طلب من {order.get('store_name', 'متجر')} - الحالة: {status}")
+        context_parts.append(f"آخر الطلبات: {', '.join(orders_info)}")
+    
+    # جلب رصيد المحفظة
+    wallet = await db.wallets.find_one({"user_id": user_id}, {"_id": 0, "balance": 1})
+    if wallet:
+        context_parts.append(f"رصيد المحفظة: {wallet.get('balance', 0):,} ل.س")
+    
+    return " | ".join(context_parts) if context_parts else ""
+
+def _check_needs_human(user_message: str, ai_response: str) -> bool:
+    """التحقق إذا كانت المحادثة تحتاج تدخل بشري"""
+    # كلمات تدل على الحاجة للدعم البشري
+    human_keywords = [
+        "مشكلة كبيرة", "شكوى", "استرجاع", "تعويض", "ما حل",
+        "تواصل مع الدعم", "موظف", "مدير", "لم يحل", "ما زال"
+    ]
+    
+    message_lower = user_message.lower()
+    for keyword in human_keywords:
+        if keyword in message_lower:
+            return True
+    
+    return False
+
+def _generate_quick_replies(message: str) -> List[str]:
+    """توليد ردود سريعة مقترحة بناءً على الرسالة"""
+    message_lower = message.lower()
+    
+    if any(word in message_lower for word in ["طلب", "تتبع", "أين"]):
+        return ["تتبع طلبي", "إلغاء الطلب", "التواصل مع الدعم"]
+    elif any(word in message_lower for word in ["إرجاع", "ارجاع", "رجع"]):
+        return ["سياسة الإرجاع", "استرجاع المبلغ", "التواصل مع الدعم"]
+    elif any(word in message_lower for word in ["دفع", "محفظة", "شحن رصيد"]):
+        return ["شحن المحفظة", "طرق الدفع", "نقاط الولاء"]
+    elif any(word in message_lower for word in ["بائع", "متجر", "أبيع"]):
+        return ["كيف أصبح بائع؟", "ما هي العمولة؟", "المستندات المطلوبة"]
+    elif any(word in message_lower for word in ["توصيل", "سائق", "موصل"]):
+        return ["كيف أصبح موظف توصيل؟", "كم الراتب؟", "ساعات العمل"]
+    else:
+        return ["أين طلبي؟", "كيف أرجع منتج؟", "التواصل مع الدعم"]
+
+@router.get("/history")
+async def get_ai_chat_history(session_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """جلب سجل المحادثة مع الشات بوت الذكي"""
+    
+    query = {"user_id": user["id"]}
+    if session_id:
+        query["session_id"] = session_id
+    
+    messages = await db.ai_chat_messages.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", 1).limit(100).to_list(100)
+    
+    return {"messages": messages}
+
+@router.post("/request-support")
+async def request_human_support_from_ai(data: SupportRequest, user: dict = Depends(get_current_user)):
+    """طلب التحويل لموظف دعم بشري من الشات بوت الذكي"""
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب آخر رسائل المحادثة للسياق
+    recent_messages = await db.ai_chat_messages.find(
+        {"session_id": data.session_id, "user_id": user["id"]},
+        {"_id": 0, "message": 1, "sender": 1}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    conversation_summary = "\n".join([
+        f"{'العميل' if m['sender'] == 'user' else 'البوت'}: {m['message'][:100]}"
+        for m in reversed(recent_messages)
+    ])
+    
+    # إنشاء طلب دعم
+    support_request = {
+        "id": str(uuid.uuid4()),
+        "session_id": data.session_id,
+        "user_id": user["id"],
+        "user_name": user.get("full_name") or user.get("name"),
+        "user_phone": user.get("phone"),
+        "initial_message": data.message,
+        "conversation_summary": conversation_summary,
+        "source": "ai_chatbot",
+        "status": "pending",
+        "created_at": now
+    }
+    
+    await db.support_requests.insert_one(support_request)
+    
+    # حفظ رسالة في المحادثة
+    await db.ai_chat_messages.insert_one({
+        "session_id": data.session_id,
+        "user_id": user["id"],
+        "sender": "system",
+        "message": "تم تحويل محادثتك لفريق الدعم البشري 👨‍💼\nسيتواصل معك أحد موظفينا قريباً على رقم هاتفك. شكراً لصبرك! 🙏",
+        "created_at": now
+    })
+    
+    return {
+        "message": "تم إرسال طلبك لفريق الدعم. سنتواصل معك قريباً!",
+        "request_id": support_request["id"]
+    }
+
+@router.get("/quick-questions")
+async def get_quick_questions():
+    """جلب الأسئلة السريعة الشائعة"""
+    
+    return {
+        "questions": [
+            {"text": "أين طلبي؟", "icon": "📦"},
+            {"text": "كيف أرجع منتج؟", "icon": "↩️"},
+            {"text": "طرق الدفع", "icon": "💳"},
+            {"text": "تكلفة الشحن", "icon": "🚚"},
+            {"text": "كيف أصبح بائع؟", "icon": "🏪"},
+            {"text": "نقاط الولاء", "icon": "⭐"},
+            {"text": "التواصل مع الدعم", "icon": "👨‍💼"}
+        ]
+    }
+
+@router.delete("/clear-session/{session_id}")
+async def clear_chat_session(session_id: str, user: dict = Depends(get_current_user)):
+    """مسح جلسة محادثة"""
+    
+    cache_key = f"{user['id']}_{session_id}"
+    if cache_key in chat_sessions:
+        del chat_sessions[cache_key]
+    
+    # حذف الرسائل من قاعدة البيانات (اختياري)
+    await db.ai_chat_messages.delete_many({
+        "session_id": session_id,
+        "user_id": user["id"]
+    })
+    
+    return {"message": "تم مسح المحادثة بنجاح"}
