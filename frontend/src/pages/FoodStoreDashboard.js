@@ -544,9 +544,6 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     description: store.description || '',
     phone: store.phone || '',
     delivery_time: store.delivery_time || 30,
-    minimum_order: store.minimum_order || 0,
-    delivery_fee: store.delivery_fee || 5000,
-    free_delivery_minimum: store.free_delivery_minimum || 0,
     working_hours: store.working_hours || defaultWorkingHours,
   });
   const [saving, setSaving] = useState(false);
@@ -605,58 +602,15 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">وقت التوصيل (د)</label>
-          <input
-            type="number"
-            value={formData.delivery_time}
-            onChange={(e) => setFormData({ ...formData, delivery_time: parseInt(e.target.value) })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">الحد الأدنى</label>
-          <input
-            type="number"
-            value={formData.minimum_order}
-            onChange={(e) => setFormData({ ...formData, minimum_order: parseInt(e.target.value) })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
-      {/* إعدادات التوصيل - مصغرة */}
-      <div className="border-t pt-3">
-        <h4 className="font-bold text-xs text-gray-900 mb-2 flex items-center gap-1">
-          <Truck size={14} className="text-green-600" />
-          التوصيل
-        </h4>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">رسوم التوصيل</label>
-            <input
-              type="number"
-              value={formData.delivery_fee}
-              onChange={(e) => setFormData({ ...formData, delivery_fee: parseInt(e.target.value) })}
-              min="0"
-              step="500"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">توصيل مجاني عند</label>
-            <input
-              type="number"
-              value={formData.free_delivery_minimum}
-              onChange={(e) => setFormData({ ...formData, free_delivery_minimum: parseInt(e.target.value) })}
-              min="0"
-              step="5000"
-              placeholder="0 = معطل"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-700 mb-1">وقت التوصيل (دقيقة)</label>
+        <input
+          type="number"
+          value={formData.delivery_time}
+          onChange={(e) => setFormData({ ...formData, delivery_time: parseInt(e.target.value) })}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          placeholder="مثال: 30"
+        />
       </div>
 
       {/* ساعات العمل */}
