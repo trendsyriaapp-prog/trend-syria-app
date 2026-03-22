@@ -16,11 +16,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة', 'ريف دمشق'];
 
 const PAYMENT_METHODS = [
-  { id: 'wallet', name: 'المحفظة', icon: '👛', description: 'الدفع من رصيد محفظتك' },
-  { id: 'card', name: 'بطاقة بنكية', icon: '💳', description: 'Visa / Mastercard' },
-  { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية' },
-  { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش' },
-  { id: 'mtn_cash', name: 'MTN', icon: '📲', description: 'MTN كاش' },
+  { id: 'wallet', name: 'المحفظة', icon: '👛', description: 'الدفع من رصيد محفظتك', available: true },
+  { id: 'bank_card', name: 'بطاقة بنكية', icon: '💳', description: 'Visa / Mastercard', available: false, comingSoon: true },
+  { id: 'shamcash', name: 'شام كاش', icon: '🏦', description: 'محفظة إلكترونية', available: true },
+  { id: 'syriatel_cash', name: 'سيرياتيل', icon: '📱', description: 'سيرياتيل كاش', available: true },
+  { id: 'mtn_cash', name: 'MTN', icon: '📲', description: 'MTN كاش', available: true },
 ];
 
 const formatPrice = (price) => {
@@ -159,7 +159,7 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
       return;
     }
-    if (useNewPayment && newPayment.type !== 'card' && (!newPayment.phone || !newPayment.holder_name)) {
+    if (useNewPayment && newPayment.type !== 'bank_card' && newPayment.type !== 'wallet' && (!newPayment.phone || !newPayment.holder_name)) {
       toast({ title: "خطأ", description: "يرجى إكمال بيانات الدفع", variant: "destructive" });
       return;
     }
@@ -205,7 +205,7 @@ const CheckoutPage = () => {
           }
         }
         // لا نحفظ طريقة الدفع للبطاقة أو المحفظة
-        if (newPayment.type !== 'card' && newPayment.type !== 'wallet') {
+        if (newPayment.type !== 'bank_card' && newPayment.type !== 'wallet') {
           await axios.post(`${API}/user/payment-methods`, newPayment);
         }
         paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone || '' };
@@ -236,11 +236,10 @@ const CheckoutPage = () => {
         } catch (walletError) {
           toast({ title: "خطأ", description: walletError.response?.data?.detail || "فشل الدفع من المحفظة", variant: "destructive" });
         }
-      } else if (paymentData.payment_method === 'card') {
-        // البطاقة البنكية - سيتم التوجيه لصفحة الدفع
-        toast({ title: "تم إنشاء الطلب", description: "جاري التوجيه لصفحة الدفع الآمن..." });
-        clearCart();
-        setOrderComplete(true);
+      } else if (paymentData.payment_method === 'bank_card') {
+        // البطاقة البنكية - قريباً
+        toast({ title: "قريباً", description: "الدفع بالبطاقة البنكية سيتوفر قريباً", variant: "destructive" });
+        return;
       } else {
         // المحافظ الإلكترونية - نحتاج OTP
         await axios.post(`${API}/payment/shamcash/init?order_id=${res.data.order_id}`);
@@ -520,12 +519,22 @@ const CheckoutPage = () => {
                     <button
                       key={method.id}
                       type="button"
-                      onClick={() => setNewPayment({ ...newPayment, type: method.id })}
-                      className={`p-1.5 rounded-lg border transition-all text-center ${
-                        newPayment.type === method.id ? 'border-[#FF6B00] bg-white' : 'border-gray-200 bg-white'
+                      onClick={() => method.available && setNewPayment({ ...newPayment, type: method.id })}
+                      disabled={!method.available}
+                      className={`p-1.5 rounded-lg border transition-all text-center relative ${
+                        !method.available
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : newPayment.type === method.id 
+                          ? 'border-[#FF6B00] bg-white' 
+                          : 'border-gray-200 bg-white'
                       }`}
                       data-testid={`new-payment-type-${method.id}`}
                     >
+                      {method.comingSoon && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[7px] px-1 py-0.5 rounded-full">
+                          قريباً
+                        </span>
+                      )}
                       <span className="text-base block">{method.icon}</span>
                       <span className="text-[9px] text-gray-700">{method.name}</span>
                     </button>
@@ -533,7 +542,7 @@ const CheckoutPage = () => {
                 </div>
                 
                 {/* إخفاء حقول الإدخال للبطاقة */}
-                {newPayment.type !== 'card' && (
+                {newPayment.type !== 'bank_card' && newPayment.type !== 'wallet' && (
                   <>
                     <input
                       type="tel"
@@ -555,9 +564,9 @@ const CheckoutPage = () => {
                 )}
                 
                 {/* رسالة توضيحية للبطاقة البنكية */}
-                {newPayment.type === 'card' && (
+                {newPayment.type === 'bank_card' && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
-                    <p className="text-[10px] text-blue-700">سيتم توجيهك لصفحة الدفع الآمن بعد تأكيد الطلب</p>
+                    <p className="text-[10px] text-blue-700">الدفع بالبطاقة البنكية قريباً</p>
                   </div>
                 )}
               </div>

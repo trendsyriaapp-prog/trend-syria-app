@@ -779,7 +779,6 @@
 
 ## Upcoming Tasks
 - 🔵 P1: تفعيل منطق التحقق الفعلي من شام كاش في `payment_providers.py`
-- 🔵 P2: إضافة placeholder لبطاقات Bank Card
 
 ## Future Tasks
 - التسوق عبر المحافظات
@@ -807,6 +806,17 @@
   - تغيير placeholder من 30 → 15 دقيقة
   - إضافة نص توضيحي: "الوقت اللازم لتحضير الطلب قبل التوصيل"
 - **الملف المعدل**: `/app/frontend/src/pages/FoodStoreDashboard.js`
+
+### ✅ P2: Bank Card Placeholder (Completed)
+- **الوصف**: إضافة خيار "بطاقة بنكية" مع علامة "قريباً" (غير مفعّل)
+- **الملفات المعدلة**:
+  - `/app/frontend/src/pages/BuyerWalletPage.js` - شحن المحفظة
+  - `/app/frontend/src/pages/CheckoutPage.js` - إتمام الشراء
+  - `/app/frontend/src/pages/FoodCartPage.js` - سلة الطعام
+- **التصميم**:
+  - علامة "قريباً" زرقاء في زاوية الزر
+  - الزر معطل (disabled) - لا يمكن اختياره
+  - عند المحاولة: رسالة "الدفع بالبطاقة البنكية سيتوفر قريباً"
 
 ### قاعدة بيانات المصادقة:
 - كلمات المرور مشفرة بـ bcrypt (تبدأ بـ $2)

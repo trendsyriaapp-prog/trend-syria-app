@@ -546,7 +546,7 @@ const FoodCartPage = () => {
       let paymentMethod = 'wallet';
       if (useNewPayment || savedPayments.length === 0) {
         paymentMethod = newPayment.type;
-        if (newPayment.type !== 'wallet' && newPayment.type !== 'card' && newPayment.is_default) {
+        if (newPayment.type !== 'wallet' && newPayment.type !== 'bank_card' && newPayment.is_default) {
           await axios.post(`${API}/user/payment-methods`, newPayment);
         }
       } else if (selectedPaymentId) {
@@ -1136,20 +1136,22 @@ const FoodCartPage = () => {
                 )}
               </label>
               
-              {/* بطاقة بنكية */}
-              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+              {/* بطاقة بنكية - قريباً */}
+              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-not-allowed bg-gray-50 opacity-70 relative">
+                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                  قريباً
+                </span>
                 <input
                   type="radio"
                   name="newPayment"
-                  value="card"
-                  checked={newPayment.type === 'card'}
-                  onChange={() => setNewPayment({ ...newPayment, type: 'card' })}
-                  className="w-4 h-4 text-[#E65000]"
+                  value="bank_card"
+                  disabled
+                  className="w-4 h-4 text-gray-400"
                 />
-                <CreditCard size={20} className="text-blue-600" />
+                <CreditCard size={20} className="text-gray-400" />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">بطاقة بنكية</p>
-                  <p className="text-sm text-gray-500">Visa / Mastercard / شام كاش</p>
+                  <p className="font-medium text-gray-500">بطاقة بنكية</p>
+                  <p className="text-sm text-gray-400">Visa / Mastercard</p>
                 </div>
               </label>
               
@@ -1171,7 +1173,7 @@ const FoodCartPage = () => {
               </label>
               
               {/* حقول إضافية للمحافظ الإلكترونية */}
-              {newPayment.type !== 'wallet' && newPayment.type !== 'card' && (
+              {newPayment.type !== 'wallet' && newPayment.type !== 'bank_card' && (
                 <div className="space-y-2 pt-2 border-t border-gray-100">
                   <input
                     type="tel"

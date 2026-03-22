@@ -52,9 +52,10 @@ const BuyerWalletPage = () => {
   
   // طرق الدفع
   const paymentMethods = [
-    { id: 'shamcash', name: 'شام كاش', icon: '🏦' },
-    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱' },
-    { id: 'mtn_cash', name: 'MTN كاش', icon: '📲' },
+    { id: 'shamcash', name: 'شام كاش', icon: '🏦', available: true },
+    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱', available: true },
+    { id: 'mtn_cash', name: 'MTN كاش', icon: '📲', available: true },
+    { id: 'bank_card', name: 'بطاقة بنكية', icon: '💳', available: false, comingSoon: true },
   ];
   
   useEffect(() => {
@@ -320,21 +321,31 @@ const BuyerWalletPage = () => {
                   {/* طرق الدفع */}
                   <div className="mb-4">
                     <p className="text-sm text-gray-600 mb-2">اختر طريقة الدفع:</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {paymentMethods.map(method => (
                         <button
                           key={method.id}
                           type="button"
                           onClick={() => {
-                            setPaymentMethod(method.id);
-                            fetchPaymentSettings();
+                            if (method.available) {
+                              setPaymentMethod(method.id);
+                              fetchPaymentSettings();
+                            }
                           }}
-                          className={`p-3 rounded-xl text-center transition-all ${
-                            paymentMethod === method.id
+                          disabled={!method.available}
+                          className={`p-3 rounded-xl text-center transition-all relative ${
+                            !method.available
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
+                              : paymentMethod === method.id
                               ? 'bg-[#FF6B00] text-white ring-2 ring-[#FF6B00] ring-offset-2'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
+                          {method.comingSoon && (
+                            <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full">
+                              قريباً
+                            </span>
+                          )}
                           <span className="text-2xl block mb-1">{method.icon}</span>
                           <span className="text-xs font-medium">{method.name}</span>
                         </button>
