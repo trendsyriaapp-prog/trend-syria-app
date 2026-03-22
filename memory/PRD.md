@@ -27,6 +27,38 @@
 
 ### Session: March 2026 (Latest - 22 Mar)
 
+#### 🆕 21. نظام الدفع الفعلي - شام كاش + بطاقات بنكية (Completed ✅) - 22 Mar 2026
+- **الوصف**: تجهيز البنية التحتية للدفع الفعلي عبر شام كاش وبطاقات Visa/Mastercard
+- **المكونات الجديدة**:
+  - `/app/backend/services/payment_providers.py` - مزودي الدفع (ShamCash, Syriatel, BankCard)
+  - `/app/backend/routes/payment_v2.py` - APIs الدفع الجديدة
+  - `/app/frontend/src/components/admin/PaymentSettingsTab.js` - واجهة إعدادات الدفع
+- **الميزات**:
+  - ✅ **شام كاش**: تكامل كامل مع API Syria (apisyria.com)
+    - التحقق من التحويلات الواردة
+    - البحث عن رقم العملية
+    - مطابقة المبالغ تلقائياً
+  - ✅ **سيرياتيل كاش**: نفس البنية مع API Syria
+  - ⏳ **بطاقات بنكية**: جاهز للتكامل عند توفر API (Visa/Mastercard شراكة ديسمبر 2025)
+  - ✅ **وضع Sandbox/Production**: تبديل سهل بين التجريبي والفعلي
+- **الـ APIs الجديدة**:
+  - `GET /api/payment/v2/status` - حالة نظام الدفع
+  - `POST /api/payment/v2/verify` - التحقق من الدفع برقم العملية
+  - `GET /api/payment/v2/instructions/{method}` - تعليمات الدفع للعميل
+  - `GET /api/payment/v2/admin/settings` - إعدادات الدفع (للمدير)
+  - `PUT /api/payment/v2/admin/settings` - تحديث إعدادات الدفع
+  - `GET /api/payment/v2/provider/{provider}/balance` - رصيد حساب التاجر
+- **المتغيرات البيئية الجديدة** (backend/.env):
+  - `PAYMENT_MODE` - sandbox أو production
+  - `APISYRIA_API_KEY` - مفتاح API Syria
+  - `SHAMCASH_ACCOUNT_ADDRESS` - عنوان حساب شام كاش
+  - `SYRIATEL_MERCHANT_GSM` - رقم سيرياتيل كاش
+- **كيفية التفعيل**:
+  1. سجّل في apisyria.com
+  2. اربط حسابات شام كاش/سيرياتيل
+  3. أضف API Key والعناوين في .env
+  4. غيّر PAYMENT_MODE إلى production
+
 #### 🆕 20. شات بوت ذكي بالذكاء الاصطناعي (Completed ✅) - 22 Mar 2026
 - **الوصف**: ترقية الشات بوت من نظام كلمات مفتاحية إلى شات بوت ذكي باستخدام OpenAI GPT-4o
 - **الميزات الجديدة**:
@@ -390,15 +422,18 @@
 
 ### P1 - High Priority
 - **نظام العروض والصفقات للطعام**: "عروض اليوم"، "الأكثر طلباً"، "جديد"
-- **تكامل بوابة الدفع السورية**: تفعيل شحن المحفظة الإلكترونية
+- **التسوق عبر المحافظات**: السماح بالشراء من متاجر في محافظات أخرى
 
 ### P2 - Medium Priority
-- **التسوق عبر المحافظات**: السماح بالشراء من متاجر في محافظات أخرى
 - زر اتصال العميل بالسائق (VoIP)
 - نظام تقييم المكالمات (1-5 نجوم)
+- تحسين عرض الأسعار (مثال: 9.3K بدل 9,375)
 
 ### P3 - Low Priority
 - إضافة مزيد من اللغات
+
+### ✅ Completed (Previously P1)
+- **تكامل بوابة الدفع السورية**: تم تجهيز البنية لشام كاش وبطاقات بنكية - 22 Mar 2026
 
 ---
 

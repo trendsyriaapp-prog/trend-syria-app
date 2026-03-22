@@ -57,6 +57,7 @@ import FeaturedStoresTab from '../components/admin/FeaturedStoresTab';
 import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
+import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -381,7 +382,8 @@ const AdminDashboardPage = () => {
     'product-badges': 'شارات المنتجات',
     'categories': 'إدارة الفئات',
     'call-requests': 'طلبات الاتصال',
-    'recorded-calls': 'المكالمات المسجلة'
+    'recorded-calls': 'المكالمات المسجلة',
+    'payment-settings': 'إعدادات الدفع'
   };
 
   return (
@@ -560,6 +562,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'homepage-sections' && user.user_type === 'admin' && (
               <HomepageSectionsTab />
+            )}
+            {activeTab === 'payment-settings' && user.user_type === 'admin' && (
+              <PaymentSettingsTab />
             )}
           </>
         ) : (
@@ -849,6 +854,7 @@ const AdminDashboardPage = () => {
                       { icon: Camera, label: 'الصور', tab: 'image-settings' },
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },
                       { icon: Package, label: 'الفئات', tab: 'categories' },
+                      { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors">
                         <item.icon size={16} className="text-gray-600" />
