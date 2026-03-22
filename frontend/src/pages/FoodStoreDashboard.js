@@ -399,19 +399,71 @@ const FoodStoreDashboard = () => {
                     إضافة طبق
                   </button>
                 </div>
-                <StoreMenuTab 
-                  products={products} 
-                  onEdit={setEditingProduct}
-                  onDelete={handleDeleteProduct}
-                  onToggleAvailability={handleToggleAvailability}
-                  token={token}
-                />
+                {/* قائمة الأطباق */}
+                {products.length === 0 ? (
+                  <div className="bg-gray-50 rounded-xl p-8 text-center">
+                    <Package size={40} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-gray-500">لم تقم بإضافة أي أطباق بعد</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {products.map((product) => (
+                      <div key={product.id} className={`bg-white rounded-xl p-3 border ${!product.is_available ? 'opacity-60' : 'border-gray-100'}`}>
+                        <div className="flex items-center gap-3">
+                          {product.images?.[0] ? (
+                            <img src={product.images[0]} alt={product.name} className="w-14 h-14 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Package size={20} className="text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900">{product.name}</h4>
+                            <p className="text-green-600 font-bold text-sm">{(product.price || 0).toLocaleString()} ل.س</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleToggleAvailability(product)}
+                              className={`p-2 rounded-lg ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
+                            >
+                              {product.is_available ? <Eye size={16} /> : <EyeOff size={16} />}
+                            </button>
+                            <button
+                              onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                              className="p-2 bg-blue-100 text-blue-600 rounded-lg"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="p-2 bg-red-100 text-red-600 rounded-lg"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* المحفظة */}
             {activeTab === 'wallet' && (
-              <StoreWalletTab token={token} />
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+                  <p className="text-white/80 text-sm">رصيد المحفظة</p>
+                  <p className="text-2xl font-bold">0 ل.س</p>
+                </div>
+                <button
+                  onClick={() => navigate('/seller/dashboard?tab=wallet')}
+                  className="w-full py-3 bg-green-100 text-green-700 rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  <Wallet size={18} />
+                  إدارة المحفظة
+                </button>
+              </div>
             )}
 
             {/* الإحصائيات */}
@@ -421,11 +473,7 @@ const FoodStoreDashboard = () => {
 
             {/* الإعدادات */}
             {activeTab === 'settings' && (
-              <StoreSettingsContent 
-                store={store} 
-                onUpdate={fetchStoreData}
-                token={token}
-              />
+              <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
             )}
           </div>
         </div>
