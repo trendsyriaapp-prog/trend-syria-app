@@ -109,7 +109,8 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+            onClick={handleSubmit}
+            className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-6 hover:bg-[#E65000] disabled:opacity-50 transition-colors cursor-pointer"
             data-testid="login-submit-btn"
           >
             {loading ? 'جاري الدخول...' : 'دخول'}

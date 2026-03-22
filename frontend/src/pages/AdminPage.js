@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench, LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -63,7 +63,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { toast } = useToast();
 
   // State
@@ -893,6 +893,18 @@ const AdminDashboardPage = () => {
                 <ChevronRight size={16} className="rotate-180" />
               </div>
             </Link>
+
+            {/* تسجيل الخروج */}
+            <button 
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="w-full mt-2 bg-red-500 hover:bg-red-600 rounded-lg p-2.5 text-white flex items-center justify-center gap-2 transition-all"
+            >
+              <LogOut size={16} />
+              <span className="text-xs font-bold">تسجيل الخروج</span>
+            </button>
           </>
         )}
 
