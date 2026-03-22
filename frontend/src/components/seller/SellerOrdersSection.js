@@ -61,6 +61,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
           const canConfirm = orderStatus === 'paid';
           const canPrepare = orderStatus === 'confirmed';
           const canShip = orderStatus === 'preparing';
+          const isShipped = orderStatus === 'shipped' || orderStatus === 'ready_for_pickup';
           const hasDeliveryDriver = order.delivery_driver_id && order.delivery_driver_name;
           
           return (
@@ -75,6 +76,28 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                   {getStatusLabel(orderStatus)}
                 </span>
               </div>
+              
+              {/* كود التسليم - يظهر عند شحن الطلب */}
+              {isShipped && order.pickup_code && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2 text-center">
+                  <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
+                  <div className="flex justify-center gap-2" dir="ltr">
+                    {order.pickup_code.split('').map((digit, i) => (
+                      <span 
+                        key={i} 
+                        className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                      >
+                        {digit}
+                      </span>
+                    ))}
+                  </div>
+                  {order.pickup_code_verified && (
+                    <p className="text-green-600 text-xs mt-2 font-bold">
+                      ✅ تم تأكيد الاستلام
+                    </p>
+                  )}
+                </div>
+              )}
               
               {/* معلومات موظف التوصيل */}
               {hasDeliveryDriver && (
@@ -106,6 +129,16 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                       </button>
                     </div>
                   </div>
+                </div>
+              )}
+              
+              {/* حالة انتظار موظف التوصيل */}
+              {isShipped && !hasDeliveryDriver && !order.pickup_code_verified && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-2 text-center">
+                  <p className="text-yellow-700 text-xs flex items-center justify-center gap-1">
+                    <Clock size={12} className="animate-pulse" />
+                    بانتظار موظف التوصيل لاستلام الطلب
+                  </p>
                 </div>
               )}
               

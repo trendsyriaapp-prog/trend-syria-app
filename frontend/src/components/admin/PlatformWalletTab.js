@@ -18,8 +18,18 @@ const PlatformWalletTab = () => {
   const [transactions, setTransactions] = useState([]);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawNote, setWithdrawNote] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [paymentSettings, setPaymentSettings] = useState(null);
+
+  // طرق السحب المتاحة
+  const withdrawMethods = [
+    { id: 'shamcash', name: 'شام كاش', icon: '💳', fields: ['shamcash_address', 'shamcash_name'] },
+    { id: 'syriatel', name: 'سيرياتيل كاش', icon: '📱', fields: ['syriatel_gsm', 'syriatel_name'] },
+    { id: 'mtn', name: 'MTN كاش', icon: '📱', fields: ['mtn_gsm', 'mtn_name'] },
+    { id: 'bank', name: 'حساب بنكي', icon: '🏦', fields: ['bank_account_number', 'bank_name', 'bank_account_holder'] }
+  ];
 
   useEffect(() => {
     fetchData();
@@ -30,13 +40,15 @@ const PlatformWalletTab = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [walletRes, transactionsRes] = await Promise.all([
+      const [walletRes, transactionsRes, paymentRes] = await Promise.all([
         axios.get(`${API}/admin/platform-wallet`, { headers }),
-        axios.get(`${API}/admin/platform-wallet/transactions?limit=20`, { headers })
+        axios.get(`${API}/admin/platform-wallet/transactions?limit=20`, { headers }),
+        axios.get(`${API}/payment/v2/admin/settings`).catch(() => ({ data: {} }))
       ]);
       
       setWallet(walletRes.data);
       setTransactions(transactionsRes.data);
+      setPaymentSettings(paymentRes.data?.payment_settings || {});
     } catch (error) {
       console.error('Error fetching platform wallet:', error);
       toast({
@@ -59,6 +71,15 @@ const PlatformWalletTab = () => {
       return;
     }
 
+    if (!withdrawMethod) {
+      toast({
+        title: "خطأ",
+        description: "اختر وسيلة السحب",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setWithdrawing(true);
     try {
       const token = localStorage.getItem('token');
@@ -67,17 +88,23 @@ const PlatformWalletTab = () => {
         null,
         { 
           headers: { Authorization: `Bearer ${token}` },
-          params: { amount: parseInt(withdrawAmount), note: withdrawNote }
+          params: { 
+            amount: parseInt(withdrawAmount), 
+            note: withdrawNote,
+            method: withdrawMethod
+          }
         }
       );
       
+      const methodName = withdrawMethods.find(m => m.id === withdrawMethod)?.name || withdrawMethod;
       toast({
-        title: "تم السحب",
-        description: `تم سحب ${parseInt(withdrawAmount).toLocaleString()} ل.س بنجاح`
+        title: "تم تسجيل طلب السحب",
+        description: `تم طلب سحب ${parseInt(withdrawAmount).toLocaleString()} ل.س إلى ${methodName}`
       });
       
       setWithdrawAmount('');
       setWithdrawNote('');
+      setWithdrawMethod('');
       setShowWithdrawForm(false);
       fetchData();
     } catch (error) {
@@ -166,8 +193,57 @@ const PlatformWalletTab = () => {
       {showWithdrawForm && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <h3 className="font-bold text-gray-900">سحب من محفظة المنصة</h3>
+          
+          {/* اختيار وسيلة السحب */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">المبلغ (ل.س)</label>
+            <label className="block text-sm text-gray-600 mb-2">وسيلة السحب *</label>
+            <div className="grid grid-cols-2 gap-2">
+              {withdrawMethods.map((method) => {
+                const isConfigured = method.fields.some(f => paymentSettings?.[f]);
+                return (
+                  <button
+                    key={method.id}
+                    onClick={() => setWithdrawMethod(method.id)}
+                    disabled={!isConfigured}
+                    className={`p-3 rounded-lg border-2 text-right transition-all ${
+                      withdrawMethod === method.id
+                        ? 'border-[#FF6B00] bg-orange-50'
+                        : isConfigured
+                          ? 'border-gray-200 hover:border-gray-300'
+                          : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{method.icon}</span>
+                      <div>
+                        <p className={`font-bold text-sm ${withdrawMethod === method.id ? 'text-[#FF6B00]' : 'text-gray-900'}`}>
+                          {method.name}
+                        </p>
+                        {isConfigured ? (
+                          <p className="text-[10px] text-gray-500">
+                            {method.id === 'shamcash' && paymentSettings?.shamcash_address}
+                            {method.id === 'syriatel' && paymentSettings?.syriatel_gsm}
+                            {method.id === 'mtn' && paymentSettings?.mtn_gsm}
+                            {method.id === 'bank' && paymentSettings?.bank_name}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-red-500">غير مُعد</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {!withdrawMethods.some(m => m.fields.some(f => paymentSettings?.[f])) && (
+              <p className="text-xs text-red-500 mt-2">
+                ⚠️ لم يتم إعداد أي وسيلة دفع. اذهب إلى "إعدادات الدفع" أولاً.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">المبلغ (ل.س) *</label>
             <input
               type="number"
               value={withdrawAmount}
@@ -175,6 +251,11 @@ const PlatformWalletTab = () => {
               placeholder="أدخل المبلغ"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
             />
+            {wallet?.balance > 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                الرصيد المتاح: {formatPrice(wallet.balance)}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">ملاحظة (اختياري)</label>
@@ -189,14 +270,17 @@ const PlatformWalletTab = () => {
           <div className="flex gap-2">
             <button
               onClick={handleWithdraw}
-              disabled={withdrawing || !withdrawAmount}
+              disabled={withdrawing || !withdrawAmount || !withdrawMethod}
               className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {withdrawing ? <Loader2 size={16} className="animate-spin" /> : <ArrowDownCircle size={16} />}
               تأكيد السحب
             </button>
             <button
-              onClick={() => setShowWithdrawForm(false)}
+              onClick={() => {
+                setShowWithdrawForm(false);
+                setWithdrawMethod('');
+              }}
               className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg"
             >
               إلغاء
