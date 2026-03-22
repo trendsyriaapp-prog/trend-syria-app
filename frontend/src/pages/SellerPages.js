@@ -6,7 +6,7 @@ import {
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
-  Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut
+  Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -574,7 +574,7 @@ const SellerDashboardPage = () => {
   const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
   // قراءة التبويب من URL أو استخدام 'orders' كافتراضي (الطلبات هي الصفحة الرئيسية)
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [walletBalance, setWalletBalance] = useState(0);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editPrice, setEditPrice] = useState('');
@@ -933,75 +933,88 @@ const SellerDashboardPage = () => {
 
   return (
     <div className="min-h-screen pb-36 md:pb-10 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
-        {/* Header with store name and notifications */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-gray-900">{labels.dashboardTitle}</h1>
-              {isFoodSeller && (
-                <span className="text-[8px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-medium">
-                  مطعم
-                </span>
+      {/* Header - مصغر مع النجوم */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <ChevronRight size={18} className="text-gray-600" />
+            </button>
+            <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center">
+              {isFoodSeller ? (
+                <Store size={18} className="text-[#FF6B00]" />
+              ) : (
+                <Package size={18} className="text-[#FF6B00]" />
               )}
             </div>
-            <div className="flex items-center gap-2">
-              {/* زر إشعارات Push */}
-              {isFoodSeller && (
-                <PushNotificationButton userType="food_seller" size="small" />
-              )}
-              {/* زر تفعيل/إيقاف صوت التنبيه */}
-              {isFoodSeller && (
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={`p-1.5 rounded-full transition-colors ${
-                    soundEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'
-                  }`}
-                  title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
-                  data-testid="sound-toggle-btn"
-                >
-                  {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                </button>
-              )}
-              <NotificationsDropdown />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold text-gray-900">{labels.dashboardTitle}</h1>
+                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded">
+                  <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-xs font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                {isFoodSeller ? (
+                  <span className="text-orange-600">مطعم</span>
+                ) : (
+                  <span>{displayItems.length} منتج</span>
+                )}
+                <span>•</span>
+                <span className="text-green-600">نشط</span>
+              </div>
             </div>
           </div>
-          {/* أزرار الإجراءات - شريط ممتلئ */}
-          <div className="flex gap-1.5">
-            <Link
-              to="/?view=customer"
-              className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
-            >
-              <Home size={12} />
-              <span>تصفح كعميل</span>
-            </Link>
-            {!isFoodSeller && (
+          <div className="flex items-center gap-2">
+            {isFoodSeller && (
               <button
-                onClick={() => navigate('/packaging-guide')}
-                className="flex-1 flex items-center justify-center gap-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] hover:bg-gray-200 transition-colors"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`p-1.5 rounded-lg ${soundEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}
+                title={soundEnabled ? 'الصوت مفعل' : 'الصوت متوقف'}
               >
-                <BookOpen size={12} />
-                <span>إرشادات التغليف</span>
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
             )}
-            <button
-              onClick={() => setShowAddProduct(true)}
-              className="flex-1 flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold py-2 rounded-lg text-[10px]"
-              data-testid="add-product-btn"
-            >
-              <Plus size={12} />
-              <span>{labels.addButton}</span>
-            </button>
+            <NotificationsDropdown />
           </div>
         </div>
+      </div>
 
-        {/* الصفحة الرئيسية = الطلبات (بدون تبويبات علوية) */}
-        
+      <div className="max-w-4xl mx-auto px-3 py-3 relative z-0">
+        {/* أزرار الإجراءات السريعة */}
+        <div className="flex gap-2 mb-4">
+          <Link
+            to="/?view=customer"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 py-2.5 rounded-lg text-xs hover:bg-gray-200 transition-colors"
+          >
+            <Home size={14} />
+            <span>تصفح كعميل</span>
+          </Link>
+          <button
+            onClick={() => setShowAddProduct(true)}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-[#FF6B00] text-white font-bold py-2.5 rounded-lg text-xs"
+            data-testid="add-product-btn"
+          >
+            <Plus size={14} />
+            <span>{labels.addButton}</span>
+          </button>
+        </div>
+
         {/* الطلبات - الصفحة الرئيسية */}
         {activeTab === 'orders' && (
           <div className="space-y-3">
-            <h2 className="text-sm font-bold text-gray-900">
-              {isFoodSeller ? 'طلبات الطعام' : 'جميع الطلبات'}
+            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingBag size={16} className="text-[#FF6B00]" />
+              {isFoodSeller ? 'طلبات الطعام' : 'الطلبات'}
+              {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {displayOrders.filter(o => o.status === 'pending' || o.status === 'paid').length} جديد
+                </span>
+              )}
             </h2>
             {isFoodSeller ? (
               <FoodOrdersSection 

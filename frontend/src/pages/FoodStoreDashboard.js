@@ -31,8 +31,8 @@ const FoodStoreDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [dataFetched, setDataFetched] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  // الصفحة الرئيسية = الطلبات (orders)، باقي الصفحات من الشريط السفلي
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  // الصفحة الرئيسية = الطلبات (orders)
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   
   // تحديث URL عند تغيير التبويب
   useEffect(() => {
@@ -302,73 +302,54 @@ const FoodStoreDashboard = () => {
         </motion.div>
       )}
 
-      {/* Header - مصغر */}
-      <div className={`bg-gradient-to-b from-green-600 to-green-500 text-white px-3 py-3 ${driverArrivingAlert ? 'mt-20' : ''}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between">
-            {/* زر الرجوع للطلبات عند التواجد في صفحة فرعية */}
-            {activeTab !== 'orders' ? (
-              <button
-                onClick={() => setActiveTab('orders')}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                title="الرجوع للطلبات"
-              >
-                <ChevronRight size={18} />
-              </button>
+      {/* Header - مصغر مع النجوم */}
+      <div className={`bg-white border-b border-gray-200 px-4 py-3 ${driverArrivingAlert ? 'mt-20' : ''}`}>
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <ChevronRight size={18} className="text-gray-600" />
+            </button>
+            {store.logo ? (
+              <img src={store.logo} alt={store.name} className="w-10 h-10 rounded-xl object-cover border border-gray-200" />
             ) : (
-              <button
-                onClick={() => navigate('/')}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                title="الصفحة الرئيسية"
-              >
-                <ChevronRight size={18} />
-              </button>
-            )}
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                {store.logo ? (
-                  <img src={store.logo} alt={store.name} className="w-8 h-8 rounded-lg object-cover" />
-                ) : (
-                  <Store size={18} />
-                )}
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <Store size={18} className="text-green-600" />
               </div>
-              <div>
-                <h1 className="text-sm font-bold">{store.name}</h1>
-                <div className="flex items-center gap-2 text-green-100 text-xs">
-                  <span>{store.city}</span>
-                  <span>•</span>
-                  <span className={store.manual_close ? 'text-red-200' : 'text-green-200'}>
-                    {store.manual_close ? 'مغلق' : 'مفتوح'}
-                  </span>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold text-gray-900">{store.name}</h1>
+                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded">
+                  <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-xs font-bold text-yellow-700">{store.rating?.toFixed(1) || '0.0'}</span>
                 </div>
               </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`flex items-center gap-1 ${store.manual_close ? 'text-red-600' : 'text-green-600'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${store.manual_close ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                  {store.manual_close ? 'مغلق' : 'مفتوح'}
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* إحصائيات سريعة في شريط صغير */}
-      <div className="max-w-4xl mx-auto px-3 py-2 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-4">
-            <span className="text-gray-500">المنتجات: <strong className="text-gray-900">{products.length}</strong></span>
-            <span className="text-gray-500">التقييم: <strong className="text-yellow-600">{store.rating?.toFixed(1) || '0.0'}</strong></span>
           </div>
           <button
             onClick={() => toggleStoreStatus(!store.manual_close)}
             disabled={togglingStore}
-            className={`px-2 py-1 rounded text-xs font-medium ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
               store.manual_close 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-red-100 text-red-700'
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-100 text-red-600'
             }`}
           >
-            {store.manual_close ? 'فتح المتجر' : 'إغلاق المتجر'}
+            {togglingStore ? '...' : (store.manual_close ? 'فتح' : 'إغلاق')}
           </button>
         </div>
       </div>
 
-      {/* Content - الطلبات هي الصفحة الرئيسية */}
+      {/* Content - الطلبات مباشرة */}
       <div className="max-w-4xl mx-auto px-3 py-3">
         {/* الطلبات - الصفحة الرئيسية */}
         {activeTab === 'orders' && (
