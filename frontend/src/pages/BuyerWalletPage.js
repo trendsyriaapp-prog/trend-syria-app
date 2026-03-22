@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Wallet, Plus, Clock, CheckCircle, XCircle, 
-  CreditCard, History, ArrowRight
+  CreditCard, History, ArrowRight, Copy, Check, AlertCircle, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -30,9 +30,18 @@ const BuyerWalletPage = () => {
   
   // Topup form
   const [showTopupForm, setShowTopupForm] = useState(false);
+  const [topupStep, setTopupStep] = useState(1); // 1: اختيار المبلغ, 2: تعليمات الدفع, 3: إدخال رقم العملية
   const [topupAmount, setTopupAmount] = useState('');
-  const [shamcashPhone, setShamcashPhone] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('shamcash');
+  const [transactionId, setTransactionId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [topupCode, setTopupCode] = useState('');
+  const [pendingTopupId, setPendingTopupId] = useState(null);
+  const [copied, setCopied] = useState(false);
+  
+  // إعدادات الدفع
+  const [paymentSettings, setPaymentSettings] = useState(null);
   
   // الحدود
   const MIN_TOPUP = 10000;
@@ -41,9 +50,17 @@ const BuyerWalletPage = () => {
   // مبالغ سريعة للشحن
   const quickAmounts = [25000, 50000, 100000, 250000, 500000];
   
+  // طرق الدفع
+  const paymentMethods = [
+    { id: 'shamcash', name: 'شام كاش', icon: '🏦' },
+    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱' },
+    { id: 'mtn_cash', name: 'MTN كاش', icon: '📲' },
+  ];
+  
   useEffect(() => {
     if (user && user.user_type === 'buyer') {
       fetchWalletData();
+      fetchPaymentSettings();
     }
   }, [user]);
   
@@ -64,8 +81,17 @@ const BuyerWalletPage = () => {
     }
   };
   
-  const handleTopup = async (e) => {
-    e.preventDefault();
+  const fetchPaymentSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/payment/v2/instructions/${paymentMethod}`);
+      setPaymentSettings(res.data);
+    } catch (error) {
+      console.error('Error fetching payment settings:', error);
+    }
+  };
+  
+  // الخطوة 1: إرسال طلب الشحن
+  const handleCreateTopup = async () => {
     const amount = parseInt(topupAmount);
     
     if (amount < MIN_TOPUP) {
@@ -91,18 +117,17 @@ const BuyerWalletPage = () => {
     try {
       const res = await axios.post(`${API}/api/wallet/topup/request`, {
         amount: amount,
-        shamcash_phone: shamcashPhone
+        payment_method: paymentMethod
       });
       
-      toast({
-        title: "تم إرسال الطلب",
-        description: `كود الطلب: ${res.data.topup_code}. سيتم إضافة الرصيد بعد التأكد من التحويل.`
-      });
+      setTopupCode(res.data.topup_code);
+      setPendingTopupId(res.data.topup_id);
       
-      setShowTopupForm(false);
-      setTopupAmount('');
-      setShamcashPhone('');
-      fetchWalletData();
+      // جلب تعليمات الدفع المحدثة
+      const instructionsRes = await axios.get(`${API}/api/payment/v2/instructions/${paymentMethod}?order_id=${res.data.topup_id}`);
+      setPaymentSettings(instructionsRes.data);
+      
+      setTopupStep(2); // الانتقال لخطوة التعليمات
     } catch (error) {
       toast({
         title: "خطأ",
@@ -112,6 +137,69 @@ const BuyerWalletPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+  
+  // الخطوة 3: التحقق من رقم العملية
+  const handleVerifyTransaction = async () => {
+    if (!transactionId || transactionId.length < 3) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم العملية الصحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setVerifying(true);
+    
+    try {
+      // التحقق من التحويل عبر API الجديد
+      const res = await axios.post(`${API}/api/wallet/topup/verify`, {
+        topup_id: pendingTopupId,
+        transaction_id: transactionId,
+        payment_method: paymentMethod
+      });
+      
+      if (res.data.success) {
+        toast({
+          title: "تم الشحن بنجاح! 🎉",
+          description: `تم إضافة ${formatPrice(parseInt(topupAmount))} لمحفظتك`
+        });
+        
+        resetTopupForm();
+        fetchWalletData();
+      } else {
+        toast({
+          title: "فشل التحقق",
+          description: res.data.message || "لم يتم العثور على التحويل أو المبلغ غير مطابق",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل التحقق من العملية",
+        variant: "destructive"
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+  
+  const resetTopupForm = () => {
+    setShowTopupForm(false);
+    setTopupStep(1);
+    setTopupAmount('');
+    setTransactionId('');
+    setTopupCode('');
+    setPendingTopupId(null);
+  };
+  
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({ title: "تم النسخ", description: "تم نسخ العنوان للحافظة" });
   };
   
   const cancelTopup = async (topupId) => {
@@ -196,96 +284,286 @@ const BuyerWalletPage = () => {
           شحن المحفظة
         </button>
         
-        {/* Topup Form Modal */}
+        {/* Topup Form Modal - Multi-step */}
         {showTopupForm && (
           <div
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowTopupForm(false)}
+            onClick={() => resetTopupForm()}
           >
             <div
-              className="bg-white rounded-2xl p-6 w-full max-w-sm"
+              className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-lg font-bold text-gray-900 mb-4">شحن المحفظة</h2>
-              
-              {/* مبالغ سريعة */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">اختر مبلغاً:</p>
-                <div className="flex flex-wrap gap-2">
-                  {quickAmounts.map(amount => (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => setTopupAmount(amount.toString())}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        parseInt(topupAmount) === amount
-                          ? 'bg-[#FF6B00] text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {formatPrice(amount)}
-                    </button>
-                  ))}
-                </div>
+              {/* Progress Steps */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {[1, 2, 3].map(step => (
+                  <div key={step} className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      topupStep >= step 
+                        ? 'bg-[#FF6B00] text-white' 
+                        : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {topupStep > step ? <Check size={16} /> : step}
+                    </div>
+                    {step < 3 && (
+                      <div className={`w-8 h-0.5 ${topupStep > step ? 'bg-[#FF6B00]' : 'bg-gray-200'}`} />
+                    )}
+                  </div>
+                ))}
               </div>
               
-              <form onSubmit={handleTopup} className="space-y-4">
+              {/* Step 1: اختيار المبلغ وطريقة الدفع */}
+              {topupStep === 1 && (
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">أو أدخل مبلغ آخر (ل.س)</label>
-                  <input
-                    type="number"
-                    value={topupAmount}
-                    onChange={(e) => setTopupAmount(e.target.value)}
-                    placeholder="مثال: 100000"
-                    className="w-full p-3 border border-gray-300 rounded-xl text-lg"
-                    required
-                    min={MIN_TOPUP}
-                    max={MAX_TOPUP}
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    الحد الأدنى: {formatPrice(MIN_TOPUP)} | الأقصى: {formatPrice(MAX_TOPUP)}
+                  <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">شحن المحفظة</h2>
+                  
+                  {/* طرق الدفع */}
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">اختر طريقة الدفع:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {paymentMethods.map(method => (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => {
+                            setPaymentMethod(method.id);
+                            fetchPaymentSettings();
+                          }}
+                          className={`p-3 rounded-xl text-center transition-all ${
+                            paymentMethod === method.id
+                              ? 'bg-[#FF6B00] text-white ring-2 ring-[#FF6B00] ring-offset-2'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          <span className="text-2xl block mb-1">{method.icon}</span>
+                          <span className="text-xs font-medium">{method.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* مبالغ سريعة */}
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">اختر مبلغاً:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {quickAmounts.map(amount => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setTopupAmount(amount.toString())}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            parseInt(topupAmount) === amount
+                              ? 'bg-[#FF6B00] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {formatPrice(amount)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm text-gray-600 mb-1">أو أدخل مبلغ آخر (ل.س)</label>
+                    <input
+                      type="number"
+                      value={topupAmount}
+                      onChange={(e) => setTopupAmount(e.target.value)}
+                      placeholder="مثال: 100000"
+                      className="w-full p-3 border border-gray-300 rounded-xl text-lg"
+                      min={MIN_TOPUP}
+                      max={MAX_TOPUP}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      الحد الأدنى: {formatPrice(MIN_TOPUP)} | الأقصى: {formatPrice(MAX_TOPUP)}
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCreateTopup}
+                      disabled={!topupAmount || parseInt(topupAmount) < MIN_TOPUP || submitting}
+                      className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          جاري الإنشاء...
+                        </>
+                      ) : (
+                        'التالي'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => resetTopupForm()}
+                      className="px-4 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Step 2: تعليمات الدفع */}
+              {topupStep === 2 && (
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-2 text-center">
+                    {paymentMethods.find(m => m.id === paymentMethod)?.icon} تعليمات الدفع
+                  </h2>
+                  <p className="text-center text-gray-500 text-sm mb-4">
+                    كود الطلب: <span className="font-bold text-[#FF6B00]">{topupCode}</span>
+                  </p>
+                  
+                  {/* المبلغ المطلوب */}
+                  <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-xl p-4 text-white text-center mb-4">
+                    <p className="text-sm opacity-80">المبلغ المطلوب تحويله</p>
+                    <p className="text-2xl font-bold">{formatPrice(parseInt(topupAmount))}</p>
+                  </div>
+                  
+                  {/* عنوان الحساب للنسخ */}
+                  {paymentSettings?.merchant_address || paymentSettings?.merchant_phone ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                      <p className="text-sm text-gray-600 mb-2">
+                        {paymentMethod === 'shamcash' ? 'عنوان حساب شام كاش:' : 'رقم الهاتف:'}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-lg font-mono" dir="ltr">
+                          {paymentSettings?.merchant_address || paymentSettings?.merchant_phone}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(paymentSettings?.merchant_address || paymentSettings?.merchant_phone)}
+                          className="p-2 bg-[#FF6B00] text-white rounded-lg hover:bg-[#e55f00]"
+                        >
+                          {copied ? <Check size={20} /> : <Copy size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle size={20} className="text-amber-600 mt-0.5" />
+                        <p className="text-sm text-amber-700">
+                          لم يتم تحديد حساب استلام للمنصة بعد. يرجى التواصل مع الإدارة.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* خطوات الدفع */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p className="font-bold text-blue-800 mb-2">خطوات الدفع:</p>
+                    <ol className="text-sm text-blue-700 space-y-2">
+                      {Array.isArray(paymentSettings?.steps) && paymentSettings.steps.map((step, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs flex-shrink-0">
+                            {index + 1}
+                          </span>
+                          <span>{typeof step === 'string' ? step.replace(/^\d+\.\s*/, '') : ''}</span>
+                        </li>
+                      ))}
+                      {!Array.isArray(paymentSettings?.steps) && (
+                        <>
+                          <li className="flex items-start gap-2">
+                            <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs flex-shrink-0">1</span>
+                            <span>افتح تطبيق {paymentMethods.find(m => m.id === paymentMethod)?.name}</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs flex-shrink-0">2</span>
+                            <span>حوّل المبلغ للحساب المذكور أعلاه</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs flex-shrink-0">3</span>
+                            <span>احفظ رقم العملية</span>
+                          </li>
+                        </>
+                      )}
+                    </ol>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 text-center mb-4">
+                    ⚠️ احفظ رقم العملية بعد التحويل - ستحتاجه في الخطوة التالية
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTopupStep(3)}
+                      className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-xl"
+                    >
+                      تم التحويل - التالي
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTopupStep(1)}
+                      className="px-4 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl"
+                    >
+                      رجوع
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Step 3: إدخال رقم العملية */}
+              {topupStep === 3 && (
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-2 text-center">تأكيد التحويل</h2>
+                  <p className="text-center text-gray-500 text-sm mb-4">
+                    أدخل رقم العملية من إيصال التحويل
+                  </p>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm text-gray-600 mb-2">رقم العملية (Transaction ID)</label>
+                    <input
+                      type="text"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      placeholder={paymentMethod === 'shamcash' ? 'مثال: TX123456789' : 'رقم العملية'}
+                      className="w-full p-4 border-2 border-gray-300 rounded-xl text-lg text-center font-mono focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/20"
+                      dir="ltr"
+                    />
+                  </div>
+                  
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">
+                    <p className="text-sm text-green-700 text-center">
+                      ✅ سيتم التحقق تلقائياً من التحويل وإضافة الرصيد فوراً
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleVerifyTransaction}
+                      disabled={!transactionId || verifying}
+                      className="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {verifying ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          جاري التحقق...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={18} />
+                          تأكيد وشحن المحفظة
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTopupStep(2)}
+                      className="px-4 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl"
+                    >
+                      رجوع
+                    </button>
+                  </div>
+                  
+                  <p className="text-xs text-gray-400 text-center mt-4">
+                    إذا واجهت مشكلة، تواصل مع الدعم مع كود الطلب: {topupCode}
                   </p>
                 </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">رقم شام كاش (للتحويل منه)</label>
-                  <input
-                    type="tel"
-                    value={shamcashPhone}
-                    onChange={(e) => setShamcashPhone(e.target.value)}
-                    placeholder="09XXXXXXXX"
-                    className="w-full p-3 border border-gray-300 rounded-xl"
-                    required
-                  />
-                </div>
-                
-                {/* تعليمات */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
-                  <p className="font-bold mb-1">خطوات الشحن:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>أرسل طلب الشحن من هنا</li>
-                    <li>حوّل المبلغ لحساب شام كاش الخاص بالمنصة</li>
-                    <li>سيتم إضافة الرصيد خلال دقائق بعد التأكد</li>
-                  </ol>
-                </div>
-                
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-xl disabled:opacity-50"
-                  >
-                    {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowTopupForm(false)}
-                    className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl"
-                  >
-                    إلغاء
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
           </div>
         )}

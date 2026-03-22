@@ -1,13 +1,20 @@
 # /app/backend/routes/wallet.py
 # نظام المحفظة للجميع (عملاء، بائعين، موظفي توصيل)
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
+
+# استيراد مزودي الدفع
+try:
+    from services.payment_providers import payment_manager, PaymentProviderError
+    PAYMENT_PROVIDERS_AVAILABLE = True
+except ImportError:
+    PAYMENT_PROVIDERS_AVAILABLE = False
 
 router = APIRouter(prefix="/wallet", tags=["Wallet"])
 
@@ -79,7 +86,8 @@ async def get_wallet_transactions(
 
 class TopUpRequest(BaseModel):
     amount: int
-    shamcash_phone: str
+    shamcash_phone: Optional[str] = None  # اختياري الآن
+    payment_method: Optional[str] = "shamcash"  # شام كاش، سيرياتيل، MTN
 
 @router.post("/topup/request")
 async def request_topup(
@@ -111,6 +119,7 @@ async def request_topup(
         "user_name": user.get("full_name", user.get("name", "")),
         "user_phone": user.get("phone", ""),
         "amount": data.amount,
+        "payment_method": data.payment_method or "shamcash",
         "shamcash_phone": data.shamcash_phone,
         "status": "pending",  # pending, approved, rejected, cancelled
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -168,6 +177,152 @@ async def cancel_topup(topup_id: str, user: dict = Depends(get_current_user)):
     )
     
     return {"message": "تم إلغاء طلب الشحن"}
+
+
+# ============== التحقق التلقائي من شحن المحفظة ==============
+
+class TopupVerifyRequest(BaseModel):
+    topup_id: str
+    transaction_id: str
+    payment_method: str = "shamcash"
+
+@router.post("/topup/verify")
+async def verify_topup_payment(
+    data: TopupVerifyRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    التحقق من تحويل شحن المحفظة برقم العملية
+    
+    يقوم بالتحقق من التحويل عبر API Syria وإضافة الرصيد تلقائياً
+    """
+    if user["user_type"] != "buyer":
+        raise HTTPException(status_code=403, detail="للعملاء فقط")
+    
+    # جلب طلب الشحن
+    topup = await db.topup_requests.find_one({
+        "id": data.topup_id,
+        "user_id": user["id"]
+    })
+    
+    if not topup:
+        raise HTTPException(status_code=404, detail="طلب الشحن غير موجود")
+    
+    if topup["status"] != "pending":
+        raise HTTPException(status_code=400, detail="تم معالجة هذا الطلب مسبقاً")
+    
+    # التحقق من أن رقم العملية لم يُستخدم من قبل
+    existing_tx = await db.topup_requests.find_one({
+        "transaction_id": data.transaction_id,
+        "status": "approved"
+    })
+    if existing_tx:
+        raise HTTPException(status_code=400, detail="رقم العملية مستخدم مسبقاً")
+    
+    # التحقق عبر مزود الدفع
+    if PAYMENT_PROVIDERS_AVAILABLE:
+        try:
+            result = await payment_manager.verify_payment(
+                payment_method=data.payment_method,
+                transaction_id=data.transaction_id,
+                expected_amount=topup["amount"],
+                order_id=data.topup_id
+            )
+            
+            if not result.get("verified"):
+                return {
+                    "success": False,
+                    "message": result.get("error", "فشل التحقق من العملية"),
+                    "code": result.get("code")
+                }
+            
+            is_sandbox = result.get("sandbox", False)
+            
+        except PaymentProviderError as e:
+            return {
+                "success": False,
+                "message": e.message,
+                "code": e.code
+            }
+    else:
+        # إذا لم تكن مزودات الدفع متاحة، نعتبره تجريبي
+        is_sandbox = True
+    
+    # نجح التحقق - إضافة الرصيد للمحفظة
+    wallet = await db.wallets.find_one({"user_id": user["id"]})
+    if not wallet:
+        # إنشاء محفظة جديدة
+        wallet = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_type": user["user_type"],
+            "balance": 0,
+            "pending_balance": 0,
+            "total_earned": 0,
+            "total_withdrawn": 0,
+            "total_topped_up": 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.wallets.insert_one(wallet)
+    
+    # تحديث رصيد المحفظة
+    new_balance = wallet.get("balance", 0) + topup["amount"]
+    new_total_topped_up = wallet.get("total_topped_up", 0) + topup["amount"]
+    
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {
+            "$set": {
+                "balance": new_balance,
+                "total_topped_up": new_total_topped_up
+            }
+        }
+    )
+    
+    # تحديث حالة طلب الشحن
+    await db.topup_requests.update_one(
+        {"id": data.topup_id},
+        {
+            "$set": {
+                "status": "approved",
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "transaction_id": data.transaction_id,
+                "payment_method": data.payment_method,
+                "verified_automatically": True,
+                "is_sandbox": is_sandbox
+            }
+        }
+    )
+    
+    # إضافة سجل معاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "topup",
+        "amount": topup["amount"],
+        "balance_after": new_balance,
+        "description": f"شحن محفظة - {data.payment_method}",
+        "reference_id": data.topup_id,
+        "transaction_id": data.transaction_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.wallet_transactions.insert_one(transaction)
+    
+    # إرسال إشعار للمستخدم
+    await create_notification_for_user(
+        user_id=user["id"],
+        title="✅ تم شحن محفظتك!",
+        message=f"تم إضافة {topup['amount']:,} ل.س لرصيدك. رصيدك الحالي: {new_balance:,} ل.س",
+        notification_type="wallet_topup"
+    )
+    
+    return {
+        "success": True,
+        "message": "تم شحن المحفظة بنجاح!",
+        "amount": topup["amount"],
+        "new_balance": new_balance,
+        "is_sandbox": is_sandbox
+    }
 
 
 # ============== إدارة طلبات الشحن (للأدمن) ==============
