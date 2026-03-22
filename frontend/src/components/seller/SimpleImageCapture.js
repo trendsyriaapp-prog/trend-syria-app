@@ -1,12 +1,13 @@
 // /app/frontend/src/components/seller/SimpleImageCapture.js
 // مكون متكامل لالتقاط ومعالجة صور المنتجات مع قوالب 3D
 // الصورة تملأ الشاشة بالكامل مع الإعدادات فوقها
+// يستخدم PhotoRoom API للجودة الاحترافية
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { 
   X, Camera, RotateCcw, Check, Loader2,
-  Sparkles, Box, Palette, SlidersHorizontal, ChevronUp, ChevronDown
+  Sparkles, Box, Palette, SlidersHorizontal, ChevronUp, ChevronDown, Sun
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -25,6 +26,14 @@ const BACKGROUND_COLORS = [
   { id: 'nature_green', name: 'أخضر طبيعي', color: '#EBF5EB' },
 ];
 
+// أنواع الظلال المتاحة
+const SHADOW_TYPES = [
+  { id: 'none', name: 'بدون', icon: 'X', emoji: '✕' },
+  { id: 'soft', name: 'ناعم', icon: 'S', emoji: '☁️' },
+  { id: 'hard', name: 'حاد', icon: 'H', emoji: '◼️' },
+  { id: 'floating', name: 'عائم', icon: 'F', emoji: '🎈' },
+];
+
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', token }) => {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -41,6 +50,9 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
   // الخلفية المحددة
   const [selectedBackground, setSelectedBackground] = useState('white');
   
+  // الظل المحدد
+  const [selectedShadow, setSelectedShadow] = useState('soft');
+  
   // القوالب
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -48,7 +60,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
   
   // أدوات التحرير - فتح الإعدادات تلقائياً
   const [showTools, setShowTools] = useState(true);
-  const [activeTab, setActiveTab] = useState('colors'); // colors, templates, adjustments
+  const [activeTab, setActiveTab] = useState('colors'); // colors, shadows, templates, adjustments
   
   // إعدادات التعديل
   const [adjustments, setAdjustments] = useState({
@@ -144,8 +156,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     reader.readAsDataURL(file);
   };
 
-  // معالجة الصورة وإزالة الخلفية
-  const processImage = async (bgColor = selectedBackground) => {
+  // معالجة الصورة وإزالة الخلفية باستخدام PhotoRoom
+  const processImage = async (bgColor = selectedBackground, shadow = selectedShadow) => {
     if (!capturedImage) return;
     setProcessing(true);
     setError(null);
@@ -157,13 +169,11 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
       const formData = new FormData();
       formData.append('file', blob, 'image.png');
       formData.append('background', bgColor);
-      formData.append('add_shadow', 'true');
-      formData.append('auto_color_correct', 'true');
-      formData.append('sharpen', 'true');
-      formData.append('smart_center', 'true');
-      formData.append('output_format', 'png');
+      formData.append('shadow_type', shadow);
+      formData.append('use_sandbox', 'false');
       
-      const result = await axios.post(`${API}/api/image/process-pro`, formData, {
+      // استخدام PhotoRoom API
+      const result = await axios.post(`${API}/api/image/process-photoroom`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 90000
       });
@@ -171,6 +181,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
       if (result.data.success && result.data.image) {
         setProcessedImage(result.data.image);
         setSelectedBackground(bgColor);
+        setSelectedShadow(shadow);
         setSelectedTemplate(null);
         setStep('edit');
       } else {
@@ -188,7 +199,15 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
   const changeBackground = async (bgColor) => {
     setSelectedBackground(bgColor);
     if (capturedImage) {
-      await processImage(bgColor);
+      await processImage(bgColor, selectedShadow);
+    }
+  };
+
+  // تغيير نوع الظل
+  const changeShadow = async (shadowType) => {
+    setSelectedShadow(shadowType);
+    if (capturedImage) {
+      await processImage(selectedBackground, shadowType);
     }
   };
 
@@ -224,7 +243,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
   // إزالة القالب
   const removeTemplate = async () => {
     setSelectedTemplate(null);
-    await processImage(selectedBackground);
+    await processImage(selectedBackground, selectedShadow);
   };
 
   // استخدام الصورة
@@ -239,6 +258,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     setProcessedImage(null);
     setSelectedTemplate(null);
     setSelectedBackground('white');
+    setSelectedShadow('soft');
     setAdjustments({ brightness: 100, contrast: 100, saturation: 100 });
     setStep('capture');
     setShowTools(true);
@@ -253,6 +273,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     setProcessedImage(null);
     setSelectedTemplate(null);
     setSelectedBackground('white');
+    setSelectedShadow('soft');
     setAdjustments({ brightness: 100, contrast: 100, saturation: 100 });
     setStep('capture');
     setError(null);
@@ -367,32 +388,41 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
             {showTools && step === 'edit' && (
               <div className="px-4 space-y-3">
                 {/* تبويبات الأدوات */}
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-1 justify-center">
                   <button
                     onClick={() => setActiveTab('colors')}
-                    className={`flex-1 max-w-[100px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
                       activeTab === 'colors' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <Palette size={14} />
+                    <Palette size={12} />
                     الخلفية
                   </button>
                   <button
+                    onClick={() => setActiveTab('shadows')}
+                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                      activeTab === 'shadows' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
+                    }`}
+                  >
+                    <Sun size={12} />
+                    الظلال
+                  </button>
+                  <button
                     onClick={() => setActiveTab('templates')}
-                    className={`flex-1 max-w-[100px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
                       activeTab === 'templates' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <Box size={14} />
+                    <Box size={12} />
                     القوالب
                   </button>
                   <button
                     onClick={() => setActiveTab('adjustments')}
-                    className={`flex-1 max-w-[100px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
+                    className={`flex-1 max-w-[80px] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${
                       activeTab === 'adjustments' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
                     }`}
                   >
-                    <SlidersHorizontal size={14} />
+                    <SlidersHorizontal size={12} />
                     تعديل
                   </button>
                 </div>
@@ -419,6 +449,28 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
                           {selectedBackground === bg.id && (
                             <Check size={18} className={bg.id === 'premium_dark' ? 'text-white' : 'text-[#FF6B00]'} />
                           )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* الظلال */}
+                  {activeTab === 'shadows' && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {SHADOW_TYPES.map(shadow => (
+                        <button
+                          key={shadow.id}
+                          onClick={() => changeShadow(shadow.id)}
+                          disabled={processing}
+                          className={`aspect-square rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+                            selectedShadow === shadow.id 
+                              ? 'border-[#FF6B00] bg-[#FF6B00]/20 scale-105' 
+                              : 'border-white/30 bg-white/10'
+                          } ${processing ? 'opacity-50' : ''}`}
+                          data-testid={`shadow-${shadow.id}`}
+                        >
+                          <span className="text-lg font-bold text-white">{shadow.icon}</span>
+                          <span className="text-[10px] text-white font-bold">{shadow.name}</span>
                         </button>
                       ))}
                     </div>

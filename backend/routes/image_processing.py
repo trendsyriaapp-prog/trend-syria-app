@@ -1,6 +1,6 @@
 # /app/backend/routes/image_processing.py
 # معالجة صور المنتجات - نظام احترافي مثل Trendyol
-# يدعم Remove.bg API + معالجة تلقائية متقدمة
+# يدعم PhotoRoom API + Remove.bg API + معالجة تلقائية متقدمة
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
@@ -14,9 +14,20 @@ from rembg import remove
 from typing import Optional, Tuple, List
 from pydantic import BaseModel
 
+# استيراد خدمة PhotoRoom
+from services.photoroom import (
+    remove_background_photoroom, 
+    process_with_photoroom,
+    get_available_shadow_types,
+    SHADOW_TYPES
+)
+
 router = APIRouter(prefix="/image", tags=["Image Processing"])
 
-# Remove.bg API Configuration
+# PhotoRoom API Configuration
+PHOTOROOM_API_KEY = os.environ.get("PHOTOROOM_API_KEY")
+
+# Remove.bg API Configuration (fallback)
 REMOVE_BG_API_KEY = os.environ.get("REMOVE_BG_API_KEY")
 REMOVE_BG_API_URL = "https://api.remove.bg/v1.0/removebg"
 
@@ -698,37 +709,172 @@ async def get_available_backgrounds():
     }
 
 
+# ============== PhotoRoom API Endpoints ==============
+
+@router.get("/shadows")
+async def get_available_shadows():
+    """
+    الحصول على أنواع الظلال المتاحة
+    """
+    return {
+        "shadows": get_available_shadow_types(),
+        "default": "soft"
+    }
+
+
+@router.post("/process-photoroom")
+async def process_image_with_photoroom(
+    file: UploadFile = File(...),
+    shadow_type: str = Form(default="soft"),
+    background: str = Form(default="white"),
+    use_sandbox: bool = Form(default=False)
+):
+    """
+    معالجة صورة المنتج باستخدام PhotoRoom API - جودة احترافية عالية
+    
+    - **file**: ملف الصورة
+    - **shadow_type**: نوع الظل (none, soft, hard, floating)
+    - **background**: لون الخلفية
+    - **use_sandbox**: استخدام بيئة الاختبار
+    """
+    
+    # التحقق من نوع الملف
+    content_type = file.content_type or ""
+    if not content_type.startswith('image/'):
+        filename = file.filename or ""
+        if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون صورة")
+    
+    image_data = await file.read()
+    
+    if len(image_data) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
+    
+    try:
+        # 1. إزالة الخلفية باستخدام PhotoRoom مع الظل
+        photoroom_result = await remove_background_photoroom(
+            image_data=image_data,
+            shadow_type=shadow_type,
+            output_size="full",
+            use_sandbox=use_sandbox
+        )
+        
+        if not photoroom_result.get("success"):
+            raise Exception("فشل في معالجة الصورة")
+        
+        # 2. إذا كان هناك لون خلفية محدد (غير شفاف)، نضيف الخلفية
+        if background != "transparent":
+            # فتح الصورة المعالجة
+            processed_bytes = photoroom_result.get("image_bytes")
+            if processed_bytes:
+                processed_image = Image.open(io.BytesIO(processed_bytes))
+                if processed_image.mode != 'RGBA':
+                    processed_image = processed_image.convert('RGBA')
+                
+                # إنشاء الخلفية
+                bg_width, bg_height = processed_image.size
+                bg_image = create_gradient_background(bg_width, bg_height, background)
+                bg_image = bg_image.convert('RGBA')
+                
+                # دمج الصورة مع الخلفية
+                bg_image.paste(processed_image, (0, 0), processed_image)
+                
+                # تحويل للـ base64
+                output_buffer = io.BytesIO()
+                bg_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+                output_buffer.seek(0)
+                image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                
+                return {
+                    "success": True,
+                    "image": f"data:image/png;base64,{image_base64}",
+                    "shadow_type": shadow_type,
+                    "background_used": background,
+                    "processing_method": "photoroom",
+                    "message": "تمت معالجة الصورة بنجاح - جودة PhotoRoom الاحترافية"
+                }
+        
+        # إرجاع الصورة بدون خلفية (شفافة)
+        return {
+            "success": True,
+            "image": photoroom_result.get("image"),
+            "shadow_type": shadow_type,
+            "background_used": "transparent",
+            "processing_method": "photoroom",
+            "message": "تمت معالجة الصورة بنجاح - جودة PhotoRoom الاحترافية"
+        }
+        
+    except Exception as e:
+        # محاولة استخدام Remove.bg كـ fallback
+        try:
+            if REMOVE_BG_API_KEY:
+                no_bg_data = await remove_background_removebg(image_data)
+                processing_method = "removebg_fallback"
+            else:
+                no_bg_data = remove_background_local(image_data)
+                processing_method = "local_fallback"
+            
+            # معالجة الصورة بالطريقة القديمة
+            product_image = Image.open(io.BytesIO(no_bg_data))
+            if product_image.mode != 'RGBA':
+                product_image = product_image.convert('RGBA')
+            
+            # إضافة الخلفية
+            bg_width, bg_height = product_image.size
+            bg_image = create_gradient_background(bg_width, bg_height, background)
+            bg_image = bg_image.convert('RGBA')
+            
+            # إضافة ظل بسيط
+            if shadow_type != "none" and background != "premium_dark":
+                shadow = add_shadow_to_image(product_image, offset=(8, 8), blur=15, opacity=0.2)
+                bg_image.paste(shadow, (0, 0), shadow)
+            
+            bg_image.paste(product_image, (0, 0), product_image)
+            
+            # تحويل للـ base64
+            output_buffer = io.BytesIO()
+            bg_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+            output_buffer.seek(0)
+            image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+            
+            return {
+                "success": True,
+                "image": f"data:image/png;base64,{image_base64}",
+                "shadow_type": shadow_type,
+                "background_used": background,
+                "processing_method": processing_method,
+                "message": f"تمت معالجة الصورة (PhotoRoom غير متاح: {str(e)})"
+            }
+            
+        except Exception as fallback_error:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"فشل معالجة الصورة: {str(e)}. Fallback error: {str(fallback_error)}"
+            )
+
+
 @router.get("/status")
 async def get_image_processing_status():
     """
     الحصول على حالة خدمة معالجة الصور
     """
-    has_premium = bool(REMOVE_BG_API_KEY)
+    has_photoroom = bool(PHOTOROOM_API_KEY)
+    has_removebg = bool(REMOVE_BG_API_KEY)
     
-    # محاولة التحقق من رصيد Remove.bg
-    credits_info = None
-    if has_premium:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    "https://api.remove.bg/v1.0/account",
-                    headers={"X-Api-Key": REMOVE_BG_API_KEY}
-                )
-                if response.status_code == 200:
-                    data = response.json().get("data", {}).get("attributes", {})
-                    credits_info = {
-                        "free_calls": data.get("api", {}).get("free_calls", 0),
-                        "total_calls": data.get("api", {}).get("total_calls", 0)
-                    }
-        except Exception:
-            pass
+    # الخدمة الرئيسية هي PhotoRoom
+    primary_service = None
+    if has_photoroom:
+        primary_service = "PhotoRoom"
+    elif has_removebg:
+        primary_service = "Remove.bg"
     
     return {
-        "premium_available": has_premium,
-        "premium_service": "Remove.bg" if has_premium else None,
-        "credits": credits_info,
+        "photoroom_available": has_photoroom,
+        "removebg_available": has_removebg,
+        "primary_service": primary_service,
         "fallback_available": True,
-        "fallback_service": "rembg (local)"
+        "fallback_service": "rembg (local)",
+        "shadow_types": get_available_shadow_types()
     }
 
 
