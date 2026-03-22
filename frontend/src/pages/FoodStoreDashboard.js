@@ -497,21 +497,6 @@ const FoodStoreDashboard = () => {
           }}
         />
       )}
-      {/* Daily Deal Request Modal */}
-      {showDailyDealModal && selectedProductForDeal && (
-        <DailyDealRequestModal
-          product={selectedProductForDeal}
-          token={token}
-          onClose={() => {
-            setShowDailyDealModal(false);
-            setSelectedProductForDeal(null);
-          }}
-          onSuccess={() => {
-            setShowDailyDealModal(false);
-            setSelectedProductForDeal(null);
-          }}
-        />
-      )}
     </div>
   );
 };
