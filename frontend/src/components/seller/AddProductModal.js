@@ -774,6 +774,11 @@ const AddProductModal = ({
                 </button>
               </div>
               
+              {/* نصيحة الخلفية البيضاء */}
+              <p className="text-[9px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
+                📸 ضع خلفية بيضاء خلف المنتج عند التصوير للحصول على جودة أفضل
+              </p>
+              
               {imageWarnings.length > 0 && (
                 <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                   {imageWarnings.map((warning, i) => (
