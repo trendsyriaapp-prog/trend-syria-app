@@ -20,12 +20,12 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
   const getStatusLabel = (status) => {
     const labels = {
       'pending': 'بانتظار الدفع',
-      'paid': 'مدفوع - بانتظار التأكيد',
-      'confirmed': 'مؤكد',
-      'preparing': 'قيد التحضير',
+      'paid': 'مدفوع - بانتظار موافقتك',
+      'confirmed': 'تمت الموافقة',
+      'preparing': 'جاري تجهيز الطلب',
       'ready_for_pickup': 'جاهز للاستلام',
       'shipped': 'جاهز - بانتظار السائق',
-      'out_for_delivery': 'في الطريق',
+      'out_for_delivery': 'في الطريق للعميل',
       'delivered': 'تم التسليم',
       'cancelled': 'ملغي'
     };
@@ -189,7 +189,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                     className="flex-1 text-[10px] bg-orange-500 text-white py-1.5 rounded-lg font-medium hover:bg-orange-600"
                     data-testid={`prepare-order-${order.id}`}
                   >
-                    بدء التحضير
+                    بدء تجهيز الطلب
                   </button>
                 )}
                 {canShip && (
@@ -198,7 +198,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                     className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600"
                     data-testid={`ship-order-${order.id}`}
                   >
-                    الطلب جاهز ✓
+                    الطلب جاهز للشحن ✓
                   </button>
                 )}
                 {!canConfirm && !canPrepare && !canShip && orderStatus !== 'delivered' && orderStatus !== 'cancelled' && (
