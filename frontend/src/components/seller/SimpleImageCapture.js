@@ -267,13 +267,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل الانعكاسي تحت المنتج
+        // رسم الظل الانعكاسي خلف المنتج على اليمين
         if (selectedShadow !== 'none') {
           ctx.save();
-          ctx.translate(centerX, centerY + scaledHeight * 0.4);
+          ctx.translate(centerX + scaledWidth * 0.15, centerY + scaledHeight * 0.15);
           ctx.rotate(rotation * Math.PI / 180);
-          ctx.scale(1, -0.25);
-          ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
+          ctx.transform(1, 0, -0.2, -0.4, 0, 0); // skew and flip
+          ctx.globalAlpha = selectedShadow === 'strong' ? 0.25 : 0.12;
+          ctx.filter = `blur(${selectedShadow === 'strong' ? '3px' : '2px'})`;
           ctx.drawImage(productImg, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight);
           ctx.restore();
         }
@@ -386,12 +387,35 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             
             {/* حاوية المنتج مع الظل */}
             <div 
-              className="relative flex flex-col items-center"
+              className="relative"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px)`,
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
+              {/* الظل الانعكاسي - خلف المنتج على اليمين */}
+              {selectedShadow !== 'none' && (
+                <div 
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '15%',
+                    left: '15%',
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(-0.4) skewX(-15deg)`,
+                    opacity: selectedShadow === 'strong' ? 0.25 : 0.12,
+                    filter: `blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
+                    transformOrigin: 'top left',
+                  }}
+                >
+                  <img 
+                    src={processedImage} 
+                    alt=""
+                    className="max-w-[85vw] max-h-[45vh] object-contain"
+                    style={{ filter: getImageFilter() }}
+                    draggable={false}
+                  />
+                </div>
+              )}
+              
               {/* المنتج */}
               <div
                 style={{
@@ -410,29 +434,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   draggable={false}
                 />
               </div>
-              
-              {/* الظل الأرضي - انعكاس على السطح */}
-              {selectedShadow !== 'none' && (
-                <div 
-                  className="pointer-events-none overflow-hidden"
-                  style={{
-                    transform: `scale(${scale}) scaleY(-0.25) rotate(${rotation}deg)`,
-                    opacity: selectedShadow === 'strong' ? 0.3 : 0.15,
-                    filter: `blur(${selectedShadow === 'strong' ? '4px' : '3px'})`,
-                    maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                    marginTop: '-5px',
-                  }}
-                >
-                  <img 
-                    src={processedImage} 
-                    alt=""
-                    className="max-w-[85vw] max-h-[45vh] object-contain"
-                    style={{ filter: getImageFilter() }}
-                    draggable={false}
-                  />
-                </div>
-              )}
             </div>
           </div>
         )}
