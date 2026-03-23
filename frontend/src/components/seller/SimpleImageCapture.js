@@ -14,6 +14,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 // الخلفيات الجاهزة 3D
 const BACKGROUNDS = [
   { id: 'white', name: 'أبيض', color: '#FFFFFF', image: null },
+  { id: 'black', name: 'أسود فاخر', image: '/backgrounds/black_luxury.jpg' },
   { id: 'marble', name: 'رخام', image: '/backgrounds/marble.jpg' },
   { id: 'wood', name: 'خشب', image: '/backgrounds/wood.jpg' },
   { id: 'concrete', name: 'إسمنت', image: '/backgrounds/concrete.jpg' },
