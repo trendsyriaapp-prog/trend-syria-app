@@ -12,6 +12,37 @@ import CallCustomerButton from '../voip/CallCustomerButton';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// ⭐ Hook لمنع التمرير في الخلفية عند فتح Modal
+const usePreventBodyScroll = (isOpen) => {
+  useEffect(() => {
+    if (isOpen) {
+      // حفظ موضع التمرير الحالي
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // استعادة التمرير
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+};
+
 // فتح العنوان في خرائط Google
 const openInGoogleMaps = (address, city) => {
   const fullAddress = `${address}, ${city}, سوريا`;
@@ -154,6 +185,10 @@ const MyOrdersList = ({
   const [helpReason, setHelpReason] = useState('');
   const [helpMessage, setHelpMessage] = useState('');
   const [helpLoading, setHelpLoading] = useState(false);
+  
+  // ⭐ منع التمرير في الخلفية عند فتح أي Modal
+  const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showCancelModal || showHelpModal || showRouteOptimizer);
+  usePreventBodyScroll(isAnyModalOpen);
   
   // ساعات التوصيل المسموحة
   const [deliveryHours, setDeliveryHours] = useState({
@@ -1303,7 +1338,11 @@ const MyOrdersList = ({
 
       {/* مودال إدخال كود التسليم */}
       {showCodeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          style={{ touchAction: 'none' }}
+          onTouchMove={(e) => e.preventDefault()}
+        >
           <div className={`rounded-2xl p-6 w-full max-w-sm ${
             isDark ? 'bg-[#1a1a1a]' : 'bg-white'
           }`}>
@@ -1353,7 +1392,11 @@ const MyOrdersList = ({
 
       {/* Modal إدخال كود الاستلام من البائع */}
       {showPickupCodeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          style={{ touchAction: 'none' }}
+          onTouchMove={(e) => e.preventDefault()}
+        >
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -1439,7 +1482,11 @@ const MyOrdersList = ({
 
       {/* Modal إلغاء الطلب */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          style={{ touchAction: 'none' }}
+          onTouchMove={(e) => e.preventDefault()}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1531,7 +1578,11 @@ const MyOrdersList = ({
 
       {/* Modal طلب المساعدة الطارئة */}
       {showHelpModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          style={{ touchAction: 'none' }}
+          onTouchMove={(e) => e.preventDefault()}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

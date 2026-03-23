@@ -2090,7 +2090,11 @@ const OrdersMap = ({
                         ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500 border-yellow-300' 
                         : 'bg-gradient-to-br from-red-400 via-red-500 to-red-600 border-red-300'
                     }`}
-                    style={{ boxShadow: priorityCountdown > 0 ? '0 0 40px rgba(251, 191, 36, 0.5)' : '0 0 40px rgba(239, 68, 68, 0.5)' }}
+                    style={{ 
+                      boxShadow: priorityCountdown > 0 ? '0 0 40px rgba(251, 191, 36, 0.5)' : '0 0 40px rgba(239, 68, 68, 0.5)',
+                      touchAction: 'none' // منع التمرير على اللمس
+                    }}
+                    onTouchMove={(e) => e.stopPropagation()} // منع انتشار حدث التمرير
                   >
                     {/* شريط العد التنازلي */}
                     <div className="h-2 bg-black/20">
