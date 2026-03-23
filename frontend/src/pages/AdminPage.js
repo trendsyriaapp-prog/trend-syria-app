@@ -660,8 +660,7 @@ const AdminDashboardPage = () => {
             <div className="grid grid-cols-3 gap-3 mb-4">
               {/* طلبات الانضمام (بائعين + سائقين + متاجر طعام) */}
               <div 
-                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('pending-sellers')}
+                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
@@ -675,13 +674,22 @@ const AdminDashboardPage = () => {
                 </div>
                 <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات الانضمام</h3>
                 <div className="flex flex-wrap gap-1">
-                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                  <span 
+                    onClick={() => setActiveTab('pending-sellers')}
+                    className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-amber-200 transition-colors"
+                  >
                     بائعين: {stats?.pending_sellers || pendingSellers.length || 0}
                   </span>
-                  <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">
+                  <span 
+                    onClick={() => setActiveTab('pending-delivery')}
+                    className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-cyan-200 transition-colors"
+                  >
                     سائقين: {stats?.pending_delivery || pendingDelivery.length || 0}
                   </span>
-                  <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                  <span 
+                    onClick={() => setActiveTab('pending-food-stores')}
+                    className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-green-200 transition-colors"
+                  >
                     متاجر: {pendingFoodStores.length || 0}
                   </span>
                 </div>
