@@ -25,9 +25,9 @@ const BACKGROUNDS = [
 
 // خيارات الظل - تظهر تحت المنتج
 const SHADOWS = [
-  { id: 'none', name: 'بدون', value: '0 0 0 rgba(0,0,0,0)' },
-  { id: 'soft', name: 'ناعم', value: '0 8px 24px rgba(0,0,0,0.3)' },
-  { id: 'strong', name: 'قوي', value: '0 16px 48px rgba(0,0,0,0.5)' },
+  { id: 'none', name: 'بدون', value: 'none' },
+  { id: 'soft', name: 'ناعم', value: '0px 20px 30px rgba(0,0,0,0.4)' },
+  { id: 'strong', name: 'قوي', value: '0px 30px 50px rgba(0,0,0,0.6)' },
 ];
 
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
@@ -216,7 +216,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   // الحصول على ظل المنتج
   const getProductShadow = () => {
     const shadow = SHADOWS.find(s => s.id === selectedShadow);
-    return shadow?.value || '0 0 0 rgba(0,0,0,0)';
+    return shadow?.value || 'none';
   };
 
   // === التحكم بالسحب ===
@@ -458,21 +458,27 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         {/* Processed Image - Draggable */}
         {step === 'edit' && processedImage && (
           <div className="w-full h-full flex items-center justify-center">
-            <img 
-              src={processedImage} 
-              alt="Product" 
-              data-testid="product-image"
-              className="max-w-[90%] max-h-[90%] object-contain select-none"
+            <div
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-                filter: `${getImageFilter()} drop-shadow(${getProductShadow()})`,
+                filter: selectedShadow !== 'none' ? `drop-shadow(${getProductShadow()})` : 'none',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out, filter 0.2s ease'
               }}
-              draggable={false}
               onMouseDown={onMouseDown}
               onTouchStart={onTouchStart}
-            />
+            >
+              <img 
+                src={processedImage} 
+                alt="Product" 
+                data-testid="product-image"
+                className="max-w-[85vw] max-h-[60vh] object-contain select-none"
+                style={{
+                  filter: getImageFilter()
+                }}
+                draggable={false}
+              />
+            </div>
           </div>
         )}
 
