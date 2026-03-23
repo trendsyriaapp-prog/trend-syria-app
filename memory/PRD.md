@@ -29,90 +29,49 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
-#### Enhanced Image Editor with 3D Backgrounds & Adjustments
-- **Features Added**:
-  - **Image Adjustments Panel** (Sliders button):
-    - Brightness (50%-150%)
-    - Contrast (50%-150%)
-    - Saturation (0%-200%)
-    - Reset adjustments button
-  - **3D Backgrounds Panel** (Image button):
-    - White (default)
-    - Marble texture
-    - Wood texture
-    - Concrete/Cement
-    - Pink pastel
-    - Blue fabric
-    - Studio gradient
-  - Direct drag-to-move product (touch/mouse)
-  - Zoom in/out, Rotate (90°), Reset transform
-  - Product displays at natural size initially
-- **Files Modified**:
-  - `/app/frontend/src/components/seller/SimpleImageCapture.js` - Complete rewrite
-- **Files Created**:
-  - `/app/frontend/public/backgrounds/marble.jpg`
-  - `/app/frontend/public/backgrounds/wood.jpg`
-  - `/app/frontend/public/backgrounds/concrete.jpg`
-  - `/app/frontend/public/backgrounds/pink.jpg`
-  - `/app/frontend/public/backgrounds/fabric_blue.jpg`
-  - `/app/frontend/public/backgrounds/studio.jpg`
+#### Shadow Position Fix
+- **Issue**: Product shadow was positioned too far from the product base
+- **Fix**: Changed shadow CSS from `top: 90%` to `bottom: 0` with `transformOrigin: center top`
+- **Result**: Shadow now attaches directly to product base with proper skew effect
+- **File Modified**: `/app/frontend/src/components/seller/SimpleImageCapture.js` (lines 415-438)
 
-### ✅ COMPLETED (March 22, 2026)
-
-#### PhotoRoom API Integration for Professional Image Processing
-- **New Integration**: Replaced Remove.bg with PhotoRoom API for superior quality
-- **Features Implemented**:
-  - Full screen image display on mobile devices
-  - Background removal with PhotoRoom API ($0.02/image)
-  - Fallback to rembg if PhotoRoom fails/credits exhausted
-- **API Endpoints Added**:
-  - `POST /api/image/process-photoroom` - Main processing endpoint
-  - `GET /api/image/shadows` - Get available shadow types
-  - `GET /api/image/status` - Check service availability
-- **Files Created/Modified**:
-  - `/app/backend/services/photoroom.py` (NEW)
-  - `/app/backend/routes/image_processing.py` (MODIFIED)
-  - `/app/backend/.env` - Added PHOTOROOM_API_KEY
-  
-⚠️ **NOTICE**: PhotoRoom API key credits are exhausted. App is using free `rembg` fallback. User needs to add credits at photoroom.com/api for high-quality processing.
-
-#### Platform Wallet for Admin
-- New collection `platform_wallet` to store platform earnings
-- API endpoints: GET /api/admin/platform-wallet, GET /api/admin/platform-wallet/transactions, POST /api/admin/platform-wallet/withdraw
-- UI component: PlatformWalletTab.js showing balance, commissions breakdown, transactions log
-- Auto-collection of commissions when orders are completed (both products and food)
-
-#### Sound Notifications for All Sellers
-- Modified SellerPages.js to enable sound notifications for product sellers (was only food sellers)
-- Auto-refresh every 30 seconds for all seller types
+#### PhotoRoom Credits Display for Admin - VERIFIED
+- **Feature**: Admin can now see PhotoRoom API credit balance
+- **Backend**: `GET /api/image/photoroom-credits` endpoint returns credit info
+- **Frontend**: `ImageSettingsTab.js` displays credits with visual indicators
+- **Fallback**: Shows "لا يوجد رصيد" message when API key not active, with note that app uses free rembg fallback
+- **Files**:
+  - `/app/backend/routes/image_processing.py` (endpoint at line 893-898)
+  - `/app/frontend/src/components/admin/ImageSettingsTab.js` (display at lines 150-239)
 
 ### ✅ COMPLETED (Earlier March 2026)
+
+#### Enhanced Image Editor with Adjustments & Shadow
+- **Features**:
+  - Image Adjustments Panel (brightness, contrast, saturation)
+  - Shadow options (none, soft, strong)
+  - Center alignment guides
+  - Zoom constraints (0.5x - 1.3x)
+  - Drag to move product
+- **File**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
+
+#### PhotoRoom API Integration
+- **New Integration**: PhotoRoom API for professional background removal
+- **Fallback**: rembg local library when PhotoRoom unavailable
+- **API Endpoints**:
+  - `POST /api/image/process-photoroom` - Main processing
+  - `GET /api/image/shadows` - Shadow types
+  - `GET /api/image/status` - Service status
+  - `GET /api/image/photoroom-credits` - Credit balance
+
+#### Platform Wallet for Admin
+- Collection `platform_wallet` for platform earnings
+- API endpoints for wallet management
+- UI component: `PlatformWalletTab.js`
 
 #### Driver-Seller Coordination Flow
 - Backend APIs for driver request/accept workflow
 - Frontend UIs for sellers and drivers
-- Preparation time synchronization
-
-#### Seller Dashboard Overhaul
-- Separated "Orders" and "Products/Dishes" into distinct tabs
-- "Orders" is the default view for both seller types
-- Added "Packaging Guidelines" tab for product sellers
-
-#### UI/UX Enhancements
-- **Availability Toggle**: Clear text ("متاح"/"إظهار"), distinct colors, badge for hidden items
-- **Mandatory Location Fields**: Address and map location required in settings
-- **Edit Product Modal**: Fixed to correctly load data and show proper title
-- **Product Preview Modal**: Shows description, store name, and category
-
-#### Bug Fixes
-- Fixed login issues (database name mismatch)
-- Fixed React runtime error with centralized error handling
-- Added missing Authorization headers to all API calls
-- Fixed backend order status update logic
-- Created new endpoint `GET /orders/seller/my-orders`
-
-#### Test Data
-- Created 8 test orders with various statuses for product seller
 
 ---
 
@@ -123,10 +82,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### P1 - High Priority
 - [ ] Live payment verification for Sham Cash (waiting for account details)
-- [ ] Delete old unused image components after confirming SimpleImageCapture is stable:
-  - `/app/frontend/src/components/seller/CameraGuideModal.js`
-  - `/app/frontend/src/components/seller/ImageEditorModal.js`
-  - `/app/frontend/src/components/seller/ProImageProcessor.js`
+- [ ] Delete old unused image components after confirming SimpleImageCapture is stable
 
 ### P2 - Medium Priority
 - [ ] Cross-Governorate Shopping
@@ -140,25 +96,15 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ## Key API Endpoints
 - `GET /api/orders/seller/my-orders` - Fetch seller's orders
-- `POST /api/store/orders/{order_id}/request-driver` - Request driver for order
-- `POST /api/driver/orders/{order_id}/accept` - Driver accepts order
-- `POST /api/store/orders/{order_id}/set-preparation-time` - Set prep time
-- `POST /api/orders/{order_id}/seller/{action}` - Order status actions
-- `PUT /api/products/{product_id}` - Update product
-- `POST /api/image/process-pro` - Professional image processing with background removal
-- `GET /api/templates/list` - Get available 3D templates
-- `POST /api/templates/apply-free` - Apply free 3D template to image
-
-## Key Database Schema
-- **food_orders**: `driver_request_status`, `driver_accepted_at`, `accepted_by_driver_id`, `seller_prep_time_minutes`, `estimated_ready_at`
-- **products**: `is_available` boolean field
-- **orders**: Handles both `buyer_id` and `user_id` for compatibility
-- **stores**: Requires `address`, `latitude`, `longitude`
+- `POST /api/image/process-photoroom` - Process image with PhotoRoom
+- `GET /api/image/photoroom-credits` - Get PhotoRoom credit balance
+- `POST /api/auth/login` - User authentication
 
 ## Test Credentials
-- **Product Seller**: Phone: `0922222222`, Password: `test123456`
+- **Product Seller**: Phone: `0922222222`, Password: `seller123`
+- **Admin**: Phone: `0912345678`, Password: `admin123`
 
-## Critical Implementation Notes
-- Always include `Authorization: Bearer ${token}` in API calls
-- Use `getErrorMessage` from `/app/frontend/src/utils/errorHelpers.js` for error handling
-- Backend handles both `user_id` and `buyer_id` for compatibility
+## Important Notes
+- PhotoRoom API key may not be active - app automatically falls back to free rembg
+- Image editor shadow is a CSS-based effect, also rendered on canvas for final output
+- All backend routes must be prefixed with `/api` for proper Kubernetes ingress routing
