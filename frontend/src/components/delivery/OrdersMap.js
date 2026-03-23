@@ -203,8 +203,10 @@ const OrdersMap = ({
 
   // ⭐ إشعار الأولوية الذكية
   const [priorityOrder, setPriorityOrder] = useState(null); // الطلب ذو الأولوية
+  const priorityOrderRef = useRef(null); // ref للحفاظ على القيمة في الـ interval
   const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
   const [showPriorityPopup, setShowPriorityPopup] = useState(false);
+  const showPriorityPopupRef = useRef(false); // ref للحفاظ على القيمة في الـ interval
   const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
   
   // تحميل الطلبات المرفوضة من localStorage عند البدء
@@ -241,6 +243,16 @@ const OrdersMap = ({
     rejectedOrderIdsRef.current = rejectedOrderIds;
   }, [rejectedOrderIds]);
 
+  // تحديث ref الـ popup
+  useEffect(() => {
+    showPriorityPopupRef.current = showPriorityPopup;
+  }, [showPriorityPopup]);
+
+  // تحديث ref الـ priorityOrder
+  useEffect(() => {
+    priorityOrderRef.current = priorityOrder;
+  }, [priorityOrder]);
+
   // ⭐ مراقبة تغيير عدد الطلبات - لإعادة إظهار الطلبات المؤجلة عند انخفاض العدد
   useEffect(() => {
     const currentOrderCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
@@ -271,7 +283,8 @@ const OrdersMap = ({
         }
         
         // لا تعرض popup جديد إذا كان هناك popup مفتوح
-        if (showPriorityPopup || priorityOrder) {
+        if (showPriorityPopupRef.current) {
+          console.log('🔒 Popup مفتوح بالفعل، تجاهل الطلبات الجديدة');
           return;
         }
         
@@ -355,7 +368,7 @@ const OrdersMap = ({
     };
   }, [isOpen, myFoodOrders, myOrders, dismissedPriorityUntil]); // إزالة rejectedOrderIds لأننا نستخدم ref
 
-  // ⭐ العد التنازلي للأولوية - الـ popup يبقى ظاهراً بعد انتهاء العد
+  // ⭐ العد التنازلي للأولوية - الـ popup يختفي بعد انتهاء العد
   useEffect(() => {
     let countdownInterval = null;
     
@@ -363,8 +376,42 @@ const OrdersMap = ({
       countdownInterval = setInterval(() => {
         setPriorityCountdown(prev => {
           if (prev <= 1) {
-            // انتهى الوقت - لكن الـ popup يبقى ظاهراً!
-            // فقط نوقف العد عند 0
+            // ⏰ انتهى الوقت - إخفاء الـ popup وإرساله لسائق آخر
+            // إضافة الطلب للمرفوضات (انتهى الوقت)
+            const currentOrder = priorityOrderRef.current; // استخدام ref
+            if (currentOrder) {
+              const orderId = currentOrder.id;
+              const storeName = currentOrder.store_name || currentOrder.restaurant_name;
+              
+              // إضافة ID للمرفوضات
+              if (!rejectedOrderIdsRef.current.includes(orderId)) {
+                rejectedOrderIdsRef.current = [...rejectedOrderIdsRef.current, orderId];
+              }
+              
+              // حفظ في localStorage
+              try {
+                const savedData = JSON.parse(localStorage.getItem('rejectedOrderIds') || '[]');
+                if (!savedData.find(e => e.id === orderId)) {
+                  savedData.push({ id: orderId, timestamp: Date.now(), storeName, reason: 'timeout' });
+                  localStorage.setItem('rejectedOrderIds', JSON.stringify(savedData));
+                }
+                
+                // ⭐ إضافة المطعم للمرفوضات أيضاً (لمنع طلبات أخرى من نفس المطعم)
+                if (storeName) {
+                  const rejectedStores = JSON.parse(localStorage.getItem('rejectedStores') || '[]');
+                  if (!rejectedStores.find(s => s.name === storeName)) {
+                    rejectedStores.push({ name: storeName, timestamp: Date.now() });
+                    localStorage.setItem('rejectedStores', JSON.stringify(rejectedStores));
+                  }
+                }
+              } catch (e) {}
+              
+              console.log('⏰ انتهى الوقت - الطلب سيذهب لسائق آخر:', orderId, 'من المطعم:', storeName);
+            }
+            
+            // إخفاء الـ popup
+            setShowPriorityPopup(false);
+            setPriorityOrder(null);
             return 0;
           }
           return prev - 1;
@@ -375,7 +422,7 @@ const OrdersMap = ({
     return () => {
       if (countdownInterval) clearInterval(countdownInterval);
     };
-  }, [showPriorityPopup, priorityCountdown]);
+  }, [showPriorityPopup]); // إزالة priorityCountdown من dependencies
 
   // قبول طلب الأولوية
   const acceptPriorityOrder = async () => {
