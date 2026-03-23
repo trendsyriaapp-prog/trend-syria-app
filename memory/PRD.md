@@ -29,6 +29,24 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
+#### Map Filters for Drivers - COMPLETED ✅ (NEW)
+- **Feature**: Filters on driver's map to toggle between viewing different order types
+- **Implementation**:
+  - Added `orderFilter` state in `OrdersMap.js` with three values: `'available'`, `'myOrders'`, `'all'`
+  - Modified `filteredMarkers` logic (lines 1655-1682) to filter markers based on `isMyOrder` property
+  - Added three filter buttons in map header (lines 1823-1871)
+- **Filter Options**:
+  - **متاحة (Available)**: Shows only orders available for acceptance (green button)
+  - **طلباتي (My Orders)**: Shows only driver's accepted orders (blue button, default)
+  - **الكل (All)**: Shows all orders combined (purple button)
+- **Behavior**:
+  - Driver marker always visible regardless of filter selection
+  - Filter counts dynamically update based on available data
+  - Smooth visual feedback with distinct colors for each filter state
+- **Files Modified**:
+  - `/app/frontend/src/components/delivery/OrdersMap.js` - Added filter state, logic, and UI
+- **Testing**: Verified via testing agent (iteration_121.json) - 100% pass rate
+
 #### Text-to-Speech (TTS) Voice Announcement Settings - COMPLETED ✅
 - **Feature**: Customizable voice announcement settings for drivers
 - **Implementation**:
