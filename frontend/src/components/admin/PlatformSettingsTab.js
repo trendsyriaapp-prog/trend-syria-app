@@ -307,101 +307,6 @@ const PlatformClosureSettings = () => {
   );
 };
 
-// 🎁 مكون إعدادات التغليف
-const GiftWrappingSettings = () => {
-  const { toast } = useToast();
-  const [settings, setSettings] = useState({
-    gift_wrapping_enabled: true,
-    gift_wrapping_price: 5000
-  });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/api/admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSettings({
-        gift_wrapping_enabled: res.data.gift_wrapping_enabled ?? true,
-        gift_wrapping_price: res.data.gift_wrapping_price || 5000
-      });
-    } catch (error) {
-      console.error('Error fetching gift wrapping settings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast({ 
-        title: "تم الحفظ!",
-        description: settings.gift_wrapping_enabled ? "خدمة التغليف مفعّلة" : "خدمة التغليف متوقفة"
-      });
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) return null;
-
-  return (
-    <div className={`bg-gradient-to-r ${settings.gift_wrapping_enabled ? 'from-purple-50 to-pink-50 border-purple-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg border-2 p-4 transition-all`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 ${settings.gift_wrapping_enabled ? 'bg-gradient-to-br from-purple-500 to-pink-600' : 'bg-gray-400'} rounded-lg flex items-center justify-center`}>
-            <Gift size={24} className="text-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900">تغليف الهدايا</h3>
-            <p className="text-xs text-gray-500">خدمة تغليف المنتجات كهدايا</p>
-          </div>
-        </div>
-        <button
-          onClick={() => setSettings({...settings, gift_wrapping_enabled: !settings.gift_wrapping_enabled})}
-          className={`relative w-12 h-6 rounded-full transition-colors ${settings.gift_wrapping_enabled ? 'bg-purple-500' : 'bg-gray-300'}`}
-        >
-          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.gift_wrapping_enabled ? 'right-1' : 'left-1'}`} />
-        </button>
-      </div>
-
-      {settings.gift_wrapping_enabled && (
-        <div className="mb-4">
-          <label className="text-xs font-medium text-gray-700 mb-1 block">سعر التغليف (ل.س)</label>
-          <input
-            type="number"
-            value={settings.gift_wrapping_price}
-            onChange={(e) => setSettings({...settings, gift_wrapping_price: parseInt(e.target.value) || 0})}
-            className="w-full bg-white border rounded-lg p-2 text-sm"
-            placeholder="5000"
-          />
-        </div>
-      )}
-
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className={`w-full py-2 rounded-lg text-white font-medium transition-colors ${saving ? 'bg-gray-400' : settings.gift_wrapping_enabled ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-500 hover:bg-gray-600'}`}
-      >
-        {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-      </button>
-    </div>
-  );
-};
-
 // 👥 مكون إعدادات برنامج الإحالات
 const ReferralProgramSettings = () => {
   const { toast } = useToast();
@@ -1429,9 +1334,6 @@ const PlatformSettingsTab = () => {
 
       {/* 🔒 إغلاق المنصة */}
       <PlatformClosureSettings />
-
-      {/* 🎁 تغليف الهدايا */}
-      <GiftWrappingSettings />
 
       {/* 🎁 عرض الشحن المجاني الشامل */}
       <GlobalFreeShippingPromo />
