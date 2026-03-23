@@ -59,6 +59,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     return () => stopCamera();
   }, [isOpen, mode, step, facingMode]);
 
+  // إعادة تعيين الحالة عند فتح المحرر
+  useEffect(() => {
+    if (isOpen) {
+      setStep('capture');
+      setError(null);
+      setCapturedImage(null);
+      setProcessedImage(null);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen && mode === 'gallery') {
       setTimeout(() => fileInputRef.current?.click(), 100);
