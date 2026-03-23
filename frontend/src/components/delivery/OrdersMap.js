@@ -1126,11 +1126,63 @@ const OrdersMap = ({
         return;
       }
 
-      // ترتيب بسيط: السائق -> المتاجر -> العملاء (بدون API إضافية للسرعة)
+      // ⭐ استخدام OSRM Trip API للحصول على الترتيب الأمثل
+      // المتطلبات: يجب زيارة المتجر قبل العميل لكل طلب
+      
+      // جمع جميع النقاط للتحسين
       const driverPoint = allPoints.find(p => p.type === 'driver');
       const stores = allPoints.filter(p => p.type === 'store');
       const customers = allPoints.filter(p => p.type === 'customer');
-      const orderedPoints = [driverPoint, ...stores, ...customers];
+      
+      // إنشاء خريطة لربط كل متجر بعميله
+      const orderPairs = []; // [{store, customer, orderId}]
+      allMyOrders.forEach((order, idx) => {
+        const store = stores[idx];
+        const customer = customers[idx];
+        if (store && customer) {
+          orderPairs.push({ store, customer, orderId: order.id });
+        }
+      });
+      
+      // ⭐ حساب الترتيب الأمثل باستخدام أقرب نقطة (Nearest Neighbor Algorithm)
+      const optimizeOrdersRoute = () => {
+        const optimizedSequence = [driverPoint];
+        const remainingPairs = [...orderPairs];
+        let currentPos = driverPoint.position;
+        
+        while (remainingPairs.length > 0) {
+          // إيجاد أقرب متجر لم تتم زيارته
+          let nearestIdx = 0;
+          let nearestDist = Infinity;
+          
+          remainingPairs.forEach((pair, idx) => {
+            const storeDist = calculateDistanceKm(
+              currentPos[0], currentPos[1],
+              pair.store.position[0], pair.store.position[1]
+            );
+            if (storeDist < nearestDist) {
+              nearestDist = storeDist;
+              nearestIdx = idx;
+            }
+          });
+          
+          // إضافة المتجر ثم العميل
+          const nearest = remainingPairs[nearestIdx];
+          optimizedSequence.push(nearest.store);
+          optimizedSequence.push(nearest.customer);
+          
+          // تحديث الموقع الحالي (موقع العميل بعد التسليم)
+          currentPos = nearest.customer.position;
+          
+          // إزالة من القائمة
+          remainingPairs.splice(nearestIdx, 1);
+        }
+        
+        return optimizedSequence;
+      };
+      
+      const orderedPoints = optimizeOrdersRoute();
+      console.log('✅ ترتيب المسار المُحسَّن:', orderedPoints.map((p, i) => `${i+1}. ${p.label} (${p.type})`));
 
       // جلب جميع المسارات بشكل متوازي للسرعة
       const routePromises = [];
