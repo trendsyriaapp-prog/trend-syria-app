@@ -267,15 +267,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - يبدأ من الأسفل ويمتد لليمين
+        // رسم الظل أولاً - على يمين المنتج
         if (selectedShadow !== 'none') {
           ctx.save();
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
-          ctx.translate(centerX, centerY + shadowY);
+          ctx.translate(centerX + scaledWidth * 0.1, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
           // مضغوط + مائل لليمين
-          ctx.transform(1, 0, -0.4, 0.3, 0, 0);
-          ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
+          ctx.transform(1, 0, 0.35, 0.35, 0, 0);
+          ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.18;
+          ctx.filter = `blur(${selectedShadow === 'strong' ? 6 : 4}px)`;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
         }
@@ -422,10 +423,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
                   style={{ 
                     top: `${shadowOffset - 50}%`,
-                    left: '10%',
+                    right: '10%',
                     filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
-                    transformOrigin: 'left top',
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(20deg)`,
+                    transformOrigin: 'right top',
                     opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
                   }}
                   draggable={false}
