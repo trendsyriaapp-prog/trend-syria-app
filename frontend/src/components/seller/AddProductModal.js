@@ -626,26 +626,27 @@ const AddProductModal = ({
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
+                    <div className="flex items-center gap-2">
+                      <label className="block text-[10px] font-medium text-gray-700">الصنف</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowSuggestCategory(true)}
+                        className="text-[9px] text-violet-600 hover:text-violet-700 flex items-center gap-0.5"
+                      >
+                        <Lightbulb size={10} />
+                        <span>اقترح تصنيف</span>
+                      </button>
+                    </div>
                     <select
                       value={newProduct.category}
                       onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none mt-1"
                       data-testid="product-category-select"
                     >
                       {CATEGORIES.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
-                    {/* زر اقتراح تصنيف جديد */}
-                    <button
-                      type="button"
-                      onClick={() => setShowSuggestCategory(true)}
-                      className="mt-1 text-[10px] text-violet-600 hover:text-violet-700 flex items-center gap-1"
-                    >
-                      <Lightbulb size={12} />
-                      <span>لم تجد التصنيف؟ اقترح تصنيفاً جديداً</span>
-                    </button>
                   </div>
                 </div>
 
@@ -753,6 +754,9 @@ const AddProductModal = ({
                       data-testid="product-height-input"
                     />
                   </div>
+                  <p className="text-[9px] text-red-500 mt-1">
+                    ⚠️ عدم إضافة الأبعاد للمنتجات التي تحتاجها قد يؤدي لإيقاف حسابك
+                  </p>
                 </div>
 
                 {/* الوزن */}
@@ -904,13 +908,6 @@ const AddProductModal = ({
                     </button>
                   )}
                 </div>
-              )}
-              
-              {newProduct.images.length === 0 && (
-                <p className="text-[9px] text-gray-400 flex items-center gap-1">
-                  <Info size={10} />
-                  استخدم خلفية بيضاء وإضاءة جيدة للحصول على أفضل النتائج
-                </p>
               )}
               
               {/* Input للكاميرا - يفتح الكاميرا مباشرة */}
