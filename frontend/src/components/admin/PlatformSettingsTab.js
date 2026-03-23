@@ -183,6 +183,225 @@ const GlobalFreeShippingPromo = () => {
   );
 };
 
+// 🔒 مكون إغلاق المنصة
+const PlatformClosureSettings = () => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    platform_closed_for_customers: false,
+    platform_closed_for_sellers: false,
+    platform_closed_message: 'المنصة مغلقة مؤقتاً، سنعود قريباً!'
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/platform-status`);
+      setSettings({
+        platform_closed_for_customers: res.data.platform_closed_for_customers || false,
+        platform_closed_for_sellers: res.data.platform_closed_for_sellers || false,
+        platform_closed_message: res.data.platform_closed_message || 'المنصة مغلقة مؤقتاً، سنعود قريباً!'
+      });
+    } catch (error) {
+      console.error('Error fetching platform status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/admin/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: "تم الحفظ!",
+        description: "تم تحديث إعدادات المنصة"
+      });
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  const isClosed = settings.platform_closed_for_customers || settings.platform_closed_for_sellers;
+
+  return (
+    <div className={`bg-gradient-to-r ${isClosed ? 'from-red-50 to-orange-50 border-red-300' : 'from-green-50 to-emerald-50 border-green-300'} rounded-lg border-2 p-4 transition-all`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 ${isClosed ? 'bg-gradient-to-br from-red-500 to-orange-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'} rounded-lg flex items-center justify-center`}>
+            <AlertCircle size={24} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">حالة المنصة</h3>
+            <p className="text-xs text-gray-500">إغلاق/فتح المنصة للعملاء والبائعين</p>
+          </div>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-bold ${isClosed ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {isClosed ? '🔒 مغلقة' : '🟢 مفتوحة'}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        {/* إغلاق للعملاء */}
+        <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-gray-600" />
+            <span className="text-sm font-medium">إغلاق المنصة للعملاء</span>
+          </div>
+          <button
+            onClick={() => setSettings({...settings, platform_closed_for_customers: !settings.platform_closed_for_customers})}
+            className={`relative w-12 h-6 rounded-full transition-colors ${settings.platform_closed_for_customers ? 'bg-red-500' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.platform_closed_for_customers ? 'right-1' : 'left-1'}`} />
+          </button>
+        </div>
+
+        {/* إغلاق للبائعين */}
+        <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <ShoppingBag size={18} className="text-gray-600" />
+            <span className="text-sm font-medium">إغلاق المنصة للبائعين</span>
+          </div>
+          <button
+            onClick={() => setSettings({...settings, platform_closed_for_sellers: !settings.platform_closed_for_sellers})}
+            className={`relative w-12 h-6 rounded-full transition-colors ${settings.platform_closed_for_sellers ? 'bg-red-500' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.platform_closed_for_sellers ? 'right-1' : 'left-1'}`} />
+          </button>
+        </div>
+
+        {/* رسالة الإغلاق */}
+        {isClosed && (
+          <div>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">رسالة الإغلاق</label>
+            <textarea
+              value={settings.platform_closed_message}
+              onChange={(e) => setSettings({...settings, platform_closed_message: e.target.value})}
+              className="w-full bg-white border rounded-lg p-2 text-sm resize-none"
+              rows={2}
+              placeholder="الرسالة التي ستظهر للمستخدمين..."
+            />
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`w-full mt-4 py-2 rounded-lg text-white font-medium transition-colors ${saving ? 'bg-gray-400' : isClosed ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+      >
+        {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+      </button>
+    </div>
+  );
+};
+
+// 🎁 مكون إعدادات التغليف
+const GiftWrappingSettings = () => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    gift_wrapping_enabled: true,
+    gift_wrapping_price: 5000
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/api/admin/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings({
+        gift_wrapping_enabled: res.data.gift_wrapping_enabled ?? true,
+        gift_wrapping_price: res.data.gift_wrapping_price || 5000
+      });
+    } catch (error) {
+      console.error('Error fetching gift wrapping settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/admin/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ 
+        title: "تم الحفظ!",
+        description: settings.gift_wrapping_enabled ? "خدمة التغليف مفعّلة" : "خدمة التغليف متوقفة"
+      });
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className={`bg-gradient-to-r ${settings.gift_wrapping_enabled ? 'from-purple-50 to-pink-50 border-purple-300' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg border-2 p-4 transition-all`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-12 h-12 ${settings.gift_wrapping_enabled ? 'bg-gradient-to-br from-purple-500 to-pink-600' : 'bg-gray-400'} rounded-lg flex items-center justify-center`}>
+            <Gift size={24} className="text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">تغليف الهدايا</h3>
+            <p className="text-xs text-gray-500">خدمة تغليف المنتجات كهدايا</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setSettings({...settings, gift_wrapping_enabled: !settings.gift_wrapping_enabled})}
+          className={`relative w-12 h-6 rounded-full transition-colors ${settings.gift_wrapping_enabled ? 'bg-purple-500' : 'bg-gray-300'}`}
+        >
+          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.gift_wrapping_enabled ? 'right-1' : 'left-1'}`} />
+        </button>
+      </div>
+
+      {settings.gift_wrapping_enabled && (
+        <div className="mb-4">
+          <label className="text-xs font-medium text-gray-700 mb-1 block">سعر التغليف (ل.س)</label>
+          <input
+            type="number"
+            value={settings.gift_wrapping_price}
+            onChange={(e) => setSettings({...settings, gift_wrapping_price: parseInt(e.target.value) || 0})}
+            className="w-full bg-white border rounded-lg p-2 text-sm"
+            placeholder="5000"
+          />
+        </div>
+      )}
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`w-full py-2 rounded-lg text-white font-medium transition-colors ${saving ? 'bg-gray-400' : settings.gift_wrapping_enabled ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-500 hover:bg-gray-600'}`}
+      >
+        {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+      </button>
+    </div>
+  );
+};
+
 // 👥 مكون إعدادات برنامج الإحالات
 const ReferralProgramSettings = () => {
   const { toast } = useToast();
@@ -1207,6 +1426,12 @@ const PlatformSettingsTab = () => {
 
       {/* 🚫 إعدادات إلغاء السائق - في أعلى الصفحة */}
       <DriverCancelSettings />
+
+      {/* 🔒 إغلاق المنصة */}
+      <PlatformClosureSettings />
+
+      {/* 🎁 تغليف الهدايا */}
+      <GiftWrappingSettings />
 
       {/* 🎁 عرض الشحن المجاني الشامل */}
       <GlobalFreeShippingPromo />

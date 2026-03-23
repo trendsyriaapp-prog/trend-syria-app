@@ -8,13 +8,13 @@ const SplashScreen = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // إخفاء شاشة البداية بعد 3.5 ثانية
+    // إخفاء شاشة البداية بعد 2 ثانية
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => {
         onComplete();
       }, 500);
-    }, 3500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [onComplete]);

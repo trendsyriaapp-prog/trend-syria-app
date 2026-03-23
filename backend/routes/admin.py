@@ -34,6 +34,10 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             "referral_enabled": True,
             "daily_deals_enabled": True,
             "flash_sales_enabled": True,
+            # إغلاق المنصة
+            "platform_closed_for_customers": False,  # إغلاق المنصة للعملاء
+            "platform_closed_for_sellers": False,    # إغلاق المنصة للبائعين
+            "platform_closed_message": "المنصة مغلقة مؤقتاً، سنعود قريباً!",
             # إعدادات الدعم
             "whatsapp_enabled": True,
             "whatsapp_number": "963551021618",
@@ -44,6 +48,9 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             # إعدادات التوصيل
             "max_food_orders_per_driver": 3,             # الحد الأقصى لطلبات الطعام للسائق
             "food_orders_max_distance_km": 2,            # المسافة القصوى بين طلبات الطعام (كم)
+            # إعدادات التغليف
+            "gift_wrapping_enabled": True,               # تغليف الهدايا
+            "gift_wrapping_price": 5000,                 # سعر تغليف الهدايا
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(settings)
@@ -66,14 +73,16 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     boolean_fields = [
         "food_enabled", "shop_enabled", "delivery_enabled",
         "wallet_enabled", "referral_enabled", "daily_deals_enabled",
-        "flash_sales_enabled", "whatsapp_enabled"
+        "flash_sales_enabled", "whatsapp_enabled",
+        "platform_closed_for_customers", "platform_closed_for_sellers",
+        "gift_wrapping_enabled"
     ]
     
     # الحقول النصية (string)
-    string_fields = ["whatsapp_number", "support_message"]
+    string_fields = ["whatsapp_number", "support_message", "platform_closed_message"]
     
     # الحقول الرقمية (number)
-    number_fields = ["products_free_shipping_threshold", "food_free_delivery_threshold"]
+    number_fields = ["products_free_shipping_threshold", "food_free_delivery_threshold", "gift_wrapping_price"]
     
     update = {"updated_at": datetime.now(timezone.utc).isoformat()}
     activated_sections = []
@@ -154,6 +163,28 @@ async def send_platform_activation_notification(platform: str, title: str, messa
         await db.notifications.insert_many(notifications)
     
     return len(notifications)
+
+
+
+# ============== حالة المنصة (للعملاء والبائعين) ==============
+
+@router.get("/platform-status")
+async def get_platform_status():
+    """التحقق من حالة المنصة - متاح للجميع"""
+    settings = await db.platform_settings.find_one({"id": "main"}, {"_id": 0})
+    if not settings:
+        return {
+            "platform_closed_for_customers": False,
+            "platform_closed_for_sellers": False,
+            "platform_closed_message": ""
+        }
+    
+    return {
+        "platform_closed_for_customers": settings.get("platform_closed_for_customers", False),
+        "platform_closed_for_sellers": settings.get("platform_closed_for_sellers", False),
+        "platform_closed_message": settings.get("platform_closed_message", "المنصة مغلقة مؤقتاً")
+    }
+
 
 
 # ============== أعداد طلبات الاتصال والطوارئ ==============
@@ -474,7 +505,12 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    result = await db.products.update_one(
+    # جلب المنتج أولاً
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    await db.products.update_one(
         {"id": product_id},
         {
             "$set": {
@@ -486,8 +522,16 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
         }
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    # إرسال إشعار للبائع
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": product.get("seller_id"),
+        "title": "تم قبول منتجك ✅",
+        "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
+        "type": "product_approved",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
     return {"message": "تم الموافقة على المنتج"}
 
@@ -496,7 +540,12 @@ async def reject_product(product_id: str, approval: ProductApproval, user: dict 
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    result = await db.products.update_one(
+    # جلب المنتج أولاً
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    await db.products.update_one(
         {"id": product_id},
         {
             "$set": {
@@ -509,10 +558,116 @@ async def reject_product(product_id: str, approval: ProductApproval, user: dict 
         }
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    # إرسال إشعار للبائع
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": product.get("seller_id"),
+        "title": "تم رفض منتجك ❌",
+        "message": f"تم رفض منتج '{product.get('name')}'. السبب: {approval.rejection_reason or 'غير محدد'}",
+        "type": "product_rejected",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
     return {"message": "تم رفض المنتج"}
+
+# ============== موافقة منتجات الطعام ==============
+
+@router.get("/food-products/pending")
+async def get_pending_food_products(user: dict = Depends(get_current_user)):
+    """جلب منتجات الطعام بانتظار الموافقة"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    products = await db.food_products.find(
+        {"approval_status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    for product in products:
+        store = await db.food_stores.find_one({"id": product.get("store_id")}, {"_id": 0})
+        if store:
+            product["store"] = store
+    
+    return products
+
+@router.post("/food-products/{product_id}/approve")
+async def approve_food_product(product_id: str, user: dict = Depends(get_current_user)):
+    """الموافقة على منتج طعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # البحث عن المنتج
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    await db.food_products.update_one(
+        {"id": product_id},
+        {
+            "$set": {
+                "is_approved": True,
+                "approval_status": "approved",
+                "approved_by": user["id"],
+                "approved_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # إرسال إشعار للبائع
+    store = await db.food_stores.find_one({"id": product.get("store_id")})
+    if store:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": store.get("owner_id"),
+            "title": "تم قبول منتجك ✅",
+            "message": f"تمت الموافقة على منتج '{product.get('name')}' وهو الآن متاح للعملاء",
+            "type": "product_approved",
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {"message": "تم الموافقة على المنتج"}
+
+@router.post("/food-products/{product_id}/reject")
+async def reject_food_product(product_id: str, approval: ProductApproval, user: dict = Depends(get_current_user)):
+    """رفض منتج طعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    product = await db.food_products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    await db.food_products.update_one(
+        {"id": product_id},
+        {
+            "$set": {
+                "is_approved": False,
+                "approval_status": "rejected",
+                "rejection_reason": approval.rejection_reason,
+                "rejected_by": user["id"],
+                "rejected_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # إرسال إشعار للبائع
+    store = await db.food_stores.find_one({"id": product.get("store_id")})
+    if store:
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": store.get("owner_id"),
+            "title": "تم رفض منتجك ❌",
+            "message": f"تم رفض منتج '{product.get('name')}'. السبب: {approval.rejection_reason or 'غير محدد'}",
+            "type": "product_rejected",
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {"message": "تم رفض المنتج"}
+
+
 
 # ============== Delivery Management ==============
 
