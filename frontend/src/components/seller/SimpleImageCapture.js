@@ -127,8 +127,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
   };
 
-  // التقاط صورة
-  const captureFromCamera = () => {
+  // التقاط صورة - مباشرة للمعالجة
+  const captureFromCamera = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
     const video = videoRef.current;
@@ -139,21 +139,61 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     const offsetX = (video.videoWidth - size) / 2;
     const offsetY = (video.videoHeight - size) / 2;
     ctx.drawImage(video, offsetX, offsetY, size, size, 0, 0, size, size);
-    setCapturedImage(canvas.toDataURL('image/jpeg', 0.95));
-    setStep('preview');
+    const imageData = canvas.toDataURL('image/jpeg', 0.95);
+    setCapturedImage(imageData);
     stopCamera();
+    // مباشرة للمعالجة
+    await processImageDirect(imageData);
   };
 
-  // اختيار من المعرض
+  // اختيار من المعرض - مباشرة للمعالجة
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) { onClose(); return; }
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setCapturedImage(event.target.result);
-      setStep('preview');
+    reader.onload = async (event) => {
+      const imageData = event.target.result;
+      setCapturedImage(imageData);
+      // مباشرة للمعالجة
+      await processImageDirect(imageData);
     };
     reader.readAsDataURL(file);
+  };
+
+  // معالجة مباشرة للصورة (بخلفية بيضاء افتراضية)
+  const processImageDirect = async (imageData) => {
+    setProcessing(true);
+    setStep('edit'); // الانتقال لشاشة التحرير مباشرة
+    setError(null);
+    
+    try {
+      const response = await fetch(imageData);
+      const blob = await response.blob();
+      
+      const formData = new FormData();
+      formData.append('file', blob, 'image.png');
+      formData.append('background', 'white'); // دائماً أبيض
+      formData.append('shadow_type', selectedShadow);
+      formData.append('use_sandbox', 'false');
+      
+      const result = await axios.post(`${API}/api/image/process-photoroom`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 90000
+      });
+      
+      if (result.data.success && result.data.image) {
+        setProcessedImage(result.data.image);
+        setSelectedBackground('white');
+      } else {
+        throw new Error('فشل في معالجة الصورة');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('فشل في إزالة الخلفية. جرب مرة أخرى.');
+      setStep('capture');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // معالجة الصورة وإزالة الخلفية باستخدام PhotoRoom
@@ -315,16 +355,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
           </div>
         )}
 
-        {/* Step 2: Preview - Full Screen Mobile */}
-        {step === 'preview' && capturedImage && (
-          <img 
-            src={capturedImage} 
-            alt="Preview" 
-            className="w-full h-full object-cover"
-          />
-        )}
-
-        {/* Step 3: Processed Image - Full Screen Mobile */}
+        {/* Step 2: Processed Image - Full Screen Mobile */}
         {step === 'edit' && processedImage && (
           <img 
             src={processedImage} 
@@ -354,7 +385,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
         </button>
         <h2 className="text-white font-bold text-lg drop-shadow-lg">
           {step === 'capture' && 'التقاط صورة'}
-          {step === 'preview' && 'معاينة الصورة'}
           {step === 'edit' && 'تحرير الصورة'}
         </h2>
         <div className="w-10" />
@@ -371,7 +401,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
         )}
 
         {/* === أدوات التحرير === */}
-        {(step === 'preview' || step === 'edit') && (
+        {step === 'edit' && (
           <div className="bg-gradient-to-t from-black/70 to-transparent pt-4">
             
             {/* زر إظهار/إخفاء الأدوات */}
@@ -556,61 +586,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
             {/* === أزرار التحكم === */}
             <div className="p-2 space-y-2">
               
-              {/* وضع المعاينة - قبل إزالة الخلفية */}
-              {step === 'preview' && (
-                <>
-                  {/* اختيار لون الخلفية */}
-                  {showTools && (
-                    <div className="bg-black/30 backdrop-blur-sm rounded-lg p-2">
-                      <p className="text-white text-[10px] font-bold mb-1">اختر لون الخلفية:</p>
-                      <div className="flex gap-2 overflow-x-auto">
-                        {BACKGROUND_COLORS.map(bg => (
-                          <button
-                            key={bg.id}
-                            onClick={() => setSelectedBackground(bg.id)}
-                            className={`w-8 h-8 flex-shrink-0 rounded-full border-2 ${
-                              selectedBackground === bg.id 
-                                ? 'border-[#FF6B00] scale-110' 
-                                : 'border-white/30'
-                            }`}
-                            style={{ backgroundColor: bg.color }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <button
-                    onClick={() => processImage(selectedBackground)}
-                    disabled={processing}
-                    className="w-full py-3 bg-[#FF6B00] text-white rounded-xl font-bold flex items-center justify-center gap-2"
-                    data-testid="remove-bg-btn"
-                  >
-                    {processing ? (
-                      <><Loader2 size={18} className="animate-spin" /> جاري المعالجة...</>
-                    ) : (
-                      <><Sparkles size={18} /> إزالة الخلفية</>
-                    )}
-                  </button>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleUseImage(capturedImage)} 
-                      disabled={processing} 
-                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
-                    >
-                      الأصلية
-                    </button>
-                    <button 
-                      onClick={retake} 
-                      disabled={processing} 
-                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
-                    >
-                      إعادة
-                    </button>
-                  </div>
-                </>
-              )}
-
               {/* وضع التحرير - بعد إزالة الخلفية */}
               {step === 'edit' && (
                 <div className="flex gap-2">
