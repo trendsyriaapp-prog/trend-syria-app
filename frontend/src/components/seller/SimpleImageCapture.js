@@ -267,14 +267,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - على يمين المنتج
+        // رسم الظل أولاً - من أسفل اليسار إلى أعلى اليمين
         if (selectedShadow !== 'none') {
           ctx.save();
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
-          ctx.translate(centerX + scaledWidth * 0.1, centerY + shadowY);
+          ctx.translate(centerX - scaledWidth * 0.1, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
           // مضغوط + مائل لليمين
-          ctx.transform(1, 0, 0.35, 0.35, 0, 0);
+          ctx.transform(1, 0, -0.35, 0.35, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.18;
           ctx.filter = `blur(${selectedShadow === 'strong' ? 6 : 4}px)`;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
@@ -415,7 +415,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 />
               </div>
               
-              {/* الظل الأرضي - يمتد لليمين */}
+              {/* الظل الأرضي - من أسفل اليسار إلى أعلى اليمين */}
               {selectedShadow !== 'none' && (
                 <img 
                   src={processedImage} 
@@ -423,10 +423,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
                   style={{ 
                     top: `${shadowOffset - 50}%`,
-                    right: '10%',
+                    left: '10%',
                     filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(20deg)`,
-                    transformOrigin: 'right top',
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
+                    transformOrigin: 'left top',
                     opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
                   }}
                   draggable={false}
