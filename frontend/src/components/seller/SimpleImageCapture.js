@@ -1,6 +1,6 @@
 // /app/frontend/src/components/seller/SimpleImageCapture.js
 // مكون لالتقاط ومعالجة صور المنتجات
-// يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، خلفيات 3D
+// يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، ظل أرضي
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// حدود التكبير والتصغير للحصول على صورة مثالية
+const MIN_SCALE = 0.5;  // الحد الأدنى للتصغير
+const MAX_SCALE = 1.3;  // الحد الأقصى للتكبير - يحافظ على جودة العرض
 
 // خيارات الظل - تظهر تحت المنتج
 const SHADOWS = [
@@ -172,12 +176,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   };
 
-  // الحصول على ظل المنتج
-  const getProductShadow = () => {
-    const shadow = SHADOWS.find(s => s.id === selectedShadow);
-    return shadow?.value || 'none';
-  };
-
   // === التحكم بالسحب ===
   const handleDragStart = useCallback((clientX, clientY) => {
     setIsDragging(true);
@@ -251,46 +249,60 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     canvas.width = size;
     canvas.height = size;
     
-    // رسم الخلفية
-    const bg = BACKGROUNDS.find(b => b.id === selectedBg);
-    
     const drawProduct = () => {
       const productImg = new window.Image();
       productImg.crossOrigin = 'anonymous';
       productImg.onload = () => {
-        ctx.save();
-        
         // حساب الموقع
         const containerWidth = imageContainerRef.current?.offsetWidth || 400;
         const containerHeight = imageContainerRef.current?.offsetHeight || 400;
         const scaleX = size / containerWidth;
         const scaleY = size / containerHeight;
         
-        ctx.translate(size/2 + position.x * scaleX, size/2 + position.y * scaleY);
-        ctx.rotate(rotation * Math.PI / 180);
-        ctx.scale(scale, scale);
-        
-        // تطبيق الفلاتر (بدون الظل - يُرسم يدوياً)
-        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-        
         // رسم الصورة
         const imgRatio = productImg.width / productImg.height;
         let drawWidth, drawHeight;
         
         if (imgRatio > 1) {
-          drawWidth = size * 0.7;
+          drawWidth = size * 0.65;
           drawHeight = drawWidth / imgRatio;
         } else {
-          drawHeight = size * 0.7;
+          drawHeight = size * 0.65;
           drawWidth = drawHeight * imgRatio;
         }
         
-        // إضافة الظل يدوياً للـ Canvas
+        const centerX = size/2 + position.x * scaleX;
+        const centerY = size/2 + position.y * scaleY;
+        
+        // رسم الظل الأرضي أولاً (إذا كان مفعلاً)
         if (selectedShadow !== 'none') {
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-          ctx.shadowBlur = selectedShadow === 'strong' ? 50 : 25;
-          ctx.shadowOffsetY = selectedShadow === 'strong' ? 25 : 15;
+          ctx.save();
+          const shadowWidth = drawWidth * scale * (selectedShadow === 'strong' ? 0.9 : 0.7);
+          const shadowHeight = 30;
+          const shadowY = centerY + (drawHeight * scale / 2) + 10;
+          
+          const gradient = ctx.createRadialGradient(
+            centerX, shadowY, 0,
+            centerX, shadowY, shadowWidth / 2
+          );
+          gradient.addColorStop(0, selectedShadow === 'strong' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.25)');
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.ellipse(centerX, shadowY, shadowWidth / 2, shadowHeight / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
+        
+        // رسم المنتج
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation * Math.PI / 180);
+        ctx.scale(scale, scale);
+        
+        // تطبيق الفلاتر
+        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
         
         ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
         ctx.restore();
@@ -396,29 +408,59 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Processed Image - Draggable */}
+        {/* Processed Image - Draggable with Ground Shadow */}
         {step === 'edit' && processedImage && (
-          <div className="w-full h-full flex items-center justify-center">
-            <div
-              style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-                filter: selectedShadow !== 'none' ? `drop-shadow(${getProductShadow()})` : 'none',
-                cursor: isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'none' : 'transform 0.1s ease-out, filter 0.2s ease'
-              }}
-              onMouseDown={onMouseDown}
-              onTouchStart={onTouchStart}
-            >
-              <img 
-                src={processedImage} 
-                alt="Product" 
-                data-testid="product-image"
-                className="max-w-[85vw] max-h-[60vh] object-contain select-none"
+          <div className="w-full h-full flex items-center justify-center relative">
+            {/* خطوط التوجيه للمنتصف */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              {/* خط عمودي */}
+              <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-blue-400/30" />
+              {/* خط أفقي */}
+              <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-blue-400/30" />
+              {/* نقطة المنتصف */}
+              <div className="w-3 h-3 rounded-full border-2 border-blue-400/50 bg-transparent" />
+            </div>
+            
+            {/* حاوية المنتج مع الظل الأرضي */}
+            <div className="relative flex flex-col items-center">
+              {/* المنتج */}
+              <div
                 style={{
-                  filter: getImageFilter()
+                  transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                 }}
-                draggable={false}
-              />
+                onMouseDown={onMouseDown}
+                onTouchStart={onTouchStart}
+              >
+                <img 
+                  src={processedImage} 
+                  alt="Product" 
+                  data-testid="product-image"
+                  className="max-w-[85vw] max-h-[50vh] object-contain select-none"
+                  style={{
+                    filter: getImageFilter()
+                  }}
+                  draggable={false}
+                />
+              </div>
+              
+              {/* الظل الأرضي تحت المنتج */}
+              {selectedShadow !== 'none' && (
+                <div 
+                  className="absolute -bottom-4"
+                  style={{
+                    transform: `translate(${position.x}px, 0) scaleX(${scale * (selectedShadow === 'strong' ? 0.9 : 0.7)}) scaleY(0.15)`,
+                    width: '80%',
+                    height: '60px',
+                    background: selectedShadow === 'strong' 
+                      ? 'radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)'
+                      : 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 70%)',
+                    borderRadius: '50%',
+                    transition: 'transform 0.1s ease-out'
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
@@ -545,15 +587,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             {/* Transform Controls */}
             <div className="flex justify-center gap-2">
               <button 
-                onClick={() => setScale(s => Math.max(0.3, s - 0.1))}
-                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                onClick={() => setScale(s => Math.max(MIN_SCALE, s - 0.1))}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  scale <= MIN_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
+                }`}
+                disabled={scale <= MIN_SCALE}
                 data-testid="zoom-out-button"
               >
                 <ZoomOut size={18} className="text-white" />
               </button>
               <button 
-                onClick={() => setScale(s => Math.min(3, s + 0.1))}
-                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                onClick={() => setScale(s => Math.min(MAX_SCALE, s + 0.1))}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  scale >= MAX_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
+                }`}
+                disabled={scale >= MAX_SCALE}
                 data-testid="zoom-in-button"
               >
                 <ZoomIn size={18} className="text-white" />
