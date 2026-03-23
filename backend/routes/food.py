@@ -87,6 +87,7 @@ class FoodProductCreate(BaseModel):
     images: List[str] = []
     is_available: bool = True
     preparation_time: Optional[int] = None  # للمطاعم فقط
+    weight_variants: Optional[List[dict]] = []  # متغيرات الوزن (g/kg/قطعة)
 
 class FoodOfferCreate(BaseModel):
     """نظام عروض اشترِ X واحصل على Y"""
@@ -671,6 +672,7 @@ async def create_food_product(product: FoodProductCreate, user: dict = Depends(g
         "images": product.images,
         "is_available": product.is_available,
         "preparation_time": product.preparation_time,
+        "weight_variants": product.weight_variants or [],
         "rating": 0,
         "reviews_count": 0,
         "sales_count": 0,
@@ -875,7 +877,7 @@ async def update_food_product(product_id: str, update_data: dict, user: dict = D
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # الحقول المسموح بتعديلها
-    allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time"]
+    allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time", "weight_variants"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
