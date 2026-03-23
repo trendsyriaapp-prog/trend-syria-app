@@ -34,6 +34,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 - **Implementation**:
   - Created `VoiceAnnouncementSettings.js` component with full settings panel
   - Updated `speakInstruction()` in `OrdersMap.js` to read settings from localStorage
+  - **Added automatic arrival announcement** when driver is within 100m of destination
 - **User Controls**:
   - Toggle to enable/disable voice announcements
   - Voice selection dropdown (Arabic voices prioritized, Google/Microsoft highlighted)
@@ -42,18 +43,21 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
   - Pitch slider (0.5 - 1.5)
   - Test voice button to preview settings
   - Reset to defaults button
+- **Automatic Features**:
+  - **Arrival announcement**: When driver is within 100 meters of destination, system automatically announces "وصلت إلى [الوجهة]. تأكد من استلام الطلب."
+  - Anti-repeat mechanism to prevent announcing multiple times for the same order
 - **Files Created**:
   - `/app/frontend/src/components/delivery/VoiceAnnouncementSettings.js`
 - **Files Modified**:
   - `/app/frontend/src/pages/SettingsPage.js` - Added import and component
-  - `/app/frontend/src/components/delivery/OrdersMap.js` - Updated speakInstruction to use saved settings
+  - `/app/frontend/src/components/delivery/OrdersMap.js` - Updated speakInstruction to use saved settings + added arrival detection
 - **localStorage Keys**:
   - `voiceAnnouncementEnabled` - Enable/disable TTS
   - `selectedVoiceName` - Selected voice name
   - `voiceVolume` - Volume level (0-1)
   - `voiceRate` - Speech rate
   - `voicePitch` - Voice pitch
-- **Integration**: TTS now respects user settings when announcing new orders, priority orders, navigation, and other events
+- **Integration**: TTS now respects user settings when announcing new orders, priority orders, navigation, arrivals, and other events
 
 #### Feedback & Suggestions Feature - NEW ✅
 - **Feature**: Universal feedback system for all user types (customers, sellers, drivers, guests)

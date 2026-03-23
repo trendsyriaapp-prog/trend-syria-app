@@ -195,6 +195,7 @@ const OrdersMap = ({
   const [distanceFromRoute, setDistanceFromRoute] = useState(0); // المسافة عن المسار
   const [navigationInstructions, setNavigationInstructions] = useState([]); // تعليمات الملاحة
   const [currentInstruction, setCurrentInstruction] = useState(null); // التعليمة الحالية
+  const [arrivalAnnouncedFor, setArrivalAnnouncedFor] = useState(null); // تتبع الإعلان عن الوصول لتجنب التكرار
 
   // ⭐ إشعار الأولوية الذكية
   const [priorityOrder, setPriorityOrder] = useState(null); // الطلب ذو الأولوية
@@ -449,6 +450,28 @@ const OrdersMap = ({
               if (distFromRoute > 0.1 && selectedOrderForRoute) {
                 console.log('🔄 إعادة حساب المسار - ابتعدت عن المسار');
                 showRouteForOrder(selectedOrderForRoute);
+              }
+            }
+            
+            // ⭐ التحقق من الاقتراب من الوجهة وإعلان الوصول تلقائياً
+            if (selectedOrderForRoute && routeCoordinates.length > 0) {
+              // الحصول على موقع الوجهة (آخر نقطة في المسار)
+              const destination = routeCoordinates[routeCoordinates.length - 1];
+              if (destination) {
+                const distanceToDestination = calculateDistanceKm(
+                  newLocation.latitude, newLocation.longitude,
+                  destination[0], destination[1]
+                );
+                
+                // إذا اقترب أقل من 100 متر (0.1 كم) ولم يتم الإعلان بعد
+                if (distanceToDestination < 0.1 && arrivalAnnouncedFor !== selectedOrderForRoute.id) {
+                  const destinationName = selectedOrderForRoute.customer_name || 
+                                         selectedOrderForRoute.store_name || 
+                                         'الوجهة';
+                  announceArrival(destinationName);
+                  setArrivalAnnouncedFor(selectedOrderForRoute.id);
+                  console.log('🎯 تم الإعلان عن الوصول إلى:', destinationName);
+                }
               }
             }
             
@@ -1239,6 +1262,7 @@ const OrdersMap = ({
 
     if (storeCoords[0] && customerCoords[0]) {
       setSelectedOrderForRoute(order);
+      setArrivalAnnouncedFor(null); // إعادة تعيين عند تغيير الطلب
       fetchRoute(driverCoords, storeCoords, customerCoords);
     }
   };
@@ -1301,6 +1325,7 @@ const OrdersMap = ({
     setSelectedOrderForRoute(null);
     setRouteCoordinates([]);
     setRouteInfo(null);
+    setArrivalAnnouncedFor(null); // إعادة تعيين عند إخفاء المسار
   };
 
   // الحصول على موقع السائق الحالي
