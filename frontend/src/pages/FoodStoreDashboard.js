@@ -17,6 +17,7 @@ import { useToast } from '../hooks/use-toast';
 import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 import SellerAnalytics from '../components/seller/SellerAnalytics';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
+import SimpleImageCapture from '../components/seller/SimpleImageCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -1579,24 +1580,52 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     category: product?.category || '',
     images: product?.images || [],
     preparation_time: product?.preparation_time || '',
+    weight_variants: product?.weight_variants || [],
   });
   const [saving, setSaving] = useState(false);
+  const [showImageCapture, setShowImageCapture] = useState(false);
+  const [imageCaptureMode, setImageCaptureMode] = useState('camera');
+  const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3);
+  const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', unit: 'g', price: '' });
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({ ...formData, images: [...formData.images, reader.result] });
+  // جلب إعدادات الصور
+  useEffect(() => {
+    const fetchImageSettings = async () => {
+      try {
+        const res = await fetch(`${API}/api/image/settings`);
+        const data = await res.json();
+        if (data.max_images_per_product) {
+          setMaxImagesPerProduct(data.max_images_per_product);
+        }
+      } catch (error) {
+        console.error('Error fetching image settings:', error);
+      }
     };
-    reader.readAsDataURL(file);
-  };
+    fetchImageSettings();
+  }, []);
 
-  const handleRemoveImage = (index) => {
+  // إضافة متغير وزن
+  const handleAddWeightVariant = () => {
+    if (!newWeightVariant.weight || !newWeightVariant.price) {
+      toast({ title: "تنبيه", description: "أدخل الوزن والسعر", variant: "destructive" });
+      return;
+    }
     setFormData({
       ...formData,
-      images: formData.images.filter((_, i) => i !== index)
+      weight_variants: [...formData.weight_variants, {
+        weight: parseFloat(newWeightVariant.weight),
+        unit: newWeightVariant.unit,
+        price: parseFloat(newWeightVariant.price)
+      }]
+    });
+    setNewWeightVariant({ weight: '', unit: 'g', price: '' });
+  };
+
+  // حذف متغير وزن
+  const handleRemoveWeightVariant = (index) => {
+    setFormData({
+      ...formData,
+      weight_variants: formData.weight_variants.filter((_, i) => i !== index)
     });
   };
 
@@ -1610,21 +1639,24 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
 
     setSaving(true);
     try {
+      const submitData = {
+        ...formData,
+        store_id: store.id,
+        price: parseFloat(formData.price),
+        original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        preparation_time: formData.preparation_time ? parseInt(formData.preparation_time) : null,
+        weight_variants: formData.weight_variants,
+      };
+      
       if (product) {
         // Edit existing product
-        await axios.put(`${API}/food/products/${product.id}`, formData, {
+        await axios.put(`${API}/food/products/${product.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تم التحديث", description: "تم تحديث المنتج بنجاح" });
       } else {
         // Add new product
-        await axios.post(`${API}/food/products`, {
-          ...formData,
-          store_id: store.id,
-          price: parseFloat(formData.price),
-          original_price: formData.original_price ? parseFloat(formData.original_price) : null,
-          preparation_time: formData.preparation_time ? parseInt(formData.preparation_time) : null,
-        }, {
+        await axios.post(`${API}/food/products`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تمت الإضافة", description: "تم إضافة المنتج بنجاح" });
@@ -1762,31 +1794,141 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             </div>
           </div>
 
-          {/* Images */}
+          {/* Images Section - محسّن */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">صور المنتج</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                صور المنتج ({formData.images.length}/{maxImagesPerProduct})
+              </label>
+            </div>
+            
+            {/* نصيحة الخلفية البيضاء */}
+            <p className="text-[10px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
+              📸 ضع خلفية بيضاء خلف المنتج عند التصوير للحصول على جودة أفضل
+            </p>
+            
+            {/* أزرار الكاميرا والمعرض */}
+            {formData.images.length < maxImagesPerProduct && (
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageCaptureMode('camera');
+                    setShowImageCapture(true);
+                  }}
+                  className="flex-1 py-2.5 bg-green-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-600"
+                >
+                  <Camera size={16} />
+                  تصوير بالكاميرا
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageCaptureMode('gallery');
+                    setShowImageCapture(true);
+                  }}
+                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200"
+                >
+                  <Image size={16} />
+                  من المعرض
+                </button>
+              </div>
+            )}
+            
+            {/* معاينة الصور */}
             <div className="flex gap-2 flex-wrap">
               {formData.images.map((img, i) => (
-                <div key={i} className="relative">
-                  <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                <div key={i} className="relative group">
+                  <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover border border-gray-200" />
                   <button
                     type="button"
-                    onClick={() => handleRemoveImage(i)}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
+                    onClick={() => setFormData({
+                      ...formData,
+                      images: formData.images.filter((_, idx) => idx !== i)
+                    })}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X size={14} />
                   </button>
+                  {i === 0 && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-[8px] text-center py-0.5 rounded-b-lg">
+                      رئيسية
+                    </span>
+                  )}
                 </div>
               ))}
-              <label className="w-20 h-20 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center cursor-pointer hover:border-green-500">
-                <Plus size={24} className="text-gray-400" />
+            </div>
+          </div>
+
+          {/* قسم البيع بالوزن */}
+          <div className="border border-gray-200 rounded-xl p-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              البيع بالوزن (اختياري)
+              <span className="text-xs text-gray-400 mr-1">- للمنتجات المباعة بالكيلو أو الجرام</span>
+            </label>
+            
+            {/* متغيرات الوزن الموجودة */}
+            {formData.weight_variants.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {formData.weight_variants.map((variant, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+                    <span className="text-sm font-medium">
+                      {variant.weight} {variant.unit === 'g' ? 'جرام' : variant.unit === 'kg' ? 'كيلو' : 'قطعة'}
+                    </span>
+                    <span className="text-sm font-bold text-green-600">{variant.price.toLocaleString()} ل.س</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveWeightVariant(index)}
+                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* إضافة متغير وزن جديد */}
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="text-[10px] text-gray-500 block mb-1">الوزن</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
+                  type="number"
+                  value={newWeightVariant.weight}
+                  onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
+                  placeholder="100"
+                  className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm"
                 />
-              </label>
+              </div>
+              <div className="w-24">
+                <label className="text-[10px] text-gray-500 block mb-1">الوحدة</label>
+                <select
+                  value={newWeightVariant.unit}
+                  onChange={(e) => setNewWeightVariant({ ...newWeightVariant, unit: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm"
+                >
+                  <option value="g">جرام</option>
+                  <option value="kg">كيلو</option>
+                  <option value="piece">قطعة</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] text-gray-500 block mb-1">السعر (ل.س)</label>
+                <input
+                  type="number"
+                  value={newWeightVariant.price}
+                  onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
+                  placeholder="5000"
+                  className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAddWeightVariant}
+                className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600"
+              >
+                <Plus size={20} />
+              </button>
             </div>
           </div>
 
@@ -1804,6 +1946,23 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
           </button>
         </form>
       </motion.div>
+      
+      {/* مكون التقاط الصور المتقدم */}
+      <SimpleImageCapture
+        isOpen={showImageCapture}
+        onClose={() => setShowImageCapture(false)}
+        mode={imageCaptureMode}
+        onImageReady={(imageUrl) => {
+          setFormData(prev => ({
+            ...prev,
+            images: [...prev.images, imageUrl].slice(0, maxImagesPerProduct)
+          }));
+          toast({
+            title: "تم بنجاح ✨",
+            description: "تم إضافة الصورة"
+          });
+        }}
+      />
     </div>
   );
 };
