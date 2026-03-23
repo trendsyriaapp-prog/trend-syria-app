@@ -1800,12 +1800,29 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
+              {/* اقتراحات سريعة */}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {['وجبات رئيسية', 'مقبلات', 'مشروبات', 'حلويات', 'سلطات', 'فطور', 'إضافات', 'مشاوي', 'سندويشات'].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: suggestion })}
+                    className={`px-2 py-1 text-[10px] rounded-full border transition-all ${
+                      formData.category === suggestion
+                        ? 'bg-green-500 text-white border-green-500'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-green-400 hover:bg-green-50'
+                    }`}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="مثال: وجبات رئيسية"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                placeholder="أو اكتب تصنيفك الخاص"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm"
               />
             </div>
             <div>
