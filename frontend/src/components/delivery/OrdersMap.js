@@ -2021,11 +2021,9 @@ const OrdersMap = ({
                                     ? [(marker.order.delivery_address || marker.order.address)?.area, (marker.order.delivery_address || marker.order.address)?.street, (marker.order.delivery_address || marker.order.address)?.building].filter(Boolean).join(', ')
                                     : (marker.order.delivery_address || marker.order.address)
                                 }</p>
-                                {(marker.order.customer_phone || marker.order.delivery_phone) && (
-                                  <p className="text-blue-600">
-                                    📞 العميل: {marker.order.customer_phone || marker.order.delivery_phone}
-                                  </p>
-                                )}
+                                <p className="text-gray-400 text-xs">
+                                  🔒 رقم العميل مخفي (استخدم زر الاتصال)
+                                </p>
                                 {/* رقم المطعم/البائع */}
                                 {(marker.order.restaurant_phone || marker.order.store_phone || marker.order.seller_phone) && (
                                   <p className="text-green-600">
@@ -2234,11 +2232,9 @@ const OrdersMap = ({
                                         {stop.order.total.toLocaleString()} ل.س
                                       </p>
                                     )}
-                                    {(stop.order.customer_phone || stop.order.delivery_phone) && (
-                                      <p className="text-blue-600">
-                                        📞 {stop.order.customer_phone || stop.order.delivery_phone}
-                                      </p>
-                                    )}
+                                    <p className="text-gray-400 text-xs">
+                                      🔒 رقم العميل مخفي
+                                    </p>
                                     {stop.order.order_code && (
                                       <p className="text-gray-500">
                                         كود: {stop.order.order_code}
@@ -2418,8 +2414,8 @@ const OrdersMap = ({
                               </p>
                               <p className="text-xs text-gray-600">{allStepsData[currentStepIndex].to.label}</p>
                               {allStepsData[currentStepIndex].to.order && (
-                                <p className="text-xs text-blue-600 mt-1">
-                                  📞 {allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}
+                                <p className="text-xs text-gray-400 mt-1">
+                                  🔒 رقم العميل مخفي
                                 </p>
                               )}
                             </div>
@@ -2476,14 +2472,11 @@ const OrdersMap = ({
                           </span>
                         </div>
 
-                        {/* رقم الهاتف */}
+                        {/* رقم الهاتف - مخفي */}
                         {allStepsData[currentStepIndex].to.order && (
-                          <a 
-                            href={`tel:${allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}`}
-                            className="inline-flex items-center gap-1 text-blue-600 text-sm mt-2"
-                          >
-                            📞 {allStepsData[currentStepIndex].to.order.customer_phone || allStepsData[currentStepIndex].to.order.delivery_phone}
-                          </a>
+                          <p className="text-gray-400 text-xs mt-2">
+                            🔒 رقم العميل مخفي - استخدم زر الاتصال من صفحة الطلب
+                          </p>
                         )}
                       </div>
                     )}
@@ -2565,16 +2558,17 @@ const OrdersMap = ({
 
                     {/* أزرار الإجراءات */}
                     <div className="flex gap-2">
-                      {/* زر الاتصال */}
-                      {(selectedOrderForRoute?.customer_phone || selectedOrderForRoute?.delivery_phone) && (
-                        <a
-                          href={`tel:${selectedOrderForRoute.customer_phone || selectedOrderForRoute.delivery_phone}`}
-                          className="flex-1 py-3 bg-blue-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                        >
-                          <Phone size={16} />
-                          اتصل
-                        </a>
-                      )}
+                      {/* زر الاتصال VoIP */}
+                      <button
+                        onClick={() => {
+                          // فتح صفحة الطلب للاتصال عبر VoIP
+                          alert('استخدم زر "اتصل بالعميل" من صفحة تفاصيل الطلب');
+                        }}
+                        className="flex-1 py-3 bg-blue-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                      >
+                        <Phone size={16} />
+                        اتصل (مشفر)
+                      </button>
                       
                       {/* زر لم يرد - طلب مساعدة الموظف */}
                       <button

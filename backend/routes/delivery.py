@@ -1,11 +1,12 @@
 # /app/backend/routes/delivery.py
 # مسارات التوصيل
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
 import uuid
+import base64
 
 from core.database import db, get_current_user, create_notification_for_user
 
@@ -32,6 +33,37 @@ async def count_hot_fresh_food_orders(driver_id: str) -> int:
             hot_fresh_count += 1
     
     return hot_fresh_count
+
+# ===== رفع صورة السائق =====
+
+@router.post("/update-image")
+async def update_driver_image(image: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    """رفع/تحديث صورة السائق"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من نوع الملف
+    if not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="يرجى رفع صورة صالحة")
+    
+    # قراءة الصورة وتحويلها لـ base64
+    content = await image.read()
+    
+    # التحقق من حجم الصورة (أقصى 5MB)
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="حجم الصورة كبير جداً (أقصى 5MB)")
+    
+    # تحويل لـ base64 data URL
+    image_base64 = base64.b64encode(content).decode('utf-8')
+    image_url = f"data:{image.content_type};base64,{image_base64}"
+    
+    # تحديث صورة السائق في قاعدة البيانات
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"image": image_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"success": True, "message": "تم تحديث الصورة بنجاح", "image_url": image_url}
 
 # ===== تتبع موقع السائق =====
 

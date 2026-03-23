@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ArrowRight, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft, Camera
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -70,6 +70,8 @@ const SettingsPage = () => {
   // بيانات السائق
   const [walletBalance, setWalletBalance] = useState(0);
   const [myRatings, setMyRatings] = useState({ average_rating: 0, total_ratings: 0 });
+  const [driverImage, setDriverImage] = useState(user?.image || null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
@@ -114,6 +116,44 @@ const SettingsPage = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // رفع صورة السائق
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // التحقق من نوع الملف
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "خطأ", description: "يرجى اختيار صورة صالحة", variant: "destructive" });
+      return;
+    }
+    
+    // التحقق من حجم الملف (أقصى 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "خطأ", description: "حجم الصورة كبير جداً (أقصى 5MB)", variant: "destructive" });
+      return;
+    }
+    
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await axios.post(`${API}/delivery/update-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (response.data.image_url) {
+        setDriverImage(response.data.image_url);
+        toast({ title: "تم", description: "تم تحديث صورتك بنجاح" });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل في رفع الصورة", variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -345,6 +385,42 @@ const SettingsPage = () => {
         {/* Driver Tab - تبويب السائق */}
         {activeTab === 'driver' && user?.user_type === 'delivery' && (
           <div className="space-y-2">
+            {/* صورة السائق */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 bg-white/20">
+                    {driverImage ? (
+                      <img src={driverImage} alt="صورتي" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User size={32} className="text-white/70" />
+                      </div>
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                    {uploadingImage ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+                    ) : (
+                      <Camera size={16} className="text-blue-600" />
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-bold text-lg">{user?.name}</p>
+                  <p className="text-white/70 text-sm">{user?.phone}</p>
+                  <p className="text-white/60 text-xs mt-1">اضغط على الكاميرا لتغيير صورتك</p>
+                </div>
+              </div>
+            </div>
+
             {/* رصيد المحفظة */}
             <div 
               onClick={() => navigate('/wallet')}

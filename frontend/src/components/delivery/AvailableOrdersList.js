@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock, Star, Layers } from 'lucide-react';
+import { Package, Navigation, MapPin, Phone, UtensilsCrossed, ShoppingBag, Map, Locate, Clock, Star, Layers, Lock } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import { 
   getCurrentLocation, 
@@ -315,9 +315,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                           : order.buyer_address?.address}
                       </p>
                       <p>{order.buyer_address?.city}</p>
-                      <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
-                        <Phone size={12} /> {order.buyer_address?.phone}
-                      </a>
+                      <p className={`flex items-center gap-1 text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <Lock size={10} /> رقم العميل مخفي
+                      </p>
                     </div>
                   </div>
 
@@ -481,9 +481,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                           : order.buyer_address?.address}
                       </p>
                       <p>{order.buyer_address?.city}</p>
-                      <a href={`tel:${order.buyer_address?.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-yellow-400' : 'text-amber-600'}`}>
-                        <Phone size={12} /> {order.buyer_address?.phone}
-                      </a>
+                      <p className={`flex items-center gap-1 text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <Lock size={10} /> رقم العميل مخفي
+                      </p>
                     </div>
                   </div>
 
