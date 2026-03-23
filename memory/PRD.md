@@ -44,6 +44,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
   - Filter by status and type
   - Respond to feedback (marks as reviewed)
   - Delete feedback
+  - **Push Notifications**: When admin responds, user receives push notification instantly
 - **Files Created**:
   - `/app/frontend/src/components/FeedbackButton.js`
   - `/app/frontend/src/components/admin/FeedbackTab.js`
@@ -52,6 +53,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
   - `/app/frontend/src/App.js` - Added FeedbackButton component
   - `/app/frontend/src/pages/AdminPage.js` - Added FeedbackTab to admin panel
   - `/app/backend/server.py` - Registered feedback router
+  - `/app/backend/core/firebase_admin.py` - Added `send_push_to_user()` function
 - **Database**: New `feedback` collection with schema:
   ```
   { id, type, type_label, message, user_id?, user_name, user_phone?, 

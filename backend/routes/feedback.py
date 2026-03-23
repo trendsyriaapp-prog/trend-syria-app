@@ -147,11 +147,22 @@ async def respond_to_feedback(
     # إشعار للمستخدم إذا كان مسجل
     if feedback.get("user_id"):
         from core.database import create_notification_for_user
+        from core.firebase_admin import send_push_to_user
+        
+        # حفظ الإشعار في قاعدة البيانات
         await create_notification_for_user(
             user_id=feedback["user_id"],
             title="✅ تم الرد على رسالتك",
             message=f"رد الإدارة: {data.response[:100]}...",
             notification_type="feedback_response"
+        )
+        
+        # إرسال push notification فوري
+        await send_push_to_user(
+            user_id=feedback["user_id"],
+            title="✅ تم الرد على رسالتك",
+            body=f"رد الإدارة: {data.response[:80]}...",
+            data={"type": "feedback_response", "feedback_id": feedback_id}
         )
     
     return {"success": True, "message": "تم إرسال الرد بنجاح"}

@@ -187,3 +187,63 @@ async def send_push_to_topic(
     except Exception as e:
         logger.error(f"❌ Topic push failed: {e}")
         return False
+
+
+async def send_push_to_user(
+    user_id: str,
+    title: str,
+    body: str,
+    data: dict = None,
+    image: str = None
+) -> bool:
+    """
+    إرسال إشعار لمستخدم بناءً على user_id
+    يجلب FCM tokens من قاعدة البيانات ويرسل لجميع أجهزة المستخدم
+    
+    Args:
+        user_id: معرف المستخدم
+        title: عنوان الإشعار
+        body: نص الإشعار
+        data: بيانات إضافية (اختياري)
+        image: رابط صورة (اختياري)
+    
+    Returns:
+        True إذا نجح الإرسال لجهاز واحد على الأقل
+    """
+    if not firebase_initialized:
+        logger.error("Firebase not initialized")
+        return False
+    
+    try:
+        from core.database import db
+        
+        # جلب FCM tokens للمستخدم من جدول push_tokens
+        tokens_cursor = db.push_tokens.find({"user_id": user_id})
+        tokens_list = await tokens_cursor.to_list(10)  # حد أقصى 10 أجهزة
+        
+        if not tokens_list:
+            # محاولة جلب من حقل fcm_token في جدول المستخدمين
+            user = await db.users.find_one({"id": user_id}, {"fcm_token": 1})
+            if user and user.get("fcm_token"):
+                tokens_list = [{"token": user["fcm_token"]}]
+        
+        if not tokens_list:
+            logger.warning(f"No FCM tokens found for user: {user_id}")
+            return False
+        
+        fcm_tokens = [t["token"] for t in tokens_list if t.get("token")]
+        
+        if not fcm_tokens:
+            return False
+        
+        # إرسال لجميع أجهزة المستخدم
+        if len(fcm_tokens) == 1:
+            return await send_push_notification(fcm_tokens[0], title, body, data, image)
+        else:
+            result = await send_push_to_multiple(fcm_tokens, title, body, data, image)
+            return result["success"] > 0
+            
+    except Exception as e:
+        logger.error(f"❌ Push to user failed: {e}")
+        return False
+
