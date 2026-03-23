@@ -412,19 +412,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 />
               </div>
               
-              {/* الظل الانعكاسي - ملتصق بأسفل المنتج ويمتد للخلف واليمين */}
+              {/* الظل الأرضي - ملتصق بقاعدة المنتج مباشرة */}
               {selectedShadow !== 'none' && (
                 <div 
                   className="absolute pointer-events-none"
                   style={{
-                    top: '90%',
-                    left: '10%',
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-25deg)`,
-                    transformOrigin: 'top left',
-                    opacity: selectedShadow === 'strong' ? 0.3 : 0.15,
-                    filter: `blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 80%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 80%)',
+                    bottom: '0',
+                    left: '50%',
+                    transform: `translateX(-40%) scale(${scale}) rotate(${rotation}deg) scaleY(0.25) skewX(-20deg)`,
+                    transformOrigin: 'center top',
+                    opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
+                    filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
                   }}
                 >
                   <img 
