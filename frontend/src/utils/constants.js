@@ -19,6 +19,7 @@ export const CATEGORIES = [
   { id: 'gifts', name: 'هدايا' },
   { id: 'medicines', name: 'أدوية' },
   { id: 'cars', name: 'سيارات' },
+  { id: 'canned_food', name: 'أطعمة معلبة وجافة' },
   { id: 'other', name: 'أخرى / منتجات متنوعة' },
 ];
 
