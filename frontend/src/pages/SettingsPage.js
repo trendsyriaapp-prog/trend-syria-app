@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ArrowRight, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft, Camera
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft, Camera, Mic
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -16,6 +16,7 @@ import LoyaltyCard from '../components/LoyaltyCard';
 import SupportTickets from '../components/support/SupportTickets';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import NotificationGuide from '../components/NotificationGuide';
+import { useNotificationSound, AVAILABLE_TONES, saveTonePreference } from '../hooks/useNotificationSound';
 // مكونات السائق
 import DriverLeaderboard from '../components/delivery/DriverLeaderboard';
 import DriverPenaltyPoints from '../components/delivery/DriverPenaltyPoints';
@@ -487,6 +488,9 @@ const SettingsPage = () => {
         {activeTab === 'tones' && user?.user_type === 'delivery' && (
           <div className="space-y-3">
             <NotificationToneSettings theme={isDarkMode ? 'dark' : 'light'} />
+            
+            {/* إعدادات الصوت الناطق */}
+            <VoiceAnnouncementSettings isDarkMode={isDarkMode} />
             
             {/* ملاحظة */}
             <div className={`p-4 rounded-xl text-center ${

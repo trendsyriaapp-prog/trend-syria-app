@@ -286,7 +286,7 @@ const OrdersMap = ({
             
             // 🔊 تشغيل صوت الأولوية العاجل
             playPriority();
-            speakInstruction('طلب جديد من نفس المطعم');
+            announcePriorityOrder(newPriorityOrder.store_name);
           }
         } catch (error) {
           console.error('Error checking priority orders:', error);
@@ -337,7 +337,7 @@ const OrdersMap = ({
     try {
       await axios.post(`${API}/api/food/orders/delivery/${priorityOrder.id}/accept`);
       playSuccess(); // 🔊 صوت النجاح
-      speakInstruction('تم قبول الطلب بنجاح');
+      announceOrderAccepted(priorityOrder.order_number || priorityOrder.id?.slice(-4));
       setShowPriorityPopup(false);
       setPriorityOrder(null);
       onTakeFoodOrder?.(priorityOrder);
@@ -507,15 +507,65 @@ const OrdersMap = ({
     return R * c;
   };
 
-  // ⭐ تشغيل التنبيهات الصوتية
-  const speakInstruction = (text) => {
+  // ⭐ تشغيل التنبيهات الصوتية - محسّن
+  const speakInstruction = (text, options = {}) => {
     if ('speechSynthesis' in window) {
+      // إلغاء أي كلام سابق
+      window.speechSynthesis.cancel();
+      
       const utterance = new SpeechSynthesisUtterance(text);
+      
+      // البحث عن صوت عربي أفضل
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find(v => 
+        v.lang.startsWith('ar') && (v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Apple'))
+      ) || voices.find(v => v.lang.startsWith('ar'));
+      
+      if (arabicVoice) {
+        utterance.voice = arabicVoice;
+      }
+      
       utterance.lang = 'ar-SA';
-      utterance.rate = 1;
-      utterance.pitch = 1;
+      utterance.rate = options.rate || 0.9; // أبطأ قليلاً للوضوح
+      utterance.pitch = options.pitch || 1.1; // أعلى قليلاً للوضوح
+      utterance.volume = options.volume || 1;
+      
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  // 🔊 رسائل صوتية محسّنة للسائقين
+  const announceNewOrder = (orderDetails = {}) => {
+    const { storeName, total, distance, isFood } = orderDetails;
+    let message = isFood ? 'طلب طعام جديد!' : 'طلب جديد!';
+    
+    if (storeName) {
+      message += ` من ${storeName}.`;
+    }
+    if (total) {
+      message += ` المبلغ ${total} ليرة.`;
+    }
+    if (distance) {
+      message += ` المسافة ${distance} كيلومتر.`;
+    }
+    
+    speakInstruction(message, { rate: 0.85 });
+  };
+
+  const announceOrderAccepted = (orderNumber) => {
+    speakInstruction(`تم قبول الطلب رقم ${orderNumber}. توجه للمتجر الآن.`, { rate: 0.85 });
+  };
+
+  const announceNavigation = (destination) => {
+    speakInstruction(`جاري التوجه إلى ${destination}`, { rate: 0.9 });
+  };
+
+  const announceArrival = (location) => {
+    speakInstruction(`وصلت إلى ${location}. تأكد من استلام الطلب.`, { rate: 0.85 });
+  };
+
+  const announcePriorityOrder = (storeName) => {
+    speakInstruction(`تنبيه! طلب عاجل من ${storeName || 'نفس المتجر'}. اقبله الآن!`, { rate: 0.95, pitch: 1.2 });
   };
 
   // ⭐ تبديل وضع الملاحة
