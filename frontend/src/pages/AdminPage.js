@@ -59,6 +59,7 @@ import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
 import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
 import PlatformWalletTab from '../components/admin/PlatformWalletTab';
+import FeedbackTab from '../components/admin/FeedbackTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -759,6 +760,7 @@ const AdminDashboardPage = () => {
                 <div className="grid grid-cols-1 gap-px bg-gray-100">
                   {[
                     { icon: MessageCircle, label: 'محادثات الدعم', tab: 'support-tickets' },
+                    { icon: MessageSquare, label: 'اقتراحات المستخدمين', tab: 'feedback' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-indigo-50 transition-colors">
                       <item.icon size={16} className="text-indigo-600" />

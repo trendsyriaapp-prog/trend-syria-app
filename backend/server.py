@@ -92,6 +92,7 @@ from routes.call_requests import router as call_requests_router
 from routes.voip import router as voip_router
 from routes.push_notifications import router as push_router
 from routes.payment_v2 import router as payment_v2_router
+from routes.feedback import router as feedback_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -181,6 +182,7 @@ api_router.include_router(call_requests_router)
 api_router.include_router(voip_router)
 api_router.include_router(push_router)
 api_router.include_router(payment_v2_router)
+api_router.include_router(feedback_router)
 
 # ============== Categories ==============
 

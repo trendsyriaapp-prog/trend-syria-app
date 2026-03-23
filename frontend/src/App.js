@@ -20,6 +20,7 @@ import FreeShippingFloatingBanner from "./components/FreeShippingFloatingBanner"
 import SplashScreen from "./components/SplashScreen";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import IncomingCallHandler from "./components/voip/IncomingCallHandler";
+import FeedbackButton from "./components/FeedbackButton";
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -268,6 +269,7 @@ function App() {
             <NotificationManager />
             <BuyerNotificationPrompt />
             <FreeShippingFloatingBanner />
+            <FeedbackButton position="bottom-left" />
           </div>
           </PlatformClosedCheck>
           </ForcePasswordChangeWrapper>
