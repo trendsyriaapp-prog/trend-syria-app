@@ -2020,7 +2020,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 </div>
 
                 {formData.weight_variants.length === 0 && (
-                  <p className="text-[10px] text-red-500 mt-2">⚠️ أضف وزن واحد على الأقل</p>
+                  <p className="text-[10px] text-red-500 mt-2">⚠️ أضف الأوزان المطلوبة</p>
                 )}
               </>
             )}
