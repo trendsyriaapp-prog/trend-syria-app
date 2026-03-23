@@ -145,6 +145,7 @@ const MyOrdersList = ({
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelSettings, setCancelSettings] = useState(null);
+  const [cancelTimers, setCancelTimers] = useState({}); // عدادات الإلغاء لكل طلب
   
   // نظام طلب المساعدة الطارئة
   const [showHelpModal, setShowHelpModal] = useState(null);
@@ -201,17 +202,37 @@ const MyOrdersList = ({
     if (token) fetchCancelSettings();
   }, [token]);
 
+  // تحديث عدادات الإلغاء كل ثانية
+  useEffect(() => {
+    if (!cancelSettings || !orders?.length) return;
+    
+    const updateTimers = () => {
+      const newTimers = {};
+      orders.forEach(order => {
+        if (order.picked_up_at && order.status !== 'delivered' && order.status !== 'cancelled') {
+          const pickedUpAt = new Date(order.picked_up_at);
+          const now = new Date();
+          const elapsedSeconds = (now - pickedUpAt) / 1000;
+          const windowSeconds = cancelSettings.cancel_window_seconds || 120;
+          const remaining = windowSeconds - elapsedSeconds;
+          if (remaining > 0) {
+            newTimers[order.id] = Math.ceil(remaining);
+          }
+        }
+      });
+      setCancelTimers(newTimers);
+    };
+    
+    updateTimers(); // تحديث فوري
+    const interval = setInterval(updateTimers, 1000); // تحديث كل ثانية
+    
+    return () => clearInterval(interval);
+  }, [cancelSettings, orders]);
+
   // حساب الوقت المتبقي للإلغاء
   const getCancelTimeRemaining = (order) => {
-    if (!order.picked_up_at || !cancelSettings) return null;
-    
-    const pickedUpAt = new Date(order.picked_up_at);
-    const now = new Date();
-    const elapsedSeconds = (now - pickedUpAt) / 1000;
-    const windowSeconds = cancelSettings.cancel_window_seconds || 120;
-    const remaining = windowSeconds - elapsedSeconds;
-    
-    return remaining > 0 ? Math.ceil(remaining) : 0;
+    // استخدام القيمة المحفوظة في state
+    return cancelTimers[order.id] || 0;
   };
 
   // إلغاء الطلب
@@ -1027,7 +1048,7 @@ const MyOrdersList = ({
               </div>
 
               {/* زر إلغاء الطلب - يظهر فقط خلال فترة السماح */}
-              {order.status === 'out_for_delivery' && getCancelTimeRemaining(order) > 0 && (
+              {order.status === 'out_for_delivery' && cancelTimers[order.id] > 0 && (
                 <button
                   onClick={() => {
                     setShowCancelModal(order);
@@ -1041,7 +1062,14 @@ const MyOrdersList = ({
                   }`}
                 >
                   <XCircle size={14} />
-                  إلغاء الطلب ({getCancelTimeRemaining(order)} ث)
+                  إلغاء الطلب 
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    cancelTimers[order.id] <= 30 
+                      ? 'bg-red-500 text-white animate-pulse' 
+                      : 'bg-red-200 text-red-700'
+                  }`}>
+                    {cancelTimers[order.id]} ث
+                  </span>
                 </button>
               )}
 
