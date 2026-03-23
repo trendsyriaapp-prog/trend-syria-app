@@ -93,12 +93,12 @@ const FoodRoute = ({ children }) => {
 // مكون التحقق من إغلاق المنصة
 const PlatformClosedCheck = ({ children }) => {
   const { user } = useAuth();
-  const { settings, loading } = useSettings();
+  const { platformSettings, loading } = useSettings();
   
   if (loading) return children;
   
   // التحقق من إغلاق المنصة للعملاء
-  if (user?.user_type === 'buyer' && settings?.platform_closed_for_customers) {
+  if (user?.user_type === 'buyer' && platformSettings?.platform_closed_for_customers) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
@@ -106,7 +106,7 @@ const PlatformClosedCheck = ({ children }) => {
             <span className="text-4xl">🔒</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-3">المنصة مغلقة مؤقتاً</h1>
-          <p className="text-gray-600 mb-6">{settings?.platform_closed_message || 'سنعود قريباً!'}</p>
+          <p className="text-gray-600 mb-6">{platformSettings?.platform_closed_message || 'سنعود قريباً!'}</p>
           <div className="text-sm text-gray-400">ترند سوريا</div>
         </div>
       </div>
@@ -114,7 +114,7 @@ const PlatformClosedCheck = ({ children }) => {
   }
   
   // التحقق من إغلاق المنصة للبائعين
-  if ((user?.user_type === 'seller' || user?.user_type === 'food_seller') && settings?.platform_closed_for_sellers) {
+  if ((user?.user_type === 'seller' || user?.user_type === 'food_seller') && platformSettings?.platform_closed_for_sellers) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
@@ -122,7 +122,7 @@ const PlatformClosedCheck = ({ children }) => {
             <span className="text-4xl">🔧</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-3">صيانة المنصة</h1>
-          <p className="text-gray-600 mb-6">المنصة مغلقة للبائعين مؤقتاً للصيانة</p>
+          <p className="text-gray-600 mb-6">{platformSettings?.platform_closed_message_sellers || 'المنصة مغلقة للبائعين مؤقتاً للصيانة'}</p>
           <div className="text-sm text-gray-400">ترند سوريا</div>
         </div>
       </div>

@@ -38,6 +38,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             "platform_closed_for_customers": False,  # إغلاق المنصة للعملاء
             "platform_closed_for_sellers": False,    # إغلاق المنصة للبائعين
             "platform_closed_message": "المنصة مغلقة مؤقتاً، سنعود قريباً!",
+            "platform_closed_message_sellers": "المنصة مغلقة للبائعين مؤقتاً للصيانة",
             # إعدادات الدعم
             "whatsapp_enabled": True,
             "whatsapp_number": "963551021618",
@@ -79,7 +80,7 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
     ]
     
     # الحقول النصية (string)
-    string_fields = ["whatsapp_number", "support_message", "platform_closed_message"]
+    string_fields = ["whatsapp_number", "support_message", "platform_closed_message", "platform_closed_message_sellers"]
     
     # الحقول الرقمية (number)
     number_fields = ["products_free_shipping_threshold", "food_free_delivery_threshold", "gift_wrapping_price"]
@@ -176,13 +177,15 @@ async def get_platform_status():
         return {
             "platform_closed_for_customers": False,
             "platform_closed_for_sellers": False,
-            "platform_closed_message": ""
+            "platform_closed_message": "",
+            "platform_closed_message_sellers": ""
         }
     
     return {
         "platform_closed_for_customers": settings.get("platform_closed_for_customers", False),
         "platform_closed_for_sellers": settings.get("platform_closed_for_sellers", False),
-        "platform_closed_message": settings.get("platform_closed_message", "المنصة مغلقة مؤقتاً")
+        "platform_closed_message": settings.get("platform_closed_message", "المنصة مغلقة مؤقتاً"),
+        "platform_closed_message_sellers": settings.get("platform_closed_message_sellers", "المنصة مغلقة للبائعين مؤقتاً للصيانة")
     }
 
 
@@ -250,7 +253,12 @@ async def get_public_settings():
         "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات ترند سورية"),
         # إعدادات الشحن المجاني
         "products_free_shipping_threshold": settings.get("products_free_shipping_threshold", 150000),
-        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000)
+        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000),
+        # إعدادات إغلاق المنصة
+        "platform_closed_for_customers": settings.get("platform_closed_for_customers", False),
+        "platform_closed_for_sellers": settings.get("platform_closed_for_sellers", False),
+        "platform_closed_message": settings.get("platform_closed_message", "المنصة مغلقة مؤقتاً، سنعود قريباً!"),
+        "platform_closed_message_sellers": settings.get("platform_closed_message_sellers", "المنصة مغلقة للبائعين مؤقتاً للصيانة")
     }
 
 # ============== دالة إرسال إشعارات العروض لجميع المستخدمين ==============

@@ -189,7 +189,8 @@ const PlatformClosureSettings = () => {
   const [settings, setSettings] = useState({
     platform_closed_for_customers: false,
     platform_closed_for_sellers: false,
-    platform_closed_message: 'المنصة مغلقة مؤقتاً، سنعود قريباً!'
+    platform_closed_message: 'المنصة مغلقة مؤقتاً، سنعود قريباً!',
+    platform_closed_message_sellers: 'المنصة مغلقة للبائعين مؤقتاً للصيانة'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -204,7 +205,8 @@ const PlatformClosureSettings = () => {
       setSettings({
         platform_closed_for_customers: res.data.platform_closed_for_customers || false,
         platform_closed_for_sellers: res.data.platform_closed_for_sellers || false,
-        platform_closed_message: res.data.platform_closed_message || 'المنصة مغلقة مؤقتاً، سنعود قريباً!'
+        platform_closed_message: res.data.platform_closed_message || 'المنصة مغلقة مؤقتاً، سنعود قريباً!',
+        platform_closed_message_sellers: res.data.platform_closed_message_sellers || 'المنصة مغلقة للبائعين مؤقتاً للصيانة'
       });
     } catch (error) {
       console.error('Error fetching platform status:', error);
@@ -281,16 +283,30 @@ const PlatformClosureSettings = () => {
           </button>
         </div>
 
-        {/* رسالة الإغلاق */}
-        {isClosed && (
+        {/* رسالة الإغلاق للعملاء */}
+        {settings.platform_closed_for_customers && (
           <div>
-            <label className="text-xs font-medium text-gray-700 mb-1 block">رسالة الإغلاق</label>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">رسالة الإغلاق للعملاء</label>
             <textarea
               value={settings.platform_closed_message}
               onChange={(e) => setSettings({...settings, platform_closed_message: e.target.value})}
               className="w-full bg-white border rounded-lg p-2 text-sm resize-none"
               rows={2}
-              placeholder="الرسالة التي ستظهر للمستخدمين..."
+              placeholder="الرسالة التي ستظهر للعملاء..."
+            />
+          </div>
+        )}
+
+        {/* رسالة الإغلاق للبائعين */}
+        {settings.platform_closed_for_sellers && (
+          <div>
+            <label className="text-xs font-medium text-gray-700 mb-1 block">رسالة الإغلاق للبائعين</label>
+            <textarea
+              value={settings.platform_closed_message_sellers}
+              onChange={(e) => setSettings({...settings, platform_closed_message_sellers: e.target.value})}
+              className="w-full bg-white border rounded-lg p-2 text-sm resize-none"
+              rows={2}
+              placeholder="الرسالة التي ستظهر للبائعين..."
             />
           </div>
         )}
