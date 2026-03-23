@@ -807,35 +807,43 @@ async def process_image_with_photoroom(
         }
         
     except Exception as e:
-        # محاولة استخدام Remove.bg كـ fallback
+        # استخدام rembg المحلي كـ fallback (مجاني)
         try:
-            if REMOVE_BG_API_KEY:
-                no_bg_data = await remove_background_removebg(image_data)
-                processing_method = "removebg_fallback"
-            else:
-                no_bg_data = remove_background_local(image_data)
-                processing_method = "local_fallback"
+            no_bg_data = remove_background_local(image_data)
+            processing_method = "rembg_local"
             
-            # معالجة الصورة بالطريقة القديمة
+            # معالجة الصورة
             product_image = Image.open(io.BytesIO(no_bg_data))
             if product_image.mode != 'RGBA':
                 product_image = product_image.convert('RGBA')
+            
+            # إذا كانت الخلفية شفافة، نرجع الصورة كما هي
+            if background == "transparent":
+                output_buffer = io.BytesIO()
+                product_image.save(output_buffer, format='PNG')
+                output_buffer.seek(0)
+                image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                
+                return {
+                    "success": True,
+                    "image": f"data:image/png;base64,{image_base64}",
+                    "shadow_type": shadow_type,
+                    "background_used": "transparent",
+                    "processing_method": processing_method,
+                    "message": "تمت معالجة الصورة بنجاح (rembg)"
+                }
             
             # إضافة الخلفية
             bg_width, bg_height = product_image.size
             bg_image = create_gradient_background(bg_width, bg_height, background)
             bg_image = bg_image.convert('RGBA')
             
-            # إضافة ظل بسيط
-            if shadow_type != "none" and background != "premium_dark":
-                shadow = add_shadow_to_image(product_image, offset=(8, 8), blur=15, opacity=0.2)
-                bg_image.paste(shadow, (0, 0), shadow)
-            
-            bg_image.paste(product_image, (0, 0), product_image)
+            # دمج الصورة مع الخلفية
+            final_image = Image.alpha_composite(bg_image, product_image)
             
             # تحويل للـ base64
             output_buffer = io.BytesIO()
-            bg_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+            final_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
             output_buffer.seek(0)
             image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
             
@@ -845,13 +853,13 @@ async def process_image_with_photoroom(
                 "shadow_type": shadow_type,
                 "background_used": background,
                 "processing_method": processing_method,
-                "message": f"تمت معالجة الصورة (PhotoRoom غير متاح: {str(e)})"
+                "message": "تمت معالجة الصورة بنجاح (rembg)"
             }
             
         except Exception as fallback_error:
             raise HTTPException(
                 status_code=500, 
-                detail=f"فشل معالجة الصورة: {str(e)}. Fallback error: {str(fallback_error)}"
+                detail=f"فشل معالجة الصورة: {str(fallback_error)}"
             )
 
 

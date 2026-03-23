@@ -1,40 +1,45 @@
 // /app/frontend/src/components/seller/SimpleImageCapture.js
-// مكون متكامل لالتقاط ومعالجة صور المنتجات مع قوالب 3D
-// الصورة تملأ الشاشة بالكامل مع الإعدادات فوقها
-// يستخدم PhotoRoom API للجودة الاحترافية
+// مكون متكامل لالتقاط ومعالجة صور المنتجات
+// يدعم: تصغير/تكبير، تحريك، خلفيات جاهزة، ظلال
 
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { 
   X, Camera, RotateCcw, Check, Loader2,
-  Sparkles, Box, Palette, SlidersHorizontal, ChevronUp, ChevronDown, Sun
+  Sparkles, ZoomIn, ZoomOut, Move, RotateCw
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// ألوان الخلفية المتاحة
+// ألوان الخلفية
 const BACKGROUND_COLORS = [
-  { id: 'white', name: 'أبيض', color: '#FFFFFF' },
-  { id: 'light_gray', name: 'رمادي فاتح', color: '#F5F5F5' },
-  { id: 'soft_blue', name: 'أزرق ناعم', color: '#E6F0FF' },
-  { id: 'soft_pink', name: 'وردي ناعم', color: '#FFF0F5' },
-  { id: 'soft_gold', name: 'ذهبي ناعم', color: '#FFF8E6' },
-  { id: 'elegant_gray', name: 'رمادي أنيق', color: '#C8C8C8' },
-  { id: 'premium_dark', name: 'داكن فاخر', color: '#282828' },
-  { id: 'fashion_beige', name: 'بيج عصري', color: '#F5F0E6' },
-  { id: 'tech_silver', name: 'فضي تقني', color: '#DCE1E6' },
-  { id: 'nature_green', name: 'أخضر طبيعي', color: '#EBF5EB' },
+  { id: 'white', name: 'أبيض', color: '#FFFFFF', type: 'color' },
+  { id: 'light_gray', name: 'رمادي', color: '#F0F0F0', type: 'color' },
+  { id: 'soft_blue', name: 'أزرق', color: '#E8F4FC', type: 'color' },
+  { id: 'soft_pink', name: 'وردي', color: '#FFF0F5', type: 'color' },
+  { id: 'soft_gold', name: 'ذهبي', color: '#FFF8E6', type: 'color' },
+  { id: 'premium_dark', name: 'داكن', color: '#1a1a1a', type: 'color' },
 ];
 
-// أنواع الظلال المتاحة
+// خلفيات جاهزة (Gradients)
+const PRESET_BACKGROUNDS = [
+  { id: 'gradient_blue', name: 'تدرج أزرق', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', type: 'gradient' },
+  { id: 'gradient_orange', name: 'تدرج برتقالي', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', type: 'gradient' },
+  { id: 'gradient_green', name: 'تدرج أخضر', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', type: 'gradient' },
+  { id: 'gradient_gold', name: 'تدرج ذهبي', gradient: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)', type: 'gradient' },
+  { id: 'gradient_purple', name: 'تدرج بنفسجي', gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', type: 'gradient' },
+  { id: 'gradient_dark', name: 'تدرج داكن', gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)', type: 'gradient' },
+];
+
+// أنواع الظلال
 const SHADOW_TYPES = [
-  { id: 'none', name: 'بدون', icon: 'X', emoji: '✕' },
-  { id: 'soft', name: 'ناعم', icon: 'S', emoji: '☁️' },
-  { id: 'hard', name: 'حاد', icon: 'H', emoji: '◼️' },
-  { id: 'floating', name: 'عائم', icon: 'F', emoji: '🎈' },
+  { id: 'none', name: 'بدون', shadow: 'none' },
+  { id: 'soft', name: 'ناعم', shadow: '0 20px 40px rgba(0,0,0,0.15)' },
+  { id: 'medium', name: 'متوسط', shadow: '0 25px 50px rgba(0,0,0,0.25)' },
+  { id: 'hard', name: 'قوي', shadow: '0 30px 60px rgba(0,0,0,0.4)' },
 ];
 
-const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', token }) => {
+const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
@@ -44,46 +49,18 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
   const [processedImage, setProcessedImage] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [step, setStep] = useState('capture'); // capture, preview, edit
+  const [step, setStep] = useState('capture');
   const [facingMode, setFacingMode] = useState('environment');
   
-  // الخلفية المحددة
+  // إعدادات الصورة
   const [selectedBackground, setSelectedBackground] = useState('white');
-  
-  // الظل المحدد
   const [selectedShadow, setSelectedShadow] = useState('soft');
+  const [activeTab, setActiveTab] = useState('bg');
   
-  // القوالب
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [applyingTemplate, setApplyingTemplate] = useState(false);
-  
-  // أدوات التحرير - فتح الإعدادات تلقائياً
-  const [showTools, setShowTools] = useState(true);
-  const [activeTab, setActiveTab] = useState('colors'); // colors, shadows, templates, adjustments
-  
-  // إعدادات التعديل
-  const [adjustments, setAdjustments] = useState({
-    brightness: 100,
-    contrast: 100,
-    saturation: 100
-  });
-
-  // جلب القوالب
-  useEffect(() => {
-    if (isOpen) {
-      fetchTemplates();
-    }
-  }, [isOpen]);
-
-  const fetchTemplates = async () => {
-    try {
-      const res = await axios.get(`${API}/api/templates/list`);
-      setTemplates(res.data.templates || []);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-    }
-  };
+  // التحكم بالصورة (تصغير/تكبير/تحريك)
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
 
   // فتح الكاميرا
   useEffect(() => {
@@ -127,7 +104,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
   };
 
-  // التقاط صورة - مباشرة للمعالجة
+  // التقاط صورة
   const captureFromCamera = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
@@ -142,28 +119,26 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     const imageData = canvas.toDataURL('image/jpeg', 0.95);
     setCapturedImage(imageData);
     stopCamera();
-    // مباشرة للمعالجة
-    await processImageDirect(imageData);
+    await processImageWithPhotoRoom(imageData);
   };
 
-  // اختيار من المعرض - مباشرة للمعالجة
-  const handleFileSelect = (e) => {
+  // اختيار من المعرض
+  const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) { onClose(); return; }
     const reader = new FileReader();
     reader.onload = async (event) => {
       const imageData = event.target.result;
       setCapturedImage(imageData);
-      // مباشرة للمعالجة
-      await processImageDirect(imageData);
+      await processImageWithPhotoRoom(imageData);
     };
     reader.readAsDataURL(file);
   };
 
-  // معالجة مباشرة للصورة (بخلفية بيضاء افتراضية)
-  const processImageDirect = async (imageData) => {
+  // إزالة الخلفية باستخدام PhotoRoom
+  const processImageWithPhotoRoom = async (imageData) => {
     setProcessing(true);
-    setStep('edit'); // الانتقال لشاشة التحرير مباشرة
+    setStep('edit');
     setError(null);
     
     try {
@@ -172,8 +147,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
       
       const formData = new FormData();
       formData.append('file', blob, 'image.png');
-      formData.append('background', 'white'); // دائماً أبيض
-      formData.append('shadow_type', selectedShadow);
+      formData.append('background', 'transparent'); // شفاف للتحكم محلياً
+      formData.append('shadow_type', 'none'); // بدون ظل من API
       formData.append('use_sandbox', 'false');
       
       const result = await axios.post(`${API}/api/image/process-photoroom`, formData, {
@@ -183,125 +158,94 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
       
       if (result.data.success && result.data.image) {
         setProcessedImage(result.data.image);
-        setSelectedBackground('white');
+        // إعادة ضبط التحكم
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+        setRotation(0);
       } else {
         throw new Error('فشل في معالجة الصورة');
       }
     } catch (err) {
       console.error('Error:', err);
-      setError('فشل في إزالة الخلفية. جرب مرة أخرى.');
+      setError('فشل في إزالة الخلفية');
       setStep('capture');
     } finally {
       setProcessing(false);
     }
   };
 
-  // معالجة الصورة وإزالة الخلفية باستخدام PhotoRoom
-  const processImage = async (bgColor = selectedBackground, shadow = selectedShadow) => {
-    if (!capturedImage) return;
-    setProcessing(true);
-    setError(null);
+  // الحصول على ستايل الخلفية
+  const getBackgroundStyle = () => {
+    // ألوان
+    const color = BACKGROUND_COLORS.find(b => b.id === selectedBackground);
+    if (color) return { backgroundColor: color.color };
     
-    try {
-      const response = await fetch(capturedImage);
-      const blob = await response.blob();
-      
-      const formData = new FormData();
-      formData.append('file', blob, 'image.png');
-      formData.append('background', bgColor);
-      formData.append('shadow_type', shadow);
-      formData.append('use_sandbox', 'false');
-      
-      // استخدام PhotoRoom API
-      const result = await axios.post(`${API}/api/image/process-photoroom`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 90000
-      });
-      
-      if (result.data.success && result.data.image) {
-        setProcessedImage(result.data.image);
-        setSelectedBackground(bgColor);
-        setSelectedShadow(shadow);
-        setSelectedTemplate(null);
-        setStep('edit');
-      } else {
-        throw new Error('فشل في معالجة الصورة');
-      }
-    } catch (err) {
-      console.error('Error:', err);
-      setError('فشل في إزالة الخلفية. جرب مرة أخرى.');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // تغيير لون الخلفية
-  const changeBackground = async (bgColor) => {
-    if (!capturedImage || processing) return;
-    setSelectedBackground(bgColor);
-    await processImage(bgColor, selectedShadow);
-  };
-
-  // تغيير نوع الظل
-  const changeShadow = async (shadowType) => {
-    if (!capturedImage || processing) return;
-    setSelectedShadow(shadowType);
-    await processImage(selectedBackground, shadowType);
-  };
-
-  // تطبيق قالب 3D
-  const applyTemplate = async (template) => {
-    if (!processedImage) return;
-    setApplyingTemplate(true);
-    setSelectedTemplate(template.id);
+    // تدرجات
+    const gradient = PRESET_BACKGROUNDS.find(b => b.id === selectedBackground);
+    if (gradient) return { background: gradient.gradient };
     
-    try {
-      const response = await fetch(processedImage);
-      const blob = await response.blob();
-      
-      const formData = new FormData();
-      formData.append('file', blob, 'image.png');
-      formData.append('template_id', template.id);
-      
-      const result = await axios.post(`${API}/api/templates/apply-free`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000
-      });
-      
-      if (result.data.success && result.data.image) {
-        setProcessedImage(result.data.image);
-      }
-    } catch (err) {
-      console.error('Template error:', err);
-    } finally {
-      setApplyingTemplate(false);
+    return { backgroundColor: '#FFFFFF' };
+  };
+
+  // الحصول على ستايل الظل
+  const getShadowStyle = () => {
+    const shadow = SHADOW_TYPES.find(s => s.id === selectedShadow);
+    return shadow ? shadow.shadow : 'none';
+  };
+
+  // حفظ الصورة النهائية
+  const saveImage = () => {
+    if (!canvasRef.current || !processedImage) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const size = 1000;
+    canvas.width = size;
+    canvas.height = size;
+    
+    // رسم الخلفية
+    const bgStyle = getBackgroundStyle();
+    if (bgStyle.background) {
+      // تدرج
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = bgStyle.backgroundColor || '#FFFFFF';
     }
+    ctx.fillRect(0, 0, size, size);
+    
+    // رسم الصورة
+    const img = new Image();
+    img.onload = () => {
+      ctx.save();
+      ctx.translate(size/2 + position.x * 5, size/2 + position.y * 5);
+      ctx.rotate(rotation * Math.PI / 180);
+      ctx.scale(scale, scale);
+      
+      // الظل
+      if (selectedShadow !== 'none') {
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = selectedShadow === 'hard' ? 40 : 20;
+        ctx.shadowOffsetY = selectedShadow === 'hard' ? 30 : 15;
+      }
+      
+      const imgSize = Math.min(img.width, img.height) * 0.8;
+      ctx.drawImage(img, -imgSize/2, -imgSize/2, imgSize, imgSize);
+      ctx.restore();
+      
+      const finalImage = canvas.toDataURL('image/jpeg', 0.95);
+      onImageReady(finalImage);
+      handleClose();
+    };
+    img.src = processedImage;
   };
 
-  // إزالة القالب
-  const removeTemplate = async () => {
-    setSelectedTemplate(null);
-    await processImage(selectedBackground, selectedShadow);
-  };
-
-  // استخدام الصورة
-  const handleUseImage = (img) => {
-    onImageReady(img);
+  // استخدام الصورة الأصلية
+  const useOriginal = () => {
+    onImageReady(capturedImage);
     handleClose();
-  };
-
-  // إعادة التصوير
-  const retake = () => {
-    setCapturedImage(null);
-    setProcessedImage(null);
-    setSelectedTemplate(null);
-    setSelectedBackground('white');
-    setSelectedShadow('soft');
-    setAdjustments({ brightness: 100, contrast: 100, saturation: 100 });
-    setStep('capture');
-    setShowTools(true);
-    if (mode === 'camera') startCamera();
-    else setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
   // إغلاق
@@ -309,343 +253,221 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
     stopCamera();
     setCapturedImage(null);
     setProcessedImage(null);
-    setSelectedTemplate(null);
     setSelectedBackground('white');
     setSelectedShadow('soft');
-    setAdjustments({ brightness: 100, contrast: 100, saturation: 100 });
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    setRotation(0);
     setStep('capture');
     setError(null);
     onClose();
   };
 
-  // الحصول على لون الخلفية للعرض
-  const getBackgroundStyle = () => {
-    const bg = BACKGROUND_COLORS.find(b => b.id === selectedBackground);
-    return bg ? bg.color : '#FFFFFF';
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" data-testid="image-capture-modal">
+    <div className="fixed inset-0 z-50 flex flex-col bg-black" data-testid="image-capture-modal">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* === الخلفية: الصورة تملأ الشاشة بالكامل === */}
-      <div 
-        className="absolute inset-0"
-        style={{ 
-          backgroundColor: step === 'edit' ? getBackgroundStyle() : '#000000'
-        }}
-      >
-        {/* Step 1: Camera View - Full Screen */}
-        {step === 'capture' && mode === 'camera' && (
-          <div className="w-full h-full">
-            {error ? (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-black">
-                <Camera size={64} className="text-white/30 mb-4" />
-                <p className="text-white text-lg mb-4">{error}</p>
-                <button onClick={startCamera} className="px-6 py-3 bg-[#FF6B00] text-white rounded-xl font-bold">
-                  إعادة المحاولة
-                </button>
-              </div>
-            ) : (
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-            )}
-          </div>
-        )}
-
-        {/* Step 2: Processed Image - Full Screen Mobile */}
-        {step === 'edit' && processedImage && (
-          <img 
-            src={processedImage} 
-            alt="Processed" 
-            className="w-full h-full object-cover"
-            style={{
-              filter: `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%) saturate(${adjustments.saturation}%)`
-            }}
-          />
-        )}
-
-        {/* Loading Overlay */}
-        {(processing || applyingTemplate) && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-            <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
-            <p className="text-white text-lg">
-              {processing ? 'جاري إزالة الخلفية...' : 'جاري تطبيق القالب...'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* === Header - فوق الصورة === */}
-      <div className="relative z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-        <button onClick={handleClose} className="p-2 bg-black/40 rounded-full text-white" data-testid="close-btn">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 bg-black/80">
+        <button onClick={handleClose} className="p-2 text-white">
           <X size={24} />
         </button>
-        <h2 className="text-white font-bold text-lg drop-shadow-lg">
-          {step === 'capture' && 'التقاط صورة'}
-          {step === 'edit' && 'تحرير الصورة'}
+        <h2 className="text-white font-bold">
+          {step === 'capture' ? 'التقاط صورة' : 'تحرير الصورة'}
         </h2>
         <div className="w-10" />
       </div>
 
-      {/* === محتوى الإعدادات والأزرار - فوق الصورة === */}
-      <div className="relative z-10 flex-1 flex flex-col justify-end">
+      {/* Main Content */}
+      <div className="flex-1 relative overflow-hidden" style={step === 'edit' ? getBackgroundStyle() : { backgroundColor: '#000' }}>
         
-        {/* Camera Guide - فقط في وضع الكاميرا */}
-        {step === 'capture' && mode === 'camera' && !error && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-3/4 aspect-square border-2 border-dashed border-white/40 rounded-2xl" />
-          </div>
-        )}
-
-        {/* === أدوات التحرير === */}
-        {step === 'edit' && (
-          <div className="bg-gradient-to-t from-black/70 to-transparent pt-4">
-            
-            {/* زر إظهار/إخفاء الأدوات */}
-            <button
-              onClick={() => setShowTools(!showTools)}
-              className="mx-auto mb-1 flex items-center gap-1 px-3 py-0.5 bg-white/30 backdrop-blur-sm rounded-full text-white text-[10px]"
-            >
-              {showTools ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-              {showTools ? 'إخفاء' : 'أدوات'}
-            </button>
-
-            {showTools && step === 'edit' && (
-              <div className="px-2 space-y-1">
-                {/* تبويبات الأدوات - أصغر */}
-                <div className="flex gap-1 justify-center">
-                  <button
-                    onClick={() => setActiveTab('colors')}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
-                      activeTab === 'colors' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    الخلفية
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('shadows')}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
-                      activeTab === 'shadows' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    الظلال
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('templates')}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
-                      activeTab === 'templates' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    القوالب
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('adjustments')}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
-                      activeTab === 'adjustments' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    تعديل
-                  </button>
-                </div>
-
-                {/* محتوى التبويب النشط - أصغر */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-lg p-2 max-h-20 overflow-x-auto">
-                  
-                  {/* ألوان الخلفية - صف أفقي */}
-                  {activeTab === 'colors' && (
-                    <div className="flex gap-2">
-                      {BACKGROUND_COLORS.map(bg => (
-                        <button
-                          key={bg.id}
-                          onClick={() => changeBackground(bg.id)}
-                          disabled={processing}
-                          className={`w-10 h-10 flex-shrink-0 rounded-lg border-2 transition-all flex items-center justify-center ${
-                            selectedBackground === bg.id 
-                              ? 'border-[#FF6B00] scale-110' 
-                              : 'border-white/30'
-                          } ${processing ? 'opacity-50' : ''}`}
-                          style={{ backgroundColor: bg.color }}
-                        >
-                          {selectedBackground === bg.id && (
-                            <Check size={14} className={bg.id === 'premium_dark' ? 'text-white' : 'text-[#FF6B00]'} />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* الظلال - صف أفقي */}
-                  {activeTab === 'shadows' && (
-                    <div className="flex gap-2 justify-center">
-                      {SHADOW_TYPES.map(shadow => (
-                        <button
-                          key={shadow.id}
-                          onClick={() => changeShadow(shadow.id)}
-                          disabled={processing}
-                          className={`w-14 h-12 flex-shrink-0 rounded-lg border-2 transition-all flex flex-col items-center justify-center ${
-                            selectedShadow === shadow.id 
-                              ? 'border-[#FF6B00] bg-[#FF6B00]/30' 
-                              : 'border-white/30 bg-white/10'
-                          } ${processing ? 'opacity-50' : ''}`}
-                        >
-                          <span className="text-sm font-bold text-white">{shadow.icon}</span>
-                          <span className="text-[8px] text-white">{shadow.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* القوالب - صف أفقي */}
-                  {activeTab === 'templates' && (
-                    <div className="flex gap-2">
-                      {/* بدون قالب */}
-                      <button
-                        onClick={removeTemplate}
-                        disabled={applyingTemplate || processing}
-                        className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 flex flex-col items-center justify-center ${
-                          !selectedTemplate ? 'border-[#FF6B00] bg-[#FF6B00]/20' : 'border-white/30 bg-white/10'
-                        } disabled:opacity-50`}
-                      >
-                        <X size={12} className="text-white/60" />
-                        <span className="text-[7px] text-white/80">بدون</span>
-                      </button>
-                      
-                      {templates.slice(0, 11).map(template => (
-                        <button
-                          key={template.id}
-                          onClick={() => applyTemplate(template)}
-                          disabled={applyingTemplate || processing}
-                          className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 overflow-hidden flex flex-col items-center justify-center ${
-                            selectedTemplate === template.id 
-                              ? 'border-[#FF6B00]' 
-                              : 'border-white/30'
-                          } disabled:opacity-50`}
-                          style={{
-                            background: `linear-gradient(135deg, ${template.colors.primary}, ${template.colors.secondary})`
-                          }}
-                        >
-                          <span className="text-sm">{template.icon}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* التعديلات - مضغوطة */}
-                  {activeTab === 'adjustments' && (
-                    <div className="space-y-2">
-                      {/* السطوع */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-white w-12">السطوع</span>
-                        <input
-                          type="range"
-                          min="50"
-                          max="150"
-                          value={adjustments.brightness}
-                          onChange={(e) => setAdjustments(prev => ({ ...prev, brightness: parseInt(e.target.value) }))}
-                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
-                        />
-                        <span className="text-[10px] text-white w-8">{adjustments.brightness}%</span>
-                      </div>
-                      
-                      {/* التباين */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-white w-12">التباين</span>
-                        <input
-                          type="range"
-                          min="50"
-                          max="150"
-                          value={adjustments.contrast}
-                          onChange={(e) => setAdjustments(prev => ({ ...prev, contrast: parseInt(e.target.value) }))}
-                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
-                        />
-                        <span className="text-[10px] text-white w-8">{adjustments.contrast}%</span>
-                      </div>
-                      
-                      {/* التشبع */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-white w-12">التشبع</span>
-                        <input
-                          type="range"
-                          min="50"
-                          max="150"
-                          value={adjustments.saturation}
-                          onChange={(e) => setAdjustments(prev => ({ ...prev, saturation: parseInt(e.target.value) }))}
-                          className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF6B00]"
-                        />
-                        <span className="text-[10px] text-white w-8">{adjustments.saturation}%</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+        {/* Camera View */}
+        {step === 'capture' && mode === 'camera' && (
+          <div className="w-full h-full">
+            {error ? (
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <Camera size={64} className="text-white/30 mb-4" />
+                <p className="text-white text-lg mb-4">{error}</p>
+                <button onClick={startCamera} className="px-6 py-3 bg-[#FF6B00] text-white rounded-xl">
+                  إعادة المحاولة
+                </button>
               </div>
+            ) : (
+              <>
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-3/4 aspect-square border-2 border-dashed border-white/40 rounded-2xl" />
+                </div>
+              </>
             )}
-
-            {/* === أزرار التحكم === */}
-            <div className="p-2 space-y-2">
-              
-              {/* وضع التحرير - بعد إزالة الخلفية */}
-              {step === 'edit' && (
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleUseImage(capturedImage)} 
-                    className="flex-1 py-3 bg-white/20 text-white rounded-lg text-sm font-bold"
-                  >
-                    الأصلية
-                  </button>
-                  <button
-                    onClick={() => handleUseImage(processedImage)}
-                    disabled={applyingTemplate || processing}
-                    className="flex-[2] py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-                    data-testid="use-image-btn"
-                  >
-                    <Check size={18} /> استخدام الصورة
-                  </button>
-                </div>
-              )}
-
-              {/* وضع الكاميرا */}
-              {step === 'capture' && mode === 'camera' && !error && (
-                <div className="flex items-center justify-center gap-8 pb-4">
-                  <button onClick={switchCamera} className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                    <RotateCcw size={24} className="text-white" />
-                  </button>
-                  <button
-                    onClick={captureFromCamera}
-                    disabled={!stream}
-                    className="w-20 h-20 bg-white rounded-full flex items-center justify-center disabled:opacity-50 shadow-lg"
-                    data-testid="capture-btn"
-                  >
-                    <div className="w-16 h-16 bg-[#FF6B00] rounded-full" />
-                  </button>
-                  <div className="w-14" />
-                </div>
-              )}
-            </div>
           </div>
         )}
 
-        {/* وضع الكاميرا - الأزرار في الأسفل */}
+        {/* Processed Image with Controls */}
+        {step === 'edit' && processedImage && (
+          <div className="w-full h-full flex items-center justify-center">
+            <img 
+              src={processedImage} 
+              alt="Product" 
+              className="max-w-[80%] max-h-[70%] object-contain transition-all duration-200"
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                filter: `drop-shadow(${getShadowStyle()})`
+              }}
+              draggable={false}
+            />
+          </div>
+        )}
+
+        {/* Loading */}
+        {processing && (
+          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
+            <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
+            <p className="text-white">جاري إزالة الخلفية...</p>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="bg-black p-3 space-y-2">
+        
+        {/* Camera Controls */}
         {step === 'capture' && mode === 'camera' && !error && (
-          <div className="bg-gradient-to-t from-black/80 to-transparent p-4 pb-8">
-            <p className="text-center text-white/60 text-sm mb-6">ضع المنتج داخل الإطار</p>
-            <div className="flex items-center justify-center gap-8">
-              <button onClick={switchCamera} className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-                <RotateCcw size={24} className="text-white" />
+          <div className="flex items-center justify-center gap-8 py-4">
+            <button onClick={switchCamera} className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <RotateCcw size={20} className="text-white" />
+            </button>
+            <button
+              onClick={captureFromCamera}
+              disabled={!stream}
+              className="w-16 h-16 bg-white rounded-full flex items-center justify-center"
+            >
+              <div className="w-12 h-12 bg-[#FF6B00] rounded-full" />
+            </button>
+            <div className="w-12" />
+          </div>
+        )}
+
+        {/* Edit Controls */}
+        {step === 'edit' && !processing && (
+          <>
+            {/* Transform Controls */}
+            <div className="flex justify-center gap-2 mb-2">
+              <button 
+                onClick={() => setScale(s => Math.max(0.5, s - 0.1))}
+                className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"
+              >
+                <ZoomOut size={18} className="text-white" />
+              </button>
+              <button 
+                onClick={() => setScale(s => Math.min(2, s + 0.1))}
+                className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"
+              >
+                <ZoomIn size={18} className="text-white" />
+              </button>
+              <button 
+                onClick={() => setRotation(r => r + 90)}
+                className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center"
+              >
+                <RotateCw size={18} className="text-white" />
+              </button>
+              <button 
+                onClick={() => { setScale(1); setPosition({x:0,y:0}); setRotation(0); }}
+                className="px-3 h-10 bg-white/20 rounded-lg flex items-center justify-center"
+              >
+                <span className="text-white text-xs">إعادة ضبط</span>
+              </button>
+            </div>
+
+            {/* Position Controls */}
+            <div className="flex justify-center gap-1 mb-2">
+              <button onClick={() => setPosition(p => ({...p, y: p.y - 10}))} className="w-8 h-8 bg-white/10 rounded text-white text-xs">↑</button>
+              <button onClick={() => setPosition(p => ({...p, y: p.y + 10}))} className="w-8 h-8 bg-white/10 rounded text-white text-xs">↓</button>
+              <button onClick={() => setPosition(p => ({...p, x: p.x - 10}))} className="w-8 h-8 bg-white/10 rounded text-white text-xs">←</button>
+              <button onClick={() => setPosition(p => ({...p, x: p.x + 10}))} className="w-8 h-8 bg-white/10 rounded text-white text-xs">→</button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 justify-center">
+              <button
+                onClick={() => setActiveTab('bg')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold ${activeTab === 'bg' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'}`}
+              >
+                خلفية
               </button>
               <button
-                onClick={captureFromCamera}
-                disabled={!stream}
-                className="w-20 h-20 bg-white rounded-full flex items-center justify-center disabled:opacity-50 shadow-lg"
-                data-testid="capture-btn"
+                onClick={() => setActiveTab('gradient')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold ${activeTab === 'gradient' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'}`}
               >
-                <div className="w-16 h-16 bg-[#FF6B00] rounded-full" />
+                تدرجات
               </button>
-              <div className="w-14" />
+              <button
+                onClick={() => setActiveTab('shadow')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold ${activeTab === 'shadow' ? 'bg-[#FF6B00] text-white' : 'bg-white/20 text-white'}`}
+              >
+                ظلال
+              </button>
             </div>
-          </div>
+
+            {/* Tab Content */}
+            <div className="flex gap-2 overflow-x-auto py-2 justify-center">
+              {/* Colors */}
+              {activeTab === 'bg' && BACKGROUND_COLORS.map(bg => (
+                <button
+                  key={bg.id}
+                  onClick={() => setSelectedBackground(bg.id)}
+                  className={`w-10 h-10 flex-shrink-0 rounded-lg border-2 ${
+                    selectedBackground === bg.id ? 'border-[#FF6B00] scale-110' : 'border-white/30'
+                  }`}
+                  style={{ backgroundColor: bg.color }}
+                />
+              ))}
+              
+              {/* Gradients */}
+              {activeTab === 'gradient' && PRESET_BACKGROUNDS.map(bg => (
+                <button
+                  key={bg.id}
+                  onClick={() => setSelectedBackground(bg.id)}
+                  className={`w-10 h-10 flex-shrink-0 rounded-lg border-2 ${
+                    selectedBackground === bg.id ? 'border-[#FF6B00] scale-110' : 'border-white/30'
+                  }`}
+                  style={{ background: bg.gradient }}
+                />
+              ))}
+              
+              {/* Shadows */}
+              {activeTab === 'shadow' && SHADOW_TYPES.map(shadow => (
+                <button
+                  key={shadow.id}
+                  onClick={() => setSelectedShadow(shadow.id)}
+                  className={`px-4 h-10 flex-shrink-0 rounded-lg border-2 ${
+                    selectedShadow === shadow.id ? 'border-[#FF6B00] bg-[#FF6B00]/30' : 'border-white/30 bg-white/10'
+                  }`}
+                >
+                  <span className="text-white text-xs">{shadow.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-2">
+              <button 
+                onClick={useOriginal}
+                className="flex-1 py-3 bg-white/20 text-white rounded-lg text-sm font-bold"
+              >
+                الأصلية
+              </button>
+              <button
+                onClick={saveImage}
+                className="flex-[2] py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+              >
+                <Check size={18} /> استخدام الصورة
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
