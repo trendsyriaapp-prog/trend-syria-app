@@ -1829,19 +1829,23 @@ const OrdersMap = ({
                   </button>
                 </div>
                 
-                {/* دليل الألوان */}
-                <div className={`flex flex-1 justify-around text-xs ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span> مطعم
+                {/* دليل الألوان - محسّن للهاتف */}
+                <div className={`flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    <span>مطعم</span>
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span> متجر
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span>متجر</span>
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span> عميل
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span>عميل</span>
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className={`w-3 h-3 rounded-full shadow-lg ${currentTheme === 'dark' ? 'bg-white' : 'bg-orange-500'}`}></span> موقعك
+                  <span className="flex items-center gap-1">
+                    <span className={`w-2.5 h-2.5 rounded-full ${currentTheme === 'dark' ? 'bg-white' : 'bg-orange-500'}`}></span>
+                    <span>موقعك</span>
                   </span>
                 </div>
               </div>
