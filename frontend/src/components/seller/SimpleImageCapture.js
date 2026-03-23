@@ -47,7 +47,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
-  const [shadowOffset, setShadowOffset] = useState(50); // 0-100 للتحكم بموقع الظل
+  const [shadowOffset, setShadowOffset] = useState(50);
+  const [showRotation, setShowRotation] = useState(false); // 0-100 للتحكم بموقع الظل
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -355,6 +356,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setShadowOffset(50);
     setShowAdjustments(false);
     setShowShadows(false);
+    setShowRotation(false);
     setStep('capture');
     setError(null);
     onClose();
@@ -606,14 +608,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <ZoomIn size={18} className="text-white" />
               </button>
               <button 
-                onClick={() => setRotation(r => r + 90)}
-                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                onClick={() => { setShowRotation(!showRotation); setShowAdjustments(false); setShowShadows(false); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                  showRotation ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
+                }`}
                 data-testid="rotate-button"
               >
                 <RotateCw size={18} className="text-white" />
               </button>
               <button 
-                onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); }}
+                onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); setShowRotation(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
@@ -622,7 +626,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <Sliders size={18} className="text-white" />
               </button>
               <button 
-                onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); }}
+                onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); setShowRotation(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showShadows ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
@@ -631,6 +635,54 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <Eclipse size={18} className="text-white" />
               </button>
             </div>
+            
+            {/* Rotation Panel */}
+            {showRotation && (
+              <div className="bg-white/10 rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-bold">تدوير المنتج</span>
+                  <span className="text-white/70 text-xs">{rotation}°</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-white/70 text-xs">0°</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="360" 
+                    value={rotation}
+                    onChange={(e) => setRotation(Number(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
+                  />
+                  <span className="text-white/70 text-xs">360°</span>
+                </div>
+                <div className="flex justify-center gap-2 pt-1">
+                  <button 
+                    onClick={() => setRotation(0)}
+                    className="px-3 py-1 text-[10px] bg-white/20 text-white rounded-lg"
+                  >
+                    0°
+                  </button>
+                  <button 
+                    onClick={() => setRotation(90)}
+                    className="px-3 py-1 text-[10px] bg-white/20 text-white rounded-lg"
+                  >
+                    90°
+                  </button>
+                  <button 
+                    onClick={() => setRotation(180)}
+                    className="px-3 py-1 text-[10px] bg-white/20 text-white rounded-lg"
+                  >
+                    180°
+                  </button>
+                  <button 
+                    onClick={() => setRotation(270)}
+                    className="px-3 py-1 text-[10px] bg-white/20 text-white rounded-lg"
+                  >
+                    270°
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
