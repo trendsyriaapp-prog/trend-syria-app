@@ -548,32 +548,53 @@ const OrdersMap = ({
       const savedRate = parseFloat(localStorage.getItem('voiceRate') || '0.9');
       const savedPitch = parseFloat(localStorage.getItem('voicePitch') || '1.1');
       
-      // البحث عن الصوت المحدد أو صوت عربي افتراضي
+      // دالة لتطبيق الإعدادات وتشغيل الصوت
+      const applySettingsAndSpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = null;
+        
+        // البحث عن الصوت المحدد
+        if (savedVoiceName) {
+          selectedVoice = voices.find(v => v.name === savedVoiceName);
+        }
+        
+        // إذا لم يوجد الصوت المحدد، استخدم صوت عربي افتراضي
+        if (!selectedVoice) {
+          selectedVoice = voices.find(v => 
+            v.lang.startsWith('ar') && (v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Apple'))
+          ) || voices.find(v => v.lang.startsWith('ar'));
+        }
+        
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+        
+        utterance.lang = 'ar-SA';
+        // تطبيق الإعدادات - القيم من localStorage مباشرة
+        utterance.rate = savedRate;
+        utterance.pitch = savedPitch;
+        utterance.volume = savedVolume;
+        
+        // تجاوز بالقيم من options إذا وجدت
+        if (options.rate !== undefined) utterance.rate = options.rate;
+        if (options.pitch !== undefined) utterance.pitch = options.pitch;
+        if (options.volume !== undefined) utterance.volume = options.volume;
+        
+        window.speechSynthesis.speak(utterance);
+      };
+      
+      // التأكد من تحميل الأصوات قبل التشغيل
       const voices = window.speechSynthesis.getVoices();
-      let selectedVoice = null;
-      
-      if (savedVoiceName) {
-        selectedVoice = voices.find(v => v.name === savedVoiceName);
+      if (voices.length > 0) {
+        applySettingsAndSpeak();
+      } else {
+        // انتظار تحميل الأصوات
+        window.speechSynthesis.onvoiceschanged = () => {
+          applySettingsAndSpeak();
+        };
+        // تشغيل بعد تأخير كبديل
+        setTimeout(applySettingsAndSpeak, 100);
       }
-      
-      // إذا لم يوجد الصوت المحدد، استخدم صوت عربي افتراضي
-      if (!selectedVoice) {
-        selectedVoice = voices.find(v => 
-          v.lang.startsWith('ar') && (v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Apple'))
-        ) || voices.find(v => v.lang.startsWith('ar'));
-      }
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-      
-      utterance.lang = 'ar-SA';
-      // استخدام القيم من options أولاً، ثم من localStorage
-      utterance.rate = options.rate || savedRate;
-      utterance.pitch = options.pitch || savedPitch;
-      utterance.volume = options.volume || savedVolume;
-      
-      window.speechSynthesis.speak(utterance);
     }
   };
 

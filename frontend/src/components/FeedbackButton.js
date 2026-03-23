@@ -26,10 +26,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // موقع الزر - أعلى من شريط التنقل السفلي
+  // موقع الزر - أعلى من شريط التنقل السفلي (مرتفع أكثر للسائقين)
   const positionClasses = {
-    'bottom-left': 'bottom-40 left-4',
-    'bottom-right': 'bottom-40 right-4',
+    'bottom-left': 'bottom-24 left-4',
+    'bottom-right': 'bottom-24 right-4',
     'top-left': 'top-20 left-4',
     'top-right': 'top-20 right-4',
   };

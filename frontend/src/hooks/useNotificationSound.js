@@ -28,8 +28,8 @@ export const AVAILABLE_TONES = [
   { id: 'digital', name: 'رقمية', nameEn: 'Digital', emoji: '💻' },
 ];
 
-// إنشاء صوت باستخدام Web Audio API
-const createTone = (audioContext, frequency, duration, type = 'sine', volume = 0.5) => {
+// إنشاء صوت باستخدام Web Audio API - صوت عالي جداً للسائقين
+const createTone = (audioContext, frequency, duration, type = 'sine', volume = 1.0) => {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
   
@@ -39,7 +39,7 @@ const createTone = (audioContext, frequency, duration, type = 'sine', volume = 0
   oscillator.frequency.value = frequency;
   oscillator.type = type;
   
-  // تأثير Fade out
+  // تأثير Fade out - صوت عالي
   gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
   gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
   
@@ -47,53 +47,78 @@ const createTone = (audioContext, frequency, duration, type = 'sine', volume = 0
   oscillator.stop(audioContext.currentTime + duration);
 };
 
-// النغمات المختلفة
+// النغمات المختلفة - صوت عالي جداً
 const tonePatterns = {
-  // نغمة مرحة: C5 -> E5 -> G5
+  // نغمة مرحة: C5 -> E5 -> G5 - مع تكرار للوضوح
   cheerful: (audioContext) => {
     const notes = [523.25, 659.25, 783.99];
     notes.forEach((freq, i) => {
-      setTimeout(() => createTone(audioContext, freq, 0.15, 'sine'), i * 100);
+      setTimeout(() => createTone(audioContext, freq, 0.2, 'sine', 1.0), i * 120);
     });
+    // تكرار مرة أخرى
+    setTimeout(() => {
+      notes.forEach((freq, i) => {
+        setTimeout(() => createTone(audioContext, freq, 0.2, 'sine', 1.0), i * 120);
+      });
+    }, 500);
   },
   
-  // نغمة كلاسيكية: G4 -> C5
+  // نغمة كلاسيكية: G4 -> C5 - أطول وأعلى
   classic: (audioContext) => {
-    createTone(audioContext, 392, 0.2, 'triangle');
-    setTimeout(() => createTone(audioContext, 523.25, 0.3, 'triangle'), 150);
+    createTone(audioContext, 392, 0.3, 'triangle', 1.0);
+    setTimeout(() => createTone(audioContext, 523.25, 0.4, 'triangle', 1.0), 200);
+    // تكرار
+    setTimeout(() => {
+      createTone(audioContext, 392, 0.3, 'triangle', 1.0);
+      setTimeout(() => createTone(audioContext, 523.25, 0.4, 'triangle', 1.0), 200);
+    }, 600);
   },
   
-  // نغمة عاجلة: beeps سريعة
+  // نغمة عاجلة: beeps سريعة ومتكررة - للطلبات ذات الأولوية
   urgent: (audioContext) => {
-    [0, 150, 300].forEach(delay => {
-      setTimeout(() => createTone(audioContext, 880, 0.1, 'square'), delay);
-    });
+    // تكرار 3 مرات
+    for (let repeat = 0; repeat < 3; repeat++) {
+      [0, 150, 300].forEach(delay => {
+        setTimeout(() => createTone(audioContext, 880, 0.12, 'square', 1.0), delay + (repeat * 500));
+      });
+    }
   },
   
-  // نغمة جرس
+  // نغمة جرس - أقوى
   bell: (audioContext) => {
-    createTone(audioContext, 659.25, 0.4, 'sine', 0.6); // E5
-    setTimeout(() => createTone(audioContext, 523.25, 0.6, 'sine', 0.4), 200); // C5
+    createTone(audioContext, 659.25, 0.5, 'sine', 1.0); // E5
+    setTimeout(() => createTone(audioContext, 523.25, 0.7, 'sine', 0.9), 250); // C5
+    // تكرار
+    setTimeout(() => {
+      createTone(audioContext, 659.25, 0.5, 'sine', 1.0);
+      setTimeout(() => createTone(audioContext, 523.25, 0.7, 'sine', 0.9), 250);
+    }, 800);
   },
   
-  // نغمة ناعمة
+  // نغمة ناعمة - أعلى قليلاً
   soft: (audioContext) => {
-    createTone(audioContext, 440, 0.5, 'sine', 0.3); // A4
-    setTimeout(() => createTone(audioContext, 554.37, 0.4, 'sine', 0.2), 300); // C#5
+    createTone(audioContext, 440, 0.6, 'sine', 0.8); // A4
+    setTimeout(() => createTone(audioContext, 554.37, 0.5, 'sine', 0.7), 350); // C#5
   },
   
-  // نغمة رقمية
+  // نغمة رقمية - أعلى وأطول
   digital: (audioContext) => {
-    createTone(audioContext, 800, 0.08, 'square', 0.4);
-    setTimeout(() => createTone(audioContext, 1000, 0.08, 'square', 0.4), 100);
-    setTimeout(() => createTone(audioContext, 1200, 0.12, 'square', 0.4), 200);
+    createTone(audioContext, 800, 0.12, 'square', 1.0);
+    setTimeout(() => createTone(audioContext, 1000, 0.12, 'square', 1.0), 120);
+    setTimeout(() => createTone(audioContext, 1200, 0.15, 'square', 1.0), 240);
+    // تكرار
+    setTimeout(() => {
+      createTone(audioContext, 800, 0.12, 'square', 1.0);
+      setTimeout(() => createTone(audioContext, 1000, 0.12, 'square', 1.0), 120);
+      setTimeout(() => createTone(audioContext, 1200, 0.15, 'square', 1.0), 240);
+    }, 500);
   },
 };
 
-// تشغيل نغمة النجاح (للتأكيد)
+// تشغيل نغمة النجاح (للتأكيد) - أعلى صوتاً
 const playSuccessSound = (audioContext) => {
-  createTone(audioContext, 523.25, 0.15, 'sine');
-  setTimeout(() => createTone(audioContext, 783.99, 0.25, 'sine'), 100);
+  createTone(audioContext, 523.25, 0.2, 'sine', 1.0);
+  setTimeout(() => createTone(audioContext, 783.99, 0.3, 'sine', 1.0), 120);
 };
 
 // الحصول على النغمة المحفوظة من localStorage
@@ -152,12 +177,12 @@ export const useNotificationSound = () => {
     }
   }, []);
 
-  // تشغيل الصوت الافتراضي من ملف MP3
+  // تشغيل الصوت الافتراضي من ملف MP3 - صوت عالي
   const playDefaultSound = useCallback(() => {
     try {
       if (!audioRef.current) {
         audioRef.current = new Audio('/notification.mp3');
-        audioRef.current.volume = 0.7;
+        audioRef.current.volume = 1.0; // أعلى صوت
       }
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(err => {
