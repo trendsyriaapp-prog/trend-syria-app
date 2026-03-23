@@ -284,24 +284,23 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const centerX = size/2 + position.x * scaleX;
         const centerY = size/2 + position.y * scaleY;
         
-        // رسم الظل الأرضي أولاً (إذا كان مفعلاً)
+        // رسم الظل الجانبي أولاً (إذا كان مفعلاً)
         if (selectedShadow !== 'none') {
           ctx.save();
-          const shadowWidth = drawWidth * scale * (selectedShadow === 'strong' ? 0.9 : 0.7);
-          const shadowHeight = 30;
-          const shadowY = centerY + (drawHeight * scale / 2) + 10;
+          ctx.translate(centerX, centerY);
+          ctx.rotate(rotation * Math.PI / 180);
+          ctx.scale(scale, scale);
           
-          const gradient = ctx.createRadialGradient(
-            centerX, shadowY, 0,
-            centerX, shadowY, shadowWidth / 2
-          );
-          gradient.addColorStop(0, selectedShadow === 'strong' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.25)');
-          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          // إزاحة الظل للجانب
+          const shadowOffset = selectedShadow === 'strong' ? 15 : 10;
+          ctx.translate(shadowOffset, shadowOffset);
           
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.ellipse(centerX, shadowY, shadowWidth / 2, shadowHeight / 2, 0, 0, Math.PI * 2);
-          ctx.fill();
+          // تطبيق blur للظل
+          ctx.filter = `blur(${selectedShadow === 'strong' ? '15px' : '10px'})`;
+          ctx.globalAlpha = selectedShadow === 'strong' ? 0.35 : 0.2;
+          
+          // رسم الظل (نسخة سوداء من المنتج)
+          ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
           ctx.restore();
         }
         
@@ -313,6 +312,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         
         // تطبيق الفلاتر
         ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+        ctx.globalAlpha = 1;
         
         ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
         ctx.restore();
@@ -418,7 +418,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Processed Image - Draggable with Ground Shadow */}
+        {/* Processed Image - Draggable with Side Shadow */}
         {step === 'edit' && processedImage && (
           <div className="w-full h-full flex items-center justify-center relative">
             {/* خطوط التوجيه للمنتصف */}
@@ -431,14 +431,41 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               <div className="w-3 h-3 rounded-full border-2 border-blue-400/50 bg-transparent" />
             </div>
             
-            {/* حاوية المنتج مع الظل الأرضي */}
-            <div className="relative flex flex-col items-center">
+            {/* حاوية المنتج مع الظل الجانبي */}
+            <div 
+              className="relative"
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px)`,
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+              }}
+            >
+              {/* الظل الجانبي خلف المنتج - يظهر قبل المنتج */}
+              {selectedShadow !== 'none' && (
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    transform: `scale(${scale}) rotate(${rotation}deg) translate(${selectedShadow === 'strong' ? '8px' : '5px'}, ${selectedShadow === 'strong' ? '8px' : '5px'})`,
+                    filter: `blur(${selectedShadow === 'strong' ? '12px' : '8px'})`,
+                    opacity: selectedShadow === 'strong' ? 0.4 : 0.25,
+                  }}
+                >
+                  <img 
+                    src={processedImage} 
+                    alt=""
+                    className="max-w-[85vw] max-h-[50vh] object-contain"
+                    style={{
+                      filter: 'brightness(0) saturate(100%)'
+                    }}
+                    draggable={false}
+                  />
+                </div>
+              )}
+              
               {/* المنتج */}
               <div
                 style={{
-                  transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                  transform: `scale(${scale}) rotate(${rotation}deg)`,
                   cursor: isDragging ? 'grabbing' : 'grab',
-                  transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                 }}
                 onMouseDown={onMouseDown}
                 onTouchStart={onTouchStart}
@@ -454,23 +481,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   draggable={false}
                 />
               </div>
-              
-              {/* الظل الأرضي تحت المنتج */}
-              {selectedShadow !== 'none' && (
-                <div 
-                  className="absolute -bottom-4"
-                  style={{
-                    transform: `translate(${position.x}px, 0) scaleX(${scale * (selectedShadow === 'strong' ? 0.9 : 0.7)}) scaleY(0.15)`,
-                    width: '80%',
-                    height: '60px',
-                    background: selectedShadow === 'strong' 
-                      ? 'radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)'
-                      : 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 70%)',
-                    borderRadius: '50%',
-                    transition: 'transform 0.1s ease-out'
-                  }}
-                />
-              )}
             </div>
           </div>
         )}
