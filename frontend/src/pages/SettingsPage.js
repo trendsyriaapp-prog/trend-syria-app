@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ArrowRight, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
