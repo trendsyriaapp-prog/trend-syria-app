@@ -809,45 +809,73 @@ const AddProductModal = ({
               
               {/* أزرار إضافة الصور - كاميرا ومعرض */}
               {newProduct.images.length < maxImagesPerProduct && (
-                <div className="flex gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageCaptureMode('camera');
-                      setShowImageCapture(true);
-                    }}
-                    disabled={uploadingImage}
-                    className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E55A00] transition-colors disabled:opacity-50"
-                    data-testid="camera-capture-btn"
-                  >
-                    {uploadingImage ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Camera size={16} />
-                        تصوير بالكاميرا
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageCaptureMode('gallery');
-                      setShowImageCapture(true);
-                    }}
-                    disabled={uploadingImage}
-                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                    data-testid="gallery-upload-btn"
-                  >
-                    {uploadingImage ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Upload size={16} />
-                        من المعرض
-                      </>
-                    )}
-                  </button>
+                <div className="space-y-2 mb-2">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageCaptureMode('camera');
+                        setShowImageCapture(true);
+                      }}
+                      disabled={uploadingImage}
+                      className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E55A00] transition-colors disabled:opacity-50"
+                      data-testid="camera-capture-btn"
+                    >
+                      {uploadingImage ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Camera size={16} />
+                          تصوير بالكاميرا
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageCaptureMode('gallery');
+                        setShowImageCapture(true);
+                      }}
+                      disabled={uploadingImage}
+                      className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                      data-testid="gallery-upload-btn"
+                    >
+                      {uploadingImage ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          من المعرض
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {/* زر الرفع المباشر بدون تعديل */}
+                  <label className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs flex items-center justify-center gap-2 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors">
+                    <Upload size={14} />
+                    رفع مباشر بدون تعديل
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          if (newProduct.images.length < maxImagesPerProduct) {
+                            setNewProduct(prev => ({
+                              ...prev,
+                              images: [...prev.images, reader.result]
+                            }));
+                            toast?.({ title: "تم بنجاح", description: "تم رفع الصورة" });
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = '';
+                      }}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               )}
 
