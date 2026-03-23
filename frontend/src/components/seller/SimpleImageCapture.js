@@ -263,29 +263,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const centerX = size/2 + position.x * scaleX;
         const centerY = size/2 + position.y * scaleY;
         
-        // رسم المنتج أولاً
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم المنتج
-        ctx.save();
-        ctx.translate(centerX, centerY - scaledHeight * 0.15);
-        ctx.rotate(rotation * Math.PI / 180);
-        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-        ctx.drawImage(productImg, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight);
-        ctx.restore();
-        
-        // رسم الظل الانعكاسي - ملتصق بأسفل المنتج ويمتد للخلف واليمين
+        // رسم الظل أولاً - ملتصق بأسفل المنتج ويمتد للخلف واليمين
         if (selectedShadow !== 'none') {
           ctx.save();
-          // موقع الظل يبدأ من أسفل المنتج
-          ctx.translate(centerX + scaledWidth * 0.15, centerY + scaledHeight * 0.35);
+          // يبدأ من أسفل المنتج
+          ctx.translate(centerX + scaledWidth * 0.1, centerY + scaledHeight * 0.35);
           ctx.rotate(rotation * Math.PI / 180);
-          // انعكاس + ميلان لليمين
-          ctx.transform(1, 0, -0.3, -0.3, 0, 0);
-          ctx.globalAlpha = selectedShadow === 'strong' ? 0.35 : 0.18;
-          ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-          ctx.drawImage(productImg, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight);
+          // مضغوط ومائل لليمين
+          ctx.transform(1, 0, -0.4, 0.35, 0, 0);
+          ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
+          ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
         }
         
@@ -397,7 +387,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             
             {/* حاوية المنتج مع الظل */}
             <div 
-              className="relative flex flex-col items-center"
+              className="relative"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px)`,
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
@@ -427,21 +417,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <div 
                   className="absolute pointer-events-none"
                   style={{
-                    bottom: '0',
-                    left: '50%',
-                    transform: `translateX(-35%) scale(${scale}) rotate(${rotation}deg) scaleY(-0.3) skewX(-20deg)`,
-                    transformOrigin: 'top center',
-                    opacity: selectedShadow === 'strong' ? 0.35 : 0.18,
-                    filter: `blur(${selectedShadow === 'strong' ? '5px' : '3px'})`,
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%)',
+                    top: '100%',
+                    left: '10%',
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-25deg)`,
+                    transformOrigin: 'top left',
+                    opacity: selectedShadow === 'strong' ? 0.3 : 0.15,
+                    filter: `blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 80%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 80%)',
                   }}
                 >
                   <img 
                     src={processedImage} 
                     alt=""
                     className="max-w-[85vw] max-h-[45vh] object-contain"
-                    style={{ filter: getImageFilter() }}
+                    style={{ filter: 'brightness(0)' }}
                     draggable={false}
                   />
                 </div>
