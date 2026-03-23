@@ -29,6 +29,14 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
+#### Guest User Protection for Food Cart - NEW
+- **Feature**: Guests can browse food stores but cannot add items to cart
+- **Implementation**: Added user check in `FoodStorePage.js` addToCart function
+- **Behavior**: Shows "يجب تسجيل الدخول" toast when guest tries to add food
+- **Files Modified**: 
+  - `/app/frontend/src/pages/FoodStorePage.js` - Added user check before adding to cart
+  - `/app/frontend/src/pages/FoodCartPage.js` - Added redirect to /food if not logged in
+
 #### AI Chatbot for Guest Users - FIXED
 - **Issue**: AI Chatbot was returning error for unauthenticated (guest) users
 - **Root Cause**: `/api/ai-chatbot/send` endpoint was using `get_current_user` which requires authentication
@@ -39,34 +47,37 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 ### ✅ COMPLETED (Earlier March 2026)
 
 #### Shadow Position Fix
-- **Issue**: Product shadow was positioned too far from the product base
-- **Fix**: Changed shadow CSS from `top: 90%` to `bottom: 0` with `transformOrigin: center top`
-- **Result**: Shadow now attaches directly to product base with proper skew effect
+- Shadow now attaches directly to product base with proper skew effect
 - **File Modified**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
 
 #### PhotoRoom Credits Display for Admin - VERIFIED
-- **Feature**: Admin can now see PhotoRoom API credit balance
-- **Backend**: `GET /api/image/photoroom-credits` endpoint returns credit info
-- **Frontend**: `ImageSettingsTab.js` displays credits with visual indicators
+- Admin can now see PhotoRoom API credit balance
 
 #### Enhanced Image Editor with Adjustments & Shadow
-- **Features**:
-  - Image Adjustments Panel (brightness, contrast, saturation)
-  - Shadow options (none, soft, strong)
-  - Center alignment guides
-  - Zoom constraints (0.5x - 1.3x)
-  - Drag to move product
-  - Rotation slider (0-360 degrees)
-- **File**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
+- Image Adjustments Panel (brightness, contrast, saturation)
+- Shadow options, zoom, rotation slider (0-360 degrees)
 
 #### Platform Closure Controls
 - Admin can close platform for customers and/or sellers separately
-- Backend endpoints and frontend UI implemented
-- **Files**: `/app/backend/routes/admin.py`, `/app/frontend/src/components/admin/PlatformSettingsTab.js`
 
 #### Food Product Approval Flow
 - Backend endpoints for approving/rejecting food items
-- Notifications sent to sellers on approval/rejection
+
+---
+
+## Guest User Experience Summary
+
+### ✅ What Guests CAN Do:
+- Browse all products and categories
+- Browse all food stores and menus
+- Use the AI Chatbot for support
+- View product details and prices
+
+### ❌ What Guests CANNOT Do (Requires Login):
+- Add products to cart → Shows "يجب تسجيل الدخول"
+- Add food items to cart → Shows "يجب تسجيل الدخول"
+- Access checkout pages
+- Place orders
 
 ---
 
@@ -82,6 +93,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 - [ ] Cross-Governorate Shopping
 - [ ] VoIP call button for customer-driver communication
 - [ ] Improve price display (e.g., `9.4K` instead of `9,375`)
+- [ ] Smart product suggestions in chatbot based on user questions
 
 ### P3 - Future
 - [ ] Convert web app to mobile app for app stores
@@ -92,7 +104,6 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 - `POST /api/ai-chatbot/send` - Send message to AI chatbot (supports guests)
 - `POST /api/chatbot/send` - Send message to FAQ chatbot (supports guests)
 - `GET /api/admin/platform-status` - Get platform open/closed status
-- `POST /api/admin/food-products/{id}/approve` - Approve food item
 
 ## Test Credentials
 - **Product Seller**: Phone: `0922222222`, Password: `seller123`
@@ -102,6 +113,5 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ## Important Notes
 - AI Chatbot now works for both authenticated users and guests
-- PhotoRoom API key may not be active - app automatically falls back to free rembg
-- Image editor shadow is a CSS-based effect, also rendered on canvas for final output
+- Guest users can browse but cannot add to cart (products or food)
 - All backend routes must be prefixed with `/api` for proper Kubernetes ingress routing

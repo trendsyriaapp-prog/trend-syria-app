@@ -123,6 +123,16 @@ const FoodStorePage = () => {
   };
 
   const addToCart = (product, quantity = 1) => {
+    // منع الإضافة إذا الزائر غير مسجل
+    if (!user) {
+      toast({ 
+        title: "يجب تسجيل الدخول", 
+        description: "سجل دخولك لإضافة الطعام للسلة", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     // منع الإضافة إذا المتجر مغلق
     if (store?.is_open === false) {
       toast({ 

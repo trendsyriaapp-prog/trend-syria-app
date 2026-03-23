@@ -30,6 +30,18 @@ const FoodCartPage = () => {
   const [offers, setOffers] = useState([]);
   const [appliedOffer, setAppliedOffer] = useState(null);
   
+  // التحقق من تسجيل الدخول - إعادة التوجيه إذا لم يكن المستخدم مسجل
+  useEffect(() => {
+    if (!user && !loading) {
+      toast({ 
+        title: "يجب تسجيل الدخول", 
+        description: "سجل دخولك لإتمام طلب الطعام", 
+        variant: "destructive" 
+      });
+      navigate('/food');
+    }
+  }, [user, loading, navigate, toast]);
+  
   // رسوم التوصيل بالمسافة
   const [distanceDeliveryFee, setDistanceDeliveryFee] = useState(null);
   const [calculatingDeliveryFee, setCalculatingDeliveryFee] = useState(false);
