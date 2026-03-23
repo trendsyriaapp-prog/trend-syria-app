@@ -221,28 +221,6 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Floating Button - يظهر دائماً */}
-      {!isOpen && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            userOpenedRef.current = true;
-            setIsOpen(true);
-          }}
-          className={`fixed bottom-20 left-4 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors ${
-            useAI 
-              ? 'bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700' 
-              : 'bg-gradient-to-br from-[#FF6B00] to-orange-600 hover:from-[#E55A00] hover:to-orange-700'
-          }`}
-          data-testid="chatbot-floating-button"
-        >
-          <MessageCircle size={24} className="text-white" />
-        </motion.button>
-      )}
-
       {/* Rating Modal */}
       <AnimatePresence>
         {showRatingModal && pendingRatingTicket && (
