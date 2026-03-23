@@ -905,7 +905,7 @@ const MyOrdersList = ({
                     )}
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
+                        onClick={() => navigate(`/chat/${order.id}?type=shopping`)}
                         className={`py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1 ${
                           isLocked ? 'bg-gray-400 text-white' : 'bg-green-600 text-white'
                         }`}
@@ -1240,7 +1240,7 @@ const MyOrdersList = ({
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        onClick={() => onOpenChat && onOpenChat(order.id, order.order_number)}
+                        onClick={() => navigate(`/chat/${order.id}?type=food`)}
                         className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-1"
                         data-testid={`food-chat-btn-${order.id}`}
                       >
