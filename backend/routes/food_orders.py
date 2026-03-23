@@ -866,6 +866,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "customer_phone": user.get("phone", order.delivery_phone),
         "store_id": order.store_id,
         "store_name": store["name"],
+        "store_phone": store.get("phone", ""),  # رقم هاتف المتجر
         "store_type": store["store_type"],
         "items": order_items,
         "subtotal": subtotal,

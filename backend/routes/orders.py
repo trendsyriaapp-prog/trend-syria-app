@@ -187,6 +187,9 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         if product["stock"] < item["quantity"]:
             raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
         
+        # جلب معلومات البائع
+        seller = await db.users.find_one({"id": product["seller_id"]}, {"_id": 0, "name": 1, "phone": 1, "store_name": 1})
+        
         item_total = product["price"] * item["quantity"]
         
         category = product.get("category", "default")
@@ -198,6 +201,8 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             "product_id": item["product_id"],
             "product_name": product["name"],
             "seller_id": product["seller_id"],
+            "seller_name": seller.get("store_name") or seller.get("name", "") if seller else "",
+            "seller_phone": seller.get("phone", "") if seller else "",
             "price": product["price"],
             "quantity": item["quantity"],
             "selected_size": item.get("selected_size"),

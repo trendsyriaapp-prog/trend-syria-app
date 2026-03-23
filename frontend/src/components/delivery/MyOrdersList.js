@@ -1075,19 +1075,28 @@ const MyOrdersList = ({
                   isDark ? 'bg-[#252525] border border-[#333]' : 'bg-gray-50 border border-gray-200'
                 }`}>
                   {/* رقم هاتف البائع */}
-                  {(order.seller_phone || order.store_phone || order.restaurant_phone) && (
-                    <a
-                      href={`tel:${order.seller_phone || order.store_phone || order.restaurant_phone}`}
-                      className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-sm mb-2 ${
-                        isDark 
-                          ? 'bg-green-600 hover:bg-green-700 text-white' 
-                          : 'bg-green-500 hover:bg-green-600 text-white'
-                      }`}
-                    >
-                      <Phone size={16} />
-                      📞 اتصل بالبائع
-                    </a>
-                  )}
+                  {(() => {
+                    // جلب رقم البائع من الطلب مباشرة أو من العناصر
+                    const sellerPhone = order.seller_phone || order.store_phone || order.restaurant_phone || 
+                      (order.items?.[0]?.seller_phone);
+                    
+                    if (sellerPhone) {
+                      return (
+                        <a
+                          href={`tel:${sellerPhone}`}
+                          className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-sm mb-2 ${
+                            isDark 
+                              ? 'bg-green-600 hover:bg-green-700 text-white' 
+                              : 'bg-green-500 hover:bg-green-600 text-white'
+                          }`}
+                        >
+                          <Phone size={16} />
+                          📞 اتصل بالبائع
+                        </a>
+                      );
+                    }
+                    return null;
+                  })()}
                   
                   {/* زر البائع غير موجود */}
                   <button
