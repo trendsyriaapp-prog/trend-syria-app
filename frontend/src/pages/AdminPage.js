@@ -60,6 +60,9 @@ import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
 import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
 import PlatformWalletTab from '../components/admin/PlatformWalletTab';
 import FeedbackTab from '../components/admin/FeedbackTab';
+import AllPendingJoinRequests from '../components/admin/AllPendingJoinRequests';
+import AllPendingItemsTab from '../components/admin/AllPendingItemsTab';
+import AllWithdrawRequestsTab from '../components/admin/AllWithdrawRequestsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -387,7 +390,10 @@ const AdminDashboardPage = () => {
     'recorded-calls': 'المكالمات المسجلة',
     'payment-settings': 'إعدادات الدفع',
     'platform-wallet': 'محفظة المنصة',
-    'feedback': 'اقتراحات المستخدمين'
+    'feedback': 'اقتراحات المستخدمين',
+    'all-join-requests': 'جميع طلبات الانضمام',
+    'all-pending-items': 'جميع العناصر المعلقة',
+    'all-withdraw-requests': 'جميع طلبات السحب'
   };
 
   return (
@@ -576,6 +582,15 @@ const AdminDashboardPage = () => {
             {activeTab === 'feedback' && (
               <FeedbackTab />
             )}
+            {activeTab === 'all-join-requests' && (
+              <AllPendingJoinRequests />
+            )}
+            {activeTab === 'all-pending-items' && (
+              <AllPendingItemsTab />
+            )}
+            {activeTab === 'all-withdraw-requests' && (
+              <AllWithdrawRequestsTab />
+            )}
           </>
         ) : (
           <>
@@ -660,7 +675,8 @@ const AdminDashboardPage = () => {
             <div className="grid grid-cols-3 gap-3 mb-4">
               {/* طلبات الانضمام (بائعين + سائقين + متاجر طعام) */}
               <div 
-                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all"
+                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => setActiveTab('all-join-requests')}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
@@ -674,22 +690,13 @@ const AdminDashboardPage = () => {
                 </div>
                 <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات الانضمام</h3>
                 <div className="flex flex-wrap gap-1">
-                  <span 
-                    onClick={() => setActiveTab('pending-sellers')}
-                    className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-amber-200 transition-colors"
-                  >
+                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
                     بائعين: {stats?.pending_sellers || pendingSellers.length || 0}
                   </span>
-                  <span 
-                    onClick={() => setActiveTab('pending-delivery')}
-                    className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-cyan-200 transition-colors"
-                  >
+                  <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">
                     سائقين: {stats?.pending_delivery || pendingDelivery.length || 0}
                   </span>
-                  <span 
-                    onClick={() => setActiveTab('pending-food-stores')}
-                    className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-green-200 transition-colors"
-                  >
+                  <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
                     متاجر: {pendingFoodStores.length || 0}
                   </span>
                 </div>
@@ -698,7 +705,7 @@ const AdminDashboardPage = () => {
               {/* العناصر المعلقة (منتجات + أطباق) */}
               <div 
                 className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('pending-products')}
+                onClick={() => setActiveTab('all-pending-items')}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -723,7 +730,7 @@ const AdminDashboardPage = () => {
               {/* السحوبات */}
               <div 
                 className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('withdrawals')}
+                onClick={() => setActiveTab('all-withdraw-requests')}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
