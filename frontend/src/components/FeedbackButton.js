@@ -22,9 +22,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // موقع الزر - أعلى من شريط التنقل السفلي
   const positionClasses = {
-    'bottom-left': 'bottom-32 left-4',
-    'bottom-right': 'bottom-32 right-4',
+    'bottom-left': 'bottom-40 left-4',
+    'bottom-right': 'bottom-40 right-4',
     'top-left': 'top-20 left-4',
     'top-right': 'top-20 right-4',
   };
@@ -74,11 +75,12 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
       {/* زر فتح النموذج */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed ${positionClasses[position]} z-40 p-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110`}
+        className={`fixed ${positionClasses[position]} z-50 p-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 animate-pulse`}
         title="اقتراحات وملاحظات"
         data-testid="feedback-button"
+        style={{ animationDuration: '3s' }}
       >
-        <MessageSquarePlus size={22} />
+        <MessageSquarePlus size={24} />
       </button>
 
       {/* Modal */}
