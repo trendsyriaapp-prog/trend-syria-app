@@ -269,8 +269,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         // رسم الظل أولاً - ملتصق بأسفل المنتج ويمتد للخلف واليمين
         if (selectedShadow !== 'none') {
           ctx.save();
-          // يبدأ من أسفل المنتج
-          ctx.translate(centerX + scaledWidth * 0.1, centerY + scaledHeight * 0.35);
+          // يبدأ من أسفل المنتج مباشرة
+          ctx.translate(centerX + scaledWidth * 0.1, centerY + scaledHeight * 0.42);
           ctx.rotate(rotation * Math.PI / 180);
           // مضغوط ومائل لليمين
           ctx.transform(1, 0, -0.4, 0.35, 0, 0);
@@ -417,7 +417,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <div 
                   className="absolute pointer-events-none"
                   style={{
-                    top: '100%',
+                    top: '98%',
                     left: '10%',
                     transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-25deg)`,
                     transformOrigin: 'top left',
