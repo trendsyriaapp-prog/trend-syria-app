@@ -267,15 +267,15 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - على يمين المنتج
+        // رسم الظل أولاً - على يمين المنتج (مقلوب أفقياً)
         if (selectedShadow !== 'none') {
           ctx.save();
           // حساب موقع الظل بناءً على shadowOffset (30-95)
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
-          ctx.translate(centerX - scaledWidth * 0.05, centerY + shadowY);
+          ctx.translate(centerX, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
-          // مضغوط ومائل لليمين
-          ctx.transform(1, 0, 0.35, 0.3, 0, 0);
+          // قلب أفقي + مضغوط + مائل
+          ctx.transform(-1, 0, -0.35, 0.3, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
@@ -422,7 +422,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   style={{
                     top: `${shadowOffset}%`,
                     left: '50%',
-                    transform: `translateX(-65%) scale(${scale}) rotate(${rotation}deg) scaleY(0.3) skewX(20deg)`,
+                    transform: `translateX(-65%) scale(${scale}) rotate(${rotation}deg) scaleX(-1) scaleY(0.3) skewX(-20deg)`,
                     transformOrigin: 'center top',
                     opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
                     filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
