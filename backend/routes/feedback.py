@@ -69,8 +69,7 @@ async def create_feedback(data: FeedbackCreate, user: dict = Depends(get_optiona
         role="admin",
         title=f"📩 {type_labels.get(data.type, 'رسالة')} جديدة",
         message=f"من {user_type_label}: {feedback_doc['user_name']}\n{data.message[:100]}...",
-        notification_type="new_feedback",
-        data={"feedback_id": feedback_id}
+        notification_type="new_feedback"
     )
     
     return {

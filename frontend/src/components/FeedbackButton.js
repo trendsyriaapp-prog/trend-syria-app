@@ -23,8 +23,8 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const positionClasses = {
-    'bottom-left': 'bottom-20 left-4',
-    'bottom-right': 'bottom-20 right-4',
+    'bottom-left': 'bottom-32 left-4',
+    'bottom-right': 'bottom-32 right-4',
     'top-left': 'top-20 left-4',
     'top-right': 'top-20 right-4',
   };

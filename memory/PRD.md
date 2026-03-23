@@ -29,7 +29,36 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
-#### Guest User Protection for Food Cart - NEW
+#### Feedback & Suggestions Feature - NEW ✅
+- **Feature**: Universal feedback system for all user types (customers, sellers, drivers, guests)
+- **Implementation**:
+  - `FeedbackButton.js` - Floating purple button visible on all pages
+  - `FeedbackTab.js` - Admin panel tab to manage feedback
+  - `feedback.py` - Backend API routes for feedback CRUD
+- **User Features**:
+  - Choose feedback type: Suggestion, Complaint, or Question
+  - Submit feedback message with optional user info
+  - Works for both logged-in users and guests
+- **Admin Features**:
+  - View all feedback with stats (total, pending, reviewed)
+  - Filter by status and type
+  - Respond to feedback (marks as reviewed)
+  - Delete feedback
+- **Files Created**:
+  - `/app/frontend/src/components/FeedbackButton.js`
+  - `/app/frontend/src/components/admin/FeedbackTab.js`
+  - `/app/backend/routes/feedback.py`
+- **Files Modified**:
+  - `/app/frontend/src/App.js` - Added FeedbackButton component
+  - `/app/frontend/src/pages/AdminPage.js` - Added FeedbackTab to admin panel
+  - `/app/backend/server.py` - Registered feedback router
+- **Database**: New `feedback` collection with schema:
+  ```
+  { id, type, type_label, message, user_id?, user_name, user_phone?, 
+    user_type, status, admin_response?, created_at, updated_at }
+  ```
+
+#### Guest User Protection for Food Cart - COMPLETED
 - **Feature**: Guests can browse food stores but cannot add items to cart
 - **Implementation**: Added user check in `FoodStorePage.js` addToCart function
 - **Behavior**: Shows "يجب تسجيل الدخول" toast when guest tries to add food
@@ -101,6 +130,10 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 ---
 
 ## Key API Endpoints
+- `POST /api/feedback` - Submit feedback (supports guests and users)
+- `GET /api/feedback/all` - Get all feedback (admin only)
+- `POST /api/feedback/{id}/respond` - Respond to feedback (admin only)
+- `DELETE /api/feedback/{id}` - Delete feedback (admin only)
 - `POST /api/ai-chatbot/send` - Send message to AI chatbot (supports guests)
 - `POST /api/chatbot/send` - Send message to FAQ chatbot (supports guests)
 - `GET /api/admin/platform-status` - Get platform open/closed status

@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, Wrench, LogOut, Wallet
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -386,7 +386,8 @@ const AdminDashboardPage = () => {
     'call-requests': 'طلبات الاتصال',
     'recorded-calls': 'المكالمات المسجلة',
     'payment-settings': 'إعدادات الدفع',
-    'platform-wallet': 'محفظة المنصة'
+    'platform-wallet': 'محفظة المنصة',
+    'feedback': 'اقتراحات المستخدمين'
   };
 
   return (
@@ -571,6 +572,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'platform-wallet' && user.user_type === 'admin' && (
               <PlatformWalletTab />
+            )}
+            {activeTab === 'feedback' && (
+              <FeedbackTab />
             )}
           </>
         ) : (
