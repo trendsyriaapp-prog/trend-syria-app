@@ -22,11 +22,11 @@ const BACKGROUNDS = [
   { id: 'studio', name: 'استوديو', image: '/backgrounds/studio.jpg' },
 ];
 
-// خيارات الظل
+// خيارات الظل - تظهر تحت المنتج
 const SHADOWS = [
-  { id: 'none', name: 'بدون', shadow: 'none' },
-  { id: 'soft', name: 'ناعم', shadow: '0 15px 35px rgba(0,0,0,0.2)' },
-  { id: 'strong', name: 'قوي', shadow: '0 25px 50px rgba(0,0,0,0.4)' },
+  { id: 'none', name: 'بدون', value: '0 0 0 rgba(0,0,0,0)' },
+  { id: 'soft', name: 'ناعم', value: '0 8px 24px rgba(0,0,0,0.3)' },
+  { id: 'strong', name: 'قوي', value: '0 16px 48px rgba(0,0,0,0.5)' },
 ];
 
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
@@ -209,13 +209,13 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   // فلتر CSS للتعديلات
   const getImageFilter = () => {
-    return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) drop-shadow(${getShadowValue()})`;
+    return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   };
 
-  // الحصول على قيمة الظل
-  const getShadowValue = () => {
+  // الحصول على ظل المنتج
+  const getProductShadow = () => {
     const shadow = SHADOWS.find(s => s.id === selectedShadow);
-    return shadow?.shadow || 'none';
+    return shadow?.value || '0 0 0 rgba(0,0,0,0)';
   };
 
   // === التحكم بالسحب ===
@@ -464,7 +464,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               className="max-w-[90%] max-h-[90%] object-contain select-none"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-                filter: getImageFilter(),
+                filter: `${getImageFilter()} drop-shadow(${getProductShadow()})`,
                 cursor: isDragging ? 'grabbing' : 'grab',
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
