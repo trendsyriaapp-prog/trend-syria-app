@@ -48,10 +48,26 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
   const [shadowOffset, setShadowOffset] = useState(50);
-  const [showRotation, setShowRotation] = useState(false); // 0-100 للتحكم بموقع الظل
+  const [showRotation, setShowRotation] = useState(false);
+  const [showTip, setShowTip] = useState(true);
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // إخفاء النصيحة تلقائياً بعد 5 ثواني
+  useEffect(() => {
+    if (isOpen && showTip) {
+      const timer = setTimeout(() => setShowTip(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, showTip]);
+
+  // إعادة إظهار النصيحة عند فتح المحرر
+  useEffect(() => {
+    if (isOpen) {
+      setShowTip(true);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && mode === 'camera' && step === 'capture') {
@@ -404,11 +420,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   <div className="w-3/4 aspect-square border-2 border-dashed border-white/40 rounded-2xl" />
                 </div>
                 {/* نصيحة الخلفية البيضاء */}
-                <div className="absolute top-4 left-4 right-4 bg-black/60 backdrop-blur-sm rounded-xl p-3">
-                  <p className="text-white text-xs text-center">
-                    📸 ضع خلفية بيضاء خلف المنتج للحصول على جودة أفضل
-                  </p>
-                </div>
+                {showTip && (
+                  <div className="absolute top-4 left-4 right-4 bg-black/60 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 animate-fade-in">
+                    <p className="text-white text-xs flex-1 text-center">
+                      📸 ضع خلفية بيضاء خلف المنتج للحصول على جودة أفضل
+                    </p>
+                    <button 
+                      onClick={() => setShowTip(false)}
+                      className="text-white/70 hover:text-white"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
