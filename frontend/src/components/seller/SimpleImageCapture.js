@@ -414,29 +414,22 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 />
               </div>
               
-              {/* الظل الأرضي - يبدأ من الأسفل ويمتد لليمين */}
+              {/* الظل الأرضي - يمتد لليمين */}
               {selectedShadow !== 'none' && (
-                <div 
-                  className="absolute pointer-events-none"
-                  style={{
-                    top: `${shadowOffset}%`,
-                    left: '50%',
-                    transform: `translateX(-50%) scale(${scale}) rotate(${rotation}deg) scaleY(0.3) skewX(-25deg)`,
-                    transformOrigin: 'center bottom',
-                    opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
-                    filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
+                <img 
+                  src={processedImage} 
+                  alt=""
+                  className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
+                  style={{ 
+                    top: `${shadowOffset - 50}%`,
+                    left: '10%',
+                    filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
+                    transformOrigin: 'left top',
+                    opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
                   }}
-                >
-                  <img 
-                    src={processedImage} 
-                    alt=""
-                    className="max-w-[85vw] max-h-[45vh] object-contain"
-                    style={{ filter: 'brightness(0)' }}
-                    draggable={false}
-                  />
-                </div>
+                  draggable={false}
+                />
               )}
             </div>
           </div>
