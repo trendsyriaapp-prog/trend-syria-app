@@ -9,8 +9,29 @@ import uuid
 import re
 
 from core.database import db, get_current_user, create_notification_for_user
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+import os
 
 router = APIRouter(prefix="/chatbot", tags=["Chatbot"])
+
+# دالة للحصول على المستخدم (اختياري - للزوار)
+security = HTTPBearer(auto_error=False)
+
+async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """الحصول على المستخدم اختيارياً - يرجع None للزوار"""
+    if not credentials:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, os.environ.get("JWT_SECRET", "your-secret-key"), algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        return user
+    except:
+        return None
 
 # ============== الردود المحددة مسبقاً ==============
 
@@ -317,16 +338,17 @@ def find_best_response(message: str) -> dict:
 # ============== API Endpoints ==============
 
 @router.post("/send")
-async def send_message(data: ChatMessage, user: dict = Depends(get_current_user)):
-    """إرسال رسالة للشات بوت"""
+async def send_message(data: ChatMessage, user: dict = Depends(get_optional_user)):
+    """إرسال رسالة للشات بوت - متاح للجميع"""
     
     session_id = data.session_id or str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
+    user_id = user["id"] if user else "guest_" + session_id[:8]
     
     # حفظ رسالة المستخدم
     await db.chat_messages.insert_one({
         "session_id": session_id,
-        "user_id": user["id"],
+        "user_id": user_id,
         "sender": "user",
         "message": data.message,
         "created_at": now
@@ -338,7 +360,7 @@ async def send_message(data: ChatMessage, user: dict = Depends(get_current_user)
     # حفظ رد البوت
     await db.chat_messages.insert_one({
         "session_id": session_id,
-        "user_id": user["id"],
+        "user_id": user_id,
         "sender": "bot",
         "message": response_data["response"],
         "category": response_data["category"],
