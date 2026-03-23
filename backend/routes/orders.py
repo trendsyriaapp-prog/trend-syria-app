@@ -832,6 +832,7 @@ async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCod
                 "delivery_driver_id": user["id"],
                 "delivery_driver_name": user.get("full_name", user.get("name", "")),
                 "delivery_driver_phone": user.get("phone", ""),
+                "delivery_driver_photo": user.get("photo", ""),
                 "delivery_status": "picked_up",
                 "picked_up_at": datetime.now(timezone.utc).isoformat()
             },

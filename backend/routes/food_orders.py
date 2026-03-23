@@ -2226,6 +2226,7 @@ async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_us
                 "driver_id": user["id"],
                 "driver_name": user["name"],
                 "driver_phone": user.get("phone"),
+                "driver_image": user.get("photo", ""),
                 "status": "out_for_delivery",
                 "picked_up_at": now.isoformat()
             },
@@ -2564,6 +2565,7 @@ async def accept_food_order(
                 "driver_id": user["id"],
                 "driver_name": user["name"],
                 "driver_phone": user.get("phone"),
+                "driver_image": user.get("photo", ""),
                 "status": "out_for_delivery",
                 "picked_up_at": datetime.now(timezone.utc).isoformat()
             },
@@ -4202,6 +4204,7 @@ async def driver_accept_order(
             "driver_id": user["id"],
             "driver_name": user.get("full_name", "السائق"),
             "driver_phone": user.get("phone", ""),
+            "driver_image": user.get("photo", ""),
             "driver_status": "driver_accepted",
             "driver_accepted_at": now.isoformat(),
             "driver_distance_km": round(distance_km, 2),

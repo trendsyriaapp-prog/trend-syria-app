@@ -105,9 +105,9 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {/* صورة موظف التوصيل */}
-                      {order.delivery_driver_image ? (
+                      {order.delivery_driver_photo ? (
                         <img 
-                          src={order.delivery_driver_image} 
+                          src={order.delivery_driver_photo} 
                           alt={order.delivery_driver_name}
                           className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400"
                         />
