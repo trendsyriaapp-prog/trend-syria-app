@@ -248,11 +248,16 @@ const AddProductModal = ({
   // إضافة خيار وزن جديد
   const addWeightVariant = () => {
     if (newWeightVariant.weight && newWeightVariant.price) {
-      const weightWithUnit = `${newWeightVariant.weight}${newWeightVariant.unit}`;
+      let weightDisplay;
+      if (newWeightVariant.unit === 'piece') {
+        weightDisplay = newWeightVariant.weight === '1' ? 'قطعة' : `${newWeightVariant.weight} قطع`;
+      } else {
+        weightDisplay = `${newWeightVariant.weight}${newWeightVariant.unit}`;
+      }
       setNewProduct(prev => ({
         ...prev,
         weight_variants: [...prev.weight_variants, {
-          weight: weightWithUnit,
+          weight: weightDisplay,
           price: parseFloat(newWeightVariant.price)
         }]
       }));
@@ -538,18 +543,22 @@ const AddProductModal = ({
                   />
                   <p className="text-[9px] text-gray-500 mt-0.5">حدد الحد الأقصى من القطع التي يمكن للعميل الواحد شراؤها</p>
                 </div>
+              </>
+            )}
 
-                {/* خيارات الوزن */}
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">
-                    خيارات الوزن والسعر (اختياري)
-                  </label>
-                  <p className="text-[9px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
-                    💡 أضف أوزان مختلفة لنفس المنتج مع سعر كل وزن - العميل سيختار الوزن المناسب عند الشراء
-                  </p>
-                  
-                  {/* عرض خيارات الوزن المضافة */}
-                  {newProduct.weight_variants.length > 0 && (
+            {/* خيارات الوزن - متاحة للمنتجات والطعام */}
+            <div>
+              <label className="block text-[10px] font-medium mb-1 text-gray-700">
+                خيارات الوزن والسعر (اختياري)
+              </label>
+              <p className="text-[9px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
+                💡 {isFoodSeller 
+                  ? 'أضف خيارات مختلفة مع سعر كل خيار (مثال: كيلو، نصف كيلو، قطعة)'
+                  : 'أضف أوزان مختلفة لنفس المنتج مع سعر كل وزن - العميل سيختار الوزن المناسب عند الشراء'}
+              </p>
+              
+              {/* عرض خيارات الوزن المضافة */}
+              {newProduct.weight_variants.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                   {newProduct.weight_variants.map((variant, index) => (
                     <div 
@@ -568,49 +577,53 @@ const AddProductModal = ({
                       </button>
                     </div>
                   ))}
-                  </div>
-                  )}
-                  
-                  {/* إضافة خيار وزن جديد */}
-                  <div className="flex gap-2 items-end">
-                    <div className="w-20">
-                      <input
-                        type="number"
-                        value={newWeightVariant.weight}
-                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                        placeholder="الوزن"
-                      />
-                    </div>
-                    <div className="w-16">
-                      <select
-                        value={newWeightVariant.unit}
-                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, unit: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-1 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                      >
-                        <option value="g">جرام</option>
-                        <option value="kg">كيلو</option>
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        value={newWeightVariant.price}
-                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                        placeholder="السعر"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addWeightVariant}
-                      className="px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs hover:bg-[#E55A00] transition-colors"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
                 </div>
+              )}
+              
+              {/* إضافة خيار وزن جديد */}
+              <div className="flex gap-2 items-end">
+                <div className="w-20">
+                  <input
+                    type="number"
+                    value={newWeightVariant.weight}
+                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder={isFoodSeller ? "الكمية" : "الوزن"}
+                  />
+                </div>
+                <div className="w-20">
+                  <select
+                    value={newWeightVariant.unit}
+                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, unit: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-1 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  >
+                    <option value="g">جرام</option>
+                    <option value="kg">كيلو</option>
+                    <option value="piece">قطعة</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    value={newWeightVariant.price}
+                    onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    placeholder="السعر"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addWeightVariant}
+                  className="px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs hover:bg-[#E55A00] transition-colors"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
 
+            {/* باقي الحقول الخاصة بالمنتجات */}
+            {!isFoodSeller && (
+              <>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] font-medium mb-1 text-gray-700">الصنف</label>
