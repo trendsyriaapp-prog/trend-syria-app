@@ -267,15 +267,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - على يمين المنتج (مقلوب أفقياً)
+        // رسم الظل أولاً - يبدأ من الأسفل ويمتد لليمين
         if (selectedShadow !== 'none') {
           ctx.save();
-          // حساب موقع الظل بناءً على shadowOffset (30-95)
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
           ctx.translate(centerX, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
-          // قلب أفقي + مضغوط + مائل
-          ctx.transform(-1, 0, -0.35, 0.3, 0, 0);
+          // مقلوب رأسياً + مائل لليمين
+          ctx.transform(1, 0, 0.4, -0.3, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
@@ -415,19 +414,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 />
               </div>
               
-              {/* الظل الأرضي - على يمين المنتج */}
+              {/* الظل الأرضي - يبدأ من الأسفل ويمتد لليمين */}
               {selectedShadow !== 'none' && (
                 <div 
                   className="absolute pointer-events-none"
                   style={{
                     top: `${shadowOffset}%`,
                     left: '50%',
-                    transform: `translateX(-65%) scale(${scale}) rotate(${rotation}deg) scaleX(-1) scaleY(0.3) skewX(-20deg)`,
+                    transform: `translateX(-50%) scale(${scale}) rotate(${rotation}deg) scaleY(-0.3) skewX(25deg)`,
                     transformOrigin: 'center top',
                     opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
                     filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
+                    maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 70%)',
+                    WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 70%)',
                   }}
                 >
                   <img 
