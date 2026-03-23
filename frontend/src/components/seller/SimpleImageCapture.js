@@ -1,6 +1,6 @@
 // /app/frontend/src/components/seller/SimpleImageCapture.js
 // مكون لالتقاط ومعالجة صور المنتجات
-// يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، ظل أرضي
+// يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، ظل جانبي
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
@@ -11,15 +11,15 @@ import {
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// حدود التكبير والتصغير للحصول على صورة مثالية
-const MIN_SCALE = 0.5;  // الحد الأدنى للتصغير
-const MAX_SCALE = 1.3;  // الحد الأقصى للتكبير - يحافظ على جودة العرض
+// حدود التكبير والتصغير
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 1.3;
 
-// خيارات الظل - تظهر تحت المنتج
+// خيارات الظل
 const SHADOWS = [
-  { id: 'none', name: 'بدون', value: 'none' },
-  { id: 'soft', name: 'ناعم', value: '0px 20px 30px rgba(0,0,0,0.4)' },
-  { id: 'strong', name: 'قوي', value: '0px 30px 50px rgba(0,0,0,0.6)' },
+  { id: 'none', name: 'بدون' },
+  { id: 'soft', name: 'ناعم' },
+  { id: 'strong', name: 'قوي' },
 ];
 
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
@@ -36,26 +36,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [step, setStep] = useState('capture');
   const [facingMode, setFacingMode] = useState('environment');
   
-  // التحكم بالصورة
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   
-  // تعديلات الصورة
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   const [showAdjustments, setShowAdjustments] = useState(false);
   
-  // الظل المختار
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
   
-  // للسحب
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // فتح الكاميرا
   useEffect(() => {
     if (isOpen && mode === 'camera' && step === 'capture') {
       startCamera();
@@ -63,7 +58,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     return () => stopCamera();
   }, [isOpen, mode, step, facingMode]);
 
-  // فتح معرض الصور
   useEffect(() => {
     if (isOpen && mode === 'gallery') {
       setTimeout(() => fileInputRef.current?.click(), 100);
@@ -97,7 +91,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
   };
 
-  // التقاط صورة
   const captureFromCamera = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
@@ -115,7 +108,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     await processImage(imageData);
   };
 
-  // اختيار من المعرض
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) { onClose(); return; }
@@ -128,7 +120,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     reader.readAsDataURL(file);
   };
 
-  // إزالة الخلفية
   const processImage = async (imageData) => {
     setProcessing(true);
     setStep('edit');
@@ -151,12 +142,9 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       if (result.data.success && result.data.image) {
         setProcessedImage(result.data.image);
       } else {
-        // إذا فشلت إزالة الخلفية، استخدم الصورة الأصلية
-        console.log('Background removal failed, using original image');
         setProcessedImage(imageData);
       }
       
-      // إعادة ضبط
       setScale(1);
       setPosition({ x: 0, y: 0 });
       setRotation(0);
@@ -166,8 +154,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       setSelectedShadow('none');
       
     } catch (err) {
-      console.error('Error processing image:', err);
-      // عند الخطأ، استخدم الصورة الأصلية بدلاً من الرجوع
+      console.error('Error:', err);
       setProcessedImage(imageData);
       setScale(1);
       setPosition({ x: 0, y: 0 });
@@ -181,12 +168,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   };
 
-  // فلتر CSS للتعديلات
   const getImageFilter = () => {
     return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   };
 
-  // === التحكم بالسحب ===
   const handleDragStart = useCallback((clientX, clientY) => {
     setIsDragging(true);
     setDragStart({ x: clientX - position.x, y: clientY - position.y });
@@ -204,7 +189,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setIsDragging(false);
   }, []);
 
-  // Mouse events
   const onMouseDown = (e) => {
     e.preventDefault();
     handleDragStart(e.clientX, e.clientY);
@@ -218,7 +202,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     handleDragEnd();
   };
 
-  // Touch events
   const onTouchStart = (e) => {
     const touch = e.touches[0];
     handleDragStart(touch.clientX, touch.clientY);
@@ -233,7 +216,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     handleDragEnd();
   };
 
-  // إضافة listeners للسحب
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', onMouseMove);
@@ -249,7 +231,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     };
   }, [isDragging, dragStart]);
 
-  // حفظ الصورة النهائية
   const saveImage = async () => {
     if (!canvasRef.current || !processedImage) return;
     
@@ -263,13 +244,11 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       const productImg = new window.Image();
       productImg.crossOrigin = 'anonymous';
       productImg.onload = () => {
-        // حساب الموقع
         const containerWidth = imageContainerRef.current?.offsetWidth || 400;
         const containerHeight = imageContainerRef.current?.offsetHeight || 400;
         const scaleX = size / containerWidth;
         const scaleY = size / containerHeight;
         
-        // رسم الصورة
         const imgRatio = productImg.width / productImg.height;
         let drawWidth, drawHeight;
         
@@ -284,22 +263,18 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const centerX = size/2 + position.x * scaleX;
         const centerY = size/2 + position.y * scaleY;
         
-        // رسم الظل الجانبي أولاً (إذا كان مفعلاً)
+        // رسم الظل الجانبي
         if (selectedShadow !== 'none') {
           ctx.save();
           ctx.translate(centerX, centerY);
           ctx.rotate(rotation * Math.PI / 180);
           ctx.scale(scale, scale);
           
-          // إزاحة الظل للجانب
           const shadowOffset = selectedShadow === 'strong' ? 15 : 10;
           ctx.translate(shadowOffset, shadowOffset);
-          
-          // تطبيق blur للظل
           ctx.filter = `blur(${selectedShadow === 'strong' ? '15px' : '10px'})`;
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.35 : 0.2;
           
-          // رسم الظل (نسخة سوداء من المنتج)
           ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
           ctx.restore();
         }
@@ -309,11 +284,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         ctx.translate(centerX, centerY);
         ctx.rotate(rotation * Math.PI / 180);
         ctx.scale(scale, scale);
-        
-        // تطبيق الفلاتر
         ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
         ctx.globalAlpha = 1;
-        
         ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
         ctx.restore();
         
@@ -324,23 +296,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       productImg.src = processedImage;
     };
     
-    // خلفية بيضاء دائماً
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, size, size);
     drawProduct();
   };
 
-  // استخدام الصورة الأصلية
   const useOriginal = () => {
     onImageReady(capturedImage);
     handleClose();
-  };
-
-  // إعادة ضبط
-  const resetTransform = () => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setRotation(0);
   };
 
   const resetAdjustments = () => {
@@ -349,7 +312,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setSaturation(100);
   };
 
-  // إغلاق
   const handleClose = () => {
     stopCamera();
     setCapturedImage(null);
@@ -390,12 +352,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       <div 
         ref={imageContainerRef}
         className="flex-1 relative overflow-hidden"
-        style={{ 
-          touchAction: 'none',
-          backgroundColor: step === 'edit' ? '#FFFFFF' : '#000'
-        }}
+        style={{ touchAction: 'none', backgroundColor: step === 'edit' ? '#FFFFFF' : '#000' }}
       >
-        
         {/* Camera View */}
         {step === 'capture' && mode === 'camera' && (
           <div className="w-full h-full bg-black">
@@ -418,20 +376,17 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Processed Image - Draggable with Side Shadow */}
+        {/* Processed Image with Side Shadow */}
         {step === 'edit' && processedImage && (
           <div className="w-full h-full flex items-center justify-center relative">
-            {/* خطوط التوجيه للمنتصف */}
+            {/* خطوط التوجيه */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              {/* خط عمودي */}
               <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-blue-400/30" />
-              {/* خط أفقي */}
               <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-blue-400/30" />
-              {/* نقطة المنتصف */}
               <div className="w-3 h-3 rounded-full border-2 border-blue-400/50 bg-transparent" />
             </div>
             
-            {/* حاوية المنتج مع الظل الجانبي */}
+            {/* حاوية المنتج */}
             <div 
               className="relative"
               style={{
@@ -439,7 +394,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* الظل الجانبي خلف المنتج - يظهر قبل المنتج */}
+              {/* الظل الجانبي */}
               {selectedShadow !== 'none' && (
                 <div 
                   className="absolute inset-0 pointer-events-none"
@@ -453,9 +408,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                     src={processedImage} 
                     alt=""
                     className="max-w-[85vw] max-h-[50vh] object-contain"
-                    style={{
-                      filter: 'brightness(0) saturate(100%)'
-                    }}
+                    style={{ filter: 'brightness(0)' }}
                     draggable={false}
                   />
                 </div>
@@ -475,9 +428,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   alt="Product" 
                   data-testid="product-image"
                   className="max-w-[85vw] max-h-[50vh] object-contain select-none"
-                  style={{
-                    filter: getImageFilter()
-                  }}
+                  style={{ filter: getImageFilter() }}
                   draggable={false}
                 />
               </div>
@@ -503,7 +454,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
       {/* Bottom Controls */}
       <div className="bg-black p-3 space-y-3">
-        
         {/* Camera Controls */}
         {step === 'capture' && mode === 'camera' && !error && (
           <div className="flex items-center justify-center gap-8 py-4">
@@ -532,49 +482,28 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   <span className="text-white text-sm font-bold">تعديلات الصورة</span>
                   <button onClick={resetAdjustments} className="text-xs text-orange-400">إعادة ضبط</button>
                 </div>
-                
-                {/* Brightness */}
                 <div className="flex items-center gap-3">
                   <Sun size={16} className="text-yellow-400" />
                   <span className="text-white text-xs w-12">إضاءة</span>
-                  <input
-                    type="range"
-                    min="50"
-                    max="150"
-                    value={brightness}
+                  <input type="range" min="50" max="150" value={brightness}
                     onChange={(e) => setBrightness(Number(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
-                  />
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500" />
                   <span className="text-white text-xs w-10 text-left">{brightness}%</span>
                 </div>
-                
-                {/* Contrast */}
                 <div className="flex items-center gap-3">
                   <Contrast size={16} className="text-blue-400" />
                   <span className="text-white text-xs w-12">تباين</span>
-                  <input
-                    type="range"
-                    min="50"
-                    max="150"
-                    value={contrast}
+                  <input type="range" min="50" max="150" value={contrast}
                     onChange={(e) => setContrast(Number(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
-                  />
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500" />
                   <span className="text-white text-xs w-10 text-left">{contrast}%</span>
                 </div>
-                
-                {/* Saturation */}
                 <div className="flex items-center gap-3">
                   <Droplets size={16} className="text-pink-400" />
                   <span className="text-white text-xs w-12">تشبع</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="200"
-                    value={saturation}
+                  <input type="range" min="0" max="200" value={saturation}
                     onChange={(e) => setSaturation(Number(e.target.value))}
-                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
-                  />
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500" />
                   <span className="text-white text-xs w-10 text-left">{saturation}%</span>
                 </div>
               </div>
@@ -633,8 +562,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               >
                 <RotateCw size={18} className="text-white" />
               </button>
-              
-              {/* Adjustments Toggle */}
               <button 
                 onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
@@ -644,8 +571,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               >
                 <Sliders size={18} className="text-white" />
               </button>
-              
-              {/* Shadows Toggle */}
               <button 
                 onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
