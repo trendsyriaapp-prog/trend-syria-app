@@ -105,8 +105,8 @@ async def send_message(req: SendMessageRequest, user: dict = Depends(get_current
         raise HTTPException(status_code=403, detail="غير مصرح بإرسال رسائل")
     
     # التحقق من حالة الطلب
-    allowed_statuses = ["accepted", "preparing", "ready", "out_for_delivery", "ready_for_pickup"]
-    if order.get("status") not in allowed_statuses:
+    allowed_statuses = ["accepted", "preparing", "ready", "out_for_delivery", "ready_for_pickup", "driver_accepted", "picked_up", "on_the_way", "arriving"]
+    if order.get("status") not in allowed_statuses and order.get("delivery_status") not in allowed_statuses:
         raise HTTPException(status_code=400, detail="لا يمكن المحادثة في هذا الوقت")
     
     # تحديد المستلم

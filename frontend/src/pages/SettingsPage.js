@@ -284,10 +284,11 @@ const SettingsPage = () => {
             </button>
             <h1 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>إعدادات الحساب</h1>
           </div>
-          {user?.user_type === 'delivery' && (
+          {/* زر تصفح كعميل - يظهر للجميع عدا المشترين */}
+          {user?.user_type && user.user_type !== 'buyer' && (
             <a
               href="/?view=customer"
-              className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs hover:bg-gray-200"
+              className={`flex items-center gap-1 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'} px-3 py-1.5 rounded-full text-xs hover:opacity-80`}
             >
               <Home size={14} />
               <span>تصفح كعميل</span>

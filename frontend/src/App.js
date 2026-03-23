@@ -62,6 +62,7 @@ import AllFoodStoresPage from "./pages/AllFoodStoresPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
 import DeliveryMapPage from "./pages/DeliveryMapPage";
+import ChatPage from "./pages/ChatPage";
 
 // Section Pages
 import SponsoredProductsPage from "./pages/SponsoredProductsPage";
@@ -231,6 +232,9 @@ function App() {
                 <Route path="/delivery/documents" element={<DeliveryDocuments />} />
                 <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
                 <Route path="/delivery/map" element={<DeliveryMapPage />} />
+                
+                {/* Chat Route */}
+                <Route path="/chat/:orderId" element={<ChatPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboardPage />} />

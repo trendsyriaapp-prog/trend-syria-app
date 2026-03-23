@@ -28,8 +28,8 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
 
   // موقع الزر - أعلى من شريط التنقل السفلي (مرتفع أكثر للسائقين)
   const positionClasses = {
-    'bottom-left': 'bottom-24 left-4',
-    'bottom-right': 'bottom-24 right-4',
+    'bottom-left': 'bottom-28 left-4',
+    'bottom-right': 'bottom-28 right-4',
     'top-left': 'top-20 left-4',
     'top-right': 'top-20 right-4',
   };
@@ -89,7 +89,7 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   return (
     <>
       {/* زر فتح النموذج مع زر الإخفاء */}
-      <div className={`fixed ${positionClasses[position]} z-50 flex flex-col items-center gap-1`}>
+      <div className={`fixed ${positionClasses[position]} z-[55] flex flex-col items-center gap-1`}>
         {/* زر الإخفاء */}
         <button
           onClick={handleHide}
