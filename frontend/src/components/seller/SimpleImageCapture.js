@@ -150,22 +150,32 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       
       if (result.data.success && result.data.image) {
         setProcessedImage(result.data.image);
-        // إعادة ضبط
-        setScale(1);
-        setPosition({ x: 0, y: 0 });
-        setRotation(0);
-        setBrightness(100);
-        setContrast(100);
-        setSaturation(100);
-        setSelectedBg('white');
-        setSelectedShadow('none');
       } else {
-        throw new Error('فشل في معالجة الصورة');
+        // إذا فشلت إزالة الخلفية، استخدم الصورة الأصلية
+        console.log('Background removal failed, using original image');
+        setProcessedImage(imageData);
       }
+      
+      // إعادة ضبط
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      setRotation(0);
+      setBrightness(100);
+      setContrast(100);
+      setSaturation(100);
+      setSelectedShadow('none');
+      
     } catch (err) {
-      console.error('Error:', err);
-      setError('فشل في إزالة الخلفية');
-      setStep('capture');
+      console.error('Error processing image:', err);
+      // عند الخطأ، استخدم الصورة الأصلية بدلاً من الرجوع
+      setProcessedImage(imageData);
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      setRotation(0);
+      setBrightness(100);
+      setContrast(100);
+      setSaturation(100);
+      setSelectedShadow('none');
     } finally {
       setProcessing(false);
     }
