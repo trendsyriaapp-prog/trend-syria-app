@@ -19,6 +19,7 @@ from services.photoroom import (
     remove_background_photoroom, 
     process_with_photoroom,
     get_available_shadow_types,
+    get_photoroom_credits,
     SHADOW_TYPES
 )
 
@@ -886,6 +887,15 @@ async def get_image_processing_status():
         "fallback_service": "rembg (local)",
         "shadow_types": get_available_shadow_types()
     }
+
+
+@router.get("/photoroom-credits")
+async def get_photoroom_credits_endpoint():
+    """
+    الحصول على رصيد PhotoRoom المتبقي - للمدير فقط
+    """
+    credits_info = await get_photoroom_credits()
+    return credits_info
 
 
 

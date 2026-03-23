@@ -6,7 +6,7 @@ import axios from 'axios';
 import { 
   Image, Settings, Save, Loader2, Camera, 
   Utensils, Package, BarChart3, RefreshCw,
-  CheckCircle, AlertCircle, Info
+  CheckCircle, AlertCircle, Info, CreditCard, ExternalLink
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -18,12 +18,14 @@ const ImageSettingsTab = ({ token }) => {
     enable_food_enhancement: true
   });
   const [usage, setUsage] = useState(null);
+  const [photoRoomCredits, setPhotoRoomCredits] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
     fetchSettings();
+    fetchPhotoRoomCredits();
   }, []);
 
   const fetchSettings = async () => {
@@ -42,6 +44,15 @@ const ImageSettingsTab = ({ token }) => {
       console.error('Error fetching settings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPhotoRoomCredits = async () => {
+    try {
+      const res = await axios.get(`${API}/api/image/photoroom-credits`);
+      setPhotoRoomCredits(res.data);
+    } catch (error) {
+      console.error('Error fetching PhotoRoom credits:', error);
     }
   };
 
@@ -135,6 +146,97 @@ const ImageSettingsTab = ({ token }) => {
           </div>
         </div>
       )}
+
+      {/* رصيد PhotoRoom */}
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CreditCard size={18} className="text-purple-600" />
+            <h3 className="font-bold text-purple-900">رصيد PhotoRoom</h3>
+          </div>
+          <button
+            onClick={fetchPhotoRoomCredits}
+            className="p-1 hover:bg-purple-100 rounded transition-colors"
+            title="تحديث"
+          >
+            <RefreshCw size={14} className="text-purple-600" />
+          </button>
+        </div>
+        
+        {photoRoomCredits ? (
+          photoRoomCredits.success ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className={`text-2xl font-bold ${
+                    photoRoomCredits.credits_available > 50 ? 'text-green-600' :
+                    photoRoomCredits.credits_available > 10 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {photoRoomCredits.credits_available || 0}
+                  </p>
+                  <p className="text-xs text-gray-600">صور متاحة</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-blue-600">{photoRoomCredits.credits_used || 0}</p>
+                  <p className="text-xs text-gray-600">صور مستخدمة</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center">
+                  <p className={`text-2xl font-bold ${photoRoomCredits.subscription_active ? 'text-green-600' : 'text-red-600'}`}>
+                    {photoRoomCredits.subscription_active ? 'نشط' : 'غير نشط'}
+                  </p>
+                  <p className="text-xs text-gray-600">الاشتراك</p>
+                </div>
+              </div>
+              
+              {photoRoomCredits.credits_available < 20 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-yellow-800 font-medium">الرصيد منخفض!</p>
+                    <p className="text-xs text-yellow-700">يُنصح بشحن الرصيد للاستمرار بجودة عالية.</p>
+                  </div>
+                </div>
+              )}
+              
+              <a
+                href="https://www.photoroom.com/api/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              >
+                <CreditCard size={16} />
+                شحن الرصيد
+                <ExternalLink size={14} />
+              </a>
+            </div>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-red-800 font-medium">لا يوجد رصيد</p>
+                  <p className="text-xs text-red-700 mb-2">{photoRoomCredits.error || 'لم يتم ربط حساب PhotoRoom'}</p>
+                  <p className="text-xs text-gray-600">التطبيق يستخدم حالياً البديل المجاني (rembg)</p>
+                </div>
+              </div>
+              <a
+                href="https://www.photoroom.com/api/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full mt-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              >
+                <CreditCard size={16} />
+                إنشاء حساب وشحن
+                <ExternalLink size={14} />
+              </a>
+            </div>
+          )
+        ) : (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 size={20} className="animate-spin text-purple-600" />
+          </div>
+        )}
+      </div>
 
       {/* الإعدادات */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

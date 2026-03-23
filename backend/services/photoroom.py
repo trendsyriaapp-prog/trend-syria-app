@@ -142,3 +142,51 @@ def get_available_shadow_types() -> list:
         {"id": "hard", "name": "حاد", "name_en": "Hard"},
         {"id": "floating", "name": "عائم", "name_en": "Floating"},
     ]
+
+
+async def get_photoroom_credits() -> dict:
+    """
+    التحقق من رصيد PhotoRoom المتبقي
+    
+    Returns:
+        dict مع معلومات الرصيد والاشتراك
+    """
+    if not PHOTOROOM_API_KEY:
+        return {
+            "success": False,
+            "error": "PhotoRoom API key not configured",
+            "credits_available": 0,
+            "subscription_active": False
+        }
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                "https://sdk.photoroom.com/account/details",
+                headers={"x-api-key": PHOTOROOM_API_KEY}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "credits_available": data.get("creditAvailable", 0),
+                    "subscription_active": data.get("subscriptionActive", False),
+                    "plan_name": data.get("planName", "Unknown"),
+                    "monthly_limit": data.get("monthlyLimit", 0),
+                    "credits_used": data.get("creditUsed", 0)
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"API error: {response.status_code}",
+                    "credits_available": 0,
+                    "subscription_active": False
+                }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "credits_available": 0,
+            "subscription_active": False
+        }
