@@ -108,6 +108,8 @@ const WaitingTimer = ({ arrivedAt, isDark, orderId }) => {
 const MyOrdersList = ({ 
   orders, 
   foodOrders = [],
+  availableOrders = [],      // ⭐ الطلبات المتاحة (منتجات)
+  availableFoodOrders = [],  // ⭐ الطلبات المتاحة (طعام)
   onStartDelivery, 
   onShowDeliveryChecklist,
   onOpenETAModal,
@@ -614,11 +616,11 @@ const MyOrdersList = ({
 
   return (
     <div className="space-y-2">
-      {/* خريطة طلباتي المقبولة */}
+      {/* خريطة طلباتي المقبولة + الطلبات المتاحة */}
       {(orders.length > 0 || foodOrders.length > 0) && (
         <OrdersMap
-          orders={[]}
-          foodOrders={[]}
+          orders={availableOrders}
+          foodOrders={availableFoodOrders}
           myOrders={orders}
           myFoodOrders={foodOrders}
           theme={theme}

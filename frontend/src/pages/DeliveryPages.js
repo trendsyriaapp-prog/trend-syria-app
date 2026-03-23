@@ -1213,6 +1213,8 @@ const DeliveryDashboard = () => {
           <MyOrdersList
             orders={orderTypeFilter === 'food' ? [] : myOrders}
             foodOrders={orderTypeFilter === 'products' ? [] : myFoodOrders}
+            availableOrders={orderTypeFilter === 'food' ? [] : availableOrders}
+            availableFoodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
             onStartDelivery={handleOnTheWay}
             onShowDeliveryChecklist={(order) => setShowDeliveryChecklist(order)}
             onOpenETAModal={openETAModal}
