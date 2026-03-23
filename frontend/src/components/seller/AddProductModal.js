@@ -541,8 +541,11 @@ const AddProductModal = ({
                 {/* خيارات الوزن */}
                 <div>
                   <label className="block text-[10px] font-medium mb-1 text-gray-700">
-                    خيارات الوزن (اختياري - للمنتجات التي تُباع بأوزان مختلفة)
+                    خيارات الوزن والسعر (اختياري)
                   </label>
+                  <p className="text-[9px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
+                    💡 أضف أوزان مختلفة لنفس المنتج مع سعر كل وزن - العميل سيختار الوزن المناسب عند الشراء
+                  </p>
                   
                   {/* عرض خيارات الوزن المضافة */}
                   {newProduct.weight_variants.length > 0 && (
@@ -595,9 +598,6 @@ const AddProductModal = ({
                       <Plus size={14} />
                     </button>
                   </div>
-                  <p className="text-[9px] text-gray-500 mt-0.5">
-                    أضف خيارات الوزن المختلفة مع أسعارها (مثال: قهوة 250g بـ 50,000 ل.س)
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
