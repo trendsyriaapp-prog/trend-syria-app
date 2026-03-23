@@ -6,22 +6,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { 
   X, Camera, RotateCcw, Check, Loader2, ZoomIn, ZoomOut, RotateCw,
-  Sun, Droplets, Contrast, Image, Sliders, Eclipse
+  Sun, Droplets, Contrast, Sliders, Eclipse
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
-
-// الخلفيات الجاهزة 3D
-const BACKGROUNDS = [
-  { id: 'white', name: 'أبيض', color: '#FFFFFF', image: null },
-  { id: 'black', name: 'أسود فاخر', image: '/backgrounds/black_luxury.jpg' },
-  { id: 'marble', name: 'رخام', image: '/backgrounds/marble.jpg' },
-  { id: 'wood', name: 'خشب', image: '/backgrounds/wood.jpg' },
-  { id: 'concrete', name: 'إسمنت', image: '/backgrounds/concrete.jpg' },
-  { id: 'pink', name: 'وردي', image: '/backgrounds/pink.jpg' },
-  { id: 'fabric', name: 'قماش', image: '/backgrounds/fabric_blue.jpg' },
-  { id: 'studio', name: 'استوديو', image: '/backgrounds/studio.jpg' },
-];
 
 // خيارات الظل - تظهر تحت المنتج
 const SHADOWS = [
@@ -55,11 +43,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [saturation, setSaturation] = useState(100);
   const [showAdjustments, setShowAdjustments] = useState(false);
   
-  // الخلفية المختارة
-  const [selectedBg, setSelectedBg] = useState('white');
-  const [showBackgrounds, setShowBackgrounds] = useState(false);
-  const [bgImageLoaded, setBgImageLoaded] = useState({});
-  
   // الظل المختار
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
@@ -82,17 +65,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       setTimeout(() => fileInputRef.current?.click(), 100);
     }
   }, [isOpen, mode]);
-
-  // تحميل صور الخلفيات مسبقاً
-  useEffect(() => {
-    BACKGROUNDS.forEach(bg => {
-      if (bg.image) {
-        const img = new window.Image();
-        img.onload = () => setBgImageLoaded(prev => ({ ...prev, [bg.id]: true }));
-        img.src = bg.image;
-      }
-    });
-  }, []);
 
   const startCamera = async () => {
     try {
@@ -193,19 +165,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     } finally {
       setProcessing(false);
     }
-  };
-
-  // الحصول على خلفية
-  const getBackgroundStyle = () => {
-    const bg = BACKGROUNDS.find(b => b.id === selectedBg);
-    if (bg?.image) {
-      return { 
-        backgroundImage: `url(${bg.image})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      };
-    }
-    return { backgroundColor: bg?.color || '#FFFFFF' };
   };
 
   // فلتر CSS للتعديلات
@@ -343,26 +302,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       productImg.src = processedImage;
     };
     
-    if (bg?.image) {
-      // رسم صورة الخلفية
-      const bgImg = new window.Image();
-      bgImg.crossOrigin = 'anonymous';
-      bgImg.onload = () => {
-        ctx.drawImage(bgImg, 0, 0, size, size);
-        drawProduct();
-      };
-      bgImg.onerror = () => {
-        // fallback to white if image fails
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, size, size);
-        drawProduct();
-      };
-      bgImg.src = bg.image;
-    } else {
-      ctx.fillStyle = bg?.color || '#FFFFFF';
-      ctx.fillRect(0, 0, size, size);
-      drawProduct();
-    }
+    // خلفية بيضاء دائماً
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, size, size);
+    drawProduct();
   };
 
   // استخدام الصورة الأصلية
@@ -395,10 +338,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setBrightness(100);
     setContrast(100);
     setSaturation(100);
-    setSelectedBg('white');
     setSelectedShadow('none');
     setShowAdjustments(false);
-    setShowBackgrounds(false);
     setShowShadows(false);
     setStep('capture');
     setError(null);
@@ -429,7 +370,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         className="flex-1 relative overflow-hidden"
         style={{ 
           touchAction: 'none',
-          ...(step === 'edit' ? getBackgroundStyle() : { backgroundColor: '#000' })
+          backgroundColor: step === 'edit' ? '#FFFFFF' : '#000'
         }}
       >
         
@@ -491,7 +432,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         )}
         
         {/* Drag hint */}
-        {step === 'edit' && processedImage && !processing && !showAdjustments && !showBackgrounds && (
+        {step === 'edit' && processedImage && !processing && !showAdjustments && !showShadows && (
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full">
             <p className="text-white/70 text-xs">اسحب المنتج لتحريكه</p>
           </div>
@@ -577,43 +518,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               </div>
             )}
 
-            {/* Backgrounds Panel */}
-            {showBackgrounds && (
-              <div className="bg-white/10 rounded-xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white text-sm font-bold">خلفيات 3D</span>
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {BACKGROUNDS.map(bg => (
-                    <button
-                      key={bg.id}
-                      onClick={() => setSelectedBg(bg.id)}
-                      className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all ${
-                        selectedBg === bg.id 
-                          ? 'border-[#FF6B00] scale-105 ring-2 ring-orange-400' 
-                          : 'border-white/30'
-                      }`}
-                    >
-                      {bg.image ? (
-                        <img 
-                          src={bg.image} 
-                          alt={bg.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-white flex items-center justify-center">
-                          <span className="text-[10px] text-gray-500">{bg.name}</span>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-white/50 text-[10px] text-center mt-1">
-                  {BACKGROUNDS.find(b => b.id === selectedBg)?.name || 'أبيض'}
-                </p>
-              </div>
-            )}
-
             {/* Shadows Panel */}
             {showShadows && (
               <div className="bg-white/10 rounded-xl p-3">
@@ -664,7 +568,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               
               {/* Adjustments Toggle */}
               <button 
-                onClick={() => { setShowAdjustments(!showAdjustments); setShowBackgrounds(false); setShowShadows(false); }}
+                onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
@@ -675,24 +579,13 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               
               {/* Shadows Toggle */}
               <button 
-                onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); setShowBackgrounds(false); }}
+                onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showShadows ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="shadows-button"
               >
                 <Eclipse size={18} className="text-white" />
-              </button>
-              
-              {/* Backgrounds Toggle */}
-              <button 
-                onClick={() => { setShowBackgrounds(!showBackgrounds); setShowAdjustments(false); setShowShadows(false); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                  showBackgrounds ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
-                }`}
-                data-testid="backgrounds-button"
-              >
-                <Image size={18} className="text-white" />
               </button>
             </div>
 
