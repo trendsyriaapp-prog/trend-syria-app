@@ -273,8 +273,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
           ctx.translate(centerX, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
-          // مقلوب رأسياً + مائل لليمين
-          ctx.transform(1, 0, 0.4, -0.3, 0, 0);
+          // مضغوط + مائل لليمين
+          ctx.transform(1, 0, -0.4, 0.3, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
@@ -421,12 +421,12 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   style={{
                     top: `${shadowOffset}%`,
                     left: '50%',
-                    transform: `translateX(-50%) scale(${scale}) rotate(${rotation}deg) scaleY(-0.3) skewX(25deg)`,
-                    transformOrigin: 'center top',
+                    transform: `translateX(-50%) scale(${scale}) rotate(${rotation}deg) scaleY(0.3) skewX(-25deg)`,
+                    transformOrigin: 'center bottom',
                     opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
                     filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
-                    maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 70%)',
-                    WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 70%)',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 70%)',
                   }}
                 >
                   <img 
