@@ -202,7 +202,26 @@ const OrdersMap = ({
   const [priorityCountdown, setPriorityCountdown] = useState(0); // العد التنازلي
   const [showPriorityPopup, setShowPriorityPopup] = useState(false);
   const [dismissedPriorityUntil, setDismissedPriorityUntil] = useState(0); // وقت إيقاف الإشعارات مؤقتاً
-  const [rejectedOrderIds, setRejectedOrderIds] = useState([]); // الطلبات المرفوضة يدوياً
+  
+  // تحميل الطلبات المرفوضة من localStorage عند البدء
+  const [rejectedOrderIds, setRejectedOrderIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('rejectedOrderIds');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // تنظيف الطلبات القديمة (أكثر من ساعة)
+        const now = Date.now();
+        const validEntries = parsed.filter(entry => 
+          typeof entry === 'object' && entry.timestamp && (now - entry.timestamp) < 3600000
+        );
+        return validEntries.map(e => e.id);
+      }
+    } catch (e) {
+      console.log('Error loading rejected orders:', e);
+    }
+    return [];
+  });
+  
   const [maxLimitOrderIds, setMaxLimitOrderIds] = useState([]); // الطلبات المؤجلة بسبب الحد الأقصى
   const maxLimitOrderIdsRef = useRef([]); // ref للحفاظ على القيمة الصحيحة في الـ interval
   const [previousOrderCount, setPreviousOrderCount] = useState(0); // عدد الطلبات السابق لمراقبة التغيير
@@ -386,14 +405,28 @@ const OrdersMap = ({
     // إضافة الطلب للقائمة المرفوضة
     if (priorityOrder) {
       const orderId = priorityOrder.id;
-      setRejectedOrderIds(prev => {
-        if (prev.includes(orderId)) return prev;
-        return [...prev, orderId];
-      });
+      const newRejectedIds = rejectedOrderIds.includes(orderId) 
+        ? rejectedOrderIds 
+        : [...rejectedOrderIds, orderId];
+      
+      setRejectedOrderIds(newRejectedIds);
+      
       // تحديث الـ ref فوراً لمنع الـ interval من إظهار الطلب مرة أخرى
       if (!rejectedOrderIdsRef.current.includes(orderId)) {
         rejectedOrderIdsRef.current = [...rejectedOrderIdsRef.current, orderId];
       }
+      
+      // حفظ في localStorage مع timestamp
+      try {
+        const savedData = JSON.parse(localStorage.getItem('rejectedOrderIds') || '[]');
+        if (!savedData.find(e => e.id === orderId)) {
+          savedData.push({ id: orderId, timestamp: Date.now() });
+          localStorage.setItem('rejectedOrderIds', JSON.stringify(savedData));
+        }
+      } catch (e) {
+        console.log('Error saving rejected order:', e);
+      }
+      
       console.log('❌ تم رفض الطلب:', orderId);
       console.log('📋 قائمة المرفوضة الآن:', rejectedOrderIdsRef.current);
     }
@@ -955,34 +988,46 @@ const OrdersMap = ({
         order: null
       }];
 
-      // إضافة المتاجر
+      // إضافة المتاجر (مع fallback للإحداثيات المفقودة)
       allMyOrders.forEach((order) => {
-        const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
-        const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
-        if (storeLat && storeLng) {
-          allPoints.push({
-            position: [storeLat, storeLng],
-            type: 'store',
-            label: order.store_name || order.seller_name || 'متجر',
-            order: order,
-            isFood: !!order.store_name
-          });
+        let storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+        let storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+        
+        // إذا لم تتوفر إحداثيات المتجر، استخدم موقع افتراضي قريب
+        if (!storeLat || !storeLng) {
+          console.log('⚠️ طلب بدون إحداثيات متجر:', order.id?.substring(0, 8));
+          storeLat = 33.5138 + (Math.random() * 0.01 - 0.005);
+          storeLng = 36.2765 + (Math.random() * 0.01 - 0.005);
         }
+        
+        allPoints.push({
+          position: [storeLat, storeLng],
+          type: 'store',
+          label: order.store_name || order.seller_name || 'متجر',
+          order: order,
+          isFood: !!order.store_name
+        });
       });
 
-      // إضافة العملاء
+      // إضافة العملاء (مع fallback للإحداثيات المفقودة)
       allMyOrders.forEach((order) => {
-        const custLat = order.latitude || order.buyer_address?.latitude;
-        const custLng = order.longitude || order.buyer_address?.longitude;
-        if (custLat && custLng) {
-          allPoints.push({
-            position: [custLat, custLng],
-            type: 'customer',
-            label: order.customer_name || 'عميل',
-            order: order,
-            isFood: !!order.store_name
-          });
+        let custLat = order.latitude || order.buyer_address?.latitude;
+        let custLng = order.longitude || order.buyer_address?.longitude;
+        
+        // إذا لم تتوفر إحداثيات العميل، استخدم موقع افتراضي قريب
+        if (!custLat || !custLng) {
+          console.log('⚠️ طلب بدون إحداثيات عميل:', order.id?.substring(0, 8));
+          custLat = 33.5000 + (Math.random() * 0.01 - 0.005);
+          custLng = 36.2900 + (Math.random() * 0.01 - 0.005);
         }
+        
+        allPoints.push({
+          position: [custLat, custLng],
+          type: 'customer',
+          label: order.customer_name || 'عميل',
+          order: order,
+          isFood: !!order.store_name
+        });
       });
 
       if (allPoints.length < 2) {
@@ -1119,34 +1164,38 @@ const OrdersMap = ({
         order: null
       }];
 
-      // إضافة المتاجر
+      // إضافة المتاجر (مع fallback)
       allMyOrders.forEach((order) => {
-        const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
-        const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
-        if (storeLat && storeLng) {
-          allPoints.push({
-            position: [storeLat, storeLng],
-            type: 'store',
-            label: order.store_name || order.seller_name || 'متجر',
-            order: order,
-            isFood: !!order.store_name
-          });
+        let storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+        let storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+        if (!storeLat || !storeLng) {
+          storeLat = 33.5138 + (Math.random() * 0.01 - 0.005);
+          storeLng = 36.2765 + (Math.random() * 0.01 - 0.005);
         }
+        allPoints.push({
+          position: [storeLat, storeLng],
+          type: 'store',
+          label: order.store_name || order.seller_name || 'متجر',
+          order: order,
+          isFood: !!order.store_name
+        });
       });
 
-      // إضافة العملاء
+      // إضافة العملاء (مع fallback)
       allMyOrders.forEach((order) => {
-        const custLat = order.latitude || order.buyer_address?.latitude;
-        const custLng = order.longitude || order.buyer_address?.longitude;
-        if (custLat && custLng) {
-          allPoints.push({
-            position: [custLat, custLng],
-            type: 'customer',
-            label: order.customer_name || 'عميل',
-            order: order,
-            isFood: !!order.store_name
-          });
+        let custLat = order.latitude || order.buyer_address?.latitude;
+        let custLng = order.longitude || order.buyer_address?.longitude;
+        if (!custLat || !custLng) {
+          custLat = 33.5000 + (Math.random() * 0.01 - 0.005);
+          custLng = 36.2900 + (Math.random() * 0.01 - 0.005);
         }
+        allPoints.push({
+          position: [custLat, custLng],
+          type: 'customer',
+          label: order.customer_name || 'عميل',
+          order: order,
+          isFood: !!order.store_name
+        });
       });
 
       if (allPoints.length < 2) {
