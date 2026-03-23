@@ -47,6 +47,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
+  const [shadowOffset, setShadowOffset] = useState(50); // 0-100 للتحكم بموقع الظل
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -266,14 +267,15 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - ملتصق بأسفل المنتج ويمتد للخلف واليمين
+        // رسم الظل أولاً - بناءً على موقع المستخدم
         if (selectedShadow !== 'none') {
           ctx.save();
-          // يبدأ من أسفل المنتج مباشرة
-          ctx.translate(centerX + scaledWidth * 0.1, centerY + scaledHeight * 0.48);
+          // حساب موقع الظل بناءً على shadowOffset (30-95)
+          const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
+          ctx.translate(centerX + scaledWidth * 0.05, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
           // مضغوط ومائل لليمين
-          ctx.transform(1, 0, -0.4, 0.35, 0, 0);
+          ctx.transform(1, 0, -0.35, 0.3, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.15;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
           ctx.restore();
@@ -322,6 +324,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setContrast(100);
     setSaturation(100);
     setSelectedShadow('none');
+    setShadowOffset(50);
     setShowAdjustments(false);
     setShowShadows(false);
     setStep('capture');
@@ -412,14 +415,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 />
               </div>
               
-              {/* الظل الأرضي - ملتصق بقاعدة المنتج مباشرة */}
+              {/* الظل الأرضي - يمكن التحكم بموقعه */}
               {selectedShadow !== 'none' && (
                 <div 
                   className="absolute pointer-events-none"
                   style={{
-                    bottom: '0',
+                    top: `${shadowOffset}%`,
                     left: '50%',
-                    transform: `translateX(-40%) scale(${scale}) rotate(${rotation}deg) scaleY(0.25) skewX(-20deg)`,
+                    transform: `translateX(-35%) scale(${scale}) rotate(${rotation}deg) scaleY(0.3) skewX(-20deg)`,
                     transformOrigin: 'center top',
                     opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
                     filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
@@ -515,8 +518,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
             {/* Shadows Panel */}
             {showShadows && (
-              <div className="bg-white/10 rounded-xl p-3">
-                <div className="flex items-center justify-between mb-2">
+              <div className="bg-white/10 rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
                   <span className="text-white text-sm font-bold">ظل المنتج</span>
                 </div>
                 <div className="flex gap-3 justify-center">
@@ -534,6 +537,25 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                     </button>
                   ))}
                 </div>
+                
+                {/* التحكم بموقع الظل */}
+                {selectedShadow !== 'none' && (
+                  <div className="pt-2 border-t border-white/20">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white/70 text-xs">قريب</span>
+                      <input 
+                        type="range" 
+                        min="30" 
+                        max="95" 
+                        value={shadowOffset}
+                        onChange={(e) => setShadowOffset(Number(e.target.value))}
+                        className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
+                      />
+                      <span className="text-white/70 text-xs">بعيد</span>
+                    </div>
+                    <p className="text-white/50 text-[10px] text-center mt-1">حرّك الشريط لضبط موقع الظل</p>
+                  </div>
+                )}
               </div>
             )}
 
