@@ -29,6 +29,32 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
+#### Text-to-Speech (TTS) Voice Announcement Settings - NEW ✅
+- **Feature**: Customizable voice announcement settings for drivers
+- **Implementation**:
+  - Created `VoiceAnnouncementSettings.js` component with full settings panel
+  - Updated `speakInstruction()` in `OrdersMap.js` to read settings from localStorage
+- **User Controls**:
+  - Toggle to enable/disable voice announcements
+  - Voice selection dropdown (Arabic voices prioritized, Google/Microsoft highlighted)
+  - Volume slider (0-100%)
+  - Speech rate slider (0.5x - 1.5x)
+  - Pitch slider (0.5 - 1.5)
+  - Test voice button to preview settings
+  - Reset to defaults button
+- **Files Created**:
+  - `/app/frontend/src/components/delivery/VoiceAnnouncementSettings.js`
+- **Files Modified**:
+  - `/app/frontend/src/pages/SettingsPage.js` - Added import and component
+  - `/app/frontend/src/components/delivery/OrdersMap.js` - Updated speakInstruction to use saved settings
+- **localStorage Keys**:
+  - `voiceAnnouncementEnabled` - Enable/disable TTS
+  - `selectedVoiceName` - Selected voice name
+  - `voiceVolume` - Volume level (0-1)
+  - `voiceRate` - Speech rate
+  - `voicePitch` - Voice pitch
+- **Integration**: TTS now respects user settings when announcing new orders, priority orders, navigation, and other events
+
 #### Feedback & Suggestions Feature - NEW ✅
 - **Feature**: Universal feedback system for all user types (customers, sellers, drivers, guests)
 - **Implementation**:
@@ -143,7 +169,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 ## Test Credentials
 - **Product Seller**: Phone: `0922222222`, Password: `seller123`
 - **Food Seller**: Phone: `0944444444`, Password: `food123`
-- **Driver**: Phone: `0977777777`, Password: `driver123`
+- **Driver**: Phone: `0988111333`, Password: `driver123`
 - **Admin**: Phone: `0912345678`, Password: `admin123`
 
 ## Important Notes

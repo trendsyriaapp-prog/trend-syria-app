@@ -25,6 +25,7 @@ import DriverPerformance from '../components/delivery/DriverPerformance';
 import MyBoxCard from '../components/delivery/MyBoxCard';
 import NotificationToneSettings from '../components/delivery/NotificationToneSettings';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
+import VoiceAnnouncementSettings from '../components/delivery/VoiceAnnouncementSettings';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

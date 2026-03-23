@@ -507,28 +507,48 @@ const OrdersMap = ({
     return R * c;
   };
 
-  // ⭐ تشغيل التنبيهات الصوتية - محسّن
+  // ⭐ تشغيل التنبيهات الصوتية - محسّن مع قراءة إعدادات المستخدم
   const speakInstruction = (text, options = {}) => {
+    // التحقق من تفعيل الصوت الناطق
+    const voiceEnabled = localStorage.getItem('voiceAnnouncementEnabled') !== 'false';
+    if (!voiceEnabled) return;
+    
     if ('speechSynthesis' in window) {
       // إلغاء أي كلام سابق
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // البحث عن صوت عربي أفضل
-      const voices = window.speechSynthesis.getVoices();
-      const arabicVoice = voices.find(v => 
-        v.lang.startsWith('ar') && (v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Apple'))
-      ) || voices.find(v => v.lang.startsWith('ar'));
+      // قراءة الإعدادات المحفوظة من localStorage
+      const savedVoiceName = localStorage.getItem('selectedVoiceName');
+      const savedVolume = parseFloat(localStorage.getItem('voiceVolume') || '1');
+      const savedRate = parseFloat(localStorage.getItem('voiceRate') || '0.9');
+      const savedPitch = parseFloat(localStorage.getItem('voicePitch') || '1.1');
       
-      if (arabicVoice) {
-        utterance.voice = arabicVoice;
+      // البحث عن الصوت المحدد أو صوت عربي افتراضي
+      const voices = window.speechSynthesis.getVoices();
+      let selectedVoice = null;
+      
+      if (savedVoiceName) {
+        selectedVoice = voices.find(v => v.name === savedVoiceName);
+      }
+      
+      // إذا لم يوجد الصوت المحدد، استخدم صوت عربي افتراضي
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => 
+          v.lang.startsWith('ar') && (v.name.includes('Google') || v.name.includes('Microsoft') || v.name.includes('Apple'))
+        ) || voices.find(v => v.lang.startsWith('ar'));
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
       }
       
       utterance.lang = 'ar-SA';
-      utterance.rate = options.rate || 0.9; // أبطأ قليلاً للوضوح
-      utterance.pitch = options.pitch || 1.1; // أعلى قليلاً للوضوح
-      utterance.volume = options.volume || 1;
+      // استخدام القيم من options أولاً، ثم من localStorage
+      utterance.rate = options.rate || savedRate;
+      utterance.pitch = options.pitch || savedPitch;
+      utterance.volume = options.volume || savedVolume;
       
       window.speechSynthesis.speak(utterance);
     }
