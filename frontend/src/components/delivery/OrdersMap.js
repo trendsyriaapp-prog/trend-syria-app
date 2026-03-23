@@ -1652,7 +1652,7 @@ const OrdersMap = ({
     }
   });
 
-  // تصفية العلامات حسب الطبقة المختارة + التحقق من صحة الإحداثيات
+  // تصفية العلامات حسب الطبقة المختارة + فلتر الطلبات + التحقق من صحة الإحداثيات
   const filteredMarkers = markers.filter(m => {
     // التحقق من وجود إحداثيات صحيحة
     if (!m.position || !m.position[0] || !m.position[1] || 
@@ -1660,10 +1660,24 @@ const OrdersMap = ({
       return false;
     }
     
+    // السائق يظهر دائماً
+    if (m.type === 'driver') return true;
+    
+    // ⭐ تطبيق فلتر الطلبات (متاحة / طلباتي / الكل)
+    if (orderFilter === 'available') {
+      // فقط الطلبات المتاحة (غير المقبولة من السائق)
+      if (m.isMyOrder) return false;
+    } else if (orderFilter === 'myOrders') {
+      // فقط طلباتي المقبولة
+      if (!m.isMyOrder) return false;
+    }
+    // orderFilter === 'all' يعرض الجميع
+    
+    // تطبيق فلتر الطبقات (طعام / منتجات / عملاء)
     if (showLayer === 'all') return true;
-    if (showLayer === 'food') return m.type === 'food-store' || m.type === 'driver';
-    if (showLayer === 'products') return m.type === 'product-store' || m.type === 'driver';
-    if (showLayer === 'customers') return m.type === 'customer' || m.type === 'driver';
+    if (showLayer === 'food') return m.type === 'food-store';
+    if (showLayer === 'products') return m.type === 'product-store';
+    if (showLayer === 'customers') return m.type === 'customer';
     return true;
   });
 
