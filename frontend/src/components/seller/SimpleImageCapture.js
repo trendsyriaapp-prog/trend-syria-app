@@ -263,19 +263,33 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const centerX = size/2 + position.x * scaleX;
         const centerY = size/2 + position.y * scaleY;
         
-        // رسم الظل الجانبي
+        // رسم الظل الأرضي (يمتد لليمين)
         if (selectedShadow !== 'none') {
           ctx.save();
-          ctx.translate(centerX, centerY);
-          ctx.rotate(rotation * Math.PI / 180);
-          ctx.scale(scale, scale);
           
-          const shadowOffset = selectedShadow === 'strong' ? 15 : 10;
-          ctx.translate(shadowOffset, shadowOffset);
-          ctx.filter = `blur(${selectedShadow === 'strong' ? '15px' : '10px'})`;
-          ctx.globalAlpha = selectedShadow === 'strong' ? 0.35 : 0.2;
+          const shadowWidth = drawWidth * scale * (selectedShadow === 'strong' ? 1.2 : 0.9);
+          const shadowHeight = drawHeight * scale * 0.3;
+          const shadowX = centerX + (drawWidth * scale * 0.1);
+          const shadowY = centerY + (drawHeight * scale / 2) + 5;
           
-          ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
+          // إنشاء تدرج للظل
+          const gradient = ctx.createRadialGradient(
+            shadowX - shadowWidth * 0.2, shadowY, 0,
+            shadowX, shadowY, shadowWidth * 0.6
+          );
+          gradient.addColorStop(0, selectedShadow === 'strong' ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.2)');
+          gradient.addColorStop(0.5, selectedShadow === 'strong' ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.08)');
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          
+          ctx.fillStyle = gradient;
+          
+          // رسم الظل مائل
+          ctx.translate(shadowX, shadowY);
+          ctx.transform(1, 0, 0.3, 1, 0, 0); // skew
+          ctx.beginPath();
+          ctx.ellipse(0, 0, shadowWidth / 2, shadowHeight / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          
           ctx.restore();
         }
         
@@ -376,7 +390,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Processed Image with Side Shadow */}
+        {/* Processed Image with Ground Shadow */}
         {step === 'edit' && processedImage && (
           <div className="w-full h-full flex items-center justify-center relative">
             {/* خطوط التوجيه */}
@@ -394,24 +408,23 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* الظل الجانبي */}
+              {/* الظل الأرضي - يمتد لليمين والخلف */}
               {selectedShadow !== 'none' && (
                 <div 
-                  className="absolute inset-0 pointer-events-none"
+                  className="absolute pointer-events-none"
                   style={{
-                    transform: `scale(${scale}) rotate(${rotation}deg) translate(${selectedShadow === 'strong' ? '8px' : '5px'}, ${selectedShadow === 'strong' ? '8px' : '5px'})`,
-                    filter: `blur(${selectedShadow === 'strong' ? '12px' : '8px'})`,
-                    opacity: selectedShadow === 'strong' ? 0.4 : 0.25,
+                    bottom: '-10px',
+                    left: '50%',
+                    transform: `translateX(-30%) skewX(-20deg) scaleY(0.3) scale(${scale})`,
+                    width: selectedShadow === 'strong' ? '90%' : '70%',
+                    height: '100%',
+                    background: selectedShadow === 'strong' 
+                      ? 'radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, transparent 70%)'
+                      : 'radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)',
+                    filter: `blur(${selectedShadow === 'strong' ? '8px' : '6px'})`,
+                    transformOrigin: 'left center',
                   }}
-                >
-                  <img 
-                    src={processedImage} 
-                    alt=""
-                    className="max-w-[85vw] max-h-[50vh] object-contain"
-                    style={{ filter: 'brightness(0)' }}
-                    draggable={false}
-                  />
-                </div>
+                />
               )}
               
               {/* المنتج */}
