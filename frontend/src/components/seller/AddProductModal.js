@@ -109,7 +109,7 @@ const AddProductModal = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
-  const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', price: '' });
+  const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', unit: 'g', price: '' });
   const [imageWarnings, setImageWarnings] = useState([]);
   const [showImageCapture, setShowImageCapture] = useState(false);
   const [imageCaptureMode, setImageCaptureMode] = useState('camera'); // 'camera' or 'gallery'
@@ -248,14 +248,15 @@ const AddProductModal = ({
   // إضافة خيار وزن جديد
   const addWeightVariant = () => {
     if (newWeightVariant.weight && newWeightVariant.price) {
+      const weightWithUnit = `${newWeightVariant.weight}${newWeightVariant.unit}`;
       setNewProduct(prev => ({
         ...prev,
         weight_variants: [...prev.weight_variants, {
-          weight: newWeightVariant.weight,
+          weight: weightWithUnit,
           price: parseFloat(newWeightVariant.price)
         }]
       }));
-      setNewWeightVariant({ weight: '', price: '' });
+      setNewWeightVariant({ weight: '', unit: 'g', price: '' });
     }
   };
 
@@ -572,14 +573,24 @@ const AddProductModal = ({
                   
                   {/* إضافة خيار وزن جديد */}
                   <div className="flex gap-2 items-end">
-                    <div className="flex-1">
+                    <div className="w-20">
                       <input
-                        type="text"
+                        type="number"
                         value={newWeightVariant.weight}
                         onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
                         className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
-                        placeholder="الوزن (مثال: 250g, 500g, 1kg)"
+                        placeholder="الوزن"
                       />
+                    </div>
+                    <div className="w-16">
+                      <select
+                        value={newWeightVariant.unit}
+                        onChange={(e) => setNewWeightVariant({ ...newWeightVariant, unit: e.target.value })}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-1 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      >
+                        <option value="g">جرام</option>
+                        <option value="kg">كيلو</option>
+                      </select>
                     </div>
                     <div className="flex-1">
                       <input
