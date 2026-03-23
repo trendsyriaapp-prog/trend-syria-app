@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { 
   X, Camera, RotateCcw, Check, Loader2, ZoomIn, ZoomOut, RotateCw,
-  Sun, Droplets, Contrast, Image, Sliders
+  Sun, Droplets, Contrast, Image, Sliders, Eclipse
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -20,6 +20,13 @@ const BACKGROUNDS = [
   { id: 'pink', name: 'وردي', image: '/backgrounds/pink.jpg' },
   { id: 'fabric', name: 'قماش', image: '/backgrounds/fabric_blue.jpg' },
   { id: 'studio', name: 'استوديو', image: '/backgrounds/studio.jpg' },
+];
+
+// خيارات الظل
+const SHADOWS = [
+  { id: 'none', name: 'بدون', shadow: 'none' },
+  { id: 'soft', name: 'ناعم', shadow: '0 15px 35px rgba(0,0,0,0.2)' },
+  { id: 'strong', name: 'قوي', shadow: '0 25px 50px rgba(0,0,0,0.4)' },
 ];
 
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
@@ -51,6 +58,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [selectedBg, setSelectedBg] = useState('white');
   const [showBackgrounds, setShowBackgrounds] = useState(false);
   const [bgImageLoaded, setBgImageLoaded] = useState({});
+  
+  // الظل المختار
+  const [selectedShadow, setSelectedShadow] = useState('none');
+  const [showShadows, setShowShadows] = useState(false);
   
   // للسحب
   const [isDragging, setIsDragging] = useState(false);
@@ -170,6 +181,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         setContrast(100);
         setSaturation(100);
         setSelectedBg('white');
+        setSelectedShadow('none');
       } else {
         throw new Error('فشل في معالجة الصورة');
       }
@@ -197,7 +209,13 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   // فلتر CSS للتعديلات
   const getImageFilter = () => {
-    return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+    return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) drop-shadow(${getShadowValue()})`;
+  };
+
+  // الحصول على قيمة الظل
+  const getShadowValue = () => {
+    const shadow = SHADOWS.find(s => s.id === selectedShadow);
+    return shadow?.shadow || 'none';
   };
 
   // === التحكم بالسحب ===
@@ -292,7 +310,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         ctx.rotate(rotation * Math.PI / 180);
         ctx.scale(scale, scale);
         
-        // تطبيق الفلاتر
+        // تطبيق الفلاتر (بدون الظل - يُرسم يدوياً)
         ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
         
         // رسم الصورة
@@ -305,6 +323,13 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         } else {
           drawHeight = size * 0.7;
           drawWidth = drawHeight * imgRatio;
+        }
+        
+        // إضافة الظل يدوياً للـ Canvas
+        if (selectedShadow !== 'none') {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+          ctx.shadowBlur = selectedShadow === 'strong' ? 50 : 25;
+          ctx.shadowOffsetY = selectedShadow === 'strong' ? 25 : 15;
         }
         
         ctx.drawImage(productImg, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
@@ -370,8 +395,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setContrast(100);
     setSaturation(100);
     setSelectedBg('white');
+    setSelectedShadow('none');
     setShowAdjustments(false);
     setShowBackgrounds(false);
+    setShowShadows(false);
     setStep('capture');
     setError(null);
     onClose();
@@ -580,6 +607,30 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               </div>
             )}
 
+            {/* Shadows Panel */}
+            {showShadows && (
+              <div className="bg-white/10 rounded-xl p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white text-sm font-bold">ظل المنتج</span>
+                </div>
+                <div className="flex gap-3 justify-center">
+                  {SHADOWS.map(shadow => (
+                    <button
+                      key={shadow.id}
+                      onClick={() => setSelectedShadow(shadow.id)}
+                      className={`flex-shrink-0 px-5 py-2.5 rounded-xl border-2 transition-all ${
+                        selectedShadow === shadow.id 
+                          ? 'border-[#FF6B00] bg-[#FF6B00]/30' 
+                          : 'border-white/30 bg-white/10'
+                      }`}
+                    >
+                      <span className="text-white text-sm font-medium">{shadow.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Transform Controls */}
             <div className="flex justify-center gap-2">
               <button 
@@ -606,7 +657,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               
               {/* Adjustments Toggle */}
               <button 
-                onClick={() => { setShowAdjustments(!showAdjustments); setShowBackgrounds(false); }}
+                onClick={() => { setShowAdjustments(!showAdjustments); setShowBackgrounds(false); setShowShadows(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
@@ -615,9 +666,20 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 <Sliders size={18} className="text-white" />
               </button>
               
+              {/* Shadows Toggle */}
+              <button 
+                onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); setShowBackgrounds(false); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                  showShadows ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
+                }`}
+                data-testid="shadows-button"
+              >
+                <Eclipse size={18} className="text-white" />
+              </button>
+              
               {/* Backgrounds Toggle */}
               <button 
-                onClick={() => { setShowBackgrounds(!showBackgrounds); setShowAdjustments(false); }}
+                onClick={() => { setShowBackgrounds(!showBackgrounds); setShowAdjustments(false); setShowShadows(false); }}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   showBackgrounds ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
