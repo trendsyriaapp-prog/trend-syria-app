@@ -891,7 +891,7 @@ const OrdersMap = ({
         });
 
         // إضافة الربح
-        totalEarn += order.driver_earnings || 0;
+        totalEarn += order.driver_earnings || order.driver_delivery_fee || 0;
       }
 
       // حساب المسافة
@@ -2092,13 +2092,20 @@ const OrdersMap = ({
                                 : station.address}</p>
                             </div>
                             
-                            {/* الإجراء */}
-                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-                              station.action === 'استلام' 
-                                ? 'bg-green-500 text-black' 
-                                : 'bg-amber-500 text-black'
-                            }`}>
-                              {station.action}
+                            {/* الإجراء + الربح */}
+                            <div className="flex flex-col items-end gap-1">
+                              <div className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                                station.action === 'استلام' 
+                                  ? 'bg-green-500 text-black' 
+                                  : 'bg-amber-500 text-black'
+                              }`}>
+                                {station.action}
+                              </div>
+                              {station.type === 'customer' && station.order && (
+                                <span className="text-green-500 text-xs font-bold">
+                                  💵 {(station.order.driver_earnings || station.order.driver_delivery_fee || 0).toLocaleString()} ل.س
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -2215,7 +2222,7 @@ const OrdersMap = ({
                       {/* الربح المتوقع */}
                       <div className="bg-green-500 text-white rounded-xl p-4 mb-4 text-center">
                         <span className="text-sm">💰 ربح إضافي: </span>
-                        <span className="font-black text-2xl">+{(priorityOrder.driver_earnings || priorityOrder.total * 0.1 || 1500).toLocaleString()} ل.س</span>
+                        <span className="font-black text-2xl">+{(priorityOrder.driver_earnings || priorityOrder.driver_delivery_fee || priorityOrder.delivery_fee || 1500).toLocaleString()} ل.س</span>
                       </div>
 
                       {/* أزرار القبول والرفض */}
@@ -2442,14 +2449,14 @@ const OrdersMap = ({
                                 </div>
                               )}
                               
-                              {/* السعر الإجمالي */}
-                              {marker.order.total && (
-                                <div className="bg-blue-50 rounded p-1.5 mb-2">
-                                  <p className="text-blue-700 font-bold text-xs text-center">
-                                    💰 المجموع: {(marker.order.total).toLocaleString()} ل.س
+                              {/* ربح السائق من التوصيل */}
+                              {(marker.order.driver_earnings || marker.order.driver_delivery_fee || marker.order.delivery_fee) ? (
+                                <div className="bg-green-50 rounded p-1.5 mb-2">
+                                  <p className="text-green-700 font-bold text-xs text-center">
+                                    💵 ربحك: {(marker.order.driver_earnings || marker.order.driver_delivery_fee || marker.order.delivery_fee || 0).toLocaleString()} ل.س
                                   </p>
                                 </div>
-                              )}
+                              ) : null}
                               
                               {/* زر قبول الطلب - يظهر على المطعم/المتجر (وليس العميل) */}
                               {(marker.type === 'food-store' || marker.type === 'product-store') && (
@@ -2622,11 +2629,11 @@ const OrdersMap = ({
                                         ? [(stop.order.delivery_address || stop.order.address)?.area, (stop.order.delivery_address || stop.order.address)?.street, (stop.order.delivery_address || stop.order.address)?.building].filter(Boolean).join(', ')
                                         : (stop.order.delivery_address || stop.order.address)}
                                     </p>
-                                    {stop.order.total && (
-                                      <p className="text-orange-600 font-bold">
-                                        {stop.order.total.toLocaleString()} ل.س
+                                    {(stop.order.driver_delivery_fee || stop.order.driver_earnings || stop.order.delivery_fee) ? (
+                                      <p className="text-green-600 font-bold">
+                                        💵 ربحك: {(stop.order.driver_earnings || stop.order.driver_delivery_fee || stop.order.delivery_fee || 0).toLocaleString()} ل.س
                                       </p>
-                                    )}
+                                    ) : null}
                                     <p className="text-gray-400 text-xs">
                                       🔒 رقم العميل مخفي
                                     </p>
