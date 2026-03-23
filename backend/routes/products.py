@@ -61,6 +61,7 @@ async def get_categories():
         {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
         {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
         {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
+        {"id": "canned_food_express", "name": "معلبات وجافة (سريع)", "icon": "Package", "type": "food"},
     ]
     
     # حفظ في الكاش لمدة ساعة
