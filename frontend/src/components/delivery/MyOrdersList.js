@@ -353,6 +353,39 @@ const MyOrdersList = ({
     }
   };
 
+  // البائع غير موجود - إبلاغ الإدارة
+  const handleSellerNotFound = async (order) => {
+    const confirmReport = window.confirm(
+      `هل أنت متأكد أن البائع "${order.store_name}" غير موجود؟\n\nسيتم إبلاغ الإدارة وقد يُلغى الطلب.`
+    );
+    
+    if (!confirmReport) return;
+    
+    try {
+      await axios.post(`${API}/orders/driver/seller-not-found`, {
+        order_id: order.id,
+        order_type: order.restaurant_id ? 'food' : 'product'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast({
+        title: "تم الإبلاغ ✅",
+        description: "تم إبلاغ الإدارة. يمكنك قبول طلب آخر.",
+      });
+      
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (err) {
+      toast({
+        title: "خطأ",
+        description: err.response?.data?.detail || "فشل في الإبلاغ",
+        variant: "destructive"
+      });
+    }
+  };
+
   // إدخال كود الاستلام رقم برقم
   const handlePickupCodeChange = (index, value) => {
     if (value.length > 1) return;
@@ -1034,6 +1067,41 @@ const MyOrdersList = ({
                   isDark={isDark}
                   orderId={order.id}
                 />
+              )}
+
+              {/* رقم هاتف البائع + زر البائع غير موجود - يظهر بعد وصول السائق */}
+              {order.driver_arrived_at && !order.pickup_code_verified && (
+                <div className={`rounded-lg p-3 mb-3 ${
+                  isDark ? 'bg-[#252525] border border-[#333]' : 'bg-gray-50 border border-gray-200'
+                }`}>
+                  {/* رقم هاتف البائع */}
+                  {(order.seller_phone || order.store_phone || order.restaurant_phone) && (
+                    <a
+                      href={`tel:${order.seller_phone || order.store_phone || order.restaurant_phone}`}
+                      className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-bold text-sm mb-2 ${
+                        isDark 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                      }`}
+                    >
+                      <Phone size={16} />
+                      📞 اتصل بالبائع
+                    </a>
+                  )}
+                  
+                  {/* زر البائع غير موجود */}
+                  <button
+                    onClick={() => handleSellerNotFound(order)}
+                    className={`flex items-center justify-center gap-2 w-full py-2 rounded-lg font-bold text-xs ${
+                      isDark 
+                        ? 'bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800' 
+                        : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+                    }`}
+                  >
+                    <AlertTriangle size={14} />
+                    البائع غير موجود
+                  </button>
+                </div>
               )}
 
               {/* زر تأكيد الاستلام من البائع - يظهر فقط بعد وصول السائق ووجود كود */}

@@ -1338,3 +1338,78 @@ async def get_seller_commission_info(user: dict = Depends(get_current_user)):
         "products_count": len(products),
         "message": f"متوسط نسبة العمولة هو {int(avg_rate * 100)}% من قيمة كل طلب"
     }
+
+
+
+# ============== البائع غير موجود ==============
+class SellerNotFoundRequest(BaseModel):
+    order_id: str
+    order_type: str  # 'food' or 'product'
+
+@router.post("/driver/seller-not-found")
+async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depends(get_current_user)):
+    """السائق يبلغ أن البائع غير موجود"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="فقط موظفي التوصيل يمكنهم استخدام هذه الميزة")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديد المجموعة حسب نوع الطلب
+    if data.order_type == 'food':
+        collection = db.food_orders
+    else:
+        collection = db.orders
+    
+    # جلب الطلب
+    order = await collection.find_one({"id": data.order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق أن السائق هو المسؤول عن الطلب
+    driver_id_field = "driver_id" if data.order_type == 'food' else "delivery_driver_id"
+    if order.get(driver_id_field) != user["id"]:
+        raise HTTPException(status_code=403, detail="أنت لست موظف التوصيل المسؤول عن هذا الطلب")
+    
+    # تحديث الطلب
+    await collection.update_one(
+        {"id": data.order_id},
+        {
+            "$set": {
+                "seller_not_found": True,
+                "seller_not_found_at": now,
+                "seller_not_found_by": user["id"]
+            }
+        }
+    )
+    
+    # إنشاء إشعار للإدارة
+    store_name = order.get("store_name", order.get("restaurant_name", "غير معروف"))
+    await create_notification_for_role(
+        role="admin",
+        title="⚠️ بائع غير موجود",
+        message=f"موظف التوصيل {user.get('name', 'غير معروف')} أبلغ أن البائع '{store_name}' غير موجود. رقم الطلب: {order.get('order_number', data.order_id[:8])}",
+        notification_type="seller_not_found",
+        data={
+            "order_id": data.order_id,
+            "order_type": data.order_type,
+            "driver_id": user["id"],
+            "driver_name": user.get("name"),
+            "store_name": store_name
+        }
+    )
+    
+    # إنشاء إشعار للبائع
+    seller_id = order.get("seller_id", order.get("restaurant_owner_id"))
+    if seller_id:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="⚠️ موظف التوصيل وصل ولم يجدك",
+            message=f"موظف التوصيل وصل لاستلام الطلب رقم {order.get('order_number', data.order_id[:8])} ولم يجدك. يرجى التواصل مع الإدارة.",
+            notification_type="driver_arrived_seller_missing"
+        )
+    
+    return {
+        "success": True,
+        "message": "تم إبلاغ الإدارة بنجاح"
+    }
