@@ -2507,17 +2507,6 @@ const OrdersMap = ({
                                   ✅ قبول الطلب
                                 </button>
                               )}
-                              {/* زر عرض المسار */}
-                              {marker.order && marker.order.latitude && marker.order.store_latitude && (
-                                <button
-                                  onClick={() => showRouteForOrder(marker.order)}
-                                  disabled={loadingRoute}
-                                  className="w-full py-1.5 bg-blue-500 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1"
-                                >
-                                  {loadingRoute ? '⏳' : <Route size={10} />}
-                                  {loadingRoute ? '...' : '🗺️ المسار'}
-                                </button>
-                              )}
                             </>
                           )}
                         </div>
