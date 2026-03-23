@@ -9,7 +9,7 @@ import uuid
 import os
 from dotenv import load_dotenv
 
-from core.database import db, get_current_user, create_notification_for_user
+from core.database import db, get_current_user, get_optional_user, create_notification_for_user
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()
@@ -101,27 +101,28 @@ def get_or_create_chat(session_id: str, user_id: str) -> LlmChat:
     return chat_sessions[cache_key]
 
 @router.post("/send")
-async def send_ai_message(data: ChatMessage, user: dict = Depends(get_current_user)):
-    """إرسال رسالة للشات بوت الذكي"""
+async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_user)):
+    """إرسال رسالة للشات بوت الذكي - متاح للجميع (مسجلين وزوار)"""
     
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="مفتاح API غير متوفر")
     
     session_id = data.session_id or str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
+    user_id = user["id"] if user else "guest_" + session_id[:8]
     
     # حفظ رسالة المستخدم في قاعدة البيانات
     await db.ai_chat_messages.insert_one({
         "session_id": session_id,
-        "user_id": user["id"],
+        "user_id": user_id,
         "sender": "user",
         "message": data.message,
         "created_at": now
     })
     
     try:
-        # جلب سياق إضافي عن العميل (طلباته الأخيرة)
-        user_context = await _get_user_context(user["id"])
+        # جلب سياق إضافي عن العميل (طلباته الأخيرة) - فقط للمسجلين
+        user_context = await _get_user_context(user_id) if user else None
         
         # إنشاء الرسالة مع السياق
         full_message = data.message
@@ -129,7 +130,7 @@ async def send_ai_message(data: ChatMessage, user: dict = Depends(get_current_us
             full_message = f"[معلومات العميل: {user_context}]\n\nسؤال العميل: {data.message}"
         
         # الحصول على جلسة المحادثة
-        chat = get_or_create_chat(session_id, user["id"])
+        chat = get_or_create_chat(session_id, user_id)
         
         # إرسال الرسالة للـ AI
         user_message = UserMessage(text=full_message)
@@ -138,7 +139,7 @@ async def send_ai_message(data: ChatMessage, user: dict = Depends(get_current_us
         # حفظ رد البوت
         await db.ai_chat_messages.insert_one({
             "session_id": session_id,
-            "user_id": user["id"],
+            "user_id": user_id,
             "sender": "ai",
             "message": ai_response,
             "created_at": now
@@ -162,7 +163,7 @@ async def send_ai_message(data: ChatMessage, user: dict = Depends(get_current_us
         
         await db.ai_chat_messages.insert_one({
             "session_id": session_id,
-            "user_id": user["id"],
+            "user_id": user_id,
             "sender": "system",
             "message": fallback_response,
             "error": str(e),

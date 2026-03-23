@@ -29,22 +29,25 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
+#### AI Chatbot for Guest Users - FIXED
+- **Issue**: AI Chatbot was returning error for unauthenticated (guest) users
+- **Root Cause**: `/api/ai-chatbot/send` endpoint was using `get_current_user` which requires authentication
+- **Fix**: Changed to `get_optional_user` to allow both authenticated and guest users
+- **Files Modified**: `/app/backend/routes/ai_chatbot.py`
+- **Testing**: Verified with curl - chatbot now responds correctly for guests
+
+### ✅ COMPLETED (Earlier March 2026)
+
 #### Shadow Position Fix
 - **Issue**: Product shadow was positioned too far from the product base
 - **Fix**: Changed shadow CSS from `top: 90%` to `bottom: 0` with `transformOrigin: center top`
 - **Result**: Shadow now attaches directly to product base with proper skew effect
-- **File Modified**: `/app/frontend/src/components/seller/SimpleImageCapture.js` (lines 415-438)
+- **File Modified**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
 
 #### PhotoRoom Credits Display for Admin - VERIFIED
 - **Feature**: Admin can now see PhotoRoom API credit balance
 - **Backend**: `GET /api/image/photoroom-credits` endpoint returns credit info
 - **Frontend**: `ImageSettingsTab.js` displays credits with visual indicators
-- **Fallback**: Shows "لا يوجد رصيد" message when API key not active, with note that app uses free rembg fallback
-- **Files**:
-  - `/app/backend/routes/image_processing.py` (endpoint at line 893-898)
-  - `/app/frontend/src/components/admin/ImageSettingsTab.js` (display at lines 150-239)
-
-### ✅ COMPLETED (Earlier March 2026)
 
 #### Enhanced Image Editor with Adjustments & Shadow
 - **Features**:
@@ -53,36 +56,27 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
   - Center alignment guides
   - Zoom constraints (0.5x - 1.3x)
   - Drag to move product
+  - Rotation slider (0-360 degrees)
 - **File**: `/app/frontend/src/components/seller/SimpleImageCapture.js`
 
-#### PhotoRoom API Integration
-- **New Integration**: PhotoRoom API for professional background removal
-- **Fallback**: rembg local library when PhotoRoom unavailable
-- **API Endpoints**:
-  - `POST /api/image/process-photoroom` - Main processing
-  - `GET /api/image/shadows` - Shadow types
-  - `GET /api/image/status` - Service status
-  - `GET /api/image/photoroom-credits` - Credit balance
+#### Platform Closure Controls
+- Admin can close platform for customers and/or sellers separately
+- Backend endpoints and frontend UI implemented
+- **Files**: `/app/backend/routes/admin.py`, `/app/frontend/src/components/admin/PlatformSettingsTab.js`
 
-#### Platform Wallet for Admin
-- Collection `platform_wallet` for platform earnings
-- API endpoints for wallet management
-- UI component: `PlatformWalletTab.js`
-
-#### Driver-Seller Coordination Flow
-- Backend APIs for driver request/accept workflow
-- Frontend UIs for sellers and drivers
+#### Food Product Approval Flow
+- Backend endpoints for approving/rejecting food items
+- Notifications sent to sellers on approval/rejection
 
 ---
 
 ## Prioritized Backlog
 
 ### P0 - Critical
-- None currently
+- None currently ✅
 
 ### P1 - High Priority
 - [ ] Live payment verification for Sham Cash (waiting for account details)
-- [ ] Delete old unused image components after confirming SimpleImageCapture is stable
 
 ### P2 - Medium Priority
 - [ ] Cross-Governorate Shopping
@@ -95,16 +89,19 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 ---
 
 ## Key API Endpoints
-- `GET /api/orders/seller/my-orders` - Fetch seller's orders
-- `POST /api/image/process-photoroom` - Process image with PhotoRoom
-- `GET /api/image/photoroom-credits` - Get PhotoRoom credit balance
-- `POST /api/auth/login` - User authentication
+- `POST /api/ai-chatbot/send` - Send message to AI chatbot (supports guests)
+- `POST /api/chatbot/send` - Send message to FAQ chatbot (supports guests)
+- `GET /api/admin/platform-status` - Get platform open/closed status
+- `POST /api/admin/food-products/{id}/approve` - Approve food item
 
 ## Test Credentials
 - **Product Seller**: Phone: `0922222222`, Password: `seller123`
+- **Food Seller**: Phone: `0944444444`, Password: `food123`
+- **Driver**: Phone: `0977777777`, Password: `driver123`
 - **Admin**: Phone: `0912345678`, Password: `admin123`
 
 ## Important Notes
+- AI Chatbot now works for both authenticated users and guests
 - PhotoRoom API key may not be active - app automatically falls back to free rembg
 - Image editor shadow is a CSS-based effect, also rendered on canvas for final output
 - All backend routes must be prefixed with `/api` for proper Kubernetes ingress routing
