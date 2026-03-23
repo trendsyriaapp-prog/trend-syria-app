@@ -1696,7 +1696,9 @@ const OrdersMap = ({
                               </div>
                               <p className={`text-xs truncate ${
                                 currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                              }`}>{station.address}</p>
+                              }`}>{typeof station.address === 'object' 
+                                ? [station.address?.area, station.address?.street, station.address?.building].filter(Boolean).join(', ')
+                                : station.address}</p>
                             </div>
                             
                             {/* الإجراء */}

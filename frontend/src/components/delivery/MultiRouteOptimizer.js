@@ -478,7 +478,9 @@ const MultiRouteOptimizer = ({
                           {point.type === 'store' ? 'استلام' : 'توصيل'}
                         </p>
                         {point.address && (
-                          <p className="text-xs text-gray-600">{point.address}</p>
+                          <p className="text-xs text-gray-600">{typeof point.address === 'object' 
+                            ? [point.address?.area, point.address?.street, point.address?.building].filter(Boolean).join(', ')
+                            : point.address}</p>
                         )}
                         <div className="mt-2 px-2 py-1 bg-orange-100 rounded-full">
                           <span className="text-xs font-bold text-orange-600">الترتيب: {index + 1}</span>
