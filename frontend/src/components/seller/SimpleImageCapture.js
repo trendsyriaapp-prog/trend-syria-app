@@ -78,15 +78,31 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const startCamera = async () => {
     try {
       setError(null);
+      
+      // التحقق من دعم الكاميرا
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError('المتصفح لا يدعم الكاميرا');
+        return;
+      }
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1280 }, height: { ideal: 1280 } }
       });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
         setStream(mediaStream);
       }
     } catch (err) {
-      setError('لا يمكن الوصول للكاميرا');
+      console.error('Camera error:', err);
+      if (err.name === 'NotAllowedError') {
+        setError('يرجى السماح بالوصول للكاميرا');
+      } else if (err.name === 'NotFoundError') {
+        setError('لا توجد كاميرا متاحة');
+      } else {
+        setError('لا يمكن الوصول للكاميرا');
+      }
     }
   };
 
@@ -408,11 +424,32 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* المنتج */}
+              {/* الظل الأرضي - خلف المنتج */}
+              {selectedShadow !== 'none' && (
+                <img 
+                  src={processedImage} 
+                  alt=""
+                  className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
+                  style={{ 
+                    top: `${shadowOffset - 50}%`,
+                    left: '70%',
+                    filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
+                    transformOrigin: 'left top',
+                    opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
+                    zIndex: 0,
+                  }}
+                  draggable={false}
+                />
+              )}
+              
+              {/* المنتج - فوق الظل */}
               <div
                 style={{
                   transform: `scale(${scale}) rotate(${rotation}deg)`,
                   cursor: isDragging ? 'grabbing' : 'grab',
+                  position: 'relative',
+                  zIndex: 1,
                 }}
                 onMouseDown={onMouseDown}
                 onTouchStart={onTouchStart}
@@ -426,24 +463,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   draggable={false}
                 />
               </div>
-              
-              {/* الظل الأرضي - من أسفل اليسار إلى أعلى اليمين */}
-              {selectedShadow !== 'none' && (
-                <img 
-                  src={processedImage} 
-                  alt=""
-                  className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
-                  style={{ 
-                    top: `${shadowOffset - 50}%`,
-                    left: '55%',
-                    filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
-                    transformOrigin: 'left top',
-                    opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
-                  }}
-                  draggable={false}
-                />
-              )}
             </div>
           </div>
         )}
