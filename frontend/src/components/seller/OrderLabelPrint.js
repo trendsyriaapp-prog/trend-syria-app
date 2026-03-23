@@ -86,7 +86,9 @@ const OrderLabelPrint = ({ order, onClose }) => {
                     <strong>المدينة:</strong> {order.city}
                   </p>
                   <p style={{ margin: '0', fontSize: '12px', color: '#444' }}>
-                    <strong>العنوان:</strong> {order.address}
+                    <strong>العنوان:</strong> {typeof order.address === 'object' 
+                      ? [order.address?.area, order.address?.street, order.address?.building].filter(Boolean).join(', ')
+                      : order.address}
                   </p>
                 </div>
               </div>

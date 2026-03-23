@@ -268,7 +268,9 @@ const OrdersTab = ({ allOrders, onRefresh }) => {
                 </p>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">{selectedOrder.city || 'غير محدد'}</p>
-                  {selectedOrder.address && <p className="text-xs text-gray-600">{selectedOrder.address}</p>}
+                  {selectedOrder.address && <p className="text-xs text-gray-600">{typeof selectedOrder.address === 'object' 
+                    ? [selectedOrder.address?.area, selectedOrder.address?.street, selectedOrder.address?.building].filter(Boolean).join(', ')
+                    : selectedOrder.address}</p>}
                   {selectedOrder.delivery_address && (
                     <p className="text-xs text-gray-600">
                       {typeof selectedOrder.delivery_address === 'object' 

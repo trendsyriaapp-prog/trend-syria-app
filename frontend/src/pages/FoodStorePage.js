@@ -283,7 +283,9 @@ const FoodStorePage = () => {
           </div>
           <div className="flex items-center gap-1 text-gray-600">
             <MapPin size={16} />
-            <span className="text-sm">{store.address || store.city}</span>
+            <span className="text-sm">{typeof store.address === 'object' 
+              ? [store.address?.area, store.address?.street, store.address?.building].filter(Boolean).join(', ') || store.city
+              : (store.address || store.city)}</span>
           </div>
         </div>
 

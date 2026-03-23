@@ -723,7 +723,9 @@ const StoreCard = ({ store }) => {
         {store.address && (
           <div className="flex items-center gap-1 mt-1">
             <MapPin size={10} className="text-gray-400 flex-shrink-0" />
-            <p className="text-[10px] text-gray-500 truncate">{store.address}</p>
+            <p className="text-[10px] text-gray-500 truncate">{typeof store.address === 'object' 
+              ? [store.address?.area, store.address?.street, store.address?.building].filter(Boolean).join(', ')
+              : store.address}</p>
           </div>
         )}
         <div className="flex items-center gap-2 mt-2">

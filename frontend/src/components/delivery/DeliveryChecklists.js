@@ -165,7 +165,9 @@ export const DeliveryChecklist = ({ order, onComplete, onClose }) => {
             </div>
             <div className="flex items-start gap-2 text-sm">
               <MapPin size={14} className="text-gray-400 mt-0.5" />
-              <span className="text-gray-600">{order?.address}, {order?.city}</span>
+              <span className="text-gray-600">{typeof order?.address === 'object' 
+                ? [order?.address?.area, order?.address?.street, order?.address?.building].filter(Boolean).join(', ')
+                : order?.address}, {order?.city}</span>
             </div>
           </div>
         </div>

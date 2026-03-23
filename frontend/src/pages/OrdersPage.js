@@ -592,7 +592,9 @@ const OrdersPage = () => {
                           </div>
                           <div className="flex items-start gap-2 text-gray-600">
                             <MapPin size={16} className="text-[#FF6B00] mt-0.5" />
-                            <span className="text-sm">{order.city} - {order.address}</span>
+                            <span className="text-sm">{order.city} - {typeof order.address === 'object' 
+                              ? [order.address?.area, order.address?.street, order.address?.building].filter(Boolean).join(', ')
+                              : order.address}</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600">
                             <Phone size={16} className="text-[#FF6B00]" />

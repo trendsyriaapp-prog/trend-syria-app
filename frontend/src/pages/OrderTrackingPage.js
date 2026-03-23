@@ -511,7 +511,9 @@ const OrderTrackingPage = () => {
               <MapPin size={16} className="text-gray-400" />
               عنوان التوصيل
             </h3>
-            <p className="text-sm text-gray-600">{order.address}</p>
+            <p className="text-sm text-gray-600">{typeof order.address === 'object' 
+              ? [order.address?.area, order.address?.street, order.address?.building].filter(Boolean).join(', ')
+              : order.address}</p>
             <p className="text-sm text-gray-500">{order.city}</p>
             <a 
               href={`tel:${order.phone}`}
@@ -546,7 +548,9 @@ const OrderTrackingPage = () => {
               <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl mb-2 last:mb-0">
                 <div className="flex-1">
                   <p className="font-bold text-gray-900">{seller.store_name || seller.name}</p>
-                  <p className="text-sm text-gray-500">{seller.store_address}</p>
+                  <p className="text-sm text-gray-500">{typeof seller.store_address === 'object' 
+                    ? [seller.store_address?.area, seller.store_address?.street, seller.store_address?.building].filter(Boolean).join(', ')
+                    : seller.store_address}</p>
                   <a 
                     href={`tel:${seller.phone}`}
                     className="flex items-center gap-1 text-[#FF6B00] text-sm mt-1"
@@ -593,7 +597,9 @@ const OrderTrackingPage = () => {
               <div className="flex items-start gap-3">
                 <MapPin size={18} className="text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-gray-900">{tracking.customer.address}</p>
+                  <p className="text-gray-900">{typeof tracking.customer.address === 'object' 
+                    ? [tracking.customer.address?.area, tracking.customer.address?.street, tracking.customer.address?.building].filter(Boolean).join(', ')
+                    : tracking.customer.address}</p>
                   <p className="text-gray-500 text-sm">{tracking.customer.city}</p>
                 </div>
               </div>
