@@ -398,7 +398,9 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                   <Popup>
                     <div className="text-center p-2">
                       <p className="font-bold">🏠 {order.buyer_address?.name || 'العميل'}</p>
-                      <p className="text-sm text-gray-500">{order.buyer_address?.address}</p>
+                      <p className="text-sm text-gray-500">{typeof order.buyer_address?.address === 'object' 
+                        ? [order.buyer_address?.address?.area, order.buyer_address?.address?.street, order.buyer_address?.address?.building].filter(Boolean).join(', ')
+                        : order.buyer_address?.address}</p>
                     </div>
                   </Popup>
                 </Marker>
@@ -454,7 +456,9 @@ const RouteMapModal = ({ order, orderType, onClose, theme = 'dark' }) => {
                   {order.buyer_address?.name || 'العميل'}
                 </p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {order.buyer_address?.address}
+                  {typeof order.buyer_address?.address === 'object' 
+                    ? [order.buyer_address?.address?.area, order.buyer_address?.address?.street, order.buyer_address?.address?.building].filter(Boolean).join(', ')
+                    : order.buyer_address?.address}
                 </p>
               </div>
             </div>

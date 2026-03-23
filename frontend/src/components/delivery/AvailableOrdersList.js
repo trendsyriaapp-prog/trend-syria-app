@@ -285,7 +285,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     </div>
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <p className="font-medium">{seller.address || seller.city}</p>
+                        <p className="font-medium">{typeof seller.address === 'object' 
+                          ? [seller.address?.area, seller.address?.street, seller.address?.building].filter(Boolean).join(', ') || seller.city
+                          : (seller.address || seller.city)}</p>
                         <p>{seller.city}</p>
                         {seller.phone && (
                           <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
@@ -451,7 +453,9 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     {order.seller_addresses?.map((seller, i) => (
                       <div key={i} className={`mr-10 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{seller.business_name || seller.name}</p>
-                        <p>{seller.address || seller.city}</p>
+                        <p>{typeof seller.address === 'object' 
+                          ? [seller.address?.area, seller.address?.street, seller.address?.building].filter(Boolean).join(', ') || seller.city
+                          : (seller.address || seller.city)}</p>
                         <p>{seller.city}</p>
                         <a href={`tel:${seller.phone}`} className={`flex items-center gap-1 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                           <Phone size={12} /> {seller.phone}

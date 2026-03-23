@@ -224,7 +224,7 @@ const AllPendingJoinRequests = () => {
                   <div className="grid grid-cols-2 gap-3 py-3 text-sm">
                     <div><span className="text-gray-500">المدينة:</span> {seller.city}</div>
                     <div><span className="text-gray-500">الهاتف:</span> {seller.phone}</div>
-                    {seller.store_address && <div className="col-span-2"><span className="text-gray-500">العنوان:</span> {seller.store_address}</div>}
+                    {seller.store_address && <div className="col-span-2"><span className="text-gray-500">العنوان:</span> {typeof seller.store_address === 'object' ? [seller.store_address?.area, seller.store_address?.street, seller.store_address?.building].filter(Boolean).join(', ') : seller.store_address}</div>}
                   </div>
                   <div className="flex gap-2 mt-3">
                     <button

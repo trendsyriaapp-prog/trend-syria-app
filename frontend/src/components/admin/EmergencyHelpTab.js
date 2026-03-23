@@ -232,7 +232,9 @@ const EmergencyHelpTab = ({ token }) => {
                       {req.customer_address && (
                         <p className="text-xs flex items-center gap-2 text-green-600">
                           <MapPin size={12} />
-                          {req.customer_address}
+                          {typeof req.customer_address === 'object' 
+                            ? [req.customer_address?.area, req.customer_address?.street, req.customer_address?.building].filter(Boolean).join(', ')
+                            : req.customer_address}
                         </p>
                       )}
                     </div>
