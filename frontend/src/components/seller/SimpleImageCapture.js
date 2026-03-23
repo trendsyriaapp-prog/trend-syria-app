@@ -423,7 +423,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
                   style={{ 
                     top: `${shadowOffset - 50}%`,
-                    left: '10%',
+                    left: '55%',
                     filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
                     transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
                     transformOrigin: 'left top',
