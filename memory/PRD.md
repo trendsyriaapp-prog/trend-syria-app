@@ -29,12 +29,13 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
-#### Text-to-Speech (TTS) Voice Announcement Settings - NEW ✅
+#### Text-to-Speech (TTS) Voice Announcement Settings - COMPLETED ✅
 - **Feature**: Customizable voice announcement settings for drivers
 - **Implementation**:
   - Created `VoiceAnnouncementSettings.js` component with full settings panel
   - Updated `speakInstruction()` in `OrdersMap.js` to read settings from localStorage
   - **Added automatic arrival announcement** when driver is within 100m of destination
+  - **Fixed voice loading** - waits for voices to load before applying settings
 - **User Controls**:
   - Toggle to enable/disable voice announcements
   - Voice selection dropdown (Arabic voices prioritized, Google/Microsoft highlighted)
@@ -50,14 +51,20 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
   - `/app/frontend/src/components/delivery/VoiceAnnouncementSettings.js`
 - **Files Modified**:
   - `/app/frontend/src/pages/SettingsPage.js` - Added import and component
-  - `/app/frontend/src/components/delivery/OrdersMap.js` - Updated speakInstruction to use saved settings + added arrival detection
-- **localStorage Keys**:
-  - `voiceAnnouncementEnabled` - Enable/disable TTS
-  - `selectedVoiceName` - Selected voice name
-  - `voiceVolume` - Volume level (0-1)
-  - `voiceRate` - Speech rate
-  - `voicePitch` - Voice pitch
-- **Integration**: TTS now respects user settings when announcing new orders, priority orders, navigation, arrivals, and other events
+  - `/app/frontend/src/components/delivery/OrdersMap.js` - Updated speakInstruction + arrival detection
+  - `/app/frontend/src/hooks/useNotificationSound.js` - Increased volume to max, added tone repetition
+  - `/app/frontend/src/components/FeedbackButton.js` - Fixed position for drivers
+
+#### Notification Tones Volume Fix - COMPLETED ✅
+- **Issue**: Notification tones were too quiet for drivers on the road
+- **Fix**: Increased default volume from 0.5 to 1.0 (maximum)
+- **Enhancement**: Added tone repetition (plays twice) for better audibility
+- **Urgent tones**: Now repeat 3 times for priority orders
+
+#### Feedback Button for Drivers - FIXED ✅
+- **Issue**: Feedback button was not visible for delivery drivers
+- **Fix**: Adjusted position from `bottom-40` to `bottom-24` to be above navigation bar
+- **Result**: Purple feedback button now appears correctly for all user types including drivers
 
 #### Feedback & Suggestions Feature - NEW ✅
 - **Feature**: Universal feedback system for all user types (customers, sellers, drivers, guests)
