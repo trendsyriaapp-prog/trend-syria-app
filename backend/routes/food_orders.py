@@ -583,7 +583,11 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     # لا نرفض الطلب بناءً على المسافة - العميل اختار المطعم وهو على علم بالمسافة
     
     # حساب الوقت المتوقع للتوصيل (تحضير + سفر)
-    preparation_time = store.get("delivery_time", 20)  # وقت التحضير
+    preparation_time_raw = store.get("delivery_time", 20)
+    try:
+        preparation_time = float(preparation_time_raw) if preparation_time_raw else 20
+    except (ValueError, TypeError):
+        preparation_time = 20
     avg_speed_kmh = 25  # متوسط سرعة السائق في المدينة
     travel_time_minutes = (distance / avg_speed_kmh) * 60
     estimated_total_time = round(preparation_time + travel_time_minutes)
@@ -868,6 +872,8 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "store_name": store["name"],
         "store_phone": store.get("phone", ""),  # رقم هاتف المتجر
         "store_type": store["store_type"],
+        "store_latitude": store.get("latitude"),  # إحداثيات المتجر
+        "store_longitude": store.get("longitude"),  # إحداثيات المتجر
         "items": order_items,
         "subtotal": subtotal,
         "offer_discount": offer_discount,
