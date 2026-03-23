@@ -768,20 +768,22 @@ async def process_image_with_photoroom(
             processed_bytes = photoroom_result.get("image_bytes")
             if processed_bytes:
                 processed_image = Image.open(io.BytesIO(processed_bytes))
+                
+                # التأكد من أن الصورة بصيغة RGBA
                 if processed_image.mode != 'RGBA':
                     processed_image = processed_image.convert('RGBA')
                 
-                # إنشاء الخلفية
+                # إنشاء الخلفية بنفس حجم الصورة
                 bg_width, bg_height = processed_image.size
                 bg_image = create_gradient_background(bg_width, bg_height, background)
                 bg_image = bg_image.convert('RGBA')
                 
-                # دمج الصورة مع الخلفية
-                bg_image.paste(processed_image, (0, 0), processed_image)
+                # استخدام composite للدمج الصحيح مع الشفافية
+                final_image = Image.alpha_composite(bg_image, processed_image)
                 
                 # تحويل للـ base64
                 output_buffer = io.BytesIO()
-                bg_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+                final_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
                 output_buffer.seek(0)
                 image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
                 

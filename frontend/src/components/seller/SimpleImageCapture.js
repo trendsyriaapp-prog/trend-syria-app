@@ -197,18 +197,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
 
   // تغيير لون الخلفية
   const changeBackground = async (bgColor) => {
+    if (!capturedImage || processing) return;
     setSelectedBackground(bgColor);
-    if (capturedImage) {
-      await processImage(bgColor, selectedShadow);
-    }
+    await processImage(bgColor, selectedShadow);
   };
 
   // تغيير نوع الظل
   const changeShadow = async (shadowType) => {
+    if (!capturedImage || processing) return;
     setSelectedShadow(shadowType);
-    if (capturedImage) {
-      await processImage(selectedBackground, shadowType);
-    }
+    await processImage(selectedBackground, shadowType);
   };
 
   // تطبيق قالب 3D
@@ -615,30 +613,22 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera', to
 
               {/* وضع التحرير - بعد إزالة الخلفية */}
               {step === 'edit' && (
-                <>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleUseImage(capturedImage)} 
+                    className="flex-1 py-3 bg-white/20 text-white rounded-lg text-sm font-bold"
+                  >
+                    الأصلية
+                  </button>
                   <button
                     onClick={() => handleUseImage(processedImage)}
                     disabled={applyingTemplate || processing}
-                    className="w-full py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-[2] py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                     data-testid="use-image-btn"
                   >
                     <Check size={18} /> استخدام الصورة
                   </button>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleUseImage(capturedImage)} 
-                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
-                    >
-                      الأصلية
-                    </button>
-                    <button 
-                      onClick={retake} 
-                      className="flex-1 py-2 bg-white/20 text-white rounded-lg text-sm font-bold"
-                    >
-                      إعادة
-                    </button>
-                  </div>
-                </>
+                </div>
               )}
 
               {/* وضع الكاميرا */}
