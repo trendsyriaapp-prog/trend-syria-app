@@ -786,7 +786,7 @@ async def get_my_food_orders(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
     # جلب فقط الطلبات النشطة (غير المسلّمة وغير الملغاة)
-    active_statuses = ["accepted", "picked_up", "on_the_way", "out_for_delivery", "arriving", "driver_assigned", "ready_for_pickup"]
+    active_statuses = ["accepted", "picked_up", "on_the_way", "out_for_delivery", "arriving", "driver_assigned", "ready_for_pickup", "driver_accepted", "ready"]
     
     food_orders = await db.food_orders.find(
         {

@@ -1813,6 +1813,9 @@ async def update_order_status(
         update_data["pickup_code"] = pickup_code
         update_data["pickup_code_verified"] = False
         update_data["ready_at"] = datetime.now(timezone.utc).isoformat()
+        # تعيين driver_status ليتمكن السائق من قبول الطلب
+        if not order.get("driver_id"):
+            update_data["driver_status"] = "waiting_for_acceptance"
         
         # إذا كان طلب تجميعي، تحقق من جهوزية باقي الطلبات
         if order.get("batch_id"):

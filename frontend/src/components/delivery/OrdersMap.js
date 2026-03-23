@@ -922,10 +922,14 @@ const OrdersMap = ({
 
   // عرض جميع مسارات طلباتي بألوان مختلفة - مُحسَّن
   const showAllMyOrdersRoutes = async () => {
-    const driverPos = currentDriverLocation || driverLocation;
-    if (!driverPos) {
-      alert('يرجى تفعيل موقعك أولاً');
-      return;
+    // استخدام موقع السائق أو موقع دمشق كافتراضي
+    let driverPos = currentDriverLocation || driverLocation;
+    
+    // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
+    if (!driverPos || !driverPos.latitude) {
+      console.log('استخدام موقع افتراضي - دمشق');
+      driverPos = { latitude: 33.5138, longitude: 36.2765 };
+      setCurrentDriverLocation(driverPos);
     }
 
     const allMyOrders = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
@@ -1085,10 +1089,14 @@ const OrdersMap = ({
 
   // بدء وضع التنقل خطوة بخطوة
   const startStepByStepNavigation = async () => {
-    const driverPos = currentDriverLocation || driverLocation;
-    if (!driverPos) {
-      alert('يرجى تفعيل موقعك أولاً');
-      return;
+    // استخدام موقع السائق أو موقع دمشق كافتراضي
+    let driverPos = currentDriverLocation || driverLocation;
+    
+    // إذا لم يتوفر موقع السائق، استخدم موقع افتراضي (دمشق)
+    if (!driverPos || !driverPos.latitude) {
+      console.log('استخدام موقع افتراضي - دمشق');
+      driverPos = { latitude: 33.5138, longitude: 36.2765 };
+      setCurrentDriverLocation(driverPos);
     }
 
     const allMyOrders = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
@@ -1360,8 +1368,17 @@ const OrdersMap = ({
         },
         (error) => {
           console.log('Error getting location:', error);
+          // استخدام موقع افتراضي عند فشل الحصول على الموقع
+          const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
+          setCurrentDriverLocation(defaultLocation);
+          setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
         }
       );
+    } else {
+      // إذا لم يكن الـ geolocation متاحاً، استخدم موقع افتراضي
+      const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
+      setCurrentDriverLocation(defaultLocation);
+      setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
     }
   };
 
