@@ -341,7 +341,7 @@ const OrdersMap = ({
           if (availableOrders.length > 0) {
             const newPriorityOrder = availableOrders[0];
             setPriorityOrder(newPriorityOrder);
-            setPriorityCountdown(15);
+            setPriorityCountdown(25); // 25 ثانية للسائق ليوقف الدراجة ويقرر
             setShowPriorityPopup(true);
             
             // 🔊 تشغيل صوت الأولوية العاجل
