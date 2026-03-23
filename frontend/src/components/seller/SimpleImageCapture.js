@@ -1,12 +1,28 @@
 // /app/frontend/src/components/seller/SimpleImageCapture.js
-// مكون بسيط لالتقاط ومعالجة صور المنتجات
-// يدعم: سحب مباشر، تصغير/تكبير، تدوير
+// مكون لالتقاط ومعالجة صور المنتجات
+// يدعم: سحب مباشر، تصغير/تكبير، تدوير، تعديلات الصورة، قوالب 3D
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { X, Camera, RotateCcw, Check, Loader2, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
+import { 
+  X, Camera, RotateCcw, Check, Loader2, ZoomIn, ZoomOut, RotateCw,
+  Sun, Droplets, Contrast, Sparkles, Sliders
+} from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// القوالب الجاهزة
+const TEMPLATES = [
+  { id: 'none', name: 'بدون', colors: null },
+  { id: 'ramadan', name: 'رمضان', icon: '🌙', colors: { primary: '#4A1A6B', secondary: '#FFD700' } },
+  { id: 'eid', name: 'عيد', icon: '🎉', colors: { primary: '#1E5128', secondary: '#FFD700' } },
+  { id: 'hot_sale', name: 'تخفيضات', icon: '🔥', colors: { primary: '#FF4500', secondary: '#FFD700' } },
+  { id: 'flash_deal', name: 'عرض', icon: '⚡', colors: { primary: '#FFD700', secondary: '#FF6B00' } },
+  { id: 'premium', name: 'فاخر', icon: '💎', colors: { primary: '#1A1A2E', secondary: '#FFD700' } },
+  { id: 'tech', name: 'تقني', icon: '🎧', colors: { primary: '#0F0F1A', secondary: '#00D4FF' } },
+  { id: 'fashion', name: 'أزياء', icon: '👗', colors: { primary: '#FFE4E1', secondary: '#FF69B4' } },
+  { id: 'food', name: 'طعام', icon: '🍔', colors: { primary: '#FF6B00', secondary: '#FFD700' } },
+];
 
 const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) => {
   const videoRef = useRef(null);
@@ -26,6 +42,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
+  
+  // تعديلات الصورة
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [showAdjustments, setShowAdjustments] = useState(false);
+  
+  // القالب المختار
+  const [selectedTemplate, setSelectedTemplate] = useState('none');
+  const [showTemplates, setShowTemplates] = useState(false);
   
   // للسحب
   const [isDragging, setIsDragging] = useState(false);
@@ -126,10 +152,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       
       if (result.data.success && result.data.image) {
         setProcessedImage(result.data.image);
-        // إعادة ضبط - الصورة بحجمها الطبيعي
+        // إعادة ضبط
         setScale(1);
         setPosition({ x: 0, y: 0 });
         setRotation(0);
+        setBrightness(100);
+        setContrast(100);
+        setSaturation(100);
+        setSelectedTemplate('none');
       } else {
         throw new Error('فشل في معالجة الصورة');
       }
@@ -140,6 +170,25 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     } finally {
       setProcessing(false);
     }
+  };
+
+  // الحصول على خلفية القالب
+  const getTemplateBackground = () => {
+    if (selectedTemplate === 'none') {
+      return { backgroundColor: '#FFFFFF' };
+    }
+    const template = TEMPLATES.find(t => t.id === selectedTemplate);
+    if (template?.colors) {
+      return { 
+        background: `linear-gradient(135deg, ${template.colors.primary}, ${template.colors.secondary})` 
+      };
+    }
+    return { backgroundColor: '#FFFFFF' };
+  };
+
+  // فلتر CSS للتعديلات
+  const getImageFilter = () => {
+    return `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   };
 
   // === التحكم بالسحب ===
@@ -189,7 +238,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     handleDragEnd();
   };
 
-  // إضافة listeners للسحب على مستوى الصفحة
+  // إضافة listeners للسحب
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', onMouseMove);
@@ -215,15 +264,23 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     canvas.width = size;
     canvas.height = size;
     
-    // خلفية بيضاء
-    ctx.fillStyle = '#FFFFFF';
+    // رسم الخلفية
+    const template = TEMPLATES.find(t => t.id === selectedTemplate);
+    if (template?.colors) {
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, template.colors.primary);
+      gradient.addColorStop(1, template.colors.secondary);
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = '#FFFFFF';
+    }
     ctx.fillRect(0, 0, size, size);
     
     const img = new Image();
     img.onload = () => {
       ctx.save();
       
-      // حساب الموقع بناءً على نسبة الحاوية
+      // حساب الموقع
       const containerWidth = imageContainerRef.current?.offsetWidth || 400;
       const containerHeight = imageContainerRef.current?.offsetHeight || 400;
       const scaleX = size / containerWidth;
@@ -233,7 +290,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       ctx.rotate(rotation * Math.PI / 180);
       ctx.scale(scale, scale);
       
-      // رسم الصورة بحجمها المناسب
+      // تطبيق الفلاتر
+      ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+      
+      // رسم الصورة
       const imgRatio = img.width / img.height;
       let drawWidth, drawHeight;
       
@@ -268,6 +328,12 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setRotation(0);
   };
 
+  const resetAdjustments = () => {
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+  };
+
   // إغلاق
   const handleClose = () => {
     stopCamera();
@@ -276,6 +342,12 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setScale(1);
     setPosition({ x: 0, y: 0 });
     setRotation(0);
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setSelectedTemplate('none');
+    setShowAdjustments(false);
+    setShowTemplates(false);
     setStep('capture');
     setError(null);
     onClose();
@@ -302,8 +374,11 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       {/* Main Content */}
       <div 
         ref={imageContainerRef}
-        className="flex-1 relative overflow-hidden bg-white"
-        style={{ touchAction: 'none' }}
+        className="flex-1 relative overflow-hidden"
+        style={{ 
+          touchAction: 'none',
+          ...(step === 'edit' ? getTemplateBackground() : { backgroundColor: '#000' })
+        }}
       >
         
         {/* Camera View */}
@@ -338,6 +413,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               className="max-w-[90%] max-h-[90%] object-contain select-none"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                filter: getImageFilter(),
                 cursor: isDragging ? 'grabbing' : 'grab',
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
@@ -357,7 +433,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         )}
         
         {/* Drag hint */}
-        {step === 'edit' && processedImage && !processing && (
+        {step === 'edit' && processedImage && !processing && !showAdjustments && !showTemplates && (
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full">
             <p className="text-white/70 text-xs">اسحب المنتج لتحريكه</p>
           </div>
@@ -385,38 +461,149 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Edit Controls - Simple */}
+        {/* Edit Controls */}
         {step === 'edit' && !processing && (
           <>
+            {/* Adjustments Panel */}
+            {showAdjustments && (
+              <div className="bg-white/10 rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-bold">تعديلات الصورة</span>
+                  <button onClick={resetAdjustments} className="text-xs text-orange-400">إعادة ضبط</button>
+                </div>
+                
+                {/* Brightness */}
+                <div className="flex items-center gap-3">
+                  <Sun size={16} className="text-yellow-400" />
+                  <span className="text-white text-xs w-16">إضاءة</span>
+                  <input
+                    type="range"
+                    min="50"
+                    max="150"
+                    value={brightness}
+                    onChange={(e) => setBrightness(Number(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer"
+                  />
+                  <span className="text-white text-xs w-8">{brightness}%</span>
+                </div>
+                
+                {/* Contrast */}
+                <div className="flex items-center gap-3">
+                  <Contrast size={16} className="text-blue-400" />
+                  <span className="text-white text-xs w-16">تباين</span>
+                  <input
+                    type="range"
+                    min="50"
+                    max="150"
+                    value={contrast}
+                    onChange={(e) => setContrast(Number(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer"
+                  />
+                  <span className="text-white text-xs w-8">{contrast}%</span>
+                </div>
+                
+                {/* Saturation */}
+                <div className="flex items-center gap-3">
+                  <Droplets size={16} className="text-pink-400" />
+                  <span className="text-white text-xs w-16">تشبع</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="200"
+                    value={saturation}
+                    onChange={(e) => setSaturation(Number(e.target.value))}
+                    className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer"
+                  />
+                  <span className="text-white text-xs w-8">{saturation}%</span>
+                </div>
+              </div>
+            )}
+
+            {/* Templates Panel */}
+            {showTemplates && (
+              <div className="bg-white/10 rounded-xl p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white text-sm font-bold">قوالب 3D</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {TEMPLATES.map(template => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={`flex-shrink-0 w-14 h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
+                        selectedTemplate === template.id 
+                          ? 'border-[#FF6B00] scale-110' 
+                          : 'border-white/30'
+                      }`}
+                      style={template.colors ? {
+                        background: `linear-gradient(135deg, ${template.colors.primary}, ${template.colors.secondary})`
+                      } : { backgroundColor: '#FFFFFF' }}
+                    >
+                      {template.icon ? (
+                        <span className="text-xl">{template.icon}</span>
+                      ) : (
+                        <span className="text-xs text-gray-500">بدون</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-white/50 text-[10px] text-center mt-1">
+                  {TEMPLATES.find(t => t.id === selectedTemplate)?.name || 'بدون قالب'}
+                </p>
+              </div>
+            )}
+
             {/* Transform Controls */}
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-2">
               <button 
                 onClick={() => setScale(s => Math.max(0.3, s - 0.1))}
-                className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
                 data-testid="zoom-out-button"
               >
-                <ZoomOut size={22} className="text-white" />
+                <ZoomOut size={18} className="text-white" />
               </button>
               <button 
                 onClick={() => setScale(s => Math.min(3, s + 0.1))}
-                className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
                 data-testid="zoom-in-button"
               >
-                <ZoomIn size={22} className="text-white" />
+                <ZoomIn size={18} className="text-white" />
               </button>
               <button 
                 onClick={() => setRotation(r => r + 90)}
-                className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
                 data-testid="rotate-button"
               >
-                <RotateCw size={22} className="text-white" />
+                <RotateCw size={18} className="text-white" />
               </button>
               <button 
                 onClick={resetTransform}
-                className="px-4 h-12 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
+                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
                 data-testid="reset-button"
               >
-                <span className="text-white text-sm">إعادة ضبط</span>
+                <RotateCcw size={18} className="text-white" />
+              </button>
+              
+              {/* Adjustments Toggle */}
+              <button 
+                onClick={() => { setShowAdjustments(!showAdjustments); setShowTemplates(false); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center active:bg-white/30 ${
+                  showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20'
+                }`}
+                data-testid="adjustments-button"
+              >
+                <Sliders size={18} className="text-white" />
+              </button>
+              
+              {/* Templates Toggle */}
+              <button 
+                onClick={() => { setShowTemplates(!showTemplates); setShowAdjustments(false); }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center active:bg-white/30 ${
+                  showTemplates ? 'bg-[#FF6B00]' : 'bg-white/20'
+                }`}
+                data-testid="templates-button"
+              >
+                <Sparkles size={18} className="text-white" />
               </button>
             </div>
 
