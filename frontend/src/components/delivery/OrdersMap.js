@@ -289,12 +289,35 @@ const OrdersMap = ({
           // تصفية الطلبات المرفوضة يدوياً والمؤجلة بسبب الحد الأقصى
           // استخدام الـ refs للحصول على القيم الحالية الصحيحة
           const allExcludedIds = [...rejectedOrderIdsRef.current, ...maxLimitOrderIdsRef.current];
-          const availableOrders = priorityOrders.filter(o => !allExcludedIds.includes(o.id));
+          
+          // ⭐ جلب قائمة المطاعم المرفوضة (لمدة 10 دقائق)
+          let rejectedStoreNames = [];
+          try {
+            const savedStores = JSON.parse(localStorage.getItem('rejectedStores') || '[]');
+            const now = Date.now();
+            // تنظيف المطاعم القديمة (أكثر من 10 دقائق)
+            const validStores = savedStores.filter(s => (now - s.timestamp) < 600000);
+            localStorage.setItem('rejectedStores', JSON.stringify(validStores));
+            rejectedStoreNames = validStores.map(s => s.name);
+          } catch (e) {
+            console.log('Error loading rejected stores:', e);
+          }
+          
+          // تصفية الطلبات: استبعاد IDs المرفوضة + المطاعم المرفوضة
+          const availableOrders = priorityOrders.filter(o => {
+            // استبعاد بالـ ID
+            if (allExcludedIds.includes(o.id)) return false;
+            // استبعاد بإسم المطعم
+            const storeName = o.store_name || o.restaurant_name;
+            if (storeName && rejectedStoreNames.includes(storeName)) return false;
+            return true;
+          });
           
           console.log('Priority check:', { 
             total: priorityOrders.length, 
             rejected: rejectedOrderIdsRef.current.length,
             maxLimit: maxLimitOrderIdsRef.current.length,
+            rejectedStores: rejectedStoreNames.length,
             excluded: allExcludedIds.length,
             available: availableOrders.length,
             currentOrders: currentOrdersCount,
@@ -409,6 +432,8 @@ const OrdersMap = ({
     // إضافة الطلب للقائمة المرفوضة
     if (priorityOrder) {
       const orderId = priorityOrder.id;
+      const storeName = priorityOrder.store_name || priorityOrder.restaurant_name;
+      
       const newRejectedIds = rejectedOrderIds.includes(orderId) 
         ? rejectedOrderIds 
         : [...rejectedOrderIds, orderId];
@@ -420,18 +445,31 @@ const OrdersMap = ({
         rejectedOrderIdsRef.current = [...rejectedOrderIdsRef.current, orderId];
       }
       
-      // حفظ في localStorage مع timestamp
+      // حفظ في localStorage مع timestamp واسم المطعم
       try {
         const savedData = JSON.parse(localStorage.getItem('rejectedOrderIds') || '[]');
         if (!savedData.find(e => e.id === orderId)) {
-          savedData.push({ id: orderId, timestamp: Date.now() });
+          savedData.push({ 
+            id: orderId, 
+            timestamp: Date.now(),
+            storeName: storeName // حفظ اسم المطعم لتصفية الطلبات من نفس المطعم
+          });
           localStorage.setItem('rejectedOrderIds', JSON.stringify(savedData));
+        }
+        
+        // ⭐ إضافة المطعم للقائمة المرفوضة مؤقتاً (لمدة 10 دقائق)
+        if (storeName) {
+          const rejectedStores = JSON.parse(localStorage.getItem('rejectedStores') || '[]');
+          if (!rejectedStores.find(s => s.name === storeName)) {
+            rejectedStores.push({ name: storeName, timestamp: Date.now() });
+            localStorage.setItem('rejectedStores', JSON.stringify(rejectedStores));
+          }
         }
       } catch (e) {
         console.log('Error saving rejected order:', e);
       }
       
-      console.log('❌ تم رفض الطلب:', orderId);
+      console.log('❌ تم رفض الطلب:', orderId, 'من المطعم:', storeName);
       console.log('📋 قائمة المرفوضة الآن:', rejectedOrderIdsRef.current);
     }
     

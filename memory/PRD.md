@@ -29,6 +29,22 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 23, 2026 - Latest Session)
 
+#### Bug Fixes - Mobile Issues - COMPLETED ✅ (NEW)
+1. **Priority Popup Keeps Returning After Reject**:
+   - **Issue**: When driver rejects a priority order popup, another order from the same restaurant appears immediately
+   - **Fix**: Added `rejectedStores` to localStorage - when rejecting an order, the restaurant name is saved for 10 minutes
+   - **File Modified**: `/app/frontend/src/components/delivery/OrdersMap.js` (lines 408-455, 285-320)
+
+2. **Emergency Help Request Error**:
+   - **Issue**: Clicking "العميل لا يرد" button showed "Internal Server Error"
+   - **Root Cause**: `delivery_address` could be a string but code expected dict
+   - **Fix**: Added type checking before calling `.get()` method
+   - **File Modified**: `/app/backend/routes/support.py` (line 398)
+
+3. **Map Filters on Mobile**:
+   - **Status**: Already working correctly - filters were hidden behind popup
+   - **Verified**: Filters (متاحة / طلباتي / الكل) display properly on mobile
+
 #### Map Filters for Drivers - COMPLETED ✅ (NEW)
 - **Feature**: Filters on driver's map to toggle between viewing different order types
 - **Implementation**:

@@ -395,7 +395,11 @@ async def request_emergency_help(
         "order_number": order.get("order_number", req.order_id[:8]),
         "customer_name": order.get("customer_name") or order.get("user_name", "عميل"),
         "customer_phone": order.get("phone") or order.get("customer_phone"),
-        "customer_address": order.get("address") or order.get("delivery_address", {}).get("address", ""),
+        "customer_address": order.get("address") or (
+            order.get("delivery_address", {}).get("address", "") 
+            if isinstance(order.get("delivery_address"), dict) 
+            else str(order.get("delivery_address", ""))
+        ),
         "reason": req.reason,
         "reason_text": reason_text,
         "message": req.message,
