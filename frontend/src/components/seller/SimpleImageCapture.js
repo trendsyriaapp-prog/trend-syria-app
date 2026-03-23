@@ -146,23 +146,25 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         setProcessedImage(imageData);
       }
       
-      setScale(1);
+      // القيم الافتراضية المحسنة للصورة
+      setScale(1.3); // أقصى تكبير
       setPosition({ x: 0, y: 0 });
       setRotation(0);
-      setBrightness(100);
-      setContrast(100);
-      setSaturation(100);
+      setBrightness(118);
+      setContrast(118);
+      setSaturation(135);
       setSelectedShadow('none');
       
     } catch (err) {
       console.error('Error:', err);
       setProcessedImage(imageData);
-      setScale(1);
+      // القيم الافتراضية المحسنة للصورة
+      setScale(1.3);
       setPosition({ x: 0, y: 0 });
       setRotation(0);
-      setBrightness(100);
-      setContrast(100);
-      setSaturation(100);
+      setBrightness(118);
+      setContrast(118);
+      setSaturation(135);
       setSelectedShadow('none');
     } finally {
       setProcessing(false);
@@ -538,8 +540,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                       <span className="text-white/70 text-xs">قريب</span>
                       <input 
                         type="range" 
-                        min="30" 
-                        max="95" 
+                        min="0" 
+                        max="150" 
                         value={shadowOffset}
                         onChange={(e) => setShadowOffset(Number(e.target.value))}
                         className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
