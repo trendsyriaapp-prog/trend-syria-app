@@ -27,18 +27,29 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ## What's Been Implemented
 
-### ✅ COMPLETED (March 22, 2026 - Latest Session)
+### ✅ COMPLETED (March 23, 2026 - Latest Session)
+
+#### Simplified Image Editor per User Request
+- **User requested removal of**: Gradients tab, Shadows tab, Background colors tab, Arrow controls
+- **New simplified features**:
+  - Clean white background only
+  - Direct drag-to-move product (touch/mouse)
+  - Zoom in/out buttons
+  - Rotate button (90° increments)
+  - Reset button
+  - Product displays at natural size initially
+  - Hint text: "اسحب المنتج لتحريكه" (Drag product to move)
+- **File Modified**:
+  - `/app/frontend/src/components/seller/SimpleImageCapture.js` - Complete rewrite
+
+### ✅ COMPLETED (March 22, 2026)
 
 #### PhotoRoom API Integration for Professional Image Processing
 - **New Integration**: Replaced Remove.bg with PhotoRoom API for superior quality
 - **Features Implemented**:
   - Full screen image display on mobile devices
   - Background removal with PhotoRoom API ($0.02/image)
-  - 4 shadow types: بدون (none), ناعم (soft), حاد (hard), عائم (floating)
-  - 10 background colors
-  - 12 pre-built 3D templates
-  - Adjustment sliders (brightness, contrast, saturation)
-  - Fallback to Remove.bg/rembg if PhotoRoom fails
+  - Fallback to rembg if PhotoRoom fails/credits exhausted
 - **API Endpoints Added**:
   - `POST /api/image/process-photoroom` - Main processing endpoint
   - `GET /api/image/shadows` - Get available shadow types
@@ -46,8 +57,9 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 - **Files Created/Modified**:
   - `/app/backend/services/photoroom.py` (NEW)
   - `/app/backend/routes/image_processing.py` (MODIFIED)
-  - `/app/frontend/src/components/seller/SimpleImageCapture.js` (MODIFIED)
   - `/app/backend/.env` - Added PHOTOROOM_API_KEY
+  
+⚠️ **NOTICE**: PhotoRoom API key credits are exhausted. App is using free `rembg` fallback. User needs to add credits at photoroom.com/api for high-quality processing.
 
 #### Platform Wallet for Admin
 - New collection `platform_wallet` to store platform earnings
