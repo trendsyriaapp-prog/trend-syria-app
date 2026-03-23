@@ -2352,34 +2352,68 @@ const OrdersMap = ({
                 </div>
               )}
 
-              {/* زر عرض جميع مساراتي */}
+              {/* زر فتح Google Maps */}
               {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
-                <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333] space-y-2">
-                  {!showAllMyRoutes ? (
-                    <>
-                      <button
-                        onClick={showAllMyOrdersRoutes}
-                        disabled={loadingRoute}
-                        className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                      >
-                        {loadingRoute ? '⏳ جاري التحميل...' : '🗺️ عرض كل المسارات'}
-                      </button>
-                      <button
-                        onClick={startStepByStepNavigation}
-                        disabled={loadingRoute}
-                        className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                      >
-                        {loadingRoute ? '⏳ جاري التحميل...' : '🏍️ ابدأ التنقل خطوة بخطوة'}
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={hideAllRoutes}
-                      className="w-full py-2 bg-gray-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2"
-                    >
-                      ✕ إخفاء المسارات
-                    </button>
-                  )}
+                <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333]">
+                  <button
+                    onClick={() => {
+                      // جمع جميع المحطات بالترتيب الصحيح
+                      const allMyOrdersList = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
+                        o.status !== 'delivered' && o.delivery_status !== 'delivered'
+                      );
+                      
+                      if (allMyOrdersList.length === 0) {
+                        alert('لا توجد طلبات للتوصيل');
+                        return;
+                      }
+                      
+                      // ترتيب المحطات: أقرب متجر ثم عميله
+                      const driverPos = currentDriverLocation || { latitude: 33.5138, longitude: 36.2765 };
+                      
+                      // جمع المتاجر والعملاء
+                      const waypoints = [];
+                      
+                      // ترتيب بسيط: متجر ثم عميل لكل طلب
+                      allMyOrdersList.forEach(order => {
+                        const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+                        const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+                        const custLat = order.latitude || order.buyer_address?.latitude;
+                        const custLng = order.longitude || order.buyer_address?.longitude;
+                        
+                        if (storeLat && storeLng) {
+                          waypoints.push({ lat: storeLat, lng: storeLng, type: 'store' });
+                        }
+                        if (custLat && custLng) {
+                          waypoints.push({ lat: custLat, lng: custLng, type: 'customer' });
+                        }
+                      });
+                      
+                      if (waypoints.length === 0) {
+                        alert('لا توجد إحداثيات للمحطات');
+                        return;
+                      }
+                      
+                      // بناء رابط Google Maps
+                      // الوجهة النهائية = آخر عميل
+                      const destination = waypoints[waypoints.length - 1];
+                      const waypointsStr = waypoints.slice(0, -1).map(w => `${w.lat},${w.lng}`).join('|');
+                      
+                      let googleMapsUrl = `https://www.google.com/maps/dir/?api=1`;
+                      googleMapsUrl += `&origin=${driverPos.latitude},${driverPos.longitude}`;
+                      googleMapsUrl += `&destination=${destination.lat},${destination.lng}`;
+                      if (waypointsStr) {
+                        googleMapsUrl += `&waypoints=${waypointsStr}`;
+                      }
+                      googleMapsUrl += `&travelmode=driving`;
+                      
+                      // فتح Google Maps
+                      window.open(googleMapsUrl, '_blank');
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-base font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <span className="text-2xl">🗺️</span>
+                    <span>ابدأ التوصيل في Google Maps</span>
+                  </button>
                 </div>
               )}
 

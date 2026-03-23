@@ -5,7 +5,6 @@ import { Truck, User, MapPin, Navigation, CheckCircle, ChevronRight, Map, Clock,
 import { formatPrice } from '../../utils/imageHelpers';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
-import RouteSelector from './RouteSelector';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 import CallCustomerButton from '../voip/CallCustomerButton';
@@ -170,9 +169,6 @@ const MyOrdersList = ({
   // نظام العميل لا يرد
   const [waitingOrders, setWaitingOrders] = useState({});
   
-  // نظام تخطيط المسار الذكي
-  const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
-  
   // نظام إلغاء الطلب من السائق
   const [showCancelModal, setShowCancelModal] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
@@ -187,7 +183,7 @@ const MyOrdersList = ({
   const [helpLoading, setHelpLoading] = useState(false);
   
   // ⭐ منع التمرير في الخلفية عند فتح أي Modal
-  const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showCancelModal || showHelpModal || showRouteOptimizer);
+  const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showCancelModal || showHelpModal);
   usePreventBodyScroll(isAnyModalOpen);
   
   // ساعات التوصيل المسموحة
@@ -662,41 +658,69 @@ const MyOrdersList = ({
         />
       )}
 
-      {/* زر تخطيط المسار الذكي */}
+      {/* زر تخطيط المسار الذكي - يفتح Google Maps مباشرة */}
       {(orders.length > 0 || foodOrders.length > 0) && (
         <button
-          onClick={() => setShowRouteOptimizer(true)}
-          className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+          onClick={() => {
+            // جمع جميع الطلبات
+            const allOrders = [...orders, ...foodOrders].filter(o => 
+              o.status !== 'delivered' && o.delivery_status !== 'delivered'
+            );
+            
+            if (allOrders.length === 0) {
+              alert('لا توجد طلبات للتوصيل');
+              return;
+            }
+            
+            // موقع السائق الافتراضي (دمشق)
+            const driverLat = 33.5138;
+            const driverLng = 36.2765;
+            
+            // جمع المحطات
+            const waypoints = [];
+            
+            allOrders.forEach(order => {
+              const storeLat = order.store_latitude || order.seller_addresses?.[0]?.latitude;
+              const storeLng = order.store_longitude || order.seller_addresses?.[0]?.longitude;
+              const custLat = order.latitude || order.buyer_address?.latitude || order.delivery_address?.latitude;
+              const custLng = order.longitude || order.buyer_address?.longitude || order.delivery_address?.longitude;
+              
+              if (storeLat && storeLng) {
+                waypoints.push(`${storeLat},${storeLng}`);
+              }
+              if (custLat && custLng) {
+                waypoints.push(`${custLat},${custLng}`);
+              }
+            });
+            
+            if (waypoints.length === 0) {
+              alert('لا توجد إحداثيات للمحطات');
+              return;
+            }
+            
+            // بناء رابط Google Maps
+            const destination = waypoints.pop(); // آخر نقطة = الوجهة
+            const waypointsStr = waypoints.join('|');
+            
+            let googleMapsUrl = `https://www.google.com/maps/dir/?api=1`;
+            googleMapsUrl += `&origin=${driverLat},${driverLng}`;
+            googleMapsUrl += `&destination=${destination}`;
+            if (waypointsStr) {
+              googleMapsUrl += `&waypoints=${waypointsStr}`;
+            }
+            googleMapsUrl += `&travelmode=driving`;
+            
+            window.open(googleMapsUrl, '_blank');
+          }}
+          className={`w-full p-4 rounded-xl flex items-center justify-center gap-3 transition-all ${
             isDark 
-              ? 'bg-gradient-to-l from-orange-600/20 to-red-600/20 border border-orange-500/30 hover:border-orange-500/50' 
-              : 'bg-gradient-to-l from-orange-50 to-red-50 border border-orange-200 hover:border-orange-300'
-          }`}
+              ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' 
+              : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400'
+          } text-white font-bold shadow-lg`}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-              <Route size={20} className="text-white" />
-            </div>
-            <div className="text-right">
-              <p className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                تخطيط المسار الذكي
-              </p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                احصل على أفضل ترتيب للتوصيل ووفّر الوقت والبنزين
-              </p>
-            </div>
-          </div>
-          <ChevronRight size={20} className={isDark ? 'text-orange-400' : 'text-orange-500'} />
+          <span className="text-2xl">🗺️</span>
+          <span>ابدأ التوصيل في Google Maps</span>
         </button>
-      )}
-
-      {/* Modal تخطيط المسار */}
-      {showRouteOptimizer && (
-        <RouteSelector
-          foodOrders={foodOrders}
-          productOrders={orders}
-          onClose={() => setShowRouteOptimizer(false)}
-          theme={theme}
-        />
       )}
 
       {/* تنبيه طلبات المنتجات - يجب التسليم اليوم */}
