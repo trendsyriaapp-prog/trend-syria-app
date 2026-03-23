@@ -18,6 +18,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 CATEGORIES = [
     "إلكترونيات", "أزياء", "ملابس", "أحذية", "تجميل",
     "مجوهرات", "إكسسوارات", "المنزل", "رياضة", "أطفال", "كتب", "ألعاب",
+    "أطعمة معلبة وجافة",
     "مطاعم", "مواد غذائية", "خضروات وفواكه"
 ]
 
@@ -51,6 +52,7 @@ async def get_categories():
         {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
         {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
         {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
+        {"id": "canned_food", "name": "أطعمة معلبة وجافة", "icon": "Package", "type": "shopping"},
         # قسم الطعام
         {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
         {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
