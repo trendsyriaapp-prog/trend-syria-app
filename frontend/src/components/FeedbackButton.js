@@ -18,6 +18,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(() => {
+    // تحقق إذا كان المستخدم أخفى الزر في هذه الجلسة
+    return sessionStorage.getItem('feedbackButtonHidden') === 'true';
+  });
   const [feedbackType, setFeedbackType] = useState('suggestion');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -28,6 +32,13 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
     'bottom-right': 'bottom-40 right-4',
     'top-left': 'top-20 left-4',
     'top-right': 'top-20 right-4',
+  };
+
+  // إخفاء الزر
+  const handleHide = (e) => {
+    e.stopPropagation();
+    setIsHidden(true);
+    sessionStorage.setItem('feedbackButtonHidden', 'true');
   };
 
   const handleSubmit = async (e) => {
@@ -70,18 +81,36 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
     }
   };
 
+  // لا تعرض شيء إذا كان الزر مخفي
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <>
-      {/* زر فتح النموذج */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed ${positionClasses[position]} z-50 p-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 animate-pulse`}
-        title="اقتراحات وملاحظات"
-        data-testid="feedback-button"
-        style={{ animationDuration: '3s' }}
-      >
-        <MessageSquarePlus size={24} />
-      </button>
+      {/* زر فتح النموذج مع زر الإخفاء */}
+      <div className={`fixed ${positionClasses[position]} z-50 flex flex-col items-center gap-1`}>
+        {/* زر الإخفاء */}
+        <button
+          onClick={handleHide}
+          className="w-5 h-5 bg-gray-400/80 hover:bg-gray-500 text-white rounded-full flex items-center justify-center text-xs shadow-md transition-all hover:scale-110"
+          title="إخفاء"
+          data-testid="feedback-hide-button"
+        >
+          <X size={12} />
+        </button>
+        
+        {/* زر الملاحظات الرئيسي */}
+        <button
+          onClick={() => setIsOpen(true)}
+          className="p-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 animate-pulse"
+          title="اقتراحات وملاحظات"
+          data-testid="feedback-button"
+          style={{ animationDuration: '3s' }}
+        >
+          <MessageSquarePlus size={24} />
+        </button>
+      </div>
 
       {/* Modal */}
       <AnimatePresence>
