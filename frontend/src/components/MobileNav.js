@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -97,8 +97,8 @@ const MobileNav = () => {
     // شريط خاص بموظف التوصيل في جميع صفحاته
     navItems = [
       { path: '/delivery/dashboard', icon: Home, label: 'الرئيسية' },
-      { path: '/delivery/orders', icon: ClipboardList, label: 'الطلبات' },
-      { path: '/wallet', icon: Wallet, label: 'المحفظة' },
+      { path: '/delivery/dashboard?tab=earnings', icon: DollarSign, label: 'الأرباح' },
+      { path: '/delivery/dashboard?tab=achievements', icon: Trophy, label: 'إنجازاتي' },
       { path: '/settings', icon: Settings, label: 'الإعدادات' }
     ];
   } else if (isInFoodSection && foodEnabled) {

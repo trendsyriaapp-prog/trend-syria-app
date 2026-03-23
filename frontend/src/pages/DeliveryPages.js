@@ -970,7 +970,7 @@ const DeliveryDashboard = () => {
         {/* التحديات والمكافآت */}
         <DriverChallenges />
 
-        {/* Tabs */}
+        {/* Tabs - طلبات متاحة و طلباتي فقط */}
         <div className="flex gap-2 mb-3">
           <button
             onClick={() => setActiveTab('available')}
@@ -995,32 +995,6 @@ const DeliveryDashboard = () => {
             }`}
           >
             طلباتي ({myOrders.length + myFoodOrders.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('earnings')}
-            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-              activeTab === 'earnings' 
-                ? 'bg-green-500 text-black' 
-                : currentTheme === 'dark'
-                  ? 'bg-[#1a1a1a] text-gray-400 border border-[#333]'
-                  : 'bg-white text-gray-600 border border-gray-200'
-            }`}
-            data-testid="earnings-tab-btn"
-          >
-            💰 الأرباح
-          </button>
-          <button
-            onClick={() => setActiveTab('achievements')}
-            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-              activeTab === 'achievements' 
-                ? 'bg-green-500 text-black' 
-                : currentTheme === 'dark'
-                  ? 'bg-[#1a1a1a] text-gray-400 border border-[#333]'
-                  : 'bg-white text-gray-600 border border-gray-200'
-            }`}
-            data-testid="achievements-tab-btn"
-          >
-            🏆 إنجازاتي
           </button>
         </div>
 
