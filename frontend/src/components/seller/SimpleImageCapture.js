@@ -267,15 +267,22 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل الانعكاسي خلف المنتج على اليمين
+        // رسم الظل الأرضي - يبدأ من أسفل المنتج ويمتد للخلف واليمين
         if (selectedShadow !== 'none') {
           ctx.save();
-          ctx.translate(centerX + scaledWidth * 0.15, centerY + scaledHeight * 0.15);
+          // موقع الظل يبدأ من أسفل المنتج
+          ctx.translate(centerX + scaledWidth * 0.1, centerY + scaledHeight * 0.45);
           ctx.rotate(rotation * Math.PI / 180);
-          ctx.transform(1, 0, -0.2, -0.4, 0, 0); // skew and flip
-          ctx.globalAlpha = selectedShadow === 'strong' ? 0.25 : 0.12;
-          ctx.filter = `blur(${selectedShadow === 'strong' ? '3px' : '2px'})`;
-          ctx.drawImage(productImg, -scaledWidth/2, -scaledHeight/2, scaledWidth, scaledHeight);
+          
+          // تحويل 3D - يجعل الظل يمتد على الأرض للخلف واليمين
+          ctx.transform(1, 0.15, 0.3, 0.35, 0, 0);
+          
+          ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.18;
+          ctx.filter = `blur(${selectedShadow === 'strong' ? '4px' : '3px'})`;
+          
+          // رسم الظل أسود
+          ctx.fillStyle = '#000000';
+          ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight * 0.8);
           ctx.restore();
         }
         
@@ -393,26 +400,33 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* الظل الانعكاسي - خلف المنتج على اليمين */}
+              {/* الظل الأرضي - يبدأ من أسفل المنتج ويمتد للخلف واليمين */}
               {selectedShadow !== 'none' && (
                 <div 
                   className="absolute pointer-events-none"
                   style={{
-                    top: '15%',
-                    left: '15%',
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(-0.4) skewX(-15deg)`,
-                    opacity: selectedShadow === 'strong' ? 0.25 : 0.12,
-                    filter: `blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transformOrigin: 'top left',
+                    bottom: '0',
+                    left: '50%',
+                    transform: `translateX(-40%) scale(${scale}) rotate(${rotation}deg)`,
+                    transformOrigin: 'top center',
                   }}
                 >
-                  <img 
-                    src={processedImage} 
-                    alt=""
-                    className="max-w-[85vw] max-h-[45vh] object-contain"
-                    style={{ filter: getImageFilter() }}
-                    draggable={false}
-                  />
+                  <div
+                    style={{
+                      transform: 'perspective(200px) rotateX(60deg) skewX(-10deg)',
+                      transformOrigin: 'top center',
+                      opacity: selectedShadow === 'strong' ? 0.35 : 0.2,
+                      filter: `blur(${selectedShadow === 'strong' ? '8px' : '5px'})`,
+                    }}
+                  >
+                    <img 
+                      src={processedImage} 
+                      alt=""
+                      className="max-w-[85vw] max-h-[45vh] object-contain"
+                      style={{ filter: 'brightness(0)' }}
+                      draggable={false}
+                    />
+                  </div>
                 </div>
               )}
               
