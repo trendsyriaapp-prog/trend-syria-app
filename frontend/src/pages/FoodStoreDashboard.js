@@ -1595,12 +1595,14 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     const fetchImageSettings = async () => {
       try {
         const res = await fetch(`${API}/api/image/settings`);
-        const data = await res.json();
-        if (data.max_images_per_product) {
-          setMaxImagesPerProduct(data.max_images_per_product);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.max_images_per_product) {
+            setMaxImagesPerProduct(data.max_images_per_product);
+          }
         }
       } catch (error) {
-        console.error('Error fetching image settings:', error);
+        // تجاهل الخطأ - استخدام القيمة الافتراضية
       }
     };
     fetchImageSettings();
