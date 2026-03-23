@@ -603,13 +603,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               >
                 <RotateCw size={18} className="text-white" />
               </button>
-              <button 
-                onClick={resetTransform}
-                className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:bg-white/30"
-                data-testid="reset-button"
-              >
-                <RotateCcw size={18} className="text-white" />
-              </button>
               
               {/* Adjustments Toggle */}
               <button 
