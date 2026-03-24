@@ -265,8 +265,11 @@ const OrdersMap = ({
       console.log('تم مسح الطلبات المؤجلة - أصبح لديك مجال لطلبات جديدة');
     }
     
-    setPreviousOrderCount(currentOrderCount);
-  }, [myFoodOrders, myOrders, previousOrderCount, maxLimitOrderIds.length]);
+    // فقط تحديث إذا تغير العدد فعلاً
+    if (currentOrderCount !== previousOrderCount) {
+      setPreviousOrderCount(currentOrderCount);
+    }
+  }, [myFoodOrders?.length, myOrders?.length]); // استخدام .length بدل الـ array كامل
 
   // ⭐ جلب طلبات الأولوية كل 10 ثواني
   useEffect(() => {

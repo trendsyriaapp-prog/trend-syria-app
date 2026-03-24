@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
-import DailyEarningsWidget from './DailyEarningsWidget';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -68,6 +67,31 @@ const MyOrdersList = ({
   const [helpMessage, setHelpMessage] = useState('');
   const [helpLoading, setHelpLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  
+  // أرباح اليوم (رقم صغير)
+  const [todayEarnings, setTodayEarnings] = useState({ current: 0, change: 0 });
+  
+  // جلب أرباح اليوم
+  useEffect(() => {
+    const fetchTodayEarnings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API}/delivery/earnings/stats?period=today`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTodayEarnings({
+            current: data.current?.earnings || 0,
+            change: data.comparison?.earnings_change || 0
+          });
+        }
+      } catch (err) {
+        // صامت - لا نُظهر أخطاء
+      }
+    };
+    fetchTodayEarnings();
+  }, []);
 
   // منع التمرير عند فتح Modal
   const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showHelpModal);
@@ -275,9 +299,6 @@ const MyOrdersList = ({
 
   return (
     <div className="space-y-4">
-      {/* Widget ربح اليوم */}
-      <DailyEarningsWidget theme={isDark ? 'dark' : 'light'} />
-      
       {/* الملخص الإجمالي */}
       <div className={`rounded-2xl p-4 ${isDark ? 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30' : 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'}`}>
         <div className="flex items-center justify-between mb-3">
@@ -294,6 +315,28 @@ const MyOrdersList = ({
             </p>
           </div>
         </div>
+        
+        {/* ربح اليوم - رقم صغير */}
+        {todayEarnings.current > 0 && (
+          <div className={`flex items-center justify-center gap-2 mb-3 py-2 rounded-xl text-sm ${
+            isDark ? 'bg-[#1a1a1a]/50' : 'bg-white/50'
+          }`}>
+            <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>ربحك اليوم:</span>
+            <span className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+              {todayEarnings.current.toLocaleString()} ل.س
+            </span>
+            {todayEarnings.change !== 0 && (
+              <span className={`flex items-center gap-0.5 text-xs ${
+                todayEarnings.change > 0 
+                  ? 'text-green-500' 
+                  : 'text-red-500'
+              }`}>
+                {todayEarnings.change > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                {Math.abs(todayEarnings.change)}%
+              </span>
+            )}
+          </div>
+        )}
 
         {/* زر Google Maps */}
         <button
