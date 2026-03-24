@@ -1625,9 +1625,18 @@ const OrdersMap = ({
 
   // الحصول على إحداثيات الطلب - GPS حقيقي فقط
   const getOrderCoordinates = (order) => {
-    // إذا كان الطلب يحتوي على إحداثيات GPS حقيقية
+    // إذا كان الطلب يحتوي على إحداثيات GPS حقيقية (الصيغة القديمة)
     if (order.latitude && order.longitude) {
       return [order.latitude, order.longitude];
+    }
+    // إذا كان delivery_address كائن مع lat/lng (الصيغة الجديدة)
+    if (order.delivery_address && typeof order.delivery_address === 'object') {
+      const addr = order.delivery_address;
+      const lat = addr.latitude || addr.lat;
+      const lng = addr.longitude || addr.lng;
+      if (lat && lng) {
+        return [lat, lng];
+      }
     }
     // إذا لا يوجد GPS، نرجع null
     return null;
@@ -1635,9 +1644,13 @@ const OrdersMap = ({
 
   // الحصول على إحداثيات المتجر - GPS حقيقي فقط
   const getStoreCoordinates = (order) => {
-    // إذا كان المتجر يحتوي على إحداثيات GPS
+    // إذا كان المتجر يحتوي على إحداثيات GPS مباشرة
     if (order.store_latitude && order.store_longitude) {
       return [order.store_latitude, order.store_longitude];
+    }
+    // إذا كان store_location موجود (الصيغة الجديدة)
+    if (order.store_location?.latitude && order.store_location?.longitude) {
+      return [order.store_location.latitude, order.store_location.longitude];
     }
     // إذا لا يوجد GPS للمتجر، نستخدم إحداثيات الطلب مع إزاحة صغيرة
     if (order.latitude && order.longitude) {

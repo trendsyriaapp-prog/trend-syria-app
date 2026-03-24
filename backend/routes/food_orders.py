@@ -952,8 +952,13 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "store_name": store["name"],
         "store_phone": store.get("phone", ""),  # رقم هاتف المتجر
         "store_type": store["store_type"],
-        "store_latitude": store.get("latitude"),  # إحداثيات المتجر
-        "store_longitude": store.get("longitude"),  # إحداثيات المتجر
+        # إحداثيات المتجر - من location.coordinates أو من الحقول المباشرة
+        "store_latitude": (store.get("location", {}).get("coordinates", [0, 0])[1] if store.get("location") else None) or store.get("latitude"),
+        "store_longitude": (store.get("location", {}).get("coordinates", [0, 0])[0] if store.get("location") else None) or store.get("longitude"),
+        "store_location": {
+            "latitude": (store.get("location", {}).get("coordinates", [0, 0])[1] if store.get("location") else None) or store.get("latitude"),
+            "longitude": (store.get("location", {}).get("coordinates", [0, 0])[0] if store.get("location") else None) or store.get("longitude")
+        } if store.get("location") or store.get("latitude") else None,
         "items": order_items,
         "subtotal": subtotal,
         "offer_discount": offer_discount,
