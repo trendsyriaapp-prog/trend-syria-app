@@ -135,10 +135,17 @@ const MyOrdersList = ({
   const [checkingLocation, setCheckingLocation] = useState(false);
   
   const handleArrivedAtStore = async (order) => {
-    // الحصول على موقع السائق الحالي
+    const isFood = order.store_id || order.restaurant_name;
+    
+    // طلبات المنتجات: لا تحتاج فحص مسافة GPS - فتح modal الكود مباشرة
+    if (!isFood) {
+      setShowPickupCodeModal(order);
+      return;
+    }
+    
+    // طلبات الطعام: فحص المسافة GPS أولاً
     if (!navigator.geolocation) {
       toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
-      // فتح modal الكود مباشرة إذا لا يوجد GPS
       setShowPickupCodeModal(order);
       return;
     }
@@ -150,14 +157,13 @@ const MyOrdersList = ({
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const isFood = order.store_id || order.restaurant_name;
           
-          // استدعاء API لتسجيل الوصول مع فحص المسافة
-          const endpoint = isFood 
-            ? `${API}/food/orders/${order.id}/driver/arrived-at-store?latitude=${latitude}&longitude=${longitude}`
-            : `${API}/orders/${order.id}/driver/arrived-at-store?latitude=${latitude}&longitude=${longitude}`;
+          // استدعاء API لتسجيل الوصول مع فحص المسافة (طلبات الطعام فقط)
+          const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
 
-          await axios.post(endpoint);
+          await axios.post(endpoint, {}, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
           
           // ✅ نجح - افتح modal الكود
           setCheckingLocation(false);
@@ -230,10 +236,15 @@ const MyOrdersList = ({
     try {
       const isFood = showPickupCodeModal.store_id || showPickupCodeModal.restaurant_name;
       const endpoint = isFood 
-        ? `${API}/food/orders/driver/orders/${showPickupCodeModal.id}/pickup`
-        : `${API}/delivery/orders/${showPickupCodeModal.id}/pickup`;
+        ? `${API}/api/food/orders/delivery/${showPickupCodeModal.id}/verify-pickup`
+        : `${API}/api/orders/${showPickupCodeModal.id}/delivery/pickup`;
 
-      await axios.post(endpoint, { pickup_code: pickupCode });
+      // طلبات الطعام تستخدم "code" وطلبات المنتجات تستخدم "pickup_code"
+      const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
+      
+      await axios.post(endpoint, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
       toast({ title: "تم!", description: "تم تأكيد الاستلام بنجاح" });
       setShowPickupCodeModal(null);
@@ -266,10 +277,12 @@ const MyOrdersList = ({
     try {
       const isFood = showCodeModal.store_id || showCodeModal.restaurant_name;
       const endpoint = isFood 
-        ? `${API}/food/orders/driver/orders/${showCodeModal.id}/deliver`
-        : `${API}/delivery/orders/${showCodeModal.id}/deliver`;
+        ? `${API}/api/food/orders/delivery/${showCodeModal.id}/verify-code`
+        : `${API}/api/delivery/orders/${showCodeModal.id}/deliver`;
 
-      await axios.post(endpoint, { delivery_code: deliveryCode });
+      await axios.post(endpoint, { delivery_code: deliveryCode }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
       toast({ title: "🎉 تم التسليم!", description: `تمت إضافة ${getDriverEarnings(showCodeModal).toLocaleString()} ل.س لمحفظتك` });
       setShowCodeModal(null);

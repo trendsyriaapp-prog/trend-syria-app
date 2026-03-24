@@ -185,10 +185,10 @@ const ChatPage = () => {
       </div>
 
       {/* منطقة الرسائل */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 0 }}>
         {messages.length === 0 ? (
-          <div className="text-center py-10">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
               <Send size={32} className="text-gray-400" />
             </div>
             <p className="text-gray-500">لا توجد رسائل بعد</p>
