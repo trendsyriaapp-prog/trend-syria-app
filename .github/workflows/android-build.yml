@@ -37,6 +37,7 @@ jobs:
       run: yarn build
       env:
         REACT_APP_BACKEND_URL: https://shopper-suite.preview.emergentagent.com
+        CI: false
     
     - name: Sync Capacitor
       run: npx cap sync android
