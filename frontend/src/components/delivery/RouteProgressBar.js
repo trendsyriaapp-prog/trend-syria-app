@@ -47,16 +47,16 @@ const RouteProgressBar = ({
       const orderId = order.id;
       const status = isFood ? order.status : order.delivery_status;
       
-      // تحديد حالة المحطة
+      // تحديد حالة المحطة - الاعتماد على pickup_code_verified للطعام
       const isPickedUp = isFood 
-        ? (status === 'out_for_delivery' || order.pickup_code_verified)
+        ? (order.pickup_code_verified === true) // فقط إذا تم التحقق من كود الاستلام
         : (status === 'picked_up' || status === 'out_for_delivery');
       
       const isDelivered = isFood
         ? (status === 'delivered')
         : (status === 'delivered');
 
-      // محطة الاستلام من المتجر
+      // محطة الاستلام من المتجر - تظهر إذا لم يتم الاستلام بعد
       if (!isPickedUp && !isDelivered) {
         result.push({
           id: `pickup-${orderId}`,
