@@ -150,9 +150,13 @@ const RouteProgressBar = ({
 
     // طلبات الطعام: فحص GPS
     if (!navigator.geolocation) {
-      toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
-      setShowPickupCodeModal(station);
-      return;
+      toast({ 
+        title: "❌ خطأ", 
+        description: "المتصفح لا يدعم تحديد الموقع - يرجى استخدام متصفح حديث", 
+        variant: "destructive",
+        duration: 5000
+      });
+      return; // لا نفتح modal الكود
     }
 
     setCheckingLocationFor(station.id);
@@ -177,24 +181,42 @@ const RouteProgressBar = ({
           const errorMsg = error.response?.data?.detail || error.response?.data?.message || "حدث خطأ";
           
           if (errorMsg.includes('بعيد') || errorMsg.includes('المسافة')) {
+            // السائق بعيد عن المتجر - لا تفتح modal الكود
             toast({ 
               title: "📍 أنت بعيد عن المتجر", 
               description: errorMsg, 
               variant: "destructive",
               duration: 5000
             });
+            // لا نفتح modal الكود - يجب أن يقترب السائق أولاً
+          } else if (error.response?.status === 404) {
+            // الطلب غير موجود
+            toast({ title: "❌ خطأ", description: "الطلب غير موجود أو تم إلغاؤه", variant: "destructive" });
           } else {
-            toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
-            // فتح modal الكود على أي حال
-            setShowPickupCodeModal(station);
+            // خطأ آخر - نعرض الرسالة فقط
+            toast({ title: "❌ خطأ", description: errorMsg, variant: "destructive" });
           }
         }
       },
       (error) => {
         setCheckingLocationFor(null);
         console.error("GPS Error:", error);
-        toast({ title: "⚠️ تعذر تحديد موقعك", description: "سيتم فتح نافذة الكود", variant: "destructive" });
-        setShowPickupCodeModal(station);
+        // فشل GPS - نعرض رسالة توضيحية
+        let gpsErrorMsg = "تعذر تحديد موقعك";
+        if (error.code === 1) {
+          gpsErrorMsg = "يرجى السماح بالوصول للموقع من إعدادات المتصفح";
+        } else if (error.code === 2) {
+          gpsErrorMsg = "تعذر الحصول على موقعك - تأكد من تفعيل GPS";
+        } else if (error.code === 3) {
+          gpsErrorMsg = "انتهت مهلة تحديد الموقع - حاول مرة أخرى";
+        }
+        toast({ 
+          title: "⚠️ خطأ في تحديد الموقع", 
+          description: gpsErrorMsg, 
+          variant: "destructive",
+          duration: 5000
+        });
+        // لا نفتح modal الكود - يجب إصلاح GPS أولاً
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
