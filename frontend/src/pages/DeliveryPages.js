@@ -508,8 +508,8 @@ const DeliveryDashboard = () => {
   const [showRouteMapForOrder, setShowRouteMapForOrder] = useState(null);
 
   // تتبع موقع السائق تلقائياً عندما يكون لديه طلبات قيد التوصيل
-  const currentOrderId = myFoodOrders.find(o => o.status === 'out_for_delivery')?.id || 
-                         myOrders.find(o => o.delivery_status === 'out_for_delivery')?.id;
+  const currentOrderId = (Array.isArray(myFoodOrders) ? myFoodOrders : []).find(o => o.status === 'out_for_delivery')?.id || 
+                         (Array.isArray(myOrders) ? myOrders : []).find(o => o.delivery_status === 'out_for_delivery')?.id;
   const hasActiveDelivery = !!currentOrderId;
   
   const { isTracking } = useDriverLocationTracker(hasActiveDelivery, currentOrderId);
@@ -814,7 +814,7 @@ const DeliveryDashboard = () => {
     } catch (error) {
       // إذا كان الخطأ بسبب عدم التحقق من الكود
       if (error.response?.data?.detail?.includes('كود التسليم')) {
-        const order = myOrders.find(o => o.id === orderId);
+        const order = (Array.isArray(myOrders) ? myOrders : []).find(o => o.id === orderId);
         if (order) {
           setShowDeliveryChecklist(null);
           setShowDeliveryCodeModal(order);
