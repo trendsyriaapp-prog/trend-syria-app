@@ -1048,11 +1048,15 @@ const PlatformSettingsTab = () => {
 
   const fetchSettings = async () => {
     try {
-      const response = await axios.get(`${API}/api/admin/settings`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/admin/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSettings(response.data);
     } catch (error) {
       console.error('Error fetching settings:', error);
-      toast({ title: "خطأ", description: "فشل تحميل الإعدادات", variant: "destructive" });
+      const errorMsg = error.response?.data?.detail || "فشل تحميل الإعدادات";
+      toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
