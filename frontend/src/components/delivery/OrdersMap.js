@@ -2496,8 +2496,8 @@ const OrdersMap = ({
                                 </div>
                               ) : null}
                               
-                              {/* زر قبول الطلب - يظهر على المطعم/المتجر (وليس العميل) */}
-                              {(marker.type === 'food-store' || marker.type === 'product-store') && (
+                              {/* زر قبول الطلب - يظهر فقط للطلبات المتاحة (غير المقبولة) */}
+                              {(marker.type === 'food-store' || marker.type === 'product-store') && !marker.isMyOrder && (
                                 <button
                                   onClick={() => {
                                     if (marker.type === 'food-store') {
@@ -2510,6 +2510,25 @@ const OrdersMap = ({
                                 >
                                   ✅ قبول الطلب
                                 </button>
+                              )}
+                              
+                              {/* أزرار لطلباتي المقبولة */}
+                              {(marker.type === 'food-store' || marker.type === 'product-store') && marker.isMyOrder && (
+                                <div className="space-y-1">
+                                  <button
+                                    onClick={() => {
+                                      const order = marker.order;
+                                      const storeCoords = marker.position;
+                                      if (storeCoords) {
+                                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${storeCoords[0]},${storeCoords[1]}&travelmode=driving`, '_blank');
+                                      }
+                                    }}
+                                    className="w-full py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-[10px] font-bold transition-colors"
+                                  >
+                                    🗺️ التنقل للمتجر
+                                  </button>
+                                  <p className="text-[9px] text-center text-green-400">✓ طلب مقبول</p>
+                                </div>
                               )}
                             </>
                           )}
