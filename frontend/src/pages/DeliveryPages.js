@@ -643,34 +643,31 @@ const DeliveryDashboard = () => {
       const prevMyFoodOrderIds = (myFoodOrders || []).map(o => o.id);
       const prevMyOrderIds = (myOrders || []).map(o => o.id);
       
-      const [availableRes, myProductRes, availableFoodRes, myFoodRes] = await Promise.all([
+      const [availableRes, myProductRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/delivery/available-orders`),
         axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [], is_locked: false } })),
-        axios.get(`${API}/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
         axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
-      setAvailableOrders(availableRes.data);
+      
+      // /api/delivery/available-orders يُرجع كل الطلبات المتاحة (منتجات + طعام)
+      const allAvailable = availableRes.data || [];
+      
+      // فصل طلبات المنتجات عن طلبات الطعام
+      const availableProductOrders = allAvailable.filter(o => o.order_source !== 'food' && !o.store_id && !o.restaurant_name);
+      const availableFoodOrdersFromAPI = allAvailable.filter(o => o.order_source === 'food' || o.store_id || o.restaurant_name);
+      
+      // تعيين طلبات المنتجات المتاحة فقط (بدون طعام لتجنب التكرار)
+      setAvailableOrders(availableProductOrders);
+      
+      // تعيين طلبات الطعام المتاحة
+      setAvailableFoodOrders(availableFoodOrdersFromAPI);
+      
       // استخدام my-product-orders الذي يحتوي على معلومات القفل
       const productOrdersData = myProductRes.data;
       setMyOrders(productOrdersData.orders || []);
       
-      // معالجة طلبات الطعام - دمج الطلبات الفردية والمجمعة مع إزالة التكرار
-      const foodData = availableFoodRes.data || {};
-      const singleOrders = foodData.single_orders || [];
-      const batchOrders = (foodData.batch_orders || []).flatMap(batch => 
-        batch.orders.map(order => ({ ...order, is_batch: true, batch_info: batch }))
-      );
-      
-      // إزالة أي طلبات مكررة بناءً على الـ id
-      const allFoodOrders = [...singleOrders, ...batchOrders];
-      const uniqueFoodOrders = allFoodOrders.filter((order, index, self) => 
-        index === self.findIndex(o => o.id === order.id)
-      );
-      setAvailableFoodOrders(uniqueFoodOrders);
-      
-      // طلبات نظام التنسيق الجديد (طلبات سائق من البائع)
-      const requestedOrders = foodData.driver_requested_orders || [];
-      setDriverRequestedOrders(requestedOrders);
+      // لا نحتاج استدعاء API منفصل لطلبات الطعام المتاحة - تم دمجها أعلاه
+      setDriverRequestedOrders([]);
       
       const newMyFoodOrders = myFoodRes.data || [];
       setMyFoodOrders(newMyFoodOrders);
