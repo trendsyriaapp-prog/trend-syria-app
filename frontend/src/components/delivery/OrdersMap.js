@@ -1813,6 +1813,74 @@ const OrdersMap = ({
     }
   });
 
+  // ⭐ إنشاء خطوط ملونة تربط كل متجر بعميله
+  const ROUTE_COLORS = [
+    '#ef4444', // أحمر
+    '#3b82f6', // أزرق
+    '#22c55e', // أخضر
+    '#f59e0b', // برتقالي
+    '#8b5cf6', // بنفسجي
+    '#ec4899', // وردي
+    '#06b6d4', // سماوي
+  ];
+
+  const orderRouteLines = useMemo(() => {
+    const lines = [];
+    let colorIndex = 0;
+
+    // خطوط لطلبات الطعام الخاصة بي
+    myFoodOrders.forEach(order => {
+      const storeCoords = getStoreCoordinates(order);
+      const customerCoords = getOrderCoordinates(order);
+      
+      if (storeCoords && customerCoords) {
+        const color = ROUTE_COLORS[colorIndex % ROUTE_COLORS.length];
+        const isPickedUp = order.status === 'out_for_delivery' || order.pickup_code_verified;
+        
+        lines.push({
+          id: `route-food-${order.id}`,
+          positions: [storeCoords, customerCoords],
+          color: color,
+          dashArray: isPickedUp ? null : '10, 10', // متقطع إذا لم يستلم بعد
+          weight: 3,
+          opacity: 0.8,
+          orderId: order.id,
+          storeName: order.store_name || order.restaurant_name,
+          customerName: order.customer_name
+        });
+        colorIndex++;
+      }
+    });
+
+    // خطوط لطلبات المنتجات الخاصة بي
+    myOrders.forEach(order => {
+      if (order.order_source === 'food') return;
+      
+      const storeCoords = getStoreCoordinates(order);
+      const customerCoords = getOrderCoordinates(order);
+      
+      if (storeCoords && customerCoords) {
+        const color = ROUTE_COLORS[colorIndex % ROUTE_COLORS.length];
+        const isPickedUp = order.delivery_status === 'out_for_delivery' || order.picked_up;
+        
+        lines.push({
+          id: `route-product-${order.id}`,
+          positions: [storeCoords, customerCoords],
+          color: color,
+          dashArray: isPickedUp ? null : '10, 10',
+          weight: 3,
+          opacity: 0.8,
+          orderId: order.id,
+          storeName: order.seller_name || order.store_name,
+          customerName: order.customer_name
+        });
+        colorIndex++;
+      }
+    });
+
+    return lines;
+  }, [myFoodOrders, myOrders]);
+
   // تصفية العلامات حسب الطبقة المختارة + فلتر الطلبات + التحقق من صحة الإحداثيات
   const filteredMarkers = markers.filter(m => {
     // التحقق من وجود إحداثيات صحيحة
@@ -2458,6 +2526,32 @@ const OrdersMap = ({
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   
+                  {/* ⭐ خطوط ملونة تربط كل متجر بعميله */}
+                  {orderFilter !== 'available' && orderRouteLines.map(line => (
+                    <Polyline
+                      key={line.id}
+                      positions={line.positions}
+                      pathOptions={{
+                        color: line.color,
+                        weight: line.weight,
+                        opacity: line.opacity,
+                        dashArray: line.dashArray
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-right text-xs">
+                          <p className="font-bold mb-1" style={{ color: line.color }}>
+                            🛒 {line.storeName}
+                          </p>
+                          <p>👤 {line.customerName}</p>
+                          <p className="text-gray-400 text-[10px] mt-1">
+                            {line.dashArray ? '📦 بانتظار الاستلام' : '🚚 جاهز للتوصيل'}
+                          </p>
+                        </div>
+                      </Popup>
+                    </Polyline>
+                  ))}
+
                   {filteredMarkers.map(marker => (
                     <Marker
                       key={marker.id}
@@ -2474,6 +2568,15 @@ const OrdersMap = ({
                           
                           {marker.order && (
                             <>
+                              {/* ⭐ اسم المطعم/المتجر */}
+                              {(marker.order.store_name || marker.order.restaurant_name || marker.order.seller_name) && (
+                                <div className="bg-amber-50 rounded p-1.5 mb-2 border border-amber-200">
+                                  <p className="text-amber-800 font-bold text-xs text-center">
+                                    🏪 {marker.order.store_name || marker.order.restaurant_name || marker.order.seller_name}
+                                  </p>
+                                </div>
+                              )}
+                              
                               {/* معلومات التواصل */}
                               <div className="text-[10px] text-gray-600 mb-2 bg-gray-50 rounded p-1.5">
                                 <p className="font-medium truncate mb-1">📍 {

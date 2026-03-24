@@ -128,9 +128,61 @@ const MyOrdersList = ({
     return order.driver_earnings || order.driver_delivery_fee || order.delivery_fee || 0;
   };
 
-  // وصلت للمتجر
+  // وصلت للمتجر - مع فحص المسافة GPS
   const handleArrivedAtStore = async (order) => {
-    setShowPickupCodeModal(order);
+    // الحصول على موقع السائق الحالي
+    if (!navigator.geolocation) {
+      toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
+      setShowPickupCodeModal(order);
+      return;
+    }
+
+    toast({ title: "جاري التحقق...", description: "يتم التحقق من موقعك" });
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const isFood = order.store_id || order.restaurant_name;
+          
+          // استدعاء API لتسجيل الوصول مع فحص المسافة
+          const endpoint = isFood 
+            ? `${API}/food/orders/${order.id}/driver/arrived-at-store?latitude=${latitude}&longitude=${longitude}`
+            : `${API}/orders/${order.id}/driver/arrived-at-store?latitude=${latitude}&longitude=${longitude}`;
+
+          await axios.post(endpoint);
+          
+          // إذا نجح، افتح modal الكود
+          toast({ title: "تم!", description: "تم تسجيل وصولك للمتجر" });
+          setShowPickupCodeModal(order);
+        } catch (error) {
+          const errorMsg = error.response?.data?.detail || "حدث خطأ";
+          // إذا كان الخطأ بسبب المسافة، أظهر رسالة واضحة
+          if (errorMsg.includes("متر") || errorMsg.includes("قرب")) {
+            toast({ 
+              title: "⚠️ أنت بعيد عن المتجر", 
+              description: errorMsg, 
+              variant: "destructive",
+              duration: 5000
+            });
+          } else {
+            // إذا كان خطأ آخر، افتح modal الكود على أي حال
+            setShowPickupCodeModal(order);
+          }
+        }
+      },
+      (error) => {
+        // إذا فشل الحصول على الموقع، افتح modal الكود مباشرة
+        console.error("GPS Error:", error);
+        toast({ 
+          title: "تعذر تحديد موقعك", 
+          description: "سيتم فتح نافذة الكود مباشرة", 
+          variant: "default" 
+        });
+        setShowPickupCodeModal(order);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   // تأكيد الاستلام بالكود
