@@ -1023,6 +1023,7 @@ const DeliveryDashboard = () => {
         {/* Tabs - طلبات متاحة و طلباتي فقط */}
         <div className="flex gap-2 mb-3">
           <button
+            data-testid="available-orders-tab"
             onClick={() => setActiveTab('available')}
             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'available' 
@@ -1035,6 +1036,7 @@ const DeliveryDashboard = () => {
             طلبات متاحة ({availableOrders.length + availableFoodOrders.length})
           </button>
           <button
+            data-testid="my-orders-tab"
             onClick={() => setActiveTab('my')}
             className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'my' 

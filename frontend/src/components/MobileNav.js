@@ -22,6 +22,10 @@ const MobileNav = () => {
   // إخفاء الشريط في صفحة تفاصيل المنتج
   const isProductPage = location.pathname.startsWith('/products/');
   if (isProductPage) return null;
+  
+  // إخفاء الشريط في صفحة المحادثة
+  const isChatPage = location.pathname.startsWith('/chat/');
+  if (isChatPage) return null;
 
   // التحقق من تفعيل منصة الطعام
   const foodEnabled = isFeatureEnabled('food_enabled');

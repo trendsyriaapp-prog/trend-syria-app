@@ -5,6 +5,7 @@ import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, Chevron
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import PickupWaitingTimer from './PickupWaitingTimer';
+import { OutgoingCallModal } from '../voip/VoIPCallModal';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -69,6 +70,7 @@ const MyOrdersList = ({
   const [helpReason, setHelpReason] = useState('');
   const [helpMessage, setHelpMessage] = useState('');
   const [helpLoading, setHelpLoading] = useState(false);
+  const [showVoIPCallModal, setShowVoIPCallModal] = useState(null); // VoIP call modal
   
   // أرباح اليوم (رقم صغير)
   const [todayEarnings, setTodayEarnings] = useState({ current: 0, change: 0 });
@@ -458,28 +460,18 @@ const MyOrdersList = ({
     window.open(url, '_blank');
   };
 
-  // اتصال بالعميل - داخل التطبيق
-  const callCustomerInternal = async (order) => {
-    try {
-      const res = await axios.post(`${API}/call-requests`, {
-        order_id: order.id,
-        order_type: order.store_id ? 'food' : 'shopping',
-        reason: 'اتصال بالعميل'
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+  // اتصال بالعميل - VoIP داخل التطبيق
+  const callCustomerVoIP = (order) => {
+    // التحقق من دعم المتصفح للميكروفون
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast({
-        title: "✅ جاري الاتصال",
-        description: "سيتم توصيلك بالعميل",
-        duration: 3000
-      });
-    } catch (err) {
-      toast({
-        title: "❌ خطأ",
-        description: err.response?.data?.detail || 'فشل الاتصال',
+        title: "❌ غير مدعوم",
+        description: "متصفحك لا يدعم المكالمات الصوتية. يرجى استخدام Chrome أو Firefox.",
         variant: "destructive"
       });
+      return;
     }
+    setShowVoIPCallModal(order);
   };
 
   // اتصال بالبائع/المطعم - رقم مباشر
@@ -752,9 +744,9 @@ const MyOrdersList = ({
                       {/* الأزرار الثانوية */}
                       <div className="grid grid-cols-3 gap-2">
                         {status === 'to_customer' ? (
-                          // ذاهب للعميل - اتصال داخلي
+                          // ذاهب للعميل - اتصال VoIP داخلي
                           <button
-                            onClick={() => callCustomerInternal(order)}
+                            onClick={() => callCustomerVoIP(order)}
                             className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
                               isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-600 border border-blue-200'
                             }`}
@@ -1005,6 +997,17 @@ const MyOrdersList = ({
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* VoIP Call Modal */}
+      {showVoIPCallModal && (
+        <OutgoingCallModal
+          orderId={showVoIPCallModal.id}
+          orderType={showVoIPCallModal.store_id ? 'food' : 'shopping'}
+          orderNumber={showVoIPCallModal.order_number || showVoIPCallModal.id?.substring(0, 8)}
+          callerType="driver"
+          onClose={() => setShowVoIPCallModal(null)}
+        />
       )}
     </div>
   );

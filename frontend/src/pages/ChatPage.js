@@ -137,9 +137,9 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden" dir="rtl">
+    <div className="h-[100dvh] bg-gray-100 flex flex-col overflow-hidden" dir="rtl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 sticky top-0 z-10 shadow-lg flex-shrink-0">
+      <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 z-10 shadow-lg flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -147,37 +147,36 @@ const ChatPage = () => {
           >
             <ArrowRight size={24} />
           </button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="font-bold text-lg flex items-center gap-2">
               <User size={20} />
               محادثة العميل
             </h1>
-            <p className="text-sm text-white/80">
+            <p className="text-sm text-white/80 truncate">
               {order?.customer_name || 'العميل'}
             </p>
           </div>
           {/* زر الاتصال بالعميل */}
           <a
             href={`tel:${order?.customer_phone || order?.delivery_phone}`}
-            className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors flex items-center gap-2"
+            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
             title="اتصال بالعميل"
           >
             <Phone size={20} />
-            <span className="text-xs">العميل</span>
           </a>
         </div>
       </div>
 
       {/* معلومات الطلب */}
-      <div className="bg-white border-b p-3 shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+      <div className="bg-white border-b p-2 shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-3 text-xs text-gray-600">
           <div className="flex items-center gap-1">
-            <Package size={16} className="text-green-500" />
-            <span>طلب #{orderId?.substring(0, 8)}</span>
+            <Package size={14} className="text-green-500" />
+            <span>#{orderId?.substring(0, 8)}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <MapPin size={16} className="text-red-500" />
-            <span className="truncate max-w-[150px]">
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            <MapPin size={14} className="text-red-500 flex-shrink-0" />
+            <span className="truncate">
               {typeof order?.delivery_address === 'string' 
                 ? order.delivery_address 
                 : order?.delivery_address?.street || 'العنوان'}
@@ -226,22 +225,22 @@ const ChatPage = () => {
       </div>
 
       {/* الرسائل السريعة */}
-      <div className="bg-white border-t p-2 overflow-x-auto flex-shrink-0">
-        <div className="flex gap-2">
-          {quickMessages.map((msg, index) => (
+      <div className="bg-white border-t px-2 py-1.5 overflow-x-auto flex-shrink-0">
+        <div className="flex gap-1.5">
+          {quickMessages.slice(0, 4).map((msg, index) => (
             <button
               key={index}
               onClick={() => sendMessage(msg)}
-              className="flex-shrink-0 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700 transition-colors"
+              className="flex-shrink-0 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700 transition-colors whitespace-nowrap"
             >
-              {msg}
+              {msg.length > 15 ? msg.substring(0, 15) + '...' : msg}
             </button>
           ))}
         </div>
       </div>
 
       {/* حقل الإدخال */}
-      <div className="bg-white border-t p-3 flex-shrink-0">
+      <div className="bg-white border-t p-2 flex-shrink-0 pb-safe">
         <div className="flex gap-2">
           <input
             type="text"
@@ -249,19 +248,19 @@ const ChatPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage(newMessage)}
             placeholder="اكتب رسالتك..."
-            className="flex-1 px-4 py-3 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="flex-1 px-3 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             disabled={sending}
           />
           <button
             onClick={() => sendMessage(newMessage)}
             disabled={!newMessage.trim() || sending}
-            className={`p-3 rounded-full transition-colors ${
+            className={`p-2 rounded-full transition-colors ${
               newMessage.trim() && !sending
                 ? 'bg-green-500 text-white hover:bg-green-600'
                 : 'bg-gray-200 text-gray-400'
             }`}
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
       </div>
