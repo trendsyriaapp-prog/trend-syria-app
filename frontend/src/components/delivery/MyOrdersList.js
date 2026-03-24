@@ -172,7 +172,18 @@ const MyOrdersList = ({
           
         } catch (error) {
           setCheckingLocation(false);
-          const errorMsg = error.response?.data?.detail || "حدث خطأ";
+          
+          // التعامل مع أخطاء الشبكة
+          if (!error.response) {
+            toast({ 
+              title: "❌ خطأ في الاتصال", 
+              description: "تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت", 
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          const errorMsg = error.response?.data?.detail || error.response?.data?.message || "حدث خطأ غير متوقع";
           const statusCode = error.response?.status;
           
           // إذا كان الخطأ 400 = بعيد عن المتجر
@@ -184,19 +195,33 @@ const MyOrdersList = ({
               duration: 6000
             });
             // ❌ لا نفتح modal - يجب أن يقترب أكثر
-          } else if (statusCode === 404) {
-            // الطلب غير موجود
+          } else if (statusCode === 400) {
+            // خطأ 400 آخر (مثل: المتجر غير موجود، الطلب غير جاهز)
             toast({ 
-              title: "❌ خطأ", 
+              title: "❌ لا يمكن المتابعة", 
               description: errorMsg, 
               variant: "destructive"
             });
-          } else {
-            // خطأ آخر غير متوقع - نُظهر الرسالة فقط بدون modal
+          } else if (statusCode === 404) {
+            // الطلب غير موجود
             toast({ 
-              title: "⚠️ تنبيه", 
+              title: "❌ الطلب غير موجود", 
               description: errorMsg, 
-              variant: "default"
+              variant: "destructive"
+            });
+          } else if (statusCode === 403) {
+            // غير مصرح
+            toast({ 
+              title: "❌ غير مصرح", 
+              description: "ليس لديك صلاحية لهذا الإجراء", 
+              variant: "destructive"
+            });
+          } else {
+            // خطأ آخر غير متوقع
+            toast({ 
+              title: "⚠️ حدث خطأ", 
+              description: errorMsg, 
+              variant: "destructive"
             });
           }
         }
