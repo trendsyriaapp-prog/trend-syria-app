@@ -375,35 +375,43 @@ const RouteProgressBar = ({
                 const isLoading = checkingLocationFor === currentStation.id;
                 
                 return (
-                  <button
-                    onClick={() => handleArrivedAtStore(currentStation)}
-                    disabled={isLoading || isLocked}
-                    data-testid="route-arrived-store-btn"
-                    className={`w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
-                      isLocked
-                        ? 'bg-gray-500 cursor-not-allowed opacity-70 text-white'
-                        : isLoading 
-                          ? 'bg-gray-400 cursor-wait text-white' 
-                          : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                    }`}
-                  >
-                    {isLocked ? (
-                      <>
-                        <Lock size={18} />
-                        مقفل - أكمل الطعام أولاً
-                      </>
-                    ) : isLoading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        جاري التحقق من موقعك...
-                      </>
-                    ) : (
-                      <>
-                        <MapPin size={18} />
-                        وصلت للمتجر
-                      </>
+                  <>
+                    <button
+                      onClick={() => handleArrivedAtStore(currentStation)}
+                      disabled={isLoading || isLocked}
+                      data-testid="route-arrived-store-btn"
+                      className={`w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
+                        isLocked
+                          ? 'bg-gray-500 cursor-not-allowed opacity-70 text-white'
+                          : isLoading 
+                            ? 'bg-gray-400 cursor-wait text-white' 
+                            : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                      }`}
+                    >
+                      {isLocked ? (
+                        <>
+                          <Lock size={18} />
+                          مقفل - أكمل الطعام أولاً
+                        </>
+                      ) : isLoading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          جاري التحقق من موقعك...
+                        </>
+                      ) : (
+                        <>
+                          <MapPin size={18} />
+                          وصلت للمتجر
+                        </>
+                      )}
+                    </button>
+                    {/* تحذير الوصول الكاذب */}
+                    {!isLocked && (
+                      <p className={`text-xs text-center mt-2 ${isDark ? 'text-red-400' : 'text-red-500'}`}>
+                        ⚠️ الإبلاغ عن وصول كاذب = تجميد الحساب نهائياً
+                      </p>
                     )}
-                  </button>
+                  </>
                 );
               })()
             ) : currentStation.canDeliver ? (

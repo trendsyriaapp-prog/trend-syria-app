@@ -193,19 +193,6 @@ const PickupWaitingTimer = ({
             </p>
           </div>
         )}
-
-        {/* تحذير مهم */}
-        <div className={`mt-3 p-2 rounded-lg border ${
-          isDark 
-            ? 'bg-red-500/10 border-red-500/30' 
-            : 'bg-red-50 border-red-200'
-        }`}>
-          <p className={`text-xs text-center leading-relaxed ${
-            isDark ? 'text-red-300' : 'text-red-600'
-          }`}>
-            ⚠️ تحذير: في حال الإبلاغ عن وصول كاذب من قبل البائع، سيتم تجميد حسابك بشكل دائم
-          </p>
-        </div>
       </div>
     </div>
   );

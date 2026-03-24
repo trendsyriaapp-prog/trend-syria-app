@@ -659,34 +659,42 @@ const MyOrdersList = ({
                           const isLoading = checkingLocationFor === order.id;
                           
                           return (
-                            <button
-                              onClick={() => handleArrivedAtStore(order)}
-                              disabled={isLoading || isLocked}
-                              className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
-                                isLocked
-                                  ? 'bg-gray-500 cursor-not-allowed opacity-70'
-                                  : isLoading 
-                                    ? 'bg-gray-400 cursor-wait' 
-                                    : 'bg-gradient-to-r from-green-500 to-green-600'
-                              }`}
-                            >
-                              {isLocked ? (
-                                <>
-                                  <Lock size={20} />
-                                  مقفل - أكمل الطعام أولاً
-                                </>
-                              ) : isLoading ? (
-                                <>
-                                  <Loader2 size={20} className="animate-spin" />
-                                  جاري التحقق من موقعك...
-                                </>
-                              ) : (
-                                <>
-                                  <MapPin size={20} />
-                                  وصلت للمتجر
-                                </>
+                            <>
+                              <button
+                                onClick={() => handleArrivedAtStore(order)}
+                                disabled={isLoading || isLocked}
+                                className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
+                                  isLocked
+                                    ? 'bg-gray-500 cursor-not-allowed opacity-70'
+                                    : isLoading 
+                                      ? 'bg-gray-400 cursor-wait' 
+                                      : 'bg-gradient-to-r from-green-500 to-green-600'
+                                }`}
+                              >
+                                {isLocked ? (
+                                  <>
+                                    <Lock size={20} />
+                                    مقفل - أكمل الطعام أولاً
+                                  </>
+                                ) : isLoading ? (
+                                  <>
+                                    <Loader2 size={20} className="animate-spin" />
+                                    جاري التحقق من موقعك...
+                                  </>
+                                ) : (
+                                  <>
+                                    <MapPin size={20} />
+                                    وصلت للمتجر
+                                  </>
+                                )}
+                              </button>
+                              {/* تحذير الوصول الكاذب */}
+                              {!isLocked && (
+                                <p className={`text-xs text-center mt-2 ${isDark ? 'text-red-400' : 'text-red-500'}`}>
+                                  ⚠️ الإبلاغ عن وصول كاذب = تجميد الحساب نهائياً
+                                </p>
                               )}
-                            </button>
+                            </>
                           );
                         })()
                       ) : (
