@@ -132,7 +132,8 @@ const MyOrdersList = ({
   };
 
   // وصلت للمتجر - مع فحص المسافة GPS
-  const [checkingLocation, setCheckingLocation] = useState(false);
+  // State لكل طلب على حدة - لمنع تحميل جميع الأزرار معاً
+  const [checkingLocationFor, setCheckingLocationFor] = useState(null);
   
   const handleArrivedAtStore = async (order) => {
     console.log('🚗 handleArrivedAtStore called with order:', order);
@@ -154,8 +155,8 @@ const MyOrdersList = ({
       return;
     }
 
-    // بدء التحقق - إظهار حالة التحميل
-    setCheckingLocation(true);
+    // بدء التحقق - إظهار حالة التحميل لهذا الطلب فقط
+    setCheckingLocationFor(order.id);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -164,7 +165,8 @@ const MyOrdersList = ({
           
           // استدعاء API لتسجيل الوصول مع فحص المسافة (طلبات الطعام فقط)
           console.log('📍 Order data:', { id: order.id, order_number: order.order_number, status: order.status });
-          const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
+          // إصلاح: إزالة /api/ المكرر - API يحتوي بالفعل على /api
+          const endpoint = `${API}/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           console.log('📍 Calling endpoint:', endpoint);
 
           await axios.post(endpoint, {}, {
@@ -172,12 +174,12 @@ const MyOrdersList = ({
           });
           
           // ✅ نجح - افتح modal الكود
-          setCheckingLocation(false);
+          setCheckingLocationFor(null);
           toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
           setShowPickupCodeModal(order);
           
         } catch (error) {
-          setCheckingLocation(false);
+          setCheckingLocationFor(null);
           
           // التعامل مع أخطاء الشبكة
           if (!error.response) {
@@ -247,7 +249,7 @@ const MyOrdersList = ({
       },
       (error) => {
         // فشل الحصول على الموقع
-        setCheckingLocation(false);
+        setCheckingLocationFor(null);
         console.error("GPS Error:", error);
         
         let errorMessage = "تعذر تحديد موقعك";
@@ -279,9 +281,10 @@ const MyOrdersList = ({
     setVerifying(true);
     try {
       const isFood = showPickupCodeModal.store_id || showPickupCodeModal.restaurant_name;
+      // إصلاح: إزالة /api/ المكرر
       const endpoint = isFood 
-        ? `${API}/api/food/orders/delivery/${showPickupCodeModal.id}/verify-pickup`
-        : `${API}/api/orders/${showPickupCodeModal.id}/delivery/pickup`;
+        ? `${API}/food/orders/delivery/${showPickupCodeModal.id}/verify-pickup`
+        : `${API}/orders/${showPickupCodeModal.id}/delivery/pickup`;
 
       // طلبات الطعام تستخدم "code" وطلبات المنتجات تستخدم "pickup_code"
       const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
@@ -320,9 +323,10 @@ const MyOrdersList = ({
     setVerifying(true);
     try {
       const isFood = showCodeModal.store_id || showCodeModal.restaurant_name;
+      // إصلاح: إزالة /api/ المكرر
       const endpoint = isFood 
-        ? `${API}/api/food/orders/delivery/${showCodeModal.id}/verify-code`
-        : `${API}/api/delivery/orders/${showCodeModal.id}/deliver`;
+        ? `${API}/food/orders/delivery/${showCodeModal.id}/verify-code`
+        : `${API}/delivery/orders/${showCodeModal.id}/deliver`;
 
       await axios.post(endpoint, { delivery_code: deliveryCode }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -608,14 +612,14 @@ const MyOrdersList = ({
                       {status === 'to_store' ? (
                         <button
                           onClick={() => handleArrivedAtStore(order)}
-                          disabled={checkingLocation}
+                          disabled={checkingLocationFor === order.id}
                           className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
-                            checkingLocation 
+                            checkingLocationFor === order.id 
                               ? 'bg-gray-400 cursor-wait' 
                               : 'bg-gradient-to-r from-green-500 to-green-600'
                           }`}
                         >
-                          {checkingLocation ? (
+                          {checkingLocationFor === order.id ? (
                             <>
                               <Loader2 size={20} className="animate-spin" />
                               جاري التحقق من موقعك...
