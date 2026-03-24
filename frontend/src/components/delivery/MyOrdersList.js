@@ -458,9 +458,41 @@ const MyOrdersList = ({
     window.open(url, '_blank');
   };
 
-  // اتصال بالعميل
-  const callCustomer = (phone) => {
-    window.open(`tel:${phone}`, '_self');
+  // اتصال بالعميل - داخل التطبيق
+  const callCustomerInternal = async (order) => {
+    try {
+      const res = await axios.post(`${API}/call-requests`, {
+        order_id: order.id,
+        order_type: order.store_id ? 'food' : 'shopping',
+        reason: 'اتصال بالعميل'
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      toast({
+        title: "✅ جاري الاتصال",
+        description: "سيتم توصيلك بالعميل",
+        duration: 3000
+      });
+    } catch (err) {
+      toast({
+        title: "❌ خطأ",
+        description: err.response?.data?.detail || 'فشل الاتصال',
+        variant: "destructive"
+      });
+    }
+  };
+
+  // اتصال بالبائع/المطعم - رقم مباشر
+  const callSeller = (phone) => {
+    if (phone) {
+      window.open(`tel:${phone}`, '_self');
+    } else {
+      toast({
+        title: "❌ خطأ",
+        description: "رقم البائع غير متوفر",
+        variant: "destructive"
+      });
+    }
   };
 
   // محادثة العميل
@@ -564,14 +596,9 @@ const MyOrdersList = ({
           const storePhone = order.store_phone || order.seller_phone || order.seller_addresses?.[0]?.phone || '';
           const customerName = order.buyer_address?.name || order.customer_name || 'العميل';
           const customerArea = order.buyer_address?.city || order.delivery_address?.city || '';
-          const customerPhone = order.buyer_address?.phone || order.customer_phone || '';
           const status = getOrderStatus(order);
           const earnings = getDriverEarnings(order);
           const isExpanded = expandedOrders[order.id];
-          
-          // تحديد من يجب الاتصال به: إذا في الطريق للمتجر = البائع، إذا في الطريق للعميل = العميل
-          const contactPhone = status === 'to_store' ? storePhone : customerPhone;
-          const contactLabel = status === 'to_store' ? 'البائع' : 'العميل';
 
           return (
             <motion.div
@@ -724,18 +751,32 @@ const MyOrdersList = ({
 
                       {/* الأزرار الثانوية */}
                       <div className="grid grid-cols-3 gap-2">
-                        <button
-                          onClick={() => contactPhone && callCustomer(contactPhone)}
-                          disabled={!contactPhone}
-                          className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
-                            contactPhone
-                              ? (isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-600 border border-blue-200')
-                              : (isDark ? 'bg-[#252525] text-gray-600' : 'bg-gray-100 text-gray-400')
-                          }`}
-                        >
-                          <Phone size={18} />
-                          <span>{contactLabel}</span>
-                        </button>
+                        {status === 'to_customer' ? (
+                          // ذاهب للعميل - اتصال داخلي
+                          <button
+                            onClick={() => callCustomerInternal(order)}
+                            className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
+                              isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-600 border border-blue-200'
+                            }`}
+                          >
+                            <Phone size={18} />
+                            <span>العميل</span>
+                          </button>
+                        ) : (
+                          // ذاهب للمتجر - رقم البائع مباشر
+                          <button
+                            onClick={() => callSeller(storePhone)}
+                            disabled={!storePhone}
+                            className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
+                              storePhone
+                                ? (isDark ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-green-50 text-green-600 border border-green-200')
+                                : (isDark ? 'bg-[#252525] text-gray-600' : 'bg-gray-100 text-gray-400')
+                            }`}
+                          >
+                            <Phone size={18} />
+                            <span>البائع</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => chatWithCustomer(order)}
                           className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
