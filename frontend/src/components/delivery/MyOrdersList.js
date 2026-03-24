@@ -183,8 +183,21 @@ const MyOrdersList = ({
             return;
           }
           
-          const errorMsg = error.response?.data?.detail || error.response?.data?.message || "حدث خطأ غير متوقع";
+          let errorMsg = error.response?.data?.detail || error.response?.data?.message || "";
           const statusCode = error.response?.status;
+          
+          // ترجمة الرسائل الإنجليزية الشائعة للعربية
+          if (errorMsg === "Not Found" || errorMsg === "not found") {
+            errorMsg = "الطلب أو المتجر غير موجود";
+          } else if (errorMsg === "Internal Server Error") {
+            errorMsg = "حدث خطأ في الخادم";
+          } else if (errorMsg === "Unauthorized") {
+            errorMsg = "غير مصرح لك";
+          } else if (errorMsg === "Forbidden") {
+            errorMsg = "ليس لديك صلاحية";
+          } else if (!errorMsg) {
+            errorMsg = "حدث خطأ غير متوقع";
+          }
           
           // إذا كان الخطأ 400 = بعيد عن المتجر
           if (statusCode === 400 && (errorMsg.includes("متر") || errorMsg.includes("بعيد") || errorMsg.includes("المسافة"))) {
@@ -203,10 +216,10 @@ const MyOrdersList = ({
               variant: "destructive"
             });
           } else if (statusCode === 404) {
-            // الطلب غير موجود
+            // الطلب غير موجود - عرض رسالة عربية فقط بدون description إنجليزي
             toast({ 
               title: "❌ الطلب غير موجود", 
-              description: errorMsg, 
+              description: "تأكد من أن الطلب مخصص لك ولم يتم إلغاؤه", 
               variant: "destructive"
             });
           } else if (statusCode === 403) {
