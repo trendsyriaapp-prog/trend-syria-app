@@ -415,6 +415,10 @@ const DeliveryDashboard = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'available');
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
+  
+  // حالة قفل طلبات المنتجات (عندما يكون هناك طلبات طعام نشطة)
+  const [isProductsLocked, setIsProductsLocked] = useState(false);
+  const [productsLockMessage, setProductsLockMessage] = useState('');
 
   // حالة توفر السائق
   const [isAvailable, setIsAvailable] = useState(false);
@@ -665,6 +669,10 @@ const DeliveryDashboard = () => {
       // استخدام my-product-orders الذي يحتوي على معلومات القفل
       const productOrdersData = myProductRes.data;
       setMyOrders(productOrdersData.orders || []);
+      
+      // حفظ حالة القفل لطلبات المنتجات
+      setIsProductsLocked(productOrdersData.is_locked || false);
+      setProductsLockMessage(productOrdersData.lock_message || '');
       
       // لا نحتاج استدعاء API منفصل لطلبات الطعام المتاحة - تم دمجها أعلاه
       setDriverRequestedOrders([]);
@@ -1248,6 +1256,8 @@ const DeliveryDashboard = () => {
             onOpenETAModal={openETAModal}
             orderTypeFilter={orderTypeFilter}
             theme={currentTheme}
+            isProductsLocked={isProductsLocked}
+            productsLockMessage={productsLockMessage}
             onRefresh={() => {
               fetchOrders();
               fetchWallet();

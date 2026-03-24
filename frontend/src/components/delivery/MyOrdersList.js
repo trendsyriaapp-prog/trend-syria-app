@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock } from 'lucide-react';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import { useToast } from '../../hooks/use-toast';
@@ -48,7 +48,9 @@ const MyOrdersList = ({
   orderTypeFilter = 'all',
   theme = 'dark',
   onOrderCancelled,
-  onRefresh
+  onRefresh,
+  isProductsLocked = false,
+  productsLockMessage = ''
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -142,8 +144,18 @@ const MyOrdersList = ({
     
     const isFood = order.store_id || order.restaurant_name;
     
-    // طلبات المنتجات: لا تحتاج فحص مسافة GPS - فتح modal الكود مباشرة
+    // طلبات المنتجات: تحقق من القفل أولاً
     if (!isFood) {
+      if (isProductsLocked) {
+        toast({ 
+          title: "⏳ طلبات المنتجات مقفلة", 
+          description: productsLockMessage || "أكمل توصيل طلبات الطعام أولاً", 
+          variant: "destructive",
+          duration: 5000
+        });
+        return;
+      }
+      // إذا لم تكن مقفلة، افتح modal الكود
       setShowPickupCodeModal(order);
       return;
     }
@@ -484,6 +496,20 @@ const MyOrdersList = ({
           </div>
         )}
 
+        {/* تنبيه قفل طلبات المنتجات */}
+        {isProductsLocked && safeOrders.length > 0 && (
+          <div className={`mb-3 p-3 rounded-xl border ${
+            isDark 
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+              : 'bg-amber-50 border-amber-200 text-amber-700'
+          }`}>
+            <div className="flex items-center gap-2">
+              <Lock size={18} />
+              <span className="font-medium text-sm">{productsLockMessage || 'طلبات المنتجات مقفلة - أكمل توصيل الطعام أولاً'}</span>
+            </div>
+          </div>
+        )}
+
         {/* زر Google Maps */}
         <button
           onClick={openGoogleMapsForAll}
@@ -610,27 +636,42 @@ const MyOrdersList = ({
 
                       {/* زر الإجراء الرئيسي */}
                       {status === 'to_store' ? (
-                        <button
-                          onClick={() => handleArrivedAtStore(order)}
-                          disabled={checkingLocationFor === order.id}
-                          className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
-                            checkingLocationFor === order.id 
-                              ? 'bg-gray-400 cursor-wait' 
-                              : 'bg-gradient-to-r from-green-500 to-green-600'
-                          }`}
-                        >
-                          {checkingLocationFor === order.id ? (
-                            <>
-                              <Loader2 size={20} className="animate-spin" />
-                              جاري التحقق من موقعك...
-                            </>
-                          ) : (
-                            <>
-                              <MapPin size={20} />
-                              وصلت للمتجر
-                            </>
-                          )}
-                        </button>
+                        (() => {
+                          const isFood = order.store_id || order.restaurant_name;
+                          const isLocked = !isFood && isProductsLocked;
+                          const isLoading = checkingLocationFor === order.id;
+                          
+                          return (
+                            <button
+                              onClick={() => handleArrivedAtStore(order)}
+                              disabled={isLoading || isLocked}
+                              className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
+                                isLocked
+                                  ? 'bg-gray-500 cursor-not-allowed opacity-70'
+                                  : isLoading 
+                                    ? 'bg-gray-400 cursor-wait' 
+                                    : 'bg-gradient-to-r from-green-500 to-green-600'
+                              }`}
+                            >
+                              {isLocked ? (
+                                <>
+                                  <Lock size={20} />
+                                  مقفل - أكمل الطعام أولاً
+                                </>
+                              ) : isLoading ? (
+                                <>
+                                  <Loader2 size={20} className="animate-spin" />
+                                  جاري التحقق من موقعك...
+                                </>
+                              ) : (
+                                <>
+                                  <MapPin size={20} />
+                                  وصلت للمتجر
+                                </>
+                              )}
+                            </button>
+                          );
+                        })()
                       ) : (
                         <button
                           onClick={() => handleArrivedAtCustomer(order)}
