@@ -29,6 +29,27 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 24, 2026 - Latest Session)
 
+#### Daily Earnings Widget for Drivers - COMPLETED ✅ (NEW)
+- **Feature**: Widget صغير يعرض ربح اليوم مقارنة بأمس في أعلى صفحة "طلباتي"
+- **Implementation**:
+  - Created `/app/frontend/src/components/delivery/DailyEarningsWidget.js`
+  - Integrated into `MyOrdersList.js`
+- **Features**:
+  - يعرض ربح اليوم بشكل كبير وواضح
+  - مقارنة مع أرباح أمس (نسبة التغير)
+  - شريط تقدم يُظهر التقدم مقارنة بأمس
+  - أيقونات ديناميكية (⬆️ للزيادة، ⬇️ للنقص)
+  - رسائل تحفيزية:
+    - "💪 ابدأ يومك بقبول طلب جديد!" (إذا لم يبدأ)
+    - "🚀 أداء رائع! تجاوزت أرباح أمس" (إذا تجاوز أمس)
+    - "⚡ استمر! باقي X ل.س للوصول لمستوى أمس" (إذا أقل من أمس)
+  - تنسيق أرقام ذكي (K, M للأرقام الكبيرة)
+- **API Used**: `GET /api/delivery/earnings/stats?period=today`
+- **Files Created**:
+  - `/app/frontend/src/components/delivery/DailyEarningsWidget.js`
+- **Files Modified**:
+  - `/app/frontend/src/components/delivery/MyOrdersList.js` - Added import and widget
+
 #### Driver UI Simplification - "طلباتي" Page Redesign - COMPLETED ✅ (NEW)
 - **Task**: Complete redesign and simplification of driver's "My Orders" page
 - **User Request**: Reduce complexity, create step-by-step workflow with single action per step

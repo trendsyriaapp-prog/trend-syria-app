@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
+import DailyEarningsWidget from './DailyEarningsWidget';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -274,6 +275,9 @@ const MyOrdersList = ({
 
   return (
     <div className="space-y-4">
+      {/* Widget ربح اليوم */}
+      <DailyEarningsWidget theme={isDark ? 'dark' : 'light'} />
+      
       {/* الملخص الإجمالي */}
       <div className={`rounded-2xl p-4 ${isDark ? 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30' : 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'}`}>
         <div className="flex items-center justify-between mb-3">
