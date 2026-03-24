@@ -66,7 +66,6 @@ const MyOrdersList = ({
   const [helpReason, setHelpReason] = useState('');
   const [helpMessage, setHelpMessage] = useState('');
   const [helpLoading, setHelpLoading] = useState(false);
-  const [showMap, setShowMap] = useState(false);
   
   // أرباح اليوم (رقم صغير)
   const [todayEarnings, setTodayEarnings] = useState({ current: 0, change: 0 });
@@ -348,28 +347,14 @@ const MyOrdersList = ({
         </button>
       </div>
 
-      {/* زر عرض الخريطة */}
-      <button
-        onClick={() => setShowMap(!showMap)}
-        className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${
-          isDark 
-            ? 'bg-[#1a1a1a] border border-[#333] text-white' 
-            : 'bg-white border border-gray-200 text-gray-900'
-        }`}
-      >
-        🗺️ {showMap ? 'إخفاء الخريطة' : `عرض الخريطة (${allOrders.length + (availableOrders?.length || 0) + (availableFoodOrders?.length || 0)} طلب)`}
-      </button>
-
       {/* الخريطة */}
-      {showMap && (
-        <OrdersMap
-          orders={availableOrders}
-          foodOrders={availableFoodOrders}
-          myOrders={orders}
-          myFoodOrders={foodOrders}
-          theme={theme}
-        />
-      )}
+      <OrdersMap
+        orders={availableOrders}
+        foodOrders={availableFoodOrders}
+        myOrders={orders}
+        myFoodOrders={foodOrders}
+        theme={theme}
+      />
 
       {/* قائمة الطلبات */}
       <div className="space-y-3">
