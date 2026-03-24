@@ -164,20 +164,31 @@ const MyOrdersList = ({
         } catch (error) {
           setCheckingLocation(false);
           const errorMsg = error.response?.data?.detail || "حدث خطأ";
+          const statusCode = error.response?.status;
           
-          // إذا كان الخطأ بسبب المسافة
-          if (errorMsg.includes("متر") || errorMsg.includes("قرب") || errorMsg.includes("بعيد")) {
+          // إذا كان الخطأ 400 = بعيد عن المتجر
+          if (statusCode === 400 && (errorMsg.includes("متر") || errorMsg.includes("بعيد") || errorMsg.includes("المسافة"))) {
             toast({ 
               title: "⚠️ أنت بعيد عن المتجر", 
               description: errorMsg, 
               variant: "destructive",
-              duration: 5000
+              duration: 6000
             });
             // ❌ لا نفتح modal - يجب أن يقترب أكثر
+          } else if (statusCode === 404) {
+            // الطلب غير موجود
+            toast({ 
+              title: "❌ خطأ", 
+              description: errorMsg, 
+              variant: "destructive"
+            });
           } else {
-            // خطأ آخر (مثل الطلب غير موجود) - افتح modal
-            toast({ title: "تنبيه", description: errorMsg, variant: "default" });
-            setShowPickupCodeModal(order);
+            // خطأ آخر غير متوقع - نُظهر الرسالة فقط بدون modal
+            toast({ 
+              title: "⚠️ تنبيه", 
+              description: errorMsg, 
+              variant: "default"
+            });
           }
         }
       },

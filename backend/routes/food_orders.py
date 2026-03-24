@@ -3251,30 +3251,45 @@ async def driver_arrived_at_store(
     
     # جلب موقع المتجر
     store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
-    if not store or not store.get("latitude") or not store.get("longitude"):
-        raise HTTPException(status_code=400, detail="المتجر ليس له موقع محدد")
+    if not store:
+        raise HTTPException(status_code=400, detail="المتجر غير موجود")
     
-    store_lat = store.get("latitude")
-    store_lon = store.get("longitude")
+    # قراءة إحداثيات المتجر من location.coordinates أو الحقول المباشرة
+    store_lat = None
+    store_lon = None
     
-    # حساب المسافة بين السائق والمتجر (Haversine formula)
-    import math
-    R = 6371000  # نصف قطر الأرض بالمتر
+    if store.get("location") and store["location"].get("coordinates"):
+        coords = store["location"]["coordinates"]
+        if len(coords) >= 2:
+            store_lon = coords[0]  # longitude first in GeoJSON
+            store_lat = coords[1]  # latitude second
     
-    lat1_rad = math.radians(latitude)
-    lat2_rad = math.radians(store_lat)
-    delta_lat = math.radians(store_lat - latitude)
-    delta_lon = math.radians(store_lon - longitude)
+    if not store_lat or not store_lon:
+        store_lat = store.get("latitude")
+        store_lon = store.get("longitude")
     
-    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    distance_meters = R * c
-    
-    if distance_meters > MAX_DISTANCE_METERS:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"يجب أن تكون قرب المتجر لتسجيل الوصول. أنت على بعد {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
-        )
+    if not store_lat or not store_lon:
+        # إذا لا يوجد موقع، نسمح بالمتابعة بدون فحص المسافة
+        print(f"⚠️ المتجر {store.get('name')} ليس له موقع GPS - تخطي فحص المسافة")
+    else:
+        # حساب المسافة بين السائق والمتجر (Haversine formula)
+        import math
+        R = 6371000  # نصف قطر الأرض بالمتر
+        
+        lat1_rad = math.radians(latitude)
+        lat2_rad = math.radians(store_lat)
+        delta_lat = math.radians(store_lat - latitude)
+        delta_lon = math.radians(store_lon - longitude)
+        
+        a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        distance_meters = R * c
+        
+        if distance_meters > MAX_DISTANCE_METERS:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"أنت بعيد عن المتجر! المسافة {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
+            )
     
     now = datetime.now(timezone.utc)
     
