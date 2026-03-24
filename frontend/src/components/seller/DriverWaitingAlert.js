@@ -1,8 +1,8 @@
 // /app/frontend/src/components/seller/DriverWaitingAlert.js
-// تنبيه للبائع عندما يكون السائق ينتظر - يظهر بعد 5 دقائق
+// تنبيه للبائع عندما يكون السائق ينتظر - تنبيهين فقط (5 دقائق و 10 دقائق)
 
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, AlertTriangle, Truck } from 'lucide-react';
+import { Clock, AlertTriangle, Truck, XCircle } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -21,9 +21,8 @@ const DriverWaitingAlert = ({
   });
   
   // حالة المؤقت
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [deduction, setDeduction] = useState(0);
-  const [showAlert, setShowAlert] = useState(false);
+  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+  const [alertLevel, setAlertLevel] = useState(0); // 0 = لا تنبيه، 1 = 5 دقائق، 2 = 10 دقائق
 
   // جلب إعدادات التعويض من الخادم
   useEffect(() => {
@@ -50,60 +49,41 @@ const DriverWaitingAlert = ({
     
     const arrivedDate = new Date(arrivedAt);
     const now = new Date();
-    const diff = Math.floor((now - arrivedDate) / 1000);
+    const diffMinutes = Math.floor((now - arrivedDate) / 1000 / 60);
     
-    return Math.max(0, diff);
+    return Math.max(0, diffMinutes);
   }, [arrivedAt]);
 
-  // حساب الخصم
-  const calculateDeduction = useCallback((elapsedSecs) => {
-    const elapsedMinutes = elapsedSecs / 60;
-    const maxWaiting = settings.max_waiting_time_minutes;
-    
-    if (elapsedMinutes <= maxWaiting) {
-      return 0;
-    }
-    
-    const extraMinutes = elapsedMinutes - maxWaiting;
-    const units = Math.ceil(extraMinutes / 5);
-    return Math.min(units * settings.compensation_per_5_minutes, settings.max_compensation_per_order);
-  }, [settings]);
-
-  // تحديث المؤقت كل ثانية
+  // تحديث كل 30 ثانية
   useEffect(() => {
     if (!arrivedAt) return;
 
     const update = () => {
-      const elapsed = calculateElapsed();
-      setElapsedSeconds(elapsed);
-      setDeduction(calculateDeduction(elapsed));
+      const mins = calculateElapsed();
+      setElapsedMinutes(mins);
       
-      // إظهار التنبيه بعد 5 دقائق (300 ثانية)
-      setShowAlert(elapsed >= 300);
+      // تحديد مستوى التنبيه
+      if (mins >= settings.max_waiting_time_minutes) {
+        setAlertLevel(2); // تنبيه المخالفة
+      } else if (mins >= 5) {
+        setAlertLevel(1); // تنبيه الانتظار
+      } else {
+        setAlertLevel(0); // لا تنبيه
+      }
     };
 
     update();
-    const interval = setInterval(update, 1000);
+    const interval = setInterval(update, 30000); // تحديث كل 30 ثانية
 
     return () => clearInterval(interval);
-  }, [arrivedAt, calculateElapsed, calculateDeduction]);
-
-  // تحويل الثواني لدقائق:ثواني
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-  const isOvertime = elapsedSeconds >= (settings.max_waiting_time_minutes * 60);
+  }, [arrivedAt, calculateElapsed, settings.max_waiting_time_minutes]);
 
   if (!arrivedAt) {
     return null;
   }
 
-  // أقل من 5 دقائق - إظهار فقط رسالة بسيطة
-  if (!showAlert) {
+  // أقل من 5 دقائق - رسالة بسيطة فقط
+  if (alertLevel === 0) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
         <div className="flex items-center gap-2">
@@ -113,7 +93,7 @@ const DriverWaitingAlert = ({
               {driverName} وصل للمتجر
             </p>
             <p className="text-xs text-green-600">
-              منذ {formatTime(elapsedSeconds)} - أعطِه كود الاستلام
+              منذ {elapsedMinutes} دقيقة - جهّز الطلب وأعطِه الكود
             </p>
           </div>
         </div>
@@ -121,85 +101,76 @@ const DriverWaitingAlert = ({
     );
   }
 
-  // أكثر من 5 دقائق - إظهار تنبيه قوي
-  return (
-    <div className={`rounded-xl overflow-hidden mt-2 border-2 ${
-      isOvertime 
-        ? 'bg-red-50 border-red-400 animate-pulse' 
-        : 'bg-amber-50 border-amber-400'
-    }`}>
-      <div className="p-3">
-        {/* رأس التنبيه */}
+  // تنبيه المستوى الأول - 5 دقائق
+  if (alertLevel === 1) {
+    return (
+      <div className="bg-amber-50 border-2 border-amber-400 rounded-xl p-3 mt-2 animate-pulse">
         <div className="flex items-center gap-2 mb-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            isOvertime ? 'bg-red-500' : 'bg-amber-500'
-          }`}>
-            <AlertTriangle size={18} className="text-white" />
+          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
+            <Clock size={18} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className={`text-sm font-bold ${isOvertime ? 'text-red-700' : 'text-amber-700'}`}>
-              {isOvertime ? '⚠️ تأخير! ستُخصم منك!' : '⏰ أسرع! السائق ينتظر'}
+            <p className="text-sm font-bold text-amber-700">
+              ⏰ {driverName} ينتظر منذ {elapsedMinutes} دقيقة
             </p>
-            <p className={`text-xs ${isOvertime ? 'text-red-600' : 'text-amber-600'}`}>
-              {driverName} ينتظر منذ {elapsedMinutes} دقيقة
+            <p className="text-xs text-amber-600">
+              متبقي {settings.max_waiting_time_minutes - elapsedMinutes} دقائق قبل المخالفة
             </p>
-          </div>
-          <div className={`text-2xl font-bold ${isOvertime ? 'text-red-600' : 'text-amber-600'}`}>
-            {formatTime(elapsedSeconds)}
           </div>
         </div>
-
-        {/* شريط التقدم */}
-        <div className="h-2 rounded-full overflow-hidden mb-2 bg-gray-200">
-          <div 
-            className={`h-full rounded-full transition-all duration-500 ${
-              isOvertime ? 'bg-red-500' : 'bg-amber-500'
-            }`}
-            style={{ 
-              width: `${Math.min(100, (elapsedSeconds / (settings.max_waiting_time_minutes * 60)) * 100)}%` 
-            }}
-          />
+        
+        <div className="bg-amber-100 rounded-lg p-2 mb-2">
+          <p className="text-xs text-amber-700 text-center">
+            ⚠️ بعد {settings.max_waiting_time_minutes - elapsedMinutes} دقائق ستُخالف بمبلغ {settings.compensation_per_5_minutes.toLocaleString()} ل.س
+          </p>
         </div>
 
-        {/* معلومات الخصم */}
-        {isOvertime && deduction > 0 && (
-          <div className="bg-red-100 rounded-lg p-2 mb-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-red-700">
-                الخصم الحالي:
-              </p>
-              <p className="text-lg font-bold text-red-600">
-                -{deduction.toLocaleString()} ل.س
-              </p>
-            </div>
-            <p className="text-xs text-red-500 mt-1">
-              يزيد {settings.compensation_per_5_minutes.toLocaleString()} ل.س كل 5 دقائق (حد أقصى {settings.max_compensation_per_order.toLocaleString()})
-            </p>
-          </div>
-        )}
-
-        {!isOvertime && (
-          <div className="bg-amber-100 rounded-lg p-2 mb-2">
-            <p className="text-xs text-amber-700 text-center">
-              متبقي <span className="font-bold">{formatTime((settings.max_waiting_time_minutes * 60) - elapsedSeconds)}</span> قبل بدء الخصم
-            </p>
-          </div>
-        )}
-
-        {/* زر إعطاء الكود */}
         {onGiveCode && (
           <button
             onClick={onGiveCode}
-            className={`w-full py-3 rounded-xl font-bold text-white text-sm ${
-              isOvertime 
-                ? 'bg-red-500 hover:bg-red-600' 
-                : 'bg-amber-500 hover:bg-amber-600'
-            }`}
+            className="w-full py-2.5 rounded-xl font-bold text-white text-sm bg-amber-500 hover:bg-amber-600"
           >
-            📱 أعطِ السائق كود الاستلام الآن
+            📱 أعطِ السائق الكود الآن
           </button>
         )}
       </div>
+    );
+  }
+
+  // تنبيه المستوى الثاني - 10 دقائق (مخالفة)
+  return (
+    <div className="bg-red-50 border-2 border-red-500 rounded-xl p-3 mt-2">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center animate-pulse">
+          <XCircle size={18} className="text-white" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-bold text-red-700">
+            🚨 مخالفة! {driverName} ينتظر منذ {elapsedMinutes} دقيقة
+          </p>
+        </div>
+      </div>
+      
+      <div className="bg-red-100 rounded-lg p-3 mb-2">
+        <div className="text-center">
+          <p className="text-xs text-red-600 mb-1">سيُخصم من حسابك:</p>
+          <p className="text-xl font-bold text-red-600">
+            -{settings.compensation_per_5_minutes.toLocaleString()} ل.س
+          </p>
+          <p className="text-xs text-red-500 mt-1">
+            (يزيد {settings.compensation_per_5_minutes.toLocaleString()} ل.س كل 5 دقائق - الحد الأقصى {settings.max_compensation_per_order.toLocaleString()} ل.س)
+          </p>
+        </div>
+      </div>
+
+      {onGiveCode && (
+        <button
+          onClick={onGiveCode}
+          className="w-full py-2.5 rounded-xl font-bold text-white text-sm bg-red-500 hover:bg-red-600"
+        >
+          📱 أعطِ السائق الكود فوراً!
+        </button>
+      )}
     </div>
   );
 };
