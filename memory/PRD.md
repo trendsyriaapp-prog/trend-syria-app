@@ -29,7 +29,28 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 24, 2026 - Latest Session)
 
-#### Driver Can View All Orders but Accept Based on Active Orders - COMPLETED ✅ (NEW)
+#### Admin Platform Settings Authorization Fix - COMPLETED ✅ (NEW)
+- **Issue**: صفحة "إعدادات المنصة" في لوحة الأدمن تعرض خطأ "للمدراء فقط"
+- **Root Cause**: `fetchSettings()` في `PlatformSettingsTab.js` لم تكن تُرسل Authorization header
+- **Fix**: إضافة `headers: { Authorization: \`Bearer ${token}\` }` للطلب
+- **File Modified**: `/app/frontend/src/components/admin/PlatformSettingsTab.js` (lines 1049-1063)
+- **Testing**: Verified via testing_agent_v3_fork (iteration_129.json) - 100% pass rate
+
+#### Chat Page Layout Fix - VERIFIED ✅ (NEW)
+- **Issue**: صفحة الدردشة تتطلب تمريراً غير ضروري
+- **Fix**: استخدام `h-screen overflow-hidden` على العنصر الرئيسي
+- **File Modified**: `/app/frontend/src/pages/ChatPage.js` (line 140)
+- **Testing**: Verified via code review and testing agent
+
+#### Dynamic Call Button Logic - VERIFIED ✅ (NEW)
+- **Issue**: زر الاتصال كان يستخدم اتصال مباشر للعميل (خطأ)
+- **Fix**: 
+  - عند الذهاب للعميل (`to_customer`): يُظهر "العميل" ويستخدم `callCustomerInternal()` (اتصال داخل التطبيق)
+  - عند الذهاب للمتجر (`to_store`): يُظهر "البائع" ويستخدم `callSeller()` (اتصال مباشر `tel:`)
+- **File Modified**: `/app/frontend/src/components/delivery/MyOrdersList.js` (lines 754-779)
+- **Testing**: Verified via testing_agent_v3_fork (iteration_129.json) - 100% pass rate
+
+#### Driver Can View All Orders but Accept Based on Active Orders - COMPLETED ✅
 - **Feature**: السائق يرى جميع الطلبات لكن لا يستطيع قبول طلبات المنتجات إذا كان لديه طلبات طعام نشطة
 - **Implementation**:
   - Backend (`delivery.py` lines 585-615): يُضيف `can_accept` و `cannot_accept_reason` لكل طلب
@@ -301,7 +322,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### P1 - High Priority
 - [ ] Live payment verification for Sham Cash (waiting for account details)
-- [ ] Verify "Arrived at Store" distance check with real GPS coordinates (manual testing needed)
+- [ ] User verification of recent fixes: Platform Settings page, Chat Page layout, Call button logic
 
 ### P2 - Medium Priority
 - [ ] Improve price display (e.g., `9.4K` instead of `9,375`)
