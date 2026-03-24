@@ -1661,8 +1661,12 @@ const OrdersMap = ({
     });
   }
 
-  // إضافة طلبات الطعام - فقط التي لديها GPS
+  // إضافة طلبات الطعام - فقط التي لديها GPS (استبعاد طلباتي)
+  const myFoodOrderIds = new Set(myFoodOrders.map(o => o.id));
   foodOrders.forEach(order => {
+    // ⭐ استبعاد الطلبات التي قبلها السائق بالفعل
+    if (myFoodOrderIds.has(order.id)) return;
+    
     const customerCoords = getOrderCoordinates(order);
     const storeCoords = getStoreCoordinates(order);
     
@@ -1692,9 +1696,12 @@ const OrdersMap = ({
     }
   });
 
-  // إضافة طلبات المنتجات - فقط التي لديها GPS
+  // إضافة طلبات المنتجات - فقط التي لديها GPS (استبعاد طلباتي)
+  const myOrderIds = new Set(myOrders.map(o => o.id));
   orders.forEach(order => {
     if (order.order_source === 'food') return;
+    // ⭐ استبعاد الطلبات التي قبلها السائق بالفعل
+    if (myOrderIds.has(order.id)) return;
     
     const customerCoords = getOrderCoordinates(order);
     const storeCoords = getStoreCoordinates(order);
