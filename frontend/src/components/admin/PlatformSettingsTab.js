@@ -1128,11 +1128,14 @@ const PlatformSettingsTab = () => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/api/admin/settings`, settings);
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/admin/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await refreshSettings();
       toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المنصة" });
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل حفظ الإعدادات", variant: "destructive" });
     } finally {
       setSaving(false);
     }
