@@ -1902,6 +1902,58 @@ const OrdersMap = ({
     return lines;
   }, [activeMyFoodOrders, activeMyOrders]);
 
+  // ⭐ خطوط للطلبات المتاحة (بلون أخضر متقطع)
+  const availableRouteLines = useMemo(() => {
+    const lines = [];
+    const AVAILABLE_COLOR = '#10b981'; // أخضر زمردي
+    
+    // خطوط لطلبات الطعام المتاحة
+    foodOrders.forEach(order => {
+      const storeCoords = getStoreCoordinates(order);
+      const customerCoords = getOrderCoordinates(order);
+      
+      if (storeCoords && customerCoords) {
+        lines.push({
+          id: `avail-food-${order.id}`,
+          positions: [storeCoords, customerCoords],
+          color: AVAILABLE_COLOR,
+          dashArray: '8, 12', // متقطع
+          weight: 2,
+          opacity: 0.6,
+          orderId: order.id,
+          storeName: order.store_name || order.restaurant_name,
+          customerName: order.customer_name,
+          isAvailable: true
+        });
+      }
+    });
+
+    // خطوط لطلبات المنتجات المتاحة
+    orders.forEach(order => {
+      if (order.order_source === 'food') return;
+      
+      const storeCoords = getStoreCoordinates(order);
+      const customerCoords = getOrderCoordinates(order);
+      
+      if (storeCoords && customerCoords) {
+        lines.push({
+          id: `avail-product-${order.id}`,
+          positions: [storeCoords, customerCoords],
+          color: AVAILABLE_COLOR,
+          dashArray: '8, 12', // متقطع
+          weight: 2,
+          opacity: 0.6,
+          orderId: order.id,
+          storeName: order.seller_name || order.store_name,
+          customerName: order.customer_name,
+          isAvailable: true
+        });
+      }
+    });
+
+    return lines;
+  }, [foodOrders, orders]);
+
   // تصفية العلامات حسب الطبقة المختارة + فلتر الطلبات + التحقق من صحة الإحداثيات
   const filteredMarkers = markers.filter(m => {
     // التحقق من وجود إحداثيات صحيحة
@@ -2545,7 +2597,7 @@ const OrdersMap = ({
                   />
                   <MapUpdater center={mapCenter} zoom={12} />
                   
-                  {/* ⭐ خطوط ملونة تربط كل متجر بعميله */}
+                  {/* ⭐ خطوط ملونة تربط كل متجر بعميله (طلباتي) */}
                   {orderFilter !== 'available' && orderRouteLines.map(line => (
                     <Polyline
                       key={line.id}
@@ -2565,6 +2617,32 @@ const OrdersMap = ({
                           <p>👤 {line.customerName}</p>
                           <p className="text-gray-400 text-[10px] mt-1">
                             {line.dashArray ? '📦 بانتظار الاستلام' : '🚚 جاهز للتوصيل'}
+                          </p>
+                        </div>
+                      </Popup>
+                    </Polyline>
+                  ))}
+                  
+                  {/* ⭐ خطوط للطلبات المتاحة (أخضر متقطع) */}
+                  {orderFilter !== 'myOrders' && availableRouteLines.map(line => (
+                    <Polyline
+                      key={line.id}
+                      positions={line.positions}
+                      pathOptions={{
+                        color: line.color,
+                        weight: line.weight,
+                        opacity: line.opacity,
+                        dashArray: line.dashArray
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-right text-xs">
+                          <p className="font-bold mb-1 text-emerald-600">
+                            🏪 {line.storeName}
+                          </p>
+                          <p>👤 {line.customerName}</p>
+                          <p className="text-emerald-500 text-[10px] mt-1">
+                            ✨ متاح للقبول
                           </p>
                         </div>
                       </Popup>
