@@ -102,6 +102,19 @@ const OrdersMap = ({
   const myOrders = useMemo(() => myOrdersProp || [], [myOrdersProp]);
   const myFoodOrders = useMemo(() => myFoodOrdersProp || [], [myFoodOrdersProp]);
   
+  // فلترة الطلبات النشطة فقط (غير المسلمة وغير الملغاة)
+  const activeMyOrders = useMemo(() => 
+    myOrders.filter(o => o.status !== 'delivered' && o.delivery_status !== 'delivered' && o.status !== 'cancelled'),
+    [myOrders]
+  );
+  const activeMyFoodOrders = useMemo(() => 
+    myFoodOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled'),
+    [myFoodOrders]
+  );
+  
+  // عدد الطلبات النشطة
+  const activeOrdersCount = activeMyOrders.length + activeMyFoodOrders.length;
+  
   // تحديد الثيم الفعلي (للوضع التلقائي)
   const getEffectiveTheme = () => {
     if (theme === 'auto') {
@@ -255,7 +268,7 @@ const OrdersMap = ({
 
   // ⭐ مراقبة تغيير عدد الطلبات - لإعادة إظهار الطلبات المؤجلة عند انخفاض العدد
   useEffect(() => {
-    const currentOrderCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
+    const currentOrderCount = activeOrdersCount;
     
     // إذا انخفض عدد الطلبات (السائق سلّم طلب)
     if (currentOrderCount < previousOrderCount && maxLimitOrderIds.length > 0) {
@@ -269,7 +282,7 @@ const OrdersMap = ({
     if (currentOrderCount !== previousOrderCount) {
       setPreviousOrderCount(currentOrderCount);
     }
-  }, [myFoodOrders?.length, myOrders?.length]); // استخدام .length بدل الـ array كامل
+  }, [activeOrdersCount]); // استخدام العدد المفلتر
 
   // ⭐ جلب طلبات الأولوية كل 10 ثواني - يعمل دائماً عندما السائق لديه طلبات
   useEffect(() => {
@@ -279,7 +292,7 @@ const OrdersMap = ({
     const MAX_ORDERS_SAME_STORE = 7;
     
     // يعمل حتى لو الخريطة مغلقة - طالما السائق لديه طلبات نشطة
-    if (myFoodOrders?.length > 0 || myOrders?.length > 0) {
+    if (activeOrdersCount > 0) {
       const checkPriorityOrders = async () => {
         // تحقق إذا تم إيقاف الإشعارات مؤقتاً
         if (Date.now() < dismissedPriorityUntil) {
@@ -293,7 +306,7 @@ const OrdersMap = ({
         }
         
         // ⭐ التحقق من الحد الأقصى - لا تعرض popup إذا السائق وصل للحد
-        const currentOrdersCount = (myFoodOrders?.length || 0) + (myOrders?.length || 0);
+        const currentOrdersCount = activeOrdersCount;
         if (currentOrdersCount >= MAX_ORDERS_SAME_STORE) {
           console.log('🚫 السائق وصل للحد الأقصى، لن يظهر popup الأولوية:', currentOrdersCount);
           return;
@@ -844,7 +857,7 @@ const OrdersMap = ({
     let stationNumber = 1;
 
     // جمع كل الطلبات (طعام + منتجات) التي قبلها السائق
-    const allMyOrders = [...(myFoodOrders || []), ...(myOrders || [])];
+    const allMyOrders = [...(activeMyFoodOrders || []), ...(activeMyOrders || [])];
 
     if (allMyOrders.length === 0) {
       setOrderedStations([]);
@@ -921,7 +934,7 @@ const OrdersMap = ({
   // تحديث المحطات عند تغيير الطلبات
   useEffect(() => {
     calculateOrderedStations();
-  }, [myFoodOrders, myOrders]);
+  }, [activeMyFoodOrders, activeMyOrders]);
 
   // ألوان المسارات
   const routeColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#eab308'];
@@ -1753,8 +1766,8 @@ const OrdersMap = ({
     }
   });
 
-  // إضافة طلباتي من الطعام (المقبولة)
-  myFoodOrders.forEach(order => {
+  // إضافة طلباتي من الطعام (المقبولة والنشطة فقط)
+  activeMyFoodOrders.forEach(order => {
     const customerCoords = getOrderCoordinates(order);
     const storeCoords = getStoreCoordinates(order);
     
@@ -1786,8 +1799,8 @@ const OrdersMap = ({
     }
   });
 
-  // إضافة طلباتي من المنتجات (المقبولة)
-  myOrders.forEach(order => {
+  // إضافة طلباتي من المنتجات (المقبولة والنشطة فقط)
+  activeMyOrders.forEach(order => {
     if (order.order_source === 'food') return;
     
     const customerCoords = getOrderCoordinates(order);
@@ -1836,8 +1849,8 @@ const OrdersMap = ({
     const lines = [];
     let colorIndex = 0;
 
-    // خطوط لطلبات الطعام الخاصة بي
-    myFoodOrders.forEach(order => {
+    // خطوط لطلبات الطعام الخاصة بي (النشطة فقط)
+    activeMyFoodOrders.forEach(order => {
       const storeCoords = getStoreCoordinates(order);
       const customerCoords = getOrderCoordinates(order);
       
@@ -1860,8 +1873,8 @@ const OrdersMap = ({
       }
     });
 
-    // خطوط لطلبات المنتجات الخاصة بي
-    myOrders.forEach(order => {
+    // خطوط لطلبات المنتجات الخاصة بي (النشطة فقط)
+    activeMyOrders.forEach(order => {
       if (order.order_source === 'food') return;
       
       const storeCoords = getStoreCoordinates(order);
@@ -1887,7 +1900,7 @@ const OrdersMap = ({
     });
 
     return lines;
-  }, [myFoodOrders, myOrders]);
+  }, [activeMyFoodOrders, activeMyOrders]);
 
   // تصفية العلامات حسب الطبقة المختارة + فلتر الطلبات + التحقق من صحة الإحداثيات
   const filteredMarkers = markers.filter(m => {
@@ -1920,11 +1933,11 @@ const OrdersMap = ({
 
   // عدد الطلبات التي لديها GPS
   const ordersWithGPS = markers.filter(m => m.type === 'customer' && m.hasRealGPS).length;
-  // حساب عدد الطلبات - يشمل الطلبات المتاحة وطلباتي
-  const totalOrders = (foodOrders?.length || 0) + (orders?.length || 0) + (myOrders?.length || 0) + (myFoodOrders?.length || 0);
+  // حساب عدد الطلبات - يشمل الطلبات المتاحة وطلباتي (النشطة فقط)
+  const totalOrders = (foodOrders?.length || 0) + (orders?.length || 0) + activeOrdersCount;
   
   // هل نعرض طلباتي فقط (بدون طلبات متاحة)؟
-  const isMyOrdersOnly = (myOrders?.length > 0 || myFoodOrders?.length > 0) && orders?.length === 0 && foodOrders?.length === 0;
+  const isMyOrdersOnly = activeOrdersCount > 0 && orders?.length === 0 && foodOrders?.length === 0;
 
   return (
     <>
@@ -2106,7 +2119,7 @@ const OrdersMap = ({
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  طلباتي ({(myOrders?.length || 0) + (myFoodOrders?.length || 0)})
+                  طلباتي ({activeOrdersCount})
                 </button>
                 
                 {/* الكل */}
@@ -2453,14 +2466,12 @@ const OrdersMap = ({
               )}
 
               {/* زر فتح Google Maps */}
-              {(myOrders?.length > 0 || myFoodOrders?.length > 0) && !stepByStepMode && (
+              {activeOrdersCount > 0 && !stepByStepMode && (
                 <div className="bg-[#1a1a1a] px-3 py-2 border-t border-[#333]">
                   <button
                     onClick={() => {
-                      // جمع جميع المحطات بالترتيب الصحيح
-                      const allMyOrdersList = [...(myOrders || []), ...(myFoodOrders || [])].filter(o => 
-                        o.status !== 'delivered' && o.delivery_status !== 'delivered'
-                      );
+                      // جمع جميع المحطات بالترتيب الصحيح (النشطة فقط)
+                      const allMyOrdersList = [...(activeMyOrders || []), ...(activeMyFoodOrders || [])];
                       
                       if (allMyOrdersList.length === 0) {
                         alert('لا توجد طلبات للتوصيل');
