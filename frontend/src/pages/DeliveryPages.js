@@ -587,12 +587,12 @@ const DeliveryDashboard = () => {
     }
   }, [availableOrders, availableFoodOrders, soundEnabled, isAvailable, playSound, playFood, playProduct, toast]);
 
-  // تحديث الطلبات كل 45 ثانية
+  // تحديث الطلبات كل 15 ثانية للكشف السريع عن التغييرات
   useEffect(() => {
     if (docStatus === 'approved') {
       const interval = setInterval(() => {
         fetchOrders();
-      }, 45000); // كل 45 ثانية
+      }, 15000); // كل 15 ثانية
       return () => clearInterval(interval);
     }
   }, [docStatus]);
@@ -639,6 +639,10 @@ const DeliveryDashboard = () => {
 
   const fetchOrders = async () => {
     try {
+      // حفظ الطلبات السابقة للمقارنة
+      const prevMyFoodOrderIds = (myFoodOrders || []).map(o => o.id);
+      const prevMyOrderIds = (myOrders || []).map(o => o.id);
+      
       const [availableRes, myProductRes, availableFoodRes, myFoodRes] = await Promise.all([
         axios.get(`${API}/delivery/available-orders`),
         axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [], is_locked: false } })),
@@ -668,7 +672,34 @@ const DeliveryDashboard = () => {
       const requestedOrders = foodData.driver_requested_orders || [];
       setDriverRequestedOrders(requestedOrders);
       
-      setMyFoodOrders(myFoodRes.data || []);
+      const newMyFoodOrders = myFoodRes.data || [];
+      setMyFoodOrders(newMyFoodOrders);
+      
+      // ======= التحقق من الطلبات الملغاة أو المحذوفة =======
+      const newMyFoodOrderIds = newMyFoodOrders.map(o => o.id);
+      const newMyOrderIds = (productOrdersData.orders || []).map(o => o.id);
+      
+      // طلبات الطعام التي اختفت
+      const cancelledFoodOrders = prevMyFoodOrderIds.filter(id => !newMyFoodOrderIds.includes(id));
+      if (cancelledFoodOrders.length > 0 && prevMyFoodOrderIds.length > 0) {
+        toast({
+          title: "⚠️ تم تغيير طلباتك",
+          description: `تم إلغاء أو نقل ${cancelledFoodOrders.length} طلب من قائمتك`,
+          variant: "destructive",
+          duration: 5000
+        });
+      }
+      
+      // طلبات المنتجات التي اختفت
+      const cancelledOrders = prevMyOrderIds.filter(id => !newMyOrderIds.includes(id));
+      if (cancelledOrders.length > 0 && prevMyOrderIds.length > 0) {
+        toast({
+          title: "⚠️ تم تغيير طلباتك",
+          description: `تم إلغاء أو نقل ${cancelledOrders.length} طلب منتجات من قائمتك`,
+          variant: "destructive",
+          duration: 5000
+        });
+      }
     } catch (error) {
       console.error(error);
     }

@@ -2549,133 +2549,178 @@ async def accept_food_order(
     cold_dry_limit = delivery_limits.get("cold_dry_limit", DEFAULT_COLD_DRY_LIMIT)
     max_distance_km = settings.get("food_orders_max_distance_km", 10) if settings else 10
     
-    # البحث عن الطلب الجديد أولاً
-    order = await db.food_orders.find_one({
-        "id": order_id, 
-        "status": {"$in": ["ready", "ready_for_pickup"]}, 
-        "driver_id": None
-    })
-    if not order:
-        raise HTTPException(status_code=404, detail="الطلب غير متاح")
-    
-    # جلب معلومات المتجر لمعرفة نوعه
-    store = await db.food_stores.find_one({"id": order.get("store_id")})
-    new_store_type = store.get("store_type", "restaurants") if store else "restaurants"
-    new_store_category = get_store_delivery_category(new_store_type)
-    
-    # التحقق من عدد الطلبات الحالية للسائق
-    current_orders = await db.food_orders.find({
-        "driver_id": user["id"],
-        "status": "out_for_delivery"
-    }).to_list(length=100)
-    
-    # التحقق إذا كان السائق لديه طلب تجميعي طعام - لا يمكنه قبول طلبات أخرى
-    # ملاحظة: طلبات الطعام التجميعية فقط تقفل السائق (لأن الطعام يبرد)
-    has_food_batch_order = any(o.get("batch_id") and o.get("order_source") != "products" for o in current_orders)
-    if has_food_batch_order:
-        batch_count = len([o for o in current_orders if o.get("batch_id")])
-        raise HTTPException(
-            status_code=400,
-            detail=f"🔥 لديك طلب طعام تجميعي ({batch_count} متجر). أكمل توصيله أولاً لضمان وصول الطعام طازجاً."
-        )
-    
-    # تصنيف الطلبات الحالية حسب نوع المتجر
-    hot_fresh_count = 0
-    cold_dry_count = 0
-    
-    for o in current_orders:
-        o_store = await db.food_stores.find_one({"id": o.get("store_id")})
-        o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
-        o_category = get_store_delivery_category(o_store_type)
-        
-        if o_category == "hot_fresh":
-            hot_fresh_count += 1
-        else:
-            cold_dry_count += 1
-    
-    # التحقق من الحدود حسب نوع الطلب الجديد
-    if new_store_category == "hot_fresh":
-        # طلب ساخن/طازج
-        if hot_fresh_count >= hot_fresh_limit:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"🔥 لديك {hot_fresh_count} طلب ساخن/طازج (الحد الأقصى: {hot_fresh_limit}). أكمل التوصيلات الحالية أولاً لضمان وصول الطعام طازجاً."
-            )
-    else:
-        # طلب بارد/جاف
-        if cold_dry_count >= cold_dry_limit:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"📦 لديك {cold_dry_count} طلب بارد/جاف (الحد الأقصى: {cold_dry_limit}). أكمل التوصيلات الحالية أولاً."
-            )
-    
-    # التحقق من المسافة إذا كان لديه طلبات سابقة
-    # للطلبات الباردة: حد أقصى 3 كم بين مواقع التسليم
-    # للطلبات الساخنة: يتم التحقق من المسافة أيضاً لكن مع تسامح أكبر
-    COLD_DRY_MAX_DISTANCE_KM = 3.0  # الحد الأقصى للطلبات الباردة
-    
-    if len(current_orders) > 0:
-        new_lat = order.get("latitude")
-        new_lon = order.get("longitude")
-        
-        if new_lat and new_lon:
-            # للطلبات الباردة: التحقق من أن جميع مواقع التسليم قريبة من بعضها
-            if new_store_category == "cold_dry" and cold_dry_count > 0:
-                for existing_order in current_orders:
-                    existing_store = await db.food_stores.find_one({"id": existing_order.get("store_id")})
-                    existing_category = get_store_delivery_category(existing_store.get("store_type", "restaurants")) if existing_store else "hot_fresh"
-                    
-                    # التحقق فقط من الطلبات الباردة الأخرى
-                    if existing_category == "cold_dry":
-                        existing_lat = existing_order.get("latitude")
-                        existing_lon = existing_order.get("longitude")
-                        
-                        if existing_lat and existing_lon:
-                            distance_between = calculate_distance_km(
-                                existing_lat, existing_lon,
-                                new_lat, new_lon
-                            )
-                            
-                            if distance_between > COLD_DRY_MAX_DISTANCE_KM:
-                                raise HTTPException(
-                                    status_code=400,
-                                    detail=f"📦 موقع تسليم هذا الطلب بعيد عن طلباتك الأخرى ({distance_between:.1f} كم). للطلبات الباردة، يجب أن تكون مواقع التسليم قريبة (≤ {COLD_DRY_MAX_DISTANCE_KM} كم) لضمان سرعة التوصيل."
-                                )
-            
-            # التحقق العام من المسافة (للطلبات الساخنة وكفحص إضافي)
-            first_order = current_orders[0]
-            first_lat = first_order.get("latitude")
-            first_lon = first_order.get("longitude")
-            
-            if first_lat and first_lon:
-                distance = calculate_distance_km(first_lat, first_lon, new_lat, new_lon)
-                
-                if distance > max_distance_km:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"هذا الطلب بعيد عن مسارك الحالي ({distance:.1f} كم). الحد الأقصى المسموح: {max_distance_km} كم"
-                    )
-    
-    await db.food_orders.update_one(
-        {"id": order_id},
+    # البحث عن الطلب وقبوله بشكل ذري (atomic) لمنع التزامن
+    # استخدام find_one_and_update لضمان أن سائق واحد فقط يمكنه قبول الطلب
+    order = await db.food_orders.find_one_and_update(
+        {
+            "id": order_id, 
+            "status": {"$in": ["ready", "ready_for_pickup"]}, 
+            "driver_id": None  # الشرط الأساسي: لم يقبله أحد بعد
+        },
         {
             "$set": {
-                "driver_id": user["id"],
-                "driver_name": user["name"],
-                "driver_phone": user.get("phone"),
-                "driver_image": user.get("photo", ""),
-                "status": "out_for_delivery",
-                "picked_up_at": datetime.now(timezone.utc).isoformat()
-            },
-            "$push": {
-                "status_history": {
+                "driver_id": user["id"],  # قفل الطلب فوراً لهذا السائق
+                "_locking_driver": user["id"],  # علامة مؤقتة للقفل
+                "_locked_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        return_document=True  # إرجاع المستند بعد التحديث
+    )
+    
+    if not order:
+        # إما الطلب غير موجود أو تم قبوله من سائق آخر
+        existing_order = await db.food_orders.find_one({"id": order_id})
+        if existing_order:
+            if existing_order.get("driver_id"):
+                raise HTTPException(status_code=400, detail="⚡ عذراً! تم قبول هذا الطلب من سائق آخر")
+            else:
+                raise HTTPException(status_code=400, detail="الطلب غير متاح حالياً")
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # دالة لإلغاء القفل عند حدوث خطأ
+    async def release_order_lock():
+        await db.food_orders.update_one(
+            {"id": order_id, "driver_id": user["id"]},
+            {"$set": {"driver_id": None, "status": "ready"}, "$unset": {"_locking_driver": "", "_locked_at": ""}}
+        )
+    
+    try:
+        # جلب معلومات المتجر لمعرفة نوعه
+        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        new_store_type = store.get("store_type", "restaurants") if store else "restaurants"
+        new_store_category = get_store_delivery_category(new_store_type)
+        
+        # التحقق من عدد الطلبات الحالية للسائق (نستثني الطلب الحالي الذي قفلناه)
+        current_orders = await db.food_orders.find({
+            "driver_id": user["id"],
+            "status": "out_for_delivery",
+            "id": {"$ne": order_id}  # استثناء الطلب الحالي
+        }).to_list(length=100)
+        
+        # التحقق إذا كان السائق لديه طلب تجميعي طعام - لا يمكنه قبول طلبات أخرى
+        # ملاحظة: طلبات الطعام التجميعية فقط تقفل السائق (لأن الطعام يبرد)
+        has_food_batch_order = any(o.get("batch_id") and o.get("order_source") != "products" for o in current_orders)
+        if has_food_batch_order:
+            batch_count = len([o for o in current_orders if o.get("batch_id")])
+            await release_order_lock()
+            raise HTTPException(
+                status_code=400,
+                detail=f"🔥 لديك طلب طعام تجميعي ({batch_count} متجر). أكمل توصيله أولاً لضمان وصول الطعام طازجاً."
+            )
+        
+        # تصنيف الطلبات الحالية حسب نوع المتجر
+        hot_fresh_count = 0
+        cold_dry_count = 0
+        
+        for o in current_orders:
+            o_store = await db.food_stores.find_one({"id": o.get("store_id")})
+            o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
+            o_category = get_store_delivery_category(o_store_type)
+            
+            if o_category == "hot_fresh":
+                hot_fresh_count += 1
+            else:
+                cold_dry_count += 1
+    
+        # التحقق من الحدود حسب نوع الطلب الجديد
+        if new_store_category == "hot_fresh":
+            # طلب ساخن/طازج
+            if hot_fresh_count >= hot_fresh_limit:
+                await release_order_lock()
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"🔥 لديك {hot_fresh_count} طلب ساخن/طازج (الحد الأقصى: {hot_fresh_limit}). أكمل التوصيلات الحالية أولاً لضمان وصول الطعام طازجاً."
+                )
+        else:
+            # طلب بارد/جاف
+            if cold_dry_count >= cold_dry_limit:
+                await release_order_lock()
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"📦 لديك {cold_dry_count} طلب بارد/جاف (الحد الأقصى: {cold_dry_limit}). أكمل التوصيلات الحالية أولاً."
+                )
+        
+        # التحقق من المسافة إذا كان لديه طلبات سابقة
+        # للطلبات الباردة: حد أقصى 3 كم بين مواقع التسليم
+        # للطلبات الساخنة: يتم التحقق من المسافة أيضاً لكن مع تسامح أكبر
+        COLD_DRY_MAX_DISTANCE_KM = 3.0  # الحد الأقصى للطلبات الباردة
+        
+        if len(current_orders) > 0:
+            new_lat = order.get("latitude")
+            new_lon = order.get("longitude")
+            
+            if new_lat and new_lon:
+                # للطلبات الباردة: التحقق من أن جميع مواقع التسليم قريبة من بعضها
+                if new_store_category == "cold_dry" and cold_dry_count > 0:
+                    for existing_order in current_orders:
+                        existing_store = await db.food_stores.find_one({"id": existing_order.get("store_id")})
+                        existing_category = get_store_delivery_category(existing_store.get("store_type", "restaurants")) if existing_store else "hot_fresh"
+                        
+                        # التحقق فقط من الطلبات الباردة الأخرى
+                        if existing_category == "cold_dry":
+                            existing_lat = existing_order.get("latitude")
+                            existing_lon = existing_order.get("longitude")
+                            
+                            if existing_lat and existing_lon:
+                                distance_between = calculate_distance_km(
+                                    existing_lat, existing_lon,
+                                    new_lat, new_lon
+                                )
+                                
+                                if distance_between > COLD_DRY_MAX_DISTANCE_KM:
+                                    await release_order_lock()
+                                    raise HTTPException(
+                                        status_code=400,
+                                        detail=f"📦 موقع تسليم هذا الطلب بعيد عن طلباتك الأخرى ({distance_between:.1f} كم). للطلبات الباردة، يجب أن تكون مواقع التسليم قريبة (≤ {COLD_DRY_MAX_DISTANCE_KM} كم) لضمان سرعة التوصيل."
+                                    )
+                
+                # التحقق العام من المسافة (للطلبات الساخنة وكفحص إضافي)
+                first_order = current_orders[0]
+                first_lat = first_order.get("latitude")
+                first_lon = first_order.get("longitude")
+                
+                if first_lat and first_lon:
+                    distance = calculate_distance_km(first_lat, first_lon, new_lat, new_lon)
+                
+                    if distance > max_distance_km:
+                        await release_order_lock()
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"هذا الطلب بعيد عن مسارك الحالي ({distance:.1f} كم). الحد الأقصى المسموح: {max_distance_km} كم"
+                        )
+        
+        # تحديث باقي بيانات الطلب (driver_id تم تعيينه مسبقاً في القفل الذري)
+        await db.food_orders.update_one(
+            {"id": order_id, "driver_id": user["id"]},  # التأكد أن الطلب لا يزال مقفولاً لهذا السائق
+            {
+                "$set": {
+                    "driver_name": user["name"],
+                    "driver_phone": user.get("phone"),
+                    "driver_image": user.get("photo", ""),
                     "status": "out_for_delivery",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "note": f"جاري التوصيل بواسطة {user['name']}"
+                    "picked_up_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$unset": {
+                    "_locking_driver": "",  # إزالة علامة القفل المؤقتة
+                    "_locked_at": ""
+                },
+                "$push": {
+                    "status_history": {
+                        "status": "out_for_delivery",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "note": f"جاري التوصيل بواسطة {user['name']}"
+                    }
                 }
             }
-        }
-    )
+        )
+    
+    except HTTPException:
+        # إعادة رفع HTTPException بدون تعديل
+        raise
+    except Exception as e:
+        # في حالة أي خطأ آخر، إلغاء القفل
+        await release_order_lock()
+        raise HTTPException(status_code=500, detail="حدث خطأ أثناء قبول الطلب. حاول مرة أخرى.")
     
     # ========== إشعار البائع بوقت وصول السائق ==========
     driver_eta_to_store = None
