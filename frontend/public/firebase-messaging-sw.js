@@ -23,16 +23,32 @@ messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
   const notificationTitle = payload.notification?.title || 'تريند سوريا';
+  
+  // تحديد إذا كان طلب عاجل
+  const isPriorityOrder = payload.data?.type === 'priority_order';
+  
   const notificationOptions = {
     body: payload.notification?.body || 'لديك إشعار جديد',
     icon: payload.notification?.icon || '/images/logo.png',
     image: payload.notification?.image,
     badge: '/images/badge.png',
-    tag: payload.data?.tag || 'trend-syria-notification',
+    tag: isPriorityOrder ? 'priority-order-urgent' : (payload.data?.tag || 'trend-syria-notification'),
     data: payload.data,
-    vibrate: [200, 100, 200],
+    vibrate: isPriorityOrder ? [300, 100, 300, 100, 300] : [200, 100, 200],
     requireInteraction: true,
-    actions: [
+    // أولوية عالية للطلبات العاجلة
+    silent: false,
+    renotify: true,
+    actions: isPriorityOrder ? [
+      {
+        action: 'accept',
+        title: '✅ قبول'
+      },
+      {
+        action: 'reject',
+        title: '❌ رفض'
+      }
+    ] : [
       {
         action: 'open',
         title: 'فتح'
@@ -54,7 +70,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   // Handle action buttons
-  if (event.action === 'close') {
+  if (event.action === 'close' || event.action === 'reject') {
     return;
   }
 
@@ -65,7 +81,15 @@ self.addEventListener('notificationclick', (event) => {
     const data = event.notification.data;
     
     // Determine URL based on notification type
-    if (data.type === 'order') {
+    if (data.type === 'priority_order') {
+      // 🔔 طلب عاجل - فتح صفحة طلباتي
+      urlToOpen = data.click_action || '/delivery/dashboard?tab=my';
+      
+      // إذا ضغط قبول، نضيف معلمة للقبول التلقائي
+      if (event.action === 'accept' && data.order_id) {
+        urlToOpen += `&accept_order=${data.order_id}`;
+      }
+    } else if (data.type === 'order') {
       urlToOpen = `/orders/${data.order_id}`;
     } else if (data.type === 'chat') {
       urlToOpen = `/chat/${data.chat_id}`;
@@ -73,6 +97,8 @@ self.addEventListener('notificationclick', (event) => {
       urlToOpen = '/delivery';
     } else if (data.url) {
       urlToOpen = data.url;
+    } else if (data.click_action) {
+      urlToOpen = data.click_action;
     }
   }
 

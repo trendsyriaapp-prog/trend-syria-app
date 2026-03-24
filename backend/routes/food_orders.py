@@ -114,6 +114,86 @@ ORDER_STATUSES = {
     "cancelled": "ملغي"
 }
 
+# ============== إشعارات Push للطلبات العاجلة ==============
+
+async def send_priority_order_push_notification(order: dict):
+    """
+    إرسال إشعار Push للسائقين الذين لديهم طلبات من نفس المطعم
+    يُستدعى عندما يصبح طلب جديد ready
+    """
+    try:
+        from core.firebase_admin import send_push_to_user
+        
+        restaurant_id = order.get("restaurant_id") or order.get("store_id")
+        if not restaurant_id:
+            return
+        
+        # البحث عن سائقين لديهم طلبات من نفس المطعم
+        drivers_with_same_restaurant = await db.food_orders.aggregate([
+            {
+                "$match": {
+                    "status": "out_for_delivery",
+                    "$or": [
+                        {"restaurant_id": restaurant_id},
+                        {"store_id": restaurant_id}
+                    ],
+                    "driver_id": {"$ne": None}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$driver_id"
+                }
+            }
+        ]).to_list(length=50)
+        
+        if not drivers_with_same_restaurant:
+            return
+        
+        driver_ids = [d["_id"] for d in drivers_with_same_restaurant]
+        
+        # جلب معلومات الطلب للإشعار
+        store_name = order.get("restaurant_name") or order.get("store_name") or "المطعم"
+        delivery_fee = order.get("driver_delivery_fee") or order.get("delivery_fee") or 0
+        delivery_area = ""
+        if order.get("delivery_address"):
+            if isinstance(order["delivery_address"], dict):
+                delivery_area = order["delivery_address"].get("city") or order["delivery_address"].get("area") or ""
+            else:
+                delivery_area = str(order["delivery_address"])[:30]
+        
+        # إرسال إشعار لكل سائق
+        for driver_id in driver_ids:
+            await send_push_to_user(
+                user_id=driver_id,
+                title="🔔 طلب عاجل من نفس المطعم!",
+                body=f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
+                data={
+                    "type": "priority_order",
+                    "order_id": order.get("id", ""),
+                    "store_name": store_name,
+                    "delivery_fee": str(delivery_fee),
+                    "click_action": "/delivery/dashboard?tab=my"
+                }
+            )
+            
+            # تسجيل الإشعار في قاعدة البيانات
+            await db.notifications.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": driver_id,
+                "title": "🔔 طلب عاجل من نفس المطعم!",
+                "message": f"💰 +{delivery_fee:,} ل.س من {store_name} - {delivery_area}",
+                "type": "priority_order",
+                "order_id": order.get("id"),
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        print(f"✅ Priority push sent to {len(driver_ids)} drivers for order from {store_name}")
+        
+    except Exception as e:
+        print(f"❌ Error sending priority push: {e}")
+
 # ============== Platform Wallet Helper ==============
 
 PLATFORM_WALLET_ID = "platform_admin_wallet"
@@ -1816,6 +1896,9 @@ async def update_order_status(
         # تعيين driver_status ليتمكن السائق من قبول الطلب
         if not order.get("driver_id"):
             update_data["driver_status"] = "waiting_for_acceptance"
+        
+        # ⭐ إرسال إشعار Push للسائقين الذين لديهم طلبات من نفس المطعم
+        await send_priority_order_push_notification(order)
         
         # إذا كان طلب تجميعي، تحقق من جهوزية باقي الطلبات
         if order.get("batch_id"):
