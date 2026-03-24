@@ -29,6 +29,16 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 24, 2026 - Latest Session)
 
+#### Driver Can View All Orders but Accept Based on Active Orders - COMPLETED ✅ (NEW)
+- **Feature**: السائق يرى جميع الطلبات لكن لا يستطيع قبول طلبات المنتجات إذا كان لديه طلبات طعام نشطة
+- **Implementation**:
+  - Backend (`delivery.py` lines 585-615): يُضيف `can_accept` و `cannot_accept_reason` لكل طلب
+  - Frontend (`AvailableOrdersList.js` lines 200-235): يُظهر زر معطل مع رسالة توضيحية
+- **Behavior**:
+  - طلبات المنتجات: 🔒 "غير متاح حالياً" + ⚠️ "أكمل طلبات الطعام أولاً"
+  - طلبات الطعام: ✅ "قبول الطلب" (دائماً نشط)
+- **Testing**: Verified via testing_agent_v3_fork (iteration_125.json) - 100% pass rate
+
 #### Notification Sound System Verification - VERIFIED ✅ (NEW)
 - **Feature**: Different notification sounds for different order types
 - **Notification Types**:
