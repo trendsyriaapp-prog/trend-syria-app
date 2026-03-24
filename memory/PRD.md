@@ -29,7 +29,35 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### ✅ COMPLETED (March 24, 2026 - Latest Session)
 
-#### Daily Earnings Widget for Drivers - COMPLETED ✅ (NEW)
+#### Driver Filters Bug Fix - COMPLETED ✅ (NEW)
+- **Issue**: "Available Orders" filters not working correctly - "Products" filter was showing food orders
+- **Root Cause**: Incorrect filtering logic in `AvailableOrdersList.js` - when `foodOrders` was empty, it was falling back to `orders.filter(o => o.order_source === 'food')` which caused food orders to appear in product section
+- **Fix**: Simplified the filter logic to use `foodOrders` prop directly and filter `orders` to exclude food orders
+- **File Modified**: `/app/frontend/src/components/delivery/AvailableOrdersList.js` (lines 43-66)
+- **Testing**: Verified via testing_agent_v3_fork (iteration_123.json) - 100% pass rate
+  - Filter "الكل": Shows all orders ✅
+  - Filter "منتجات": Shows only product orders, NOT food orders ✅
+  - Filter "طعام": Shows only food orders ✅
+
+#### "Arrived at Store" Logic Fix - COMPLETED ✅ (NEW)
+- **Issue**: The code modal was appearing simultaneously with "verifying location" toast, or appearing even when driver was far from store
+- **Fix**: 
+  - Added `checkingLocation` state to track verification status
+  - Button shows loading spinner during location check
+  - Only opens code modal if API returns success
+  - Shows toast warning without modal if driver is too far
+- **File Modified**: `/app/frontend/src/components/delivery/MyOrdersList.js` (lines 131-217, 545-570)
+- **Behavior**:
+  - Click "وصلت للمتجر" → Button shows "جاري التحقق من موقعك..." with spinner
+  - If close to store → Toast success + Opens code modal
+  - If far from store → Toast warning (no modal opened)
+
+#### Test Product Orders Added - COMPLETED ✅ (NEW)
+- Added 3 test product orders to database for testing "Products" filter
+- Orders have `order_source: "products"` and `delivery_status: "shipped"`
+- Location: Damascus area with various store locations
+
+#### Daily Earnings Widget for Drivers - COMPLETED ✅
 - **Feature**: Widget صغير يعرض ربح اليوم مقارنة بأمس في أعلى صفحة "طلباتي"
 - **Implementation**:
   - Created `/app/frontend/src/components/delivery/DailyEarningsWidget.js`
@@ -245,6 +273,7 @@ Build a multi-vendor e-commerce and food delivery application with a sophisticat
 
 ### P1 - High Priority
 - [ ] Live payment verification for Sham Cash (waiting for account details)
+- [ ] Verify "Arrived at Store" distance check with real GPS coordinates (manual testing needed)
 
 ### P2 - Medium Priority
 - [ ] Improve price display (e.g., `9.4K` instead of `9,375`)
