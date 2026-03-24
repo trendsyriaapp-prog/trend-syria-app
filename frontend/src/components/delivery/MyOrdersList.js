@@ -135,6 +135,10 @@ const MyOrdersList = ({
   const [checkingLocation, setCheckingLocation] = useState(false);
   
   const handleArrivedAtStore = async (order) => {
+    console.log('🚗 handleArrivedAtStore called with order:', order);
+    console.log('🚗 order.id:', order.id);
+    console.log('🚗 order._id:', order._id);
+    
     const isFood = order.store_id || order.restaurant_name;
     
     // طلبات المنتجات: لا تحتاج فحص مسافة GPS - فتح modal الكود مباشرة
@@ -159,7 +163,9 @@ const MyOrdersList = ({
           const { latitude, longitude } = position.coords;
           
           // استدعاء API لتسجيل الوصول مع فحص المسافة (طلبات الطعام فقط)
+          console.log('📍 Order data:', { id: order.id, order_number: order.order_number, status: order.status });
           const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
+          console.log('📍 Calling endpoint:', endpoint);
 
           await axios.post(endpoint, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
