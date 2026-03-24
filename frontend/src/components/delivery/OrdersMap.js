@@ -1834,20 +1834,12 @@ const OrdersMap = ({
     }
   });
 
-  // ⭐ إنشاء خطوط ملونة تربط كل متجر بعميله
-  const ROUTE_COLORS = [
-    '#ef4444', // أحمر
-    '#3b82f6', // أزرق
-    '#22c55e', // أخضر
-    '#f59e0b', // برتقالي
-    '#8b5cf6', // بنفسجي
-    '#ec4899', // وردي
-    '#06b6d4', // سماوي
-  ];
+  // ⭐ إنشاء خطوط ملونة تربط كل متجر بعميله (ألوان غامقة وأعرض)
+  const MY_FOOD_COLOR = '#15803D'; // أخضر غامق - طلباتي الطعام
+  const MY_PRODUCT_COLOR = '#7C3AED'; // بنفسجي غامق - طلباتي المنتجات
 
   const orderRouteLines = useMemo(() => {
     const lines = [];
-    let colorIndex = 0;
 
     // خطوط لطلبات الطعام الخاصة بي (النشطة فقط)
     activeMyFoodOrders.forEach(order => {
@@ -1855,21 +1847,19 @@ const OrdersMap = ({
       const customerCoords = getOrderCoordinates(order);
       
       if (storeCoords && customerCoords) {
-        const color = ROUTE_COLORS[colorIndex % ROUTE_COLORS.length];
         const isPickedUp = order.status === 'out_for_delivery' || order.pickup_code_verified;
         
         lines.push({
           id: `route-food-${order.id}`,
           positions: [storeCoords, customerCoords],
-          color: color,
+          color: MY_FOOD_COLOR,
           dashArray: isPickedUp ? null : '10, 10', // متقطع إذا لم يستلم بعد
-          weight: 3,
-          opacity: 0.8,
+          weight: 6,
+          opacity: 0.9,
           orderId: order.id,
           storeName: order.store_name || order.restaurant_name,
           customerName: order.customer_name
         });
-        colorIndex++;
       }
     });
 
@@ -1881,31 +1871,30 @@ const OrdersMap = ({
       const customerCoords = getOrderCoordinates(order);
       
       if (storeCoords && customerCoords) {
-        const color = ROUTE_COLORS[colorIndex % ROUTE_COLORS.length];
         const isPickedUp = order.delivery_status === 'out_for_delivery' || order.picked_up;
         
         lines.push({
           id: `route-product-${order.id}`,
           positions: [storeCoords, customerCoords],
-          color: color,
+          color: MY_PRODUCT_COLOR,
           dashArray: isPickedUp ? null : '10, 10',
-          weight: 3,
-          opacity: 0.8,
+          weight: 6,
+          opacity: 0.9,
           orderId: order.id,
           storeName: order.seller_name || order.store_name,
           customerName: order.customer_name
         });
-        colorIndex++;
       }
     });
 
     return lines;
   }, [activeMyFoodOrders, activeMyOrders]);
 
-  // ⭐ خطوط للطلبات المتاحة (بلون أخضر متقطع)
+  // ⭐ خطوط للطلبات المتاحة (ألوان غامقة وأعرض)
   const availableRouteLines = useMemo(() => {
     const lines = [];
-    const AVAILABLE_COLOR = '#10b981'; // أخضر زمردي
+    const AVAILABLE_FOOD_COLOR = '#D97706'; // برتقالي غامق - طلبات الطعام المتاحة
+    const AVAILABLE_PRODUCT_COLOR = '#1D4ED8'; // أزرق غامق - طلبات المنتجات المتاحة
     
     // خطوط لطلبات الطعام المتاحة
     foodOrders.forEach(order => {
@@ -1916,10 +1905,10 @@ const OrdersMap = ({
         lines.push({
           id: `avail-food-${order.id}`,
           positions: [storeCoords, customerCoords],
-          color: AVAILABLE_COLOR,
+          color: AVAILABLE_FOOD_COLOR,
           dashArray: '8, 12', // متقطع
-          weight: 2,
-          opacity: 0.6,
+          weight: 5,
+          opacity: 0.85,
           orderId: order.id,
           storeName: order.store_name || order.restaurant_name,
           customerName: order.customer_name,
@@ -1939,10 +1928,10 @@ const OrdersMap = ({
         lines.push({
           id: `avail-product-${order.id}`,
           positions: [storeCoords, customerCoords],
-          color: AVAILABLE_COLOR,
+          color: AVAILABLE_PRODUCT_COLOR,
           dashArray: '8, 12', // متقطع
-          weight: 2,
-          opacity: 0.6,
+          weight: 5,
+          opacity: 0.85,
           orderId: order.id,
           storeName: order.seller_name || order.store_name,
           customerName: order.customer_name,
@@ -2093,25 +2082,6 @@ const OrdersMap = ({
                   </button>
                 </div>
                 
-                {/* دليل الألوان - محسّن للهاتف */}
-                <div className={`flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                    <span>مطعم</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                    <span>متجر</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <span>عميل</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className={`w-2.5 h-2.5 rounded-full ${currentTheme === 'dark' ? 'bg-white' : 'bg-orange-500'}`}></span>
-                    <span>موقعك</span>
-                  </span>
-                </div>
               </div>
 
               {/* فلاتر الطبقات */}

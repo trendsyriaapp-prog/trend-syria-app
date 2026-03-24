@@ -2591,9 +2591,10 @@ async def accept_food_order(
         new_store_category = get_store_delivery_category(new_store_type)
         
         # التحقق من عدد الطلبات الحالية للسائق (نستثني الطلب الحالي الذي قفلناه)
+        # نحسب الطلبات النشطة (accepted أو out_for_delivery أو picked_up)
         current_orders = await db.food_orders.find({
             "driver_id": user["id"],
-            "status": "out_for_delivery",
+            "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]},
             "id": {"$ne": order_id}  # استثناء الطلب الحالي
         }).to_list(length=100)
         
