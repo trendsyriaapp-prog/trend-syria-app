@@ -198,21 +198,41 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
           </div>
 
           {/* زر القبول */}
-          <button
-            onClick={() => isFood && onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
-            disabled={!isWorkingHours()}
-            className={`w-full py-4 rounded-xl font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
-              isBatch 
-                ? order.batch_category === 'cold_dry'
-                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500'
-                  : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500'
-                : isFood
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500'
-            }`}
-          >
-            {!isWorkingHours() ? '⏰ خارج أوقات العمل' : '✅ قبول الطلب'}
-          </button>
+          {order.can_accept === false ? (
+            /* زر معطل مع رسالة توضيحية */
+            <div className="space-y-2">
+              <button
+                disabled
+                className={`w-full py-4 rounded-xl font-bold text-base cursor-not-allowed transition-all ${
+                  isDark 
+                    ? 'bg-gray-700 text-gray-400 border border-gray-600' 
+                    : 'bg-gray-200 text-gray-500 border border-gray-300'
+                }`}
+              >
+                🔒 غير متاح حالياً
+              </button>
+              <p className={`text-center text-sm ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                ⚠️ {order.cannot_accept_reason || 'أكمل طلباتك الحالية أولاً'}
+              </p>
+            </div>
+          ) : (
+            /* زر القبول النشط */
+            <button
+              onClick={() => isFood && onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
+              disabled={!isWorkingHours()}
+              className={`w-full py-4 rounded-xl font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                isBatch 
+                  ? order.batch_category === 'cold_dry'
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500'
+                  : isFood
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500'
+              }`}
+            >
+              {!isWorkingHours() ? '⏰ خارج أوقات العمل' : '✅ قبول الطلب'}
+            </button>
+          )}
         </div>
       </motion.div>
     );

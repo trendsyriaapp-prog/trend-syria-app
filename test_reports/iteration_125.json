@@ -1,0 +1,97 @@
+{
+  "summary": "Tested driver available orders system with can_accept restriction. Feature working correctly: Product orders show disabled '🔒 غير متاح حالياً' button with warning 'أكمل طلبات الطعام أولاً' when driver has active food orders. Food orders show active '✅ قبول الطلب' button.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_125.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend delivery.py (lines 585-615): Correctly adds can_accept=false and cannot_accept_reason for product orders when driver has active hot/fresh food orders",
+    "Frontend AvailableOrdersList.js (lines 200-235): Properly renders disabled button with lock icon and warning message based on can_accept field"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "driver": {"phone": "0988111333", "password": "driver123"}
+  },
+  "seed_data_creation": "None - Used existing test data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Driver available orders restriction feature is fully functional. Driver with active food orders cannot accept product orders until food orders are completed.",
+  "features_tested": {
+    "driver_login": {
+      "status": "PASS",
+      "credentials": "0988111333 / driver123"
+    },
+    "available_orders_api": {
+      "status": "PASS",
+      "endpoint": "/api/delivery/available-orders",
+      "response": {
+        "total_orders": 5,
+        "food_orders": 2,
+        "product_orders": 3,
+        "food_orders_can_accept": true,
+        "product_orders_can_accept": false,
+        "product_orders_reason": "أكمل طلبات الطعام أولاً"
+      }
+    },
+    "active_food_orders": {
+      "status": "PASS",
+      "endpoint": "/api/delivery/my-food-orders",
+      "count": 2,
+      "statuses": ["out_for_delivery", "ready"]
+    },
+    "ui_product_orders_disabled": {
+      "status": "PASS",
+      "button_text": "🔒 غير متاح حالياً",
+      "warning_message": "⚠️ أكمل طلبات الطعام أولاً",
+      "button_state": "disabled",
+      "count": 3
+    },
+    "ui_food_orders_active": {
+      "status": "PASS",
+      "button_text": "✅ قبول الطلب",
+      "button_state": "enabled",
+      "count": 2
+    },
+    "filter_tabs": {
+      "status": "PASS",
+      "tabs": ["الكل", "منتجات 📦", "طعام 🍔"],
+      "working": true
+    }
+  },
+  "code_review": {
+    "backend_delivery_py": {
+      "lines": "585-615",
+      "status": "CORRECT",
+      "logic": [
+        "count_hot_fresh_food_orders() counts active food orders with hot/fresh store types",
+        "has_hot_fresh_orders flag set based on count > 0",
+        "Product orders get can_accept=false when has_hot_fresh_orders is true",
+        "Product orders get cannot_accept_reason='أكمل طلبات الطعام أولاً'",
+        "Food orders always get can_accept=true (priority for fresh food)"
+      ]
+    },
+    "frontend_available_orders_list": {
+      "lines": "200-235",
+      "status": "CORRECT",
+      "logic": [
+        "Checks order.can_accept === false to show disabled button",
+        "Disabled button shows '🔒 غير متاح حالياً' with gray styling",
+        "Warning message shows order.cannot_accept_reason or default text",
+        "Active button shows '✅ قبول الطلب' with green gradient"
+      ]
+    }
+  }
+}

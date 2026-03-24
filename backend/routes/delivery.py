@@ -582,27 +582,37 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     # الحصول على مدينة السائق
     driver_city = user.get("city") or doc.get("city")
     
-    # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة فقط
-    # الطلبات الباردة/الجافة (ماركت، خضار) لا تمنع قبول طلبات المنتجات
+    # التحقق من وجود طلبات طعام ساخنة/طازجة نشطة
     hot_fresh_count = await count_hot_fresh_food_orders(user["id"])
-    
     has_hot_fresh_orders = hot_fresh_count > 0
     
-    # جلب طلبات المتجر العادية - فقط إذا لم يكن لديه طلبات طعام ساخنة/طازجة
-    shop_orders = []
-    if not has_hot_fresh_orders:
-        shop_query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
-        if driver_city:
-            shop_query["shipping_city"] = driver_city
-        
-        shop_orders = await db.orders.find(
-            shop_query,
-            {"_id": 0}
-        ).sort("created_at", -1).to_list(100)
-        
-        # تحويل طلبات المتجر لتنسيق موحد
-        for order in shop_orders:
-            order["order_source"] = "shop"
+    # التحقق من وجود طلبات منتجات نشطة
+    active_product_orders = await db.orders.count_documents({
+        "driver_id": user["id"],
+        "delivery_status": {"$in": ["accepted", "picked_up", "out_for_delivery"]}
+    })
+    has_active_product_orders = active_product_orders > 0
+    
+    # جلب جميع طلبات المتجر المتاحة (بغض النظر عن الطلبات النشطة)
+    shop_query = {
+        "delivery_status": {"$in": ["shipped", "out_for_delivery"]},
+        "driver_id": {"$in": [None, ""]}  # فقط الطلبات غير المقبولة
+    }
+    if driver_city:
+        shop_query["shipping_city"] = driver_city
+    
+    shop_orders = await db.orders.find(
+        shop_query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # تحويل طلبات المتجر لتنسيق موحد مع إضافة can_accept
+    for order in shop_orders:
+        order["order_source"] = "shop"
+        # يمكن قبول طلبات المنتجات فقط إذا لم يكن هناك طلبات طعام ساخنة نشطة
+        order["can_accept"] = not has_hot_fresh_orders
+        if has_hot_fresh_orders:
+            order["cannot_accept_reason"] = "أكمل طلبات الطعام أولاً"
     
     # جلب طلبات الطعام الجاهزة - في نفس مدينة السائق فقط
     food_query = {"status": "ready", "driver_id": None}
@@ -618,6 +628,8 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     for order in food_orders:
         order["order_source"] = "food"
         order["total"] = order.get("total", 0)
+        # يمكن دائماً قبول طلبات الطعام (الأولوية للطعام الطازج)
+        order["can_accept"] = True
         # إضافة معلومات المتجر كـ seller
         store = await db.food_stores.find_one({"id": order["store_id"]}, {"_id": 0})
         if store:
