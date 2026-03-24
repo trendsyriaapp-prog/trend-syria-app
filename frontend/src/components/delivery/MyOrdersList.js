@@ -122,8 +122,18 @@ const MyOrdersList = ({
 
   // الحصول على حالة الطلب
   const getOrderStatus = (order) => {
+    // للطعام: نعتمد على pickup_code_verified
+    if (order.store_id || order.restaurant_name) {
+      // طلب طعام
+      if (order.pickup_code_verified === true) {
+        return 'to_customer'; // تم الاستلام - في الطريق للعميل
+      }
+      return 'to_store'; // لم يتم الاستلام - في الطريق للمتجر
+    }
+    
+    // للمنتجات: نعتمد على status
     const status = order.delivery_status || order.status;
-    if (status === 'picked_up' || status === 'on_the_way') {
+    if (status === 'picked_up' || status === 'on_the_way' || status === 'out_for_delivery') {
       return 'to_customer'; // في الطريق للعميل
     }
     return 'to_store'; // في الطريق للمتجر
