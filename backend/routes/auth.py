@@ -170,6 +170,21 @@ async def login(request: Request, credentials: UserLogin):
         upsert=True
     )
     
+    # تحديد is_approved حسب نوع المستخدم
+    is_approved = user.get("is_approved", False)
+    
+    # للسائقين: التحقق من delivery_documents
+    if user["user_type"] == "delivery":
+        delivery_doc = await db.delivery_documents.find_one(
+            {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+            {"_id": 0, "status": 1}
+        )
+        is_approved = delivery_doc and delivery_doc.get("status") == "approved"
+    
+    # للبائعين: التحقق من is_approved في users أو seller_profile
+    elif user["user_type"] in ["seller", "food_seller"]:
+        is_approved = user.get("is_approved", False)
+    
     return {
         "token": access_token,
         "refresh_token": refresh_token,
@@ -179,7 +194,7 @@ async def login(request: Request, credentials: UserLogin):
             "full_name": user.get("full_name", user.get("name", "")),
             "phone": user["phone"],
             "user_type": user["user_type"],
-            "is_approved": user.get("is_approved", False)
+            "is_approved": is_approved
         },
         "force_password_change": force_password_change
     }

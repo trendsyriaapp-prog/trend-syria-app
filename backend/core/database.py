@@ -55,6 +55,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if not user:
             raise HTTPException(status_code=401, detail="المستخدم غير موجود")
         
+        # إضافة name للتوافق مع الكود القديم (بعض الأماكن تستخدم user['name'] وبعضها user['full_name'])
+        if 'name' not in user and 'full_name' in user:
+            user['name'] = user['full_name']
+        
         # 🔒 التحقق إذا كان التوكن يحتاج تجديد (أقل من يوم على الانتهاء)
         exp = payload.get("exp", 0)
         remaining = exp - datetime.now(timezone.utc).timestamp()
