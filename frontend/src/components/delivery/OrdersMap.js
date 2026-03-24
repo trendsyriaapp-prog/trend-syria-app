@@ -1847,13 +1847,11 @@ const OrdersMap = ({
       const customerCoords = getOrderCoordinates(order);
       
       if (storeCoords && customerCoords) {
-        const isPickedUp = order.status === 'out_for_delivery' || order.pickup_code_verified;
-        
         lines.push({
           id: `route-food-${order.id}`,
           positions: [storeCoords, customerCoords],
           color: MY_FOOD_COLOR,
-          dashArray: isPickedUp ? null : '10, 10', // متقطع إذا لم يستلم بعد
+          dashArray: null, // خط متصل دائماً
           weight: 6,
           opacity: 0.9,
           orderId: order.id,
@@ -1871,13 +1869,11 @@ const OrdersMap = ({
       const customerCoords = getOrderCoordinates(order);
       
       if (storeCoords && customerCoords) {
-        const isPickedUp = order.delivery_status === 'out_for_delivery' || order.picked_up;
-        
         lines.push({
           id: `route-product-${order.id}`,
           positions: [storeCoords, customerCoords],
           color: MY_PRODUCT_COLOR,
-          dashArray: isPickedUp ? null : '10, 10',
+          dashArray: null, // خط متصل دائماً
           weight: 6,
           opacity: 0.9,
           orderId: order.id,
@@ -1906,7 +1902,7 @@ const OrdersMap = ({
           id: `avail-food-${order.id}`,
           positions: [storeCoords, customerCoords],
           color: AVAILABLE_FOOD_COLOR,
-          dashArray: '8, 12', // متقطع
+          dashArray: null, // خط متصل
           weight: 5,
           opacity: 0.85,
           orderId: order.id,
@@ -1929,7 +1925,7 @@ const OrdersMap = ({
           id: `avail-product-${order.id}`,
           positions: [storeCoords, customerCoords],
           color: AVAILABLE_PRODUCT_COLOR,
-          dashArray: '8, 12', // متقطع
+          dashArray: null, // خط متصل
           weight: 5,
           opacity: 0.85,
           orderId: order.id,
