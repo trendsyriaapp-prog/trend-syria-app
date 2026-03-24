@@ -561,12 +561,17 @@ const MyOrdersList = ({
         {allOrders.map((order, index) => {
           const isFood = order.store_id || order.restaurant_name;
           const storeName = order.store_name || order.restaurant_name || 'متجر';
+          const storePhone = order.store_phone || order.seller_phone || order.seller_addresses?.[0]?.phone || '';
           const customerName = order.buyer_address?.name || order.customer_name || 'العميل';
           const customerArea = order.buyer_address?.city || order.delivery_address?.city || '';
           const customerPhone = order.buyer_address?.phone || order.customer_phone || '';
           const status = getOrderStatus(order);
           const earnings = getDriverEarnings(order);
           const isExpanded = expandedOrders[order.id];
+          
+          // تحديد من يجب الاتصال به: إذا في الطريق للمتجر = البائع، إذا في الطريق للعميل = العميل
+          const contactPhone = status === 'to_store' ? storePhone : customerPhone;
+          const contactLabel = status === 'to_store' ? 'البائع' : 'العميل';
 
           return (
             <motion.div
@@ -720,16 +725,16 @@ const MyOrdersList = ({
                       {/* الأزرار الثانوية */}
                       <div className="grid grid-cols-3 gap-2">
                         <button
-                          onClick={() => customerPhone && callCustomer(customerPhone)}
-                          disabled={!customerPhone}
+                          onClick={() => contactPhone && callCustomer(contactPhone)}
+                          disabled={!contactPhone}
                           className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
-                            customerPhone
+                            contactPhone
                               ? (isDark ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-600 border border-blue-200')
                               : (isDark ? 'bg-[#252525] text-gray-600' : 'bg-gray-100 text-gray-400')
                           }`}
                         >
                           <Phone size={18} />
-                          <span>اتصال</span>
+                          <span>{contactLabel}</span>
                         </button>
                         <button
                           onClick={() => chatWithCustomer(order)}

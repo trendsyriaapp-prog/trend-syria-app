@@ -137,9 +137,9 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col" dir="rtl">
+    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden" dir="rtl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 sticky top-0 z-10 shadow-lg">
+      <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 sticky top-0 z-10 shadow-lg flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -156,18 +156,20 @@ const ChatPage = () => {
               {order?.customer_name || 'العميل'}
             </p>
           </div>
-          {/* زر الاتصال */}
+          {/* زر الاتصال بالعميل */}
           <a
             href={`tel:${order?.customer_phone || order?.delivery_phone}`}
-            className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+            className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors flex items-center gap-2"
+            title="اتصال بالعميل"
           >
             <Phone size={20} />
+            <span className="text-xs">العميل</span>
           </a>
         </div>
       </div>
 
       {/* معلومات الطلب */}
-      <div className="bg-white border-b p-3 shadow-sm">
+      <div className="bg-white border-b p-3 shadow-sm flex-shrink-0">
         <div className="flex items-center gap-4 text-sm text-gray-600">
           <div className="flex items-center gap-1">
             <Package size={16} className="text-green-500" />
@@ -185,14 +187,14 @@ const ChatPage = () => {
       </div>
 
       {/* منطقة الرسائل */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 0 }}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-              <Send size={32} className="text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-3">
+              <Send size={28} className="text-gray-400" />
             </div>
-            <p className="text-gray-500">لا توجد رسائل بعد</p>
-            <p className="text-sm text-gray-400 mt-1">ابدأ المحادثة مع العميل</p>
+            <p className="text-gray-500 text-sm">لا توجد رسائل بعد</p>
+            <p className="text-xs text-gray-400 mt-1">ابدأ المحادثة مع العميل</p>
           </div>
         ) : (
           messages.map((msg, index) => (
@@ -224,7 +226,7 @@ const ChatPage = () => {
       </div>
 
       {/* الرسائل السريعة */}
-      <div className="bg-white border-t p-2 overflow-x-auto">
+      <div className="bg-white border-t p-2 overflow-x-auto flex-shrink-0">
         <div className="flex gap-2">
           {quickMessages.map((msg, index) => (
             <button
@@ -239,7 +241,7 @@ const ChatPage = () => {
       </div>
 
       {/* حقل الإدخال */}
-      <div className="bg-white border-t p-3 safe-area-inset-bottom">
+      <div className="bg-white border-t p-3 flex-shrink-0">
         <div className="flex gap-2">
           <input
             type="text"
