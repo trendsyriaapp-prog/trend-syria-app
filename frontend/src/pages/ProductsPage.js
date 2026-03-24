@@ -138,6 +138,9 @@ const ProductsPage = () => {
   const priceMax = searchParams.get('price_max') || '';
   const cityFilter = searchParams.get('city') || '';
   const sort = searchParams.get('sort') || 'newest';
+  
+  // إخفاء الأشرطة الترويجية عند تصفح فئة محددة
+  const isHomePage = !category && !search;
 
   // Reset when filters change
   useEffect(() => {
@@ -338,13 +341,13 @@ const ProductsPage = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* 🎁 بانر الشحن المجاني الشامل */}
-        {globalFreeShipping && (
+        {/* 🎁 بانر الشحن المجاني الشامل - فقط في الصفحة الرئيسية */}
+        {isHomePage && globalFreeShipping && (
           <FreeShippingBanner promo={globalFreeShipping} />
         )}
 
-        {/* 📢 شريط الإعلانات */}
-        {ads.length > 0 && (
+        {/* 📢 شريط الإعلانات - فقط في الصفحة الرئيسية */}
+        {isHomePage && ads.length > 0 && (
           <div className="mb-3">
             <div className="relative overflow-hidden h-16 md:h-20">
               {ads.map((ad, index) => (
@@ -423,8 +426,8 @@ const ProductsPage = () => {
           </div>
         )}
 
-        {/* ⚡ شريط فلاش */}
-        {flashProducts.length > 0 && flashSale && (
+        {/* ⚡ شريط فلاش - فقط في الصفحة الرئيسية */}
+        {isHomePage && flashProducts.length > 0 && flashSale && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -493,8 +496,8 @@ const ProductsPage = () => {
           </section>
         )}
 
-        {/* 🔥 شريط الأكثر مبيعاً */}
-        {bestSellers.length > 0 && (
+        {/* 🔥 شريط الأكثر مبيعاً - فقط في الصفحة الرئيسية */}
+        {isHomePage && bestSellers.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -567,8 +570,8 @@ const ProductsPage = () => {
           </section>
         )}
 
-        {/* 🆕 شريط وصل حديثاً */}
-        {newlyAddedProducts.length > 0 && (
+        {/* 🆕 شريط وصل حديثاً - فقط في الصفحة الرئيسية */}
+        {isHomePage && newlyAddedProducts.length > 0 && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
