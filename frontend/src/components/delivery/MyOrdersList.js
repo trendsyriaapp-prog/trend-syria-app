@@ -96,8 +96,11 @@ const MyOrdersList = ({
   const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showHelpModal);
   usePreventBodyScroll(isAnyModalOpen);
 
-  // دمج جميع الطلبات
-  const allOrders = [...orders, ...foodOrders].filter(o => 
+  // دمج جميع الطلبات - مع التأكد من أن المصفوفات صالحة
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeFoodOrders = Array.isArray(foodOrders) ? foodOrders : [];
+  
+  const allOrders = [...safeOrders, ...safeFoodOrders].filter(o => 
     o.status !== 'delivered' && o.delivery_status !== 'delivered'
   );
 

@@ -44,11 +44,15 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
   // orders = طلبات المتجر (المنتجات)
   // foodOrders = طلبات الطعام
   
+  // التأكد من أن المصفوفات صالحة
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeFoodOrders = Array.isArray(foodOrders) ? foodOrders : [];
+  
   // طلبات الطعام: استخدم foodOrders فقط (لا تأخذ من orders)
-  const displayFoodOrders = foodOrders;
+  const displayFoodOrders = safeFoodOrders;
   
   // طلبات المتجر: استخدم orders فقط وفلتر أي طلبات طعام قد تكون موجودة
-  const shopOrders = orders.filter(o => o.order_source !== 'food');
+  const shopOrders = safeOrders.filter(o => o.order_source !== 'food');
   
   const allOrders = [...shopOrders, ...displayFoodOrders];
   
