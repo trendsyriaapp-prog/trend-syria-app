@@ -463,7 +463,7 @@ const MyOrdersList = ({
                         ? (isDark ? 'bg-amber-500/20' : 'bg-amber-100')
                         : (isDark ? 'bg-green-500/20' : 'bg-green-100')
                     }`}>
-                      {status === 'to_customer' ? '🚚' : '📦'}
+                      {status === 'to_customer' ? '🚚' : (isFood ? '🍔' : '📦')}
                     </div>
                     <div>
                       <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -496,7 +496,7 @@ const MyOrdersList = ({
                       ? (isDark ? 'text-amber-400' : 'text-amber-600')
                       : (isDark ? 'text-green-400' : 'text-green-600')
                   }`}>
-                    {status === 'to_customer' ? '🚚 للعميل' : '📦 للمتجر'}
+                    {status === 'to_customer' ? '🚚 للعميل' : (isFood ? '🍔 للمتجر' : '📦 للمتجر')}
                   </span>
                 </div>
               </div>
