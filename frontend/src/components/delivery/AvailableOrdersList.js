@@ -40,7 +40,17 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
     }
   };
 
-  const allOrders = [...orders, ...foodOrders];
+  // الفلترة تتم في DeliveryPages.js قبل تمرير الـ props
+  // orders = طلبات المتجر (المنتجات)
+  // foodOrders = طلبات الطعام
+  
+  // طلبات الطعام: استخدم foodOrders فقط (لا تأخذ من orders)
+  const displayFoodOrders = foodOrders;
+  
+  // طلبات المتجر: استخدم orders فقط وفلتر أي طلبات طعام قد تكون موجودة
+  const shopOrders = orders.filter(o => o.order_source !== 'food');
+  
+  const allOrders = [...shopOrders, ...displayFoodOrders];
   
   if (allOrders.length === 0) {
     return (
@@ -54,9 +64,6 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
       </div>
     );
   }
-
-  const displayFoodOrders = foodOrders.length > 0 ? foodOrders : orders.filter(o => o.order_source === 'food');
-  const shopOrders = orders.filter(o => o.order_source !== 'food');
 
   // حساب ربح السائق
   const getDriverEarnings = (order) => {
