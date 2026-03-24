@@ -33,7 +33,7 @@ jobs:
     - name: Build web app
       run: yarn build
       env:
-        REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+        REACT_APP_BACKEND_URL: https://shopper-suite.preview.emergentagent.com
     
     - name: Sync Capacitor
       run: npx cap sync android
