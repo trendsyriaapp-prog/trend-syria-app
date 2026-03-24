@@ -3317,6 +3317,9 @@ async def driver_arrived_at_store(
     if not store_lat or not store_lon:
         # إذا لا يوجد موقع، نسمح بالمتابعة بدون فحص المسافة
         print(f"⚠️ المتجر {store.get('name')} ليس له موقع GPS - تخطي فحص المسافة")
+    elif user.get("phone") == "0999888777":
+        # 🧪 تجاوز فحص المسافة للحساب التجريبي فقط
+        print(f"🧪 حساب تجريبي - تجاوز فحص المسافة للسائق {user.get('name')}")
     else:
         # حساب المسافة بين السائق والمتجر (Haversine formula)
         import math
