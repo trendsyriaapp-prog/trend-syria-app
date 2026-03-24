@@ -6,6 +6,7 @@ import { MapPin, Navigation, Package, User, ChevronDown, ChevronUp, Loader2, Loc
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
+import PickupWaitingTimer from './PickupWaitingTimer';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -492,12 +493,18 @@ const RouteProgressBar = ({
           <div className={`w-full max-w-sm rounded-2xl p-6 ${
             isDark ? 'bg-[#1a1a1a]' : 'bg-white'
           }`}>
-            <h3 className={`text-xl font-bold mb-4 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className={`text-xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
               أدخل كود الاستلام
             </h3>
-            <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-sm text-center mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               اطلب الكود من {showPickupCodeModal.name}
             </p>
+            
+            {/* مؤقت الانتظار */}
+            <PickupWaitingTimer
+              arrivedAt={showPickupCodeModal.order?.driver_arrived_at}
+              theme={theme}
+            />
             
             <input
               type="text"

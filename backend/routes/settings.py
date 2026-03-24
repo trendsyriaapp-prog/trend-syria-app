@@ -759,6 +759,34 @@ async def update_delivery_wait_time(
         "delivery_wait_time_minutes": wait_time_minutes
     }
 
+# ============== إعدادات تعويض انتظار السائق (عام - للجميع) ==============
+
+@router.get("/delivery-wait-compensation")
+async def get_delivery_wait_compensation():
+    """
+    جلب إعدادات تعويض انتظار السائق
+    متاح للجميع (السائق والبائع) لعرض المؤقت والتعويض المتوقع
+    """
+    settings = await db.settings.find_one({"type": "delivery_settings"})
+    
+    if not settings or "values" not in settings:
+        # القيم الافتراضية
+        return {
+            "max_waiting_time_minutes": 10,
+            "compensation_per_5_minutes": 500,
+            "max_compensation_per_order": 2000,
+            "geofencing_max_distance_meters": 150
+        }
+    
+    values = settings.get("values", {})
+    return {
+        "max_waiting_time_minutes": values.get("max_waiting_time_minutes", 10),
+        "compensation_per_5_minutes": values.get("compensation_per_5_minutes", 500),
+        "max_compensation_per_order": values.get("max_compensation_per_order", 2000),
+        "geofencing_max_distance_meters": values.get("geofencing_max_distance_meters", 150)
+    }
+
+
 # ============== إعدادات حدود الطلبات الذكية ==============
 
 class SmartOrderLimits(BaseModel):

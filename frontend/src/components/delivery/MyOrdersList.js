@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock } from 'lucide-react';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
+import PickupWaitingTimer from './PickupWaitingTimer';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -736,8 +737,8 @@ const MyOrdersList = ({
             animate={{ scale: 1, opacity: 1 }}
             className={`w-full max-w-sm rounded-2xl p-6 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}
           >
-            <div className="text-center mb-6">
-              <div className="text-5xl mb-3">📦</div>
+            <div className="text-center mb-4">
+              <div className="text-5xl mb-2">📦</div>
               <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 تأكيد الاستلام
               </h3>
@@ -745,6 +746,12 @@ const MyOrdersList = ({
                 أدخل كود الاستلام من البائع
               </p>
             </div>
+
+            {/* مؤقت الانتظار */}
+            <PickupWaitingTimer
+              arrivedAt={showPickupCodeModal?.driver_arrived_at}
+              theme={theme}
+            />
 
             <input
               type="text"

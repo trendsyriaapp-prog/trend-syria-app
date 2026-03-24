@@ -18,6 +18,7 @@ import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 import SellerAnalytics from '../components/seller/SellerAnalytics';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import SimpleImageCapture from '../components/seller/SimpleImageCapture';
+import DriverWaitingAlert from '../components/seller/DriverWaitingAlert';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -2559,9 +2560,21 @@ const StoreOrdersTab = ({ token }) => {
                           </div>
                           {order.driver_arrived_at && (
                             <>
-                              <p className="text-xs text-green-600 mt-2 font-bold">
-                                ✅ وصل للمتجر
-                              </p>
+                              {/* مؤقت انتظار السائق - تنبيه للبائع */}
+                              {!order.pickup_code_verified && (
+                                <DriverWaitingAlert
+                                  arrivedAt={order.driver_arrived_at}
+                                  driverName={order.driver_name || 'السائق'}
+                                  orderId={order.id}
+                                />
+                              )}
+                              
+                              {order.pickup_code_verified && (
+                                <p className="text-xs text-green-600 mt-2 font-bold">
+                                  ✅ تم تسليم الطلب للسائق
+                                </p>
+                              )}
+                              
                               {/* زر الإبلاغ عن وصول كاذب */}
                               {!order.pickup_code_verified && (
                                 <button
