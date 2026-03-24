@@ -102,11 +102,39 @@ const RouteProgressBar = ({
       }
     });
 
-    // ترتيب المحطات: الاستلام أولاً ثم التسليم
-    // (يمكن تحسين هذا لاحقاً بناءً على المسافة)
+    // ترتيب المحطات: الاستلام أولاً ثم التسليم (حسب المسافة)
     result.sort((a, b) => {
+      // الاستلام دائماً أولاً
       if (a.type === 'pickup' && b.type === 'delivery') return -1;
       if (a.type === 'delivery' && b.type === 'pickup') return 1;
+      
+      // إذا كلاهما تسليم، نرتب حسب المسافة من المتجر
+      if (a.type === 'delivery' && b.type === 'delivery') {
+        // نحصل على موقع المتجر من أول طلب
+        const storeLocation = allOrders[0] ? {
+          lat: allOrders[0].store_latitude || 33.5138,
+          lng: allOrders[0].store_longitude || 36.2765
+        } : { lat: 33.5138, lng: 36.2765 };
+        
+        // حساب المسافة (Haversine simplified)
+        const getDistance = (lat1, lon1, lat2, lon2) => {
+          if (!lat1 || !lon1 || !lat2 || !lon2) return 999999;
+          const R = 6371; // km
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        };
+        
+        const distA = getDistance(storeLocation.lat, storeLocation.lng, a.latitude, a.longitude);
+        const distB = getDistance(storeLocation.lat, storeLocation.lng, b.latitude, b.longitude);
+        
+        return distA - distB; // الأقرب أولاً
+      }
+      
       return 0;
     });
 
