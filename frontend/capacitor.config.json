@@ -1,5 +1,33 @@
 {
   "appId": "com.trendsyria.app",
-  "appName": "تريند سورية",
-  "webDir": "build"
+  "appName": "Trend Syria",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "trendsyria.app"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#FF6B00",
+    "buildOptions": {
+      "keystorePath": null,
+      "keystorePassword": null,
+      "keystoreAlias": null,
+      "keystoreAliasPassword": null,
+      "releaseType": "AAB"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#FF6B00",
+      "showSpinner": false,
+      "androidSpinnerStyle": "small",
+      "spinnerColor": "#FFFFFF"
+    },
+    "StatusBar": {
+      "style": "light",
+      "backgroundColor": "#FF6B00"
+    }
+  }
 }

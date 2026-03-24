@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">تريند سورية</string>
-    <string name="title_activity_main">تريند سورية</string>
+    <string name="app_name">ترند سوريا</string>
+    <string name="title_activity_main">ترند سوريا</string>
     <string name="package_name">com.trendsyria.app</string>
     <string name="custom_url_scheme">com.trendsyria.app</string>
 </resources>
