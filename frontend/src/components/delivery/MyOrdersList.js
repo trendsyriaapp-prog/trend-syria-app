@@ -156,15 +156,23 @@ const MyOrdersList = ({
         });
         return;
       }
-      // إذا لم تكن مقفلة، افتح modal الكود
-      setShowPickupCodeModal(order);
+      // إذا لم تكن مقفلة، افتح modal الكود مع الوقت الحالي
+      const updatedOrder = {
+        ...order,
+        driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
+      };
+      setShowPickupCodeModal(updatedOrder);
       return;
     }
     
     // طلبات الطعام: فحص المسافة GPS أولاً
     if (!navigator.geolocation) {
       toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
-      setShowPickupCodeModal(order);
+      const updatedOrder = {
+        ...order,
+        driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
+      };
+      setShowPickupCodeModal(updatedOrder);
       return;
     }
 
@@ -182,14 +190,18 @@ const MyOrdersList = ({
           const endpoint = `${API}/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           console.log('📍 Calling endpoint:', endpoint);
 
-          await axios.post(endpoint, {}, {
+          const response = await axios.post(endpoint, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           });
           
-          // ✅ نجح - افتح modal الكود
+          // ✅ نجح - افتح modal الكود مع الوقت المحدث
           setCheckingLocationFor(null);
           toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
-          setShowPickupCodeModal(order);
+          const updatedOrder = {
+            ...order,
+            driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
+          };
+          setShowPickupCodeModal(updatedOrder);
           
         } catch (error) {
           setCheckingLocationFor(null);
@@ -278,7 +290,11 @@ const MyOrdersList = ({
         });
         
         // فتح modal الكود لأننا لا نستطيع التحقق
-        setTimeout(() => setShowPickupCodeModal(order), 500);
+        const updatedOrder = {
+          ...order,
+          driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
+        };
+        setTimeout(() => setShowPickupCodeModal(updatedOrder), 500);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );

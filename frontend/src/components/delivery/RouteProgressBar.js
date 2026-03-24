@@ -143,9 +143,16 @@ const RouteProgressBar = ({
       return;
     }
 
-    // طلبات المنتجات: فتح modal الكود مباشرة
+    // طلبات المنتجات: فتح modal الكود مباشرة (تسجيل الوقت الحالي)
     if (!isFood) {
-      setShowPickupCodeModal(station);
+      const updatedStation = {
+        ...station,
+        order: {
+          ...station.order,
+          driver_arrived_at: station.order?.driver_arrived_at || new Date().toISOString()
+        }
+      };
+      setShowPickupCodeModal(updatedStation);
       return;
     }
 
@@ -175,7 +182,15 @@ const RouteProgressBar = ({
           if (response.data.success || response.data.message?.includes('تم')) {
             setCheckingLocationFor(null);
             toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
-            setShowPickupCodeModal(station);
+            // تحديث driver_arrived_at من response الـ API
+            const updatedStation = {
+              ...station,
+              order: {
+                ...station.order,
+                driver_arrived_at: response.data.arrived_at || new Date().toISOString()
+              }
+            };
+            setShowPickupCodeModal(updatedStation);
           }
         } catch (error) {
           setCheckingLocationFor(null);
