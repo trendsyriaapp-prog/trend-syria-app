@@ -855,12 +855,18 @@ const OrdersMap = ({
 
     // ترتيب ذكي: لكل طلب، أضف المتجر أولاً ثم العميل
     allMyOrders.forEach((order, idx) => {
-      const isFood = order.restaurant_id || order.order_type === 'food';
-      const storeName = isFood ? (order.restaurant_name || 'المطعم') : (order.seller_name || 'المتجر');
-      const storeLat = order.store_latitude;
-      const storeLon = order.store_longitude;
-      const customerLat = order.latitude;
-      const customerLon = order.longitude;
+      const isFood = order.restaurant_id || order.order_type === 'food' || order.store_id;
+      const storeName = isFood 
+        ? (order.store_name || order.restaurant_name || 'المطعم') 
+        : (order.seller_name || order.store_name || 'المتجر');
+      
+      // قراءة إحداثيات المتجر من store_location أو الحقول المباشرة
+      const storeLat = order.store_location?.latitude || order.store_latitude;
+      const storeLon = order.store_location?.longitude || order.store_longitude;
+      
+      // قراءة إحداثيات العميل من delivery_address أو الحقول المباشرة
+      const customerLat = order.delivery_address?.latitude || order.delivery_address?.lat || order.latitude;
+      const customerLon = order.delivery_address?.longitude || order.delivery_address?.lng || order.longitude;
 
       // إضافة محطة المتجر
       if (storeLat && storeLon) {
@@ -870,7 +876,7 @@ const OrdersMap = ({
           isFood: isFood,
           name: storeName,
           address: order.store_address || '',
-          phone: order.restaurant_phone || order.seller_phone || '',
+          phone: order.store_phone || order.restaurant_phone || order.seller_phone || '',
           position: [storeLat, storeLon],
           action: 'استلام',
           orderId: order.id,
@@ -885,7 +891,9 @@ const OrdersMap = ({
           type: 'customer',
           isFood: isFood,
           name: order.customer_name || order.buyer_name || 'العميل',
-          address: order.delivery_address || order.address || '',
+          address: typeof order.delivery_address === 'string' 
+            ? order.delivery_address 
+            : (order.delivery_address?.area || order.delivery_address?.city || order.address || ''),
           phone: order.customer_phone || order.delivery_phone || '',
           position: [customerLat, customerLon],
           action: 'تسليم',
@@ -895,7 +903,7 @@ const OrdersMap = ({
         });
 
         // إضافة الربح
-        totalEarn += order.driver_earnings || order.driver_delivery_fee || 0;
+        totalEarn += order.driver_delivery_fee || order.driver_earnings || 0;
       }
 
       // حساب المسافة
