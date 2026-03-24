@@ -26,6 +26,7 @@ import PushNotificationButton from '../components/PushNotificationButton';
 import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
 import EarningsStats from '../components/delivery/EarningsStats';
+import RouteProgressBar from '../components/delivery/RouteProgressBar';
 import '../styles/driver-dark-theme.css';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -1005,6 +1006,19 @@ const DeliveryDashboard = () => {
 
         {/* التحديات والمكافآت */}
         <DriverChallenges />
+
+        {/* شريط تتبع المسار الذكي */}
+        <RouteProgressBar
+          myOrders={myOrders}
+          myFoodOrders={myFoodOrders}
+          isProductsLocked={isProductsLocked}
+          productsLockMessage={productsLockMessage}
+          theme={currentTheme}
+          onRefresh={() => {
+            fetchOrders();
+            fetchWallet();
+          }}
+        />
 
         {/* Tabs - طلبات متاحة و طلباتي فقط */}
         <div className="flex gap-2 mb-3">
