@@ -129,15 +129,19 @@ const MyOrdersList = ({
   };
 
   // وصلت للمتجر - مع فحص المسافة GPS
+  const [checkingLocation, setCheckingLocation] = useState(false);
+  
   const handleArrivedAtStore = async (order) => {
     // الحصول على موقع السائق الحالي
     if (!navigator.geolocation) {
       toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
+      // فتح modal الكود مباشرة إذا لا يوجد GPS
       setShowPickupCodeModal(order);
       return;
     }
 
-    toast({ title: "جاري التحقق...", description: "يتم التحقق من موقعك" });
+    // بدء التحقق - إظهار حالة التحميل
+    setCheckingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -152,34 +156,50 @@ const MyOrdersList = ({
 
           await axios.post(endpoint);
           
-          // إذا نجح، افتح modal الكود
-          toast({ title: "تم!", description: "تم تسجيل وصولك للمتجر" });
+          // ✅ نجح - افتح modal الكود
+          setCheckingLocation(false);
+          toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
           setShowPickupCodeModal(order);
+          
         } catch (error) {
+          setCheckingLocation(false);
           const errorMsg = error.response?.data?.detail || "حدث خطأ";
-          // إذا كان الخطأ بسبب المسافة، أظهر رسالة واضحة
-          if (errorMsg.includes("متر") || errorMsg.includes("قرب")) {
+          
+          // إذا كان الخطأ بسبب المسافة
+          if (errorMsg.includes("متر") || errorMsg.includes("قرب") || errorMsg.includes("بعيد")) {
             toast({ 
               title: "⚠️ أنت بعيد عن المتجر", 
               description: errorMsg, 
               variant: "destructive",
               duration: 5000
             });
+            // ❌ لا نفتح modal - يجب أن يقترب أكثر
           } else {
-            // إذا كان خطأ آخر، افتح modal الكود على أي حال
+            // خطأ آخر (مثل الطلب غير موجود) - افتح modal
+            toast({ title: "تنبيه", description: errorMsg, variant: "default" });
             setShowPickupCodeModal(order);
           }
         }
       },
       (error) => {
-        // إذا فشل الحصول على الموقع، افتح modal الكود مباشرة
+        // فشل الحصول على الموقع
+        setCheckingLocation(false);
         console.error("GPS Error:", error);
+        
+        let errorMessage = "تعذر تحديد موقعك";
+        if (error.code === 1) errorMessage = "تم رفض صلاحية الموقع";
+        if (error.code === 2) errorMessage = "الموقع غير متاح";
+        if (error.code === 3) errorMessage = "انتهت مهلة تحديد الموقع";
+        
         toast({ 
-          title: "تعذر تحديد موقعك", 
-          description: "سيتم فتح نافذة الكود مباشرة", 
-          variant: "default" 
+          title: "⚠️ " + errorMessage, 
+          description: "سيتم فتح نافذة الكود", 
+          variant: "default",
+          duration: 3000
         });
-        setShowPickupCodeModal(order);
+        
+        // فتح modal الكود لأننا لا نستطيع التحقق
+        setTimeout(() => setShowPickupCodeModal(order), 500);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -517,10 +537,24 @@ const MyOrdersList = ({
                       {status === 'to_store' ? (
                         <button
                           onClick={() => handleArrivedAtStore(order)}
-                          className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2"
+                          disabled={checkingLocation}
+                          className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
+                            checkingLocation 
+                              ? 'bg-gray-400 cursor-wait' 
+                              : 'bg-gradient-to-r from-green-500 to-green-600'
+                          }`}
                         >
-                          <MapPin size={20} />
-                          وصلت للمتجر
+                          {checkingLocation ? (
+                            <>
+                              <Loader2 size={20} className="animate-spin" />
+                              جاري التحقق من موقعك...
+                            </>
+                          ) : (
+                            <>
+                              <MapPin size={20} />
+                              وصلت للمتجر
+                            </>
+                          )}
                         </button>
                       ) : (
                         <button
