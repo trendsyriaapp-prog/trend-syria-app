@@ -131,6 +131,8 @@ const OrdersMap = ({
   const [showLayer, setShowLayer] = useState('all'); // all, food, products, customers
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [currentDriverLocation, setCurrentDriverLocation] = useState(null);
+  const [gpsRequested, setGpsRequested] = useState(false);
+  const [gpsError, setGpsError] = useState(null);
   const [selectedOrderForRoute, setSelectedOrderForRoute] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
@@ -1572,24 +1574,39 @@ const OrdersMap = ({
     setArrivalAnnouncedFor(null); // إعادة تعيين عند إخفاء المسار
   };
 
-  // الحصول على موقع السائق الحالي
+  // الحصول على موقع السائق الحالي مع طلب الإذن
   const getDriverLocation = () => {
+    setGpsRequested(true);
+    setGpsError(null);
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setCurrentDriverLocation({ latitude, longitude });
           setMapCenter([latitude, longitude]);
+          setGpsError(null);
         },
         (error) => {
           console.log('Error getting location:', error);
+          let errorMessage = 'تعذر الحصول على موقعك';
+          if (error.code === error.PERMISSION_DENIED) {
+            errorMessage = 'يجب السماح بالوصول للموقع لعرض الطلبات على الخريطة';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMessage = 'الموقع غير متاح حالياً';
+          } else if (error.code === error.TIMEOUT) {
+            errorMessage = 'انتهت مهلة الحصول على الموقع';
+          }
+          setGpsError(errorMessage);
           // استخدام موقع افتراضي عند فشل الحصول على الموقع
           const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
           setCurrentDriverLocation(defaultLocation);
           setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
+      setGpsError('المتصفح لا يدعم خدمة الموقع');
       // إذا لم يكن الـ geolocation متاحاً، استخدم موقع افتراضي
       const defaultLocation = { latitude: 33.5138, longitude: 36.2765 };
       setCurrentDriverLocation(defaultLocation);
@@ -1597,12 +1614,12 @@ const OrdersMap = ({
     }
   };
 
-  // تحديث مركز الخريطة عند فتحها
+  // تحديث مركز الخريطة عند فتحها - مع طلب GPS
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !gpsRequested) {
       getDriverLocation();
     }
-  }, [isOpen]);
+  }, [isOpen, gpsRequested]);
 
   // تتبع موقع السائق وتحديث المسار تلقائياً كل 2 ثانية
   useEffect(() => {
@@ -2079,6 +2096,25 @@ const OrdersMap = ({
                 </div>
                 
               </div>
+
+              {/* رسالة خطأ GPS */}
+              {gpsError && (
+                <div className="px-4 py-3 bg-red-500/20 border-b border-red-500/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-red-400 text-sm font-medium">{gpsError}</span>
+                    <button
+                      onClick={() => {
+                        setGpsRequested(false);
+                        setGpsError(null);
+                        getDriverLocation();
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm font-bold"
+                    >
+                      إعادة المحاولة
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* فلاتر الطبقات */}
               <div className={`px-3 py-2 flex gap-2 border-b ${

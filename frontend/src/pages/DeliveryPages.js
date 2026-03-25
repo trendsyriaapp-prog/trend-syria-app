@@ -417,6 +417,25 @@ const DeliveryDashboard = () => {
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
   
+  // ⭐ حفظ موضع التمرير واستعادته عند العودة
+  const scrollPositionRef = useRef(0);
+  
+  // حفظ موضع التمرير قبل التنقل
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      scrollPositionRef.current = window.scrollY;
+    };
+    window.addEventListener('beforeunload', saveScrollPosition);
+    return () => window.removeEventListener('beforeunload', saveScrollPosition);
+  }, []);
+  
+  // استعادة موضع التمرير عند العودة للصفحة
+  useEffect(() => {
+    if (!loading && scrollPositionRef.current > 0) {
+      window.scrollTo(0, scrollPositionRef.current);
+    }
+  }, [loading, activeTab]);
+  
   // حالة قفل طلبات المنتجات (عندما يكون هناك طلبات طعام نشطة)
   const [isProductsLocked, setIsProductsLocked] = useState(false);
   const [productsLockMessage, setProductsLockMessage] = useState('');
@@ -475,6 +494,9 @@ const DeliveryDashboard = () => {
       searchParams.set('tab', activeTab);
     }
     setSearchParams(searchParams, { replace: true });
+    
+    // ⭐ التمرير للأعلى عند تغيير التبويب
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTab]);
 
   // قراءة التبويب من URL
