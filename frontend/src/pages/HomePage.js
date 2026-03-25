@@ -91,6 +91,12 @@ const HomePage = () => {
     best_sellers_enabled: true,
     new_arrivals_enabled: true
   });
+  const [bannerSettings, setBannerSettings] = useState({
+    food_banner_enabled: true,
+    food_banner_title: 'طعام و ماركت',
+    food_banner_description: 'مطاعم • حلويات • سوبرماركت • خضار',
+    food_banner_button: 'اطلب الآن'
+  });
   const location = useLocation();
   const { isFeatureEnabled } = useSettings();
   const { signalContentReady, isNavigatingBack } = useScroll();
@@ -384,6 +390,14 @@ const HomePage = () => {
         const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
         const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
         setFreeShippingProducts(freeShipProducts.slice(0, 10));
+        
+        // حفظ إعدادات البانرات
+        setBannerSettings({
+          food_banner_enabled: settingsRes.data?.food_banner_enabled !== false,
+          food_banner_title: settingsRes.data?.food_banner_title || 'طعام و ماركت',
+          food_banner_description: settingsRes.data?.food_banner_description || 'مطاعم • حلويات • سوبرماركت • خضار',
+          food_banner_button: settingsRes.data?.food_banner_button || 'اطلب الآن'
+        });
       } catch (err) {}
       
       try {
@@ -509,7 +523,7 @@ const HomePage = () => {
       </section>
 
       {/* بانر الطعام الثابت مع تأثير النبض بألوان مختلفة */}
-      {foodEnabled && (
+      {foodEnabled && bannerSettings.food_banner_enabled && (
         <div className="h-14 md:h-16">
           <Link to="/food" className="block h-full">
             <motion.div 
@@ -550,8 +564,8 @@ const HomePage = () => {
                       جديد ✨
                     </motion.span>
                   </div>
-                  <h3 className="text-sm md:text-base font-bold">طعام و ماركت</h3>
-                  <p className="text-white text-[10px] md:text-xs font-medium">مطاعم • حلويات • سوبرماركت • خضار</p>
+                  <h3 className="text-sm md:text-base font-bold">{bannerSettings.food_banner_title}</h3>
+                  <p className="text-white text-[10px] md:text-xs font-medium">{bannerSettings.food_banner_description}</p>
                 </div>
                 
                 {/* زر الطلب مع نبض */}
@@ -563,7 +577,7 @@ const HomePage = () => {
                   }}
                   transition={{ duration: 6, repeat: Infinity }}
                 >
-                  اطلب الآن
+                  {bannerSettings.food_banner_button}
                 </motion.div>
               </div>
             </motion.div>

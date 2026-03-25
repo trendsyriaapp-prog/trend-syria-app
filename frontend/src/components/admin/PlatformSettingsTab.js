@@ -1208,10 +1208,24 @@ const PlatformSettingsTab = () => {
       description: 'تفعيل بانر الشحن المجاني في الصفحة الرئيسية',
       icon: Gift,
       color: 'from-green-500 to-emerald-500',
-      hasInput: true,
-      inputKey: 'free_shipping_banner_title',
-      inputLabel: 'عنوان البانر',
-      inputPlaceholder: 'شحن مجاني'
+      hasMultipleInputs: true,
+      inputs: [
+        { key: 'free_shipping_banner_title', label: 'عنوان البانر', placeholder: 'شحن مجاني' },
+        { key: 'free_shipping_banner_description', label: 'وصف البانر', placeholder: 'احصل على شحن مجاني للطلبات فوق...' }
+      ]
+    },
+    {
+      key: 'food_banner_enabled',
+      title: 'بانر الطعام 🍕',
+      description: 'تفعيل بانر قسم الطعام في الصفحة الرئيسية',
+      icon: UtensilsCrossed,
+      color: 'from-orange-500 to-red-500',
+      hasMultipleInputs: true,
+      inputs: [
+        { key: 'food_banner_title', label: 'عنوان البانر', placeholder: 'طعام و ماركت' },
+        { key: 'food_banner_description', label: 'وصف البانر', placeholder: 'مطاعم • حلويات • سوبرماركت • خضار' },
+        { key: 'food_banner_button', label: 'نص الزر', placeholder: 'اطلب الآن' }
+      ]
     },
     {
       key: 'best_sellers_enabled',
@@ -1365,23 +1379,51 @@ const PlatformSettingsTab = () => {
                 </span>
               </div>
               
-              {/* حقل إدخال رقم الواتساب */}
+              {/* حقل إدخال واحد */}
               {config.hasInput && isEnabled && (
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <label className="text-xs text-gray-600 mb-1 block">{config.inputLabel}</label>
                   <div className="flex items-center gap-2">
-                    <Phone size={16} className="text-gray-400" />
+                    {config.key === 'whatsapp_enabled' && <Phone size={16} className="text-gray-400" />}
                     <input
-                      type="tel"
-                      value={whatsappNumber}
-                      onChange={(e) => handleWhatsappNumberChange(e.target.value)}
+                      type={config.key === 'whatsapp_enabled' ? 'tel' : 'text'}
+                      value={config.key === 'whatsapp_enabled' ? whatsappNumber : (settings?.[config.inputKey] || '')}
+                      onChange={(e) => {
+                        if (config.key === 'whatsapp_enabled') {
+                          handleWhatsappNumberChange(e.target.value);
+                        } else {
+                          setSettings(prev => ({ ...prev, [config.inputKey]: e.target.value }));
+                        }
+                      }}
                       placeholder={config.inputPlaceholder}
                       className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500"
-                      dir="ltr"
-                      data-testid="whatsapp-number-input"
+                      dir={config.key === 'whatsapp_enabled' ? 'ltr' : 'rtl'}
+                      data-testid={`input-${config.inputKey}`}
                     />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">مثال: 963551021618 (بدون + أو 00)</p>
+                  {config.key === 'whatsapp_enabled' && (
+                    <p className="text-xs text-gray-400 mt-1">مثال: 963551021618 (بدون + أو 00)</p>
+                  )}
+                </div>
+              )}
+              
+              {/* حقول إدخال متعددة */}
+              {config.hasMultipleInputs && isEnabled && (
+                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                  {config.inputs.map((input) => (
+                    <div key={input.key}>
+                      <label className="text-xs text-gray-600 mb-1 block">{input.label}</label>
+                      <input
+                        type="text"
+                        value={settings?.[input.key] || ''}
+                        onChange={(e) => setSettings(prev => ({ ...prev, [input.key]: e.target.value }))}
+                        placeholder={input.placeholder}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500"
+                        dir="rtl"
+                        data-testid={`input-${input.key}`}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
             </motion.div>
