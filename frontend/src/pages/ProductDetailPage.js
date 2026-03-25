@@ -707,7 +707,7 @@ const ProductDetailPage = () => {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [currentImage, setCurrentImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [canReview, setCanReview] = useState(false);
@@ -1656,65 +1656,53 @@ const ProductDetailPage = () => {
       {/* الشريط السفلي الثابت - السعر والأزرار */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
         <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-2 p-3">
-          {/* أيقونة السلة للانتقال المباشر */}
-          <button
-            onClick={() => navigate('/cart')}
-            className="relative w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
-            data-testid="go-to-cart-btn"
-          >
-            <ShoppingBag size={18} className="text-gray-600" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6B00] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
-          </button>
-
-          {/* السعر والكمية */}
-          <div className="flex-1 flex items-center justify-center gap-3 min-w-0">
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => {
-                  const maxAllowed = product.max_per_customer && product.max_per_customer > 0 
-                    ? Math.min(product.stock, product.max_per_customer) 
-                    : product.stock;
-                  setQuantity(Math.min(maxAllowed, quantity + 1));
-                }}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"
-                data-testid="increase-qty"
-              >
-                <Plus size={12} />
-              </button>
-              <span className="w-6 text-center text-sm font-bold">{quantity}</span>
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200"
-                data-testid="decrease-qty"
-              >
-                <Minus size={12} />
-              </button>
-            </div>
-            <p className="text-sm sm:text-base font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
+          {/* الجانب الأيمن: أزرار الكمية */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => setQuantity(Math.max(0, quantity - 1))}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600"
+              data-testid="decrease-qty"
+            >
+              <Minus size={16} />
+            </button>
+            <span className="w-8 text-center text-base font-bold text-gray-900">{quantity}</span>
+            <button
+              onClick={() => {
+                const maxAllowed = product.max_per_customer && product.max_per_customer > 0 
+                  ? Math.min(product.stock, product.max_per_customer) 
+                  : product.stock;
+                setQuantity(Math.min(maxAllowed, quantity + 1));
+              }}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600"
+              data-testid="increase-qty"
+            >
+              <Plus size={16} />
+            </button>
           </div>
 
-          {/* أزرار الشراء */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* السعر في المنتصف */}
+          <div className="flex-1 flex items-center justify-center min-w-0">
+            <p className="text-base font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
+          </div>
+
+          {/* الجانب الأيسر: أزرار الشراء */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {/* زر إرسال كهدية */}
             {user && (
               <button
                 onClick={() => setShowGiftModal(true)}
-                className="flex items-center justify-center gap-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold px-3 py-1.5 rounded-full text-xs hover:opacity-90 transition-colors"
+                className="w-9 h-9 flex items-center justify-center bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90 transition-colors"
                 data-testid="gift-btn"
+                title="إرسال كهدية"
               >
-                <Gift size={14} />
-                <span className="hidden sm:inline">هدية</span>
+                <Gift size={16} />
               </button>
             )}
             
             {/* زر إضافة للسلة */}
             <button
               onClick={handleAddToCart}
-              disabled={product.stock === 0 || addingToCart}
+              disabled={product.stock === 0 || addingToCart || quantity === 0}
               className="flex items-center justify-center gap-1 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-3 py-1.5 rounded-full text-xs hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
               data-testid="add-to-cart-btn"
             >
@@ -1731,6 +1719,7 @@ const ProductDetailPage = () => {
             {/* زر الطلب المباشر */}
             <button
               onClick={() => {
+                if (quantity === 0) setQuantity(1);
                 handleAddToCart();
                 setTimeout(() => navigate('/checkout'), 500);
               }}

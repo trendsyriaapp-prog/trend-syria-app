@@ -1,5 +1,6 @@
 // /app/frontend/src/components/FeedbackButton.js
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquarePlus, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
@@ -15,6 +16,7 @@ const FEEDBACK_TYPES = [
 ];
 
 const FeedbackButton = ({ position = 'bottom-left' }) => {
+  const location = useLocation();
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +27,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
   const [feedbackType, setFeedbackType] = useState('suggestion');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // إخفاء الزر في صفحة تفاصيل المنتج لأنه يحجب السعر
+  const isProductDetailPage = location.pathname.startsWith('/products/');
+  if (isProductDetailPage) return null;
 
   // موقع الزر - أعلى من شريط التنقل السفلي (مرتفع أكثر للسائقين)
   const positionClasses = {
