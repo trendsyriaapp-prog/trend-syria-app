@@ -434,87 +434,43 @@ const FoodMyCartPage = () => {
         </AnimatePresence>
       </div>
 
-      {/* Total Summary */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-2 z-40 shadow-lg max-h-[45vh] overflow-y-auto">
-        {/* ملخص كل متجر */}
-        {stores.length > 0 && (
-          <div className="mb-2 pb-2 border-b border-gray-100">
-            <p className="text-[10px] text-gray-500 mb-1.5 font-medium">ملخص الطلبات حسب المتجر:</p>
-            <div className="space-y-1">
-              {stores.map((store) => {
-                const details = storeDetails[store.storeId];
-                const freeDeliveryMin = details?.free_delivery_minimum || 0;
-                const qualifiesForFree = freeDeliveryMin > 0 && store.totalAmount >= freeDeliveryMin;
-                const deliveryFee = qualifiesForFree ? 0 : (details?.delivery_fee || 5000);
-                
-                return (
-                  <div key={store.storeId} className="flex justify-between items-center bg-gray-50 rounded-lg px-2 py-1.5">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] text-gray-700 truncate block font-medium">
-                        {details?.name || 'متجر'}
-                      </span>
-                      <span className="text-[9px] text-gray-400">
-                        {store.itemCount} منتج
-                      </span>
-                    </div>
-                    <div className="text-left">
-                      <span className="text-[10px] font-bold text-gray-900 block">
-                        {formatPrice(store.totalAmount)}
-                      </span>
-                      {qualifiesForFree ? (
-                        <span className="text-[9px] font-bold text-green-600">توصيل مجاني ✓</span>
-                      ) : (
-                        <span className="text-[9px] text-orange-600">+ توصيل {formatPrice(deliveryFee)}</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
+      {/* Total Summary - شريط سفلي ثابت */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-50 shadow-lg">
         {/* الإجمالي الكلي */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">الإجمالي ({totalItems} منتج من {stores.length} متجر)</span>
-          <span className="text-lg font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
+          <div>
+            <span className="text-xs text-gray-500 block">الإجمالي</span>
+            <span className="text-sm text-gray-600">{totalItems} منتج • {stores.length} متجر</span>
+          </div>
+          <span className="text-xl font-bold text-[#FF6B00]">{formatPrice(totalAmount)}</span>
         </div>
         
-        {/* زر إكمال جميع الطلبات */}
-        {stores.length > 1 && (
+        {/* زر إكمال الطلب */}
+        {stores.length > 1 ? (
           <button
             onClick={handleCheckoutAll}
             disabled={checkoutLoading}
-            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-2.5 rounded-lg font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-1 shadow-md text-sm"
+            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 shadow-md"
             data-testid="checkout-all-btn"
           >
             {checkoutLoading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <>
-                <ShoppingCart size={16} />
+                <ShoppingCart size={18} />
                 إكمال جميع الطلبات ({stores.length} متجر)
               </>
             )}
           </button>
-        )}
-        
-        {stores.length === 1 && (
+        ) : stores.length === 1 && (
           <Link
             to={`/food/cart/${stores[0].storeId}`}
-            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-2.5 rounded-lg font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 mb-1 shadow-md text-sm"
+            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2 shadow-md"
           >
-            <ShoppingCart size={16} />
+            <ShoppingCart size={18} />
             إكمال الطلب
           </Link>
         )}
-        
-        <p className="text-[10px] text-gray-500 text-center">
-          {stores.length > 1 
-            ? '🛵 سائق واحد سيجمع جميع طلباتك ويوصلها دفعة واحدة'
-            : '🛵 اضغط لإتمام طلبك'
-          }
-        </p>
       </div>
     </div>
   );

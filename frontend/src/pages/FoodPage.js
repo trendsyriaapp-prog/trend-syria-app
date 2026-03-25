@@ -166,7 +166,7 @@ const FoodPage = () => {
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
   const filterParam = searchParams.get('filter');
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   
   const [activeCategory, setActiveCategory] = useState(categoryParam || 'all');
@@ -188,6 +188,7 @@ const FoodPage = () => {
   const [isFeaturedEnabled, setIsFeaturedEnabled] = useState(false);
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
+  const [foodFavorites, setFoodFavorites] = useState([]);
 
   // تحديث showOnlyFreeDelivery عند تغير filterParam
   useEffect(() => {
@@ -231,6 +232,54 @@ const FoodPage = () => {
   useEffect(() => {
     setSearchQuery(searchParam || '');
   }, [searchParam]);
+
+  // جلب المفضلة للأطعمة
+  useEffect(() => {
+    const fetchFoodFavorites = async () => {
+      if (!user || !token) return;
+      try {
+        const res = await axios.get(`${API}/stores/favorites`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // استخراج IDs المنتجات المفضلة
+        const favIds = res.data.map(f => f.product_id);
+        setFoodFavorites(favIds);
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+      }
+    };
+    fetchFoodFavorites();
+  }, [user, token]);
+
+  // دالة إضافة/إزالة من المفضلة
+  const toggleFoodFavorite = async (productId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user || !token) {
+      // إذا لم يكن مسجل الدخول، توجيه لصفحة تسجيل الدخول
+      navigate('/login');
+      return;
+    }
+    
+    const isFavorite = foodFavorites.includes(productId);
+    
+    try {
+      if (isFavorite) {
+        await axios.delete(`${API}/stores/favorites/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFoodFavorites(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post(`${API}/stores/favorites/${productId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFoodFavorites(prev => [...prev, productId]);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   // جلب مدينة المستخدم من العنوان الافتراضي
   useEffect(() => {
@@ -630,7 +679,7 @@ const FoodPage = () => {
                 {freeDeliveryProducts.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {freeDeliveryProducts.map((product) => (
-                      <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} />
+                      <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} foodFavorites={foodFavorites} toggleFoodFavorite={toggleFoodFavorite} />
                     ))}
                   </div>
                 ) : (
@@ -647,7 +696,7 @@ const FoodPage = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {products.map((product) => (
-                    <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} />
+                    <FoodProductCard key={product.id} product={product} badgeSettings={badgeSettings} foodFavorites={foodFavorites} toggleFoodFavorite={toggleFoodFavorite} />
                   ))}
                 </div>
               </section>
@@ -777,7 +826,7 @@ const StoreCard = ({ store }) => {
 };
 
 // بطاقة منتج الطعام - توجه للمتجر وليس لصفحة المنتج
-const FoodProductCard = ({ product, badgeSettings }) => {
+const FoodProductCard = ({ product, badgeSettings, foodFavorites = [], toggleFoodFavorite }) => {
   // جلب إعدادات القسم حسب نوع المتجر
   const categoryConfig = CATEGORY_CONFIG[product.store_type] || CATEGORY_CONFIG.restaurants;
   const UnitIcon = categoryConfig.unitIcon;
@@ -913,10 +962,14 @@ const FoodProductCard = ({ product, badgeSettings }) => {
         
         {/* Favorite */}
         <button 
-          className="absolute top-1 left-1 p-1.5 bg-white/80 rounded-full hover:bg-white transition-colors"
-          onClick={(e) => e.preventDefault()}
+          className={`absolute top-1 left-1 p-1.5 rounded-full transition-colors ${
+            foodFavorites.includes(product.id) 
+              ? 'bg-red-500 text-white' 
+              : 'bg-white/80 hover:bg-white text-gray-500'
+          }`}
+          onClick={(e) => toggleFoodFavorite(product.id, e)}
         >
-          <Heart size={14} className="text-gray-500" />
+          <Heart size={14} className={foodFavorites.includes(product.id) ? 'fill-current' : ''} />
         </button>
       </div>
       
