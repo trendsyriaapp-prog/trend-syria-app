@@ -241,3 +241,12 @@ input:-webkit-autofill:focus {
 .dark-map-tiles ~ .leaflet-shadow-pane img {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Safe area for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
