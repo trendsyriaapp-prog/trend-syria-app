@@ -34,13 +34,21 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
   // تحديد نوع الشارة المناسب للمنتج
   useEffect(() => {
     if (!badgeSettings?.enabled || !badgeSettings?.badge_types) {
-      setActiveBadge(null);
+      // إذا لم تكن الإعدادات موجودة، نظهر شارات افتراضية
+      if (product.stock <= 5 && product.stock > 0) {
+        setActiveBadge({
+          type: 'limited_stock',
+          messages: [`⚡ آخر ${product.stock} قطع`, `🔥 الكمية محدودة`, `⏰ اطلب الآن`]
+        });
+      } else {
+        setActiveBadge(null);
+      }
       return;
     }
 
     const { badge_types } = badgeSettings;
     
-    // أولوية الشارات: الأكثر مبيعاً > الأكثر زيارة > شحن مجاني
+    // أولوية الشارات: الأكثر مبيعاً > الأكثر زيارة > كمية محدودة > شحن مجاني
     if (badge_types.best_seller?.enabled && (product.sales_count || 0) >= (badge_types.best_seller.min_sales || 10)) {
       setActiveBadge({
         type: 'best_seller',
@@ -50,6 +58,12 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
       setActiveBadge({
         type: 'most_viewed',
         messages: badge_types.most_viewed.messages || ['👁️ الأكثر زيارة']
+      });
+    } else if (product.stock <= 5 && product.stock > 0) {
+      // شارة الكمية المحدودة - متحركة
+      setActiveBadge({
+        type: 'limited_stock',
+        messages: [`⚡ آخر ${product.stock} قطع`, `🔥 الكمية محدودة`, `⏰ اطلب الآن`]
       });
     } else if (badge_types.free_shipping?.enabled) {
       const threshold = badge_types.free_shipping.threshold || 50000;
@@ -282,7 +296,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
                 رائج
               </motion.span>
             )}
-            {product.stock <= 5 && product.stock > 0 && (
+            {product.stock <= 5 && product.stock > 0 && !activeBadge && (
               <span className="badge-limited text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md">
                 آخر {product.stock} قطع
               </span>
@@ -295,7 +309,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
           </div>
 
           {/* Video Badge */}
-          {product.video && (
+          {product.video && !activeBadge && (
             <motion.div 
               className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 text-white px-2 py-1 rounded-full z-20"
               initial={{ y: 10, opacity: 0 }}

@@ -1,6 +1,6 @@
 import "@/App.css";
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { FoodCartProvider } from "./context/FoodCartContext";
@@ -21,6 +21,8 @@ import SplashScreen from "./components/SplashScreen";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import IncomingCallHandler from "./components/voip/IncomingCallHandler";
 import FeedbackButton from "./components/FeedbackButton";
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 // Pages
 import HomeRouter from "./pages/HomeRouter";
@@ -165,6 +167,39 @@ const BuyerNotificationPrompt = () => {
   return <PushNotificationPrompt userType="buyer" userName={user.name || user.full_name} />;
 };
 
+// مكون معالج زر الرجوع في الأندرويد
+const BackButtonHandler = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  useEffect(() => {
+    // فقط في بيئة الأندرويد/iOS
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleBackButton = ({ canGoBack }) => {
+      // الصفحات الرئيسية التي يجب الخروج منها عند الضغط على الرجوع
+      const mainPages = ['/', '/home', '/products', '/food'];
+      
+      if (mainPages.includes(location.pathname)) {
+        // في الصفحة الرئيسية - الخروج من التطبيق
+        CapacitorApp.exitApp();
+      } else {
+        // في صفحة فرعية - الرجوع للخلف
+        navigate(-1);
+      }
+    };
+
+    // الاستماع لحدث زر الرجوع
+    CapacitorApp.addListener('backButton', handleBackButton);
+
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
+  }, [navigate, location.pathname]);
+  
+  return null;
+};
+
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -182,6 +217,7 @@ function App() {
               )}
               <BrowserRouter>
                 <ScrollProvider>
+                <BackButtonHandler />
                 <ForcePasswordChangeWrapper>
                 <PlatformClosedCheck>
                 <div className="App min-h-screen bg-[#050505] dark:bg-gray-900 transition-colors">
