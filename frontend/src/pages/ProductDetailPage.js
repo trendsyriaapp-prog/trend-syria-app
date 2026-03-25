@@ -1647,23 +1647,23 @@ const ProductDetailPage = () => {
       
       {/* الشريط السفلي الثابت - السعر والأزرار */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg safe-area-inset-bottom">
-        <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-3 p-3">
+        <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-2 px-2 py-2">
           {/* السعر في اليمين */}
-          <div className="flex-shrink-0">
-            <p className="text-lg font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
+          <div className="flex-shrink-0 min-w-0">
+            <p className="text-base font-bold text-[#FF6B00]">{formatPrice(product.price)}</p>
           </div>
 
           {/* أزرار الشراء في اليسار */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {/* زر إرسال كهدية */}
             {user && (
               <button
                 onClick={() => setShowGiftModal(true)}
-                className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90 transition-colors"
+                className="w-8 h-8 flex items-center justify-center bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:opacity-90 transition-colors"
                 data-testid="gift-btn"
                 title="إرسال كهدية"
               >
-                <Gift size={18} />
+                <Gift size={14} />
               </button>
             )}
             
@@ -1671,15 +1671,15 @@ const ProductDetailPage = () => {
             <button
               onClick={handleAddToCart}
               disabled={product.stock === 0 || addingToCart}
-              className="flex items-center justify-center gap-1.5 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-4 py-2 rounded-full text-sm hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-2.5 py-1.5 rounded-full text-xs hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
               data-testid="add-to-cart-btn"
             >
               {addingToCart ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin" />
               ) : (
                 <>
-                  <ShoppingCart size={16} />
-                  <span>أضف للسلة</span>
+                  <ShoppingCart size={14} />
+                  <span>أضف</span>
                 </>
               )}
             </button>
@@ -1721,11 +1721,11 @@ const ProductDetailPage = () => {
                 }
               }}
               disabled={product.stock === 0 || addingToCart}
-              className="flex items-center justify-center gap-1.5 bg-[#FF6B00] text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-[#E65000] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold px-2.5 py-1.5 rounded-full text-xs hover:bg-[#E65000] disabled:opacity-50 transition-colors"
               data-testid="buy-now-btn"
             >
-              <Zap size={16} />
-              <span>اشتري الآن</span>
+              <Zap size={14} />
+              <span>اشتري</span>
             </button>
           </div>
         </div>
