@@ -933,6 +933,16 @@ const ProductDetailPage = () => {
       return;
     }
 
+    // التحقق من أن الكمية أكبر من 0
+    if (quantity === 0) {
+      toast({
+        title: "يرجى تحديد الكمية",
+        description: "اضغط على زر + لإضافة الكمية المطلوبة",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // التحقق من اختيار المقاس إذا كان المنتج يحتوي على مقاسات
     if (product.available_sizes && product.available_sizes.length > 0 && !selectedSize) {
       toast({
@@ -956,6 +966,14 @@ const ProductDetailPage = () => {
     setAddingToCart(true);
     try {
       const newCart = await addToCart(product.id, quantity, selectedSize, selectedWeight);
+      
+      // إعادة تعيين الكمية بعد الإضافة للسلة (للسماح بإضافة مقاس/وزن آخر)
+      setQuantity(0);
+      
+      toast({
+        title: "تمت الإضافة للسلة ✓",
+        description: `تم إضافة ${quantity} قطعة${selectedSize ? ` - مقاس ${selectedSize}` : ''}${selectedWeight ? ` - ${selectedWeight}` : ''}`,
+      });
       
       // تحديث حساب الشحن بعد إضافة المنتج باستخدام إجمالي السلة الجديد
       if (customerAddress?.city && newCart?.total) {
@@ -1718,10 +1736,42 @@ const ProductDetailPage = () => {
             
             {/* زر الطلب المباشر */}
             <button
-              onClick={() => {
+              onClick={async () => {
+                // التحقق من اختيار المقاس أولاً
+                if (product.available_sizes && product.available_sizes.length > 0 && !selectedSize) {
+                  toast({
+                    title: "يرجى اختيار المقاس",
+                    description: "اختر المقاس المناسب قبل الشراء",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                // التحقق من اختيار الوزن أولاً
+                if (product.weight_variants && product.weight_variants.length > 0 && !selectedWeight) {
+                  toast({
+                    title: "يرجى اختيار الوزن",
+                    description: "اختر الوزن المناسب قبل الشراء",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                // تعيين الكمية إذا كانت 0
+                const finalQuantity = quantity === 0 ? 1 : quantity;
                 if (quantity === 0) setQuantity(1);
-                handleAddToCart();
-                setTimeout(() => navigate('/checkout'), 500);
+                
+                setAddingToCart(true);
+                try {
+                  await addToCart(product.id, finalQuantity, selectedSize, selectedWeight);
+                  navigate('/checkout');
+                } catch (error) {
+                  toast({
+                    title: "خطأ",
+                    description: error.response?.data?.detail || "حدث خطأ",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setAddingToCart(false);
+                }
               }}
               disabled={product.stock === 0 || addingToCart}
               className="flex items-center justify-center gap-1 bg-[#FF6B00] text-white font-bold px-3 py-1.5 rounded-full text-xs hover:bg-[#E65000] disabled:opacity-50 transition-colors"
