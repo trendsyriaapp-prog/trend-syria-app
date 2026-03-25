@@ -10,7 +10,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import { useScroll } from '../context/ScrollContext';
+import { useSettings } from '../context/SettingsContext';
 import GiftModal from '../components/GiftModal';
+import ProductCard from '../components/ProductCard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -697,6 +699,7 @@ const ProductDetailPage = () => {
   const { addToCart, cart, cartCount } = useCart();
   const { toast } = useToast();
   const { saveScrollPosition } = useScroll();
+  const { settings } = useSettings();
 
   // حفظ موقع التمرير في الصفحة السابقة قبل الدخول لهذه الصفحة
   useEffect(() => {
@@ -1631,27 +1634,11 @@ const ProductDetailPage = () => {
             <h2 className="text-lg font-bold text-gray-900 mb-3">منتجات مشابهة</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {similarProducts.map((item) => (
-                <Link
-                  key={item.id}
-                  to={`/products/${item.id}`}
-                  className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-[#FF6B00] hover:shadow-md transition-all group"
-                  data-testid={`similar-product-${item.id}`}
-                >
-                  <div className="aspect-square relative overflow-hidden bg-gray-50">
-                    <img
-                      src={item.images?.[0] || 'https://via.placeholder.com/200'}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-2">
-                    <h3 className="font-medium text-xs text-gray-800 line-clamp-2 mb-1 group-hover:text-[#FF6B00] transition-colors">
-                      {item.name}
-                    </h3>
-                    <p className="text-[#FF6B00] font-bold text-sm">{formatPrice(item.price)}</p>
-                  </div>
-                </Link>
+                <ProductCard 
+                  key={item.id} 
+                  product={item} 
+                  badgeSettings={settings?.badge_settings}
+                />
               ))}
             </div>
           </div>
