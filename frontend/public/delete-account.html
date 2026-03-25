@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلب حذف الحساب - ترند سورية</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: #f5f5f5; 
+            padding: 20px;
+            line-height: 1.8;
+            color: #333;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 16px; 
+            padding: 30px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        h1 { 
+            color: #FF6B00; 
+            margin-bottom: 10px; 
+            font-size: 1.6rem;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .info-box {
+            background: #fff3e0;
+            border: 1px solid #FF6B00;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .info-box h3 {
+            color: #FF6B00;
+            margin-bottom: 10px;
+        }
+        .info-box ul {
+            margin-right: 20px;
+        }
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #FF6B00;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #FF6B00, #FF8C00);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .contact {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #666;
+        }
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-message h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>طلب حذف الحساب</h1>
+        <p class="subtitle">ترند سورية - Trend Syria</p>
+        
+        <div class="info-box">
+            <h3>⚠️ معلومات مهمة قبل الحذف:</h3>
+            <ul>
+                <li>سيتم حذف جميع بياناتك الشخصية نهائياً</li>
+                <li>سيتم حذف سجل طلباتك ومشترياتك</li>
+                <li>سيتم حذف عناوين التوصيل المحفوظة</li>
+                <li>سيتم حذف قائمة المفضلة</li>
+                <li>لا يمكن استرجاع البيانات بعد الحذف</li>
+            </ul>
+        </div>
+        
+        <form id="deleteForm">
+            <div class="form-group">
+                <label>رقم الهاتف المسجل في التطبيق *</label>
+                <input type="tel" id="phone" required placeholder="مثال: 0912345678">
+            </div>
+            
+            <div class="form-group">
+                <label>البريد الإلكتروني (اختياري)</label>
+                <input type="email" id="email" placeholder="للتواصل معك بخصوص الطلب">
+            </div>
+            
+            <div class="form-group">
+                <label>سبب حذف الحساب (اختياري)</label>
+                <textarea id="reason" placeholder="ساعدنا في تحسين خدماتنا بإخبارنا سبب مغادرتك"></textarea>
+            </div>
+            
+            <button type="submit" class="btn">إرسال طلب الحذف</button>
+        </form>
+        
+        <div class="success-message" id="successMessage">
+            <h3>✅ تم إرسال طلبك بنجاح</h3>
+            <p>سيتم معالجة طلبك خلال 7 أيام عمل.</p>
+            <p>ستتلقى تأكيداً عند اكتمال عملية الحذف.</p>
+        </div>
+        
+        <div class="contact">
+            <p>للاستفسارات: <strong>trendsyria.app@gmail.com</strong></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const reason = document.getElementById('reason').value;
+            
+            // Send email with deletion request
+            const subject = encodeURIComponent('طلب حذف حساب - Trend Syria');
+            const body = encodeURIComponent(
+                'طلب حذف حساب جديد:\n\n' +
+                'رقم الهاتف: ' + phone + '\n' +
+                'البريد الإلكتروني: ' + (email || 'غير محدد') + '\n' +
+                'السبب: ' + (reason || 'غير محدد')
+            );
+            
+            // Open email client
+            window.location.href = 'mailto:trendsyria.app@gmail.com?subject=' + subject + '&body=' + body;
+            
+            // Show success message
+            document.getElementById('deleteForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
