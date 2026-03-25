@@ -119,9 +119,6 @@ const foodCategories = Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
   color: config.color
 }));
 
-// قائمة المدن السورية
-const SYRIAN_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'];
-
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
 // مكون المتاجر - تمرير أفقي حر
@@ -178,7 +175,7 @@ const FoodPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParam || '');
   const [userCity, setUserCity] = useState(null);
-  const [showCitySelector, setShowCitySelector] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState('checking'); // 'checking', 'requesting', 'denied', 'error', 'success'
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [badgeSettings, setBadgeSettings] = useState(null);
   const [dynamicCategories, setDynamicCategories] = useState([]);
@@ -189,6 +186,86 @@ const FoodPage = () => {
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
   const [foodFavorites, setFoodFavorites] = useState([]);
+
+  // إحداثيات المدن السورية الرئيسية
+  const CITY_COORDINATES = {
+    'دمشق': { lat: 33.5138, lng: 36.2765 },
+    'حلب': { lat: 36.2021, lng: 37.1343 },
+    'حمص': { lat: 34.7324, lng: 36.7137 },
+    'حماة': { lat: 35.1318, lng: 36.7519 },
+    'اللاذقية': { lat: 35.5317, lng: 35.7919 },
+    'طرطوس': { lat: 34.8890, lng: 35.8866 },
+    'دير الزور': { lat: 35.3359, lng: 40.1408 },
+    'الرقة': { lat: 35.9594, lng: 39.0078 },
+    'الحسكة': { lat: 36.5067, lng: 40.7440 },
+    'درعا': { lat: 32.6189, lng: 36.1021 },
+    'السويداء': { lat: 32.7090, lng: 36.5663 },
+    'إدلب': { lat: 35.9306, lng: 36.6347 },
+    'القنيطرة': { lat: 33.1260, lng: 35.8245 },
+    'ريف دمشق': { lat: 33.4500, lng: 36.3000 }
+  };
+
+  // حساب المسافة بين نقطتين (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // تحديد أقرب مدينة من الإحداثيات
+  const getNearestCity = (latitude, longitude) => {
+    let nearestCity = 'دمشق';
+    let minDistance = Infinity;
+
+    Object.entries(CITY_COORDINATES).forEach(([city, coords]) => {
+      const distance = calculateDistance(latitude, longitude, coords.lat, coords.lng);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCity = city;
+      }
+    });
+
+    return nearestCity;
+  };
+
+  // طلب إذن GPS وتحديد المدينة
+  const requestGPSLocation = () => {
+    setGpsStatus('requesting');
+    
+    if (!navigator.geolocation) {
+      setGpsStatus('error');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const city = getNearestCity(latitude, longitude);
+        setUserCity(city);
+        localStorage.setItem('food_delivery_city', city);
+        localStorage.setItem('food_gps_granted', 'true');
+        setGpsStatus('success');
+      },
+      (error) => {
+        console.error('GPS Error:', error);
+        if (error.code === error.PERMISSION_DENIED) {
+          setGpsStatus('denied');
+        } else {
+          setGpsStatus('error');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 دقائق cache
+      }
+    );
+  };
 
   // تحديث showOnlyFreeDelivery عند تغير filterParam
   useEffect(() => {
@@ -281,49 +358,46 @@ const FoodPage = () => {
     }
   };
 
-  // جلب مدينة المستخدم من العنوان الافتراضي
+  // تحديد الموقع عند فتح الصفحة
   useEffect(() => {
-    const fetchUserCity = async () => {
+    const initLocation = () => {
+      // تحقق إذا كان المستخدم قد وافق مسبقاً
+      const gpsGranted = localStorage.getItem('food_gps_granted');
       const savedCity = localStorage.getItem('food_delivery_city');
       
-      if (savedCity) {
+      if (gpsGranted === 'true' && savedCity) {
+        // موقع محفوظ - استخدمه ثم حدّث في الخلفية
         setUserCity(savedCity);
-        setShowCitySelector(false);
-        return;
-      }
-      
-      // محاولة جلب العنوان الافتراضي للمستخدم
-      if (user) {
-        try {
-          const res = await axios.get(`${API}/user/addresses`);
-          const addresses = res.data || [];
-          const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
-          
-          if (defaultAddr?.city) {
-            setUserCity(defaultAddr.city);
-            localStorage.setItem('food_delivery_city', defaultAddr.city);
-            setShowCitySelector(false);
-            return;
-          }
-        } catch (error) {
-          console.error('Error fetching user addresses:', error);
-        }
+        setGpsStatus('success');
         
-        // إذا لم يوجد عنوان، استخدم مدينة المستخدم
-        if (user.city) {
-          setUserCity(user.city);
-          localStorage.setItem('food_delivery_city', user.city);
-          setShowCitySelector(false);
-          return;
+        // تحديث الموقع في الخلفية
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              const city = getNearestCity(latitude, longitude);
+              if (city !== savedCity) {
+                setUserCity(city);
+                localStorage.setItem('food_delivery_city', city);
+              }
+            },
+            () => {}, // تجاهل الأخطاء في التحديث الخلفي
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+          );
         }
+      } else {
+        // طلب GPS لأول مرة
+        setGpsStatus('checking');
+        setTimeout(() => {
+          if (!userCity) {
+            requestGPSLocation();
+          }
+        }, 500);
       }
-      
-      // إظهار نافذة اختيار المدينة
-      setShowCitySelector(true);
     };
     
-    fetchUserCity();
-  }, [user]);
+    initLocation();
+  }, []);
 
   useEffect(() => {
     if (userCity) {
@@ -411,11 +485,38 @@ const FoodPage = () => {
   const handleCitySelect = (city) => {
     setUserCity(city);
     localStorage.setItem('food_delivery_city', city);
-    setShowCitySelector(false);
+    setGpsStatus('success');
   };
 
-  // نافذة اختيار المدينة
-  if (showCitySelector) {
+  // شاشة طلب تفعيل GPS
+  if (gpsStatus === 'checking' || gpsStatus === 'requesting') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center"
+        >
+          <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <MapPin size={40} className="text-[#FF6B00]" />
+            </motion.div>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">جاري تحديد موقعك...</h2>
+          <p className="text-sm text-gray-500">يرجى السماح بالوصول لموقعك لعرض المطاعم القريبة</p>
+          <div className="mt-4 flex justify-center">
+            <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // شاشة رفض GPS أو خطأ
+  if (gpsStatus === 'denied' || gpsStatus === 'error') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <motion.div
@@ -424,22 +525,41 @@ const FoodPage = () => {
           className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
         >
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MapPin size={32} className="text-[#FF6B00]" />
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin size={40} className="text-red-500" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">اختر مدينتك</h2>
-            <p className="text-sm text-gray-500 mt-2">سنعرض لك المتاجر والمطاعم في مدينتك فقط</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {gpsStatus === 'denied' ? 'تم رفض الوصول للموقع' : 'خطأ في تحديد الموقع'}
+            </h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              لعرض المطاعم والمتاجر القريبة منك، نحتاج الوصول لموقعك.
+              <br />
+              هذا يضمن لك توصيل أسرع وتجربة أفضل.
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-            {SYRIAN_CITIES.map((city) => (
-              <button
-                key={city}
-                onClick={() => handleCitySelect(city)}
-                className="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-[#FF6B00] hover:text-white transition-colors"
-              >
-                {city}
-              </button>
-            ))}
+          
+          <div className="space-y-3">
+            <button
+              onClick={requestGPSLocation}
+              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2"
+            >
+              <MapPin size={20} />
+              تفعيل الموقع
+            </button>
+            
+            <p className="text-xs text-gray-400 text-center">
+              💡 تأكد من تفعيل خدمات الموقع في إعدادات جهازك
+            </p>
+          </div>
+
+          {/* رسالة توضيحية إضافية */}
+          <div className="mt-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
+            <h3 className="font-bold text-orange-800 text-sm mb-2">🛵 لماذا نحتاج موقعك؟</h3>
+            <ul className="text-xs text-orange-700 space-y-1">
+              <li>• عرض المطاعم في مدينتك فقط</li>
+              <li>• ضمان وصول الطلب بسرعة</li>
+              <li>• حساب تكلفة التوصيل بدقة</li>
+            </ul>
           </div>
         </motion.div>
       </div>
@@ -485,14 +605,11 @@ const FoodPage = () => {
               <Package size={18} className="text-white" />
             </Link>
             <h1 className="text-base font-bold">قسم الطعام</h1>
-            {/* زر تغيير المدينة */}
-            <button 
-              onClick={() => setShowCitySelector(true)}
-              className="mr-auto flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs hover:bg-white/30 transition-colors border border-white/30"
-            >
+            {/* عرض المدينة الحالية (من GPS) */}
+            <div className="mr-auto flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs border border-white/30">
               <MapPin size={12} />
-              <span>{userCity || 'اختر مدينة'}</span>
-            </button>
+              <span>{userCity || 'جاري التحديد...'}</span>
+            </div>
           </div>
         </div>
       </motion.div>
