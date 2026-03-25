@@ -18,25 +18,29 @@ const iconMap = {
   Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
 };
 
-// ألوان متدرجة جميلة لكل صنف
-const gradientColors = [
-  'from-blue-500 to-blue-600',
-  'from-purple-500 to-purple-600',
-  'from-pink-500 to-pink-600',
-  'from-orange-500 to-orange-600',
-  'from-green-500 to-green-600',
-  'from-cyan-500 to-cyan-600',
-  'from-red-500 to-red-600',
-  'from-yellow-500 to-yellow-600',
-  'from-indigo-500 to-indigo-600',
-  'from-teal-500 to-teal-600',
-  'from-rose-500 to-rose-600',
-  'from-emerald-500 to-emerald-600',
-  'from-violet-500 to-violet-600',
-  'from-amber-500 to-amber-600',
-  'from-lime-500 to-lime-600',
-  'from-fuchsia-500 to-fuchsia-600',
-];
+// ألوان الأيقونات
+const iconColors = {
+  electronics: '#3B82F6',
+  mobiles: '#8B5CF6',
+  laptops: '#06B6D4',
+  clothing: '#EC4899',
+  shoes: '#F97316',
+  home: '#10B981',
+  sports: '#EF4444',
+  books: '#6366F1',
+  gaming: '#8B5CF6',
+  beauty: '#F472B6',
+  health: '#22C55E',
+  automotive: '#64748B',
+  watches: '#F59E0B',
+  gifts: '#E11D48',
+  restaurants: '#FF6B00',
+  cafes: '#92400E',
+  bakeries: '#F59E0B',
+  sweets: '#EC4899',
+  juices: '#22C55E',
+  default: '#FF6B00'
+};
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -62,7 +66,7 @@ const CategoriesPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
       </div>
     );
@@ -71,35 +75,31 @@ const CategoriesPage = () => {
   const CategoryCard = ({ cat, index, isFood = false }) => {
     const IconComponent = iconMap[cat.icon] || Package;
     const linkTo = isFood ? `/food?category=${cat.id}` : `/products?category=${cat.id}`;
-    const gradient = gradientColors[index % gradientColors.length];
+    const iconColor = cat.color || iconColors[cat.id] || iconColors.default;
     
     return (
       <motion.div
         key={cat.id}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.05 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.03 }}
       >
         <Link
           to={linkTo}
-          className="block relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+          className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all group"
           data-testid={`category-page-${cat.id}`}
         >
-          {/* الخلفية الملونة المتدرجة */}
-          <div className={`bg-gradient-to-br ${gradient} aspect-square flex flex-col items-center justify-center p-4`}>
-            {/* الأيقونة */}
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-3">
-              <IconComponent size={28} className="text-white" />
-            </div>
-            {/* اسم الصنف */}
-            <span className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
-              {cat.name}
-            </span>
+          {/* دائرة الأيقونة */}
+          <div 
+            className="w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+            style={{ backgroundColor: `${iconColor}15` }}
+          >
+            <IconComponent size={26} style={{ color: iconColor }} />
           </div>
-          {/* تأثير اللمعان */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          {/* اسم الصنف */}
+          <span className="font-semibold text-xs text-gray-700 text-center leading-tight">
+            {cat.name}
+          </span>
         </Link>
       </motion.div>
     );
@@ -112,15 +112,15 @@ const CategoriesPage = () => {
         {/* قسم المنتجات */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-full flex items-center justify-center">
-              <ShoppingBasket className="text-white" size={20} />
+            <div className="w-9 h-9 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+              <ShoppingBasket className="text-[#FF6B00]" size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-800">أصناف المنتجات</h2>
+              <h2 className="text-base font-bold text-gray-800">أصناف المنتجات</h2>
               <span className="text-xs text-gray-500">{shoppingCategories.length} فئة</span>
             </div>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5">
             {shoppingCategories.map((cat, i) => (
               <CategoryCard key={cat.id} cat={cat} index={i} isFood={false} />
             ))}
@@ -131,17 +131,17 @@ const CategoriesPage = () => {
         {foodCategories.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                <UtensilsCrossed className="text-white" size={20} />
+              <div className="w-9 h-9 bg-green-500/10 rounded-full flex items-center justify-center">
+                <UtensilsCrossed className="text-green-500" size={18} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-800">أصناف الطعام والمشروبات</h2>
+                <h2 className="text-base font-bold text-gray-800">أصناف الطعام والمشروبات</h2>
                 <span className="text-xs text-gray-500">{foodCategories.length} فئة</span>
               </div>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5">
               {foodCategories.map((cat, i) => (
-                <CategoryCard key={cat.id} cat={cat} index={i + 8} isFood={true} />
+                <CategoryCard key={cat.id} cat={cat} index={i} isFood={true} />
               ))}
             </div>
           </div>
