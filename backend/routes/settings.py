@@ -68,6 +68,9 @@ async def get_public_settings():
             },
             "free_shipping_threshold": 150000,
             "food_free_delivery_threshold": 100000,
+            # إعدادات الفلاش المنفصلة
+            "flash_sales_products_enabled": True,
+            "flash_sales_food_enabled": True,
             # إعدادات البانرات - مفعلة افتراضياً
             "ads_banner_enabled": True,
             "ads_banner_title": "إعلانات مميزة",
@@ -88,6 +91,9 @@ async def get_public_settings():
         "delivery_fees": settings.get("delivery_fees", {}),
         "free_shipping_threshold": settings.get("free_shipping_threshold", 150000),
         "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000),
+        # إعدادات الفلاش المنفصلة
+        "flash_sales_products_enabled": settings.get("flash_sales_products_enabled", True),
+        "flash_sales_food_enabled": settings.get("flash_sales_food_enabled", True),
         # إعدادات البانرات
         "ads_banner_enabled": settings.get("ads_banner_enabled", True),
         "ads_banner_title": settings.get("ads_banner_title", "إعلانات مميزة"),

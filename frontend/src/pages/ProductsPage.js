@@ -430,7 +430,7 @@ const ProductsPage = () => {
         )}
 
         {/* ⚡ شريط فلاش - فقط في الصفحة الرئيسية */}
-        {isHomePage && flashProducts.length > 0 && flashSale && (
+        {isHomePage && flashProducts.length > 0 && flashSale && bannerSettings?.flash_sales_products_enabled !== false && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">

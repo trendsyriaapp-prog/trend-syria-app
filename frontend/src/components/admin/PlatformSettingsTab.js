@@ -1185,11 +1185,18 @@ const PlatformSettingsTab = () => {
       color: 'from-red-500 to-orange-500'
     },
     {
-      key: 'flash_sales_enabled',
-      title: 'عروض الفلاش ⚡',
-      description: 'تفعيل عروض الفلاش والخصومات السريعة',
+      key: 'flash_sales_products_enabled',
+      title: 'فلاش المنتجات 🛒⚡',
+      description: 'تفعيل عروض الفلاش في قسم التسوق/المنتجات',
       icon: Zap,
       color: 'from-purple-500 to-indigo-500'
+    },
+    {
+      key: 'flash_sales_food_enabled',
+      title: 'فلاش الطعام 🍕⚡',
+      description: 'تفعيل عروض الفلاش في قسم الطعام',
+      icon: Zap,
+      color: 'from-orange-500 to-yellow-500'
     },
     {
       key: 'ads_banner_enabled',
