@@ -960,11 +960,6 @@ const ProductDetailPage = () => {
       // إضافة قطعة واحدة دائماً
       const newCart = await addToCart(product.id, 1, selectedSize, selectedWeight);
       
-      toast({
-        title: "تمت الإضافة للسلة ✓",
-        description: `تم إضافة 1 قطعة${selectedSize ? ` - مقاس ${selectedSize}` : ''}${selectedWeight ? ` - ${selectedWeight}` : ''}`,
-      });
-      
       // تحديث حساب الشحن بعد إضافة المنتج
       if (customerAddress?.city && newCart?.total) {
         try {
