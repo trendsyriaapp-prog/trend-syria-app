@@ -242,19 +242,34 @@ const FoodPage = () => {
       return;
     }
 
+    // timeout إضافي للتأكد من عدم التعليق
+    const timeoutId = setTimeout(() => {
+      setGpsStatus('error');
+    }, 15000); // 15 ثانية كحد أقصى
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        clearTimeout(timeoutId);
         const { latitude, longitude } = position.coords;
         const city = getNearestCity(latitude, longitude);
-        setUserCity(city);
-        localStorage.setItem('food_delivery_city', city);
-        localStorage.setItem('food_gps_granted', 'true');
-        setGpsStatus('success');
+        
+        // التحقق من أن المدينة ضمن سوريا
+        if (city) {
+          setUserCity(city);
+          localStorage.setItem('food_delivery_city', city);
+          localStorage.setItem('food_gps_granted', 'true');
+          setGpsStatus('success');
+        } else {
+          setGpsStatus('error');
+        }
       },
       (error) => {
+        clearTimeout(timeoutId);
         console.error('GPS Error:', error);
         if (error.code === error.PERMISSION_DENIED) {
           setGpsStatus('denied');
+        } else if (error.code === error.TIMEOUT) {
+          setGpsStatus('error');
         } else {
           setGpsStatus('error');
         }
@@ -386,13 +401,8 @@ const FoodPage = () => {
           );
         }
       } else {
-        // طلب GPS لأول مرة
-        setGpsStatus('checking');
-        setTimeout(() => {
-          if (!userCity) {
-            requestGPSLocation();
-          }
-        }, 500);
+        // طلب GPS لأول مرة - مباشرة بدون انتظار
+        requestGPSLocation();
       }
     };
     
