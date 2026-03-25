@@ -61,6 +61,8 @@ const LocationPickerMap = ({
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [address, setAddress] = useState('');
+  const [gpsAccuracy, setGpsAccuracy] = useState(null); // دقة GPS بالمتر
+  const [accuracyStatus, setAccuracyStatus] = useState(null); // 'good', 'poor', null
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -73,6 +75,8 @@ const LocationPickerMap = ({
   const handleLocationSelect = (lat, lng) => {
     setSelectedLat(lat);
     setSelectedLng(lng);
+    setGpsAccuracy(null); // إعادة تعيين الدقة عند النقر اليدوي
+    setAccuracyStatus(null);
     reverseGeocode(lat, lng);
   };
 
@@ -97,11 +101,25 @@ const LocationPickerMap = ({
     }
 
     setGettingLocation(true);
+    setGpsAccuracy(null);
+    setAccuracyStatus(null);
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         setSelectedLat(latitude);
         setSelectedLng(longitude);
+        setGpsAccuracy(Math.round(accuracy));
+        
+        // تحديد حالة الدقة
+        if (accuracy <= 50) {
+          setAccuracyStatus('good'); // دقة ممتازة
+        } else if (accuracy <= 100) {
+          setAccuracyStatus('moderate'); // دقة مقبولة
+        } else {
+          setAccuracyStatus('poor'); // دقة ضعيفة
+        }
+        
         reverseGeocode(latitude, longitude);
         setGettingLocation(false);
       },
@@ -110,7 +128,7 @@ const LocationPickerMap = ({
         alert('تعذر تحديد موقعك. تأكد من تفعيل خدمة الموقع.');
         setGettingLocation(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -179,6 +197,58 @@ const LocationPickerMap = ({
 
         {/* Selected Location Info */}
         <div className="p-4 bg-gray-50 border-t">
+          {/* مؤشر دقة GPS */}
+          {gpsAccuracy !== null && (
+            <div className={`mb-3 p-3 rounded-xl flex items-center gap-3 ${
+              accuracyStatus === 'good' 
+                ? 'bg-green-50 border border-green-200' 
+                : accuracyStatus === 'moderate'
+                ? 'bg-yellow-50 border border-yellow-200'
+                : 'bg-red-50 border border-red-200'
+            }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                accuracyStatus === 'good' 
+                  ? 'bg-green-100' 
+                  : accuracyStatus === 'moderate'
+                  ? 'bg-yellow-100'
+                  : 'bg-red-100'
+              }`}>
+                {accuracyStatus === 'good' ? (
+                  <Check size={20} className="text-green-600" />
+                ) : accuracyStatus === 'moderate' ? (
+                  <Navigation size={20} className="text-yellow-600" />
+                ) : (
+                  <MapPin size={20} className="text-red-600" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-bold ${
+                  accuracyStatus === 'good' 
+                    ? 'text-green-700' 
+                    : accuracyStatus === 'moderate'
+                    ? 'text-yellow-700'
+                    : 'text-red-700'
+                }`}>
+                  {accuracyStatus === 'good' 
+                    ? '✓ موقع دقيق جداً' 
+                    : accuracyStatus === 'moderate'
+                    ? '⚠ دقة مقبولة'
+                    : '⚠ دقة منخفضة'}
+                </p>
+                <p className={`text-xs ${
+                  accuracyStatus === 'good' 
+                    ? 'text-green-600' 
+                    : accuracyStatus === 'moderate'
+                    ? 'text-yellow-600'
+                    : 'text-red-600'
+                }`}>
+                  الدقة: ±{gpsAccuracy} متر
+                  {accuracyStatus === 'poor' && ' - يُفضل تحريك المؤشر يدوياً'}
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center flex-shrink-0">
               <MapPin size={20} className="text-[#FF6B00]" />
