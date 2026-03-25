@@ -498,6 +498,13 @@ const FoodPage = () => {
     setGpsStatus('success');
   };
 
+  // دالة تخطي GPS للتصوير (مؤقتة)
+  const skipGPSForScreenshot = () => {
+    setUserCity('دمشق');
+    localStorage.setItem('food_delivery_city', 'دمشق');
+    setGpsStatus('success');
+  };
+
   // شاشة طلب تفعيل GPS
   if (gpsStatus === 'checking' || gpsStatus === 'requesting') {
     return (
@@ -520,6 +527,13 @@ const FoodPage = () => {
           <div className="mt-4 flex justify-center">
             <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
           </div>
+          {/* زر تخطي مؤقت للتصوير */}
+          <button
+            onClick={skipGPSForScreenshot}
+            className="mt-6 text-xs text-gray-400 hover:text-[#FF6B00] underline"
+          >
+            تخطي (للتصوير فقط)
+          </button>
         </motion.div>
       </div>
     );
@@ -555,6 +569,14 @@ const FoodPage = () => {
             >
               <MapPin size={20} />
               تفعيل الموقع
+            </button>
+            
+            {/* زر تخطي مؤقت للتصوير */}
+            <button
+              onClick={skipGPSForScreenshot}
+              className="w-full border-2 border-gray-200 text-gray-500 py-3 rounded-xl font-medium hover:border-[#FF6B00] hover:text-[#FF6B00] transition-all"
+            >
+              تخطي (للتصوير فقط)
             </button>
             
             <p className="text-xs text-gray-400 text-center">
