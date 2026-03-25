@@ -67,13 +67,31 @@ async def get_public_settings():
                 "far": 12000
             },
             "free_shipping_threshold": 150000,
-            "food_free_delivery_threshold": 100000
+            "food_free_delivery_threshold": 100000,
+            # إعدادات البانرات - مفعلة افتراضياً
+            "ads_banner_enabled": True,
+            "ads_banner_title": "إعلانات مميزة",
+            "free_shipping_banner_enabled": True,
+            "free_shipping_banner_title": "شحن مجاني",
+            "best_sellers_enabled": True,
+            "best_sellers_title": "الأكثر مبيعاً",
+            "newly_added_enabled": True,
+            "newly_added_title": "وصل حديثاً"
         }
     
     return {
         "delivery_fees": settings.get("delivery_fees", {}),
         "free_shipping_threshold": settings.get("free_shipping_threshold", 150000),
-        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000)
+        "food_free_delivery_threshold": settings.get("food_free_delivery_threshold", 100000),
+        # إعدادات البانرات
+        "ads_banner_enabled": settings.get("ads_banner_enabled", True),
+        "ads_banner_title": settings.get("ads_banner_title", "إعلانات مميزة"),
+        "free_shipping_banner_enabled": settings.get("free_shipping_banner_enabled", True),
+        "free_shipping_banner_title": settings.get("free_shipping_banner_title", "شحن مجاني"),
+        "best_sellers_enabled": settings.get("best_sellers_enabled", True),
+        "best_sellers_title": settings.get("best_sellers_title", "الأكثر مبيعاً"),
+        "newly_added_enabled": settings.get("newly_added_enabled", True),
+        "newly_added_title": settings.get("newly_added_title", "وصل حديثاً")
     }
 
 # ============== Update Settings ==============

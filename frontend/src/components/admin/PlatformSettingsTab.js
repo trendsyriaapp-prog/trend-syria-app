@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, UtensilsCrossed, ShoppingBag, Truck, Wallet, 
   Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare, MessageCircle, Phone,
-  Gift, Calendar, AlertCircle
+  Gift, Calendar, AlertCircle, Megaphone, TrendingUp, Sparkles
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
@@ -1190,6 +1190,50 @@ const PlatformSettingsTab = () => {
       description: 'تفعيل عروض الفلاش والخصومات السريعة',
       icon: Zap,
       color: 'from-purple-500 to-indigo-500'
+    },
+    {
+      key: 'ads_banner_enabled',
+      title: 'إعلانات مميزة 📢',
+      description: 'تفعيل شريط الإعلانات في الصفحة الرئيسية',
+      icon: Megaphone,
+      color: 'from-blue-500 to-cyan-500',
+      hasInput: true,
+      inputKey: 'ads_banner_title',
+      inputLabel: 'عنوان الشريط',
+      inputPlaceholder: 'إعلانات مميزة'
+    },
+    {
+      key: 'free_shipping_banner_enabled',
+      title: 'بانر الشحن المجاني 🎁',
+      description: 'تفعيل بانر الشحن المجاني في الصفحة الرئيسية',
+      icon: Gift,
+      color: 'from-green-500 to-emerald-500',
+      hasInput: true,
+      inputKey: 'free_shipping_banner_title',
+      inputLabel: 'عنوان البانر',
+      inputPlaceholder: 'شحن مجاني'
+    },
+    {
+      key: 'best_sellers_enabled',
+      title: 'الأكثر مبيعاً 🔥',
+      description: 'تفعيل قسم الأكثر مبيعاً في الصفحة الرئيسية',
+      icon: TrendingUp,
+      color: 'from-orange-500 to-red-500',
+      hasInput: true,
+      inputKey: 'best_sellers_title',
+      inputLabel: 'عنوان القسم',
+      inputPlaceholder: 'الأكثر مبيعاً'
+    },
+    {
+      key: 'newly_added_enabled',
+      title: 'وصل حديثاً 🆕',
+      description: 'تفعيل قسم المنتجات الجديدة في الصفحة الرئيسية',
+      icon: Sparkles,
+      color: 'from-pink-500 to-purple-500',
+      hasInput: true,
+      inputKey: 'newly_added_title',
+      inputLabel: 'عنوان القسم',
+      inputPlaceholder: 'وصل حديثاً'
     },
     {
       key: 'whatsapp_enabled',

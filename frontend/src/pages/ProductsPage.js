@@ -70,6 +70,7 @@ const ProductsPage = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [newlyAddedProducts, setNewlyAddedProducts] = useState([]);
   const [badgeSettings, setBadgeSettings] = useState(null);
+  const [bannerSettings, setBannerSettings] = useState(null);
   
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
@@ -79,17 +80,18 @@ const ProductsPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
 
-  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً
+  // جلب عرض الشحن المجاني + الإعلانات + فلاش + الأكثر مبيعاً + وصل حديثاً + إعدادات البانرات
   useEffect(() => {
     const fetchExtras = async () => {
       try {
-        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes] = await Promise.all([
+        const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes, settingsRes] = await Promise.all([
           axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
           axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
           axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
           axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
+          axios.get(`${API}/settings/public`).catch(() => ({ data: {} }))
         ]);
         
         const promo = promoRes.data;
@@ -105,6 +107,7 @@ const ProductsPage = () => {
         setBestSellers(bestSellersRes.data || []);
         setNewlyAddedProducts(newlyAddedRes.data || []);
         setBadgeSettings(badgeRes.data);
+        setBannerSettings(settingsRes.data || {});
       } catch (error) {
         console.error('Error fetching extras:', error);
       }
@@ -342,12 +345,12 @@ const ProductsPage = () => {
     <div className="min-h-screen pb-20 md:pb-10 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* 🎁 بانر الشحن المجاني الشامل - فقط في الصفحة الرئيسية */}
-        {isHomePage && globalFreeShipping && (
+        {isHomePage && globalFreeShipping && bannerSettings?.free_shipping_banner_enabled !== false && (
           <FreeShippingBanner promo={globalFreeShipping} />
         )}
 
         {/* 📢 شريط الإعلانات - فقط في الصفحة الرئيسية */}
-        {isHomePage && ads.length > 0 && (
+        {isHomePage && ads.length > 0 && bannerSettings?.ads_banner_enabled !== false && (
           <div className="mb-3">
             <div className="relative overflow-hidden h-16 md:h-20">
               {ads.map((ad, index) => (
@@ -497,7 +500,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🔥 شريط الأكثر مبيعاً - فقط في الصفحة الرئيسية */}
-        {isHomePage && bestSellers.length > 0 && (
+        {isHomePage && bestSellers.length > 0 && bannerSettings?.best_sellers_enabled !== false && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -505,7 +508,7 @@ const ProductsPage = () => {
                   <TrendingUp size={16} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-gray-900">الأكثر مبيعاً</h2>
+                  <h2 className="text-sm font-bold text-gray-900">{bannerSettings?.best_sellers_title || 'الأكثر مبيعاً'}</h2>
                   <p className="text-[10px] text-gray-500">المنتجات المفضلة لدى العملاء</p>
                 </div>
               </div>
@@ -571,7 +574,7 @@ const ProductsPage = () => {
         )}
 
         {/* 🆕 شريط وصل حديثاً - فقط في الصفحة الرئيسية */}
-        {isHomePage && newlyAddedProducts.length > 0 && (
+        {isHomePage && newlyAddedProducts.length > 0 && bannerSettings?.newly_added_enabled !== false && (
           <section className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -579,7 +582,7 @@ const ProductsPage = () => {
                   <Sparkles size={16} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-gray-900">وصل حديثاً</h2>
+                  <h2 className="text-sm font-bold text-gray-900">{bannerSettings?.newly_added_title || 'وصل حديثاً'}</h2>
                   <p className="text-[10px] text-gray-500">أحدث المنتجات المضافة</p>
                 </div>
               </div>
