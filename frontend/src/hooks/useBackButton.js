@@ -15,13 +15,16 @@ export const useBackButton = () => {
 
     const handleBackButton = () => {
       // الصفحات الرئيسية التي يجب الخروج منها عند الضغط على الرجوع
-      const mainPages = ['/', '/home', '/products', '/food'];
+      const mainPages = ['/', '/home'];
       
-      if (mainPages.includes(location.pathname)) {
+      // صفحات تحتاج رجوع عادي
+      const currentPath = location.pathname;
+      
+      if (mainPages.includes(currentPath)) {
         // في الصفحة الرئيسية - تأكيد الخروج
         App.exitApp();
       } else {
-        // في صفحة فرعية - الرجوع للخلف
+        // في أي صفحة أخرى - الرجوع للخلف
         navigate(-1);
       }
     };

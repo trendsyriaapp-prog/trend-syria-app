@@ -176,10 +176,10 @@ const StorePage = () => {
       </div>
 
       {/* Back Button */}
-      <div className="fixed bottom-20 left-4">
+      <div className="fixed bottom-24 left-4 z-40">
         <Link
           to="/"
-          className="flex items-center gap-2 bg-white shadow-lg rounded-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 bg-white shadow-lg rounded-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors border border-gray-100"
         >
           <ArrowRight size={18} />
           <span className="text-sm">العودة</span>
