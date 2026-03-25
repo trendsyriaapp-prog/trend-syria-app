@@ -816,7 +816,7 @@ const ProductsPage = () => {
                         animation: index < 12 ? 'fadeInUp 0.4s ease-out forwards' : 'none'
                       }}
                     >
-                      <ProductCard product={product} />
+                      <ProductCard product={product} badgeSettings={badgeSettings} />
                     </div>
                   ))}
                 </div>
