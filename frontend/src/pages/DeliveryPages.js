@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import { useModalBackHandler } from '../hooks/useBackButton';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
   Car, Bike, Check, MapPin
@@ -521,6 +522,26 @@ const DeliveryDashboard = () => {
   // ETA Modal - الوقت المتوقع للوصول
   const [showETAModal, setShowETAModal] = useState(null);
   const [estimatedTime, setEstimatedTime] = useState(30);
+  
+  // ⭐ دعم زر الرجوع للـ modals
+  const closeETAModal = useCallback(() => setShowETAModal(null), []);
+  const closeDeliveryCodeModal = useCallback(() => {
+    setShowDeliveryCodeModal(null);
+    setDeliveryCodeInput('');
+    setDeliveryCodeError('');
+  }, []);
+  const closePickupChecklist = useCallback(() => setShowPickupChecklist(null), []);
+  const closeDeliveryChecklist = useCallback(() => setShowDeliveryChecklist(null), []);
+  const closeReturnChecklist = useCallback(() => setShowReturnChecklist(null), []);
+  const closeRouteMapModal = useCallback(() => setShowRouteMapForOrder(null), []);
+  
+  // تسجيل الـ modals مع زر الرجوع
+  useModalBackHandler(!!showETAModal, closeETAModal);
+  useModalBackHandler(!!showDeliveryCodeModal, closeDeliveryCodeModal);
+  useModalBackHandler(!!showPickupChecklist, closePickupChecklist);
+  useModalBackHandler(!!showDeliveryChecklist, closeDeliveryChecklist);
+  useModalBackHandler(!!showReturnChecklist, closeReturnChecklist);
+  useModalBackHandler(!!showRouteMapForOrder, closeRouteMapModal);
   
   // Ratings
   const [myRatings, setMyRatings] = useState({ ratings: [], average_rating: 0, total_ratings: 0 });

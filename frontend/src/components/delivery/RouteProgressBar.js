@@ -1,11 +1,12 @@
 // /app/frontend/src/components/delivery/RouteProgressBar.js
 // شريط تتبع المسار الذكي - يظهر المحطة الحالية وزر الإجراء
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { MapPin, Navigation, Package, User, ChevronDown, ChevronUp, Loader2, Lock, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
+import { useModalBackHandler } from '../../hooks/useBackButton';
 import PickupWaitingTimer from './PickupWaitingTimer';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -30,6 +31,21 @@ const RouteProgressBar = ({
   const [pickupCode, setPickupCode] = useState('');
   const [deliveryCode, setDeliveryCode] = useState('');
   const [verifying, setVerifying] = useState(false);
+
+  // ⭐ دعم زر الرجوع للـ modals
+  const closePickupModal = useCallback(() => {
+    setShowPickupCodeModal(null);
+    setPickupCode('');
+  }, []);
+  
+  const closeDeliveryModal = useCallback(() => {
+    setShowDeliveryCodeModal(null);
+    setDeliveryCode('');
+  }, []);
+  
+  // تسجيل الـ modals مع زر الرجوع
+  useModalBackHandler(!!showPickupCodeModal, closePickupModal);
+  useModalBackHandler(!!showDeliveryCodeModal, closeDeliveryModal);
 
   // حساب المحطات بالترتيب الصحيح
   const stations = useMemo(() => {
@@ -574,10 +590,7 @@ const RouteProgressBar = ({
             
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setShowPickupCodeModal(null);
-                  setPickupCode('');
-                }}
+                onClick={closePickupModal}
                 className={`flex-1 py-3 rounded-xl font-bold ${
                   isDark 
                     ? 'bg-[#333] text-white' 
@@ -636,10 +649,7 @@ const RouteProgressBar = ({
             
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setShowDeliveryCodeModal(null);
-                  setDeliveryCode('');
-                }}
+                onClick={closeDeliveryModal}
                 className={`flex-1 py-3 rounded-xl font-bold ${
                   isDark 
                     ? 'bg-[#333] text-white' 

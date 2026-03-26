@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, X, Navigation, Phone, PhoneOff, Package, UtensilsCrossed, Locate, Layers, Route } from 'lucide-react';
@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 import useNotificationSound from '../../hooks/useNotificationSound';
+import { useModalBackHandler } from '../../hooks/useBackButton';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -140,6 +141,10 @@ const OrdersMap = ({
   const [multiRouteSegments, setMultiRouteSegments] = useState([]); // مسارات متعددة
   const [showAllMyRoutes, setShowAllMyRoutes] = useState(false); // عرض جميع مسارات طلباتي
   const [optimizedStops, setOptimizedStops] = useState([]); // النقاط المُرقمة المُحسَّنة
+  
+  // ⭐ دعم زر الرجوع للخريطة
+  const closeMap = useCallback(() => setIsOpen(false), []);
+  useModalBackHandler(isOpen, closeMap);
   
   // ⭐ فلتر الطلبات الجديد: متاحة / طلباتي / الكل
   const [orderFilter, setOrderFilter] = useState('myOrders'); // 'available', 'myOrders', 'all'
