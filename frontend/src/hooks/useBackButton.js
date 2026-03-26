@@ -43,16 +43,26 @@ export const useBackButton = () => {
       }
 
       // الصفحات الرئيسية التي يجب الخروج منها عند الضغط على الرجوع
-      const mainPages = ['/', '/home', '/delivery/dashboard'];
+      const mainPages = ['/', '/home'];
+      
+      // الصفحات الفرعية الرئيسية (المستوى الأول)
+      const firstLevelPages = ['/products', '/food', '/categories', '/cart', '/orders', '/settings', '/favorites', '/following', '/messages', '/wallet', '/my-wallet', '/gifts', '/referrals', '/delivery/dashboard'];
       
       const currentPath = location.pathname;
       
       if (mainPages.includes(currentPath)) {
         // في الصفحة الرئيسية - تأكيد الخروج
         App.exitApp();
+      } else if (firstLevelPages.includes(currentPath)) {
+        // في صفحة فرعية من المستوى الأول - الرجوع للصفحة الرئيسية
+        navigate('/', { replace: true });
       } else {
-        // في أي صفحة أخرى - الرجوع للخلف
-        navigate(-1);
+        // في صفحة أعمق - نتحقق من السجل
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate('/', { replace: true });
+        }
       }
     };
 

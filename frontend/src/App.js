@@ -178,14 +178,28 @@ const BackButtonHandler = () => {
 
     const handleBackButton = ({ canGoBack }) => {
       // الصفحات الرئيسية التي يجب الخروج منها عند الضغط على الرجوع
-      const mainPages = ['/', '/home', '/products', '/food'];
+      const mainPages = ['/', '/home'];
       
-      if (mainPages.includes(location.pathname)) {
+      // الصفحات الفرعية الرئيسية (المستوى الأول)
+      const firstLevelPages = ['/products', '/food', '/categories', '/cart', '/orders', '/settings', '/favorites', '/following', '/messages', '/wallet', '/my-wallet', '/gifts', '/referrals'];
+      
+      const currentPath = location.pathname;
+      
+      if (mainPages.includes(currentPath)) {
         // في الصفحة الرئيسية - الخروج من التطبيق
         CapacitorApp.exitApp();
+      } else if (firstLevelPages.includes(currentPath)) {
+        // في صفحة فرعية من المستوى الأول - الرجوع للصفحة الرئيسية
+        navigate('/', { replace: true });
       } else {
-        // في صفحة فرعية - الرجوع للخلف
-        navigate(-1);
+        // في صفحة أعمق (منتج، متجر، تفاصيل طلب، الخ)
+        // نتحقق إذا كان هناك تاريخ للرجوع
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          // إذا لم يكن هناك تاريخ، نرجع للصفحة الرئيسية
+          navigate('/', { replace: true });
+        }
       }
     };
 
