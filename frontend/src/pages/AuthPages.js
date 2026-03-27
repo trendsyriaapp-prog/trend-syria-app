@@ -159,11 +159,13 @@ const RegisterPage = () => {
     full_name: '',
     phone: '',
     password: '',
+    confirmPassword: '',
     city: 'دمشق',
     user_type: defaultType,
     emergency_phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -175,6 +177,26 @@ const RegisterPage = () => {
       toast({
         title: "خطأ",
         description: "يرجى إدخال الاسم الثلاثي كاملاً",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // التحقق من تطابق كلمة السر
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "خطأ",
+        description: "كلمة المرور وتأكيدها غير متطابقتين",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // التحقق من طول كلمة السر
+    if (formData.password.length < 6) {
+      toast({
+        title: "خطأ",
+        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
         variant: "destructive"
       });
       return;
@@ -312,6 +334,46 @@ const RegisterPage = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              <p className="text-xs text-gray-400 mt-1">6 أحرف على الأقل</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">تأكيد كلمة المرور *</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className={`w-full bg-gray-50 border rounded-lg py-3 px-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:outline-none transition-colors ${
+                    formData.confirmPassword && formData.password !== formData.confirmPassword 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : formData.confirmPassword && formData.password === formData.confirmPassword
+                        ? 'border-green-500 focus:border-green-500'
+                        : 'border-gray-200 focus:border-[#FF6B00]'
+                  }`}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  data-testid="confirm-password-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle size={12} /> كلمة المرور غير متطابقة
+                </p>
+              )}
+              {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+                  <CheckCircle size={12} /> كلمة المرور متطابقة
+                </p>
+              )}
             </div>
 
             <div>
