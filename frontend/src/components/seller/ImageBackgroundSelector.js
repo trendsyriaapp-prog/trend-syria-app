@@ -91,11 +91,12 @@ const ImageBackgroundSelector = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-2">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-2">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto overscroll-contain"
+        style={{ touchAction: 'pan-y' }}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-3 flex items-center justify-between rounded-t-2xl z-10">
@@ -248,7 +249,7 @@ const ImageBackgroundSelector = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 flex gap-2">
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 flex gap-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <button
             onClick={onCancel}
             className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-bold"

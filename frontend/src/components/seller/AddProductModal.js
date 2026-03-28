@@ -397,11 +397,13 @@ const AddProductModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl p-4 w-full max-w-md max-h-[85vh] overflow-y-auto"
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-t-xl sm:rounded-xl p-4 w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain"
+          style={{ touchAction: 'pan-y' }}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

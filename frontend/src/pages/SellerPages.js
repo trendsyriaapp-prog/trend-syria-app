@@ -1142,7 +1142,7 @@ const SellerDashboardPage = () => {
       </div>
 
       {/* المحتوى الرئيسي */}
-      <div className="max-w-4xl mx-auto px-4 py-4 pb-32">
+      <div className="max-w-4xl mx-auto px-4 py-4 pb-24" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
         
         {/* قسم الطلبات - تبويب منفصل */}
         {activeTab === 'orders' && (
@@ -1405,7 +1405,7 @@ const SellerDashboardPage = () => {
       </div>
 
       {/* الشريط السفلي الثابت */}
-      <div className="fixed bottom-8 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-4xl mx-auto flex">
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
