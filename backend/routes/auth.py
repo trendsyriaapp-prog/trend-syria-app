@@ -932,7 +932,7 @@ async def send_sms(phone: str, message: str) -> dict:
         # client = Client(account_sid, auth_token)
         # message = client.messages.create(body=message, from_=from_number, to=phone)
         # return {"success": True, "sid": message.sid}
-        raise HTTPException(status_code=500, detail="SMS service not configured")
+        raise HTTPException(status_code=500, detail="خدمة الرسائل النصية غير مُعدّة")
 
 
 @router.post("/send-sms-code")

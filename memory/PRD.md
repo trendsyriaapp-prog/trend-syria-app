@@ -26,6 +26,7 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 - ✅ Fixed ImageBackgroundSelector mobile sizing - proper mobile-first design with slide-up animation
 - ✅ Fixed product shadow positioning - shadow now renders closer to product image
 - ✅ Improved modal animations for mobile - changed from scale to slide-up
+- ✅ **Translated all error messages to Arabic** - Added validation exception handler in server.py and error translation in errorHelpers.js
 
 ### Earlier December 2024
 - ✅ Full e-commerce platform (React + FastAPI + MongoDB)
@@ -91,3 +92,6 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 - `/app/frontend/src/components/seller/AddProductModal.js` - Fixed scroll leaking
 - `/app/frontend/src/components/seller/ImageBackgroundSelector.js` - Fixed mobile sizing
 - `/app/frontend/src/components/seller/SimpleImageCapture.js` - Fixed shadow position
+- `/app/backend/server.py` - Added Arabic validation error handler
+- `/app/backend/routes/wallet.py` - Fixed withdraw endpoint to accept JSON body
+- `/app/frontend/src/utils/errorHelpers.js` - Added error message translation

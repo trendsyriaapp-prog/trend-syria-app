@@ -448,14 +448,21 @@ async def reject_topup(
 
 # ============== Withdrawal Requests ==============
 
+class WithdrawRequest(BaseModel):
+    amount: int
+    shamcash_phone: str
+
 @router.post("/withdraw")
 async def request_withdrawal(
-    amount: int = Query(..., gt=0),
-    shamcash_phone: str = Query(...),
+    data: WithdrawRequest,
     user: dict = Depends(get_current_user)
 ):
     """طلب سحب رصيد"""
+    amount = data.amount
+    shamcash_phone = data.shamcash_phone
+    
     if user["user_type"] not in ["seller", "delivery"]:
+        raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
         raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
     
     # Get wallet

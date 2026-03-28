@@ -6,6 +6,8 @@
 
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 from pathlib import Path
@@ -105,6 +107,77 @@ app = FastAPI(
 # 🔒 إضافة Rate Limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# 🌍 ترجمة رسائل الخطأ إلى العربية
+VALIDATION_ERRORS_AR = {
+    "field required": "هذا الحقل مطلوب",
+    "value is not a valid integer": "يجب أن تكون القيمة رقماً صحيحاً",
+    "value is not a valid float": "يجب أن تكون القيمة رقماً",
+    "value is not a valid email address": "البريد الإلكتروني غير صحيح",
+    "ensure this value has at least": "يجب أن يكون طول القيمة على الأقل",
+    "ensure this value has at most": "يجب أن يكون طول القيمة على الأكثر",
+    "value is not a valid phone number": "رقم الهاتف غير صحيح",
+    "invalid datetime format": "صيغة التاريخ غير صحيحة",
+    "none is not an allowed value": "هذا الحقل لا يمكن أن يكون فارغاً",
+    "value could not be parsed to a boolean": "يجب أن تكون القيمة صحيحة أو خاطئة",
+    "ensure this value is greater than": "يجب أن تكون القيمة أكبر من",
+    "ensure this value is less than": "يجب أن تكون القيمة أقل من",
+    "string does not match regex": "الصيغة غير صحيحة",
+    "invalid json": "صيغة JSON غير صحيحة",
+    "Input should be a valid string": "يجب إدخال نص صحيح",
+    "Input should be a valid integer": "يجب إدخال رقم صحيح",
+    "Input should be a valid number": "يجب إدخال رقم صحيح",
+    "String should have at least": "يجب أن يكون طول النص على الأقل",
+    "String should have at most": "يجب أن يكون طول النص على الأكثر",
+    "Field required": "هذا الحقل مطلوب",
+    "Missing": "هذا الحقل مطلوب",
+    "missing": "هذا الحقل مطلوب",
+}
+
+def translate_validation_error(error_msg: str) -> str:
+    """ترجمة رسائل خطأ Pydantic إلى العربية"""
+    error_msg_lower = error_msg.lower()
+    
+    for eng, ar in VALIDATION_ERRORS_AR.items():
+        if eng.lower() in error_msg_lower:
+            return ar
+    
+    # إذا لم نجد ترجمة، نرجع الرسالة الأصلية
+    return error_msg
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """معالج أخطاء التحقق - يُرجع رسائل بالعربية"""
+    errors = exc.errors()
+    arabic_errors = []
+    
+    for error in errors:
+        field = error.get("loc", [""])[1] if len(error.get("loc", [])) > 1 else error.get("loc", [""])[0]
+        msg = error.get("msg", "خطأ في البيانات")
+        arabic_msg = translate_validation_error(msg)
+        
+        # إضافة اسم الحقل للرسالة
+        field_names = {
+            "amount": "المبلغ",
+            "shamcash_phone": "رقم شام كاش",
+            "phone": "رقم الهاتف",
+            "password": "كلمة المرور",
+            "name": "الاسم",
+            "email": "البريد الإلكتروني",
+            "price": "السعر",
+            "stock": "الكمية",
+            "description": "الوصف",
+            "title": "العنوان",
+            "body": "محتوى الرسالة",
+        }
+        
+        field_ar = field_names.get(str(field), str(field))
+        arabic_errors.append(f"{field_ar}: {arabic_msg}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "، ".join(arabic_errors) if arabic_errors else "خطأ في البيانات المدخلة"}
+    )
 
 # 🔒 Middleware للتحقق من IPs المحظورة
 @app.middleware("http")
