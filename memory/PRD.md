@@ -20,7 +20,14 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ## What's Been Implemented
 
-### December 2024
+### December 2024 - UI/UX Fixes (28 Dec 2024)
+- ✅ Fixed seller bottom navigation bar position (`bottom-0` + `safe-area-inset-bottom`)
+- ✅ Fixed AddProductModal scroll issue - prevented scroll leaking to background page (`overscroll-contain`)
+- ✅ Fixed ImageBackgroundSelector mobile sizing - proper mobile-first design with slide-up animation
+- ✅ Fixed product shadow positioning - shadow now renders closer to product image
+- ✅ Improved modal animations for mobile - changed from scale to slide-up
+
+### Earlier December 2024
 - ✅ Full e-commerce platform (React + FastAPI + MongoDB)
 - ✅ Capacitor Android wrapper with native integrations
 - ✅ GPS permissions and location tracking for delivery
@@ -36,11 +43,12 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 ## Prioritized Backlog
 
 ### P0 - Blockers
-- [ ] Google Identity Verification (Waiting on Google Support response)
+- [ ] Google Identity Verification (Waiting on Google Support response - 1-3 days)
 
 ### P1 - High Priority
 - [ ] Granular permissions for sub-admins (orders manager, products manager roles)
 - [ ] Live payment verification for Sham Cash (`backend/services/payment_providers.py`)
+- [ ] WhatsApp Business API or SMS for password reset OTPs
 
 ### P2 - Medium Priority
 - [ ] Improve price display formatting (e.g., 9375 → 9.4K)
@@ -73,4 +81,13 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ## Test Credentials (Preview)
 - Delivery Driver: `0911222333` / `test123`
-- Seller: `0911444555` / `test123`
+- Seller 1: `0922222222` / `seller123`
+- Seller 2: `0911444555` / `seller123`
+
+---
+
+## Files Modified (28 Dec 2024)
+- `/app/frontend/src/pages/SellerPages.js` - Fixed bottom bar position
+- `/app/frontend/src/components/seller/AddProductModal.js` - Fixed scroll leaking
+- `/app/frontend/src/components/seller/ImageBackgroundSelector.js` - Fixed mobile sizing
+- `/app/frontend/src/components/seller/SimpleImageCapture.js` - Fixed shadow position
