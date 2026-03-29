@@ -153,9 +153,6 @@ const OrderLabelPrint = ({ order, onClose }) => {
                 <p style={{ fontSize: '9px', color: '#999', margin: 0 }}>
                   شكراً لتسوقك من ترند سورية
                 </p>
-                <p style={{ fontSize: '10px', color: '#25D366', margin: '5px 0 0 0', fontWeight: 'bold' }}>
-                  📞 للدعم واتساب: 0945570365
-                </p>
               </div>
             </div>
           </div>
