@@ -441,7 +441,7 @@ class TestGiftIntegration:
         sent_gifts = sent_response.json()
         gift_found = any(g["id"] == gift_id for g in sent_gifts)
         assert gift_found, "Gift should appear in sent gifts"
-        print(f"✅ Gift verified in sent gifts list")
+        print("✅ Gift verified in sent gifts list")
         
         # Step 3: Verify gift details
         for gift in sent_gifts:

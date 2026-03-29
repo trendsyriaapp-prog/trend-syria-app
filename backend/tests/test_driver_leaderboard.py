@@ -163,7 +163,7 @@ class TestDriverLeaderboard:
             else:
                 assert driver.get("reward") == 0, f"Rank {i+1} should have 0 reward"
         
-        print(f"✅ Top 3 rewards verification passed")
+        print("✅ Top 3 rewards verification passed")
     
     # ==================== Access Control Tests ====================
     
@@ -174,7 +174,7 @@ class TestDriverLeaderboard:
         
         response = self.session.get(f"{BASE_URL}/api/delivery/leaderboard")
         assert response.status_code == 403, f"Expected 403 for customer, got {response.status_code}"
-        print(f"✅ Customer correctly denied access to leaderboard (403)")
+        print("✅ Customer correctly denied access to leaderboard (403)")
     
     def test_unauthenticated_cannot_access_leaderboard(self):
         """Unauthenticated user should NOT be able to access leaderboard"""
@@ -273,7 +273,7 @@ class TestAdminLeaderboardRewards:
             }
             self.session.put(f"{BASE_URL}/api/settings/leaderboard-rewards", json=restore_rewards)
         
-        print(f"✅ Admin can update and persist leaderboard rewards")
+        print("✅ Admin can update and persist leaderboard rewards")
     
     def test_admin_rejects_negative_rewards(self):
         """Admin should not be able to set negative rewards"""
@@ -291,7 +291,7 @@ class TestAdminLeaderboardRewards:
             json=negative_rewards
         )
         assert response.status_code == 400, f"Expected 400 for negative rewards, got {response.status_code}"
-        print(f"✅ Admin correctly rejected negative rewards (400)")
+        print("✅ Admin correctly rejected negative rewards (400)")
     
     # ==================== Access Control Tests ====================
     
@@ -307,7 +307,7 @@ class TestAdminLeaderboardRewards:
             json=test_rewards
         )
         assert response.status_code == 403, f"Expected 403 for delivery user, got {response.status_code}"
-        print(f"✅ Delivery user correctly denied rewards update (403)")
+        print("✅ Delivery user correctly denied rewards update (403)")
     
     def test_customer_cannot_update_rewards(self):
         """Customer should NOT be able to update leaderboard rewards"""
@@ -321,7 +321,7 @@ class TestAdminLeaderboardRewards:
             json=test_rewards
         )
         assert response.status_code == 403, f"Expected 403 for customer, got {response.status_code}"
-        print(f"✅ Customer correctly denied rewards update (403)")
+        print("✅ Customer correctly denied rewards update (403)")
     
     def test_unauthenticated_cannot_update_rewards(self):
         """Unauthenticated user should NOT be able to update leaderboard rewards"""
@@ -389,7 +389,7 @@ class TestLeaderboardIntegration:
         default_rewards = {"first": 50000, "second": 30000, "third": 15000}
         self.session.put(f"{BASE_URL}/api/settings/leaderboard-rewards", json=default_rewards)
         
-        print(f"✅ Leaderboard correctly uses configured rewards")
+        print("✅ Leaderboard correctly uses configured rewards")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@
 import pytest
 import requests
 import os
-import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -47,7 +46,7 @@ class TestSellerRejectOptionalReason:
         pending = response.json()
         if len(pending) == 0:
             # No pending sellers, create a test scenario by checking all sellers
-            all_sellers = api_client.get(f"{BASE_URL}/api/admin/sellers/all", headers=admin_headers)
+            api_client.get(f"{BASE_URL}/api/admin/sellers/all", headers=admin_headers)
             pytest.skip("No pending sellers available to test rejection")
         
         # Use first pending seller

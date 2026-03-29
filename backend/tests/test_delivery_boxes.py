@@ -62,7 +62,7 @@ class TestDeliveryBoxAPIs:
         assert "user" in data, "User not in response"
         assert data["user"]["user_type"] == "delivery", "User type should be delivery"
         assert data["user"]["phone"] == "0900000000", "Phone should match"
-        assert data["user"]["is_approved"] == True, "User should be approved"
+        assert data["user"]["is_approved"], "User should be approved"
         print(f"✓ Delivery user login successful: {data['user']['full_name']}")
     
     # ========== Admin User Login Tests ==========
@@ -97,11 +97,11 @@ class TestDeliveryBoxAPIs:
         
         data = response.json()
         assert "has_box" in data, "has_box field missing"
-        assert data["has_box"] == True, "Delivery user should have a box assigned"
+        assert data["has_box"], "Delivery user should have a box assigned"
         assert data["box_serial"] == "BOX-001", f"Box serial should be BOX-001, got {data.get('box_serial')}"
         assert data["deposit_paid"] == 15000, f"Deposit should be 15000, got {data.get('deposit_paid')}"
         assert data["progress_percent"] == 25, f"Progress should be 25%, got {data.get('progress_percent')}"
-        assert data["remaining_installments"] == 10, f"Remaining installments should be 10"
+        assert data["remaining_installments"] == 10, "Remaining installments should be 10"
         
         print(f"✓ My box endpoint returns correct data: {data['box_serial']}, {data['progress_percent']}% progress")
     

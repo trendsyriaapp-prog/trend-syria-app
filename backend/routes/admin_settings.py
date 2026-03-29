@@ -3,14 +3,13 @@
 """
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional
 from datetime import datetime, timezone
 
 from core.database import db, get_current_user
 from services.violation_system import (
     get_delivery_settings,
-    save_delivery_settings,
-    get_admin_violations_report
+    save_delivery_settings
 )
 
 router = APIRouter(prefix="/admin", tags=["Admin Settings"])
@@ -246,7 +245,6 @@ async def get_dispatch_status(user: dict = Depends(get_current_user)):
     if user.get("user_type") != "admin":
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    from datetime import timedelta
     now = datetime.now(timezone.utc)
     
     # الطلبات الجاهزة للتوزيع

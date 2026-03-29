@@ -1,7 +1,7 @@
 # /app/backend/models/schemas.py
 # نماذج البيانات (Pydantic Models)
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional
 
 # ============== User Models ==============

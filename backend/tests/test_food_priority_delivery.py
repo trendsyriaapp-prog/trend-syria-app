@@ -14,7 +14,6 @@ Test scenarios:
 import pytest
 import requests
 import uuid
-from datetime import datetime, timezone
 
 BASE_URL = "https://shopper-suite.preview.emergentagent.com"
 
@@ -93,7 +92,7 @@ class TestFoodPriorityDeliverySystem:
         assert "lock_message" in data, "Response should contain 'lock_message' field"
         assert "can_accept_more" in data, "Response should contain 'can_accept_more' field"
         
-        print(f"✅ my-product-orders endpoint structure verified")
+        print("✅ my-product-orders endpoint structure verified")
         print(f"   - is_locked: {data['is_locked']}")
         print(f"   - active_food_orders: {data['active_food_orders']}")
         print(f"   - lock_message: {data['lock_message']}")
@@ -104,9 +103,8 @@ class TestFoodPriorityDeliverySystem:
         
         # First, get driver's food orders to check current state
         food_orders_response = requests.get(f"{BASE_URL}/api/delivery/my-food-orders", headers=headers)
-        active_food_orders = []
         if food_orders_response.status_code == 200:
-            active_food_orders = food_orders_response.json()
+            food_orders_response.json()
         
         # Get product orders
         response = requests.get(f"{BASE_URL}/api/delivery/my-product-orders", headers=headers)
@@ -116,12 +114,12 @@ class TestFoodPriorityDeliverySystem:
         
         # If no active food orders, is_locked should be False
         if data["active_food_orders"] == 0:
-            assert data["is_locked"] == False, "is_locked should be False when no active food orders"
+            assert not data["is_locked"], "is_locked should be False when no active food orders"
             assert data["lock_message"] is None, "lock_message should be None when not locked"
             print("✅ is_locked is False when no active food orders")
         else:
             # Driver has active food orders, so is_locked should be True
-            assert data["is_locked"] == True, "is_locked should be True when active food orders exist"
+            assert data["is_locked"], "is_locked should be True when active food orders exist"
             assert data["lock_message"] is not None, "lock_message should be present when locked"
             print(f"⚠️ Driver has {data['active_food_orders']} active food orders, is_locked=True")
     
@@ -225,10 +223,10 @@ class TestFoodPriorityDeliverySystem:
             assert "is_locked" in order, f"Order {order.get('id', 'unknown')} should have is_locked field"
             
             if data["active_food_orders"] > 0:
-                assert order["is_locked"] == True, "Each order should be locked when food orders are active"
+                assert order["is_locked"], "Each order should be locked when food orders are active"
                 assert "lock_reason" in order, "Locked order should have lock_reason"
             else:
-                assert order["is_locked"] == False, "Each order should be unlocked when no food orders active"
+                assert not order["is_locked"], "Each order should be unlocked when no food orders active"
         
         print(f"✅ All {len(orders)} orders have is_locked field properly set")
     
@@ -339,7 +337,7 @@ class TestFoodPriorityE2EScenario:
             f"(based on {len(active_food_orders)} food orders), got is_locked={actual_locked}"
         )
         
-        print(f"✅ Lock state verification passed:")
+        print("✅ Lock state verification passed:")
         print(f"   - Active food orders: {len(active_food_orders)}")
         print(f"   - is_locked: {actual_locked}")
         print(f"   - active_food_orders count in response: {product_data['active_food_orders']}")

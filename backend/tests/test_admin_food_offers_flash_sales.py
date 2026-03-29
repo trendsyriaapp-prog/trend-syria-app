@@ -94,7 +94,7 @@ class TestAdminFoodOffers(TestAuthTokens):
         
         # All returned should be active
         for offer in offers:
-            assert offer.get("is_active") == True, f"Filter failed: {offer}"
+            assert offer.get("is_active"), f"Filter failed: {offer}"
     
     def test_03_admin_get_inactive_offers_filter(self, admin_token):
         """GET /api/admin/food-offers?status=inactive - Filter inactive offers"""
@@ -108,7 +108,7 @@ class TestAdminFoodOffers(TestAuthTokens):
         
         # All returned should be inactive
         for offer in offers:
-            assert offer.get("is_active") == False, f"Filter failed: {offer}"
+            assert not offer.get("is_active"), f"Filter failed: {offer}"
     
     def test_04_seller_create_offer_for_admin_test(self, seller_token):
         """Create a test offer as seller for admin update/delete tests"""
@@ -237,7 +237,7 @@ class TestFlashSalesAdmin(TestAuthTokens):
         assert "id" in data, "Response should contain flash sale ID"
         assert data["name"] == flash_data["name"]
         assert data["discount_percentage"] == 25
-        assert data["is_active"] == True
+        assert data["is_active"]
         
         TestFlashSalesAdmin.test_flash_id = data["id"]
         print(f"Created flash sale: {data['id']} - {data['name']}")
@@ -353,7 +353,7 @@ class TestActiveFlashSalesPublic(TestAuthTokens):
         # 2. start_time <= now <= end_time
         now = datetime.utcnow().isoformat() + "Z"
         for sale in sales:
-            assert sale.get("is_active") == True, f"Should only return active: {sale}"
+            assert sale.get("is_active"), f"Should only return active: {sale}"
             assert sale.get("start_time") <= now, f"Should have started: {sale}"
             assert sale.get("end_time") >= now, f"Should not have ended: {sale}"
         

@@ -61,7 +61,7 @@ class TestFoodBatchOrders:
         store_ids = [s["id"] for s in stores]
         assert STORE_1_ID in store_ids, f"Store 1 {STORE_1_ID} not found"
         assert STORE_2_ID in store_ids, f"Store 2 {STORE_2_ID} not found"
-        print(f"✓ Found both stores in Damascus")
+        print("✓ Found both stores in Damascus")
     
     def test_02_verify_products_available(self):
         """Verify products are available from both stores"""
@@ -79,7 +79,7 @@ class TestFoodBatchOrders:
         product_ids2 = [p["id"] for p in products2]
         assert STORE_2_PRODUCT_1 in product_ids2, "Store 2 product 1 not found"
         
-        print(f"✓ Products available from both stores")
+        print("✓ Products available from both stores")
     
     def test_03_batch_order_requires_auth(self):
         """Batch order endpoint requires authentication"""

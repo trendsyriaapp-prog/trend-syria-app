@@ -1,12 +1,10 @@
 # /app/backend/services/websocket_manager.py
 # مدير اتصالات WebSocket للتحديثات الفورية
 
-import asyncio
-import json
 import logging
-from typing import Dict, Set, Optional, Any
+from typing import Dict, Set, Any
 from datetime import datetime, timezone
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
 logger = logging.getLogger(__name__)
 

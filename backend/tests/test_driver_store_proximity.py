@@ -4,8 +4,6 @@
 import pytest
 import requests
 import os
-import uuid
-from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -94,7 +92,7 @@ class TestDriverStoreProximityNotification:
         print(f"Location update response: {response.status_code} - {response.text}")
         assert response.status_code == 200
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         print("✅ Driver location update API working")
 
     def test_05_notifications_endpoint(self):
@@ -147,7 +145,7 @@ class TestDriverStoreProximityNotification:
         if len(notifications) > 0:
             # Check notification structure
             n = notifications[0]
-            print(f"✅ Sample notification structure:")
+            print("✅ Sample notification structure:")
             print(f"   id: {n.get('id')}")
             print(f"   type: {n.get('type')}")
             print(f"   title: {n.get('title')}")
@@ -298,5 +296,5 @@ class TestUnreadNotificationsEndpoint:
         for n in notifications[:3]:
             assert "id" in n, "Notification should have id"
             assert "is_read" in n, "Notification should have is_read flag"
-            assert n["is_read"] == False, "All notifications should be unread"
+            assert not n["is_read"], "All notifications should be unread"
             print(f"   - {n.get('type')}: {n.get('title')}")

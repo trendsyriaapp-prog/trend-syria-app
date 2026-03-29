@@ -9,7 +9,7 @@ import uuid
 import os
 from dotenv import load_dotenv
 
-from core.database import db, get_current_user, get_optional_user, create_notification_for_user
+from core.database import db, get_current_user, get_optional_user
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()

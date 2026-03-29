@@ -10,8 +10,6 @@ Tests the delivery_code feature for shop orders (similar to food orders):
 import pytest
 import requests
 import os
-import uuid
-import random
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
@@ -222,7 +220,7 @@ class TestDeliveryCodeIntegration:
             order = res.json()
             assert 'delivery_code' in order, "Order should include delivery_code"
             assert len(order['delivery_code']) == 4, f"delivery_code should be 4 digits: {order['delivery_code']}"
-            assert order['delivery_code'].isdigit(), f"delivery_code should be numeric"
+            assert order['delivery_code'].isdigit(), "delivery_code should be numeric"
             print(f"✅ Order API returns delivery_code: {order['delivery_code']}")
         elif res.status_code == 403:
             print("⚠️ Order access denied - may need different user")

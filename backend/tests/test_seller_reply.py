@@ -50,7 +50,7 @@ class TestSellerReplyFeature:
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
         assert "token" in data, "No token in response"
-        print(f"✓ Admin login successful")
+        print("✓ Admin login successful")
         return data.get("token")
     
     def test_2_create_seller_account(self):
@@ -242,7 +242,7 @@ class TestSellerReplyIntegration:
         if not seller:
             pytest.skip("Seller login failed")
         
-        seller_id = seller.get("id")
+        seller.get("id")
         print(f"✓ Step 1: Seller logged in: {seller.get('full_name', 'Unknown')}")
         
         # Step 2: Get pending reviews
@@ -273,7 +273,7 @@ class TestSellerReplyIntegration:
                 else:
                     print(f"⚠ Step 4: Failed to delete reply: {response.text}")
             elif response.status_code == 403:
-                print(f"✓ Step 3: Correctly blocked - seller doesn't own this product")
+                print("✓ Step 3: Correctly blocked - seller doesn't own this product")
             else:
                 print(f"⚠ Step 3: Unexpected response: {response.status_code} - {response.text}")
         else:

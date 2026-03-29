@@ -90,7 +90,7 @@ class TestNewDriverFeatures:
         # Verify all returned drivers are available (if any)
         for driver in data["drivers"]:
             if "is_available" in driver:
-                assert driver["is_available"] == True, f"Driver {driver.get('id')} should be available"
+                assert driver["is_available"], f"Driver {driver.get('id')} should be available"
         
         print(f"✅ Available only filter: {len(data['drivers'])} available drivers")
     
@@ -204,7 +204,7 @@ class TestNewDriverFeatures:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True, "Update should return success=true"
+        assert data.get("success"), "Update should return success=true"
         
         # Verify settings were updated
         verify_response = requests.get(

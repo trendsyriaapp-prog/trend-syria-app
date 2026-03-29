@@ -4,7 +4,6 @@
 import pytest
 import requests
 import os
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -296,7 +295,7 @@ class TestSupportRating:
         assert isinstance(data["total_ratings"], int), "total_ratings should be int"
         assert isinstance(data["recent_ratings"], list), "recent_ratings should be list"
         
-        print(f"✅ admin/rating-stats structure correct:")
+        print("✅ admin/rating-stats structure correct:")
         print(f"   - Average: {data['average_rating']}")
         print(f"   - Total: {data['total_ratings']}")
         print(f"   - Distribution: {data['rating_distribution']}")

@@ -17,7 +17,7 @@ async def get_dashboard_analytics(user: dict = Depends(get_current_user)):
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=7)
-    month_start = today_start - timedelta(days=30)
+    today_start - timedelta(days=30)
     
     # إحصائيات المستخدمين
     total_users = await db.users.count_documents({})
@@ -312,7 +312,7 @@ async def get_peak_hours(user: dict = Depends(get_current_user)):
             })
         
         return result
-    except:
+    except Exception:
         return []
 
 @router.get("/wallet-stats")
@@ -475,7 +475,7 @@ async def get_drivers_performance(
             time_result = await db.food_orders.aggregate(time_pipeline).to_list(1)
             if time_result:
                 avg_delivery_time = round(time_result[0].get("avg_time", 0), 1)
-        except:
+        except Exception:
             pass
         
         # === معدل القبول ===
@@ -555,7 +555,7 @@ async def get_drivers_performance(
             try:
                 last_time = datetime.fromisoformat(last_active.replace("Z", "+00:00"))
                 is_online = (now - last_time) < timedelta(minutes=5)
-            except:
+            except Exception:
                 pass
         
         results.append({

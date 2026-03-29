@@ -11,8 +11,6 @@ Features tested:
 import pytest
 import requests
 import os
-import json
-from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com')
 
@@ -79,7 +77,7 @@ class TestAdminDeliverySettings:
         # Verify response structure
         assert "success" in data
         assert "settings" in data
-        assert data["success"] == True
+        assert data["success"]
         
         # Verify wait compensation settings fields
         settings = data["settings"]
@@ -91,7 +89,7 @@ class TestAdminDeliverySettings:
         assert "warnings_before_suspend" in settings, "Missing warnings_before_suspend"
         assert "suspend_duration_hours" in settings, "Missing suspend_duration_hours"
         
-        print(f"✓ Delivery settings retrieved successfully:")
+        print("✓ Delivery settings retrieved successfully:")
         print(f"  - Max waiting time: {settings['max_waiting_time_minutes']} minutes")
         print(f"  - Compensation per 5 min: {settings['compensation_per_5_minutes']} SYP")
         print(f"  - Max compensation: {settings['max_compensation_per_order']} SYP")
@@ -115,8 +113,8 @@ class TestAdminDeliverySettings:
         )
         assert response.status_code == 200, f"Failed to update delivery settings: {response.text}"
         data = response.json()
-        assert data["success"] == True
-        print(f"✓ Delivery settings updated successfully")
+        assert data["success"]
+        print("✓ Delivery settings updated successfully")
         
         # Verify update
         response = requests.get(
@@ -130,7 +128,7 @@ class TestAdminDeliverySettings:
         assert settings["max_waiting_time_minutes"] == 15
         assert settings["compensation_per_5_minutes"] == 600
         assert settings["max_compensation_per_order"] == 2500
-        print(f"✓ Settings update verified")
+        print("✓ Settings update verified")
         
         # Reset to default values
         reset_data = {
@@ -144,7 +142,7 @@ class TestAdminDeliverySettings:
             json=reset_data
         )
         assert response.status_code == 200
-        print(f"✓ Settings reset to defaults")
+        print("✓ Settings reset to defaults")
 
 
 class TestStartPreparationAPI:

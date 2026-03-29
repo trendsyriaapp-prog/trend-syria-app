@@ -2,15 +2,15 @@
 # مسارات المنتجات
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone
 import uuid
 import jwt
 import logging
 
-from core.database import db, get_current_user, get_optional_user, JWT_SECRET, ALGORITHM
-from core.performance import cache, cached
-from models.schemas import ProductCreate, ProductUpdate, ProductApproval, ProductQuestion, ProductAnswer
+from core.database import db, get_current_user, JWT_SECRET, ALGORITHM
+from core.performance import cache
+from models.schemas import ProductCreate, ProductUpdate, ProductQuestion, ProductAnswer
 
 router = APIRouter(prefix="/products", tags=["Products"])
 

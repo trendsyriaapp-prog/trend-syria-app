@@ -3,7 +3,6 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
 import uuid
 from core.database import db, get_current_user
 

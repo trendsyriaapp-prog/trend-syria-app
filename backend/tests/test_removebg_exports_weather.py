@@ -5,7 +5,6 @@
 import pytest
 import requests
 import os
-import io
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
@@ -19,9 +18,9 @@ class TestImageProcessingStatus:
         
         data = response.json()
         assert "premium_available" in data, "Response should contain premium_available field"
-        assert data["premium_available"] == True, "premium_available should be True when REMOVE_BG_API_KEY is set"
+        assert data["premium_available"], "premium_available should be True when REMOVE_BG_API_KEY is set"
         assert "fallback_available" in data, "Response should contain fallback_available"
-        assert data["fallback_available"] == True, "Fallback (local rembg) should always be available"
+        assert data["fallback_available"], "Fallback (local rembg) should always be available"
         
     def test_image_status_contains_service_info(self):
         """Check that status endpoint returns service info"""
@@ -152,7 +151,7 @@ class TestWeatherAPI:
         city = "Damascus"
         
         response = requests.get(
-            f"https://api.openweathermap.org/data/2.5/weather",
+            "https://api.openweathermap.org/data/2.5/weather",
             params={"q": city, "appid": api_key, "units": "metric"}
         )
         

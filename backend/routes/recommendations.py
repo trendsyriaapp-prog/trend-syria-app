@@ -2,7 +2,6 @@
 # نظام التوصيات الذكية
 
 from fastapi import APIRouter, Depends
-from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import random
 

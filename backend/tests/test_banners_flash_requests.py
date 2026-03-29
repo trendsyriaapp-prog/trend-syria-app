@@ -118,7 +118,7 @@ class TestHomepageBanners:
                                json={"is_active": False}, headers=headers)
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        print(f"✅ Toggle homepage banner active/inactive working")
+        print("✅ Toggle homepage banner active/inactive working")
     
     def test_admin_delete_homepage_banner(self):
         """Admin can delete a homepage banner"""
@@ -141,7 +141,7 @@ class TestHomepageBanners:
         response = requests.get(f"{BASE_URL}/api/admin/homepage-banners", headers=headers)
         
         assert response.status_code == 403, f"Expected 403, got {response.status_code}"
-        print(f"✅ Buyer cannot access homepage banners (403)")
+        print("✅ Buyer cannot access homepage banners (403)")
 
 
 # ============== Food Banners Tests ==============
@@ -283,7 +283,7 @@ class TestFlashSaleRequests:
         
         # May return 404 if seller has no food store
         if response.status_code == 404:
-            print(f"✅ GET /api/food/my-flash-requests - Seller has no food store (expected)")
+            print("✅ GET /api/food/my-flash-requests - Seller has no food store (expected)")
         else:
             assert response.status_code == 200, f"Expected 200/404, got {response.status_code}"
             data = response.json()
@@ -309,7 +309,7 @@ class TestFlashSaleRequests:
             response = requests.get(f"{BASE_URL}/api/admin/flash-sale-requests?status={status}", headers=headers)
             assert response.status_code == 200, f"Expected 200 for status={status}, got {response.status_code}"
         
-        print(f"✅ GET /api/admin/flash-sale-requests?status=<pending|approved|rejected> - All filters working")
+        print("✅ GET /api/admin/flash-sale-requests?status=<pending|approved|rejected> - All filters working")
     
     def test_admin_get_flash_sale_settings(self):
         """Admin can get flash sale settings"""
@@ -337,7 +337,7 @@ class TestFlashSaleRequests:
         
         # Restore original
         requests.put(f"{BASE_URL}/api/admin/flash-sale-settings", json={"join_fee": original_fee}, headers=headers)
-        print(f"✅ PUT /api/admin/flash-sale-settings - Settings updated and restored")
+        print("✅ PUT /api/admin/flash-sale-settings - Settings updated and restored")
     
     def test_buyer_cannot_access_admin_flash_requests(self):
         """Buyer cannot access admin flash sale requests"""
@@ -345,7 +345,7 @@ class TestFlashSaleRequests:
         response = requests.get(f"{BASE_URL}/api/admin/flash-sale-requests", headers=headers)
         
         assert response.status_code == 403, f"Expected 403, got {response.status_code}"
-        print(f"✅ Buyer cannot access admin flash-sale-requests (403)")
+        print("✅ Buyer cannot access admin flash-sale-requests (403)")
 
 
 # ============== Seller Food Store Integration Tests ==============
@@ -364,7 +364,7 @@ class TestSellerFoodStoreIntegration:
         response = requests.get(f"{BASE_URL}/api/food/my-store", headers=headers)
         
         if response.status_code == 404:
-            print(f"✅ GET /api/food/my-store - Seller has no food store (need to join /join/food-seller)")
+            print("✅ GET /api/food/my-store - Seller has no food store (need to join /join/food-seller)")
         elif response.status_code == 200:
             data = response.json()
             store = data.get("store", {})

@@ -82,7 +82,7 @@ class TestDriverTrackingAPIs:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        assert data.get("success") == True, "Response should indicate success"
+        assert data.get("success"), "Response should indicate success"
         print(f"✅ Driver location update works - {data.get('message')}")
     
     def test_driver_location_update_with_order(self):
@@ -212,7 +212,7 @@ class TestDriverTrackingAPIs:
         data = response.json()
         assert "optimized_route" in data or "orders" in data or "message" in data, \
             "Response should contain route data or message"
-        print(f"✅ Optimize route API works for driver")
+        print("✅ Optimize route API works for driver")
         if data.get("optimized_route"):
             print(f"   Route has {len(data['optimized_route'])} stops")
     

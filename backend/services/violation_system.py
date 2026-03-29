@@ -5,7 +5,7 @@
 - إدارة التحذيرات
 """
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Optional
+from typing import Dict
 import uuid
 
 from core.database import db
@@ -638,7 +638,7 @@ async def compensate_seller_on_cancel(order_id: str) -> Dict:
         return {"success": False, "error": "order_not_prepared", "compensation": 0}
     
     store_id = order.get("store_id")
-    store_name = order.get("store_name", "")
+    order.get("store_name", "")
     order_total = order.get("subtotal", 0)  # بدون رسوم التوصيل
     
     # حساب التعويض
@@ -695,7 +695,7 @@ async def process_delayed_orders():
     if not settings.get("customer_protection_enabled", True):
         return {"processed": 0, "reason": "protection_disabled"}
     
-    now = datetime.now(timezone.utc)
+    datetime.now(timezone.utc)
     
     # البحث عن الطلبات النشطة التي لديها وقت توصيل متوقع
     active_orders = await db.food_orders.find({

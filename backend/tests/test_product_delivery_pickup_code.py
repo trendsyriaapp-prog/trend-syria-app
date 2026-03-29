@@ -13,8 +13,6 @@ Tests the new features added for product delivery:
 import pytest
 import requests
 import os
-import uuid
-from datetime import datetime, timezone
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -60,7 +58,7 @@ class TestProductDeliveryPickupCode:
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
         TestProductDeliveryPickupCode.admin_token = data["token"]
-        print(f"Admin token obtained")
+        print("Admin token obtained")
     
     # ================== My Product Orders Endpoint ====================
     
@@ -82,7 +80,7 @@ class TestProductDeliveryPickupCode:
         assert "max_orders" in data, "Missing 'max_orders' field"
         assert "can_accept_more" in data, "Missing 'can_accept_more' field"
         
-        print(f"✅ my-product-orders response:")
+        print("✅ my-product-orders response:")
         print(f"   - orders count: {len(data['orders'])}")
         print(f"   - count: {data['count']}")
         print(f"   - max_orders: {data['max_orders']}")
@@ -314,7 +312,7 @@ class TestProductDeliveryPickupCode:
         
         if response.status_code == 200:
             data = response.json()
-            assert data.get("success") == True, "Expected success=True"
+            assert data.get("success"), "Expected success=True"
             print("✅ Pickup code verified successfully!")
             print(f"✅ Message: {data.get('message')}")
         elif response.status_code == 403:
@@ -387,7 +385,7 @@ class TestProductOrderAcceptLimit:
         if response.status_code == 200:
             data = response.json()
             assert data.get('max_orders') == 7, f"Expected max_orders=7, got {data.get('max_orders')}"
-            print(f"✅ max_orders is correctly set to 7")
+            print("✅ max_orders is correctly set to 7")
             print(f"   Current orders: {data.get('count')}")
             print(f"   Can accept more: {data.get('can_accept_more')}")
     
@@ -404,7 +402,7 @@ class TestProductOrderAcceptLimit:
             
             if orders:
                 order = orders[0]
-                print(f"Order fields present:")
+                print("Order fields present:")
                 print(f"  - seller_name: {order.get('seller_name')}")
                 print(f"  - seller_phone: {order.get('seller_phone')}")
                 print(f"  - seller_address: {order.get('seller_address')}")
@@ -501,7 +499,7 @@ class TestSellerPickupCodeFlow:
             assert "is_verified" in data
             assert "order_id" in data
             
-            print(f"✅ Response structure correct")
+            print("✅ Response structure correct")
             print(f"   pickup_code: {data['pickup_code']}")
             print(f"   is_verified: {data['is_verified']}")
         elif response.status_code == 400:

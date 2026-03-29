@@ -95,7 +95,7 @@ async def update_platform_settings(data: dict, user: dict = Depends(get_current_
             update[field] = new_value
             
             # تتبع الأقسام التي تم تفعيلها
-            was_disabled = current_settings is None or current_settings.get(field, True) == False
+            was_disabled = current_settings is None or not current_settings.get(field, True)
             if new_value and was_disabled:
                 activated_sections.append(field)
     
@@ -1808,7 +1808,7 @@ async def reject_food_offer(offer_id: str, data: dict = None, user: dict = Depen
     if reason:
         update_data["rejection_reason"] = reason
     
-    result = await db.food_offers.update_one(
+    await db.food_offers.update_one(
         {"id": offer_id},
         {"$set": update_data}
     )
@@ -2869,13 +2869,11 @@ async def admin_cancel_order(
     # البحث في طلبات المنتجات
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     collection = db.orders
-    order_type = "product"
     
     if not order:
         # البحث في طلبات الطعام
         order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
         collection = db.food_orders
-        order_type = "food"
     
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -2980,13 +2978,11 @@ async def admin_change_order_status(
     # البحث في طلبات المنتجات
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     collection = db.orders
-    order_type = "product"
     
     if not order:
         # البحث في طلبات الطعام
         order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
         collection = db.food_orders
-        order_type = "food"
     
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -3059,12 +3055,10 @@ async def admin_full_refund(
     # البحث عن الطلب
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     collection = db.orders
-    order_type = "product"
     
     if not order:
         order = await db.food_orders.find_one({"id": order_id}, {"_id": 0})
         collection = db.food_orders
-        order_type = "food"
     
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")

@@ -1,10 +1,9 @@
 # /app/backend/routes/activity_log.py
 # سجل نشاط المسؤولين
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi import APIRouter, HTTPException, Depends, Query
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from pydantic import BaseModel
 import uuid
 
 from core.database import db, get_current_user

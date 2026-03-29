@@ -8,7 +8,6 @@ from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
@@ -37,12 +36,9 @@ from core.performance import (
 from core.security import (
     limiter, 
     rate_limit_exceeded_handler,
-    add_security_headers,
     is_ip_blocked,
-    log_suspicious_activity,
     SECURITY_HEADERS
 )
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 # Import routers
@@ -92,7 +88,6 @@ from routes.reports_export import router as reports_export_router
 from routes.image_templates import router as image_templates_router
 from routes.call_requests import router as call_requests_router
 from routes.voip import router as voip_router
-from routes.push_notifications import router as push_router
 from routes.payment_v2 import router as payment_v2_router
 from routes.feedback import router as feedback_router
 

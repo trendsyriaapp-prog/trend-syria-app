@@ -7,8 +7,6 @@ Tests for: Authentication, Products, Reviews with Images, Orders, Payments
 import pytest
 import requests
 import os
-import uuid
-from datetime import datetime
 
 # Get BASE_URL from environment variable
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
@@ -118,7 +116,7 @@ class TestAuthentication:
         data = response.json()
         assert "id" in data
         assert "user_type" in data
-        print(f"✅ Auth/me returns correct user info")
+        print("✅ Auth/me returns correct user info")
     
     def test_auth_me_without_token(self):
         """Test /auth/me without token returns 401"""
@@ -212,7 +210,7 @@ class TestCartAndOrders:
             headers={"Authorization": f"Bearer {buyer_token}"}
         )
         assert response.status_code == 200
-        print(f"✅ Added product to cart successfully")
+        print("✅ Added product to cart successfully")
     
     def test_get_cart(self, buyer_token):
         """Test getting cart contents"""
@@ -342,7 +340,7 @@ class TestPayments:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         print("✅ ShamCash payment verified (MOCKED) - Order status: paid")
     
     def test_verify_shamcash_invalid_otp(self, buyer_token, order_with_shamcash):
@@ -455,7 +453,7 @@ class TestReviewsWithImages:
         )
         # Should succeed or return 400 if already reviewed
         if response.status_code == 200:
-            print(f"✅ Review with images created successfully")
+            print("✅ Review with images created successfully")
         elif response.status_code == 400 and "مسبقاً" in response.json().get("detail", ""):
             print("⚠️ Product already reviewed (expected if test ran before)")
         else:

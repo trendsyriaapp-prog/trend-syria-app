@@ -63,7 +63,7 @@ class TestDriverAvailabilityValidation:
         """P0: Unavailable driver should NOT be able to accept food orders"""
         # First, ensure driver is unavailable
         # Try setting unavailable (might fail if active orders - that's OK)
-        unavail_response = self.session.put(
+        self.session.put(
             f"{BASE_URL}/api/delivery/availability",
             json={"is_available": False}
         )
@@ -128,7 +128,7 @@ class TestDriverAvailabilityValidation:
                     assert accept_response.status_code == 403, \
                         f"Unavailable driver should NOT accept product order. Got: {accept_response.status_code}"
                     
-                    print(f"✅ Unavailable driver correctly rejected from accepting product order")
+                    print("✅ Unavailable driver correctly rejected from accepting product order")
                 else:
                     print("⚠️ No product orders available to test")
             else:
@@ -159,7 +159,7 @@ class TestDriverAvailabilityValidation:
                         # Should be rejected
                         assert accept_response.status_code == 403, \
                             f"Unavailable driver should NOT accept batch. Got: {accept_response.status_code}"
-                        print(f"✅ Unavailable driver correctly rejected from accepting batch orders")
+                        print("✅ Unavailable driver correctly rejected from accepting batch orders")
                 else:
                     print("⚠️ No batch orders available to test")
         else:
@@ -213,7 +213,7 @@ class TestDriverAvailabilityValidation:
             )
             
             if unavail_response.status_code == 200:
-                print(f"✅ Driver with no active orders CAN set unavailable")
+                print("✅ Driver with no active orders CAN set unavailable")
             else:
                 print(f"⚠️ Unexpected error setting unavailable: {unavail_response.text}")
                 
@@ -229,7 +229,7 @@ class TestDriverAvailabilityValidation:
             f"Driver should always be able to set available. Got: {avail_response.status_code} - {avail_response.text}"
         
         data = avail_response.json()
-        assert data.get("is_available") == True, "Driver should now be available"
+        assert data.get("is_available"), "Driver should now be available"
         
         print(f"✅ Driver successfully set available: {data.get('message', '')}")
         
@@ -256,9 +256,9 @@ class TestDriverAvailabilityValidation:
                     f"Available driver should accept order or get proper error. Got: {accept_response.status_code} - {accept_response.text}"
                 
                 if accept_response.status_code == 200:
-                    print(f"✅ Available driver successfully accepted food order")
+                    print("✅ Available driver successfully accepted food order")
                 elif accept_response.status_code == 404:
-                    print(f"⚠️ Order already taken by another driver")
+                    print("⚠️ Order already taken by another driver")
                 else:
                     print(f"⚠️ Order acceptance blocked by limits: {accept_response.text}")
             else:

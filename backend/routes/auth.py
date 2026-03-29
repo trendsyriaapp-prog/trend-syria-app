@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime, timezone
 import uuid
 
-from core.database import db, get_current_user, create_token
+from core.database import db, get_current_user
 from core.security import (
     hash_password_secure,
     verify_password,
@@ -16,13 +16,11 @@ from core.security import (
     validate_phone,
     validate_password_strength,
     is_default_account,
-    check_password_change_required,
     sanitize_input,
     log_suspicious_activity,
     create_access_token,
     create_refresh_token,
     decode_token,
-    should_refresh_token,
     limiter,
     reset_all_brute_force_locks
 )
@@ -40,7 +38,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/register")
 @limiter.limit("3/minute")
 async def register(request: Request, user: UserRegister):
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # 🔒 التحقق من صحة رقم الهاتف
     if not validate_phone(user.phone):
@@ -499,7 +497,7 @@ async def get_vehicle_types():
 # ============================================
 
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 
 class StoreSettingsUpdate(BaseModel):
     store_name: Optional[str] = None
@@ -958,7 +956,7 @@ async def send_sms_code(request: Request, data: ForgotPasswordRequest):
     """
     إرسال كود التحقق عبر SMS
     """
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # التحقق من صحة رقم الهاتف
     if not validate_phone(data.phone):
@@ -990,7 +988,7 @@ async def send_sms_code(request: Request, data: ForgotPasswordRequest):
     
     # إرسال SMS
     message = f"كود التحقق الخاص بك في ترند سورية: {sms_code}\nصالح لمدة 5 دقائق فقط."
-    result = await send_sms(data.phone, message)
+    await send_sms(data.phone, message)
     
     response = {
         "sent": True,
@@ -1080,7 +1078,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest):
     """
     الخطوة الأولى: التحقق من وجود رقم الهاتف
     """
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # التحقق من صحة رقم الهاتف
     if not validate_phone(data.phone):
@@ -1197,7 +1195,7 @@ async def reset_password(request: Request, data: ResetPasswordRequest):
     """
     الخطوة الثالثة: إعادة تعيين كلمة المرور
     """
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # التحقق من قوة كلمة المرور الجديدة
     is_valid, issues = validate_password_strength(data.new_password)
@@ -1394,7 +1392,7 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
     """
     from services.whatsapp_service import send_password_reset_otp
     
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # التحقق من صحة رقم الهاتف
     if not validate_phone(data.phone):
@@ -1443,7 +1441,7 @@ async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
     """
     التحقق من رمز OTP المرسل عبر واتساب
     """
-    client_ip = get_remote_address(request)
+    get_remote_address(request)
     
     # البحث عن OTP
     otp_record = await db.otp_codes.find_one({"phone": phone, "used": False}, {"_id": 0})

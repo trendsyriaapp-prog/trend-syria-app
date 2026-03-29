@@ -91,7 +91,7 @@ class TestReferralSystem:
         assert res.status_code == 200
         data = res.json()
         
-        assert data["valid"] == True
+        assert data["valid"]
         assert "referrer_name" in data
         assert "discount" in data
         assert "20%" in data["discount"]
@@ -103,7 +103,7 @@ class TestReferralSystem:
             json={"code": "rdtzffce"}  # lowercase
         )
         assert res.status_code == 200
-        assert res.json()["valid"] == True
+        assert res.json()["valid"]
     
     def test_validate_referral_code_invalid(self):
         """Test validating an invalid referral code"""

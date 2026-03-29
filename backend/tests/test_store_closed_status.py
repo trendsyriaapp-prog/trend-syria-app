@@ -40,7 +40,7 @@ class TestStoreClosedStatus:
         assert "open_status" in store, "Missing open_status field"
         
         # Validate is_open is False (store should be closed at night)
-        assert store["is_open"] == False, f"Store should be closed at night, got is_open={store['is_open']}"
+        assert not store["is_open"], f"Store should be closed at night, got is_open={store['is_open']}"
         
         # Validate open_status has appropriate message
         assert len(store["open_status"]) > 0, "open_status should have a message"
@@ -55,7 +55,7 @@ class TestStoreClosedStatus:
         closed_store = next((s for s in stores if s.get("id") == CLOSED_STORE_ID), None)
         
         if closed_store:
-            assert closed_store["is_open"] == False, "Closed store should have is_open=False in list"
+            assert not closed_store["is_open"], "Closed store should have is_open=False in list"
             assert "open_status" in closed_store, "Closed store should have open_status"
             print(f"Closed store in list: {closed_store['name']} - is_open={closed_store['is_open']}")
         else:
@@ -74,7 +74,7 @@ class TestStoreClosedStatus:
             assert field in store, f"Missing required field: {field}"
         
         # If closed, should have next_open_time
-        if store["is_open"] == False:
+        if not store["is_open"]:
             assert "next_open_time" in store or "open_status" in store, \
                 "Closed store should indicate when it opens"
     
@@ -115,7 +115,7 @@ class TestStoreOpenStatus:
         
         for store in stores:
             if not store.get("working_hours"):
-                assert store["is_open"] == True, \
+                assert store["is_open"], \
                     f"Store {store['name']} without working_hours should be open"
                 assert store["open_status"] == "مفتوح", \
                     f"Store {store['name']} open_status should be 'مفتوح'"

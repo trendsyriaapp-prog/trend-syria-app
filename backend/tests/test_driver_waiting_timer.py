@@ -4,7 +4,6 @@
 import pytest
 import requests
 import os
-from datetime import datetime, timedelta, timezone
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com')
 

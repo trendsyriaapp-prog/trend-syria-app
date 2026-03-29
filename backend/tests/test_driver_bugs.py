@@ -58,7 +58,7 @@ class TestDriverAvailability:
         assert response.status_code == 200, f"PUT availability (true) failed: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True or data.get("is_available") == True, \
+        assert data.get("success") or data.get("is_available"), \
             f"Setting available failed: {data}"
         print(f"✅ PUT availability (true): {data}")
     
@@ -79,7 +79,7 @@ class TestDriverAvailability:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["is_available"] == True, "Availability state did not persist"
+        assert data["is_available"], "Availability state did not persist"
         print(f"✅ Availability persisted correctly: is_available = {data['is_available']}")
     
     def test_set_unavailable_with_active_orders_fails(self, driver_token):

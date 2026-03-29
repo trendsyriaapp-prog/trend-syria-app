@@ -587,11 +587,10 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     has_hot_fresh_orders = hot_fresh_count > 0
     
     # التحقق من وجود طلبات منتجات نشطة
-    active_product_orders = await db.orders.count_documents({
+    await db.orders.count_documents({
         "driver_id": user["id"],
         "delivery_status": {"$in": ["accepted", "picked_up", "out_for_delivery"]}
     })
-    has_active_product_orders = active_product_orders > 0
     
     # جلب جميع طلبات المتجر المتاحة (بغض النظر عن الطلبات النشطة)
     shop_query = {
@@ -1610,7 +1609,6 @@ async def get_driver_leaderboard(user: dict = Depends(get_current_user)):
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    from datetime import timedelta
     
     now = datetime.now(timezone.utc)
     month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
@@ -2313,7 +2311,7 @@ async def get_all_drivers_locations(
                 time_diff = now - location_time
                 is_stale = time_diff > timedelta(minutes=5)
                 is_online = time_diff < timedelta(minutes=2)
-            except:
+            except Exception:
                 pass
         
         result.append({

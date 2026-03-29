@@ -13,7 +13,6 @@ import pytest
 import requests
 import os
 import random
-import string
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com').rstrip('/')
 

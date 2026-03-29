@@ -3,12 +3,12 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 import uuid
 
 from core.database import db, get_current_user, create_notification_for_user, create_notification_for_role
-from models.schemas import OrderCreate, CartItem, ShamCashPayment
+from models.schemas import OrderCreate, ShamCashPayment
 from routes.loyalty import add_loyalty_points
 
 router = APIRouter(tags=["Orders"])

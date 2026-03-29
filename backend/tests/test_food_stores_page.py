@@ -148,7 +148,6 @@ class TestFoodStoresAPI:
         if len(data) > 0:
             store = data[0]
             # Check for status-related fields
-            has_status = "is_open" in store or "open_status" in store or "manual_close" in store
             print(f"✅ Store status fields present: is_open={store.get('is_open')}, open_status={store.get('open_status')}, manual_close={store.get('manual_close')}")
 
 

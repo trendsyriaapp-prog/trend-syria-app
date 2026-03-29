@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timedelta
 import uuid
 
@@ -335,7 +335,7 @@ async def record_ad_click(
 ):
     """تسجيل نقرة على الإعلان"""
     
-    result = await db.ads.update_one(
+    await db.ads.update_one(
         {"id": ad_id},
         {"$inc": {"clicks": 1}}
     )

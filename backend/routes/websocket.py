@@ -3,7 +3,7 @@
 
 import asyncio
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from typing import Optional
 import jwt
 import os

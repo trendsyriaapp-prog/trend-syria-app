@@ -3,7 +3,6 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
-from typing import Optional, List
 from pydantic import BaseModel
 import uuid
 

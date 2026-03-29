@@ -3,7 +3,6 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional
 
 from core.database import db, get_current_user, create_notification_for_user
 
@@ -394,7 +393,7 @@ async def calculate_progress(driver_id: str) -> dict:
         try:
             created = datetime.fromisoformat(driver["created_at"].replace('Z', '+00:00'))
             days_active = (now - created).days
-        except:
+        except Exception:
             pass
     
     # المدن الفريدة

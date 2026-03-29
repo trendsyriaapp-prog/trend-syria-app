@@ -4,7 +4,7 @@
 import os
 import httpx
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)

@@ -2,8 +2,7 @@
 # نظام قوالب صور المنتجات - مجاني + AI مدفوع (Gemini Imagen)
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
-from fastapi.responses import JSONResponse
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from PIL import Image, ImageDraw, ImageEnhance
 import io
 import base64
 import os

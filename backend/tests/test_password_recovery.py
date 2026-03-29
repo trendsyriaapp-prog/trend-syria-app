@@ -20,10 +20,10 @@ class TestForgotPasswordAPI:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["found"] == True
+        assert data["found"]
         assert "has_emergency_phone" in data
         assert "message" in data
-        print(f"PASS: Forgot password found user 0900000000")
+        print("PASS: Forgot password found user 0900000000")
     
     def test_forgot_password_nonexistent_user(self):
         """Test finding account with non-existent phone"""
@@ -34,7 +34,7 @@ class TestForgotPasswordAPI:
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 404 for non-existent phone")
+        print("PASS: Returns 404 for non-existent phone")
     
     def test_forgot_password_invalid_phone(self):
         """Test with invalid phone format"""
@@ -45,7 +45,7 @@ class TestForgotPasswordAPI:
         assert response.status_code == 400
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 400 for invalid phone format")
+        print("PASS: Returns 400 for invalid phone format")
 
 
 class TestVerifyIdentityAPI:
@@ -63,10 +63,10 @@ class TestVerifyIdentityAPI:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["verified"] == True
+        assert data["verified"]
         assert "reset_token" in data
         assert len(data["reset_token"]) == 32
-        print(f"PASS: Verify identity by name - got reset token")
+        print("PASS: Verify identity by name - got reset token")
         return data["reset_token"]
     
     def test_verify_identity_by_name_wrong(self):
@@ -82,7 +82,7 @@ class TestVerifyIdentityAPI:
         assert response.status_code == 401
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 401 for wrong name")
+        print("PASS: Returns 401 for wrong name")
     
     def test_verify_identity_by_emergency_wrong_digits(self):
         """Test emergency verification with wrong last 4 digits"""
@@ -97,7 +97,7 @@ class TestVerifyIdentityAPI:
         assert response.status_code == 401  # Wrong digits returns 401
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 401 for wrong emergency phone digits")
+        print("PASS: Returns 401 for wrong emergency phone digits")
     
     def test_verify_identity_nonexistent_user(self):
         """Test verification with non-existent phone"""
@@ -112,7 +112,7 @@ class TestVerifyIdentityAPI:
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 404 for non-existent user")
+        print("PASS: Returns 404 for non-existent user")
     
     def test_verify_identity_invalid_type(self):
         """Test with invalid verification type"""
@@ -127,7 +127,7 @@ class TestVerifyIdentityAPI:
         assert response.status_code == 400
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 400 for invalid verification type")
+        print("PASS: Returns 400 for invalid verification type")
 
 
 class TestResetPasswordAPI:
@@ -158,8 +158,8 @@ class TestResetPasswordAPI:
         )
         assert reset_response.status_code == 200
         data = reset_response.json()
-        assert data["success"] == True
-        print(f"PASS: Password reset successful")
+        assert data["success"]
+        print("PASS: Password reset successful")
         
         # Step 3: Verify login with new password
         login_response = requests.post(
@@ -173,7 +173,7 @@ class TestResetPasswordAPI:
         login_data = login_response.json()
         assert "token" in login_data
         assert login_data["user"]["phone"] == "0900000000"
-        print(f"PASS: Login successful with reset password")
+        print("PASS: Login successful with reset password")
     
     def test_reset_password_invalid_token(self):
         """Test reset with invalid token"""
@@ -188,7 +188,7 @@ class TestResetPasswordAPI:
         assert response.status_code == 401
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 401 for invalid token")
+        print("PASS: Returns 401 for invalid token")
     
     def test_reset_password_weak_password(self):
         """Test reset with weak password (less than 6 chars)"""
@@ -224,7 +224,7 @@ class TestResetPasswordAPI:
         assert response.status_code == 400
         data = response.json()
         assert "detail" in data
-        print(f"PASS: Returns 400 for weak password")
+        print("PASS: Returns 400 for weak password")
 
 
 class TestRegisterWithEmergencyPhone:
@@ -248,9 +248,9 @@ class TestRegisterWithEmergencyPhone:
         if response.status_code == 200:
             data = response.json()
             assert "token" in data
-            print(f"PASS: Registration with emergency phone successful")
+            print("PASS: Registration with emergency phone successful")
         elif response.status_code == 429:
-            print(f"SKIP: Rate limited - schema accepted but can't verify")
+            print("SKIP: Rate limited - schema accepted but can't verify")
         else:
             print(f"Response: {response.status_code} - {response.json()}")
             assert False, f"Unexpected status: {response.status_code}"

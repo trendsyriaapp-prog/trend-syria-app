@@ -63,7 +63,7 @@ class TestAdminBuyXGetYOffers:
         assert data["offer"]["offer_type"] == "buy_x_get_y"
         assert data["offer"]["buy_quantity"] == 2
         assert data["offer"]["get_quantity"] == 1
-        assert data["offer"]["created_by_admin"] == True
+        assert data["offer"]["created_by_admin"]
         print(f"✅ Created Buy X Get Y offer: {data['offer']['id']}")
         
         # Store offer ID for cleanup
@@ -143,7 +143,7 @@ class TestAdminBuyXGetYOffers:
             assert response.status_code == 200, f"Create offer failed: {response.text}"
             data = response.json()
             assert data["offer"]["store_id"] == store_id
-            assert data["offer"]["apply_to_all"] == False
+            assert not data["offer"]["apply_to_all"]
             print(f"✅ Created offer for specific store: {store_id}")
         else:
             pytest.skip("No food stores available for testing")
@@ -420,7 +420,7 @@ class TestFlashSaleRequestsInAdmin:
         assert response.status_code == 200, f"Get flash requests failed: {response.text}"
         data = response.json()
         assert "requests" in data or isinstance(data, list)
-        print(f"✅ Retrieved flash sale requests")
+        print("✅ Retrieved flash sale requests")
     
     def test_get_flash_sales(self):
         """Test getting all flash sales"""

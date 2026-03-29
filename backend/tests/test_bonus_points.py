@@ -6,7 +6,6 @@
 import pytest
 import requests
 import os
-import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -135,7 +134,7 @@ class TestBonusPointsHistory:
                 for field in expected_bonus_fields:
                     assert field in entry, f"Bonus entry missing field: {field}"
                 
-                print(f"✅ Bonus entry structure verified:")
+                print("✅ Bonus entry structure verified:")
                 print(f"   bonus_type: {entry.get('bonus_type')}")
                 print(f"   reason: {entry.get('reason')}")
                 print(f"   points: +{entry.get('points_added')}")

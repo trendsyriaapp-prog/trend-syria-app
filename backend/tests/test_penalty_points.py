@@ -5,7 +5,6 @@
 import pytest
 import requests
 import os
-import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -88,7 +87,7 @@ class TestPenaltyPointsEndpoints:
         assert 0 <= data["percentage"] <= 100, f"percentage out of range: {data['percentage']}"
         assert isinstance(data["history"], list), "history should be a list"
         
-        print(f"✅ GET /my-penalty-points success for delivery (200)")
+        print("✅ GET /my-penalty-points success for delivery (200)")
         print(f"   Current points: {data['current_points']}/{data['max_points']} ({data['percentage']}%)")
         print(f"   History entries: {len(data['history'])}")
     
@@ -225,7 +224,7 @@ class TestPenaltyPointsEndpoints:
         pending_reports = [r for r in data.get("reports", []) if r.get("status") == "pending"]
         
         if len(pending_reports) > 0:
-            report = pending_reports[0]
+            pending_reports[0]
             # Note: We don't actually penalize here to avoid changing state
             # Just verify the endpoint is accessible
             print(f"✅ Found {len(pending_reports)} pending report(s) - penalize action is available")
@@ -237,12 +236,6 @@ class TestPenaltyPointsEndpoints:
     def test_penalty_points_values(self):
         """Test that penalty points constants are correct"""
         # These are the expected penalty point deductions
-        expected_penalties = {
-            "سلوك_غير_لائق": 15,  # Inappropriate behavior
-            "تحرش": 50,           # Harassment
-            "سرقة_احتيال": 100,   # Theft/Fraud (immediate termination)
-            "أخرى": 10            # Other
-        }
         
         # Verify through admin driver-reports endpoint structure
         token = self.get_token(ADMIN_CREDS)
@@ -256,10 +249,10 @@ class TestPenaltyPointsEndpoints:
         
         # The penalty points are defined in the backend
         print("✅ Penalty points values verified:")
-        print(f"   سلوك_غير_لائق (Inappropriate behavior): 15 points")
-        print(f"   تحرش (Harassment): 50 points")
-        print(f"   سرقة_احتيال (Theft/Fraud): 100 points (immediate termination)")
-        print(f"   أخرى (Other): 10 points")
+        print("   سلوك_غير_لائق (Inappropriate behavior): 15 points")
+        print("   تحرش (Harassment): 50 points")
+        print("   سرقة_احتيال (Theft/Fraud): 100 points (immediate termination)")
+        print("   أخرى (Other): 10 points")
     
     def test_max_penalty_points_is_100(self):
         """Test that max penalty points is 100"""

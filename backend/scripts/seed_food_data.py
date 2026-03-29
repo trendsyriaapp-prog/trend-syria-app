@@ -298,7 +298,7 @@ async def seed_data():
         
         print(f"   └── تم إضافة {len(products)} منتج")
     
-    print(f"\n🎉 تم الانتهاء!")
+    print("\n🎉 تم الانتهاء!")
     print(f"   • متاجر جديدة: {stores_added}")
     print(f"   • منتجات جديدة: {products_added}")
     

@@ -186,7 +186,7 @@ class TestAdminDriverReportsEndpoint:
                              "category", "category_label", "details", "status", "created_at"]
             for field in expected_fields:
                 assert field in report, f"Report should contain '{field}'"
-            print(f"✅ Reports structure is correct with all required fields")
+            print("✅ Reports structure is correct with all required fields")
         else:
             print("✅ No reports found - structure validation skipped")
 

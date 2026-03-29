@@ -1,10 +1,10 @@
 # /app/backend/routes/voip.py
 # نظام مكالمات VoIP - للاتصال بين السائق والعميل
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 import uuid
 import os
@@ -498,7 +498,7 @@ async def cleanup_expired_recordings():
                 if filepath and os.path.exists(filepath):
                     try:
                         os.remove(filepath)
-                    except:
+                    except Exception:
                         pass
             else:
                 valid_recordings.append(rec)

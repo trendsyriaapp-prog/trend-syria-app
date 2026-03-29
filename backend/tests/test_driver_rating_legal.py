@@ -317,7 +317,7 @@ class TestSellerPackagingWorkflow:
         required_fields = ["id", "user_name", "phone", "address", "city", "items", "total"]
         for field in required_fields:
             assert field in order, f"Order missing field: {field}"
-        print(f"✅ Order has all required fields for label printing")
+        print("✅ Order has all required fields for label printing")
 
 
 class TestPrivacyInOrderTracking:

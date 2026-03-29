@@ -5,7 +5,6 @@
 import pytest
 import requests
 import os
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -97,7 +96,7 @@ class TestChatbotSupportFlow:
         )
         session_id = msg1.json()["session_id"]
         
-        msg2 = requests.post(
+        requests.post(
             f"{BASE_URL}/api/chatbot/send",
             json={"message": "سؤال ثاني", "session_id": session_id},
             headers=customer_headers
@@ -112,7 +111,7 @@ class TestChatbotSupportFlow:
         
         data = response.json()
         assert data["total_count"] >= 4, f"Expected at least 4 messages, got {data['total_count']}"
-        assert data["has_new"] == True, "Should have new messages when last_count=0"
+        assert data["has_new"], "Should have new messages when last_count=0"
         
         print(f"✅ Check-replies count accurate: {data['total_count']} messages")
     
@@ -140,17 +139,17 @@ class TestChatbotSupportFlow:
         assert second_check.status_code == 200
         
         data = second_check.json()
-        assert data["has_new"] == False, "Should have no new messages when caught up"
+        assert not data["has_new"], "Should have no new messages when caught up"
         assert len(data["new_messages"]) == 0, "new_messages should be empty"
         
-        print(f"✅ Check-replies correctly returns has_new=False when caught up")
+        print("✅ Check-replies correctly returns has_new=False when caught up")
     
     def test_check_replies_requires_auth(self):
         """Test check-replies requires authentication"""
         response = requests.get(f"{BASE_URL}/api/chatbot/check-replies/test-session?last_count=0")
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
         
-        print(f"✅ Check-replies correctly requires auth (401)")
+        print("✅ Check-replies correctly requires auth (401)")
     
     # ============== Admin Reply Endpoint ==============
     
@@ -187,7 +186,7 @@ class TestChatbotSupportFlow:
         data = reply_response.json()
         assert "message" in data, "Response should have confirmation message"
         
-        print(f"✅ Admin reply sent successfully")
+        print("✅ Admin reply sent successfully")
     
     def test_admin_reply_requires_admin_role(self, customer_headers, customer_id):
         """Test admin reply requires admin/sub_admin role"""
@@ -202,7 +201,7 @@ class TestChatbotSupportFlow:
         )
         assert response.status_code == 403, f"Expected 403, got {response.status_code}"
         
-        print(f"✅ Admin reply correctly requires admin role (403 for customer)")
+        print("✅ Admin reply correctly requires admin role (403 for customer)")
     
     def test_admin_reply_requires_auth(self):
         """Test admin reply requires authentication"""
@@ -216,7 +215,7 @@ class TestChatbotSupportFlow:
         )
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
         
-        print(f"✅ Admin reply correctly requires auth (401)")
+        print("✅ Admin reply correctly requires auth (401)")
     
     def test_admin_reply_invalid_ticket_returns_404(self, admin_headers):
         """Test admin reply with non-existent ticket returns 404"""
@@ -231,7 +230,7 @@ class TestChatbotSupportFlow:
         )
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         
-        print(f"✅ Admin reply correctly returns 404 for non-existent ticket")
+        print("✅ Admin reply correctly returns 404 for non-existent ticket")
     
     # ============== Full Support Flow Integration Test ==============
     
@@ -278,7 +277,7 @@ class TestChatbotSupportFlow:
             headers=admin_headers
         )
         assert admin_reply_response.status_code == 200
-        print(f"✅ Step 4: Admin reply sent")
+        print("✅ Step 4: Admin reply sent")
         
         # Step 5: Check if admin reply appears in chat messages
         after_reply = requests.get(
@@ -289,7 +288,7 @@ class TestChatbotSupportFlow:
         data = after_reply.json()
         
         # Verify new message appeared
-        assert data["has_new"] == True, "Should have new messages after admin reply"
+        assert data["has_new"], "Should have new messages after admin reply"
         assert data["total_count"] > count_before, f"Count should increase after reply, was {count_before}, now {data['total_count']}"
         
         # Verify admin reply is in new messages
@@ -301,8 +300,8 @@ class TestChatbotSupportFlow:
         support_msg = support_messages[0]
         assert "رد من فريق الدعم" in support_msg["message"], "Support message should contain admin reply text"
         
-        print(f"✅ Step 5: Admin reply appears in check-replies!")
-        print(f"✅ FULL FLOW TEST PASSED: User -> Support Request -> Admin Reply -> Reply visible to User")
+        print("✅ Step 5: Admin reply appears in check-replies!")
+        print("✅ FULL FLOW TEST PASSED: User -> Support Request -> Admin Reply -> Reply visible to User")
 
 
 class TestChatbotHistory:
@@ -357,7 +356,7 @@ class TestChatbotHistory:
         for msg in data["messages"]:
             assert msg["session_id"] == session_id, "All messages should have same session_id"
         
-        print(f"✅ Chat history filter by session works")
+        print("✅ Chat history filter by session works")
 
 
 if __name__ == "__main__":

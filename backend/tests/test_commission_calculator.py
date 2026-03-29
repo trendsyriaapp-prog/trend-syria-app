@@ -105,7 +105,7 @@ class TestFoodSellerCommissionAPI:
         assert isinstance(data.get("total_earnings"), (int, float)), "total_earnings should be numeric"
         assert isinstance(data.get("orders_count"), int), "orders_count should be integer"
         
-        print(f"PASS: Food commission API returns all expected fields")
+        print("PASS: Food commission API returns all expected fields")
         print(f"  Store Type: {data.get('store_type_name')}")
         print(f"  Commission Rate: {data.get('commission_percentage')}")
         print(f"  Total Earnings: {data.get('total_earnings')}")
@@ -188,7 +188,7 @@ class TestProductSellerCommissionAPI:
         assert isinstance(data.get("total_sales"), (int, float)), "total_sales should be numeric"
         assert isinstance(data.get("total_earnings"), (int, float)), "total_earnings should be numeric"
         
-        print(f"PASS: Seller commission API returns all expected fields")
+        print("PASS: Seller commission API returns all expected fields")
         print(f"  Average Commission: {data.get('commission_percentage')}")
 
 
@@ -233,7 +233,7 @@ class TestCommissionCalculation:
             # Allow for small rounding differences
             assert abs(calculated_earnings - total_earnings) < 1, \
                 f"Earnings calculation mismatch: {total_sales} - {total_commission} should equal {total_earnings}"
-            print(f"PASS: Commission calculation is mathematically correct")
+            print("PASS: Commission calculation is mathematically correct")
             print(f"  Total Sales: {total_sales}")
             print(f"  Commission Paid: {total_commission}")
             print(f"  Net Earnings: {total_earnings}")

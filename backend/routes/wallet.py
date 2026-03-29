@@ -1,7 +1,7 @@
 # /app/backend/routes/wallet.py
 # نظام المحفظة للجميع (عملاء، بائعين، موظفي توصيل)
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Body
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional

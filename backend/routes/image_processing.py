@@ -3,24 +3,20 @@
 # يدعم PhotoRoom API + Remove.bg API + معالجة تلقائية متقدمة
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import JSONResponse
 from PIL import Image, ImageFilter, ImageDraw, ImageEnhance, ImageOps
 import io
 import base64
 import os
 import httpx
-import numpy as np
 from rembg import remove
-from typing import Optional, Tuple, List
+from typing import Tuple
 from pydantic import BaseModel
 
 # استيراد خدمة PhotoRoom
 from services.photoroom import (
     remove_background_photoroom, 
-    process_with_photoroom,
     get_available_shadow_types,
-    get_photoroom_credits,
-    SHADOW_TYPES
+    get_photoroom_credits
 )
 
 router = APIRouter(prefix="/image", tags=["Image Processing"])
@@ -807,7 +803,7 @@ async def process_image_with_photoroom(
             "message": "تمت معالجة الصورة بنجاح - جودة PhotoRoom الاحترافية"
         }
         
-    except Exception as e:
+    except Exception:
         # استخدام rembg المحلي كـ fallback (مجاني)
         try:
             no_bg_data = remove_background_local(image_data)

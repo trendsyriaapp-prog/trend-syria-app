@@ -171,10 +171,10 @@ class TestChatbotAPI:
         
         data = response.json()
         assert "needs_human" in data, "Response should have 'needs_human' field"
-        assert data["needs_human"] == True, "Unknown question should trigger needs_human=True"
+        assert data["needs_human"], "Unknown question should trigger needs_human=True"
         assert data["category"] == "unknown", "Unknown question should have category 'unknown'"
         
-        print(f"✅ Unknown question correctly triggers needs_human=True")
+        print("✅ Unknown question correctly triggers needs_human=True")
     
     def test_send_message_greeting(self, auth_headers):
         """Test greeting message gets friendly response"""
@@ -189,7 +189,7 @@ class TestChatbotAPI:
         assert data["category"] == "greeting", f"Expected 'greeting', got '{data['category']}'"
         assert "أهلاً" in data["response"] or "مرحبا" in data["response"].lower(), "Greeting should be welcoming"
         
-        print(f"✅ Greeting response works")
+        print("✅ Greeting response works")
     
     def test_send_message_session_persistence(self, auth_headers):
         """Test session_id is returned and can be reused"""
@@ -212,7 +212,7 @@ class TestChatbotAPI:
         assert response2.status_code == 200
         assert response2.json()["session_id"] == session_id, "Session should persist"
         
-        print(f"✅ Session persistence works")
+        print("✅ Session persistence works")
     
     # ============== Request Human Support API ==============
     
@@ -250,7 +250,7 @@ class TestChatbotAPI:
         )
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
         
-        print(f"✅ Send message correctly requires auth (401)")
+        print("✅ Send message correctly requires auth (401)")
     
     def test_request_support_requires_auth(self):
         """Test /api/chatbot/request-support requires authentication"""
@@ -260,14 +260,14 @@ class TestChatbotAPI:
         )
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
         
-        print(f"✅ Request support correctly requires auth (401)")
+        print("✅ Request support correctly requires auth (401)")
     
     def test_quick_questions_no_auth_required(self):
         """Test /api/chatbot/quick-questions does NOT require auth"""
         response = requests.get(f"{BASE_URL}/api/chatbot/quick-questions")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
-        print(f"✅ Quick questions accessible without auth (public endpoint)")
+        print("✅ Quick questions accessible without auth (public endpoint)")
 
 
 if __name__ == "__main__":

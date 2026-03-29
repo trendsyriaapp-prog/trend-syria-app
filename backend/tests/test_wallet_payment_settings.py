@@ -23,7 +23,7 @@ class TestAuth:
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
         assert "token" in data
-        print(f"✅ Admin login successful")
+        print("✅ Admin login successful")
         return data["token"]
     
     def test_seller_login(self):
@@ -32,7 +32,7 @@ class TestAuth:
         assert response.status_code == 200, f"Seller login failed: {response.text}"
         data = response.json()
         assert "token" in data
-        print(f"✅ Seller login successful")
+        print("✅ Seller login successful")
         return data["token"]
     
     def test_customer_login(self):
@@ -41,7 +41,7 @@ class TestAuth:
         assert response.status_code == 200, f"Customer login failed: {response.text}"
         data = response.json()
         assert "token" in data
-        print(f"✅ Customer login successful")
+        print("✅ Customer login successful")
         return data["token"]
 
 
@@ -96,14 +96,14 @@ class TestWalletAPI:
         response = requests.get(f"{BASE_URL}/api/wallet/balance", headers=headers)
         
         assert response.status_code == 403, f"Expected 403 for customer, got {response.status_code}"
-        print(f"✅ Wallet balance correctly forbidden for customers")
+        print("✅ Wallet balance correctly forbidden for customers")
     
     def test_wallet_balance_unauthorized(self):
         """GET /api/wallet/balance - Should return 401 without auth"""
         response = requests.get(f"{BASE_URL}/api/wallet/balance")
         
         assert response.status_code == 401, f"Expected 401, got {response.status_code}"
-        print(f"✅ Wallet balance correctly requires authentication")
+        print("✅ Wallet balance correctly requires authentication")
     
     def test_wallet_transactions(self, seller_token):
         """GET /api/wallet/transactions - Get transaction history"""
@@ -142,7 +142,7 @@ class TestWithdrawalAPI:
         
         # Should fail due to insufficient balance
         assert response.status_code == 400, f"Expected 400 for insufficient balance, got {response.status_code}"
-        print(f"✅ Withdrawal correctly rejected for insufficient balance")
+        print("✅ Withdrawal correctly rejected for insufficient balance")
     
     def test_withdraw_below_minimum(self, seller_token):
         """POST /api/wallet/withdraw - Should fail below minimum amount"""
@@ -159,7 +159,7 @@ class TestWithdrawalAPI:
         assert response.status_code == 400, f"Expected 400 for below minimum, got {response.status_code}"
         data = response.json()
         assert "50,000" in data.get("detail", "") or "50000" in data.get("detail", "")
-        print(f"✅ Withdrawal correctly rejected for below minimum")
+        print("✅ Withdrawal correctly rejected for below minimum")
     
     def test_withdraw_forbidden_for_customer(self, customer_token):
         """POST /api/wallet/withdraw - Should be forbidden for customers"""
@@ -172,7 +172,7 @@ class TestWithdrawalAPI:
         )
         
         assert response.status_code == 403, f"Expected 403 for customer, got {response.status_code}"
-        print(f"✅ Withdrawal correctly forbidden for customers")
+        print("✅ Withdrawal correctly forbidden for customers")
 
 
 class TestDeliveryFeeAPI:
@@ -260,7 +260,7 @@ class TestSettingsAPI:
         assert "medium" in data["delivery_fees"]
         assert "far" in data["delivery_fees"]
         
-        print(f"✅ Settings retrieved for admin")
+        print("✅ Settings retrieved for admin")
         print(f"   - Min seller withdrawal: {data['min_seller_withdrawal']} ل.س")
         print(f"   - Min delivery withdrawal: {data['min_delivery_withdrawal']} ل.س")
         print(f"   - Delivery fees: {data['delivery_fees']}")
@@ -271,7 +271,7 @@ class TestSettingsAPI:
         response = requests.get(f"{BASE_URL}/api/settings", headers=headers)
         
         assert response.status_code == 403, f"Expected 403 for seller, got {response.status_code}"
-        print(f"✅ Settings correctly forbidden for seller")
+        print("✅ Settings correctly forbidden for seller")
     
     def test_settings_public(self):
         """GET /api/settings/public - Public settings available to all"""
@@ -282,7 +282,7 @@ class TestSettingsAPI:
         
         assert "delivery_fees" in data
         assert "free_shipping_threshold" in data
-        print(f"✅ Public settings accessible")
+        print("✅ Public settings accessible")
     
     def test_update_delivery_fees(self, admin_token):
         """PUT /api/settings/delivery-fees - Admin can update delivery fees"""
@@ -304,7 +304,7 @@ class TestSettingsAPI:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
         assert "message" in data
-        print(f"✅ Delivery fees updated successfully")
+        print("✅ Delivery fees updated successfully")
     
     def test_update_delivery_fees_forbidden_for_seller(self, seller_token):
         """PUT /api/settings/delivery-fees - Should be forbidden for non-admin"""
@@ -319,7 +319,7 @@ class TestSettingsAPI:
         )
         
         assert response.status_code == 403, f"Expected 403 for seller, got {response.status_code}"
-        print(f"✅ Delivery fees update correctly forbidden for seller")
+        print("✅ Delivery fees update correctly forbidden for seller")
 
 
 class TestAdminWithdrawalsAPI:
@@ -360,7 +360,7 @@ class TestAdminWithdrawalsAPI:
         response = requests.get(f"{BASE_URL}/api/payment/admin/withdrawals", headers=headers)
         
         assert response.status_code == 403, f"Expected 403 for seller, got {response.status_code}"
-        print(f"✅ Admin withdrawals correctly forbidden for seller")
+        print("✅ Admin withdrawals correctly forbidden for seller")
     
     def test_admin_withdrawals_forbidden_for_customer(self, customer_token):
         """GET /api/payment/admin/withdrawals - Should be forbidden for customer"""
@@ -368,7 +368,7 @@ class TestAdminWithdrawalsAPI:
         response = requests.get(f"{BASE_URL}/api/payment/admin/withdrawals", headers=headers)
         
         assert response.status_code == 403, f"Expected 403 for customer, got {response.status_code}"
-        print(f"✅ Admin withdrawals correctly forbidden for customer")
+        print("✅ Admin withdrawals correctly forbidden for customer")
 
 
 if __name__ == "__main__":

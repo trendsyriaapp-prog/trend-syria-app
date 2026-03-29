@@ -53,7 +53,7 @@ class TestTemplatesList:
             assert "category" in template
             assert "is_free" in template
             assert "colors" in template
-            assert template["is_free"] == True  # All templates are free
+            assert template["is_free"]  # All templates are free
             
     def test_all_templates_are_free(self):
         """Verify all 12 templates are marked as free"""
@@ -89,7 +89,7 @@ class TestApplyFreeTemplate:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["success"] == True
+        assert data["success"]
         assert "image" in data
         assert data["image"].startswith("data:image/jpeg;base64,")
         assert data["template_used"] == "ramadan"
@@ -259,7 +259,7 @@ class TestApplyAITemplate:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["success"] == True
+        assert data["success"]
         assert "image" in data
         assert data["cost"] == 3000
         assert data["new_balance"] == initial_balance - 3000
@@ -308,7 +308,7 @@ class TestTemplateIntegration:
         
         # 3. Verify response has valid image
         result = apply_response.json()
-        assert result["success"] == True
+        assert result["success"]
         assert result["template_used"] == template_id
         assert result["cost"] == 0
         

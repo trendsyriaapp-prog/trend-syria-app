@@ -325,7 +325,6 @@ class TestFullTrackingFlow:
             if "steps" in data:
                 steps = data["steps"]
                 print(f"  Found {len(steps)} tracking steps")
-                expected_step_keys = ["key", "label"]
                 for step in steps[:3]:  # Check first 3 steps
                     print(f"    Step: {step.get('key')} - {step.get('label')}")
         

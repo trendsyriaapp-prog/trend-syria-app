@@ -11,7 +11,6 @@ Tests the coordination flow:
 import pytest
 import requests
 import os
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -59,7 +58,7 @@ class TestDriverSellerCoordination:
         data = response.json()
         assert "token" in data, "No token in response"
         TestDriverSellerCoordination.driver_token = data["token"]
-        print(f"✅ Driver logged in successfully")
+        print("✅ Driver logged in successfully")
     
     def test_02_seller_login(self):
         """Test food seller can login"""
@@ -72,7 +71,7 @@ class TestDriverSellerCoordination:
         data = response.json()
         assert "token" in data, "No token in response"
         TestDriverSellerCoordination.seller_token = data["token"]
-        print(f"✅ Food seller logged in successfully")
+        print("✅ Food seller logged in successfully")
     
     def test_03_delivery_available_api_returns_driver_requested_orders(self):
         """Test GET /api/food/orders/delivery/available returns driver_requested_orders array"""
@@ -96,7 +95,7 @@ class TestDriverSellerCoordination:
         # driver_requested_orders should be a list
         assert isinstance(data["driver_requested_orders"], list), "driver_requested_orders should be a list"
         
-        print(f"✅ delivery/available API returns correct structure")
+        print("✅ delivery/available API returns correct structure")
         print(f"   - single_orders: {len(data['single_orders'])}")
         print(f"   - batch_orders: {len(data['batch_orders'])}")
         print(f"   - driver_requested_orders: {len(data['driver_requested_orders'])}")
@@ -183,7 +182,7 @@ class TestDriverSellerCoordination:
         driver_requested = data.get("driver_requested_orders", [])
         
         if not driver_requested:
-            print(f"⚠️ No driver_requested_orders available to accept")
+            print("⚠️ No driver_requested_orders available to accept")
             # Test with a non-existent order to verify API structure
             test_response = requests.post(
                 f"{BASE_URL}/api/food/orders/driver/orders/test-order-id/accept",
@@ -191,7 +190,7 @@ class TestDriverSellerCoordination:
             )
             # Should return 404 for non-existent order
             assert test_response.status_code in [404, 400], f"Expected 404 or 400, got {test_response.status_code}"
-            print(f"✅ Driver accept API endpoint exists and validates order")
+            print("✅ Driver accept API endpoint exists and validates order")
             return
         
         # Try to accept the first available order
@@ -206,8 +205,8 @@ class TestDriverSellerCoordination:
         if response.status_code == 200:
             data = response.json()
             assert "success" in data, "Missing success in response"
-            assert data.get("waiting_for_preparation_time") == True, "Should be waiting for preparation time"
-            print(f"✅ Driver accepted order successfully")
+            assert data.get("waiting_for_preparation_time"), "Should be waiting for preparation time"
+            print("✅ Driver accepted order successfully")
             print(f"   - Order: {data.get('order_number')}")
             print(f"   - Store: {data.get('store_name')}")
             print(f"   - Distance: {data.get('distance_km')} km")
@@ -233,10 +232,10 @@ class TestDriverSellerCoordination:
             pytest.skip("Could not get store orders")
         
         orders = response.json()
-        waiting_orders = [o for o in orders if o.get("waiting_for_preparation_time") == True]
+        waiting_orders = [o for o in orders if o.get("waiting_for_preparation_time")]
         
         if not waiting_orders:
-            print(f"⚠️ No orders waiting for preparation time")
+            print("⚠️ No orders waiting for preparation time")
             # Test API with non-existent order to verify endpoint exists
             test_response = requests.post(
                 f"{BASE_URL}/api/food/orders/store/orders/test-order-id/set-preparation-time",
@@ -244,7 +243,7 @@ class TestDriverSellerCoordination:
                 headers={"Authorization": f"Bearer {TestDriverSellerCoordination.seller_token}"}
             )
             assert test_response.status_code in [404, 400], f"Expected 404 or 400, got {test_response.status_code}"
-            print(f"✅ Set preparation time API endpoint exists")
+            print("✅ Set preparation time API endpoint exists")
             return
         
         order_id = waiting_orders[0]["id"]
@@ -258,7 +257,7 @@ class TestDriverSellerCoordination:
         if response.status_code == 200:
             data = response.json()
             assert "success" in data or "pickup_code" in data, "Missing success indicator"
-            print(f"✅ Set preparation time successful")
+            print("✅ Set preparation time successful")
             print(f"   - Pickup code: {data.get('pickup_code')}")
             print(f"   - Prep time: {data.get('preparation_time_minutes')} minutes")
         elif response.status_code == 400:
@@ -280,7 +279,7 @@ class TestDriverSellerCoordination:
         # Should return success (even for non-existent, it just updates notification)
         # or 404 if order validation is strict
         assert response.status_code in [200, 404, 400], f"Unexpected status: {response.status_code}"
-        print(f"✅ Driver reject API endpoint exists")
+        print("✅ Driver reject API endpoint exists")
     
     def test_09_delivery_available_with_coordinates(self):
         """Test delivery/available API with driver coordinates"""
@@ -301,7 +300,7 @@ class TestDriverSellerCoordination:
         data = response.json()
         
         assert "sorted_by_proximity" in data, "Missing sorted_by_proximity field"
-        assert data["sorted_by_proximity"] == True, "Should be sorted by proximity when coordinates provided"
+        assert data["sorted_by_proximity"], "Should be sorted by proximity when coordinates provided"
         
         # Check if orders have proximity info
         for order in data.get("single_orders", [])[:3]:
@@ -312,7 +311,7 @@ class TestDriverSellerCoordination:
             if "driver_distance_km" in order:
                 print(f"   - Requested order has distance: {order['driver_distance_km']} km")
         
-        print(f"✅ Delivery available API works with coordinates")
+        print("✅ Delivery available API works with coordinates")
     
     def test_10_order_status_tracking(self):
         """Test that order status tracking includes driver coordination fields"""
@@ -356,7 +355,7 @@ class TestAPIEndpointValidation:
             f"{BASE_URL}/api/food/orders/store/orders/test-id/request-driver"
         )
         assert response.status_code in [401, 403, 422], f"Expected auth error, got {response.status_code}"
-        print(f"✅ request-driver requires authentication")
+        print("✅ request-driver requires authentication")
     
     def test_driver_accept_requires_auth(self):
         """Test driver accept endpoint requires authentication"""
@@ -364,7 +363,7 @@ class TestAPIEndpointValidation:
             f"{BASE_URL}/api/food/orders/driver/orders/test-id/accept"
         )
         assert response.status_code in [401, 403, 422], f"Expected auth error, got {response.status_code}"
-        print(f"✅ driver/accept requires authentication")
+        print("✅ driver/accept requires authentication")
     
     def test_set_preparation_time_requires_auth(self):
         """Test set-preparation-time endpoint requires authentication"""
@@ -373,7 +372,7 @@ class TestAPIEndpointValidation:
             json={"preparation_time_minutes": 15}
         )
         assert response.status_code in [401, 403, 422], f"Expected auth error, got {response.status_code}"
-        print(f"✅ set-preparation-time requires authentication")
+        print("✅ set-preparation-time requires authentication")
     
     def test_delivery_available_requires_driver_role(self):
         """Test delivery/available requires driver role"""
@@ -395,7 +394,7 @@ class TestAPIEndpointValidation:
         
         # Should return 403 for non-driver
         assert response.status_code == 403, f"Expected 403 for non-driver, got {response.status_code}"
-        print(f"✅ delivery/available requires driver role")
+        print("✅ delivery/available requires driver role")
 
 
 if __name__ == "__main__":

@@ -53,7 +53,7 @@ class TestDispatchViolationsAPIs:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        assert data.get("success") == True, "Response should have success=True"
+        assert data.get("success"), "Response should have success=True"
         
         print(f"✅ Dispatch status endpoint working: {response.status_code}")
     
@@ -109,7 +109,7 @@ class TestDispatchViolationsAPIs:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        assert data.get("success") == True, "Response should have success=True"
+        assert data.get("success"), "Response should have success=True"
         
         print(f"✅ Violations report endpoint working: {response.status_code}")
     
@@ -159,7 +159,7 @@ class TestDispatchViolationsAPIs:
         report_30 = response_30.json()["report"]
         assert report_30["period_days"] == 30
         
-        print(f"✅ Violations report works with different day parameters")
+        print("✅ Violations report works with different day parameters")
     
     def test_violations_report_requires_admin(self):
         """Test violations report requires admin role"""
@@ -185,7 +185,7 @@ class TestDispatchViolationsAPIs:
         
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
-        assert data.get("success") == True, "Response should have success=True"
+        assert data.get("success"), "Response should have success=True"
         
         # Check settings structure
         settings = data.get("settings", {})

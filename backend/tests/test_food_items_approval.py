@@ -62,7 +62,7 @@ class TestFoodItemsApprovalSystem:
         assert "token" in data
         assert data.get("user", {}).get("user_type") == "admin"
         TestFoodItemsApprovalSystem.admin_token = data["token"]
-        print(f"✓ Admin login successful")
+        print("✓ Admin login successful")
     
     def test_02_get_pending_food_items(self):
         """Test GET /api/admin/food-items/pending"""
@@ -98,13 +98,13 @@ class TestFoodItemsApprovalSystem:
         """Test unauthorized access to pending items"""
         response = requests.get(f"{BASE_URL}/api/admin/food-items/pending")
         assert response.status_code in [401, 403], "Should reject unauthorized access"
-        print(f"✓ Unauthorized access correctly rejected")
+        print("✓ Unauthorized access correctly rejected")
     
     def test_05_unauthorized_access_stats(self):
         """Test unauthorized access to stats"""
         response = requests.get(f"{BASE_URL}/api/admin/food-items/stats")
         assert response.status_code in [401, 403], "Should reject unauthorized access"
-        print(f"✓ Unauthorized access to stats correctly rejected")
+        print("✓ Unauthorized access to stats correctly rejected")
     
     # ============== Food Seller Tests ==============
     
@@ -172,9 +172,9 @@ class TestFoodItemsApprovalSystem:
                 pending_items = pending_response.json()
                 item_found = any(item.get("id") == TestFoodItemsApprovalSystem.test_item_id for item in pending_items)
                 if item_found:
-                    print(f"✓ Item correctly appears in pending list (is_approved: false)")
+                    print("✓ Item correctly appears in pending list (is_approved: false)")
                 else:
-                    print(f"⚠ Item not found in pending list")
+                    print("⚠ Item not found in pending list")
         elif response.status_code == 403:
             print(f"⚠ Food seller not authorized to create items: {response.text}")
         elif response.status_code == 404:
@@ -217,9 +217,9 @@ class TestFoodItemsApprovalSystem:
                     new_pending = verify_response.json()
                     still_pending = any(item.get("id") == item_id for item in new_pending)
                     assert not still_pending, "Item should not be in pending list after approval"
-                    print(f"✓ Item correctly removed from pending list after approval")
+                    print("✓ Item correctly removed from pending list after approval")
             else:
-                print(f"⚠ No pending items to approve")
+                print("⚠ No pending items to approve")
         else:
             print(f"⚠ Could not get pending items: {response.status_code}")
     
@@ -233,8 +233,8 @@ class TestFoodItemsApprovalSystem:
             f"{BASE_URL}/api/admin/food-items/{fake_id}/approve",
             headers={"Authorization": f"Bearer {self.admin_token}"}
         )
-        assert response.status_code == 404, f"Should return 404 for non-existent item"
-        print(f"✓ Correctly returns 404 for non-existent item")
+        assert response.status_code == 404, "Should return 404 for non-existent item"
+        print("✓ Correctly returns 404 for non-existent item")
     
     def test_11_reject_food_item_with_reason(self):
         """Test POST /api/admin/food-items/{id}/reject with reason"""
@@ -289,9 +289,9 @@ class TestFoodItemsApprovalSystem:
                     assert reject_response.status_code == 200, f"Reject failed: {reject_response.text}"
                     print(f"✓ Rejected existing pending item: {item_id}")
                 else:
-                    print(f"⚠ No pending items to reject")
+                    print("⚠ No pending items to reject")
             else:
-                print(f"⚠ Could not create or find item to reject")
+                print("⚠ Could not create or find item to reject")
     
     def test_12_reject_food_item_without_reason(self):
         """Test POST /api/admin/food-items/{id}/reject without reason (optional)"""
@@ -327,7 +327,7 @@ class TestFoodItemsApprovalSystem:
             assert reject_response.status_code == 200, f"Reject without reason failed: {reject_response.text}"
             print(f"✓ Rejected food item without reason: {item_id}")
         else:
-            print(f"⚠ Could not create item to reject without reason")
+            print("⚠ Could not create item to reject without reason")
     
     def test_13_reject_nonexistent_item(self):
         """Test rejecting non-existent item"""
@@ -340,8 +340,8 @@ class TestFoodItemsApprovalSystem:
             json={"reason": "test"},
             headers={"Authorization": f"Bearer {self.admin_token}"}
         )
-        assert response.status_code == 404, f"Should return 404 for non-existent item"
-        print(f"✓ Correctly returns 404 for rejecting non-existent item")
+        assert response.status_code == 404, "Should return 404 for non-existent item"
+        print("✓ Correctly returns 404 for rejecting non-existent item")
     
     def test_14_stats_update_after_operations(self):
         """Test that stats update correctly after approve/reject operations"""
@@ -430,7 +430,7 @@ class TestFoodItemCreationFlow:
         pending_items = pending_response.json()
         item_in_pending = any(item.get("id") == item_id for item in pending_items)
         assert item_in_pending, "New item should be in pending list"
-        print(f"✓ Item is in pending list")
+        print("✓ Item is in pending list")
         
         # Approve the item
         approve_response = requests.post(
@@ -438,7 +438,7 @@ class TestFoodItemCreationFlow:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert approve_response.status_code == 200
-        print(f"✓ Item approved")
+        print("✓ Item approved")
         
         # Verify item is no longer pending
         pending_after = requests.get(
@@ -447,9 +447,9 @@ class TestFoodItemCreationFlow:
         ).json()
         item_still_pending = any(item.get("id") == item_id for item in pending_after)
         assert not item_still_pending, "Approved item should not be in pending list"
-        print(f"✓ Item removed from pending list after approval")
+        print("✓ Item removed from pending list after approval")
         
-        print(f"✓ Complete approval flow test passed!")
+        print("✓ Complete approval flow test passed!")
 
 
 if __name__ == "__main__":

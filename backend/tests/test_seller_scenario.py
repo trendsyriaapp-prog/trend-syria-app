@@ -50,7 +50,7 @@ class TestSellerScenario:
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/register", json=payload)
-        print(f"\n=== Step 1: Register New Seller ===")
+        print("\n=== Step 1: Register New Seller ===")
         print(f"Phone: {TestSellerScenario.seller_phone}")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.json()}")
@@ -61,7 +61,7 @@ class TestSellerScenario:
         assert "token" in data, "Response should contain token"
         assert "user" in data, "Response should contain user info"
         assert data["user"]["user_type"] == "seller", "User type should be seller"
-        assert data["user"]["is_approved"] == False, "New seller should NOT be approved automatically"
+        assert not data["user"]["is_approved"], "New seller should NOT be approved automatically"
         
         TestSellerScenario.seller_id = data["user"]["id"]
         TestSellerScenario.seller_token = data["token"]
@@ -82,7 +82,7 @@ class TestSellerScenario:
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/login", json=payload)
-        print(f"\n=== Step 2: Admin Login ===")
+        print("\n=== Step 2: Admin Login ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code == 200, f"Admin login failed: {response.text}"
@@ -104,7 +104,7 @@ class TestSellerScenario:
         headers = {"Authorization": f"Bearer {TestSellerScenario.admin_token}"}
         
         response = requests.get(f"{BASE_URL}/api/admin/sellers/pending", headers=headers)
-        print(f"\n=== Step 3: Get Pending Sellers ===")
+        print("\n=== Step 3: Get Pending Sellers ===")
         print(f"Status Code: {response.status_code}")
         
         # Note: If seller documents are required, we might need different check
@@ -135,7 +135,7 @@ class TestSellerScenario:
             headers=headers
         )
         
-        print(f"\n=== Step 4: Approve Seller ===")
+        print("\n=== Step 4: Approve Seller ===")
         print(f"Seller ID: {TestSellerScenario.seller_id}")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.text}")
@@ -155,13 +155,13 @@ class TestSellerScenario:
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/login", json=payload)
-        print(f"\n=== Step 5: Seller Login After Approval ===")
+        print("\n=== Step 5: Seller Login After Approval ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code == 200, f"Seller login failed: {response.text}"
         
         data = response.json()
-        assert data["user"]["is_approved"] == True, "Seller should now be approved"
+        assert data["user"]["is_approved"], "Seller should now be approved"
         
         TestSellerScenario.seller_token = data["token"]
         print(f"is_approved: {data['user']['is_approved']}")
@@ -176,7 +176,7 @@ class TestSellerScenario:
         headers = {"Authorization": f"Bearer {TestSellerScenario.seller_token}"}
         
         response = requests.get(f"{BASE_URL}/api/auth/seller/store-settings", headers=headers)
-        print(f"\n=== Step 6: Get Store Settings ===")
+        print("\n=== Step 6: Get Store Settings ===")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.json()}")
         
@@ -202,7 +202,7 @@ class TestSellerScenario:
         }
         
         response = requests.put(f"{BASE_URL}/api/auth/seller/store-settings", json=payload, headers=headers)
-        print(f"\n=== Step 7: Update Store Settings (No Location) ===")
+        print("\n=== Step 7: Update Store Settings (No Location) ===")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.text}")
         
@@ -230,7 +230,7 @@ class TestSellerScenario:
         }
         
         response = requests.put(f"{BASE_URL}/api/auth/seller/store-settings", json=payload, headers=headers)
-        print(f"\n=== Step 8: Update Store Settings (With Location) ===")
+        print("\n=== Step 8: Update Store Settings (With Location) ===")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.text}")
         
@@ -246,7 +246,7 @@ class TestSellerScenario:
         headers = {"Authorization": f"Bearer {TestSellerScenario.seller_token}"}
         
         response = requests.get(f"{BASE_URL}/api/auth/seller/store-settings", headers=headers)
-        print(f"\n=== Step 9: Verify Store Settings Saved ===")
+        print("\n=== Step 9: Verify Store Settings Saved ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code == 200, f"Failed to get store settings: {response.text}"
@@ -268,7 +268,7 @@ class TestSellerScenario:
         
         # GET initial accounts (should be empty)
         response = requests.get(f"{BASE_URL}/api/auth/seller/payment-accounts", headers=headers)
-        print(f"\n=== Step 10: Payment Accounts CRUD ===")
+        print("\n=== Step 10: Payment Accounts CRUD ===")
         print(f"GET Status: {response.status_code}")
         assert response.status_code == 200
         
@@ -318,7 +318,7 @@ class TestEdgeCases:
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/register", json=payload)
-        print(f"\n=== Edge Case: Duplicate Phone Registration ===")
+        print("\n=== Edge Case: Duplicate Phone Registration ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code == 400, "Should reject duplicate phone"
@@ -332,7 +332,7 @@ class TestEdgeCases:
         }
         
         response = requests.post(f"{BASE_URL}/api/auth/login", json=payload)
-        print(f"\n=== Edge Case: Invalid Login Credentials ===")
+        print("\n=== Edge Case: Invalid Login Credentials ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code == 401, "Should reject invalid credentials"
@@ -341,7 +341,7 @@ class TestEdgeCases:
     def test_store_settings_unauthorized(self):
         """Test accessing store settings without authentication"""
         response = requests.get(f"{BASE_URL}/api/auth/seller/store-settings")
-        print(f"\n=== Edge Case: Unauthorized Access ===")
+        print("\n=== Edge Case: Unauthorized Access ===")
         print(f"Status Code: {response.status_code}")
         
         assert response.status_code in [401, 403], "Should reject unauthorized access"

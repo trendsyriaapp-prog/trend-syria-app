@@ -102,7 +102,7 @@ class TestCart:
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
         assert "items" in data or isinstance(data, list), "Cart should have items"
-        print(f"PASS: Got cart data")
+        print("PASS: Got cart data")
 
 # ===========================================
 # MODULE 4: Gift System APIs
@@ -171,7 +171,7 @@ class TestWhatsAppSupport:
         assert "whatsapp_number" in data, "Missing whatsapp_number"
         assert "support_message" in data, "Missing support_message"
         
-        print(f"PASS: Public settings retrieved")
+        print("PASS: Public settings retrieved")
         print(f"  - whatsapp_enabled: {data['whatsapp_enabled']}")
         print(f"  - whatsapp_number: {data['whatsapp_number']}")
     
@@ -197,7 +197,7 @@ class TestWhatsAppSupport:
         # Check core settings exist - whatsapp settings may or may not be present depending on when they were set
         # The main settings document contains various platform settings
         assert "id" in data or "food_enabled" in data, "Missing expected settings fields"
-        print(f"PASS: Admin settings retrieved")
+        print("PASS: Admin settings retrieved")
         
         # Check for whatsapp settings if present
         if "whatsapp_enabled" in data:
@@ -228,7 +228,7 @@ class TestWhatsAppSupport:
             json={"whatsapp_number": "963551021618"}
         )
         
-        print(f"PASS: WhatsApp number updated and restored")
+        print("PASS: WhatsApp number updated and restored")
     
     def test_toggle_whatsapp_support(self, admin_token):
         """اختبار تفعيل/تعطيل دعم WhatsApp"""
@@ -254,7 +254,7 @@ class TestWhatsAppSupport:
             json={"whatsapp_enabled": current_state}
         )
         
-        print(f"PASS: WhatsApp support toggle works")
+        print("PASS: WhatsApp support toggle works")
 
 # ===========================================
 # MODULE 6: Order Tracking APIs
@@ -350,8 +350,8 @@ class TestRecommendations:
         )
         # Recommendations API should return 200
         if response.status_code == 200:
-            data = response.json()
-            print(f"PASS: Got recommendations")
+            response.json()
+            print("PASS: Got recommendations")
         else:
             print(f"INFO: Recommendations API returned {response.status_code}")
 
@@ -411,7 +411,7 @@ class TestAdminStats:
         for field in expected_fields:
             assert field in data, f"Missing field: {field}"
         
-        print(f"PASS: Admin stats retrieved")
+        print("PASS: Admin stats retrieved")
         print(f"  - Users: {data.get('total_users')}")
         print(f"  - Sellers: {data.get('total_sellers')}")
         print(f"  - Products: {data.get('total_products')}")

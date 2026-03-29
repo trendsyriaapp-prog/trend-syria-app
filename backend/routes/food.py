@@ -1,13 +1,13 @@
 # /app/backend/routes/food.py
 # مسارات توصيل الطعام - مطاعم ومواد غذائية وخضروات
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime, timezone
 from pydantic import BaseModel
 import uuid
 
-from core.database import db, get_current_user, get_optional_user
+from core.database import db, get_current_user
 
 router = APIRouter(prefix="/food", tags=["Food Delivery"])
 

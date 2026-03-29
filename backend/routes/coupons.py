@@ -370,13 +370,15 @@ async def get_welcome_coupon_for_user(user_id: str) -> Optional[dict]:
     welcome_coupon = await db.coupons.find_one({
         "new_customers_only": True,
         "is_active": True,
-        "$or": [
-            {"end_date": None},
-            {"end_date": {"$gte": now}}
-        ],
-        "$or": [
-            {"max_uses": None},
-            {"$expr": {"$lt": ["$usage_count", "$max_uses"]}}
+        "$and": [
+            {"$or": [
+                {"end_date": None},
+                {"end_date": {"$gte": now}}
+            ]},
+            {"$or": [
+                {"max_uses": None},
+                {"$expr": {"$lt": ["$usage_count", "$max_uses"]}}
+            ]}
         ]
     }, {"_id": 0})
     

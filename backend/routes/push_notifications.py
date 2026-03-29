@@ -3,13 +3,12 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
 from core.database import db, get_current_user
 from services.firebase_push import (
-    send_push_notification,
     send_push_to_multiple,
     send_push_to_topic,
     subscribe_to_topic,

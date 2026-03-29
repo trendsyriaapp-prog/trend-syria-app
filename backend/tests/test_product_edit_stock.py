@@ -98,7 +98,7 @@ class TestProductEdit:
         )
         
         assert response.status_code == 200, f"Update product price failed: {response.text}"
-        print(f"✅ Product price update API returned 200")
+        print("✅ Product price update API returned 200")
         
         # Verify the change by fetching the product
         get_response = requests.get(f"{BASE_URL}/api/products/{product['id']}")
@@ -130,7 +130,7 @@ class TestProductEdit:
         )
         
         assert response.status_code == 200, f"Update product stock failed: {response.text}"
-        print(f"✅ Product stock update API returned 200")
+        print("✅ Product stock update API returned 200")
         
         # Verify the change by fetching the product
         get_response = requests.get(f"{BASE_URL}/api/products/{product['id']}")
@@ -171,7 +171,7 @@ class TestProductEdit:
         updated_product = get_response.json()
         assert updated_product['price'] == new_price, "Price not updated"
         assert updated_product['stock'] == new_stock, "Stock not updated"
-        print(f"✅ Both price and stock updated successfully")
+        print("✅ Both price and stock updated successfully")
         
         # Restore original values
         restore_response = requests.put(
@@ -180,7 +180,7 @@ class TestProductEdit:
             json={"price": original_price, "stock": original_stock}
         )
         assert restore_response.status_code == 200
-        print(f"✅ Original values restored")
+        print("✅ Original values restored")
     
     def test_unauthorized_product_update_rejected(self, customer_token, seller_products):
         """Test that customer cannot update seller's product"""
@@ -194,7 +194,7 @@ class TestProductEdit:
         )
         
         assert response.status_code == 403, f"Expected 403 Forbidden, got {response.status_code}"
-        print(f"✅ Unauthorized update correctly rejected with 403")
+        print("✅ Unauthorized update correctly rejected with 403")
     
     def test_unauthenticated_product_update_rejected(self, seller_products):
         """Test that unauthenticated request cannot update product"""
@@ -206,7 +206,7 @@ class TestProductEdit:
         )
         
         assert response.status_code == 401, f"Expected 401 Unauthorized, got {response.status_code}"
-        print(f"✅ Unauthenticated update correctly rejected with 401")
+        print("✅ Unauthenticated update correctly rejected with 401")
 
 
 class TestStockDecrement:
@@ -243,7 +243,7 @@ class TestStockDecrement:
         assert response.status_code == 200, f"Customer login failed: {response.text}"
         data = response.json()
         assert "token" in data
-        print(f"✅ Customer login successful")
+        print("✅ Customer login successful")
     
     def test_get_available_products(self):
         """Test we can get products with stock"""
@@ -327,7 +327,7 @@ class TestStockDecrement:
         if add_response.status_code != 200:
             pytest.skip(f"Could not add to cart: {add_response.text}")
         
-        print(f"✅ Added product to cart")
+        print("✅ Added product to cart")
         
         # Create order
         order_response = requests.post(

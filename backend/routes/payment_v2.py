@@ -4,15 +4,11 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from datetime import datetime, timezone
 from typing import Optional
-import uuid
 
 from core.database import db, get_current_user, create_notification_for_user
 from services.payment_providers import (
     payment_manager,
-    PaymentProviderError,
-    ShamCashProvider,
-    SyriatelCashProvider,
-    BankCardProvider
+    PaymentProviderError
 )
 from routes.wallet import add_pending_to_wallet
 

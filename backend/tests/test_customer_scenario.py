@@ -61,7 +61,7 @@ class TestCustomerScenario:
         assert "token" in data, "Missing 'token' in response"
         assert "user" in data, "Missing 'user' in response"
         assert data["user"]["user_type"] == "buyer", "User type should be 'buyer'"
-        assert data["user"]["is_approved"] == True, "Buyer should be auto-approved"
+        assert data["user"]["is_approved"], "Buyer should be auto-approved"
         
         TestCustomerScenario.customer_token = data["token"]
         TestCustomerScenario.customer_id = data["user"]["id"]
@@ -106,7 +106,7 @@ class TestCustomerScenario:
         data = response.json()
         assert "token" in data, "Missing 'token' in response"
         assert data["user"]["user_type"] == "buyer", "User type mismatch"
-        assert data["user"]["is_approved"] == True, "Customer should be approved"
+        assert data["user"]["is_approved"], "Customer should be approved"
         
         # Update token (might be refreshed)
         TestCustomerScenario.customer_token = data["token"]
@@ -191,7 +191,7 @@ class TestCustomerScenario:
         assert added_address is not None, "Added address not found"
         assert added_address["latitude"] == 33.5138, "Latitude not persisted"
         assert added_address["longitude"] == 36.2765, "Longitude not persisted"
-        assert added_address["is_default"] == True, "Should be default address"
+        assert added_address["is_default"], "Should be default address"
         
         print(f"✅ Addresses retrieved successfully: {len(data)} address(es)")
     
@@ -509,7 +509,7 @@ class TestCustomerScenario:
             headers={"Authorization": f"Bearer {TestCustomerScenario.customer_token}"}
         )
         
-        assert get_response.status_code == 200, f"Get payment methods failed"
+        assert get_response.status_code == 200, "Get payment methods failed"
         assert len(get_response.json()) > 0, "Should have payment methods"
         print("✅ Payment methods retrieved")
         
@@ -519,7 +519,7 @@ class TestCustomerScenario:
             headers={"Authorization": f"Bearer {TestCustomerScenario.customer_token}"}
         )
         
-        assert delete_response.status_code == 200, f"Delete payment method failed"
+        assert delete_response.status_code == 200, "Delete payment method failed"
         print("✅ Payment method deleted")
     
     def test_23_unauthorized_access(self):

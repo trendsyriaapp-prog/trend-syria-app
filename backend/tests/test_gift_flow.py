@@ -175,10 +175,10 @@ class TestGiftFlow:
         # Check that pending gifts hide product details
         for gift in gifts:
             if gift.get("status") == "pending":
-                assert gift.get("is_surprise") == True, "Pending gift should be marked as surprise"
+                assert gift.get("is_surprise"), "Pending gift should be marked as surprise"
                 assert gift.get("product_name") == "🎁 مفاجأة!", "Product name should be hidden"
             elif gift.get("status") == "pending_address":
-                assert gift.get("requires_address") == True, "pending_address should require address"
+                assert gift.get("requires_address"), "pending_address should require address"
     
     def test_get_received_gifts_unauthorized(self):
         """Test getting received gifts without authentication"""
@@ -233,8 +233,8 @@ class TestGiftFlow:
         assert accept_response.status_code == 200, f"Accept gift failed: {accept_response.text}"
         accept_data = accept_response.json()
         assert accept_data["status"] == "pending_address", "Status should change to pending_address"
-        assert accept_data.get("requires_address") == True, "Should require address"
-        print(f"Step 2 PASS: Gift accepted, status is pending_address")
+        assert accept_data.get("requires_address"), "Should require address"
+        print("Step 2 PASS: Gift accepted, status is pending_address")
         
         # Step 3: Submit shipping address
         address_data = {
@@ -271,7 +271,7 @@ class TestGiftFlow:
         assert completed_gift is not None
         assert completed_gift.get("status") == "completed"
         assert completed_gift.get("order_id") == order_id
-        print(f"Step 4 PASS: Gift marked as completed with order_id")
+        print("Step 4 PASS: Gift marked as completed with order_id")
         
         print(f"COMPLETE FLOW TEST PASSED! Gift ID: {gift_id}, Order ID: {order_id}")
     
@@ -424,7 +424,7 @@ class TestGiftFlow:
         
         assert details_response.status_code == 200
         details = details_response.json()
-        assert details.get("is_surprise") == True, "Pending gift should be surprise"
+        assert details.get("is_surprise"), "Pending gift should be surprise"
         assert details.get("product_name") == "🎁 مفاجأة!"
     
     def test_get_gift_details_as_sender(self):

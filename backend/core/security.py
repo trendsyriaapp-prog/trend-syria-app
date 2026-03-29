@@ -1,7 +1,6 @@
 # /app/backend/core/security.py
 # طبقات الأمان الشاملة لتطبيق ترند سورية
 
-import os
 import re
 import html
 import logging
@@ -9,12 +8,11 @@ import hashlib
 import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any
-from functools import wraps
 
 import bcrypt
 import bleach
 from jose import jwt, JWTError
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address

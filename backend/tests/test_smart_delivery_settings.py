@@ -200,7 +200,7 @@ class TestAdminSettingsUpdate:
         assert data["smart_order_limits"]["max_orders_different_stores"] == 6
         assert data["smart_order_limits"]["max_orders_same_store"] == 8
         assert data["smart_order_limits"]["priority_timeout_seconds"] == 20
-        assert data["smart_order_limits"]["enable_smart_priority"] == True
+        assert data["smart_order_limits"]["enable_smart_priority"]
         print("Admin successfully updated smart order limits")
         
         # Verify persistence with GET

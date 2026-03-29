@@ -63,8 +63,8 @@ class TestAdminFoodCommissionsAPI:
         expected_types = ["restaurants", "default"]
         for store_type in expected_types:
             assert store_type in commissions, f"Expected store type '{store_type}' in commissions"
-            assert isinstance(commissions[store_type], (int, float)), f"Commission rate should be numeric"
-            assert 0 <= commissions[store_type] <= 1, f"Commission rate should be between 0 and 1"
+            assert isinstance(commissions[store_type], (int, float)), "Commission rate should be numeric"
+            assert 0 <= commissions[store_type] <= 1, "Commission rate should be between 0 and 1"
         
         print(f"✓ Admin food commissions retrieved successfully: {commissions}")
     
@@ -104,7 +104,7 @@ class TestAdminFoodCommissionsAPI:
         assert verify_response.status_code == 200
         assert verify_response.json()["commissions"]["restaurants"] == 0.25
         
-        print(f"✓ Admin food commissions updated and verified: restaurants = 25%")
+        print("✓ Admin food commissions updated and verified: restaurants = 25%")
         
         # Restore original rate
         restore_response = requests.put(
@@ -113,7 +113,7 @@ class TestAdminFoodCommissionsAPI:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert restore_response.status_code == 200
-        print(f"✓ Original rates restored")
+        print("✓ Original rates restored")
     
     def test_admin_unauthorized_access(self):
         """Test that non-admin cannot access food commissions"""
@@ -131,7 +131,7 @@ class TestAdminFoodCommissionsAPI:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 400, f"Expected 400 for invalid rate, got {response.status_code}"
-        print(f"✓ Invalid commission rate properly rejected")
+        print("✓ Invalid commission rate properly rejected")
 
 
 class TestSellerCommissionReflectsAdminChanges:
@@ -225,7 +225,7 @@ class TestSellerCommissionReflectsAdminChanges:
         restored_rate = seller_response_restored.json()["commission_rate"]
         assert restored_rate == original_seller_rate, f"Rate should be restored to {original_seller_rate}"
         
-        print(f"✓ Commission change reflects immediately on seller API - TEST PASSED")
+        print("✓ Commission change reflects immediately on seller API - TEST PASSED")
 
 
 class TestCommissionCalculationFlow:
@@ -289,7 +289,7 @@ class TestCommissionCalculationFlow:
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         
-        print(f"✓ Commission updates persist correctly to database")
+        print("✓ Commission updates persist correctly to database")
 
 
 class TestFoodCommissionsTabUI:
@@ -312,7 +312,6 @@ class TestFoodCommissionsTabUI:
         commissions = data["commissions"]
         
         # Frontend expects these store types (based on CommissionsTab.js)
-        expected_store_types = ["restaurants", "fast_food", "market", "vegetables", "sweets", "groceries", "default"]
         
         # At minimum, should have restaurants and default
         assert "restaurants" in commissions or "default" in commissions
@@ -322,7 +321,7 @@ class TestFoodCommissionsTabUI:
             assert isinstance(val, (int, float)), f"{key} should be numeric"
             assert 0 <= val <= 1, f"{key} rate {val} should be between 0 and 1"
         
-        print(f"✓ Food commissions API structure is correct for frontend")
+        print("✓ Food commissions API structure is correct for frontend")
 
 
 if __name__ == "__main__":

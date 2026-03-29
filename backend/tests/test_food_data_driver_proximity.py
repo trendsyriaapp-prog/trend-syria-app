@@ -10,7 +10,6 @@
 import pytest
 import requests
 import os
-import uuid
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -130,7 +129,7 @@ class TestDriverProximityNotification:
         assert response.status_code == 200
         
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         assert "تم تحديث الموقع" in data.get("message", "")
         print(f"✅ Driver location updated: {data}")
     

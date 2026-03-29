@@ -2,9 +2,8 @@
 # خدمة الطقس التلقائية
 
 import httpx
-import os
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from core.database import db
 

@@ -218,7 +218,7 @@ class TestAdminWorkingHours:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["working_hours"]["is_enabled"] == False
+        assert not data["working_hours"]["is_enabled"]
         print("✅ Working hours disabled successfully")
         
         # Re-enable for other tests

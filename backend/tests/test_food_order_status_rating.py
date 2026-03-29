@@ -320,7 +320,6 @@ class TestNotificationOnStatusChange:
     
     def test_admin_update_creates_notification(self, admin_token, buyer_token):
         """Verify notification is created when admin updates order status"""
-        admin_headers = {"Authorization": f"Bearer {admin_token}"}
         buyer_headers = {"Authorization": f"Bearer {buyer_token}"}
         
         # Get buyer's current notifications count

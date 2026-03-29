@@ -32,7 +32,7 @@ class TestProductsPageAPIs:
         data = response.json()
         # يجب أن يكون dict مع products و flash_sale
         assert "products" in data or isinstance(data, dict)
-        print(f"✅ Flash products endpoint working")
+        print("✅ Flash products endpoint working")
     
     def test_best_sellers_endpoint(self):
         """اختبار GET /api/products/best-sellers"""
@@ -149,7 +149,7 @@ class TestSmartRoutingAPI:
         response = requests.get(f"{BASE_URL}/api/food/orders/delivery/optimize-route")
         # يجب أن يكون 401 أو 403 بدون auth
         assert response.status_code in [401, 403, 422]
-        print(f"✅ Optimize route requires authentication")
+        print("✅ Optimize route requires authentication")
     
     def test_optimize_route_with_driver_auth(self):
         """اختبار التوجيه الذكي مع توثيق السائق"""
@@ -182,7 +182,7 @@ class TestSmartRoutingAPI:
         data = response.json()
         # قد تكون القائمة فارغة إذا لا توجد طلبات للسائق
         assert isinstance(data.get("optimized_route"), list)
-        print(f"✅ Optimize route returns proper structure even with no orders")
+        print("✅ Optimize route returns proper structure even with no orders")
 
 
 class TestReferralsAPI:
@@ -205,7 +205,7 @@ class TestReferralsAPI:
         """اختبار أن جلب كود الإحالة يتطلب تسجيل الدخول"""
         response = requests.get(f"{BASE_URL}/api/referrals/my-code")
         assert response.status_code in [401, 403, 422]
-        print(f"✅ My referral code requires authentication")
+        print("✅ My referral code requires authentication")
     
     def test_get_my_referral_code(self):
         """اختبار GET /api/referrals/my-code"""

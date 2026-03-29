@@ -2,9 +2,7 @@
 # مسارات السلة
 
 from fastapi import APIRouter, HTTPException, Depends
-from typing import Optional
 from datetime import datetime, timezone
-import uuid
 
 from core.database import db, get_current_user
 from models.schemas import CartItem
@@ -94,7 +92,7 @@ async def add_to_cart(item: CartItem, user: dict = Depends(get_current_user)):
             # تحديث الكمية لنفس المنتج ونفس المقاس/الوزن
             await db.carts.update_one(
                 {"user_id": user["id"]},
-                {"$set": {f"items.$[elem].quantity": new_quantity}},
+                {"$set": {"items.$[elem].quantity": new_quantity}},
                 array_filters=[{
                     "elem.product_id": item.product_id, 
                     "elem.selected_size": item.selected_size,
@@ -170,7 +168,7 @@ async def update_cart_item(item: CartItem, user: dict = Depends(get_current_user
         # تحديث الكمية لنفس المنتج والمقاس والوزن
         await db.carts.update_one(
             {"user_id": user["id"]},
-            {"$set": {f"items.$[elem].quantity": item.quantity}},
+            {"$set": {"items.$[elem].quantity": item.quantity}},
             array_filters=[{
                 "elem.product_id": item.product_id, 
                 "elem.selected_size": item.selected_size,

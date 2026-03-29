@@ -17,7 +17,6 @@ import pytest
 import requests
 import os
 import time
-from datetime import datetime
 
 # Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
@@ -53,7 +52,7 @@ class TestLoginForcePasswordChange:
         # Check force_password_change field exists
         assert "force_password_change" in data, "force_password_change field missing from response"
         # For default account with default password, should be True
-        assert data["force_password_change"] == True, "force_password_change should be True for default admin account"
+        assert data["force_password_change"], "force_password_change should be True for default admin account"
         
         print(f"✅ Admin login returns force_password_change: {data['force_password_change']}")
     
@@ -94,7 +93,7 @@ class TestLoginForcePasswordChange:
         
         # delivery123 is in DEFAULT_ACCOUNTS, so should be True
         assert "force_password_change" in data
-        assert data["force_password_change"] == True, "Delivery default account should require password change"
+        assert data["force_password_change"], "Delivery default account should require password change"
         print(f"✅ Delivery login force_password_change: {data['force_password_change']}")
 
 
@@ -151,7 +150,7 @@ class TestPasswordValidation:
         
         # Should return 400 for password without digit
         assert response.status_code == 400, f"Expected 400 for no-digit password, got {response.status_code}"
-        print(f"✅ Password without digit rejected")
+        print("✅ Password without digit rejected")
     
     def test_change_password_accepts_strong_password(self):
         """POST /api/auth/change-password - يجب أن يقبل كلمات المرور القوية"""
@@ -393,9 +392,9 @@ class TestDatabaseIndexes:
         
         # Check performance stats
         if "performance_stats" in data:
-            print(f"✅ Performance stats available")
+            print("✅ Performance stats available")
         
-        print(f"✅ Performance endpoint working - indexes configured")
+        print("✅ Performance endpoint working - indexes configured")
 
 
 class TestAuthenticationFlow:
@@ -426,7 +425,7 @@ class TestAuthenticationFlow:
         assert "phone" in data["user"]
         assert "user_type" in data["user"]
         
-        print(f"✅ Login returns all required fields")
+        print("✅ Login returns all required fields")
     
     def test_me_endpoint_requires_auth(self):
         """GET /api/auth/me should require authentication"""

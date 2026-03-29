@@ -3,7 +3,6 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from datetime import datetime, timezone
-from typing import Optional
 import uuid
 import random
 

@@ -1,9 +1,8 @@
 # /app/backend/routes/delivery_time.py
 # نظام وقت التوصيل والعقوبات
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 import os

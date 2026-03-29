@@ -111,7 +111,7 @@ class TestAdminOrdersAPIs:
         )
         # Should return 400 for invalid status
         assert response.status_code == 400, f"Expected 400 for invalid status, got {response.status_code}"
-        print(f"✅ Invalid status correctly rejected")
+        print("✅ Invalid status correctly rejected")
     
     def test_change_status_missing_status(self, auth_headers):
         """Test that missing status is rejected"""
@@ -123,7 +123,7 @@ class TestAdminOrdersAPIs:
         )
         # Should return 400 for missing status
         assert response.status_code == 400, f"Expected 400 for missing status, got {response.status_code}"
-        print(f"✅ Missing status correctly rejected")
+        print("✅ Missing status correctly rejected")
 
 
 class TestAdminProductsAPIs:
@@ -163,7 +163,7 @@ class TestAdminProductsAPIs:
         )
         # Should return 404 (product not found) not 405 (method not allowed)
         assert response.status_code == 404, f"Unexpected status: {response.status_code}, {response.text}"
-        print(f"✅ Toggle visibility API exists (returned 404 for non-existent product)")
+        print("✅ Toggle visibility API exists (returned 404 for non-existent product)")
     
     def test_delete_product_api_exists(self, auth_headers):
         """Test that delete product API endpoint exists"""
@@ -174,7 +174,7 @@ class TestAdminProductsAPIs:
         )
         # Should return 404 (product not found) not 405 (method not allowed)
         assert response.status_code == 404, f"Unexpected status: {response.status_code}, {response.text}"
-        print(f"✅ Delete product API exists (returned 404 for non-existent product)")
+        print("✅ Delete product API exists (returned 404 for non-existent product)")
 
 
 class TestAdminOrdersWithRealData:
@@ -291,7 +291,7 @@ class TestUnauthorizedAccess:
             json={"reason": "test"}
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✅ Cancel order correctly requires authentication")
+        print("✅ Cancel order correctly requires authentication")
     
     def test_change_status_without_auth(self):
         """Test change status without authentication"""
@@ -301,7 +301,7 @@ class TestUnauthorizedAccess:
             json={"status": "confirmed"}
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✅ Change status correctly requires authentication")
+        print("✅ Change status correctly requires authentication")
     
     def test_refund_without_auth(self):
         """Test refund without authentication"""
@@ -311,7 +311,7 @@ class TestUnauthorizedAccess:
             json={}
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✅ Refund correctly requires authentication")
+        print("✅ Refund correctly requires authentication")
     
     def test_toggle_visibility_without_auth(self):
         """Test toggle visibility without authentication"""
@@ -320,7 +320,7 @@ class TestUnauthorizedAccess:
             f"{BASE_URL}/api/admin/products/{fake_product_id}/toggle-visibility"
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✅ Toggle visibility correctly requires authentication")
+        print("✅ Toggle visibility correctly requires authentication")
     
     def test_delete_product_without_auth(self):
         """Test delete product without authentication"""
@@ -329,7 +329,7 @@ class TestUnauthorizedAccess:
             f"{BASE_URL}/api/admin/products/{fake_product_id}"
         )
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✅ Delete product correctly requires authentication")
+        print("✅ Delete product correctly requires authentication")
 
 
 if __name__ == "__main__":

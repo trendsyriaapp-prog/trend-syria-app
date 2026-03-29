@@ -38,7 +38,7 @@ async def send_whatsapp_message(phone: str, message: str) -> dict:
             response = await client.post(url, data=payload)
             result = response.json()
             
-            if result.get("sent") == "true" or result.get("sent") == True:
+            if result.get("sent") == "true" or result.get("sent"):
                 return {"success": True, "message": "تم إرسال الرسالة بنجاح", "data": result}
             else:
                 return {"success": False, "message": "فشل إرسال الرسالة", "data": result}

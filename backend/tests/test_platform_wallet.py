@@ -69,7 +69,7 @@ class TestPlatformWalletAPIs:
         assert isinstance(data["total_commission_food"], (int, float)), "total_commission_food ليس رقماً"
         assert isinstance(data["total_withdrawn"], (int, float)), "total_withdrawn ليس رقماً"
         
-        print(f"✅ جلب محفظة المنصة ناجح:")
+        print("✅ جلب محفظة المنصة ناجح:")
         print(f"   - الرصيد: {data['balance']}")
         print(f"   - عمولات المنتجات: {data['total_commission_products']}")
         print(f"   - عمولات الطعام: {data['total_commission_food']}")
@@ -199,7 +199,7 @@ class TestPlatformWalletAPIs:
         
         # قد يكون هناك فرق بسيط بسبب التقريب
         assert abs(actual_balance - expected_balance) < 1, f"الرصيد غير متطابق: {actual_balance} != {expected_balance}"
-        print(f"✅ بنية المحفظة صحيحة:")
+        print("✅ بنية المحفظة صحيحة:")
         print(f"   - الرصيد المحسوب: {expected_balance}")
         print(f"   - الرصيد الفعلي: {actual_balance}")
 

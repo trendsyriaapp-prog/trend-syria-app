@@ -64,7 +64,7 @@ class TestDriverScenario:
         assert "user" in data, "No user in response"
         assert data["user"]["user_type"] == "delivery", "Wrong user_type"
         # New delivery users are NOT auto-approved
-        assert data["user"]["is_approved"] == False, "New driver should NOT be approved initially"
+        assert not data["user"]["is_approved"], "New driver should NOT be approved initially"
         
         # Store driver ID for later tests
         self.__class__.driver_id = data["user"]["id"]
@@ -193,7 +193,7 @@ class TestDriverScenario:
         assert response.status_code == 200, f"Driver login failed: {response.text}"
         
         data = response.json()
-        assert data["user"]["is_approved"] == True, "Driver should be approved now"
+        assert data["user"]["is_approved"], "Driver should be approved now"
         assert data["user"]["user_type"] == "delivery", "Wrong user type"
         
         # Update token
@@ -326,7 +326,7 @@ class TestDriverScenario:
         
         account = data[0]
         assert account["type"] == "shamcash", "Wrong account type"
-        assert account["is_default"] == True, "Should be default"
+        assert account["is_default"], "Should be default"
         print(f"Payment account verified: {account}")
 
     # ==================== 6. DRIVER STATS AND AVAILABILITY ====================

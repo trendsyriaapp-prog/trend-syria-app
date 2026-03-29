@@ -3,10 +3,8 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
-from typing import Optional
 import uuid
 import random
-import string
 
 from core.database import db, get_current_user
 

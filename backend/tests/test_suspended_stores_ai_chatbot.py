@@ -16,7 +16,7 @@ class TestSuspendedStoresAPI:
         """Test that /api/food/stores endpoint returns 200"""
         response = requests.get(f"{BASE_URL}/api/food/stores")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-        print(f"✅ GET /api/food/stores returned 200")
+        print("✅ GET /api/food/stores returned 200")
     
     def test_food_stores_returns_list(self):
         """Test that /api/food/stores returns a list"""
@@ -51,7 +51,7 @@ class TestSuspendedStoresAPI:
         assert response.status_code == 200
         stores = response.json()
         
-        suspended_stores = [s for s in stores if s.get("is_suspended") == True]
+        suspended_stores = [s for s in stores if s.get("is_suspended")]
         
         if len(suspended_stores) == 0:
             print("ℹ️ No suspended stores found - this is expected if no stores are suspended")
@@ -59,9 +59,9 @@ class TestSuspendedStoresAPI:
         
         for store in suspended_stores:
             # Suspended stores should have is_open = False
-            assert store.get("is_open") == False, f"Suspended store {store.get('name')} should have is_open=False"
+            assert not store.get("is_open"), f"Suspended store {store.get('name')} should have is_open=False"
             # Suspended stores should have open_status = "متوقف مؤقتاً"
-            assert store.get("open_status") == "متوقف مؤقتاً", f"Suspended store should have open_status='متوقف مؤقتاً'"
+            assert store.get("open_status") == "متوقف مؤقتاً", "Suspended store should have open_status='متوقف مؤقتاً'"
         
         print(f"✅ Found {len(suspended_stores)} suspended stores with correct status")
     
@@ -77,7 +77,7 @@ class TestSuspendedStoresAPI:
         # Find first suspended store index
         first_suspended_idx = None
         for i, store in enumerate(stores):
-            if store.get("is_suspended") == True:
+            if store.get("is_suspended"):
                 first_suspended_idx = i
                 break
         
@@ -90,9 +90,9 @@ class TestSuspendedStoresAPI:
             is_suspended = store.get("is_suspended", False)
             is_open = store.get("is_open", True)
             # Either suspended or closed stores should be at the end
-            assert is_suspended or not is_open, f"Non-suspended open store found after suspended stores"
+            assert is_suspended or not is_open, "Non-suspended open store found after suspended stores"
         
-        print(f"✅ Stores are correctly sorted with suspended stores at the end")
+        print("✅ Stores are correctly sorted with suspended stores at the end")
     
     def test_single_store_has_is_suspended_field(self):
         """Test that single store endpoint also returns is_suspended field"""
@@ -163,7 +163,7 @@ class TestAIChatbotAPI:
         )
         # Should return 401 or 403 without auth
         assert response.status_code in [401, 403, 422], f"Expected auth error, got {response.status_code}"
-        print(f"✅ Chatbot correctly requires authentication")
+        print("✅ Chatbot correctly requires authentication")
     
     def test_chatbot_send_message_and_get_response(self, auth_token):
         """Test sending a message to AI chatbot and getting a response"""
@@ -192,7 +192,7 @@ class TestAIChatbotAPI:
         assert "response" in data, "Response should contain AI response"
         assert len(data["response"]) > 0, "AI response should not be empty"
         
-        print(f"✅ AI chatbot responded successfully")
+        print("✅ AI chatbot responded successfully")
         print(f"   Session ID: {data['session_id']}")
         print(f"   Response preview: {data['response'][:100]}...")
     
@@ -224,7 +224,7 @@ class TestAIChatbotAPI:
         assert isinstance(data["quick_replies"], list), "quick_replies should be list"
         assert isinstance(data["needs_human"], bool), "needs_human should be boolean"
         
-        print(f"✅ Chatbot response has correct structure")
+        print("✅ Chatbot response has correct structure")
         print(f"   Quick replies: {data['quick_replies']}")
         print(f"   Needs human: {data['needs_human']}")
     
@@ -258,7 +258,7 @@ class TestAIChatbotAPI:
         
         # Session ID should be the same
         assert data2["session_id"] == session_id, "Session ID should be maintained"
-        print(f"✅ Chatbot maintains session continuity")
+        print("✅ Chatbot maintains session continuity")
 
 
 class TestAIChatbotHistory:
@@ -295,7 +295,7 @@ class TestAIChatbotHistory:
         """Test that history endpoint requires authentication"""
         response = requests.get(f"{BASE_URL}/api/ai-chatbot/history")
         assert response.status_code in [401, 403, 422], f"Expected auth error, got {response.status_code}"
-        print(f"✅ History endpoint correctly requires authentication")
+        print("✅ History endpoint correctly requires authentication")
     
     def test_chatbot_history_returns_messages(self, auth_token):
         """Test that history endpoint returns messages list"""
@@ -357,7 +357,7 @@ class TestAIChatbotHistory:
         for msg in data["messages"]:
             assert msg.get("session_id") == session_id, "All messages should have the filtered session_id"
         
-        print(f"✅ History filtering by session_id works correctly")
+        print("✅ History filtering by session_id works correctly")
 
 
 class TestQuickQuestionsAPI:
@@ -441,7 +441,7 @@ class TestRequestSupportAPI:
         assert "message" in data, "Response should contain message"
         assert "request_id" in data, "Response should contain request_id"
         
-        print(f"✅ Support request created successfully")
+        print("✅ Support request created successfully")
         print(f"   Request ID: {data['request_id']}")
 
 

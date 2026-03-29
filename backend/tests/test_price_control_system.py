@@ -158,7 +158,7 @@ class TestPriceControlAPIs:
             pytest.skip("No products available for testing")
         
         product_id = products[0]["id"]
-        product_name = products[0]["name"]
+        products[0]["name"]
         
         # Create price report
         response = self.session.post(

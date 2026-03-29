@@ -109,7 +109,7 @@ async def seed_ads_and_flash():
     print(f"   ✅ عرض فلاش: {flash_sale['name']}")
     print(f"   📦 عدد المنتجات في العرض: {len(product_ids)}")
     print(f"   💰 نسبة الخصم: {flash_sale['discount_percentage']}%")
-    print(f"   ⏰ ينتهي خلال: 48 ساعة")
+    print("   ⏰ ينتهي خلال: 48 ساعة")
     
     print("\n✅ تم إضافة البيانات التجريبية بنجاح!")
     return True

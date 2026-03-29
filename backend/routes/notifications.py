@@ -7,7 +7,6 @@ import uuid
 from typing import Optional
 
 from core.database import db, get_current_user
-from models.schemas import NotificationCreate
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -212,7 +211,7 @@ async def remove_fcm_token(user: dict = Depends(get_current_user)):
 
 # ============== إرسال إشعارات Push من الأدمن ==============
 
-from core.firebase_admin import send_push_notification, send_push_to_multiple, send_push_to_topic
+from core.firebase_admin import send_push_notification, send_push_to_multiple
 import logging
 
 logger = logging.getLogger(__name__)

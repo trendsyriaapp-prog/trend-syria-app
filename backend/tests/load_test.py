@@ -4,7 +4,6 @@
 
 from locust import HttpUser, task, between
 import random
-import json
 
 class TrendSyriaUser(HttpUser):
     """محاكاة مستخدم عادي للتطبيق"""

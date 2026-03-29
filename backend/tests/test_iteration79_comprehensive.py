@@ -5,7 +5,6 @@
 import pytest
 import requests
 import os
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com')
 
@@ -190,7 +189,7 @@ class TestChatbot:
         assert response.status_code == 200, f"Chatbot failed: {response.text}"
         data = response.json()
         assert "response" in data
-        print(f"✅ Chatbot order question response received")
+        print("✅ Chatbot order question response received")
 
 
 class TestAdminEmergencyHelp:

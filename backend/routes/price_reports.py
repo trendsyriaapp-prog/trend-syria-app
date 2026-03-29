@@ -2,7 +2,7 @@
 # نظام الإبلاغ عن الأسعار المرتفعة والمخالفات
 
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 import uuid

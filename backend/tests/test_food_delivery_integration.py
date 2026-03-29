@@ -354,7 +354,7 @@ class TestDeliveryFeeCalculationLogic:
         if free_delivery_min > 0:
             print(f"✅ Free delivery logic: if subtotal >= {free_delivery_min}, delivery is FREE")
         else:
-            print(f"ℹ️ Free delivery not enabled for this store (free_delivery_minimum=0)")
+            print("ℹ️ Free delivery not enabled for this store (free_delivery_minimum=0)")
 
 
 class TestIntegrationSummary:

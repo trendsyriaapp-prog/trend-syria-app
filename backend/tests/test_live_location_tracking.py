@@ -6,7 +6,6 @@ import pytest
 import requests
 import os
 import uuid
-from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -230,8 +229,8 @@ class TestLiveLocationTracking:
         # Should return available: false for non-existent/no location
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         data = response.json()
-        assert data.get("available") == False, "Should indicate location not available"
-        print(f"✅ PASS: Non-existent driver returns available: false")
+        assert not data.get("available"), "Should indicate location not available"
+        print("✅ PASS: Non-existent driver returns available: false")
     
     def test_get_driver_location_as_buyer_no_active_order(self, buyer_token, delivery_user_data):
         """Test GET /api/delivery/location/{driver_id} - buyer without active order should fail"""
@@ -424,7 +423,7 @@ class TestLiveLocationTracking:
         # 4. Verify deleted
         verify_resp = requests.get(f"{BASE_URL}/api/delivery/location/{driver_id}", headers=admin_headers)
         assert verify_resp.status_code == 200
-        assert verify_resp.json().get("available") == False
+        assert not verify_resp.json().get("available")
         
         print("✅ PASS: Full location lifecycle test passed")
 

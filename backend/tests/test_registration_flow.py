@@ -6,7 +6,6 @@ import pytest
 import requests
 import os
 import random
-import string
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com').rstrip('/')
 
@@ -141,7 +140,7 @@ class TestSellerRegistration:
         assert "token" in data
         assert data["user"]["user_type"] == "seller"
         # Seller should not be approved until documents are verified
-        assert data["user"]["is_approved"] == False
+        assert not data["user"]["is_approved"]
         print(f"✅ Seller registered successfully: {phone}")
 
 
@@ -169,7 +168,7 @@ class TestDeliveryRegistration:
         assert "token" in data
         assert data["user"]["user_type"] == "delivery"
         # Delivery should not be approved until documents are verified
-        assert data["user"]["is_approved"] == False
+        assert not data["user"]["is_approved"]
         print(f"✅ Delivery driver registered successfully: {phone}")
 
 

@@ -62,7 +62,7 @@ class TestNewsletterPublicAPIs:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data.get("already_subscribed") == True or "مشترك بالفعل" in data.get("message", "")
+        assert data.get("already_subscribed") or "مشترك بالفعل" in data.get("message", "")
         print(f"✓ Duplicate subscribe handled: {data['message']}")
     
     def test_subscribe_invalid_email(self):
@@ -82,7 +82,7 @@ class TestNewsletterPublicAPIs:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data.get("subscribed") == False
+        assert not data.get("subscribed")
         print("✓ Status for non-subscriber: Not subscribed")
     
     def test_status_subscribed(self):
@@ -100,7 +100,7 @@ class TestNewsletterPublicAPIs:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data.get("subscribed") == True
+        assert data.get("subscribed")
         assert "subscribed_at" in data
         print(f"✓ Status for subscriber: subscribed_at={data['subscribed_at']}")
     
@@ -141,17 +141,17 @@ class TestNewsletterPublicAPIs:
         
         # Verify unsubscribed
         status_response = requests.get(f"{BASE_URL}/api/newsletter/status", params={"email": self.test_email})
-        assert status_response.json().get("subscribed") == False
+        assert not status_response.json().get("subscribed")
         
         # Resubscribe
         response = requests.post(f"{BASE_URL}/api/newsletter/subscribe", json={"email": self.test_email})
         assert response.status_code == 200
         data = response.json()
-        assert data.get("reactivated") == True or "إعادة تفعيل" in data.get("message", "")
+        assert data.get("reactivated") or "إعادة تفعيل" in data.get("message", "")
         
         # Verify subscribed again
         final_status = requests.get(f"{BASE_URL}/api/newsletter/status", params={"email": self.test_email})
-        assert final_status.json().get("subscribed") == True
+        assert final_status.json().get("subscribed")
         print("✓ Resubscribe after unsubscribe works correctly")
 
 
@@ -305,7 +305,7 @@ class TestNewsletterWorkflow:
             f"{BASE_URL}/api/newsletter/status",
             params={"email": test_email}
         ).json()
-        assert status.get("subscribed") == True
+        assert status.get("subscribed")
         
         # 5. Unsubscribe
         unsub_response = requests.post(
@@ -319,7 +319,7 @@ class TestNewsletterWorkflow:
             f"{BASE_URL}/api/newsletter/status",
             params={"email": test_email}
         ).json()
-        assert final_status.get("subscribed") == False
+        assert not final_status.get("subscribed")
         
         print("✓ Full workflow test passed: Subscribe → Stats → Status → Unsubscribe → Verify")
 

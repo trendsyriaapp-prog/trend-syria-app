@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timezone
 import uuid
 import re
@@ -30,7 +30,7 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
             return None
         user = await db.users.find_one({"id": user_id}, {"_id": 0})
         return user
-    except:
+    except Exception:
         return None
 
 # ============== الردود المحددة مسبقاً ==============
@@ -710,7 +710,7 @@ async def check_and_send_rating_reminder(user: dict = Depends(get_current_user))
                         {"$set": {"reminder_sent": True, "reminder_sent_at": now.isoformat()}}
                     )
                     reminders_sent += 1
-            except:
+            except Exception:
                 pass
     
     return {"reminders_sent": reminders_sent}
@@ -746,7 +746,7 @@ async def get_support_analytics(user: dict = Depends(get_current_user)):
             try:
                 dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                 hour_counts[dt.hour] += 1
-            except:
+            except Exception:
                 pass
     
     peak_hours = [{"hour": h, "count": c} for h, c in sorted(hour_counts.items())]
@@ -764,7 +764,7 @@ async def get_support_analytics(user: dict = Depends(get_current_user)):
                 diff_minutes = (reply_dt - created_dt).total_seconds() / 60
                 if diff_minutes > 0:
                     response_times.append(diff_minutes)
-            except:
+            except Exception:
                 pass
     
     avg_response_time = round(sum(response_times) / len(response_times), 1) if response_times else 0
@@ -813,7 +813,7 @@ async def get_support_analytics(user: dict = Depends(get_current_user)):
                 if days_ago < 7:
                     date_str = dt.strftime("%Y-%m-%d")
                     daily_counts[date_str] += 1
-            except:
+            except Exception:
                 pass
     
     daily_tickets = [{"date": d, "count": c} for d, c in sorted(daily_counts.items())]

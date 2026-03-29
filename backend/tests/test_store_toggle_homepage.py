@@ -43,7 +43,7 @@ class TestAuthentication:
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
         assert "access_token" in data or "token" in data, "Token not in response"
-        print(f"✅ Food seller login successful")
+        print("✅ Food seller login successful")
 
 
 class TestStoreToggleStatus:
@@ -72,8 +72,8 @@ class TestStoreToggleStatus:
         assert response.status_code == 200, f"Toggle close failed: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True, "Toggle should return success=True"
-        assert data.get("is_closed") == True, "Store should be marked as closed"
+        assert data.get("success"), "Toggle should return success=True"
+        assert data.get("is_closed"), "Store should be marked as closed"
         assert "message" in data, "Response should have message"
         print(f"✅ Store closed successfully: {data.get('message')}")
     
@@ -83,8 +83,8 @@ class TestStoreToggleStatus:
         assert response.status_code == 200, f"Get status failed: {response.text}"
         
         data = response.json()
-        assert data.get("is_open") == False, "Store should be closed"
-        assert data.get("manual_close") == True, "Should indicate manual close"
+        assert not data.get("is_open"), "Store should be closed"
+        assert data.get("manual_close"), "Should indicate manual close"
         assert "مغلق" in data.get("status", ""), "Status should indicate closed"
         print(f"✅ Store status verified as closed: {data}")
     
@@ -99,9 +99,9 @@ class TestStoreToggleStatus:
         # Find the test store
         test_store = next((s for s in stores if s.get("id") == STORE_ID), None)
         if test_store:
-            assert test_store.get("is_open") == False, "Store should show as closed"
+            assert not test_store.get("is_open"), "Store should show as closed"
             assert test_store.get("open_status") == "مغلق مؤقتاً", "Status should be 'مغلق مؤقتاً'"
-            print(f"✅ Store appears as 'مغلق مؤقتاً' in stores list")
+            print("✅ Store appears as 'مغلق مؤقتاً' in stores list")
         else:
             print("⚠️ Test store not found in stores list (may not be approved)")
     
@@ -116,8 +116,8 @@ class TestStoreToggleStatus:
         assert response.status_code == 200, f"Toggle open failed: {response.text}"
         
         data = response.json()
-        assert data.get("success") == True, "Toggle should return success=True"
-        assert data.get("is_closed") == False, "Store should be marked as open"
+        assert data.get("success"), "Toggle should return success=True"
+        assert not data.get("is_closed"), "Store should be marked as open"
         print(f"✅ Store opened successfully: {data.get('message')}")
     
     def test_get_store_status_after_open(self, auth_token):
@@ -126,7 +126,7 @@ class TestStoreToggleStatus:
         assert response.status_code == 200, f"Get status failed: {response.text}"
         
         data = response.json()
-        assert data.get("manual_close") == False, "Should not be manually closed"
+        assert not data.get("manual_close"), "Should not be manually closed"
         # Note: is_open depends on working hours, but manual_close should be False
         print(f"✅ Store status verified after opening: {data}")
     
@@ -194,7 +194,7 @@ class TestHomepageDataAPI:
         for key in required_keys:
             assert key in data, f"Missing key: {key}"
         
-        print(f"✅ Homepage data API returns all required sections")
+        print("✅ Homepage data API returns all required sections")
         print(f"   - Categories: {len(data.get('categories', []))} items")
         print(f"   - Sponsored Products: {len(data.get('sponsored_products', []))} items")
         print(f"   - Best Sellers: {len(data.get('best_sellers', []))} items")
@@ -295,7 +295,7 @@ class TestFoodStoresList:
             # Check if open stores come before closed stores
             found_closed = False
             for store in stores:
-                if store.get("is_open") == False:
+                if not store.get("is_open"):
                     found_closed = True
                 elif found_closed:
                     # Found an open store after a closed one - invalid order

@@ -120,7 +120,7 @@ class TestShippingCartAPI:
         
         data = ship_res.json()
         assert data["shipping_cost"] == 0, f"Expected free shipping, got {data['shipping_cost']}"
-        assert data["qualifies_for_free"] == True
+        assert data["qualifies_for_free"]
         assert data["shipping_type"] == "free_same_city"
         assert data["cart_total"] >= FREE_SHIPPING_THRESHOLD
         print(f"✅ Scenario 1 PASS: Free shipping! cart_total={data['cart_total']}, shipping={data['shipping_cost']}, message={data.get('message')}")
@@ -146,7 +146,7 @@ class TestShippingCartAPI:
         
         data = ship_res.json()
         assert data["shipping_cost"] == NEARBY_SHIPPING_COST, f"Expected {NEARBY_SHIPPING_COST}, got {data['shipping_cost']}"
-        assert data["qualifies_for_free"] == False
+        assert not data["qualifies_for_free"]
         assert data["shipping_type"] == "same_city_below_threshold"
         assert "remaining_for_free" in data
         assert data["remaining_for_free"] > 0
@@ -173,8 +173,8 @@ class TestShippingCartAPI:
         
         data = ship_res.json()
         assert data["shipping_cost"] > 0, f"Expected shipping cost, got {data['shipping_cost']}"
-        assert data["qualifies_for_free"] == False
-        assert data.get("no_free_option") == True
+        assert not data["qualifies_for_free"]
+        assert data.get("no_free_option")
         print(f"✅ Scenario 3 PASS: Different city shipping={data['shipping_cost']}, no_free_option={data.get('no_free_option')}, message={data.get('message')}")
 
     def test_scenario3_nearby_city(self, auth_headers, clean_cart):
@@ -198,7 +198,7 @@ class TestShippingCartAPI:
         
         data = ship_res.json()
         assert data["shipping_cost"] == NEARBY_SHIPPING_COST, f"Expected {NEARBY_SHIPPING_COST}, got {data['shipping_cost']}"
-        assert data["qualifies_for_free"] == False
+        assert not data["qualifies_for_free"]
         print(f"✅ Nearby city shipping={data['shipping_cost']}, message={data.get('message')}")
 
 
@@ -219,7 +219,7 @@ class TestSingleProductShippingAPI:
         
         data = res.json()
         assert data["shipping_cost"] == 0
-        assert data["qualifies_for_free"] == True
+        assert data["qualifies_for_free"]
         print(f"✅ Single product free shipping: {data.get('message')}")
 
     def test_single_product_below_threshold(self):
@@ -236,7 +236,7 @@ class TestSingleProductShippingAPI:
         
         data = res.json()
         assert data["shipping_cost"] == NEARBY_SHIPPING_COST
-        assert data["qualifies_for_free"] == False
+        assert not data["qualifies_for_free"]
         assert "remaining_for_free" in data
         print(f"✅ Single product below threshold: shipping={data['shipping_cost']}, remaining={data['remaining_for_free']}")
 

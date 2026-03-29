@@ -168,7 +168,7 @@ class TestPlatformSettings:
         data = response.json()
         # Verify expected settings fields
         assert "food_enabled" in data or data.get("id") == "main"
-        print(f"✅ Platform settings retrieved")
+        print("✅ Platform settings retrieved")
     
     def test_get_public_settings(self):
         """Test getting public settings (no auth required)"""
@@ -205,7 +205,7 @@ class TestCommissions:
         
         data = response.json()
         assert "summary" in data
-        print(f"✅ Commissions report retrieved")
+        print("✅ Commissions report retrieved")
     
     def test_get_commission_rates(self, auth_headers):
         """Test getting commission rates"""
@@ -214,7 +214,7 @@ class TestCommissions:
         
         data = response.json()
         assert "rates" in data or "default_rate" in data
-        print(f"✅ Commission rates retrieved")
+        print("✅ Commission rates retrieved")
 
 
 class TestSubAdmins:
@@ -282,8 +282,8 @@ class TestDeliverySettings:
         response = requests.get(f"{BASE_URL}/api/settings/delivery-settings")
         assert response.status_code == 200
         
-        data = response.json()
-        print(f"✅ Delivery settings retrieved")
+        response.json()
+        print("✅ Delivery settings retrieved")
     
     def test_get_distance_delivery_settings(self):
         """Test getting distance delivery settings"""
@@ -292,15 +292,15 @@ class TestDeliverySettings:
         
         data = response.json()
         assert "base_fee" in data or "price_per_km" in data
-        print(f"✅ Distance delivery settings retrieved")
+        print("✅ Distance delivery settings retrieved")
     
     def test_get_driver_earnings_settings(self):
         """Test getting driver earnings settings"""
         response = requests.get(f"{BASE_URL}/api/settings/driver-earnings")
         assert response.status_code == 200
         
-        data = response.json()
-        print(f"✅ Driver earnings settings retrieved")
+        response.json()
+        print("✅ Driver earnings settings retrieved")
 
 
 class TestDriverReports:

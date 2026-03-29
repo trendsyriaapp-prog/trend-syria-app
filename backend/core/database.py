@@ -3,14 +3,14 @@
 # 🔒 محمي بنظام JWT محسّن مع تجديد تلقائي
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import HTTPException, Depends, Response
+from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 import jwt
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -87,7 +87,7 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[ALGORITHM])
         user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         return user
-    except:
+    except Exception:
         return None
 
 # ============== Notification Helpers ==============

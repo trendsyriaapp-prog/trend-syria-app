@@ -142,7 +142,7 @@ class TestDriverAchievements:
         first_delivery = next((a for a in data["achievements"] if a["id"] == "first_delivery"), None)
         
         assert first_delivery is not None, "first_delivery achievement not found"
-        assert first_delivery["is_unlocked"] == True, "first_delivery should be unlocked"
+        assert first_delivery["is_unlocked"], "first_delivery should be unlocked"
         assert first_delivery["unlocked_at"] is not None, "unlocked_at should be set"
         assert first_delivery["icon"] == "🚀"
         assert first_delivery["reward"] == 1000

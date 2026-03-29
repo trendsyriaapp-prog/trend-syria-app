@@ -86,7 +86,7 @@ class TestCheckDistanceEndpoint:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert data.get("success") == True, "Should return success=True"
+        assert data.get("success"), "Should return success=True"
         assert "distance_km" in data, "Should include distance_km"
         assert "estimated_time_minutes" in data, "Should include estimated_time_minutes"
         
@@ -112,7 +112,7 @@ class TestCheckDistanceEndpoint:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         
         distance = data.get("distance_km", 0)
         warning = data.get("warning")
@@ -122,7 +122,7 @@ class TestCheckDistanceEndpoint:
         
         if distance > 3:
             assert warning is not None, "Should have warning for distance > 3km"
-            assert warning.get("level") in ["low", "medium", "high"], f"Warning level should be low/medium/high"
+            assert warning.get("level") in ["low", "medium", "high"], "Warning level should be low/medium/high"
         
         print(f"✅ Medium customer: distance={distance}km, warning_level={warning.get('level') if warning else 'none'}")
         
@@ -140,7 +140,7 @@ class TestCheckDistanceEndpoint:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert data.get("success") == True
+        assert data.get("success")
         
         distance = data.get("distance_km", 0)
         warning = data.get("warning")
@@ -189,7 +189,7 @@ class TestCheckDistanceEndpoint:
         )
         
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
-        print(f"✅ Invalid store returns 404 as expected")
+        print("✅ Invalid store returns 404 as expected")
 
 
 class TestCreateOrderNoDistanceRestriction:
@@ -274,7 +274,7 @@ class TestCreateOrderNoDistanceRestriction:
                 f"Order was rejected due to distance: {error_detail}"
         
         if response.status_code == 200 or response.status_code == 201:
-            print(f"✅ Far distance order ACCEPTED (not rejected)")
+            print("✅ Far distance order ACCEPTED (not rejected)")
             # Clean up - cancel the test order
             order_data = response.json()
             order_id = order_data.get("order_id")

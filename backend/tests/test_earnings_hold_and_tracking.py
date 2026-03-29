@@ -53,7 +53,7 @@ class TestEarningsHoldSettingsAPI:
         data = response.json()
         
         # Verify response structure
-        assert data["success"] == True
+        assert data["success"]
         assert "settings" in data
         settings = data["settings"]
         
@@ -86,7 +86,7 @@ class TestEarningsHoldSettingsAPI:
         data = response.json()
         
         # Verify response
-        assert data["success"] == True
+        assert data["success"]
         assert "message" in data
         assert "settings" in data
         
@@ -94,8 +94,8 @@ class TestEarningsHoldSettingsAPI:
         settings = data["settings"]
         assert settings["food_hold_hours"] == 2
         assert settings["products_hold_hours"] == 48
-        assert settings["enabled"] == True
-        print(f"✓ Settings updated successfully")
+        assert settings["enabled"]
+        print("✓ Settings updated successfully")
         
         # Restore default settings
         restore_settings = {
@@ -108,7 +108,7 @@ class TestEarningsHoldSettingsAPI:
             headers={"Authorization": f"Bearer {admin_token}"},
             json=restore_settings
         )
-        print(f"✓ Settings restored to defaults")
+        print("✓ Settings restored to defaults")
     
     def test_get_earnings_hold_settings_unauthorized(self):
         """Test that non-admins cannot access earnings hold settings"""
@@ -123,7 +123,7 @@ class TestEarningsHoldSettingsAPI:
             headers={"Authorization": f"Bearer {driver_token}"}
         )
         assert response.status_code == 403
-        print(f"✓ Non-admin correctly denied access (403)")
+        print("✓ Non-admin correctly denied access (403)")
 
 
 # ==========================================
@@ -143,7 +143,7 @@ class TestHeldEarningsSummaryAPI:
         data = response.json()
         
         # Verify response structure
-        assert data["success"] == True
+        assert data["success"]
         assert "summary" in data
         summary = data["summary"]
         
@@ -170,7 +170,7 @@ class TestHeldEarningsSummaryAPI:
         data = response.json()
         
         # Verify response
-        assert data["success"] == True
+        assert data["success"]
         assert "message" in data
         assert "result" in data
         result = data["result"]
@@ -245,9 +245,9 @@ class TestDriverLocationTrackingAPI:
         assert response.status_code == 200
         data = response.json()
         
-        assert data["success"] == True
+        assert data["success"]
         assert "message" in data
-        print(f"✓ Driver location updated successfully")
+        print("✓ Driver location updated successfully")
     
     def test_update_driver_location_with_order(self, driver_token):
         """Test PUT /api/delivery/location with order_id"""
@@ -266,8 +266,8 @@ class TestDriverLocationTrackingAPI:
         assert response.status_code == 200
         data = response.json()
         
-        assert data["success"] == True
-        print(f"✓ Driver location with order_id updated successfully")
+        assert data["success"]
+        print("✓ Driver location with order_id updated successfully")
 
 
 # ==========================================
@@ -336,7 +336,7 @@ class TestEarningsHoldIntegration:
             json={"latitude": 33.5138, "longitude": 36.2765}
         )
         assert location_resp.status_code == 200
-        print(f"✓ Step 4: Location tracking working")
+        print("✓ Step 4: Location tracking working")
         
         print("✓ Full integration flow completed successfully!")
 

@@ -10,8 +10,6 @@ Tests the pickup code flow between seller and driver:
 import pytest
 import requests
 import os
-import time
-import random
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -222,7 +220,7 @@ class TestDriverAvailabilityValidation:
     def test_04_unavailable_driver_cannot_accept_food_order(self):
         """Unavailable driver cannot accept food orders - should return 403"""
         # First ensure driver is unavailable
-        avail_response = requests.put(
+        requests.put(
             f"{BASE_URL}/api/delivery/availability",
             json={"is_available": False},
             headers={"Authorization": f"Bearer {self.driver_token}"}

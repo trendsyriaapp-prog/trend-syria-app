@@ -1,7 +1,7 @@
 # /app/backend/routes/messages.py
 # مسارات الرسائل والمحادثات
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from datetime import datetime, timezone
 import uuid
 

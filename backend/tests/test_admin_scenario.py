@@ -271,7 +271,7 @@ def test_16_get_public_settings():
     assert response.status_code == 200
     data = response.json()
     assert "delivery_fees" in data
-    print(f"✅ Public settings retrieved")
+    print("✅ Public settings retrieved")
 
 
 def test_17_get_admin_settings(admin_token):
@@ -279,8 +279,8 @@ def test_17_get_admin_settings(admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = requests.get(f"{BASE_URL}/api/admin/settings", headers=headers)
     assert response.status_code == 200
-    data = response.json()
-    print(f"✅ Admin settings retrieved")
+    response.json()
+    print("✅ Admin settings retrieved")
 
 
 # ============== Featured Stores Tests ==============
@@ -344,7 +344,7 @@ def test_21_create_coupon(admin_token):
             headers=headers
         )
         if delete_response.status_code == 200:
-            print(f"✅ Test coupon cleaned up")
+            print("✅ Test coupon cleaned up")
 
 
 # ============== Orders Management Tests ==============
@@ -376,7 +376,7 @@ def test_24_create_and_delete_sub_admin(admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     random_phone = f"098{uuid.uuid4().hex[:7]}"
     sub_admin_data = {
-        "full_name": f"TEST_مدير تنفيذي اختبار",
+        "full_name": "TEST_مدير تنفيذي اختبار",
         "phone": random_phone,
         "password": "SubAdmin@123",
         "city": "دمشق"
@@ -395,7 +395,7 @@ def test_24_create_and_delete_sub_admin(admin_token):
                 headers=headers
             )
             if delete_response.status_code == 200:
-                print(f"✅ Test sub-admin cleaned up")
+                print("✅ Test sub-admin cleaned up")
             assert delete_response.status_code == 200
     else:
         # Phone might already exist

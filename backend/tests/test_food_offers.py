@@ -75,7 +75,7 @@ class TestFoodOffersAPI(TestAuthSetup):
         assert data["offer_type"] == "buy_x_get_y"
         assert data["buy_quantity"] == 2
         assert data["get_quantity"] == 1
-        assert data["is_active"] == True
+        assert data["is_active"]
         assert "store_id" in data, "Response should contain store_id"
         
         # Save for later tests
@@ -125,7 +125,7 @@ class TestFoodOffersAPI(TestAuthSetup):
         
         assert data["offer_type"] == "fixed_discount"
         assert data["discount_amount"] == 5000
-        assert data["is_active"] == False
+        assert not data["is_active"]
     
     def test_04_get_my_offers(self, seller_token):
         """Test getting seller's offers (GET /api/food/my-offers)"""
@@ -163,7 +163,7 @@ class TestFoodOffersAPI(TestAuthSetup):
         # Only active offers should be returned
         for offer in offers:
             # All returned offers should be active
-            assert offer.get("is_active") == True, f"Public endpoint should only return active offers: {offer}"
+            assert offer.get("is_active"), f"Public endpoint should only return active offers: {offer}"
             assert offer["store_id"] == TEST_STORE_ID
     
     def test_06_update_offer_toggle_active(self, seller_token):
@@ -188,7 +188,7 @@ class TestFoodOffersAPI(TestAuthSetup):
         
         deactivated = next((o for o in offers if o["id"] == offer_id), None)
         # Should not be in active offers list
-        assert deactivated is None or deactivated.get("is_active") == False, "Offer should be deactivated"
+        assert deactivated is None or not deactivated.get("is_active"), "Offer should be deactivated"
     
     def test_07_update_offer_quantities(self, seller_token):
         """Test updating offer quantities"""

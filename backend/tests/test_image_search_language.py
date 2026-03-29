@@ -64,7 +64,7 @@ class TestImageSearchAPI:
         )
         # Should return 400 for invalid image, not 404
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
-        print(f"✓ Image search endpoint exists and returns 400 for invalid image")
+        print("✓ Image search endpoint exists and returns 400 for invalid image")
     
     def test_image_search_validation_empty_image(self):
         """Test that empty image_base64 returns proper error"""
@@ -148,7 +148,7 @@ class TestImageUploadAPI:
         )
         # Should return 400 for unsupported file type, not 404
         assert response.status_code == 400, f"Expected 400, got {response.status_code}"
-        print(f"✓ Image upload endpoint exists and validates file type")
+        print("✓ Image upload endpoint exists and validates file type")
     
     def test_image_upload_validation_unsupported_type(self):
         """Test that unsupported file type returns proper error"""
@@ -209,7 +209,7 @@ class TestRecentSearchesAPI:
         """Test that /api/image-search/recent requires authentication"""
         response = requests.get(f"{BASE_URL}/api/image-search/recent")
         assert response.status_code in [401, 403], f"Expected 401/403, got {response.status_code}"
-        print(f"✓ Recent searches endpoint requires authentication")
+        print("✓ Recent searches endpoint requires authentication")
 
 
 class TestLanguageIntegration:

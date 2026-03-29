@@ -6,7 +6,6 @@ Tests: Smart Route Bar, Order Acceptance, GPS Check, Pickup/Delivery Codes, Prod
 import pytest
 import requests
 import os
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shopper-suite.preview.emergentagent.com')
 
@@ -77,7 +76,7 @@ class TestDriverAvailability:
                                json={"is_available": True})
         assert response.status_code == 200, f"Failed to set availability: {response.text}"
         data = response.json()
-        assert data.get("is_available") == True, "Availability not set to True"
+        assert data.get("is_available"), "Availability not set to True"
         print("✅ Driver set to available")
     
     def test_toggle_availability_off(self, auth_headers):
@@ -334,7 +333,7 @@ class TestProductOrderLocking:
         
         # If there are active food orders, products should be locked
         if active_food > 0:
-            assert is_locked == True, "Products should be locked when food orders are active"
+            assert is_locked, "Products should be locked when food orders are active"
             print("✅ Product orders correctly locked due to active food orders")
         else:
             print("ℹ️ No active food orders - products not locked")

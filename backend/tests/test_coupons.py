@@ -208,7 +208,7 @@ class TestCouponSystem:
         if updated_coupon:
             assert updated_coupon["name"] == "Updated Name"
             assert updated_coupon["discount_percentage"] == 25
-            assert updated_coupon["is_active"] == False
+            assert not updated_coupon["is_active"]
             print(f"Coupon {coupon_code} updated successfully")
         
         # Cleanup
@@ -321,7 +321,7 @@ class TestCouponSystem:
         assert validate_response.status_code == 200, f"Validation failed: {validate_response.text}"
         
         data = validate_response.json()
-        assert data["valid"] == True
+        assert data["valid"]
         assert "discount" in data
         assert "coupon" in data
         
@@ -396,7 +396,7 @@ class TestCouponSystem:
         assert validate_response.status_code == 200
         
         data = validate_response.json()
-        assert data["coupon"]["is_free_delivery"] == True
+        assert data["coupon"]["is_free_delivery"]
         assert data["discount"] == 0  # Free delivery doesn't affect product discount
         print(f"Free delivery coupon {coupon_code} validated")
         

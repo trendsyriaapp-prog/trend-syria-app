@@ -67,7 +67,7 @@ class TestFoodProductWeightVariants:
             assert "id" in data or "message" in data
             print(f"✅ Product created successfully: {data}")
         else:
-            print(f"⚠️ Product creation returned 422 - weight_variants may not be supported in model")
+            print("⚠️ Product creation returned 422 - weight_variants may not be supported in model")
 
 
 class TestDriverImageOnOrderAccept:
@@ -186,9 +186,9 @@ class TestChatbotResponses:
             
             # Check that it doesn't say "per order"
             if "لكل طلب" in response_text:
-                print(f"⚠️ Chatbot incorrectly mentions 'per order' earnings")
+                print("⚠️ Chatbot incorrectly mentions 'per order' earnings")
             else:
-                print(f"✅ Chatbot doesn't mention 'per order' earnings")
+                print("✅ Chatbot doesn't mention 'per order' earnings")
         else:
             print(f"ℹ️ Chatbot endpoint returned {response.status_code}")
 

@@ -528,7 +528,7 @@ async def check_batch_readiness_and_notify_driver(batch_id: str, ready_order_id:
     ready_count = len(ready_orders)
     
     # إذا جهز أول طلب (حوالي 50% أو أكثر)، أرسل إشعار للسائقين
-    ready_percentage = (ready_count / total_orders) * 100
+    (ready_count / total_orders) * 100
     
     # إذا جهز على الأقل طلب واحد ولم يتم إرسال إشعار بعد
     first_order = batch_orders[0]
@@ -787,7 +787,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     platform_settings = await db.platform_settings.find_one({"id": "main"})
     food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
     # رسوم التوصيل الموحدة من إعدادات المنصة
-    food_delivery_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
+    platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
     
     # جلب رسوم الطقس الصعب
     weather_surcharge = platform_settings.get("weather_surcharge", {}) if platform_settings else {}
@@ -810,7 +810,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
                         end_datetime = end_datetime.replace(tzinfo=timezone.utc)
                     if datetime.now(timezone.utc) <= end_datetime:
                         is_global_free_shipping = True
-                except:
+                except Exception:
                     pass
             else:
                 is_global_free_shipping = True
@@ -1283,7 +1283,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
     platform_settings = await db.platform_settings.find_one({"id": "main"})
     food_free_delivery_threshold = platform_settings.get("food_free_delivery_threshold", 100000) if platform_settings else 100000
     # رسوم التوصيل الموحدة من إعدادات المنصة
-    food_delivery_fee = platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
+    platform_settings.get("food_delivery_fee", 5000) if platform_settings else 5000
     
     # التحقق من عرض الشحن المجاني الشامل
     global_free_shipping = await db.settings.find_one({"key": "global_free_shipping"})
@@ -1300,7 +1300,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
                         end_datetime = end_datetime.replace(tzinfo=timezone.utc)
                     if datetime.now(timezone.utc) <= end_datetime:
                         is_global_free_shipping = True
-                except:
+                except Exception:
                     pass
             else:
                 is_global_free_shipping = True
@@ -2718,7 +2718,7 @@ async def accept_food_order(
     except HTTPException:
         # إعادة رفع HTTPException بدون تعديل
         raise
-    except Exception as e:
+    except Exception:
         # في حالة أي خطأ آخر، إلغاء القفل
         await release_order_lock()
         raise HTTPException(status_code=500, detail="حدث خطأ أثناء قبول الطلب. حاول مرة أخرى.")
