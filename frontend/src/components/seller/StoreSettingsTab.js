@@ -65,8 +65,8 @@ const StoreSettingsTab = () => {
   const fetchData = async () => {
     try {
       const [settingsRes, accountsRes] = await Promise.all([
-        axios.get(`${API}/auth/seller/store-settings`),
-        axios.get(`${API}/auth/seller/payment-accounts`)
+        axios.get(`${API}/api/auth/seller/store-settings`),
+        axios.get(`${API}/api/auth/seller/payment-accounts`)
       ]);
       setStoreSettings(settingsRes.data);
       setStoreLogo(settingsRes.data.store_logo || null);
@@ -100,7 +100,7 @@ const StoreSettingsTab = () => {
         const imageDataUrl = event.target.result;
         
         try {
-          await axios.put(`${API}/auth/seller/store-settings`, { 
+          await axios.put(`${API}/api/auth/seller/store-settings`, { 
             ...storeSettings,
             store_logo: imageDataUrl 
           });
@@ -134,7 +134,7 @@ const StoreSettingsTab = () => {
     
     setSaving(true);
     try {
-      await axios.put(`${API}/auth/seller/store-settings`, storeSettings);
+      await axios.put(`${API}/api/auth/seller/store-settings`, storeSettings);
       toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المتجر بنجاح" });
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
@@ -147,10 +147,10 @@ const StoreSettingsTab = () => {
     e.preventDefault();
     try {
       if (editingAccount) {
-        await axios.put(`${API}/auth/seller/payment-accounts/${editingAccount.id}`, newAccount);
+        await axios.put(`${API}/api/auth/seller/payment-accounts/${editingAccount.id}`, newAccount);
         toast({ title: "تم التحديث", description: "تم تحديث الحساب بنجاح" });
       } else {
-        await axios.post(`${API}/auth/seller/payment-accounts`, newAccount);
+        await axios.post(`${API}/api/auth/seller/payment-accounts`, newAccount);
         toast({ title: "تمت الإضافة", description: "تم إضافة حساب الاستلام بنجاح" });
       }
       setShowAddAccount(false);
@@ -165,7 +165,7 @@ const StoreSettingsTab = () => {
   const handleDeleteAccount = async (accountId) => {
     if (!window.confirm('هل تريد حذف هذا الحساب؟')) return;
     try {
-      await axios.delete(`${API}/auth/seller/payment-accounts/${accountId}`);
+      await axios.delete(`${API}/api/auth/seller/payment-accounts/${accountId}`);
       toast({ title: "تم الحذف", description: "تم حذف الحساب بنجاح" });
       fetchData();
     } catch (error) {
@@ -175,7 +175,7 @@ const StoreSettingsTab = () => {
 
   const handleSetDefault = async (accountId) => {
     try {
-      await axios.post(`${API}/auth/seller/payment-accounts/${accountId}/default`);
+      await axios.post(`${API}/api/auth/seller/payment-accounts/${accountId}/default`);
       toast({ title: "تم التحديث", description: "تم تعيين الحساب كافتراضي" });
       fetchData();
     } catch (error) {

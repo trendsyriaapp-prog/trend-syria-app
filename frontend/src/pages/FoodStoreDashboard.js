@@ -52,7 +52,7 @@ const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/wallet/withdraw`, {
+      await axios.post(`${API}/api/wallet/withdraw`, {
         amount: withdrawAmount,
         shamcash_phone: phone
       }, {
@@ -219,7 +219,7 @@ const FoodStoreDashboard = () => {
   const checkDriverArrivingNotifications = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${API}/notifications/unread`, {
+      const res = await axios.get(`${API}/api/notifications/unread`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -246,7 +246,7 @@ const FoodStoreDashboard = () => {
   const fetchWalletData = async () => {
     if (!token) return;
     try {
-      const res = await axios.get(`${API}/wallet/balance`, {
+      const res = await axios.get(`${API}/api/wallet/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setWalletData({

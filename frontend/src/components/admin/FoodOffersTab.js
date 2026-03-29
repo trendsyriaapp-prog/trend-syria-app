@@ -33,13 +33,13 @@ const FoodOffersTab = ({ token }) => {
   const fetchData = async () => {
     try {
       const [offersRes, flashRes, requestsRes] = await Promise.all([
-        axios.get(`${API}/admin/food-offers`, {
+        axios.get(`${API}/api/admin/food-offers`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API}/admin/flash-sales`, {
+        axios.get(`${API}/api/admin/flash-sales`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API}/admin/flash-sale-requests`, {
+        axios.get(`${API}/api/admin/flash-sale-requests`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -56,7 +56,7 @@ const FoodOffersTab = ({ token }) => {
 
   const handleToggleOffer = async (offer) => {
     try {
-      await axios.put(`${API}/admin/food-offers/${offer.id}`, 
+      await axios.put(`${API}/api/admin/food-offers/${offer.id}`, 
         { is_active: !offer.is_active },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -72,11 +72,11 @@ const FoodOffersTab = ({ token }) => {
     
     try {
       if (deleteModal.type === 'offer') {
-        await axios.delete(`${API}/admin/food-offers/${deleteModal.id}`, {
+        await axios.delete(`${API}/api/admin/food-offers/${deleteModal.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.delete(`${API}/admin/flash-sales/${deleteModal.id}`, {
+        await axios.delete(`${API}/api/admin/flash-sales/${deleteModal.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -90,7 +90,7 @@ const FoodOffersTab = ({ token }) => {
 
   const handleToggleFlash = async (flash) => {
     try {
-      await axios.put(`${API}/admin/flash-sales/${flash.id}`, 
+      await axios.put(`${API}/api/admin/flash-sales/${flash.id}`, 
         { is_active: !flash.is_active },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -463,7 +463,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
   const handleApprove = async (requestId) => {
     setProcessing(requestId);
     try {
-      await axios.put(`${API}/admin/flash-sale-requests/${requestId}/approve`, {}, {
+      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تمت الموافقة", description: "تمت إضافة المنتجات لعرض الفلاش" });
@@ -478,7 +478,7 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
   const handleReject = async (requestId, reason, refund = true) => {
     setProcessing(requestId);
     try {
-      await axios.put(`${API}/admin/flash-sale-requests/${requestId}/reject?reason=${encodeURIComponent(reason)}&refund=${refund}`, {}, {
+      await axios.put(`${API}/api/admin/flash-sale-requests/${requestId}/reject?reason=${encodeURIComponent(reason)}&refund=${refund}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الرفض", description: refund ? "تم رفض الطلب واسترداد الرسوم" : "تم رفض الطلب" });
@@ -799,7 +799,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
   const fetchAllProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await axios.get(`${API}/food/products?limit=500`);
+      const res = await axios.get(`${API}/api/food/products?limit=500`);
       setAllProducts(res.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -859,12 +859,12 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
       };
 
       if (flash?.id) {
-        await axios.put(`${API}/admin/flash-sales/${flash.id}`, data, {
+        await axios.put(`${API}/api/admin/flash-sales/${flash.id}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تم التحديث", description: "تم تحديث عرض الفلاش" });
       } else {
-        await axios.post(`${API}/admin/flash-sales`, data, {
+        await axios.post(`${API}/api/admin/flash-sales`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تم الإنشاء", description: "تم إنشاء عرض الفلاش" });

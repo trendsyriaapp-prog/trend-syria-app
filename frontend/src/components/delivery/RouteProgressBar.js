@@ -217,7 +217,7 @@ const RouteProgressBar = ({
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const endpoint = `${API}/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
+          const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           
           const response = await axios.post(endpoint, {}, {
             headers: { Authorization: `Bearer ${token}` }
@@ -301,8 +301,8 @@ const RouteProgressBar = ({
       const isFood = station.orderType === 'food';
       
       const endpoint = isFood 
-        ? `${API}/food/orders/delivery/${order.id}/verify-pickup`
-        : `${API}/orders/${order.id}/delivery/pickup`;
+        ? `${API}/api/food/orders/delivery/${order.id}/verify-pickup`
+        : `${API}/api/orders/${order.id}/delivery/pickup`;
       
       const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
 
@@ -339,8 +339,8 @@ const RouteProgressBar = ({
       const isFood = station.orderType === 'food';
       
       const endpoint = isFood 
-        ? `${API}/food/orders/delivery/${order.id}/verify-code`
-        : `${API}/delivery/orders/${order.id}/deliver`;
+        ? `${API}/api/food/orders/delivery/${order.id}/verify-code`
+        : `${API}/api/delivery/orders/${order.id}/deliver`;
 
       await axios.post(endpoint, { delivery_code: deliveryCode }, {
         headers: { Authorization: `Bearer ${token}` }

@@ -17,7 +17,7 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
   // إرسال الموقع للخادم
   const sendLocationToServer = async (latitude, longitude, speed = null, heading = null) => {
     try {
-      await axios.put(`${API}/delivery/location`, {
+      await axios.put(`${API}/api/delivery/location`, {
         latitude,
         longitude,
         speed,

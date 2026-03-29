@@ -76,7 +76,7 @@ const FoodStorePage = () => {
 
   const fetchBadgeSettings = async () => {
     try {
-      const res = await axios.get(`${API}/settings/product-badges`);
+      const res = await axios.get(`${API}/api/settings/product-badges`);
       setBadgeSettings(res.data);
     } catch (e) {
       // لا مشكلة
@@ -86,8 +86,8 @@ const FoodStorePage = () => {
   const fetchStore = async () => {
     try {
       const [storeRes, offersRes] = await Promise.all([
-        axios.get(`${API}/food/stores/${storeId}`),
-        axios.get(`${API}/food/stores/${storeId}/offers`)
+        axios.get(`${API}/api/food/stores/${storeId}`),
+        axios.get(`${API}/api/food/stores/${storeId}/offers`)
       ]);
       setStore(storeRes.data);
       setOffers(offersRes.data || []);
@@ -108,7 +108,7 @@ const FoodStorePage = () => {
 
   const fetchPriceRating = async () => {
     try {
-      const res = await axios.get(`${API}/price-reports/store/${storeId}/rating`);
+      const res = await axios.get(`${API}/api/price-reports/store/${storeId}/rating`);
       setPriceRating(res.data);
     } catch (e) {
       // لا مشكلة إذا فشل - المتجر جديد أو لا توجد بيانات
@@ -243,7 +243,7 @@ const FoodStorePage = () => {
               onClick={async () => {
                 if (!reviews.stats) {
                   try {
-                    const res = await axios.get(`${API}/food/orders/store/${storeId}/reviews`);
+                    const res = await axios.get(`${API}/api/food/orders/store/${storeId}/reviews`);
                     setReviews(res.data);
                   } catch (e) {}
                 }

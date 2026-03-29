@@ -129,9 +129,9 @@ const FoodCartPage = () => {
       try {
         // جلب بيانات المتجر وإعدادات المنصة
         const [storeRes, offersRes, settingsRes] = await Promise.all([
-          axios.get(`${API}/food/stores/${storeId}`),
-          axios.get(`${API}/food/stores/${storeId}/offers`),
-          axios.get(`${API}/settings/public`).catch(() => ({ data: {} }))
+          axios.get(`${API}/api/food/stores/${storeId}`),
+          axios.get(`${API}/api/food/stores/${storeId}/offers`),
+          axios.get(`${API}/api/settings/public`).catch(() => ({ data: {} }))
         ]);
         
         if (!isMounted) return;
@@ -147,7 +147,7 @@ const FoodCartPage = () => {
         // جلب المحفظة إذا كان المستخدم مسجل
         if (token) {
           try {
-            const walletRes = await axios.get(`${API}/wallet/balance`, {
+            const walletRes = await axios.get(`${API}/api/wallet/balance`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (isMounted) setWalletBalance(walletRes.data.balance || 0);
@@ -158,8 +158,8 @@ const FoodCartPage = () => {
         if (user) {
           try {
             const [addressesRes, paymentsRes] = await Promise.all([
-              axios.get(`${API}/user/addresses`),
-              axios.get(`${API}/user/payment-methods`)
+              axios.get(`${API}/api/user/addresses`),
+              axios.get(`${API}/api/user/payment-methods`)
             ]);
             
             if (!isMounted) return;
@@ -249,7 +249,7 @@ const FoodCartPage = () => {
     try {
       // استدعاء API حساب المسافة الجديد
       const [feeRes, warningRes] = await Promise.all([
-        axios.get(`${API}/shipping/calculate-by-distance`, {
+        axios.get(`${API}/api/shipping/calculate-by-distance`, {
           params: {
             store_lat: storeLat,
             store_lon: storeLon,
@@ -259,7 +259,7 @@ const FoodCartPage = () => {
             order_type: 'food'
           }
         }),
-        axios.post(`${API}/food/orders/check-distance`, {
+        axios.post(`${API}/api/food/orders/check-distance`, {
           store_id: storeId,
           customer_lat: customerLat,
           customer_lng: customerLon
@@ -383,7 +383,7 @@ const FoodCartPage = () => {
     setCouponError('');
     
     try {
-      const res = await axios.post(`${API}/coupons/validate`, {
+      const res = await axios.post(`${API}/api/coupons/validate`, {
         code: couponCode.toUpperCase(),
         order_amount: subtotal - offerDiscount,
         order_type: 'food',
@@ -449,7 +449,7 @@ const FoodCartPage = () => {
       // تحديث العنوان المحفوظ بالموقع الجديد
       const selectedAddr = savedAddresses.find(a => a.id === selectedAddressId);
       if (selectedAddr) {
-        await axios.put(`${API}/user/addresses/${selectedAddressId}`, {
+        await axios.put(`${API}/api/user/addresses/${selectedAddressId}`, {
           ...selectedAddr,
           latitude: tempLocation.latitude,
           longitude: tempLocation.longitude
@@ -532,7 +532,7 @@ const FoodCartPage = () => {
       let addressData;
       if (useNewAddress || savedAddresses.length === 0) {
         if (newAddress.is_default || savedAddresses.length === 0) {
-          await axios.post(`${API}/user/addresses`, newAddress);
+          await axios.post(`${API}/api/user/addresses`, newAddress);
         }
         const fullAddress = `${newAddress.area}${newAddress.street_number ? ' - شارع ' + newAddress.street_number : ''}${newAddress.building_number ? ' - بناء ' + newAddress.building_number : ''}${newAddress.apartment_number ? ' - شقة ' + newAddress.apartment_number : ''}`;
         addressData = { 
@@ -559,7 +559,7 @@ const FoodCartPage = () => {
       if (useNewPayment || savedPayments.length === 0) {
         paymentMethod = newPayment.type;
         if (newPayment.type !== 'wallet' && newPayment.type !== 'bank_card' && newPayment.is_default) {
-          await axios.post(`${API}/user/payment-methods`, newPayment);
+          await axios.post(`${API}/api/user/payment-methods`, newPayment);
         }
       } else if (selectedPaymentId) {
         const pay = savedPayments.find(p => p.id === selectedPaymentId);
@@ -606,7 +606,7 @@ const FoodCartPage = () => {
         return;
       }
       
-      const res = await axios.post(`${API}/food/orders`, orderData, {
+      const res = await axios.post(`${API}/api/food/orders`, orderData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

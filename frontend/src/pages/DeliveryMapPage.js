@@ -46,7 +46,7 @@ const DeliveryMapPage = () => {
     const fetchData = async () => {
       try {
         // التحقق من حالة الوثائق أولاً
-        const statusRes = await axios.get(`${API}/delivery/documents/status`);
+        const statusRes = await axios.get(`${API}/api/delivery/documents/status`);
         setDocStatus(statusRes.data.status);
         
         if (statusRes.data.status !== 'approved') {
@@ -56,10 +56,10 @@ const DeliveryMapPage = () => {
 
         // جلب جميع الطلبات
         const [availableRes, myRes, availableFoodRes, myFoodRes] = await Promise.all([
-          axios.get(`${API}/delivery/available-orders`),
-          axios.get(`${API}/delivery/my-orders`),
-          axios.get(`${API}/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
-          axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
+          axios.get(`${API}/api/delivery/available-orders`),
+          axios.get(`${API}/api/delivery/my-orders`),
+          axios.get(`${API}/api/food/orders/delivery/available`).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
+          axios.get(`${API}/api/delivery/my-food-orders`).catch(() => ({ data: [] }))
         ]);
         
         setOrders(availableRes.data);
@@ -129,7 +129,7 @@ const DeliveryMapPage = () => {
           }
           
           const evalRes = await axios.post(
-            `${API}/food/orders/delivery/smart-route/evaluate`,
+            `${API}/api/food/orders/delivery/smart-route/evaluate`,
             { 
               order_id: order.id,
               driver_lat: driverLat,
@@ -178,12 +178,12 @@ const DeliveryMapPage = () => {
       // التحقق من نوع الطلب (عادي أم تجميعي)
       if (order.is_batch && order.batch_info?.batch_id) {
         // قبول جميع طلبات الدفعة
-        await axios.post(`${API}/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`, {}, {
+        await axios.post(`${API}/api/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
         // طلب عادي
-        await axios.post(`${API}/food/orders/delivery/${order.id}/accept`, {}, {
+        await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -193,10 +193,10 @@ const DeliveryMapPage = () => {
       
       // إعادة جلب البيانات
       const [availableFoodRes, myFoodRes] = await Promise.all([
-        axios.get(`${API}/food/orders/delivery/available`, {
+        axios.get(`${API}/api/food/orders/delivery/available`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { single_orders: [], batch_orders: [] } })),
-        axios.get(`${API}/delivery/my-food-orders`, {
+        axios.get(`${API}/api/delivery/my-food-orders`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: [] }))
       ]);
@@ -218,11 +218,11 @@ const DeliveryMapPage = () => {
   // قبول طلب منتجات
   const handleTakeOrder = async (order) => {
     try {
-      await axios.post(`${API}/orders/${order.id}/delivery/pickup`);
+      await axios.post(`${API}/api/orders/${order.id}/delivery/pickup`);
       // إعادة جلب البيانات
       const [availableRes, myRes] = await Promise.all([
-        axios.get(`${API}/delivery/available-orders`),
-        axios.get(`${API}/delivery/my-orders`)
+        axios.get(`${API}/api/delivery/available-orders`),
+        axios.get(`${API}/api/delivery/my-orders`)
       ]);
       setOrders(availableRes.data);
       setMyOrders(myRes.data);

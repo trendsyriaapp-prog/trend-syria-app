@@ -112,7 +112,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
 
   const checkFavorite = async () => {
     try {
-      const res = await axios.get(`${API}/favorites/check/${product.id}`, {
+      const res = await axios.get(`${API}/api/favorites/check/${product.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsFavorite(res.data.is_favorite);
@@ -137,7 +137,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
     setFavoriteLoading(true);
     try {
       if (isFavorite) {
-        await axios.delete(`${API}/favorites/${product.id}`, {
+        await axios.delete(`${API}/api/favorites/${product.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setIsFavorite(false);
@@ -146,7 +146,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
           description: "تمت إزالة المنتج من المفضلة"
         });
       } else {
-        await axios.post(`${API}/favorites/${product.id}`, {}, {
+        await axios.post(`${API}/api/favorites/${product.id}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setIsFavorite(true);

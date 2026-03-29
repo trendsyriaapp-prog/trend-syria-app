@@ -118,9 +118,9 @@ const FoodFreeDeliveryPage = () => {
       setLoading(true);
       try {
         const [productsRes, settingsRes, badgeRes] = await Promise.all([
-          axios.get(`${API}/food/products`, { params: { city: userCity, limit: 100 } }),
-          axios.get(`${API}/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 75000 } })),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+          axios.get(`${API}/api/food/products`, { params: { city: userCity, limit: 100 } }),
+          axios.get(`${API}/api/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 75000 } })),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         const allProductsData = productsRes.data || [];

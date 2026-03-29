@@ -85,8 +85,8 @@ const CheckoutPage = () => {
         try {
           // جلب بيانات الشحن العامة والتفصيلية لكل بائع
           const [shippingRes, detailedRes] = await Promise.all([
-            axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(selectedCity)}`),
-            axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(selectedCity)}`)
+            axios.get(`${API}/api/shipping/cart?customer_city=${encodeURIComponent(selectedCity)}`),
+            axios.get(`${API}/api/shipping/cart/detailed?customer_city=${encodeURIComponent(selectedCity)}`)
           ]);
           setShippingInfo(shippingRes.data);
           setSellerShippingDetails(detailedRes.data.sellers || []);
@@ -115,9 +115,9 @@ const CheckoutPage = () => {
   const fetchSavedData = async () => {
     try {
       const [addressesRes, paymentsRes, walletRes] = await Promise.all([
-        axios.get(`${API}/user/addresses`),
-        axios.get(`${API}/user/payment-methods`),
-        axios.get(`${API}/wallet/balance`).catch(() => ({ data: { balance: 0 } }))
+        axios.get(`${API}/api/user/addresses`),
+        axios.get(`${API}/api/user/payment-methods`),
+        axios.get(`${API}/api/wallet/balance`).catch(() => ({ data: { balance: 0 } }))
       ]);
       setSavedAddresses(addressesRes.data);
       setSavedPayments(paymentsRes.data);
@@ -168,7 +168,7 @@ const CheckoutPage = () => {
     try {
       let addressData;
       if (useNewAddress) {
-        await axios.post(`${API}/user/addresses`, newAddress);
+        await axios.post(`${API}/api/user/addresses`, newAddress);
         const fullAddress = `${newAddress.area} - شارع ${newAddress.street_number} - بناء ${newAddress.building_number} - منزل ${newAddress.apartment_number}`;
         addressData = { 
           address: fullAddress, 
@@ -206,7 +206,7 @@ const CheckoutPage = () => {
         }
         // لا نحفظ طريقة الدفع للبطاقة أو المحفظة
         if (newPayment.type !== 'bank_card' && newPayment.type !== 'wallet') {
-          await axios.post(`${API}/user/payment-methods`, newPayment);
+          await axios.post(`${API}/api/user/payment-methods`, newPayment);
         }
         paymentData = { payment_method: newPayment.type, payment_phone: newPayment.phone || '' };
       } else {
@@ -214,7 +214,7 @@ const CheckoutPage = () => {
         paymentData = { payment_method: pay.type, payment_phone: pay.phone };
       }
 
-      const res = await axios.post(`${API}/orders`, {
+      const res = await axios.post(`${API}/api/orders`, {
         items: cart.items.map(i => ({ 
           product_id: i.product_id, 
           quantity: i.quantity,
@@ -229,7 +229,7 @@ const CheckoutPage = () => {
       if (paymentData.payment_method === 'wallet') {
         // الدفع من المحفظة - يتم فوراً
         try {
-          await axios.post(`${API}/payment/wallet/pay?order_id=${res.data.order_id}`);
+          await axios.post(`${API}/api/payment/wallet/pay?order_id=${res.data.order_id}`);
           clearCart();
           setOrderComplete(true);
           toast({ title: "تم الدفع بنجاح!", description: "تم خصم المبلغ من محفظتك" });
@@ -242,7 +242,7 @@ const CheckoutPage = () => {
         return;
       } else {
         // المحافظ الإلكترونية - نحتاج OTP
-        await axios.post(`${API}/payment/shamcash/init?order_id=${res.data.order_id}`);
+        await axios.post(`${API}/api/payment/shamcash/init?order_id=${res.data.order_id}`);
         toast({ title: "تم إنشاء الطلب", description: "أدخل رمز التحقق لإتمام الدفع" });
       }
     } catch (error) {
@@ -260,7 +260,7 @@ const CheckoutPage = () => {
     setSubmitting(true);
     try {
       const paymentPhone = useNewPayment ? newPayment.phone : savedPayments.find(p => p.id === selectedPaymentId)?.phone;
-      await axios.post(`${API}/payment/shamcash/verify`, { order_id: orderId, phone: paymentPhone, otp });
+      await axios.post(`${API}/api/payment/shamcash/verify`, { order_id: orderId, phone: paymentPhone, otp });
       clearCart();
       setOrderComplete(true);
       toast({ title: "تم الدفع بنجاح!", description: "سيتم توصيل طلبك قريباً" });

@@ -22,7 +22,7 @@ export const CartProvider = ({ children }) => {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/cart`);
+      const res = await axios.get(`${API}/api/cart`);
       setCart({
         items: res.data?.items || [],
         total: res.data?.total || 0
@@ -37,14 +37,14 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (productId, quantity = 1, selectedSize = null, selectedWeight = null) => {
     try {
-      await axios.post(`${API}/cart/add`, { 
+      await axios.post(`${API}/api/cart/add`, { 
         product_id: productId, 
         quantity,
         selected_size: selectedSize,
         selected_weight: selectedWeight
       });
       // جلب السلة وإرجاع البيانات الجديدة
-      const res = await axios.get(`${API}/cart`);
+      const res = await axios.get(`${API}/api/cart`);
       const newCart = {...res.data};
       setCart(newCart);
       
@@ -61,14 +61,14 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = async (productId, quantity, selectedSize = null, selectedWeight = null) => {
     try {
-      await axios.put(`${API}/cart/update`, { 
+      await axios.put(`${API}/api/cart/update`, { 
         product_id: productId, 
         quantity,
         selected_size: selectedSize,
         selected_weight: selectedWeight
       });
       // جلب السلة مباشرة وتحديث الـ state
-      const res = await axios.get(`${API}/cart`);
+      const res = await axios.get(`${API}/api/cart`);
       setCart({...res.data});
       return { success: true };
     } catch (error) {
@@ -81,7 +81,7 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = async (productId, selectedSize = null, selectedWeight = null) => {
     try {
-      let url = `${API}/cart/${productId}`;
+      let url = `${API}/api/cart/${productId}`;
       const params = [];
       if (selectedSize) params.push(`selected_size=${encodeURIComponent(selectedSize)}`);
       if (selectedWeight) params.push(`selected_weight=${encodeURIComponent(selectedWeight)}`);
@@ -89,7 +89,7 @@ export const CartProvider = ({ children }) => {
       
       await axios.delete(url);
       // جلب السلة مباشرة وتحديث الـ state
-      const res = await axios.get(`${API}/cart`);
+      const res = await axios.get(`${API}/api/cart`);
       setCart({...res.data});
     } catch (error) {
       console.error('Error removing from cart:', error);

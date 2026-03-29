@@ -222,7 +222,7 @@ const JoinAsFoodSellerPage = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/food/stores`, formData, {
+      await axios.post(`${API}/api/food/stores`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

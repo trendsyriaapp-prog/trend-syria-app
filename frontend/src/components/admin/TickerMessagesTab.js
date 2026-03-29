@@ -23,7 +23,7 @@ const TickerMessagesTab = () => {
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get(`${API}/settings/ticker-messages/admin`);
+      const res = await axios.get(`${API}/api/settings/ticker-messages/admin`);
       setMessages(res.data.messages || []);
       setIsEnabled(res.data.is_enabled !== false);
     } catch (error) {
@@ -36,7 +36,7 @@ const TickerMessagesTab = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/settings/ticker-messages`, {
+      await axios.put(`${API}/api/settings/ticker-messages`, {
         messages,
         is_enabled: isEnabled
       });
@@ -66,7 +66,7 @@ const TickerMessagesTab = () => {
     }
 
     try {
-      const res = await axios.post(`${API}/settings/ticker-messages/add`, newMessage);
+      const res = await axios.post(`${API}/api/settings/ticker-messages/add`, newMessage);
       setMessages([...messages, res.data.message]);
       setNewMessage({ text: '', highlight: false });
       toast({
@@ -84,7 +84,7 @@ const TickerMessagesTab = () => {
 
   const handleDeleteMessage = async (messageId) => {
     try {
-      await axios.delete(`${API}/settings/ticker-messages/${messageId}`);
+      await axios.delete(`${API}/api/settings/ticker-messages/${messageId}`);
       setMessages(messages.filter(m => m.id !== messageId));
       toast({
         title: "تم الحذف",
@@ -120,7 +120,7 @@ const TickerMessagesTab = () => {
   const handleToggleTicker = async () => {
     try {
       const newState = !isEnabled;
-      await axios.put(`${API}/settings/ticker-messages/toggle`, { is_enabled: newState });
+      await axios.put(`${API}/api/settings/ticker-messages/toggle`, { is_enabled: newState });
       setIsEnabled(newState);
       toast({
         title: newState ? "تم التفعيل" : "تم التعطيل",

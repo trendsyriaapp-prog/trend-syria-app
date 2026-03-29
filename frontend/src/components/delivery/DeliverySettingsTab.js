@@ -65,8 +65,8 @@ const DeliverySettingsTab = () => {
   const fetchData = async () => {
     try {
       const [settingsRes, accountsRes] = await Promise.all([
-        axios.get(`${API}/auth/delivery/settings`),
-        axios.get(`${API}/auth/delivery/payment-accounts`)
+        axios.get(`${API}/api/auth/delivery/settings`),
+        axios.get(`${API}/api/auth/delivery/payment-accounts`)
       ]);
       setDeliverySettings(settingsRes.data);
       setPaymentAccounts(accountsRes.data);
@@ -86,7 +86,7 @@ const DeliverySettingsTab = () => {
     
     setSaving(true);
     try {
-      await axios.put(`${API}/auth/delivery/settings`, deliverySettings);
+      await axios.put(`${API}/api/auth/delivery/settings`, deliverySettings);
       toast({ title: "تم الحفظ", description: "تم تحديث الإعدادات بنجاح" });
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
@@ -99,10 +99,10 @@ const DeliverySettingsTab = () => {
     e.preventDefault();
     try {
       if (editingAccount) {
-        await axios.put(`${API}/auth/delivery/payment-accounts/${editingAccount.id}`, newAccount);
+        await axios.put(`${API}/api/auth/delivery/payment-accounts/${editingAccount.id}`, newAccount);
         toast({ title: "تم التحديث", description: "تم تحديث الحساب بنجاح" });
       } else {
-        await axios.post(`${API}/auth/delivery/payment-accounts`, newAccount);
+        await axios.post(`${API}/api/auth/delivery/payment-accounts`, newAccount);
         toast({ title: "تمت الإضافة", description: "تم إضافة حساب الاستلام بنجاح" });
       }
       setShowAddAccount(false);
@@ -117,7 +117,7 @@ const DeliverySettingsTab = () => {
   const handleDeleteAccount = async (accountId) => {
     if (!window.confirm('هل تريد حذف هذا الحساب؟')) return;
     try {
-      await axios.delete(`${API}/auth/delivery/payment-accounts/${accountId}`);
+      await axios.delete(`${API}/api/auth/delivery/payment-accounts/${accountId}`);
       toast({ title: "تم الحذف", description: "تم حذف الحساب بنجاح" });
       fetchData();
     } catch (error) {
@@ -127,7 +127,7 @@ const DeliverySettingsTab = () => {
 
   const handleSetDefault = async (accountId) => {
     try {
-      await axios.post(`${API}/auth/delivery/payment-accounts/${accountId}/default`);
+      await axios.post(`${API}/api/auth/delivery/payment-accounts/${accountId}/default`);
       toast({ title: "تم التحديث", description: "تم تعيين الحساب كافتراضي" });
       fetchData();
     } catch (error) {

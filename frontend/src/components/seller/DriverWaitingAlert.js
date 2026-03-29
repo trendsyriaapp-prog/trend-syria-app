@@ -28,7 +28,7 @@ const DriverWaitingAlert = ({
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`${API}/settings/delivery-wait-compensation`);
+        const res = await axios.get(`${API}/api/settings/delivery-wait-compensation`);
         if (res.data) {
           setSettings({
             max_waiting_time_minutes: res.data.max_waiting_time_minutes || 10,

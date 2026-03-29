@@ -70,7 +70,7 @@ const ProImageProcessor = ({
 
   const fetchBackgrounds = async () => {
     try {
-      const res = await axios.get(`${API}/image/backgrounds`);
+      const res = await axios.get(`${API}/api/image/backgrounds`);
       setBackgrounds(res.data.backgrounds);
     } catch (error) {
       console.error('Error fetching backgrounds:', error);
@@ -79,7 +79,7 @@ const ProImageProcessor = ({
 
   const fetchImageSettings = async () => {
     try {
-      const res = await axios.get(`${API}/image/settings`);
+      const res = await axios.get(`${API}/api/image/settings`);
       setImageSettings(res.data);
     } catch (error) {
       console.error('Error fetching image settings:', error);
@@ -96,7 +96,7 @@ const ProImageProcessor = ({
       const formData = new FormData();
       formData.append('file', blob, 'image.jpg');
       
-      const res = await axios.post(`${API}/image/analyze`, formData, {
+      const res = await axios.post(`${API}/api/image/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -130,7 +130,7 @@ const ProImageProcessor = ({
         formData.append('enhance_colors', 'true');
         formData.append('output_format', options.outputFormat);
         
-        res = await axios.post(`${API}/image/process-food`, formData, {
+        res = await axios.post(`${API}/api/image/process-food`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       } else {
@@ -144,7 +144,7 @@ const ProImageProcessor = ({
         formData.append('generate_sizes', options.generateSizes.toString());
         formData.append('output_format', options.outputFormat);
 
-        res = await axios.post(`${API}/image/process-pro`, formData, {
+        res = await axios.post(`${API}/api/image/process-pro`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }

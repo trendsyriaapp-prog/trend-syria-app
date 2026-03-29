@@ -125,14 +125,14 @@ const FoodBatchCheckoutPage = () => {
     setLoading(true);
     try {
       const [walletRes, addressesRes, paymentsRes, weatherRes] = await Promise.all([
-        axios.get(`${API}/wallet/balance`, {
+        axios.get(`${API}/api/wallet/balance`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { balance: 0 } })),
-        axios.get(`${API}/user/addresses`).catch(() => ({ data: [] })),
-        axios.get(`${API}/settings/weather-surcharge`, {
+        axios.get(`${API}/api/user/addresses`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/settings/weather-surcharge`, {
           headers: { Authorization: `Bearer ${token}` }
         }).catch(() => ({ data: { is_active: false, amount: 0, reason: '' } })),
-        axios.get(`${API}/user/payment-methods`).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/user/payment-methods`).catch(() => ({ data: [] }))
       ]);
       
       setWalletBalance(walletRes.data.balance || 0);
@@ -225,7 +225,7 @@ const FoodBatchCheckoutPage = () => {
       // حفظ العنوان الجديد
       if (newAddress.is_default || savedAddresses.length === 0) {
         try {
-          await axios.post(`${API}/user/addresses`, newAddress);
+          await axios.post(`${API}/api/user/addresses`, newAddress);
         } catch (e) {}
       }
     } else {
@@ -285,7 +285,7 @@ const FoodBatchCheckoutPage = () => {
       // حفظ طريقة الدفع الجديدة إذا كانت محفظة إلكترونية
       if (useNewPayment && newPayment.type !== 'wallet' && newPayment.type !== 'card') {
         try {
-          await axios.post(`${API}/user/payment-methods`, newPayment);
+          await axios.post(`${API}/api/user/payment-methods`, newPayment);
         } catch (e) {}
       }
       
@@ -301,7 +301,7 @@ const FoodBatchCheckoutPage = () => {
         notes: null
       }));
       
-      const response = await axios.post(`${API}/food/orders/batch`, {
+      const response = await axios.post(`${API}/api/food/orders/batch`, {
         orders: batchOrders,
         delivery_address: addressData.address,
         delivery_city: addressData.city,

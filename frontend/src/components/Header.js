@@ -68,7 +68,7 @@ const Header = () => {
 
   const fetchSearchHistory = async () => {
     try {
-      const res = await axios.get(`${API}/products/search-history`);
+      const res = await axios.get(`${API}/api/products/search-history`);
       setSearchHistory(res.data.searches || []);
     } catch (error) {
       console.error('Error fetching search history:', error);
@@ -95,7 +95,7 @@ const Header = () => {
   const handleDeleteHistory = async (searchId, e) => {
     e.stopPropagation();
     try {
-      await axios.delete(`${API}/products/search-history/${searchId}`);
+      await axios.delete(`${API}/api/products/search-history/${searchId}`);
       setSearchHistory(prev => prev.filter(s => s.id !== searchId));
     } catch (error) {
       console.error('Error deleting search:', error);
@@ -104,7 +104,7 @@ const Header = () => {
 
   const handleClearAllHistory = async () => {
     try {
-      await axios.delete(`${API}/products/search-history`);
+      await axios.delete(`${API}/api/products/search-history`);
       setSearchHistory([]);
       toast({
         title: "تم المسح",

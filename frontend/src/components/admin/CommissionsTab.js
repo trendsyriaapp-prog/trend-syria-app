@@ -74,7 +74,7 @@ const CommissionsTab = ({
 
   const fetchFoodCommissions = async () => {
     try {
-      const res = await axios.get(`${API}/admin/food/commissions`, {
+      const res = await axios.get(`${API}/api/admin/food/commissions`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFoodCommissions(res.data.commissions);
@@ -91,7 +91,7 @@ const CommissionsTab = ({
       const updatedCommissions = { ...foodCommissions };
       updatedCommissions[storeType] = parseFloat(tempFoodRate) / 100;
       
-      await axios.put(`${API}/admin/food/commissions`, updatedCommissions, {
+      await axios.put(`${API}/api/admin/food/commissions`, updatedCommissions, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

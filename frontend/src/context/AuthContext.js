@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await axios.get(`${API}/auth/me`);
+      const res = await axios.get(`${API}/api/auth/me`);
       setUser(res.data);
     } catch (error) {
       logout();
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (phone, password) => {
-    const res = await axios.post(`${API}/auth/login`, { phone, password });
+    const res = await axios.post(`${API}/api/auth/login`, { phone, password });
     const newToken = res.data.token;
     localStorage.setItem('token', newToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (data) => {
-    const res = await axios.post(`${API}/auth/register`, data);
+    const res = await axios.post(`${API}/api/auth/register`, data);
     const newToken = res.data.token;
     localStorage.setItem('token', newToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const changePassword = async (currentPassword, newPassword) => {
-    const res = await axios.post(`${API}/auth/change-password`, {
+    const res = await axios.post(`${API}/api/auth/change-password`, {
       current_password: currentPassword,
       new_password: newPassword
     });

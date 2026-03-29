@@ -41,7 +41,7 @@ const ImageBackgroundSelector = ({
 
   const fetchBackgrounds = async () => {
     try {
-      const res = await axios.get(`${API}/image/backgrounds`);
+      const res = await axios.get(`${API}/api/image/backgrounds`);
       setBackgrounds(res.data.backgrounds);
     } catch (error) {
       console.error('Error fetching backgrounds:', error);
@@ -66,7 +66,7 @@ const ImageBackgroundSelector = ({
       formData.append('background', selectedBg);
       formData.append('add_shadow', addShadow.toString());
 
-      const res = await axios.post(`${API}/image/process`, formData, {
+      const res = await axios.post(`${API}/api/image/process`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 

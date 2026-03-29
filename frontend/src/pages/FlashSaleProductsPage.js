@@ -16,8 +16,8 @@ const FlashSaleProductsPage = () => {
     const fetchData = async () => {
       try {
         const [productsRes, badgeRes] = await Promise.all([
-          axios.get(`${API}/products/flash-products`),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+          axios.get(`${API}/api/products/flash-products`),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         setProducts(productsRes.data?.products || []);
         setFlashSale(productsRes.data?.flash_sale || null);

@@ -49,7 +49,7 @@ const InfiniteProductList = ({
       params.append('page', pageNum);
       params.append('limit', limit);
 
-      const res = await axios.get(`${API}/products?${params}`);
+      const res = await axios.get(`${API}/api/products?${params}`);
       const newProducts = res.data.products || res.data;
       const totalPages = res.data.pages || 1;
       

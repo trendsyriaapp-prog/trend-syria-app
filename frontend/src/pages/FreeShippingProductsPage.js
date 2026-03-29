@@ -15,14 +15,14 @@ const FreeShippingProductsPage = () => {
     const fetchData = async () => {
       try {
         // Get threshold first
-        const settingsRes = await axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
+        const settingsRes = await axios.get(`${API}/api/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
         const thresh = settingsRes.data?.free_shipping_threshold || 150000;
         setThreshold(thresh);
         
         // Get products and badge settings
         const [productsRes, badgeRes] = await Promise.all([
-          axios.get(`${API}/products?price_min=${thresh}&limit=50`),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+          axios.get(`${API}/api/products?price_min=${thresh}&limit=50`),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         
         const prods = productsRes.data?.products || productsRes.data || [];

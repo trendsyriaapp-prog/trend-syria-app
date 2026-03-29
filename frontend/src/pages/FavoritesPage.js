@@ -27,7 +27,7 @@ const FavoritesPage = () => {
 
   const fetchFavorites = async () => {
     try {
-      const res = await axios.get(`${API}/favorites`, {
+      const res = await axios.get(`${API}/api/favorites`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFavorites(res.data);
@@ -41,7 +41,7 @@ const FavoritesPage = () => {
   const handleRemove = async (productId) => {
     setRemoving(productId);
     try {
-      await axios.delete(`${API}/favorites/${productId}`, {
+      await axios.delete(`${API}/api/favorites/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFavorites(favorites.filter(p => p.id !== productId));

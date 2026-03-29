@@ -49,7 +49,7 @@ const ReportPriceModal = ({ isOpen, onClose, productId, productName, productType
 
     setLoading(true);
     try {
-      await axios.post(`${API}/price-reports`, {
+      await axios.post(`${API}/api/price-reports`, {
         product_id: productId,
         product_type: productType,
         reason,
@@ -260,7 +260,7 @@ const ReviewForm = ({ productId, onSuccess }) => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/reviews`, {
+      await axios.post(`${API}/api/reviews`, {
         product_id: productId,
         rating,
         comment,
@@ -388,7 +388,7 @@ const ReviewCard = ({ review, sellerId, onReplyAdded }) => {
     if (!replyText.trim()) return;
     setReplyLoading(true);
     try {
-      await axios.post(`${API}/reviews/${review.id}/reply`, { reply: replyText });
+      await axios.post(`${API}/api/reviews/${review.id}/reply`, { reply: replyText });
       toast({ title: "تم إضافة الرد بنجاح" });
       setShowReplyForm(false);
       setReplyText('');
@@ -407,7 +407,7 @@ const ReviewCard = ({ review, sellerId, onReplyAdded }) => {
   const handleDeleteReply = async () => {
     if (!window.confirm('هل تريد حذف ردك على هذا التقييم؟')) return;
     try {
-      await axios.delete(`${API}/reviews/${review.id}/reply`);
+      await axios.delete(`${API}/api/reviews/${review.id}/reply`);
       toast({ title: "تم حذف الرد" });
       onReplyAdded?.();
     } catch (error) {
@@ -796,7 +796,7 @@ const ProductDetailPage = () => {
 
   const fetchUserAddress = async () => {
     try {
-      const res = await axios.get(`${API}/user/addresses`);
+      const res = await axios.get(`${API}/api/user/addresses`);
       // Get the default address or the first one
       const addresses = res.data;
       const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
@@ -813,7 +813,7 @@ const ProductDetailPage = () => {
     try {
       // استخدام إجمالي السلة الحالي فقط (بدون سعر المنتج المعروض)
       const cartTotal = cart?.total || 0;
-      const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${cartTotal}`);
+      const res = await axios.get(`${API}/api/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${cartTotal}`);
       setShippingInfo({ ...res.data, _timestamp: Date.now() });
     } catch (error) {
       console.error('Error calculating shipping:', error);
@@ -822,13 +822,13 @@ const ProductDetailPage = () => {
 
   const fetchProduct = async () => {
     try {
-      const res = await axios.get(`${API}/products/${id}`);
+      const res = await axios.get(`${API}/api/products/${id}`);
       setProduct(res.data);
       
       // Check if user can review (has purchased this product)
       if (user) {
         try {
-          const ordersRes = await axios.get(`${API}/orders`);
+          const ordersRes = await axios.get(`${API}/api/orders`);
           const hasPurchased = ordersRes.data.some(order => 
             order.status === 'paid' && 
             order.items.some(item => item.product_id === id)
@@ -853,7 +853,7 @@ const ProductDetailPage = () => {
 
   const fetchQuestions = async () => {
     try {
-      const res = await axios.get(`${API}/products/${id}/questions`);
+      const res = await axios.get(`${API}/api/products/${id}/questions`);
       setQuestions(res.data);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -862,7 +862,7 @@ const ProductDetailPage = () => {
 
   const fetchSimilarProducts = async () => {
     try {
-      const res = await axios.get(`${API}/products/${id}/similar`);
+      const res = await axios.get(`${API}/api/products/${id}/similar`);
       setSimilarProducts(res.data);
     } catch (error) {
       console.error('Error fetching similar products:', error);
@@ -885,7 +885,7 @@ const ProductDetailPage = () => {
 
     setAskingQuestion(true);
     try {
-      await axios.post(`${API}/products/${id}/questions`, { question: newQuestion });
+      await axios.post(`${API}/api/products/${id}/questions`, { question: newQuestion });
       toast({ title: "تم إرسال السؤال", description: "سيرد البائع قريباً" });
       setNewQuestion('');
       fetchQuestions();
@@ -904,7 +904,7 @@ const ProductDetailPage = () => {
     if (!newAnswer.trim()) return;
     
     try {
-      await axios.post(`${API}/products/${id}/questions/${questionId}/answer`, { answer: newAnswer });
+      await axios.post(`${API}/api/products/${id}/questions/${questionId}/answer`, { answer: newAnswer });
       toast({ title: "تم إضافة الرد" });
       setNewAnswer('');
       setAnsweringId(null);
@@ -963,7 +963,7 @@ const ProductDetailPage = () => {
       // تحديث حساب الشحن بعد إضافة المنتج
       if (customerAddress?.city && newCart?.total) {
         try {
-          const res = await axios.get(`${API}/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${newCart.total}`);
+          const res = await axios.get(`${API}/api/shipping/calculate?product_id=${product.id}&customer_city=${encodeURIComponent(customerAddress.city)}&order_total=${newCart.total}`);
           setShippingInfo({ ...res.data, _timestamp: Date.now() });
         } catch (err) {
           console.error('Error updating shipping:', err);

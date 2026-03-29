@@ -31,7 +31,7 @@ const SellerReviewsTab = () => {
 
   const fetchPendingReviews = async () => {
     try {
-      const res = await axios.get(`${API}/reviews/seller/pending`);
+      const res = await axios.get(`${API}/api/reviews/seller/pending`);
       setPendingReviews(res.data);
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -44,7 +44,7 @@ const SellerReviewsTab = () => {
     if (!replyText.trim()) return;
     setSubmitting(true);
     try {
-      await axios.post(`${API}/reviews/${reviewId}/reply`, { reply: replyText });
+      await axios.post(`${API}/api/reviews/${reviewId}/reply`, { reply: replyText });
       toast({ title: "تم إضافة الرد بنجاح" });
       setReplyingTo(null);
       setReplyText('');

@@ -95,8 +95,8 @@ const SettingsPage = () => {
   const fetchData = async () => {
     try {
       const [addressesRes, paymentsRes] = await Promise.all([
-        axios.get(`${API}/user/addresses`),
-        axios.get(`${API}/user/payment-methods`)
+        axios.get(`${API}/api/user/addresses`),
+        axios.get(`${API}/api/user/payment-methods`)
       ]);
       setAddresses(addressesRes.data);
       setPaymentMethods(paymentsRes.data);
@@ -105,8 +105,8 @@ const SettingsPage = () => {
       if (user?.user_type === 'delivery') {
         try {
           const [walletRes, ratingsRes] = await Promise.all([
-            axios.get(`${API}/wallet/balance`),
-            axios.get(`${API}/delivery/my-ratings`)
+            axios.get(`${API}/api/wallet/balance`),
+            axios.get(`${API}/api/delivery/my-ratings`)
           ]);
           setWalletBalance(walletRes.data?.balance || 0);
           setMyRatings(ratingsRes.data || { average_rating: 0, total_ratings: 0 });
@@ -143,7 +143,7 @@ const SettingsPage = () => {
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await axios.post(`${API}/delivery/update-image`, formData, {
+      const response = await axios.post(`${API}/api/delivery/update-image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -170,10 +170,10 @@ const SettingsPage = () => {
     
     try {
       if (editingAddress) {
-        await axios.put(`${API}/user/addresses/${editingAddress.id}`, newAddress);
+        await axios.put(`${API}/api/user/addresses/${editingAddress.id}`, newAddress);
         toast({ title: "تم التحديث", description: "تم تحديث العنوان" });
       } else {
-        await axios.post(`${API}/user/addresses`, newAddress);
+        await axios.post(`${API}/api/user/addresses`, newAddress);
         toast({ title: "تمت الإضافة", description: "تم إضافة العنوان" });
       }
       setShowAddAddress(false);
@@ -188,7 +188,7 @@ const SettingsPage = () => {
   const handleDeleteAddress = async (addressId) => {
     if (!window.confirm('حذف العنوان؟')) return;
     try {
-      await axios.delete(`${API}/user/addresses/${addressId}`);
+      await axios.delete(`${API}/api/user/addresses/${addressId}`);
       toast({ title: "تم الحذف" });
       fetchData();
     } catch (error) {
@@ -198,7 +198,7 @@ const SettingsPage = () => {
 
   const handleSetDefaultAddress = async (addressId) => {
     try {
-      await axios.post(`${API}/user/addresses/${addressId}/default`);
+      await axios.post(`${API}/api/user/addresses/${addressId}/default`);
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", variant: "destructive" });
@@ -220,10 +220,10 @@ const SettingsPage = () => {
     e.preventDefault();
     try {
       if (editingPayment) {
-        await axios.put(`${API}/user/payment-methods/${editingPayment.id}`, newPayment);
+        await axios.put(`${API}/api/user/payment-methods/${editingPayment.id}`, newPayment);
         toast({ title: "تم التحديث" });
       } else {
-        await axios.post(`${API}/user/payment-methods`, newPayment);
+        await axios.post(`${API}/api/user/payment-methods`, newPayment);
         toast({ title: "تمت الإضافة" });
       }
       setShowAddPayment(false);
@@ -238,7 +238,7 @@ const SettingsPage = () => {
   const handleDeletePayment = async (paymentId) => {
     if (!window.confirm('حذف طريقة الدفع؟')) return;
     try {
-      await axios.delete(`${API}/user/payment-methods/${paymentId}`);
+      await axios.delete(`${API}/api/user/payment-methods/${paymentId}`);
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", variant: "destructive" });
@@ -247,7 +247,7 @@ const SettingsPage = () => {
 
   const handleSetDefaultPayment = async (paymentId) => {
     try {
-      await axios.post(`${API}/user/payment-methods/${paymentId}/default`);
+      await axios.post(`${API}/api/user/payment-methods/${paymentId}/default`);
       fetchData();
     } catch (error) {
       toast({ title: "خطأ", variant: "destructive" });

@@ -49,7 +49,7 @@ const FoodMyCartPage = () => {
       if (!user || !token) return;
       
       try {
-        const res = await axios.get(`${API}/user/addresses`);
+        const res = await axios.get(`${API}/api/user/addresses`);
         const addresses = res.data || [];
         setSavedAddresses(addresses);
         
@@ -78,7 +78,7 @@ const FoodMyCartPage = () => {
     try {
       // جلب جميع المتاجر بالتوازي
       const promises = stores.map(store => 
-        axios.get(`${API}/food/stores/${store.storeId}`)
+        axios.get(`${API}/api/food/stores/${store.storeId}`)
           .then(res => ({ storeId: store.storeId, data: res.data }))
           .catch(err => {
             console.error('Error fetching store:', store.storeId, err);

@@ -52,7 +52,7 @@ const CategoriesPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${API}/products/categories`);
+      const res = await axios.get(`${API}/api/products/categories`);
       setCategories(res.data);
     } catch (error) {
       console.error('Error fetching categories:', error);

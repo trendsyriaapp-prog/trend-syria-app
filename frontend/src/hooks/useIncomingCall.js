@@ -18,7 +18,7 @@ const useIncomingCall = () => {
     
     setIsChecking(true);
     try {
-      const response = await axios.get(`${API}/voip/incoming-call`, {
+      const response = await axios.get(`${API}/api/voip/incoming-call`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -37,7 +37,7 @@ const useIncomingCall = () => {
   // قبول المكالمة
   const acceptCall = useCallback(async (call) => {
     try {
-      await axios.post(`${API}/voip/call/action`, {
+      await axios.post(`${API}/api/voip/call/action`, {
         call_id: call.id,
         action: 'accept'
       }, {
@@ -53,7 +53,7 @@ const useIncomingCall = () => {
   // رفض المكالمة
   const rejectCall = useCallback(async (call) => {
     try {
-      await axios.post(`${API}/voip/call/action`, {
+      await axios.post(`${API}/api/voip/call/action`, {
         call_id: call.id,
         action: 'reject'
       }, {

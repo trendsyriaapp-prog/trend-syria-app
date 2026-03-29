@@ -67,7 +67,7 @@ const FreeShippingFloatingBanner = () => {
       
       // محاولة جلب بيانات الشحن الفعلية
       try {
-        const res = await axios.get(`${API}/shipping/cart/detailed?customer_city=دمشق`);
+        const res = await axios.get(`${API}/api/shipping/cart/detailed?customer_city=دمشق`);
         if (res.data.sellers) {
           res.data.sellers.forEach(seller => {
             if (sellerGroups[seller.seller_id]) {
@@ -99,7 +99,7 @@ const FreeShippingFloatingBanner = () => {
       // جلب حد التوصيل المجاني الموحد من الإعدادات
       let foodFreeDeliveryThreshold = 100000; // قيمة افتراضية
       try {
-        const settingsRes = await axios.get(`${API}/settings/public`);
+        const settingsRes = await axios.get(`${API}/api/settings/public`);
         foodFreeDeliveryThreshold = settingsRes.data.food_free_delivery_threshold || 100000;
       } catch (e) {
         // استخدام القيمة الافتراضية
@@ -108,7 +108,7 @@ const FreeShippingFloatingBanner = () => {
       const storesData = await Promise.all(
         foodStores.map(async (store) => {
           try {
-            const res = await axios.get(`${API}/food/stores/${store.storeId}`);
+            const res = await axios.get(`${API}/api/food/stores/${store.storeId}`);
             const storeData = res.data;
             
             // استخدام الحد الموحد من المنصة

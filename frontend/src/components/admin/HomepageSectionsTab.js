@@ -68,7 +68,7 @@ const HomepageSectionsTab = () => {
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/settings/homepage-sections`);
+      const res = await axios.get(`${API}/api/settings/homepage-sections`);
       setSections(res.data);
     } catch (error) {
       console.error('Error fetching sections:', error);
@@ -93,7 +93,7 @@ const HomepageSectionsTab = () => {
     try {
       setSaving(true);
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/settings/homepage-sections`, sections, {
+      await axios.put(`${API}/api/settings/homepage-sections`, sections, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ 

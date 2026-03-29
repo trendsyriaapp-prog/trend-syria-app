@@ -68,7 +68,7 @@ const OrderTrackingPage = () => {
 
   const checkRating = async () => {
     try {
-      const res = await axios.get(`${API}/delivery/check-rating/${orderId}`);
+      const res = await axios.get(`${API}/api/delivery/check-rating/${orderId}`);
       setHasRated(res.data.has_rated);
     } catch (error) {
       console.error('Error checking rating:', error);
@@ -78,8 +78,8 @@ const OrderTrackingPage = () => {
   const fetchOrderTracking = async () => {
     try {
       const [orderRes, trackingRes] = await Promise.all([
-        axios.get(`${API}/orders/${orderId}`),
-        axios.get(`${API}/orders/${orderId}/tracking`)
+        axios.get(`${API}/api/orders/${orderId}`),
+        axios.get(`${API}/api/orders/${orderId}/tracking`)
       ]);
       setOrder(orderRes.data);
       setTracking(trackingRes.data);
@@ -99,7 +99,7 @@ const OrderTrackingPage = () => {
   const handleSaveNote = async () => {
     setSavingNote(true);
     try {
-      await axios.put(`${API}/orders/${orderId}/delivery-note`, {
+      await axios.put(`${API}/api/orders/${orderId}/delivery-note`, {
         delivery_note: deliveryNote
       });
       toast({

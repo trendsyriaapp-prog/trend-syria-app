@@ -62,7 +62,7 @@ const DriverTrackingMap = ({ orderId, orderStatus }) => {
       return;
     }
     try {
-      const res = await axios.get(`${API}/delivery/location/${orderId}`, {
+      const res = await axios.get(`${API}/api/delivery/location/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLocationData(res.data);

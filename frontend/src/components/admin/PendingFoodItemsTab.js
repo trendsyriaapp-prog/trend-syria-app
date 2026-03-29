@@ -29,8 +29,8 @@ const PendingFoodItemsTab = () => {
     try {
       setLoading(true);
       const [itemsRes, statsRes] = await Promise.all([
-        axios.get(`${API}/admin/food-items/pending`),
-        axios.get(`${API}/admin/food-items/stats`)
+        axios.get(`${API}/api/admin/food-items/pending`),
+        axios.get(`${API}/api/admin/food-items/stats`)
       ]);
       setItems(itemsRes.data);
       setStats(statsRes.data);
@@ -48,7 +48,7 @@ const PendingFoodItemsTab = () => {
 
   const handleApprove = async (itemId) => {
     try {
-      await axios.post(`${API}/admin/food-items/${itemId}/approve`);
+      await axios.post(`${API}/api/admin/food-items/${itemId}/approve`);
       toast({
         title: "تمت الموافقة",
         description: "تم الموافقة على الطبق بنجاح"
@@ -70,7 +70,7 @@ const PendingFoodItemsTab = () => {
   const handleRejectConfirm = async (reason) => {
     setProcessing(true);
     try {
-      await axios.post(`${API}/admin/food-items/${rejectModal.itemId}/reject`, { reason });
+      await axios.post(`${API}/api/admin/food-items/${rejectModal.itemId}/reject`, { reason });
       toast({
         title: "تم الرفض",
         description: "تم رفض الطبق"

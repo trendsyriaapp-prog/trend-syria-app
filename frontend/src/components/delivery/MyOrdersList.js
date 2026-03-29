@@ -80,7 +80,7 @@ const MyOrdersList = ({
     const fetchTodayEarnings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API}/delivery/earnings/stats?period=today`, {
+        const res = await fetch(`${API}/api/delivery/earnings/stats?period=today`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -199,7 +199,7 @@ const MyOrdersList = ({
           // استدعاء API لتسجيل الوصول مع فحص المسافة (طلبات الطعام فقط)
           console.log('📍 Order data:', { id: order.id, order_number: order.order_number, status: order.status });
           // إصلاح: إزالة /api/ المكرر - API يحتوي بالفعل على /api
-          const endpoint = `${API}/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
+          const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived?latitude=${latitude}&longitude=${longitude}`;
           console.log('📍 Calling endpoint:', endpoint);
 
           const response = await axios.post(endpoint, {}, {
@@ -324,8 +324,8 @@ const MyOrdersList = ({
       const isFood = showPickupCodeModal.store_id || showPickupCodeModal.restaurant_name;
       // إصلاح: إزالة /api/ المكرر
       const endpoint = isFood 
-        ? `${API}/food/orders/delivery/${showPickupCodeModal.id}/verify-pickup`
-        : `${API}/orders/${showPickupCodeModal.id}/delivery/pickup`;
+        ? `${API}/api/food/orders/delivery/${showPickupCodeModal.id}/verify-pickup`
+        : `${API}/api/orders/${showPickupCodeModal.id}/delivery/pickup`;
 
       // طلبات الطعام تستخدم "code" وطلبات المنتجات تستخدم "pickup_code"
       const payload = isFood ? { code: pickupCode } : { pickup_code: pickupCode };
@@ -366,8 +366,8 @@ const MyOrdersList = ({
       const isFood = showCodeModal.store_id || showCodeModal.restaurant_name;
       // إصلاح: إزالة /api/ المكرر
       const endpoint = isFood 
-        ? `${API}/food/orders/delivery/${showCodeModal.id}/verify-code`
-        : `${API}/delivery/orders/${showCodeModal.id}/deliver`;
+        ? `${API}/api/food/orders/delivery/${showCodeModal.id}/verify-code`
+        : `${API}/api/delivery/orders/${showCodeModal.id}/deliver`;
 
       await axios.post(endpoint, { delivery_code: deliveryCode }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -397,7 +397,7 @@ const MyOrdersList = ({
 
     setHelpLoading(true);
     try {
-      await axios.post(`${API}/support/emergency-help`, {
+      await axios.post(`${API}/api/support/emergency-help`, {
         order_id: showHelpModal.id,
         reason: helpReason,
         message: helpMessage

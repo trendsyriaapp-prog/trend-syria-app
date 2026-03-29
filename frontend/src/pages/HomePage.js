@@ -154,7 +154,7 @@ const HomePage = () => {
       }
       
       // جلب البيانات من API الموحد
-      const response = await axios.get(`${API}/products/homepage-data`);
+      const response = await axios.get(`${API}/api/products/homepage-data`);
       const data = response.data;
       
       // حفظ في الكاش
@@ -348,14 +348,14 @@ const HomePage = () => {
   const fetchDataLegacy = async () => {
     try {
       const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes] = await Promise.all([
-        axios.get(`${API}/products/featured`),
-        axios.get(`${API}/categories`),
-        axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
-        axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
-        axios.get(`${API}/products/sponsored`).catch(() => ({ data: [] })),
-        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } })),
-        axios.get(`${API}/settings/homepage-sections`).catch(() => ({ data: {
+        axios.get(`${API}/api/products/featured`),
+        axios.get(`${API}/api/categories`),
+        axios.get(`${API}/api/ads/active`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
+        axios.get(`${API}/api/products/sponsored`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/settings/global-free-shipping`).catch(() => ({ data: null })),
+        axios.get(`${API}/api/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } })),
+        axios.get(`${API}/api/settings/homepage-sections`).catch(() => ({ data: {
           sponsored_enabled: true,
           flash_sale_enabled: true,
           free_shipping_enabled: true,
@@ -375,19 +375,19 @@ const HomePage = () => {
       setTickerEnabled(tickerRes.data?.is_enabled !== false);
       
       try {
-        const badgeRes = await axios.get(`${API}/settings/product-badges`);
+        const badgeRes = await axios.get(`${API}/api/settings/product-badges`);
         setBadgeSettings(badgeRes.data);
       } catch (err) {}
       
       try {
-        const extraRes = await axios.get(`${API}/products?limit=20&skip=0`);
+        const extraRes = await axios.get(`${API}/api/products?limit=20&skip=0`);
         setExtraProducts(extraRes.data?.products || extraRes.data || []);
       } catch (err) {}
       
       try {
-        const settingsRes = await axios.get(`${API}/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
+        const settingsRes = await axios.get(`${API}/api/settings/public`).catch(() => ({ data: { free_shipping_threshold: 150000 } }));
         const threshold = settingsRes.data?.free_shipping_threshold || 150000;
-        const freeShipRes = await axios.get(`${API}/products?price_min=${threshold}&limit=10`);
+        const freeShipRes = await axios.get(`${API}/api/products?price_min=${threshold}&limit=10`);
         const freeShipProducts = freeShipRes.data?.products || freeShipRes.data || [];
         setFreeShippingProducts(freeShipProducts.slice(0, 10));
         
@@ -401,12 +401,12 @@ const HomePage = () => {
       } catch (err) {}
       
       try {
-        const bestSellersRes = await axios.get(`${API}/products/best-sellers`);
+        const bestSellersRes = await axios.get(`${API}/api/products/best-sellers`);
         setBestSellers(bestSellersRes.data || []);
       } catch (err) {}
       
       try {
-        const newlyAddedRes = await axios.get(`${API}/products/newly-added`);
+        const newlyAddedRes = await axios.get(`${API}/api/products/newly-added`);
         setNewlyAddedProducts(newlyAddedRes.data || []);
       } catch (err) {}
       
@@ -425,7 +425,7 @@ const HomePage = () => {
   useEffect(() => {
     const seedData = async () => {
       try {
-        await axios.post(`${API}/seed`);
+        await axios.post(`${API}/api/seed`);
         fetchData();
       } catch (error) {
         // Ignore if already seeded

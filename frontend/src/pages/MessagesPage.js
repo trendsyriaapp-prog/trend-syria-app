@@ -46,7 +46,7 @@ const MessagesPage = () => {
 
   const fetchConversations = async () => {
     try {
-      const res = await axios.get(`${API}/messages`);
+      const res = await axios.get(`${API}/api/messages`);
       setConversations(res.data);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -57,7 +57,7 @@ const MessagesPage = () => {
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get(`${API}/messages/${userId}`);
+      const res = await axios.get(`${API}/api/messages/${userId}`);
       setMessages(res.data);
       
       // Get other user info from first message
@@ -81,7 +81,7 @@ const MessagesPage = () => {
 
     setSending(true);
     try {
-      await axios.post(`${API}/messages`, {
+      await axios.post(`${API}/api/messages`, {
         receiver_id: userId,
         content: newMessage,
         product_id: productId || null

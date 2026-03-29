@@ -24,8 +24,8 @@ const FeaturedStoresTab = () => {
   const fetchData = async () => {
     try {
       const [settingsRes, storesRes] = await Promise.all([
-        axios.get(`${API}/settings/featured-stores`),
-        axios.get(`${API}/food/stores`)
+        axios.get(`${API}/api/settings/featured-stores`),
+        axios.get(`${API}/api/food/stores`)
       ]);
       
       setEnabled(settingsRes.data.enabled || false);
@@ -41,7 +41,7 @@ const FeaturedStoresTab = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/settings/featured-stores`, {
+      await axios.put(`${API}/api/settings/featured-stores`, {
         enabled,
         store_ids: selectedStores
       });

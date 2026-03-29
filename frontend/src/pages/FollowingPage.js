@@ -22,7 +22,7 @@ const FollowingPage = () => {
 
   const fetchFollowing = async () => {
     try {
-      const res = await axios.get(`${API}/user/following`, {
+      const res = await axios.get(`${API}/api/user/following`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStores(res.data);

@@ -85,13 +85,13 @@ const ProductsPage = () => {
     const fetchExtras = async () => {
       try {
         const [promoRes, adsRes, flashRes, bestSellersRes, newlyAddedRes, badgeRes, settingsRes] = await Promise.all([
-          axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
-          axios.get(`${API}/ads/active`).catch(() => ({ data: [] })),
-          axios.get(`${API}/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
-          axios.get(`${API}/products/best-sellers`).catch(() => ({ data: [] })),
-          axios.get(`${API}/products/newly-added`).catch(() => ({ data: [] })),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
-          axios.get(`${API}/settings/public`).catch(() => ({ data: {} }))
+          axios.get(`${API}/api/settings/global-free-shipping`).catch(() => ({ data: null })),
+          axios.get(`${API}/api/ads/active`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/products/flash-products`).catch(() => ({ data: { products: [], flash_sale: null } })),
+          axios.get(`${API}/api/products/best-sellers`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/products/newly-added`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null })),
+          axios.get(`${API}/api/settings/public`).catch(() => ({ data: {} }))
         ]);
         
         const promo = promoRes.data;
@@ -172,7 +172,7 @@ const ProductsPage = () => {
       params.append('page', pageNum);
       params.append('limit', 12);
 
-      const res = await axios.get(`${API}/products?${params}`);
+      const res = await axios.get(`${API}/api/products?${params}`);
       const newProducts = res.data.products;
       
       if (append) {
@@ -236,7 +236,7 @@ const ProductsPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get(`${API}/categories`);
+      const res = await axios.get(`${API}/api/categories`);
       setCategories(res.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -245,7 +245,7 @@ const ProductsPage = () => {
 
   const fetchCities = async () => {
     try {
-      const res = await axios.get(`${API}/shipping/cities`);
+      const res = await axios.get(`${API}/api/shipping/cities`);
       setCities(res.data);
     } catch (error) {
       console.error('Error fetching cities:', error);

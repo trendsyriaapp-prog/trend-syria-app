@@ -56,7 +56,7 @@ const AllFoodStoresPage = () => {
       const params = {};
       if (userCity) params.city = userCity;
       
-      const res = await axios.get(`${API}/food/stores`, { params });
+      const res = await axios.get(`${API}/api/food/stores`, { params });
       const storesData = res.data || [];
       
       // حفظ في الـ cache

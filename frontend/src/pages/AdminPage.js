@@ -127,23 +127,23 @@ const AdminDashboardPage = () => {
   const fetchData = async () => {
     try {
       const requests = [
-        axios.get(`${API}/admin/stats`),
-        axios.get(`${API}/admin/sellers/pending`),
-        axios.get(`${API}/admin/products/pending`),
-        axios.get(`${API}/admin/notifications`),
-        axios.get(`${API}/admin/users`),
-        axios.get(`${API}/admin/sellers/all`),
-        axios.get(`${API}/admin/orders`),
-        axios.get(`${API}/admin/products/all`),
-        axios.get(`${API}/admin/delivery/pending`),
-        axios.get(`${API}/admin/delivery/all`),
-        axios.get(`${API}/admin/food/stores?status=pending`),
-        axios.get(`${API}/payment/admin/withdrawals?status=pending`),
-        axios.get(`${API}/admin/food-items/pending`)
+        axios.get(`${API}/api/admin/stats`),
+        axios.get(`${API}/api/admin/sellers/pending`),
+        axios.get(`${API}/api/admin/products/pending`),
+        axios.get(`${API}/api/admin/notifications`),
+        axios.get(`${API}/api/admin/users`),
+        axios.get(`${API}/api/admin/sellers/all`),
+        axios.get(`${API}/api/admin/orders`),
+        axios.get(`${API}/api/admin/products/all`),
+        axios.get(`${API}/api/admin/delivery/pending`),
+        axios.get(`${API}/api/admin/delivery/all`),
+        axios.get(`${API}/api/admin/food/stores?status=pending`),
+        axios.get(`${API}/api/payment/admin/withdrawals?status=pending`),
+        axios.get(`${API}/api/admin/food-items/pending`)
       ];
       
       if (user?.user_type === 'admin') {
-        requests.push(axios.get(`${API}/admin/sub-admins`));
+        requests.push(axios.get(`${API}/api/admin/sub-admins`));
       }
 
       const responses = await Promise.all(requests);
@@ -168,8 +168,8 @@ const AdminDashboardPage = () => {
       // Fetch commissions data
       try {
         const [commissionsRes, ratesRes] = await Promise.all([
-          axios.get(`${API}/admin/commissions`),
-          axios.get(`${API}/admin/commissions/rates`)
+          axios.get(`${API}/api/admin/commissions`),
+          axios.get(`${API}/api/admin/commissions/rates`)
         ]);
         setCommissionsReport(commissionsRes.data);
         setCommissionRates(ratesRes.data);
@@ -180,8 +180,8 @@ const AdminDashboardPage = () => {
       // Fetch call requests and emergency counts
       try {
         const [callRes, emergencyRes] = await Promise.all([
-          axios.get(`${API}/admin/call-requests/count`).catch(() => ({ data: { count: 0 } })),
-          axios.get(`${API}/admin/emergency-help/count`).catch(() => ({ data: { count: 0 } }))
+          axios.get(`${API}/api/admin/call-requests/count`).catch(() => ({ data: { count: 0 } })),
+          axios.get(`${API}/api/admin/emergency-help/count`).catch(() => ({ data: { count: 0 } }))
         ]);
         setCallRequestsCount(callRes.data?.count || 0);
         setEmergencyCount(emergencyRes.data?.count || 0);
@@ -200,7 +200,7 @@ const AdminDashboardPage = () => {
   // Handlers
   const handleApproveSeller = async (sellerId) => {
     try {
-      await axios.post(`${API}/admin/sellers/${sellerId}/approve`);
+      await axios.post(`${API}/api/admin/sellers/${sellerId}/approve`);
       toast({ title: "تم التفعيل", description: "تم تفعيل حساب البائع بنجاح" });
       fetchData();
     } catch (error) {
@@ -210,7 +210,7 @@ const AdminDashboardPage = () => {
 
   const handleRejectSeller = async (sellerId, reason = '') => {
     try {
-      await axios.post(`${API}/admin/sellers/${sellerId}/reject`, { reason });
+      await axios.post(`${API}/api/admin/sellers/${sellerId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب البائع" });
       fetchData();
     } catch (error) {
@@ -220,7 +220,7 @@ const AdminDashboardPage = () => {
 
   const handleApproveProduct = async (productId) => {
     try {
-      await axios.post(`${API}/admin/products/${productId}/approve`);
+      await axios.post(`${API}/api/admin/products/${productId}/approve`);
       toast({ title: "تم الموافقة", description: "تم الموافقة على المنتج" });
       fetchData();
     } catch (error) {
@@ -230,7 +230,7 @@ const AdminDashboardPage = () => {
 
   const handleRejectProduct = async (productId, reason = '') => {
     try {
-      await axios.post(`${API}/admin/products/${productId}/reject`, { 
+      await axios.post(`${API}/api/admin/products/${productId}/reject`, { 
         approved: false, 
         rejection_reason: reason 
       });
@@ -243,7 +243,7 @@ const AdminDashboardPage = () => {
 
   const handleApproveDelivery = async (driverId) => {
     try {
-      await axios.post(`${API}/admin/delivery/${driverId}/approve`);
+      await axios.post(`${API}/api/admin/delivery/${driverId}/approve`);
       toast({ title: "تم التفعيل", description: "تم تفعيل حساب موظف التوصيل بنجاح" });
       fetchData();
     } catch (error) {
@@ -253,7 +253,7 @@ const AdminDashboardPage = () => {
 
   const handleRejectDelivery = async (driverId, reason = '') => {
     try {
-      await axios.post(`${API}/admin/delivery/${driverId}/reject`, { reason });
+      await axios.post(`${API}/api/admin/delivery/${driverId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب موظف التوصيل" });
       fetchData();
     } catch (error) {
@@ -263,7 +263,7 @@ const AdminDashboardPage = () => {
 
   const handleAddSubAdmin = async (newSubAdmin) => {
     try {
-      await axios.post(`${API}/admin/sub-admins`, newSubAdmin);
+      await axios.post(`${API}/api/admin/sub-admins`, newSubAdmin);
       toast({ title: "تمت الإضافة", description: "تم إضافة المدير التنفيذي بنجاح" });
       fetchData();
     } catch (error) {
@@ -282,7 +282,7 @@ const AdminDashboardPage = () => {
   const handleDeleteSubAdmin = async () => {
     if (!deleteSubAdminModal.id) return;
     try {
-      await axios.delete(`${API}/admin/sub-admins/${deleteSubAdminModal.id}`);
+      await axios.delete(`${API}/api/admin/sub-admins/${deleteSubAdminModal.id}`);
       toast({ title: "تم الحذف", description: "تم حذف المدير التنفيذي" });
       setDeleteSubAdminModal({ isOpen: false, id: null });
       fetchData();
@@ -293,7 +293,7 @@ const AdminDashboardPage = () => {
 
   const handleSendNotification = async (newNotification) => {
     try {
-      await axios.post(`${API}/admin/notifications`, newNotification);
+      await axios.post(`${API}/api/admin/notifications`, newNotification);
       toast({ title: "تم الإرسال", description: "تم إرسال الإشعار بنجاح" });
       fetchData();
     } catch (error) {
@@ -304,7 +304,7 @@ const AdminDashboardPage = () => {
   const handleDeleteNotification = async () => {
     if (!deleteNotificationModal.id) return;
     try {
-      await axios.delete(`${API}/admin/notifications/${deleteNotificationModal.id}`);
+      await axios.delete(`${API}/api/admin/notifications/${deleteNotificationModal.id}`);
       toast({ title: "تم الحذف", description: "تم حذف الإشعار" });
       setDeleteNotificationModal({ isOpen: false, id: null });
       fetchData();
@@ -314,8 +314,8 @@ const AdminDashboardPage = () => {
   };
 
   const handleSaveRates = async (rates) => {
-    await axios.put(`${API}/admin/commissions/rates`, rates);
-    const res = await axios.get(`${API}/admin/commissions/rates`);
+    await axios.put(`${API}/api/admin/commissions/rates`, rates);
+    const res = await axios.get(`${API}/api/admin/commissions/rates`);
     setCommissionRates(res.data);
   };
 

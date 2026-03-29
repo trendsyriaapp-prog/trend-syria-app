@@ -291,7 +291,7 @@ const FoodPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get(`${API}/categories/food`);
+        const res = await axios.get(`${API}/api/categories/food`);
         setDynamicCategories(res.data);
       } catch (err) {
         console.log('Using default categories');
@@ -330,7 +330,7 @@ const FoodPage = () => {
     const fetchFoodFavorites = async () => {
       if (!user || !token) return;
       try {
-        const res = await axios.get(`${API}/stores/favorites`, {
+        const res = await axios.get(`${API}/api/stores/favorites`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         // استخراج IDs المنتجات المفضلة
@@ -358,12 +358,12 @@ const FoodPage = () => {
     
     try {
       if (isFavorite) {
-        await axios.delete(`${API}/stores/favorites/${productId}`, {
+        await axios.delete(`${API}/api/stores/favorites/${productId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFoodFavorites(prev => prev.filter(id => id !== productId));
       } else {
-        await axios.post(`${API}/stores/favorites/${productId}`, {}, {
+        await axios.post(`${API}/api/stores/favorites/${productId}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFoodFavorites(prev => [...prev, productId]);
@@ -432,23 +432,23 @@ const FoodPage = () => {
     try {
       // جلب المتاجر والمنتجات الغذائية في نفس مدينة العميل فقط
       const [storesRes, productsRes, flashRes, bannersRes, promoRes, badgeRes, featuredRes, publicSettingsRes] = await Promise.all([
-        axios.get(`${API}/food/stores`, { params: { 
+        axios.get(`${API}/api/food/stores`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
           search: searchQuery || undefined
         }}),
-        axios.get(`${API}/food/products`, { params: { 
+        axios.get(`${API}/api/food/products`, { params: { 
           category: activeCategory !== 'all' ? activeCategory : undefined,
           city: userCity,
           search: searchQuery || undefined,
           limit: 100
         }}),
-        axios.get(`${API}/food/flash-sales/active`),
-        axios.get(`${API}/food/banners`).catch(() => ({ data: [] })),
-        axios.get(`${API}/settings/global-free-shipping`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null })),
-        axios.get(`${API}/settings/featured-stores/public`).catch(() => ({ data: { is_featured: false, stores: [] } })),
-        axios.get(`${API}/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 100000 } }))
+        axios.get(`${API}/api/food/flash-sales/active`),
+        axios.get(`${API}/api/food/banners`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/settings/global-free-shipping`).catch(() => ({ data: null })),
+        axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null })),
+        axios.get(`${API}/api/settings/featured-stores/public`).catch(() => ({ data: { is_featured: false, stores: [] } })),
+        axios.get(`${API}/api/settings/public`).catch(() => ({ data: { food_free_delivery_threshold: 100000 } }))
       ]);
       setStores(storesRes.data || []);
       setProducts(productsRes.data || []);

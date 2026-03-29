@@ -108,8 +108,8 @@ const OrdersPage = () => {
   const fetchOrders = async () => {
     try {
       const [ordersRes, foodRes] = await Promise.all([
-        axios.get(`${API}/orders`),
-        axios.get(`${API}/food/orders/my-orders`).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/orders`),
+        axios.get(`${API}/api/food/orders/my-orders`).catch(() => ({ data: [] }))
       ]);
       
       setOrders(ordersRes.data);
@@ -119,7 +119,7 @@ const OrdersPage = () => {
       const delivered = ordersRes.data.filter(o => o.delivery_status === 'delivered');
       for (const order of delivered) {
         try {
-          const ratingRes = await axios.get(`${API}/delivery/check-rating/${order.id}`);
+          const ratingRes = await axios.get(`${API}/api/delivery/check-rating/${order.id}`);
           if (ratingRes.data.has_rated) {
             setRatedOrders(prev => ({ ...prev, [order.id]: ratingRes.data.rating }));
           }

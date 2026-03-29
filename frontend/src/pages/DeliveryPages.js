@@ -64,7 +64,7 @@ const DeliveryDocuments = () => {
 
   const fetchVehicleTypes = async () => {
     try {
-      const res = await axios.get(`${API}/delivery/vehicle-types`);
+      const res = await axios.get(`${API}/api/delivery/vehicle-types`);
       setVehicleTypes(res.data.vehicle_types || defaultVehicleTypes);
     } catch (error) {
       setVehicleTypes(defaultVehicleTypes);
@@ -73,7 +73,7 @@ const DeliveryDocuments = () => {
 
   const checkStatus = async () => {
     try {
-      const res = await axios.get(`${API}/delivery/documents/status`);
+      const res = await axios.get(`${API}/api/delivery/documents/status`);
       setStatus(res.data.status);
     } catch (error) {
       console.error(error);
@@ -129,7 +129,7 @@ const DeliveryDocuments = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/delivery/documents`, docs);
+      await axios.post(`${API}/api/delivery/documents`, docs);
       toast({
         title: "تم بنجاح",
         description: "تم إرسال الوثائق، في انتظار موافقة الإدارة"
@@ -565,7 +565,7 @@ const DeliveryDashboard = () => {
   // جلب حالة التوفر
   const fetchAvailability = async () => {
     try {
-      const res = await axios.get(`${API}/delivery/availability`);
+      const res = await axios.get(`${API}/api/delivery/availability`);
       setIsAvailable(res.data.is_available);
     } catch (error) {
       console.error('Error fetching availability:', error);
@@ -576,7 +576,7 @@ const DeliveryDashboard = () => {
   const toggleAvailability = async () => {
     setIsLoadingAvailability(true);
     try {
-      const res = await axios.put(`${API}/delivery/availability`, {
+      const res = await axios.put(`${API}/api/delivery/availability`, {
         is_available: !isAvailable
       });
       setIsAvailable(res.data.is_available);
@@ -654,7 +654,7 @@ const DeliveryDashboard = () => {
 
   const fetchMyRatings = async () => {
     try {
-      const res = await axios.get(`${API}/delivery/my-ratings`);
+      const res = await axios.get(`${API}/api/delivery/my-ratings`);
       setMyRatings(res.data);
     } catch (error) {
       console.error('Error fetching ratings:', error);
@@ -663,7 +663,7 @@ const DeliveryDashboard = () => {
 
   const fetchWallet = async () => {
     try {
-      const res = await axios.get(`${API}/wallet/balance`);
+      const res = await axios.get(`${API}/api/wallet/balance`);
       setWalletBalance(res.data.balance || 0);
     } catch (error) {
       console.error('Error fetching wallet:', error);
@@ -672,7 +672,7 @@ const DeliveryDashboard = () => {
 
   const checkStatusAndFetch = async () => {
     try {
-      const statusRes = await axios.get(`${API}/delivery/documents/status`);
+      const statusRes = await axios.get(`${API}/api/delivery/documents/status`);
       setDocStatus(statusRes.data.status);
       
       if (statusRes.data.status === 'approved') {
@@ -692,9 +692,9 @@ const DeliveryDashboard = () => {
       const prevMyOrderIds = (myOrders || []).map(o => o.id);
       
       const [availableRes, myProductRes, myFoodRes] = await Promise.all([
-        axios.get(`${API}/delivery/available-orders`),
-        axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [], is_locked: false } })),
-        axios.get(`${API}/delivery/my-food-orders`).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/delivery/available-orders`),
+        axios.get(`${API}/api/delivery/my-product-orders`).catch(() => ({ data: { orders: [], is_locked: false } })),
+        axios.get(`${API}/api/delivery/my-food-orders`).catch(() => ({ data: [] }))
       ]);
       
       // /api/delivery/available-orders يُرجع كل الطلبات المتاحة (منتجات + طعام)
@@ -756,7 +756,7 @@ const DeliveryDashboard = () => {
 
   const handleTakeOrder = async (orderId) => {
     try {
-      await axios.post(`${API}/orders/${orderId}/delivery/pickup`);
+      await axios.post(`${API}/api/orders/${orderId}/delivery/pickup`);
       toast({
         title: "تم بنجاح",
         description: "تم استلام الطلب من البائع"
@@ -777,7 +777,7 @@ const DeliveryDashboard = () => {
       // التحقق من نوع الطلب (عادي أم تجميعي)
       if (order.is_batch && order.batch_info?.batch_id) {
         // قبول جميع طلبات الدفعة
-        await axios.post(`${API}/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`);
+        await axios.post(`${API}/api/food/orders/delivery/batch/${order.batch_info.batch_id}/accept`);
         toast({
           title: "تم بنجاح",
           description: `تم قبول الطلب التجميعي (${order.batch_info.stores?.length || 0} متاجر)`
@@ -786,7 +786,7 @@ const DeliveryDashboard = () => {
         setAvailableFoodOrders(prev => prev.filter(o => o.batch_info?.batch_id !== order.batch_info.batch_id));
       } else {
         // طلب عادي
-        await axios.post(`${API}/food/orders/delivery/${order.id}/accept`);
+        await axios.post(`${API}/api/food/orders/delivery/${order.id}/accept`);
         toast({
           title: "تم بنجاح",
           description: "تم قبول طلب التوصيل"
@@ -808,7 +808,7 @@ const DeliveryDashboard = () => {
   // قبول طلب من نظام التنسيق (البائع طلب سائق)
   const handleAcceptDriverRequest = async (order) => {
     try {
-      const res = await axios.post(`${API}/food/orders/driver/orders/${order.id}/accept`);
+      const res = await axios.post(`${API}/api/food/orders/driver/orders/${order.id}/accept`);
       toast({
         title: "تم القبول! ✅",
         description: `تم إبلاغ المطعم. انتظر حتى يحدد وقت التحضير`
@@ -828,7 +828,7 @@ const DeliveryDashboard = () => {
   // رفض طلب من نظام التنسيق
   const handleRejectDriverRequest = async (orderId) => {
     try {
-      await axios.post(`${API}/food/orders/driver/orders/${orderId}/reject`);
+      await axios.post(`${API}/api/food/orders/driver/orders/${orderId}/reject`);
       toast({
         title: "تم رفض الطلب",
         description: "سيتم إرساله لسائق آخر"
@@ -845,7 +845,7 @@ const DeliveryDashboard = () => {
 
   const handleOnTheWay = async (orderId, eta = null) => {
     try {
-      await axios.post(`${API}/orders/${orderId}/delivery/on-the-way`, {
+      await axios.post(`${API}/api/orders/${orderId}/delivery/on-the-way`, {
         estimated_minutes: eta || estimatedTime
       });
       toast({
@@ -883,7 +883,7 @@ const DeliveryDashboard = () => {
     
     // إذا تم التحقق من الكود مسبقاً أو لا يوجد كود، نُكمل التسليم مباشرة
     try {
-      await axios.post(`${API}/orders/${orderId}/delivery/delivered`);
+      await axios.post(`${API}/api/orders/${orderId}/delivery/delivered`);
       toast({
         title: "تم بنجاح",
         description: "تم تسليم الطلب وإضافة أجرتك للمحفظة"
@@ -922,7 +922,7 @@ const DeliveryDashboard = () => {
     setDeliveryCodeError('');
     
     try {
-      await axios.post(`${API}/orders/${showDeliveryCodeModal.id}/delivery/verify-code`, {
+      await axios.post(`${API}/api/orders/${showDeliveryCodeModal.id}/delivery/verify-code`, {
         delivery_code: deliveryCodeInput
       });
       toast({

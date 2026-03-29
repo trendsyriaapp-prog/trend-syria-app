@@ -57,9 +57,9 @@ const DeliveryHomePage = () => {
   const fetchData = async () => {
     try {
       const [statsRes, availableRes, myOrdersRes] = await Promise.all([
-        axios.get(`${API}/delivery/stats`).catch(() => ({ data: {} })),
-        axios.get(`${API}/delivery/available-orders`).catch(() => ({ data: [] })),
-        axios.get(`${API}/delivery/my-product-orders`).catch(() => ({ data: { orders: [] } }))
+        axios.get(`${API}/api/delivery/stats`).catch(() => ({ data: {} })),
+        axios.get(`${API}/api/delivery/available-orders`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/delivery/my-product-orders`).catch(() => ({ data: { orders: [] } }))
       ]);
       
       setStats({

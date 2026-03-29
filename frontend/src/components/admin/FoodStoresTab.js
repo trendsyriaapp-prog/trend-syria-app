@@ -58,15 +58,15 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
       
       // جلب البيانات مع معالجة الأخطاء لكل طلب
       const [storesRes, statsRes, commissionsRes] = await Promise.all([
-        axios.get(`${API}/admin/food/stores`, { params }).catch(e => {
+        axios.get(`${API}/api/admin/food/stores`, { params }).catch(e => {
           console.error('FoodStoresTab: Error fetching stores:', e);
           return { data: [] };
         }),
-        axios.get(`${API}/admin/food/stats`).catch(e => {
+        axios.get(`${API}/api/admin/food/stats`).catch(e => {
           console.error('FoodStoresTab: Error fetching stats:', e);
           return { data: null };
         }),
-        axios.get(`${API}/admin/food/commissions`).catch(e => {
+        axios.get(`${API}/api/admin/food/commissions`).catch(e => {
           console.error('FoodStoresTab: Error fetching commissions:', e);
           return { data: null };
         })
@@ -96,7 +96,7 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
 
   const handleApprove = async (storeId) => {
     try {
-      await axios.post(`${API}/admin/food/stores/${storeId}/approve`);
+      await axios.post(`${API}/api/admin/food/stores/${storeId}/approve`);
       toast({ title: "تمت الموافقة", description: "تم قبول المتجر بنجاح" });
       fetchData();
       if (onRefresh) onRefresh();
@@ -112,7 +112,7 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
   const handleRejectConfirm = async (reason) => {
     setRejectProcessing(true);
     try {
-      await axios.post(`${API}/admin/food/stores/${rejectModal.storeId}/reject`, { reason });
+      await axios.post(`${API}/api/admin/food/stores/${rejectModal.storeId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض المتجر" });
       fetchData();
       if (onRefresh) onRefresh();
@@ -126,7 +126,7 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
 
   const handleSaveCommissions = async () => {
     try {
-      await axios.put(`${API}/admin/food/commissions`, editingCommissions);
+      await axios.put(`${API}/api/admin/food/commissions`, editingCommissions);
       toast({ title: "تم الحفظ", description: "تم تحديث العمولات بنجاح" });
       setShowCommissionsModal(false);
       fetchData();

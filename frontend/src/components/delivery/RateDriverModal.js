@@ -33,7 +33,7 @@ const RateDriverModal = ({ order, onClose, onSuccess }) => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/delivery/rate/${order.id}`, {
+      await axios.post(`${API}/api/delivery/rate/${order.id}`, {
         rating,
         comment: comment.trim() || null
       });

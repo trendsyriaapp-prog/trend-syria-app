@@ -37,8 +37,8 @@ const PaymentSettingsTab = () => {
   const fetchSettings = async () => {
     try {
       const [settingsRes, statusRes] = await Promise.all([
-        axios.get(`${API}/payment/v2/admin/settings`),
-        axios.get(`${API}/payment/v2/status`)
+        axios.get(`${API}/api/payment/v2/admin/settings`),
+        axios.get(`${API}/api/payment/v2/status`)
       ]);
       
       if (settingsRes.data.payment_settings) {
@@ -63,7 +63,7 @@ const PaymentSettingsTab = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/payment/v2/admin/settings`, settings);
+      await axios.put(`${API}/api/payment/v2/admin/settings`, settings);
       toast({
         title: "تم الحفظ",
         description: "تم تحديث إعدادات الدفع بنجاح"

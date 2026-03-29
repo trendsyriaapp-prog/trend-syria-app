@@ -77,7 +77,7 @@ const CartPage = () => {
       
       try {
         // Get customer address
-        const addressRes = await axios.get(`${API}/user/addresses`);
+        const addressRes = await axios.get(`${API}/api/user/addresses`);
         if (!isMounted) return;
         
         const addresses = addressRes.data;
@@ -88,8 +88,8 @@ const CartPage = () => {
           // Calculate shipping based on address
           setShippingLoading(true);
           const [shippingRes, detailedRes] = await Promise.all([
-            axios.get(`${API}/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`),
-            axios.get(`${API}/shipping/cart/detailed?customer_city=${encodeURIComponent(defaultAddr.city)}`)
+            axios.get(`${API}/api/shipping/cart?customer_city=${encodeURIComponent(defaultAddr.city)}`),
+            axios.get(`${API}/api/shipping/cart/detailed?customer_city=${encodeURIComponent(defaultAddr.city)}`)
           ]);
           
           if (!isMounted) return;
@@ -103,7 +103,7 @@ const CartPage = () => {
             const firstItem = cart.items[0];
             if (firstItem?.product?.seller_latitude && firstItem?.product?.seller_longitude) {
               try {
-                const distanceRes = await axios.get(`${API}/shipping/calculate-by-distance`, {
+                const distanceRes = await axios.get(`${API}/api/shipping/calculate-by-distance`, {
                   params: {
                     store_lat: firstItem.product.seller_latitude,
                     store_lon: firstItem.product.seller_longitude,
@@ -178,7 +178,7 @@ const CartPage = () => {
     setCouponLoading(true);
     try {
       const productIds = cart.items.map(item => item.product_id);
-      const res = await axios.post(`${API}/discounts/apply-coupon`, {
+      const res = await axios.post(`${API}/api/discounts/apply-coupon`, {
         code: couponCode,
         cart_total: cart.total,
         product_ids: productIds
@@ -221,7 +221,7 @@ const CartPage = () => {
     try {
       if (customerAddress?.id) {
         // تحديث العنوان الموجود
-        await axios.put(`${API}/user/addresses/${customerAddress.id}`, {
+        await axios.put(`${API}/api/user/addresses/${customerAddress.id}`, {
           ...customerAddress,
           latitude: tempLocation.latitude,
           longitude: tempLocation.longitude

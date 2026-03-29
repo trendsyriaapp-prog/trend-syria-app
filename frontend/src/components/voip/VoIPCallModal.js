@@ -108,7 +108,7 @@ export const OutgoingCallModal = ({
         formData.append('recording', blob, `call_${cId}.webm`);
         
         try {
-          await axios.post(`${API}/voip/call/${cId}/upload-recording`, formData, {
+          await axios.post(`${API}/api/voip/call/${cId}/upload-recording`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           console.log('Recording uploaded successfully');
@@ -133,7 +133,7 @@ export const OutgoingCallModal = ({
       localStreamRef.current = stream;
 
       // إنشاء المكالمة على الخادم
-      const response = await axios.post(`${API}/voip/call/initiate`, {
+      const response = await axios.post(`${API}/api/voip/call/initiate`, {
         order_id: orderId,
         order_type: orderType,
         caller_type: callerType
@@ -153,7 +153,7 @@ export const OutgoingCallModal = ({
       // معالجة ICE candidates
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
-          await axios.post(`${API}/voip/call/signal`, {
+          await axios.post(`${API}/api/voip/call/signal`, {
             call_id: response.data.call_id,
             signal_type: 'ice-candidate',
             signal_data: event.candidate
@@ -172,7 +172,7 @@ export const OutgoingCallModal = ({
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       
-      await axios.post(`${API}/voip/call/signal`, {
+      await axios.post(`${API}/api/voip/call/signal`, {
         call_id: response.data.call_id,
         signal_type: 'offer',
         signal_data: pc.localDescription
@@ -192,7 +192,7 @@ export const OutgoingCallModal = ({
   const startSignalPolling = (cId) => {
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const response = await axios.get(`${API}/voip/call/${cId}/signals`);
+        const response = await axios.get(`${API}/api/voip/call/${cId}/signals`);
         
         // معالجة حالة المكالمة
         if (response.data.call_status === 'connected' && callStatus !== CALL_STATUS.CONNECTED) {
@@ -274,7 +274,7 @@ export const OutgoingCallModal = ({
       await stopAndUploadRecording(callId);
       
       if (callId) {
-        await axios.post(`${API}/voip/call/action`, {
+        await axios.post(`${API}/api/voip/call/action`, {
           call_id: callId,
           action: 'end'
         });
@@ -564,7 +564,7 @@ export const ActiveCallModal = ({
         formData.append('recording', blob, `call_${callId}.webm`);
         
         try {
-          await axios.post(`${API}/voip/call/${callId}/upload-recording`, formData, {
+          await axios.post(`${API}/api/voip/call/${callId}/upload-recording`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
         } catch (err) {
@@ -594,7 +594,7 @@ export const ActiveCallModal = ({
       // معالجة ICE candidates
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
-          await axios.post(`${API}/voip/call/signal`, {
+          await axios.post(`${API}/api/voip/call/signal`, {
             call_id: callId,
             signal_type: 'ice-candidate',
             signal_data: event.candidate
@@ -626,7 +626,7 @@ export const ActiveCallModal = ({
   const startSignalPolling = () => {
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const response = await axios.get(`${API}/voip/call/${callId}/signals`);
+        const response = await axios.get(`${API}/api/voip/call/${callId}/signals`);
         
         // معالجة حالة المكالمة
         if (['ended', 'rejected', 'missed'].includes(response.data.call_status)) {
@@ -656,7 +656,7 @@ export const ActiveCallModal = ({
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         
-        await axios.post(`${API}/voip/call/signal`, {
+        await axios.post(`${API}/api/voip/call/signal`, {
           call_id: callId,
           signal_type: 'answer',
           signal_data: pc.localDescription
@@ -707,7 +707,7 @@ export const ActiveCallModal = ({
       // رفع التسجيل
       await stopAndUploadRecording();
       
-      await axios.post(`${API}/voip/call/action`, {
+      await axios.post(`${API}/api/voip/call/action`, {
         call_id: callId,
         action: 'end'
       });

@@ -14,8 +14,8 @@ const NewArrivalsPage = () => {
     const fetchData = async () => {
       try {
         const [productsRes, badgeRes] = await Promise.all([
-          axios.get(`${API}/products/newly-added`),
-          axios.get(`${API}/settings/product-badges`).catch(() => ({ data: null }))
+          axios.get(`${API}/api/products/newly-added`),
+          axios.get(`${API}/api/settings/product-badges`).catch(() => ({ data: null }))
         ]);
         setProducts(productsRes.data || []);
         setBadgeSettings(badgeRes.data);

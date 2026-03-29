@@ -41,9 +41,9 @@ const PlatformWalletTab = () => {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [walletRes, transactionsRes, paymentRes] = await Promise.all([
-        axios.get(`${API}/admin/platform-wallet`, { headers }),
-        axios.get(`${API}/admin/platform-wallet/transactions?limit=20`, { headers }),
-        axios.get(`${API}/payment/v2/admin/settings`).catch(() => ({ data: {} }))
+        axios.get(`${API}/api/admin/platform-wallet`, { headers }),
+        axios.get(`${API}/api/admin/platform-wallet/transactions?limit=20`, { headers }),
+        axios.get(`${API}/api/payment/v2/admin/settings`).catch(() => ({ data: {} }))
       ]);
       
       setWallet(walletRes.data);
@@ -84,7 +84,7 @@ const PlatformWalletTab = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API}/admin/platform-wallet/withdraw`,
+        `${API}/api/admin/platform-wallet/withdraw`,
         null,
         { 
           headers: { Authorization: `Bearer ${token}` },

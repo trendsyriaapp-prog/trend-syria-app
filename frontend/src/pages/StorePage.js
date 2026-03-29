@@ -26,7 +26,7 @@ const StorePage = () => {
   const fetchStore = async () => {
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.get(`${API}/stores/${sellerId}`, { headers });
+      const res = await axios.get(`${API}/api/stores/${sellerId}`, { headers });
       setStore(res.data);
       setFollowing(res.data.is_following);
     } catch (error) {
@@ -45,13 +45,13 @@ const StorePage = () => {
     setFollowLoading(true);
     try {
       if (following) {
-        await axios.delete(`${API}/stores/${sellerId}/follow`, {
+        await axios.delete(`${API}/api/stores/${sellerId}/follow`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFollowing(false);
         setStore(prev => ({ ...prev, followers_count: prev.followers_count - 1 }));
       } else {
-        await axios.post(`${API}/stores/${sellerId}/follow`, {}, {
+        await axios.post(`${API}/api/stores/${sellerId}/follow`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setFollowing(true);

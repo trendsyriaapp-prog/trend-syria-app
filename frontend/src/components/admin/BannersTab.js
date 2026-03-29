@@ -29,10 +29,10 @@ const BannersTab = ({ token }) => {
   const fetchBanners = async () => {
     try {
       const [homeRes, foodRes] = await Promise.all([
-        axios.get(`${API}/admin/homepage-banners`, {
+        axios.get(`${API}/api/admin/homepage-banners`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API}/admin/food-banners`, {
+        axios.get(`${API}/api/admin/food-banners`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
