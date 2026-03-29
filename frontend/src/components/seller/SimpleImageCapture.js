@@ -313,16 +313,15 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - مع تحكم أفقي وعمودي
+        // رسم الظل أولاً - مع تحكم أفقي وعمودي (زاوية الإضاءة ثابتة)
         if (selectedShadow !== 'none') {
           ctx.save();
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
           const shadowX = (shadowOffsetX - 50) / 100 * scaledWidth;
           ctx.translate(centerX + shadowX, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
-          // مضغوط + مائل
-          const skewAmount = (shadowOffsetX - 50) / 100 * -0.5;
-          ctx.transform(1, 0, skewAmount, 0.35, 0, 0);
+          // زاوية ثابتة للإضاءة
+          ctx.transform(1, 0, -0.25, 0.35, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.18;
           ctx.filter = `blur(${selectedShadow === 'strong' ? 6 : 4}px)`;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
@@ -459,7 +458,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* الظل الأرضي - خلف المنتج مع تحكم أفقي وعمودي */}
+              {/* الظل الأرضي - زاوية إضاءة ثابتة مع تحكم بالموقع */}
               {selectedShadow !== 'none' && (
                 <img 
                   src={processedImage} 
@@ -467,9 +466,9 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
                   style={{ 
                     top: `${shadowOffset - 50}%`,
-                    left: `${20 + shadowOffsetX}%`,
+                    left: `${shadowOffsetX}%`,
                     filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(${(shadowOffsetX - 50) * -0.4}deg)`,
+                    transform: `translateX(-50%) scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-15deg)`,
                     transformOrigin: 'center top',
                     opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
                     zIndex: 0,
