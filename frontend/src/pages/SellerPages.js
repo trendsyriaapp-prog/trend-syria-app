@@ -848,6 +848,8 @@ const SellerDashboardPage = () => {
         description: getErrorMessage(error, "حدث خطأ"),
         variant: "destructive"
       });
+      // إعادة رمي الخطأ ليعرف AddProductModal أن هناك مشكلة
+      throw error;
     } finally {
       setSaving(false);
     }
