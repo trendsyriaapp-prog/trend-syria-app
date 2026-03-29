@@ -699,6 +699,7 @@ const SellerDashboardPage = () => {
   const [activeStatView, setActiveStatView] = useState(null);
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
   const [commissionInfo, setCommissionInfo] = useState(null);
+  const [storeLogo, setStoreLogo] = useState(null);
 
   // صوت التنبيه للطلبات الجديدة
   const { playSound } = useNotificationSound();
@@ -791,6 +792,16 @@ const SellerDashboardPage = () => {
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
+      
+      // جلب صورة المتجر
+      try {
+        const settingsRes = await axios.get(`${API}/api/auth/seller/store-settings`, { headers });
+        if (settingsRes.data?.store_logo) {
+          setStoreLogo(settingsRes.data.store_logo);
+        }
+      } catch (e) {
+        console.log('Could not fetch store logo');
+      }
       
       if (isFoodSeller) {
         // بائع طعام - جلب الأطباق وطلبات الطعام
@@ -1110,8 +1121,12 @@ const SellerDashboardPage = () => {
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center">
-                <Package size={20} className="text-[#FF6B00]" />
+              <div className="w-12 h-12 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden">
+                {storeLogo ? (
+                  <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
+                ) : (
+                  <Package size={20} className="text-[#FF6B00]" />
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -1552,19 +1567,19 @@ const SellerDashboardPage = () => {
         {activeTab === 'settings' && (
           <div className="space-y-4">
             {/* إعدادات المتجر */}
-            <StoreSettingsTab />
+            <StoreSettingsTab onLogoUpdate={(logo) => setStoreLogo(logo)} />
             
             {/* روابط إضافية */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
               <Link
                 to="/?view=customer"
-                className="flex items-center justify-between bg-gray-50 rounded-xl p-4"
+                className="flex items-center justify-between bg-[#FF6B00]/10 border-2 border-[#FF6B00] rounded-xl p-4"
               >
                 <div className="flex items-center gap-3">
-                  <Home size={20} className="text-gray-500" />
-                  <span className="font-medium">تصفح كعميل</span>
+                  <Home size={20} className="text-[#FF6B00]" />
+                  <span className="font-medium text-[#FF6B00]">تصفح كعميل</span>
                 </div>
-                <ChevronRight size={20} className="text-gray-400" />
+                <ChevronRight size={20} className="text-[#FF6B00]" />
               </Link>
             </div>
           </div>

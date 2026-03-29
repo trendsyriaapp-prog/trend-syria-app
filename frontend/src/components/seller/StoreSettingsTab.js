@@ -26,7 +26,7 @@ const PAYMENT_TYPES = [
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 
-const StoreSettingsTab = () => {
+const StoreSettingsTab = ({ onLogoUpdate }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -106,6 +106,10 @@ const StoreSettingsTab = () => {
           });
           
           setStoreLogo(imageDataUrl);
+          // تحديث الصورة في الهيدر
+          if (onLogoUpdate) {
+            onLogoUpdate(imageDataUrl);
+          }
           toast({ title: "تم", description: "تم تحديث صورة المتجر" });
         } catch (error) {
           toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });

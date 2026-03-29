@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ExternalLink, Check, X, Loader2 } from 'lucide-react';
+import { MapPin, ExternalLink, Check, X, Loader2, Settings } from 'lucide-react';
 
 /**
  * مكون لاختيار الموقع من Google Maps
@@ -13,11 +13,32 @@ const GoogleMapsLocationPicker = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
+  // فتح إعدادات الموقع في الهاتف
+  const openLocationSettings = () => {
+    // للتطبيقات المحلية عبر Capacitor
+    if (window.Capacitor?.isNativePlatform()) {
+      try {
+        if (window.Capacitor.Plugins?.App) {
+          window.Capacitor.Plugins.App.openUrl({ url: 'app-settings:location' });
+        }
+      } catch (e) {
+        // fallback للويب
+        alert('يرجى فتح إعدادات الهاتف يدوياً وتفعيل خدمة الموقع (GPS)');
+      }
+    } else {
+      // للويب - إظهار تعليمات
+      alert('يرجى تفعيل خدمة الموقع من إعدادات المتصفح أو الهاتف');
+    }
+    setShowLocationPrompt(false);
+  };
 
   // استخدام GPS الهاتف مباشرة
   const getCurrentLocation = () => {
     setLoading(true);
     setError(null);
+    setShowLocationPrompt(false);
 
     if (!navigator.geolocation) {
       setError('المتصفح لا يدعم تحديد الموقع');
@@ -37,14 +58,20 @@ const GoogleMapsLocationPicker = ({
       },
       (err) => {
         console.error('Geolocation error:', err);
+        setLoading(false);
+        
         if (err.code === 1) {
-          setError('تم رفض إذن الموقع. يرجى السماح بالوصول للموقع من إعدادات المتصفح');
+          // PERMISSION_DENIED
+          setError('تم رفض إذن الموقع');
+          setShowLocationPrompt(true);
         } else if (err.code === 2) {
-          setError('لا يمكن تحديد الموقع. تأكد من تفعيل GPS');
+          // POSITION_UNAVAILABLE - GPS مغلق
+          setError('خدمة الموقع غير مفعّلة');
+          setShowLocationPrompt(true);
         } else {
+          // TIMEOUT
           setError('انتهت مهلة تحديد الموقع. حاول مرة أخرى');
         }
-        setLoading(false);
       },
       {
         enableHighAccuracy: true,
@@ -246,13 +273,25 @@ const GoogleMapsLocationPicker = ({
         </div>
       )}
 
-      {/* رسالة الخطأ */}
+      {/* رسالة الخطأ مع زر فتح الإعدادات */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-sm font-bold text-red-700 mb-1">⚠️ تعذر تحديد الموقع</p>
           <p className="text-xs text-red-600">{error}</p>
+          
+          {showLocationPrompt && (
+            <button
+              type="button"
+              onClick={openLocationSettings}
+              className="mt-3 w-full flex items-center justify-center gap-2 p-2 bg-orange-500 text-white rounded-lg font-bold text-sm hover:bg-orange-600 transition-all"
+            >
+              <Settings size={16} />
+              <span>فتح إعدادات الموقع</span>
+            </button>
+          )}
+          
           <p className="text-xs text-gray-600 mt-2">
-            💡 جرّب استخدام زر "لصق من Maps" بدلاً من ذلك
+            💡 أو جرّب استخدام زر "لصق من Maps" بدلاً من ذلك
           </p>
         </div>
       )}
