@@ -20,6 +20,32 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ## What's Been Implemented
 
+### March 2026 - Session 2 (29 Mar 2026)
+- ✅ **UltraMsg WhatsApp API Integration** - Ready for activation ($39/month)
+  - Service file: `/app/backend/services/whatsapp_service.py`
+  - Endpoints: `/api/auth/send-whatsapp-otp`, `/api/auth/verify-whatsapp-otp`
+  - Instance ID: 167761, Token saved in `.env`
+- ✅ **Fixed Image Upload Bug** - Second image upload via "+" button now works
+  - Added `validateAndEnhanceImage` import
+  - Fixed undefined state variables
+- ✅ **Fixed Product Preview Modal** - Swipe gesture to change images
+- ✅ **Fixed All API Endpoints** - Added `/api` prefix to 100+ endpoints across all files
+- ✅ **Fixed "Order Ready for Shipping" Button** - Corrected endpoint path
+- ✅ **Fixed Store Settings** - Logo, latitude, longitude now save and load correctly
+- ✅ **Packaging Guide Tab** - Full content moved from separate page to bottom nav tab
+- ✅ **Removed "Packaging Guide" button** from Settings (no longer needed)
+- ✅ **"Browse as Customer" button** - Changed to orange color
+- ✅ **Store Logo in Header** - Updates immediately when changed in settings
+- ✅ **GPS Location Handler** - Shows error message and "Open Settings" button when GPS is off
+- ✅ **Order Label Print** - Fixed order code to match display (last 6 chars)
+- ✅ **WhatsApp Support Number** - Added `0945570365` to:
+  - About page (green card with direct link)
+  - Orders page (floating help button)
+  - Order tracking page (floating help button)
+  - WhatsApp floating button (default number)
+  - Backend settings
+- ✅ **Python Code Cleanup** - Fixed 539 lint errors (unused variables, bare except, etc.)
+
 ### March 2026 - Food Store Dashboard Parity (29 Mar 2026)
 - ✅ **Added Product Approval Status Badges to Food Store Dashboard** (`FoodStoreDashboard.js`)
   - Yellow badge (بانتظار الموافقة) for pending products

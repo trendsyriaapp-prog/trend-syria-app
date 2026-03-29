@@ -47,29 +47,16 @@ const GoogleMapsLocationPicker = ({
       return;
     }
 
-    // التحقق أولاً من صلاحيات الموقع
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        if (result.state === 'denied') {
-          setError('صلاحية الموقع مرفوضة. يرجى تفعيلها من الإعدادات.');
-          setShowLocationPrompt(true);
-          setLoading(false);
-          return;
-        }
-        // إذا لم تكن مرفوضة، نحاول الحصول على الموقع
-        requestLocation();
-      }).catch(() => {
-        // إذا فشل التحقق من الصلاحيات، نحاول مباشرة
-        requestLocation();
-      });
-    } else {
-      requestLocation();
-    }
-  };
+    // إعداد timeout يدوي للتأكد من الاستجابة
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError('خدمة الموقع (GPS) غير مفعّلة أو بطيئة. يرجى تفعيل GPS.');
+      setShowLocationPrompt(true);
+    }, 8000);
 
-  const requestLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        clearTimeout(timeoutId);
         const { latitude, longitude } = position.coords;
         onLocationSelect({
           latitude,
@@ -78,31 +65,31 @@ const GoogleMapsLocationPicker = ({
         });
         setLoading(false);
         setError(null);
+        setShowLocationPrompt(false);
       },
       (err) => {
+        clearTimeout(timeoutId);
         console.error('Geolocation error:', err);
         setLoading(false);
         
         if (err.code === 1) {
-          // PERMISSION_DENIED
           setError('تم رفض إذن الموقع. يرجى السماح من إعدادات الهاتف.');
           setShowLocationPrompt(true);
         } else if (err.code === 2) {
-          // POSITION_UNAVAILABLE - GPS مغلق
-          setError('خدمة الموقع (GPS) غير مفعّلة. يرجى تفعيلها.');
+          setError('خدمة الموقع (GPS) غير مفعّلة. يرجى تفعيلها من الإعدادات.');
           setShowLocationPrompt(true);
         } else if (err.code === 3) {
-          // TIMEOUT
           setError('انتهت المهلة. تأكد من تفعيل GPS وحاول مرة أخرى.');
           setShowLocationPrompt(true);
         } else {
-          setError('حدث خطأ في تحديد الموقع.');
+          setError('حدث خطأ في تحديد الموقع. حاول مرة أخرى.');
+          setShowLocationPrompt(true);
         }
       },
       {
-        enableHighAccuracy: false, // أسرع
-        timeout: 5000, // 5 ثواني فقط
-        maximumAge: 60000 // قبول موقع محفوظ لمدة دقيقة
+        enableHighAccuracy: false,
+        timeout: 7000,
+        maximumAge: 60000
       }
     );
   };

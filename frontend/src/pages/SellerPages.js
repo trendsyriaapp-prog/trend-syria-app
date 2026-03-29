@@ -959,9 +959,9 @@ const SellerDashboardPage = () => {
   const handleSellerAction = async (orderId, action) => {
     try {
       const endpoints = {
-        'confirm': `/orders/${orderId}/seller/confirm`,
-        'preparing': `/orders/${orderId}/seller/preparing`,
-        'shipped': `/orders/${orderId}/seller/shipped`
+        'confirm': `/api/orders/${orderId}/seller/confirm`,
+        'preparing': `/api/orders/${orderId}/seller/preparing`,
+        'shipped': `/api/orders/${orderId}/seller/shipped`
       };
       
       await axios.post(`${API}${endpoints[action]}`, {}, {
