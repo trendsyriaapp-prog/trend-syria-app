@@ -221,7 +221,7 @@ const FoodOrdersSection = ({ orders, onStatusChange }) => {
                 onClick={() => onStatusChange(order.id, 'accepted')}
                 className="flex-1 bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600"
               >
-                قبول الطلب
+                استلام الطلب
               </button>
               <button
                 onClick={() => onStatusChange(order.id, 'rejected')}
