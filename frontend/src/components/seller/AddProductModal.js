@@ -579,8 +579,8 @@ const AddProductModal = ({
                   onClick={() => setSellingType('weight')}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                     sellingType === 'weight' 
-                      ? 'bg-[#FF6B00] text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-[#E65000] text-white' 
+                      : 'bg-[#FF6B00] text-white hover:bg-[#E65000]'
                   }`}
                 >
                   بالوزن
@@ -897,7 +897,7 @@ const AddProductModal = ({
                         setShowImageCapture(true);
                       }}
                       disabled={uploadingImage}
-                      className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E65000] transition-colors disabled:opacity-50"
                       data-testid="gallery-upload-btn"
                     >
                       {uploadingImage ? (
