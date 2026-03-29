@@ -1,10 +1,37 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Heart, Share2, ShoppingCart, Star, Truck, Shield, RotateCcw, ChevronLeft, Store } from 'lucide-react';
 
 const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPrice, productDescription, productCategory, storeName }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  
+  // للتمرير بالسحب
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50; // الحد الأدنى للسحب
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        // سحب لليسار - الصورة التالية
+        setCurrentImage(prev => (prev + 1) % images.length);
+      } else {
+        // سحب لليمين - الصورة السابقة
+        setCurrentImage(prev => (prev - 1 + images.length) % images.length);
+      }
+    }
+  };
   
   if (!isOpen || !images || images.length === 0) return null;
 
@@ -74,7 +101,12 @@ const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPric
 
         {/* صورة المنتج */}
         <div className="bg-white">
-          <div className="aspect-square relative overflow-hidden">
+          <div 
+            className="aspect-square relative overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <img
               src={getImageSrc(images[currentImage])}
               alt="Product Preview"
