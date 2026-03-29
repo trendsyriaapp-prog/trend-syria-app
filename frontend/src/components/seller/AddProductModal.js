@@ -1041,7 +1041,7 @@ const AddProductModal = ({
                   type="button"
                   onClick={() => document.getElementById('product-video').click()}
                   disabled={uploadingVideo}
-                  className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-[10px] flex items-center justify-center gap-1 hover:border-[#FF6B00] hover:text-[#FF6B00]"
+                  className="w-full py-2 bg-[#FF6B00] text-white rounded-lg text-[10px] flex items-center justify-center gap-1 hover:bg-[#E65000] font-bold disabled:opacity-50"
                 >
                   {uploadingVideo ? (
                     <Loader2 size={12} className="animate-spin" />
