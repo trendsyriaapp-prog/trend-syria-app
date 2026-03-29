@@ -7,7 +7,7 @@ import {
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
-  Eye, EyeOff
+  Eye, EyeOff, RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -1243,34 +1243,55 @@ const SellerDashboardPage = () => {
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-[#FF6B00]'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        {/* زر إظهار/إخفاء واضح */}
-                        <button
-                          onClick={() => handleToggleAvailability(product.id, product.is_available)}
-                          data-testid={`toggle-availability-${product.id}`}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            product.is_available 
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                              : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                          }`}
-                        >
-                          {product.is_available ? (
-                            <>
-                              <Eye size={14} />
-                              <span>متاح</span>
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff size={14} />
-                              <span>إظهار</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-                        >
-                          <Edit2 size={16} />
-                        </button>
+                        {/* أزرار حسب حالة المنتج */}
+                        {product.approval_status === 'rejected' ? (
+                          /* منتج مرفوض - زر إعادة إرسال */
+                          <button
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200"
+                          >
+                            <RotateCcw size={14} />
+                            <span>تعديل وإعادة إرسال</span>
+                          </button>
+                        ) : product.approval_status === 'pending' || !product.is_approved ? (
+                          /* منتج معلق - بدون زر إظهار/إخفاء */
+                          null
+                        ) : (
+                          /* منتج موافق عليه - زر إظهار/إخفاء */
+                          <button
+                            onClick={() => handleToggleAvailability(product.id, product.is_available)}
+                            data-testid={`toggle-availability-${product.id}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              product.is_available 
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                            }`}
+                          >
+                            {product.is_available ? (
+                              <>
+                                <Eye size={14} />
+                                <span>متاح</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff size={14} />
+                                <span>إظهار</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {/* زر التعديل - للجميع ما عدا المرفوض (له زر خاص) */}
+                        {product.approval_status !== 'rejected' && (
+                          <button
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
+                        
+                        {/* زر الحذف - للجميع */}
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
                           className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
