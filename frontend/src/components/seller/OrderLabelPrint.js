@@ -154,7 +154,7 @@ const OrderLabelPrint = ({ order, onClose }) => {
                   شكراً لتسوقك من ترند سورية
                 </p>
                 <p style={{ fontSize: '10px', color: '#25D366', margin: '5px 0 0 0', fontWeight: 'bold' }}>
-                  📞 للدعم واتساب: 0912345678
+                  📞 للدعم واتساب: 0945570365
                 </p>
               </div>
             </div>
