@@ -795,8 +795,8 @@ const SellerDashboardPage = () => {
       if (isFoodSeller) {
         // بائع طعام - جلب الأطباق وطلبات الطعام
         const [menuRes, foodOrdersRes] = await Promise.all([
-          axios.get(`${API}/food/my-items`, { headers }),
-          axios.get(`${API}/food/orders/seller`, { headers })
+          axios.get(`${API}/api/food/my-items`, { headers }),
+          axios.get(`${API}/api/food/orders/seller`, { headers })
         ]);
         setFoodItems(menuRes.data || []);
         setFoodOrders(foodOrdersRes.data || []);
@@ -827,14 +827,14 @@ const SellerDashboardPage = () => {
       
       if (isFoodSeller) {
         // إضافة طبق جديد
-        await axios.post(`${API}/food/items`, productData, { headers });
+        await axios.post(`${API}/api/food/items`, productData, { headers });
         toast({
           title: "تم الإضافة",
           description: "تمت إضافة الطبق بنجاح"
         });
       } else {
         // إضافة منتج جديد
-        await axios.post(`${API}/products`, productData, { headers });
+        await axios.post(`${API}/api/products`, productData, { headers });
         toast({
           title: "تم الإضافة",
           description: "تمت إضافة المنتج بنجاح"
@@ -861,9 +861,9 @@ const SellerDashboardPage = () => {
       const headers = { Authorization: `Bearer ${token}` };
       
       if (isFoodSeller) {
-        await axios.delete(`${API}/food/items/${productId}`, { headers });
+        await axios.delete(`${API}/api/food/items/${productId}`, { headers });
       } else {
-        await axios.delete(`${API}/products/${productId}`, { headers });
+        await axios.delete(`${API}/api/products/${productId}`, { headers });
       }
       toast({
         title: "تم الحذف",
@@ -918,7 +918,7 @@ const SellerDashboardPage = () => {
     
     setSavingEdit(true);
     try {
-      await axios.put(`${API}/products/${editingProduct.id}`, {
+      await axios.put(`${API}/api/products/${editingProduct.id}`, {
         price: parseFloat(editPrice),
         stock: parseInt(editStock)
       }, {
@@ -978,7 +978,7 @@ const SellerDashboardPage = () => {
   // تبديل حالة توفر المنتج (إظهار/إخفاء)
   const handleToggleAvailability = async (productId, currentStatus) => {
     try {
-      await axios.put(`${API}/products/${productId}`, {
+      await axios.put(`${API}/api/products/${productId}`, {
         is_available: !currentStatus
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -1003,7 +1003,7 @@ const SellerDashboardPage = () => {
   // Handler جديد لتغيير حالة توفر منتج الطعام (3 حالات)
   const handleChangeFoodAvailability = async (itemId, newStatus) => {
     try {
-      await axios.put(`${API}/food/products/${itemId}/availability?status=${newStatus}`, {}, {
+      await axios.put(`${API}/api/food/products/${itemId}/availability?status=${newStatus}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -1033,7 +1033,7 @@ const SellerDashboardPage = () => {
 
   const handleFoodOrderStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`${API}/food-orders/${orderId}/status`, { status: newStatus }, {
+      await axios.put(`${API}/api/food-orders/${orderId}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
