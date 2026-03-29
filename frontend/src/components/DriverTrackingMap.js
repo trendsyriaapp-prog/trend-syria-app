@@ -6,7 +6,7 @@ import { Loader2, Navigation, MapPin, Clock, RefreshCw, Route } from 'lucide-rea
 import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // أيقونات مخصصة
 const createIcon = (emoji, color) => {

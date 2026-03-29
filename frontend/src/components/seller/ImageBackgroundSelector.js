@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { X, Loader2, Wand2, Check, Image as ImageIcon } from 'lucide-react';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // ألوان الخلفيات للمعاينة
 const BACKGROUND_COLORS = {

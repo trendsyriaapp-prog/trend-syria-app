@@ -9,7 +9,7 @@ import {
   Sofa, Refrigerator, Coffee, Cake, Croissant, GlassWater, Package
 } from 'lucide-react';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const iconMap = {
   Smartphone, Shirt, Home: HomeIcon, Dumbbell, 

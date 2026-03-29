@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Percent, Edit2, Trash2, Plus, Store, Utensils, Save, X } from 'lucide-react';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

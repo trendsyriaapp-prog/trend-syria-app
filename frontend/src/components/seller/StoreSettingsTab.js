@@ -11,7 +11,7 @@ import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const SYRIAN_CITIES = [
   'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',

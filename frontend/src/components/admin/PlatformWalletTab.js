@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const PlatformWalletTab = () => {
   const { toast } = useToast();

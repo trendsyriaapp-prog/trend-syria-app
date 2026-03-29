@@ -13,7 +13,7 @@ import { useToast } from '../hooks/use-toast';
 import NotificationsDropdown from './NotificationsDropdown';
 import ImageSearchModal from './ImageSearchModal';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

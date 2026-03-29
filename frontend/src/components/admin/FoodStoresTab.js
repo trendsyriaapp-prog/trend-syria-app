@@ -11,7 +11,7 @@ import { useToast } from '../../hooks/use-toast';
 import RejectModal from './RejectModal';
 import ImageLightbox from '../ui/ImageLightbox';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const STORE_TYPES = {
   restaurants: { name: 'مطاعم', icon: UtensilsCrossed, color: 'bg-red-500' },

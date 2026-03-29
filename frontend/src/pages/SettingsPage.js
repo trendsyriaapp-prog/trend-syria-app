@@ -27,7 +27,7 @@ import NotificationToneSettings from '../components/delivery/NotificationToneSet
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 import VoiceAnnouncementSettings from '../components/delivery/VoiceAnnouncementSettings';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const SYRIAN_CITIES = [
   'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',

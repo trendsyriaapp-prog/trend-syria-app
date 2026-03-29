@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Zap, Loader2, Clock } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const FlashSaleProductsPage = () => {
   const [products, setProducts] = useState([]);

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Star, MessageSquare, Send, Loader2, Package, CheckCircle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const StarRating = ({ rating, size = 12 }) => (
   <div className="flex gap-0.5">

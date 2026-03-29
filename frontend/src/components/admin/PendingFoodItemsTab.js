@@ -7,7 +7,7 @@ import { Check, X, UtensilsCrossed, RefreshCw, Store } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import RejectModal from './RejectModal';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

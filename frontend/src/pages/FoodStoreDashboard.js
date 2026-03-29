@@ -20,7 +20,7 @@ import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import SimpleImageCapture from '../components/seller/SimpleImageCapture';
 import DriverWaitingAlert from '../components/seller/DriverWaitingAlert';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // المدن السورية
 const SYRIAN_CITIES = [

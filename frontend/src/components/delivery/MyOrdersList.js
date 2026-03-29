@@ -9,7 +9,7 @@ import { OutgoingCallModal } from '../voip/VoIPCallModal';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // Hook لمنع التمرير في الخلفية عند فتح Modal
 const usePreventBodyScroll = (isOpen) => {

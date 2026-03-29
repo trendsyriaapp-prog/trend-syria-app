@@ -9,7 +9,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

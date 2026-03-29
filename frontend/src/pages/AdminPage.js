@@ -64,7 +64,7 @@ import AllPendingJoinRequests from '../components/admin/AllPendingJoinRequests';
 import AllPendingItemsTab from '../components/admin/AllPendingItemsTab';
 import AllWithdrawRequestsTab from '../components/admin/AllWithdrawRequestsTab';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();

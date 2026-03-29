@@ -14,7 +14,7 @@ import { useSettings } from '../context/SettingsContext';
 import GiftModal from '../components/GiftModal';
 import ProductCard from '../components/ProductCard';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

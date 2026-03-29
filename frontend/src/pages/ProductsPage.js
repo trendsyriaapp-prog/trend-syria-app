@@ -7,7 +7,7 @@ import ProductCard from '../components/ProductCard';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import { useScroll } from '../context/ScrollContext';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // 🔥 مكون العداد التنازلي لفلاش
 const FlashCountdown = ({ endTime }) => {

@@ -12,7 +12,7 @@ import { useFoodCart } from '../context/FoodCartContext';
 import { useToast } from '../hooks/use-toast';
 import LocationPickerMap from '../components/LocationPickerMap';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

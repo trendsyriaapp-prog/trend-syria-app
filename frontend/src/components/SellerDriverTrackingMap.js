@@ -8,7 +8,7 @@ import axios from 'axios';
 import { Loader2, Navigation, MapPin, Clock, RefreshCw, User } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // أيقونات مخصصة
 const createIcon = (emoji, color) => {

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Clock, AlertTriangle, Truck, XCircle } from 'lucide-react';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const DriverWaitingAlert = ({ 
   arrivedAt, // ISO string - وقت وصول السائق

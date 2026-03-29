@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 import ProductCard from './ProductCard';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const InfiniteProductList = ({ 
   category = '',

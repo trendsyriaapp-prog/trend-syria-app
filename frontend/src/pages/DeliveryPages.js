@@ -30,7 +30,7 @@ import EarningsStats from '../components/delivery/EarningsStats';
 import RouteProgressBar from '../components/delivery/RouteProgressBar';
 import '../styles/driver-dark-theme.css';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // صفحة رفع وثائق موظف التوصيل
 const DeliveryDocuments = () => {

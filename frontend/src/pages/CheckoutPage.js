@@ -11,7 +11,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../hooks/use-toast';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة', 'ريف دمشق'];
 

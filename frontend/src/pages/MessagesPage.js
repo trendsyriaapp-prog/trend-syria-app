@@ -6,7 +6,7 @@ import { Send, ArrowRight, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const MessagesPage = () => {
   const navigate = useNavigate();

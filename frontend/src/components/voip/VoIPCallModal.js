@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // إعدادات STUN/TURN servers
 const ICE_SERVERS = {

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Truck, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const FreeShippingProductsPage = () => {
   const [products, setProducts] = useState([]);

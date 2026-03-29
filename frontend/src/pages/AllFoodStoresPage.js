@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import LazyImage from '../components/LazyImage';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // Cache للمتاجر
 const storesCache = {

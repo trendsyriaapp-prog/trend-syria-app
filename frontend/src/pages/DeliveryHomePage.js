@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../utils/imageHelpers';
 import DeliverySettingsTab from '../components/delivery/DeliverySettingsTab';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const DeliveryHomePage = () => {
   const { user } = useAuth();

@@ -4,7 +4,7 @@ import { X, Star, Send, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const RateDriverModal = ({ order, onClose, onSuccess }) => {
   const [rating, setRating] = useState(0);

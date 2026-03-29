@@ -5,7 +5,7 @@ import { Store, Package, Heart, Loader2, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const FollowingPage = () => {
   const { user, token } = useAuth();

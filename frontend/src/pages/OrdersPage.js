@@ -8,7 +8,7 @@ import { useCart } from '../context/CartContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
 import { useToast } from '../hooks/use-toast';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';

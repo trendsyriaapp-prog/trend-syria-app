@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import DriverTrackingMap from '../components/DriverTrackingMap';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // مدة السماح بالإلغاء بالثواني (3 دقائق)
 const CANCEL_WINDOW_SECONDS = 3 * 60;
