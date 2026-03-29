@@ -2157,7 +2157,7 @@ const StoreOrdersTab = ({ token }) => {
   const fetchOrders = async () => {
     try {
       const params = filter !== 'all' ? { status: filter } : {};
-      const res = await axios.get(`${API}/food/orders/store/orders`, {
+      const res = await axios.get(`${API}/api/food/orders/store/orders`, {
         params,
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -2171,7 +2171,7 @@ const StoreOrdersTab = ({ token }) => {
 
   const updateStatus = async (orderId, newStatus) => {
     try {
-      await axios.post(`${API}/food/orders/store/orders/${orderId}/status`, null, {
+      await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
         params: { new_status: newStatus },
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -2187,7 +2187,7 @@ const StoreOrdersTab = ({ token }) => {
     setPrepSubmitting(true);
     try {
       const res = await axios.post(
-        `${API}/food/orders/store/orders/${orderId}/start-preparation`,
+        `${API}/api/food/orders/store/orders/${orderId}/start-preparation`,
         { preparation_time_minutes: prepTime },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -2230,7 +2230,7 @@ const StoreOrdersTab = ({ token }) => {
 
     try {
       const res = await axios.post(
-        `${API}/food/orders/store/orders/${orderId}/report-false-arrival`,
+        `${API}/api/food/orders/store/orders/${orderId}/report-false-arrival`,
         null,
         { 
           params: { reason: 'السائق لم يصل فعلياً' },
@@ -2266,7 +2266,7 @@ const StoreOrdersTab = ({ token }) => {
     setRequestingDriver(orderId);
     try {
       const res = await axios.post(
-        `${API}/food/orders/store/orders/${orderId}/request-driver`,
+        `${API}/api/food/orders/store/orders/${orderId}/request-driver`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -2299,7 +2299,7 @@ const StoreOrdersTab = ({ token }) => {
     setSettingPrepTime(true);
     try {
       const res = await axios.post(
-        `${API}/food/orders/store/orders/${orderId}/set-preparation-time`,
+        `${API}/api/food/orders/store/orders/${orderId}/set-preparation-time`,
         { preparation_time_minutes: newPrepTime },
         { headers: { Authorization: `Bearer ${token}` } }
       );

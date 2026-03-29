@@ -1035,12 +1035,14 @@ const SellerDashboardPage = () => {
 
   const handleFoodOrderStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`${API}/api/food-orders/${orderId}/status`, { status: newStatus }, {
+      await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
+        params: { new_status: newStatus },
         headers: { Authorization: `Bearer ${token}` }
       });
       
       const statusMessages = {
         'accepted': 'تم قبول الطلب',
+        'confirmed': 'تم تأكيد الطلب',
         'preparing': 'جاري تحضير الطلب',
         'ready': 'الطلب جاهز للاستلام',
         'rejected': 'تم رفض الطلب'
