@@ -32,7 +32,7 @@ import SellerProductsGrid from '../components/seller/SellerProductsGrid';
 import SellerOrdersSection from '../components/seller/SellerOrdersSection';
 import StatDetailsModal from '../components/seller/StatDetailsModal';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 // دالة مساعدة لاستخراج رسالة الخطأ من الـ API
 const getErrorMessage = (error, defaultMsg = "حدث خطأ") => {
