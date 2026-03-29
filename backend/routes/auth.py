@@ -1369,3 +1369,133 @@ async def admin_reset_user_password(phone: str, admin: dict = Depends(get_curren
         "message": f"تم إعادة تعيين كلمة مرور {phone} إلى: {default_password}",
         "force_password_change": True
     }
+
+
+
+# ============== WhatsApp OTP ==============
+
+@router.post("/send-whatsapp-otp")
+@limiter.limit("3/minute")
+async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
+    """
+    إرسال رمز OTP عبر واتساب لاستعادة كلمة المرور
+    """
+    from services.whatsapp_service import send_password_reset_otp
+    
+    client_ip = get_remote_address(request)
+    
+    # التحقق من صحة رقم الهاتف
+    if not validate_phone(data.phone):
+        raise HTTPException(status_code=400, detail="رقم الهاتف غير صحيح")
+    
+    # البحث عن المستخدم
+    user = await db.users.find_one({"phone": data.phone}, {"_id": 0, "id": 1, "full_name": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    # توليد رمز OTP (6 أرقام)
+    otp_code = ''.join(random.choices(string.digits, k=6))
+    
+    # حفظ OTP في قاعدة البيانات (صالح لمدة 10 دقائق)
+    await db.otp_codes.update_one(
+        {"phone": data.phone},
+        {
+            "$set": {
+                "phone": data.phone,
+                "user_id": user["id"],
+                "otp": otp_code,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "expires_at": (datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(minutes=10)).isoformat(),
+                "used": False,
+                "attempts": 0
+            }
+        },
+        upsert=True
+    )
+    
+    # إرسال OTP عبر واتساب
+    result = await send_password_reset_otp(data.phone, otp_code)
+    
+    if result.get("success"):
+        return {
+            "sent": True,
+            "message": "تم إرسال رمز التحقق عبر واتساب"
+        }
+    else:
+        raise HTTPException(status_code=500, detail="فشل إرسال الرسالة. تأكد من أن رقمك مسجل على واتساب.")
+
+
+@router.post("/verify-whatsapp-otp")
+@limiter.limit("5/minute")
+async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
+    """
+    التحقق من رمز OTP المرسل عبر واتساب
+    """
+    client_ip = get_remote_address(request)
+    
+    # البحث عن OTP
+    otp_record = await db.otp_codes.find_one({"phone": phone, "used": False}, {"_id": 0})
+    
+    if not otp_record:
+        raise HTTPException(status_code=404, detail="لم يتم طلب رمز تحقق لهذا الرقم")
+    
+    # التحقق من انتهاء الصلاحية
+    expires_at = datetime.fromisoformat(otp_record["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً.")
+    
+    # التحقق من عدد المحاولات
+    if otp_record.get("attempts", 0) >= 5:
+        raise HTTPException(status_code=429, detail="تم تجاوز عدد المحاولات المسموح. اطلب رمزاً جديداً.")
+    
+    # زيادة عدد المحاولات
+    await db.otp_codes.update_one(
+        {"phone": phone},
+        {"$inc": {"attempts": 1}}
+    )
+    
+    # التحقق من OTP
+    if otp_record["otp"] != otp:
+        remaining = 5 - otp_record.get("attempts", 0) - 1
+        raise HTTPException(status_code=401, detail=f"رمز التحقق غير صحيح. المحاولات المتبقية: {remaining}")
+    
+    # OTP صحيح - توليد رمز إعادة التعيين
+    reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    
+    # تحديث OTP كمستخدم
+    await db.otp_codes.update_one(
+        {"phone": phone},
+        {"$set": {"used": True}}
+    )
+    
+    # حفظ رمز إعادة التعيين
+    await db.password_resets.update_one(
+        {"phone": phone},
+        {
+            "$set": {
+                "phone": phone,
+                "user_id": otp_record["user_id"],
+                "token": reset_token,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "used": False
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "verified": True,
+        "reset_token": reset_token,
+        "message": "تم التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور."
+    }
+
+
+@router.get("/whatsapp/status")
+async def check_whatsapp_status():
+    """
+    التحقق من حالة اتصال واتساب
+    """
+    from services.whatsapp_service import check_connection
+    
+    result = await check_connection()
+    return result
