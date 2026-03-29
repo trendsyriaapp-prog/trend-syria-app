@@ -507,6 +507,9 @@ class StoreSettingsUpdate(BaseModel):
     store_address: Optional[str] = None
     store_city: Optional[str] = None
     store_phone: Optional[str] = None
+    store_logo: Optional[str] = None
+    store_latitude: Optional[float] = None
+    store_longitude: Optional[float] = None
 
 class PaymentAccountUpdate(BaseModel):
     type: str  # shamcash, syriatel_cash, mtn_cash, bank_account
@@ -523,7 +526,7 @@ async def get_store_settings(user: dict = Depends(get_current_user)):
     
     seller = await db.users.find_one(
         {"id": user["id"]},
-        {"_id": 0, "store_name": 1, "store_description": 1, "store_address": 1, "store_city": 1, "store_phone": 1, "city": 1, "phone": 1}
+        {"_id": 0, "store_name": 1, "store_description": 1, "store_address": 1, "store_city": 1, "store_phone": 1, "city": 1, "phone": 1, "store_logo": 1, "store_latitude": 1, "store_longitude": 1}
     )
     
     return {
@@ -531,7 +534,10 @@ async def get_store_settings(user: dict = Depends(get_current_user)):
         "store_description": seller.get("store_description", ""),
         "store_address": seller.get("store_address", ""),
         "store_city": seller.get("store_city", seller.get("city", "")),
-        "store_phone": seller.get("store_phone", seller.get("phone", ""))
+        "store_phone": seller.get("store_phone", seller.get("phone", "")),
+        "store_logo": seller.get("store_logo"),
+        "store_latitude": seller.get("store_latitude"),
+        "store_longitude": seller.get("store_longitude")
     }
 
 @router.put("/seller/store-settings")
@@ -551,6 +557,12 @@ async def update_store_settings(settings: StoreSettingsUpdate, user: dict = Depe
         update_data["store_city"] = sanitize_input(settings.store_city)
     if settings.store_phone is not None:
         update_data["store_phone"] = settings.store_phone
+    if settings.store_logo is not None:
+        update_data["store_logo"] = settings.store_logo
+    if settings.store_latitude is not None:
+        update_data["store_latitude"] = settings.store_latitude
+    if settings.store_longitude is not None:
+        update_data["store_longitude"] = settings.store_longitude
     
     if update_data:
         update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
