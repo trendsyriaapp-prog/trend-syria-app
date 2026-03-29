@@ -189,29 +189,33 @@ const AddProductModal = ({
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
     
+    // إعادة تعيين الـ input لقبول نفس الملف مرة أخرى
+    e.target.value = '';
+    
     setUploadingImage(true);
     setImageWarnings([]);
     
     try {
-      for (const file of files) {
-        const result = await validateAndEnhanceImage(file);
-        
-        if (result.issues.length > 0) {
-          toast({
-            title: "مشكلة في الصورة",
-            description: result.issues[0],
-            variant: "destructive"
-          });
-          continue;
-        }
-        
-        setPendingImage(result.dataUrl);
-        // استخدام المعالج الاحترافي الجديد
-        setShowProProcessor(true);
-        
-        if (result.warnings.length > 0) {
-          setImageWarnings(prev => [...prev, ...result.warnings]);
-        }
+      // معالجة الصورة الأولى فقط
+      const file = files[0];
+      const result = await validateAndEnhanceImage(file);
+      
+      if (result.issues.length > 0) {
+        toast({
+          title: "مشكلة في الصورة",
+          description: result.issues[0],
+          variant: "destructive"
+        });
+        setUploadingImage(false);
+        return;
+      }
+      
+      setPendingImage(result.dataUrl);
+      // استخدام المعالج الاحترافي الجديد
+      setShowProProcessor(true);
+      
+      if (result.warnings.length > 0) {
+        setImageWarnings(prev => [...prev, ...result.warnings]);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -1054,7 +1058,12 @@ const AddProductModal = ({
                   />
                   <button
                     type="button"
-                    onClick={() => setNewProduct({ ...newProduct, video: null })}
+                    onClick={() => {
+                      setNewProduct({ ...newProduct, video: null });
+                      // إعادة تعيين الـ input لقبول فيديو جديد
+                      const videoInput = document.getElementById('product-video');
+                      if (videoInput) videoInput.value = '';
+                    }}
                     className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white"
                   >
                     <X size={12} />

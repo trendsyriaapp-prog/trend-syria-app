@@ -883,5 +883,9 @@ async def get_seller_products(user: dict = Depends(get_current_user)):
     if user["user_type"] != "seller":
         raise HTTPException(status_code=403, detail="للبائعين فقط")
     
-    products = await db.products.find({"seller_id": user["id"]}, {"_id": 0}).to_list(100)
+    # ترتيب من الأحدث للأقدم وإزالة الحد الأقصى
+    products = await db.products.find(
+        {"seller_id": user["id"]}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(None)
     return products
