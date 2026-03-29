@@ -430,7 +430,9 @@ const AddProductModal = ({
                 type="text"
                 value={newProduct.name}
                 onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                  newProduct.name ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                }`}
                 placeholder={labels.namePlaceholder}
                 required
                 data-testid="product-name-input"
@@ -442,7 +444,9 @@ const AddProductModal = ({
               <textarea
                 value={newProduct.description}
                 onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                  newProduct.description ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                }`}
                 placeholder={labels.descPlaceholder}
                 rows={2}
                 required
@@ -457,7 +461,9 @@ const AddProductModal = ({
                   type="number"
                   value={newProduct.price}
                   onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                  className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                    newProduct.price ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                  }`}
                   required
                   data-testid="product-price-input"
                 />
@@ -505,7 +511,9 @@ const AddProductModal = ({
                     type="number"
                     value={newProduct.stock}
                     onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                      newProduct.stock ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                    }`}
                     required
                     data-testid="product-stock-input"
                   />
