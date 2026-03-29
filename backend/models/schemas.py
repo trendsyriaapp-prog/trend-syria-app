@@ -67,7 +67,7 @@ class ProductCreate(BaseModel):
     images: List[str]
     video: Optional[str] = None
     video_url: Optional[str] = None
-    city: str
+    city: Optional[str] = None
     length_cm: Optional[float] = None
     width_cm: Optional[float] = None
     height_cm: Optional[float] = None
