@@ -59,7 +59,7 @@ const OrderLabelPrint = ({ order, onClose }) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                   <span style={{ fontSize: '12px', color: '#666' }}>رقم الطلب:</span>
                   <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#000' }}>
-                    #{order.id?.slice(0, 8).toUpperCase()}
+                    #{order.order_number || order.id?.slice(-6).toUpperCase()}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -143,8 +143,8 @@ const OrderLabelPrint = ({ order, onClose }) => {
                 }}>
                   ||||||||||||||||||||||||
                 </div>
-                <p style={{ fontSize: '10px', color: '#666', margin: '5px 0 0 0' }}>
-                  {order.id?.slice(0, 12).toUpperCase()}
+                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', margin: '5px 0 0 0' }}>
+                  #{order.order_number || order.id?.slice(-6).toUpperCase()}
                 </p>
               </div>
 
@@ -152,6 +152,9 @@ const OrderLabelPrint = ({ order, onClose }) => {
               <div style={{ textAlign: 'center', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
                 <p style={{ fontSize: '9px', color: '#999', margin: 0 }}>
                   شكراً لتسوقك من ترند سورية
+                </p>
+                <p style={{ fontSize: '10px', color: '#25D366', margin: '5px 0 0 0', fontWeight: 'bold' }}>
+                  📞 للدعم واتساب: 0912345678
                 </p>
               </div>
             </div>
