@@ -48,6 +48,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [selectedShadow, setSelectedShadow] = useState('none');
   const [showShadows, setShowShadows] = useState(false);
   const [shadowOffset, setShadowOffset] = useState(50);
+  const [shadowOffsetX, setShadowOffsetX] = useState(50);
   const [showRotation, setShowRotation] = useState(false);
   const [showTip, setShowTip] = useState(true);
   
@@ -312,14 +313,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         const scaledWidth = drawWidth * scale;
         const scaledHeight = drawHeight * scale;
         
-        // رسم الظل أولاً - من أسفل اليسار إلى أعلى اليمين
+        // رسم الظل أولاً - مع تحكم أفقي وعمودي
         if (selectedShadow !== 'none') {
           ctx.save();
           const shadowY = (shadowOffset - 50) / 100 * scaledHeight;
-          ctx.translate(centerX - scaledWidth * 0.1, centerY + shadowY);
+          const shadowX = (shadowOffsetX - 50) / 100 * scaledWidth;
+          ctx.translate(centerX + shadowX, centerY + shadowY);
           ctx.rotate(rotation * Math.PI / 180);
-          // مضغوط + مائل لليمين
-          ctx.transform(1, 0, -0.35, 0.35, 0, 0);
+          // مضغوط + مائل
+          const skewAmount = (shadowOffsetX - 50) / 100 * -0.5;
+          ctx.transform(1, 0, skewAmount, 0.35, 0, 0);
           ctx.globalAlpha = selectedShadow === 'strong' ? 0.3 : 0.18;
           ctx.filter = `blur(${selectedShadow === 'strong' ? 6 : 4}px)`;
           ctx.drawImage(productImg, -scaledWidth/2, 0, scaledWidth, scaledHeight);
@@ -456,7 +459,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
             >
-              {/* الظل الأرضي - خلف المنتج */}
+              {/* الظل الأرضي - خلف المنتج مع تحكم أفقي وعمودي */}
               {selectedShadow !== 'none' && (
                 <img 
                   src={processedImage} 
@@ -464,10 +467,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                   className="absolute pointer-events-none max-w-[85vw] max-h-[45vh] object-contain"
                   style={{ 
                     top: `${shadowOffset - 50}%`,
-                    left: '70%',
+                    left: `${20 + shadowOffsetX}%`,
                     filter: `brightness(0) blur(${selectedShadow === 'strong' ? '6px' : '4px'})`,
-                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(-20deg)`,
-                    transformOrigin: 'left top',
+                    transform: `scale(${scale}) rotate(${rotation}deg) scaleY(0.35) skewX(${(shadowOffsetX - 50) * -0.4}deg)`,
+                    transformOrigin: 'center top',
                     opacity: selectedShadow === 'strong' ? 0.3 : 0.18,
                     zIndex: 0,
                   }}
@@ -596,9 +599,23 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 
                 {/* التحكم بموقع الظل */}
                 {selectedShadow !== 'none' && (
-                  <div className="pt-2 border-t border-white/20">
+                  <div className="pt-2 border-t border-white/20 space-y-3">
+                    {/* الموقع الأفقي */}
                     <div className="flex items-center gap-3">
-                      <span className="text-white/70 text-xs">قريب</span>
+                      <span className="text-white/70 text-xs w-10">↔️ يسار</span>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        value={shadowOffsetX}
+                        onChange={(e) => setShadowOffsetX(Number(e.target.value))}
+                        className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
+                      />
+                      <span className="text-white/70 text-xs w-10">يمين</span>
+                    </div>
+                    {/* الموقع العمودي */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-white/70 text-xs w-10">↕️ قريب</span>
                       <input 
                         type="range" 
                         min="0" 
@@ -607,9 +624,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                         onChange={(e) => setShadowOffset(Number(e.target.value))}
                         className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
                       />
-                      <span className="text-white/70 text-xs">بعيد</span>
+                      <span className="text-white/70 text-xs w-10">بعيد</span>
                     </div>
-                    <p className="text-white/50 text-[10px] text-center mt-1">حرّك الشريط لضبط موقع الظل</p>
                   </div>
                 )}
               </div>
