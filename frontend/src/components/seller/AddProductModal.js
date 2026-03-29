@@ -591,8 +591,8 @@ const AddProductModal = ({
                   onClick={() => setSellingType('weight')}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                     sellingType === 'weight' 
-                      ? 'bg-[#E65000] text-white' 
-                      : 'bg-[#FF6B00] text-white hover:bg-[#E65000]'
+                      ? 'bg-[#FF6B00] text-white' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   بالوزن
