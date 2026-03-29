@@ -574,57 +574,44 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               </div>
             )}
 
-            {/* Shadows Panel */}
+            {/* Shadows Panel - مدمج */}
             {showShadows && (
-              <div className="bg-white/10 rounded-xl p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-sm font-bold">ظل المنتج</span>
-                </div>
-                <div className="flex gap-3 justify-center">
+              <div className="bg-white/10 rounded-xl p-2 space-y-2">
+                <div className="flex gap-2 justify-center">
                   {SHADOWS.map(shadow => (
                     <button
                       key={shadow.id}
                       onClick={() => setSelectedShadow(shadow.id)}
-                      className={`flex-shrink-0 px-5 py-2.5 rounded-xl border-2 transition-all ${
+                      className={`px-3 py-1.5 rounded-lg border transition-all text-xs ${
                         selectedShadow === shadow.id 
                           ? 'border-[#FF6B00] bg-[#FF6B00]/30' 
                           : 'border-white/30 bg-white/10'
                       }`}
                     >
-                      <span className="text-white text-sm font-medium">{shadow.name}</span>
+                      <span className="text-white font-medium">{shadow.name}</span>
                     </button>
                   ))}
                 </div>
                 
-                {/* التحكم بموقع الظل */}
+                {/* التحكم بموقع الظل - مدمج في صف واحد */}
                 {selectedShadow !== 'none' && (
-                  <div className="pt-2 border-t border-white/20 space-y-3">
-                    {/* الموقع الأفقي */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-white/70 text-xs w-10">↔️ يسار</span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={shadowOffsetX}
-                        onChange={(e) => setShadowOffsetX(Number(e.target.value))}
-                        className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
-                      />
-                      <span className="text-white/70 text-xs w-10">يمين</span>
-                    </div>
-                    {/* الموقع العمودي */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-white/70 text-xs w-10">↕️ قريب</span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="150" 
-                        value={shadowOffset}
-                        onChange={(e) => setShadowOffset(Number(e.target.value))}
-                        className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
-                      />
-                      <span className="text-white/70 text-xs w-10">بعيد</span>
-                    </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-white/60 text-[10px]">↔️</span>
+                    <input 
+                      type="range" 
+                      min="0" max="100" 
+                      value={shadowOffsetX}
+                      onChange={(e) => setShadowOffsetX(Number(e.target.value))}
+                      className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
+                    />
+                    <span className="text-white/60 text-[10px]">↕️</span>
+                    <input 
+                      type="range" 
+                      min="0" max="150" 
+                      value={shadowOffset}
+                      onChange={(e) => setShadowOffset(Number(e.target.value))}
+                      className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-orange-500"
+                    />
                   </div>
                 )}
               </div>
