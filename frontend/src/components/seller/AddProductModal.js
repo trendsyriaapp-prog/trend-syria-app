@@ -911,7 +911,7 @@ const AddProductModal = ({
                     </button>
                   </div>
                   {/* زر الرفع المباشر بدون تعديل */}
-                  <label className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs flex items-center justify-center gap-2 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors">
+                  <label className="w-full py-2 bg-[#FF6B00] text-white rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-[#E65000] cursor-pointer transition-colors font-bold">
                     <Upload size={14} />
                     رفع مباشر بدون تعديل
                     <input
