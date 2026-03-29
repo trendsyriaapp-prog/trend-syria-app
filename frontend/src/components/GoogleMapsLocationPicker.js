@@ -42,10 +42,32 @@ const GoogleMapsLocationPicker = ({
 
     if (!navigator.geolocation) {
       setError('المتصفح لا يدعم تحديد الموقع');
+      setShowLocationPrompt(true);
       setLoading(false);
       return;
     }
 
+    // التحقق أولاً من صلاحيات الموقع
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (result.state === 'denied') {
+          setError('صلاحية الموقع مرفوضة. يرجى تفعيلها من الإعدادات.');
+          setShowLocationPrompt(true);
+          setLoading(false);
+          return;
+        }
+        // إذا لم تكن مرفوضة، نحاول الحصول على الموقع
+        requestLocation();
+      }).catch(() => {
+        // إذا فشل التحقق من الصلاحيات، نحاول مباشرة
+        requestLocation();
+      });
+    } else {
+      requestLocation();
+    }
+  };
+
+  const requestLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -55,6 +77,7 @@ const GoogleMapsLocationPicker = ({
           source: 'gps'
         });
         setLoading(false);
+        setError(null);
       },
       (err) => {
         console.error('Geolocation error:', err);
@@ -62,21 +85,24 @@ const GoogleMapsLocationPicker = ({
         
         if (err.code === 1) {
           // PERMISSION_DENIED
-          setError('تم رفض إذن الموقع');
+          setError('تم رفض إذن الموقع. يرجى السماح من إعدادات الهاتف.');
           setShowLocationPrompt(true);
         } else if (err.code === 2) {
           // POSITION_UNAVAILABLE - GPS مغلق
-          setError('خدمة الموقع غير مفعّلة');
+          setError('خدمة الموقع (GPS) غير مفعّلة. يرجى تفعيلها.');
+          setShowLocationPrompt(true);
+        } else if (err.code === 3) {
+          // TIMEOUT
+          setError('انتهت المهلة. تأكد من تفعيل GPS وحاول مرة أخرى.');
           setShowLocationPrompt(true);
         } else {
-          // TIMEOUT
-          setError('انتهت مهلة تحديد الموقع. حاول مرة أخرى');
+          setError('حدث خطأ في تحديد الموقع.');
         }
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        enableHighAccuracy: false, // أسرع
+        timeout: 5000, // 5 ثواني فقط
+        maximumAge: 60000 // قبول موقع محفوظ لمدة دقيقة
       }
     );
   };
