@@ -8,6 +8,7 @@ import TemplateSelector from './TemplateSelector';
 import ProductPreviewModal from './ProductPreviewModal';
 import { CATEGORIES } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/errorHelpers';
+import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -192,6 +193,16 @@ const AddProductModal = ({
     // إعادة تعيين الـ input لقبول نفس الملف مرة أخرى
     e.target.value = '';
     
+    // التحقق من عدد الصور المسموح
+    if (newProduct.images.length >= maxImagesPerProduct) {
+      toast?.({
+        title: "تنبيه",
+        description: `الحد الأقصى ${maxImagesPerProduct} صور`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setUploadingImage(true);
     setImageWarnings([]);
     
@@ -201,7 +212,7 @@ const AddProductModal = ({
       const result = await validateAndEnhanceImage(file);
       
       if (result.issues.length > 0) {
-        toast({
+        toast?.({
           title: "مشكلة في الصورة",
           description: result.issues[0],
           variant: "destructive"
@@ -210,16 +221,23 @@ const AddProductModal = ({
         return;
       }
       
-      setPendingImage(result.dataUrl);
-      // استخدام المعالج الاحترافي الجديد
-      setShowProProcessor(true);
+      // إضافة الصورة مباشرة إلى المصفوفة
+      setNewProduct(prev => ({
+        ...prev,
+        images: [...prev.images, result.dataUrl].slice(0, maxImagesPerProduct)
+      }));
+      
+      toast?.({
+        title: "تم بنجاح ✨",
+        description: "تم إضافة الصورة"
+      });
       
       if (result.warnings.length > 0) {
         setImageWarnings(prev => [...prev, ...result.warnings]);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast({
+      toast?.({
         title: "خطأ",
         description: "حدث خطأ في رفع الصورة",
         variant: "destructive"
