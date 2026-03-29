@@ -129,6 +129,11 @@ async def login(request: Request, credentials: UserLogin):
         raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
     
     # 🔒 التحقق من كلمة المرور (يدعم bcrypt و SHA256 القديم)
+    # DEBUG: طباعة للتحقيق
+    import logging
+    auth_logger = logging.getLogger("auth")
+    auth_logger.info(f"DEBUG Login: phone={credentials.phone}, password_input={credentials.password[:3]}***, stored_hash={user['password'][:20]}...")
+    
     if not verify_password(credentials.password, user["password"]):
         record_failed_login(credentials.phone, client_ip)
         # 📝 Log للتحقيق في مشاكل تسجيل الدخول
