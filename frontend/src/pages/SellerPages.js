@@ -803,8 +803,8 @@ const SellerDashboardPage = () => {
       } else {
         // بائع منتجات - جلب المنتجات والطلبات
         const [productsRes, ordersRes] = await Promise.all([
-          axios.get(`${API}/seller/my-products`, { headers }),
-          axios.get(`${API}/orders/seller/my-orders`, { headers })
+          axios.get(`${API}/api/products/seller/my-products`, { headers }),
+          axios.get(`${API}/api/orders/seller/my-orders`, { headers })
         ]);
         setProducts(productsRes.data || []);
         // فلترة الطلبات: لا تظهر الطلبات بانتظار الدفع - فقط المدفوعة فما فوق
@@ -1183,18 +1183,45 @@ const SellerDashboardPage = () => {
               </button>
             </div>
             {displayItems.length === 0 ? (
-              <div className="bg-gray-50 rounded-xl p-8 text-center">
-                <Package size={40} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">لم تقم بإضافة أي منتجات بعد</p>
+              <div className="bg-orange-50 rounded-xl p-8 text-center border border-orange-200">
+                <Package size={40} className="mx-auto text-orange-300 mb-3" />
+                <p className="text-orange-600 font-medium">لم تقم بإضافة أي منتجات بعد</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {displayItems.map((product) => (
-                  <div key={product.id} className={`relative bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'border-2 border-dashed border-gray-300' : ''}`}>
-                    {/* شارة "مخفي" على المنتج */}
-                    {!product.is_available && (
+                  <div key={product.id} className={`relative bg-gray-50 rounded-xl p-3 ${
+                    product.approval_status === 'rejected' ? 'border-2 border-red-300 bg-red-50/50' :
+                    product.approval_status === 'pending' || !product.is_approved ? 'border-2 border-yellow-300 bg-yellow-50/50' :
+                    !product.is_available ? 'border-2 border-dashed border-gray-300' : ''
+                  }`}>
+                    {/* شارات حالة المنتج */}
+                    {product.approval_status === 'rejected' ? (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <X size={10} />
+                        مرفوض
+                      </div>
+                    ) : product.approval_status === 'pending' || !product.is_approved ? (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <Clock size={10} />
+                        بانتظار الموافقة
+                      </div>
+                    ) : !product.is_available ? (
                       <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full z-10">
                         مخفي عن العملاء
+                      </div>
+                    ) : (
+                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <Check size={10} />
+                        نشط
+                      </div>
+                    )}
+                    
+                    {/* سبب الرفض إذا كان مرفوضاً */}
+                    {product.approval_status === 'rejected' && product.rejection_reason && (
+                      <div className="mb-2 p-2 bg-red-100 rounded-lg border border-red-200">
+                        <p className="text-xs text-red-700 font-medium">سبب الرفض:</p>
+                        <p className="text-xs text-red-600">{product.rejection_reason}</p>
                       </div>
                     )}
                     <div className="flex items-center gap-3">
