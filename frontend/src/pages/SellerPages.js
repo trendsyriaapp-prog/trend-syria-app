@@ -278,7 +278,7 @@ const WithdrawModal = ({ balance, onClose, onSuccess, token }) => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/wallet/withdraw`, {
+      await axios.post(`${API}/api/wallet/withdraw`, {
         amount,
         shamcash_phone: shamcashPhone
       }, {
@@ -395,7 +395,7 @@ const SellerDocumentsPage = () => {
 
   const checkStatus = async () => {
     try {
-      const res = await axios.get(`${API}/seller/documents/status`, {
+      const res = await axios.get(`${API}/api/seller/documents/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStatus(res.data.status);
@@ -446,7 +446,7 @@ const SellerDocumentsPage = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/seller/documents`, {
+      await axios.post(`${API}/api/seller/documents`, {
         business_name: businessName,
         seller_type: sellerType,
         national_id: nationalId,
@@ -775,7 +775,7 @@ const SellerDashboardPage = () => {
 
   const fetchWallet = async () => {
     try {
-      const res = await axios.get(`${API}/wallet/balance`, {
+      const res = await axios.get(`${API}/api/wallet/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setWalletBalance(res.data.balance || 0);

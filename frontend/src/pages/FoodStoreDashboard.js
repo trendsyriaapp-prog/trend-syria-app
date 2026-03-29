@@ -185,7 +185,7 @@ const FoodStoreDashboard = () => {
     setTogglingStore(true);
     try {
       const res = await axios.post(
-        `${API}/food/stores/${store.id}/toggle-status`,
+        `${API}/api/food/stores/${store.id}/toggle-status`,
         { is_closed: shouldClose, close_reason: reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -276,21 +276,21 @@ const FoodStoreDashboard = () => {
 
   const fetchStoreData = async () => {
     try {
-      const res = await axios.get(`${API}/food/my-store`, {
+      const res = await axios.get(`${API}/api/food/my-store`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStore(res.data.store);
       setProducts(res.data.products || []);
       
       // جلب العروض
-      const offersRes = await axios.get(`${API}/food/my-offers`, {
+      const offersRes = await axios.get(`${API}/api/food/my-offers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOffers(offersRes.data || []);
       
       // جلب معلومات العمولة
       try {
-        const commissionRes = await axios.get(`${API}/food/my-store/commission`, {
+        const commissionRes = await axios.get(`${API}/api/food/my-store/commission`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setCommissionInfo(commissionRes.data);
@@ -316,7 +316,7 @@ const FoodStoreDashboard = () => {
     if (!window.confirm('هل تريد حذف هذا المنتج؟')) return;
     
     try {
-      await axios.delete(`${API}/food/products/${productId}`, {
+      await axios.delete(`${API}/api/food/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الحذف", description: "تم حذف المنتج بنجاح" });
@@ -328,7 +328,7 @@ const FoodStoreDashboard = () => {
 
   const handleToggleAvailability = async (productId, currentStatus) => {
     try {
-      await axios.patch(`${API}/food/products/${productId}`, 
+      await axios.patch(`${API}/api/food/products/${productId}`, 
         { is_available: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` }}
       );
@@ -907,7 +907,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         
         try {
           // تحديث صورة المتجر
-          await axios.put(`${API}/food/my-store`, { logo: imageDataUrl }, {
+          await axios.put(`${API}/api/food/my-store`, { logo: imageDataUrl }, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -955,7 +955,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
     
     setSaving(true);
     try {
-      await axios.put(`${API}/food/my-store`, formData, {
+      await axios.put(`${API}/api/food/my-store`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الحفظ", description: "تم تحديث معلومات المتجر" });
@@ -1238,7 +1238,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
 
   const handleToggleOffer = async (offer) => {
     try {
-      await axios.put(`${API}/food/offers/${offer.id}`, 
+      await axios.put(`${API}/api/food/offers/${offer.id}`, 
         { is_active: !offer.is_active },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1256,7 +1256,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
     if (!window.confirm('هل تريد حذف هذا العرض؟')) return;
     
     try {
-      await axios.delete(`${API}/food/offers/${offerId}`, {
+      await axios.delete(`${API}/api/food/offers/${offerId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ title: "تم الحذف", description: "تم حذف العرض" });
@@ -1451,7 +1451,7 @@ const OfferModal = ({ offer, products, token, onClose, onSave }) => {
 
     setSaving(true);
     try {
-      await axios.post(`${API}/food/offers`, {
+      await axios.post(`${API}/api/food/offers`, {
         ...formData,
         buy_quantity: parseInt(formData.buy_quantity),
         get_quantity: parseInt(formData.get_quantity),
@@ -1725,13 +1725,13 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       
       if (product) {
         // Edit existing product
-        await axios.put(`${API}/food/products/${product.id}`, submitData, {
+        await axios.put(`${API}/api/food/products/${product.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تم التحديث", description: "تم تحديث المنتج بنجاح" });
       } else {
         // Add new product
-        await axios.post(`${API}/food/products`, submitData, {
+        await axios.post(`${API}/api/food/products`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast({ title: "تمت الإضافة", description: "تم إضافة المنتج بنجاح" });
@@ -2917,13 +2917,13 @@ const FlashSalesTab = ({ store, products, token }) => {
   const fetchData = async () => {
     try {
       const [salesRes, requestsRes, settingsRes] = await Promise.all([
-        axios.get(`${API}/food/flash-sales/available`, {
+        axios.get(`${API}/api/food/flash-sales/available`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API}/food/my-flash-requests`, {
+        axios.get(`${API}/api/food/my-flash-requests`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`${API}/food/flash-sale-settings`, {
+        axios.get(`${API}/api/food/flash-sale-settings`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -2942,7 +2942,7 @@ const FlashSalesTab = ({ store, products, token }) => {
     if (!window.confirm('هل تريد إلغاء هذا الطلب؟ سيتم استرداد الرسوم.')) return;
     
     try {
-      const res = await axios.delete(`${API}/food/flash-sale-request/${requestId}`, {
+      const res = await axios.delete(`${API}/api/food/flash-sale-request/${requestId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast({ 
@@ -3146,7 +3146,7 @@ const JoinFlashSaleModal = ({ flashSale, products, settings, token, onClose, onS
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/food/flash-sale-request`, {
+      await axios.post(`${API}/api/food/flash-sale-request`, {
         flash_sale_id: flashSale.id,
         product_ids: selectedProducts
       }, {
@@ -3446,7 +3446,7 @@ const DriverAvailabilityCheck = ({ orderId, token }) => {
   useEffect(() => {
     const checkAvailability = async () => {
       try {
-        const res = await axios.get(`${API}/food/orders/check-drivers-availability/${orderId}`, {
+        const res = await axios.get(`${API}/api/food/orders/check-drivers-availability/${orderId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setData(res.data);
