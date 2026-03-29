@@ -717,20 +717,20 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2 pt-2">
               <button 
                 onClick={useOriginal}
-                className="flex-1 py-3.5 bg-white/20 text-white rounded-xl text-sm font-bold active:bg-white/30"
+                className="flex-1 py-3 bg-[#FF6B00] text-white rounded-xl text-sm font-bold active:bg-[#E65000]"
                 data-testid="use-original-button"
               >
-                الأصلية
+                رفع مباشر
               </button>
               <button
                 onClick={saveImage}
-                className="flex-[2] py-3.5 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 active:bg-green-600"
+                className="flex-[2] py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 active:bg-green-600"
                 data-testid="save-image-button"
               >
-                <Check size={20} /> استخدام الصورة
+                <Check size={18} /> استخدام مع التعديلات
               </button>
             </div>
           </>
