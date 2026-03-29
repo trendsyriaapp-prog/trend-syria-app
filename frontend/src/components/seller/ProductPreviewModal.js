@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Eye, ShoppingCart, Star, Heart, ChevronLeft } from 'lucide-react';
+import { X, Heart, Share2, ShoppingCart, Star, Truck, Shield, RotateCcw, ChevronLeft, Store } from 'lucide-react';
 
 const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPrice, productDescription, productCategory, storeName }) => {
+  const [currentImage, setCurrentImage] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+  
   if (!isOpen || !images || images.length === 0) return null;
 
-  const mainImage = images[0];
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('ar-SY').format(price || 0) + ' ل.س';
+    return new Intl.NumberFormat('ar-SY').format(price || 0);
   };
 
   // تسميات التصنيفات
@@ -27,153 +30,203 @@ const ProductPreviewModal = ({ isOpen, onClose, images, productName, productPric
     'sides': 'أطباق جانبية'
   };
 
+  const getImageSrc = (img) => {
+    return typeof img === 'string' ? img : URL.createObjectURL(img);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-sm max-h-[90vh] overflow-hidden"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gray-50 w-full h-full max-w-md mx-auto overflow-y-auto"
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-4 text-white">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold flex items-center gap-2">
-              <Eye size={20} />
-              معاينة في المتجر
-            </h2>
+        {/* Header - شريط علوي */}
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3">
             <button 
               onClick={onClose}
-              className="p-1 hover:bg-white/20 rounded-full"
+              className="flex items-center gap-1 text-gray-600"
             >
-              <X size={24} />
+              <ChevronLeft size={24} />
+              <span className="text-sm">رجوع</span>
             </button>
+            <div className="flex items-center gap-1 bg-orange-100 px-2 py-1 rounded-full">
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              <span className="text-[10px] text-orange-700 font-medium">معاينة</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-full">
+                <Share2 size={20} className="text-gray-600" />
+              </button>
+              <button 
+                onClick={() => setIsFavorite(!isFavorite)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <Heart 
+                  size={20} 
+                  className={isFavorite ? "text-red-500 fill-red-500" : "text-gray-600"} 
+                />
+              </button>
+            </div>
           </div>
-          <p className="text-xs opacity-80 mt-1">هكذا سيرى العملاء منتجك</p>
         </div>
 
-        {/* Preview Content */}
-        <div className="p-4 bg-gray-50">
-          {/* Simulated Product Card */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            {/* Main Image */}
-            <div className="relative aspect-square bg-gray-100">
-              <img 
-                src={typeof mainImage === 'string' ? mainImage : URL.createObjectURL(mainImage)}
-                alt="Product Preview"
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Favorite Button */}
-              <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
-                <Heart size={16} className="text-gray-400" />
-              </button>
-              
-              {/* Image Counter */}
-              {images.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                  1 / {images.length}
-                </div>
-              )}
-            </div>
-
-            {/* Product Info */}
-            <div className="p-4">
-              {/* Store Name */}
-              {storeName && (
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">{storeName.charAt(0)}</span>
-                  </div>
-                  <span className="text-xs text-gray-500">{storeName}</span>
-                </div>
-              )}
-
-              {/* Category Badge */}
-              {productCategory && (
-                <span className="inline-block text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full mb-2">
-                  {categoryLabels[productCategory] || productCategory}
-                </span>
-              )}
-
-              {/* Title */}
-              <h3 className="font-bold text-gray-900 text-lg mb-1 line-clamp-2">
-                {productName || 'اسم المنتج'}
-              </h3>
-
-              {/* Description */}
-              {productDescription && (
-                <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                  {productDescription}
-                </p>
-              )}
-              
-              {/* Rating */}
-              <div className="flex items-center gap-1 mb-2">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star 
-                      key={i} 
-                      size={14} 
-                      className={i <= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'} 
+        {/* صورة المنتج */}
+        <div className="bg-white">
+          <div className="aspect-square relative overflow-hidden">
+            <img
+              src={getImageSrc(images[currentImage])}
+              alt="Product Preview"
+              className="w-full h-full object-contain"
+            />
+            
+            {/* نقاط التنقل بين الصور */}
+            {images.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+                <div className="flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentImage(i)}
+                      className={`rounded-full transition-all ${
+                        currentImage === i 
+                          ? 'bg-white w-2 h-2' 
+                          : 'bg-white/60 w-1.5 h-1.5'
+                      }`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-gray-500">(0 تقييم)</span>
               </div>
-
-              {/* Price */}
-              <div className="flex items-center justify-between">
-                <p className="text-xl font-bold text-[#FF6B00]">
-                  {formatPrice(productPrice)}
-                </p>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                  متوفر
-                </span>
-              </div>
-
-              {/* Add to Cart Button */}
-              <button className="w-full mt-3 py-3 bg-[#FF6B00] text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                <ShoppingCart size={18} />
-                أضف للسلة
-              </button>
-            </div>
+            )}
           </div>
 
-          {/* Thumbnail Preview */}
-          {images.length > 1 && (
-            <div className="mt-4">
-              <p className="text-xs text-gray-500 mb-2">الصور الإضافية:</p>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
-                  <div 
-                    key={idx}
-                    className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 ${idx === 0 ? 'border-[#FF6B00]' : 'border-transparent'}`}
-                  >
-                    <img 
-                      src={typeof img === 'string' ? img : URL.createObjectURL(img)}
-                      alt={`Thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+          {/* شريط المميزات */}
+          <div className="flex items-center justify-center gap-3 py-2 bg-gradient-to-r from-green-50 via-white to-orange-50 border-t border-gray-100">
+            <div className="flex items-center gap-1">
+              <Truck size={12} className="text-green-600" />
+              <span className="text-[10px] text-gray-600">توصيل سريع</span>
+            </div>
+            <div className="w-px h-3 bg-gray-300" />
+            <div className="flex items-center gap-1">
+              <Shield size={12} className="text-blue-600" />
+              <span className="text-[10px] text-gray-600">ضمان الجودة</span>
+            </div>
+            <div className="w-px h-3 bg-gray-300" />
+            <div className="flex items-center gap-1">
+              <RotateCcw size={12} className="text-orange-600" />
+              <span className="text-[10px] text-gray-600">إرجاع مجاني</span>
+            </div>
+          </div>
+        </div>
+
+        {/* معلومات المنتج */}
+        <div className="bg-white mt-2 p-4">
+          {/* المتجر */}
+          {storeName && (
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                <Store size={18} className="text-white" />
               </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">{storeName}</p>
+                <div className="flex items-center gap-1">
+                  <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                  <span className="text-[10px] text-gray-500">4.8 (120 تقييم)</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* التصنيف */}
+          {productCategory && (
+            <span className="inline-block text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full mb-2">
+              {categoryLabels[productCategory] || productCategory}
+            </span>
+          )}
+
+          {/* اسم المنتج */}
+          <h1 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
+            {productName || 'اسم المنتج'}
+          </h1>
+
+          {/* التقييم */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star 
+                  key={i} 
+                  size={14} 
+                  className={i <= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'} 
+                />
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">4.0 (0 تقييم)</span>
+            <span className="text-xs text-green-600">• متوفر</span>
+          </div>
+
+          {/* السعر */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-2xl font-bold text-[#FF6B00]">
+              {formatPrice(productPrice)}
+            </span>
+            <span className="text-sm text-gray-500">ل.س</span>
+          </div>
+
+          {/* الوصف */}
+          {productDescription && (
+            <div className="mb-4">
+              <h3 className="font-bold text-gray-900 text-sm mb-2">وصف المنتج</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {productDescription}
+              </p>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-white">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>هذه معاينة تقريبية لكيفية ظهور منتجك</span>
+        {/* الصور المصغرة */}
+        {images.length > 1 && (
+          <div className="bg-white mt-2 p-4">
+            <h3 className="font-bold text-gray-900 text-sm mb-3">صور المنتج</h3>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImage(idx)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                    currentImage === idx ? 'border-[#FF6B00] scale-105' : 'border-gray-200'
+                  }`}
+                >
+                  <img 
+                    src={getImageSrc(img)}
+                    alt={`صورة ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
-          >
-            <ChevronLeft size={18} />
-            العودة للتحرير
-          </button>
+        )}
+
+        {/* شريط سفلي ثابت */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="text-[10px] text-gray-500">السعر</p>
+              <p className="text-lg font-bold text-[#FF6B00]">{formatPrice(productPrice)} ل.س</p>
+            </div>
+            <button className="flex-[2] py-3 bg-[#FF6B00] text-white rounded-xl font-bold flex items-center justify-center gap-2 active:bg-[#E65000]">
+              <ShoppingCart size={18} />
+              أضف للسلة
+            </button>
+          </div>
+          
+          {/* ملاحظة المعاينة */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <p className="text-[10px] text-center text-gray-400">
+              هذه معاينة تقريبية • المنتج الفعلي قد يختلف قليلاً
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
