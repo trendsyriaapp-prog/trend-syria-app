@@ -24,18 +24,18 @@ const LoginPage = () => {
       const response = await login(formData.phone, formData.password);
       toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
       
-      // توجيه حسب نوع المستخدم
+      // توجيه حسب نوع المستخدم - مع استبدال صفحة الدخول من السجل
       const userType = response.user?.user_type;
       if (userType === 'admin' || userType === 'sub_admin') {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
       } else if (userType === 'seller') {
-        navigate('/seller/dashboard');
+        navigate('/seller/dashboard', { replace: true });
       } else if (userType === 'food_seller') {
-        navigate('/food/dashboard');
+        navigate('/food/dashboard', { replace: true });
       } else if (userType === 'delivery') {
-        navigate('/delivery/dashboard');
+        navigate('/delivery/dashboard', { replace: true });
       } else {
-        navigate('/');
+        navigate('/', { replace: true });
       }
     } catch (error) {
       toast({
@@ -209,11 +209,11 @@ const RegisterPage = () => {
       toast({ title: "تم التسجيل بنجاح", description: "مرحباً بك في ترند سورية" });
       
       if (formData.user_type === 'seller') {
-        navigate('/seller/documents');
+        navigate('/seller/documents', { replace: true });
       } else if (formData.user_type === 'delivery') {
-        navigate('/delivery/documents');
+        navigate('/delivery/documents', { replace: true });
       } else {
-        navigate('/');
+        navigate('/', { replace: true });
       }
     } catch (error) {
       toast({
