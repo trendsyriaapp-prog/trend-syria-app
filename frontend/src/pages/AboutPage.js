@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowRight, Heart, Target, Eye, Users, Truck, 
   Store, Shield, Clock, MapPin, Mail, Phone,
-  Star, Award, Zap, CheckCircle
+  Star, Award, Zap, CheckCircle, MessageCircle
 } from 'lucide-react';
 
 const AboutPage = () => {
@@ -330,7 +330,21 @@ const AboutPage = () => {
             <span className="text-2xl">📞</span>
             تواصل معنا
           </h3>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a 
+              href="https://wa.me/963945570365"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors border-2 border-green-200"
+            >
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <MessageCircle size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">واتساب الدعم</p>
+                <p className="font-bold text-green-600 text-sm">0945570365</p>
+              </div>
+            </a>
             <a 
               href="mailto:trendsyria.app@gmail.com"
               className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors"

@@ -13,7 +13,7 @@ const WhatsAppButton = () => {
   const [message, setMessage] = useState('');
   const [settings, setSettings] = useState({
     whatsapp_enabled: true,
-    whatsapp_number: '963551021618',
+    whatsapp_number: '963945570365',
     support_message: 'مرحباً، أريد الاستفسار عن خدمات ترند سورية'
   });
 
@@ -25,7 +25,7 @@ const WhatsAppButton = () => {
         setSettings(prev => ({
           ...prev,
           whatsapp_enabled: res.data.whatsapp_enabled ?? true,
-          whatsapp_number: res.data.whatsapp_number || '963551021618',
+          whatsapp_number: res.data.whatsapp_number || '963945570365',
           support_message: res.data.support_message || prev.support_message
         }));
       } catch (err) {

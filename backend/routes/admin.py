@@ -41,7 +41,7 @@ async def get_platform_settings(user: dict = Depends(get_current_user)):
             "platform_closed_message_sellers": "المنصة مغلقة للبائعين مؤقتاً للصيانة",
             # إعدادات الدعم
             "whatsapp_enabled": True,
-            "whatsapp_number": "963551021618",
+            "whatsapp_number": "963945570365",
             "support_message": "مرحباً، أريد الاستفسار عن خدمات ترند سورية",
             # إعدادات الشحن المجاني
             "products_free_shipping_threshold": 150000,  # حد الشحن المجاني للمنتجات
@@ -226,7 +226,7 @@ async def get_public_settings():
         "daily_deals_enabled": True,
         "flash_sales_enabled": True,
         "whatsapp_enabled": True,
-        "whatsapp_number": "963551021618",
+        "whatsapp_number": "963945570365",
         "support_message": "مرحباً، أريد الاستفسار عن خدمات ترند سورية"
     }
     
@@ -249,7 +249,7 @@ async def get_public_settings():
         "flash_sales_enabled": settings.get("flash_sales_enabled", True),
         # إعدادات الدعم
         "whatsapp_enabled": settings.get("whatsapp_enabled", True),
-        "whatsapp_number": settings.get("whatsapp_number", "963551021618"),
+        "whatsapp_number": settings.get("whatsapp_number", "963945570365"),
         "support_message": settings.get("support_message", "مرحباً، أريد الاستفسار عن خدمات ترند سورية"),
         # إعدادات الشحن المجاني
         "products_free_shipping_threshold": settings.get("products_free_shipping_threshold", 150000),

@@ -650,6 +650,17 @@ const OrderTrackingPage = () => {
           });
         }}
       />
+
+      {/* زر الدعم واتساب */}
+      <a
+        href="https://wa.me/963945570365"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-20 left-4 z-40 flex items-center gap-2 bg-green-500 text-white px-4 py-3 rounded-full shadow-lg hover:bg-green-600 transition-all"
+      >
+        <MessageSquare size={20} />
+        <span className="text-sm font-bold">مساعدة</span>
+      </a>
     </div>
   );
 };
