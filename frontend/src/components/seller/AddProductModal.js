@@ -498,7 +498,9 @@ const AddProductModal = ({
                     type="number"
                     value={newProduct.preparation_time}
                     onChange={(e) => setNewProduct({ ...newProduct, preparation_time: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                      newProduct.preparation_time ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                    }`}
                     min="1"
                     required
                     data-testid="food-prep-time-input"
@@ -550,7 +552,9 @@ const AddProductModal = ({
                     type="number"
                     value={newProduct.max_per_customer}
                     onChange={(e) => setNewProduct({ ...newProduct, max_per_customer: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                      newProduct.max_per_customer ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                    }`}
                     placeholder="مثال: 2 (اتركه فارغاً للسماح بأي كمية)"
                     min="1"
                     data-testid="product-max-per-customer-input"
@@ -650,7 +654,9 @@ const AddProductModal = ({
                         type="number"
                         value={newWeightVariant.weight}
                         onChange={(e) => setNewWeightVariant({ ...newWeightVariant, weight: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                        className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                          newWeightVariant.weight ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                        }`}
                         placeholder={isFoodSeller ? "الكمية" : "الوزن"}
                       />
                     </div>
@@ -658,7 +664,7 @@ const AddProductModal = ({
                       <select
                         value={newWeightVariant.unit}
                         onChange={(e) => setNewWeightVariant({ ...newWeightVariant, unit: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-1 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                        className="w-full bg-gray-50 border-2 border-green-400 bg-green-50/30 rounded-lg py-1.5 px-1 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
                       >
                         <option value="g">جرام</option>
                         <option value="kg">كيلو</option>
@@ -669,7 +675,9 @@ const AddProductModal = ({
                         type="number"
                         value={newWeightVariant.price}
                         onChange={(e) => setNewWeightVariant({ ...newWeightVariant, price: e.target.value })}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                        className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                          newWeightVariant.price ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                        }`}
                         placeholder="السعر"
                       />
                     </div>
@@ -708,7 +716,7 @@ const AddProductModal = ({
                     <select
                       value={newProduct.category}
                       onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none mt-1"
+                      className="w-full bg-gray-50 border-2 border-green-400 bg-green-50/30 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none mt-1"
                       data-testid="product-category-select"
                     >
                       {CATEGORIES.map(cat => (
@@ -801,7 +809,9 @@ const AddProductModal = ({
                       type="number"
                       value={newProduct.length_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                        newProduct.length_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                      }`}
                       placeholder="الطول"
                       data-testid="product-length-input"
                     />
@@ -809,7 +819,9 @@ const AddProductModal = ({
                       type="number"
                       value={newProduct.width_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                        newProduct.width_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                      }`}
                       placeholder="العرض"
                       data-testid="product-width-input"
                     />
@@ -817,7 +829,9 @@ const AddProductModal = ({
                       type="number"
                       value={newProduct.height_cm}
                       onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                        newProduct.height_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                      }`}
                       placeholder="الارتفاع"
                       data-testid="product-height-input"
                     />
@@ -835,7 +849,9 @@ const AddProductModal = ({
                     step="0.1"
                     value={newProduct.weight_kg}
                     onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                    className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                      newProduct.weight_kg ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                    }`}
                     placeholder="مثال: 1.5"
                     data-testid="product-weight-input"
                   />
