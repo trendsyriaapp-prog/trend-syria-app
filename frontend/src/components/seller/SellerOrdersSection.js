@@ -10,9 +10,9 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
 
   if (orders.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-6 text-center border border-gray-200">
-        <ShoppingBag size={32} className="text-gray-300 mx-auto mb-2" />
-        <p className="text-gray-500 text-xs">لا توجد طلبات</p>
+      <div className="bg-orange-50 rounded-xl p-6 text-center border border-orange-200">
+        <ShoppingBag size={32} className="text-orange-300 mx-auto mb-2" />
+        <p className="text-orange-600 text-xs font-medium">لا توجد طلبات</p>
       </div>
     );
   }

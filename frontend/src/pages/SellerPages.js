@@ -49,10 +49,10 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
   
   if (!items || items.length === 0) {
     return (
-      <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
-        <Package className="mx-auto mb-2 text-gray-300" size={40} />
-        <p className="text-gray-500 text-sm">لا توجد أطباق بعد</p>
-        <p className="text-gray-400 text-xs">أضف أول طبق لقائمة الطعام</p>
+      <div className="text-center py-8 bg-orange-50 rounded-xl border border-orange-200">
+        <Package className="mx-auto mb-2 text-orange-300" size={40} />
+        <p className="text-orange-600 text-sm font-medium">لا توجد أطباق بعد</p>
+        <p className="text-orange-400 text-xs">أضف أول طبق لقائمة الطعام</p>
       </div>
     );
   }
@@ -161,9 +161,9 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
 const FoodOrdersSection = ({ orders, onStatusChange }) => {
   if (!orders || orders.length === 0) {
     return (
-      <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
-        <ShoppingBag className="mx-auto mb-2 text-gray-300" size={40} />
-        <p className="text-gray-500 text-sm">لا توجد طلبات</p>
+      <div className="text-center py-8 bg-orange-50 rounded-xl border border-orange-200">
+        <ShoppingBag className="mx-auto mb-2 text-orange-300" size={40} />
+        <p className="text-orange-600 text-sm font-medium">لا توجد طلبات</p>
       </div>
     );
   }

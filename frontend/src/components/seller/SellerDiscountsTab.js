@@ -217,10 +217,10 @@ const SellerDiscountsTab = ({ products = [] }) => {
       
       {/* Discounts List */}
       {discounts.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-          <Gift size={40} className="text-gray-300 mx-auto mb-3" />
-          <h3 className="font-bold text-gray-700 mb-1">لا توجد عروض</h3>
-          <p className="text-gray-500 text-sm mb-4">أنشئ عرضك الأول لجذب المزيد من العملاء</p>
+        <div className="bg-orange-50 rounded-xl p-8 text-center border border-orange-200">
+          <Gift size={40} className="text-orange-300 mx-auto mb-3" />
+          <h3 className="font-bold text-orange-700 mb-1">لا توجد عروض</h3>
+          <p className="text-orange-500 text-sm mb-4">أنشئ عرضك الأول لجذب المزيد من العملاء</p>
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-[#FF6B00] text-white px-4 py-2 rounded-full text-sm font-bold"
