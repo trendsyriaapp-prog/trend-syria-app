@@ -20,6 +20,17 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ## What's Been Implemented
 
+### March 2026 - Food Store Dashboard Parity (29 Mar 2026)
+- ✅ **Added Product Approval Status Badges to Food Store Dashboard** (`FoodStoreDashboard.js`)
+  - Yellow badge (بانتظار الموافقة) for pending products
+  - Green badge (نشط) for approved products  
+  - Red badge (مرفوض) for rejected products with rejection reason displayed
+- ✅ **Conditional action buttons based on approval status:**
+  - Pending: Edit + Delete only (no visibility toggle)
+  - Approved: Edit + Delete + Show/Hide toggle
+  - Rejected: "Edit & Resubmit" + Delete (no visibility toggle)
+- ✅ Created test food seller account (`0966666666` / `food123`) with store "مطعم الشام للمأكولات"
+
 ### December 2024 - UI/UX Fixes (28 Dec 2024)
 - ✅ Fixed seller bottom navigation bar position (`bottom-0` + `safe-area-inset-bottom`)
 - ✅ Fixed AddProductModal scroll issue - prevented scroll leaking to background page (`overscroll-contain`)
@@ -84,8 +95,12 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 - Delivery Driver: `0911222333` / `test123`
 - Seller 1: `0922222222` / `seller123`
 - Seller 2: `0911444555` / `seller123`
+- Food Seller: `0966666666` / `food123` (Store: مطعم الشام للمأكولات)
 
 ---
+
+## Files Modified (29 Mar 2026)
+- `/app/frontend/src/pages/FoodStoreDashboard.js` - Added approval status badges and conditional buttons
 
 ## Files Modified (28 Dec 2024)
 - `/app/frontend/src/pages/SellerPages.js` - Fixed bottom bar position
