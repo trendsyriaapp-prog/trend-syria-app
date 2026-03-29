@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -507,11 +507,38 @@ const FoodStoreDashboard = () => {
             ) : (
               <div className="space-y-2">
                 {products.map((product) => (
-                  <div key={product.id} className={`relative bg-gray-50 rounded-xl p-3 ${!product.is_available ? 'border-2 border-dashed border-gray-300' : ''}`}>
-                    {/* شارة "مخفي" على الطبق */}
-                    {!product.is_available && (
+                  <div key={product.id} className={`relative bg-gray-50 rounded-xl p-3 ${
+                    product.approval_status === 'rejected' ? 'border-2 border-red-300 bg-red-50/50' :
+                    product.approval_status === 'pending' || !product.is_approved ? 'border-2 border-yellow-300 bg-yellow-50/50' :
+                    !product.is_available ? 'border-2 border-dashed border-gray-300' : ''
+                  }`}>
+                    {/* شارات حالة الطبق */}
+                    {product.approval_status === 'rejected' ? (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <X size={10} />
+                        مرفوض
+                      </div>
+                    ) : product.approval_status === 'pending' || !product.is_approved ? (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <Clock size={10} />
+                        بانتظار الموافقة
+                      </div>
+                    ) : !product.is_available ? (
                       <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full z-10">
                         مخفي عن العملاء
+                      </div>
+                    ) : (
+                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                        <Check size={10} />
+                        نشط
+                      </div>
+                    )}
+                    
+                    {/* سبب الرفض إذا كان مرفوضاً */}
+                    {product.approval_status === 'rejected' && product.rejection_reason && (
+                      <div className="mb-2 p-2 bg-red-100 rounded-lg border border-red-200">
+                        <p className="text-xs text-red-700 font-medium">سبب الرفض:</p>
+                        <p className="text-xs text-red-600">{product.rejection_reason}</p>
                       </div>
                     )}
                     <div className="flex items-center gap-3">
@@ -533,34 +560,55 @@ const FoodStoreDashboard = () => {
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-green-600'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        {/* زر إظهار/إخفاء واضح */}
-                        <button
-                          onClick={() => handleToggleAvailability(product.id, product.is_available)}
-                          data-testid={`toggle-availability-${product.id}`}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            product.is_available 
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                              : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                          }`}
-                        >
-                          {product.is_available ? (
-                            <>
-                              <Eye size={14} />
-                              <span>متاح</span>
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff size={14} />
-                              <span>إظهار</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-                        >
-                          <Edit size={16} />
-                        </button>
+                        {/* أزرار حسب حالة الطبق */}
+                        {product.approval_status === 'rejected' ? (
+                          /* طبق مرفوض - زر إعادة إرسال */
+                          <button
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200"
+                          >
+                            <RotateCcw size={14} />
+                            <span>تعديل وإعادة إرسال</span>
+                          </button>
+                        ) : product.approval_status === 'pending' || !product.is_approved ? (
+                          /* طبق معلق - بدون زر إظهار/إخفاء */
+                          null
+                        ) : (
+                          /* طبق موافق عليه - زر إظهار/إخفاء */
+                          <button
+                            onClick={() => handleToggleAvailability(product.id, product.is_available)}
+                            data-testid={`toggle-availability-${product.id}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              product.is_available 
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                            }`}
+                          >
+                            {product.is_available ? (
+                              <>
+                                <Eye size={14} />
+                                <span>متاح</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff size={14} />
+                                <span>إظهار</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {/* زر التعديل - للجميع ما عدا المرفوض */}
+                        {product.approval_status !== 'rejected' && (
+                          <button
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
+                        
+                        {/* زر الحذف - للجميع */}
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
                           className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
