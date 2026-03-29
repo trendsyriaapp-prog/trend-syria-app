@@ -180,7 +180,7 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                     className="flex-1 text-[10px] bg-blue-500 text-white py-1.5 rounded-lg font-medium hover:bg-blue-600"
                     data-testid={`confirm-order-${order.id}`}
                   >
-                    تأكيد الطلب
+                    استلام الطلب
                   </button>
                 )}
                 {canPrepare && (
