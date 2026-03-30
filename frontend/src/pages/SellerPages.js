@@ -1297,13 +1297,11 @@ const SellerDashboardPage = () => {
                 )}
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold text-gray-900 truncate">{user?.name || 'متجري'}</h1>
-                  <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                    <Star size={10} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-[10px] font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
-                  </div>
+                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded-full w-fit mb-1">
+                  <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-[10px] font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
                 </div>
+                <h1 className="text-sm font-bold text-gray-900 truncate">{user?.name || 'متجري'}</h1>
                 <p className="text-xs text-gray-500 mt-0.5">{displayItems.length} منتج • <span className="text-green-600">نشط</span></p>
               </div>
             </div>
