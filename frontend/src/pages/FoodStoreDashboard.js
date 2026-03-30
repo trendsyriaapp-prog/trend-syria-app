@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import useNotificationSound from '../hooks/useNotificationSound';
 import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 import SellerAnalytics from '../components/seller/SellerAnalytics';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
@@ -163,10 +164,15 @@ const FoodStoreDashboard = () => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showStoreToggleConfirm, setShowStoreToggleConfirm] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
-  // مرجع لصوت الإشعار
+  // مرجع لصوت الإشعار وتتبع الطلبات
   const audioRef = useRef(null);
   const lastNotificationId = useRef(null);
+  const previousPendingCountRef = useRef(0);
+  
+  // Hook لتشغيل الأصوات
+  const { playFood } = useNotificationSound();
 
   // تشغيل صوت الإشعار
   const playNotificationSound = () => {
@@ -490,7 +496,18 @@ const FoodStoreDashboard = () => {
               <ShoppingBag size={20} className="text-green-600" />
               الطلبات
             </h2>
-            <StoreOrdersTab token={token} />
+            <StoreOrdersTab 
+              token={token} 
+              onNewOrder={(pendingCount) => {
+                if (soundEnabled) {
+                  playFood();
+                  toast({
+                    title: "🔔 طلب جديد!",
+                    description: `لديك ${pendingCount} طلب في الانتظار`,
+                  });
+                }
+              }}
+            />
           </div>
         )}
 
@@ -2134,11 +2151,12 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
 };
 
 // Store Orders Tab Component
-const StoreOrdersTab = ({ token }) => {
+const StoreOrdersTab = ({ token, onNewOrder }) => {
   const { toast } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const previousPendingCountRef = useRef(0);
   
   // Modal لبدء التحضير مع تحديد الوقت
   const [showPrepModal, setShowPrepModal] = useState(null);
@@ -2150,6 +2168,19 @@ const StoreOrdersTab = ({ token }) => {
   const [showSetPrepTimeModal, setShowSetPrepTimeModal] = useState(null);
   const [newPrepTime, setNewPrepTime] = useState(15);
   const [settingPrepTime, setSettingPrepTime] = useState(false);
+
+  // التحقق من الطلبات الجديدة وتشغيل الصوت
+  useEffect(() => {
+    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    
+    if (pendingCount > previousPendingCountRef.current && previousPendingCountRef.current !== 0) {
+      // هناك طلب جديد!
+      if (onNewOrder) {
+        onNewOrder(pendingCount);
+      }
+    }
+    previousPendingCountRef.current = pendingCount;
+  }, [orders, onNewOrder]);
 
   useEffect(() => {
     fetchOrders();

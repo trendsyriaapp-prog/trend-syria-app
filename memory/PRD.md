@@ -25,6 +25,11 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
   - File: `/app/frontend/src/pages/FoodStoreDashboard.js` - Added `<NotificationsDropdown />` to header
   - Food sellers now receive real-time notifications for orders and driver arrivals
   - UI fully standardized between Food and Product seller dashboards
+- ✅ **Added New Order Sound Alert for Food Sellers**
+  - Integrated `useNotificationSound` hook with `playFood()` function
+  - Added `onNewOrder` callback to `StoreOrdersTab` component
+  - Sound plays automatically when new pending orders arrive (every 30 seconds check)
+  - Shows toast notification with pending order count
 
 ### March 2026 - Session 3 (30 Mar 2026)
 - ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model
