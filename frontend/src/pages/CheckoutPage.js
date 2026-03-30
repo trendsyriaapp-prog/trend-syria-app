@@ -48,7 +48,9 @@ const CheckoutPage = () => {
 
   const [newAddress, setNewAddress] = useState({
     title: 'المنزل', city: 'دمشق', area: '', street_number: '', building_number: '', apartment_number: '', phone: '', is_default: false,
-    latitude: null, longitude: null
+    latitude: null, longitude: null,
+    address_details: '', // العنوان التفصيلي
+    landmark: '' // علامة مميزة قريبة
   });
 
   const [newPayment, setNewPayment] = useState({
@@ -154,6 +156,15 @@ const CheckoutPage = () => {
       toast({ title: "خطأ", description: "يرجى إكمال جميع بيانات العنوان", variant: "destructive" });
       return;
     }
+    // التحقق من العنوان التفصيلي والعلامة المميزة - إجباري
+    if (useNewAddress && (!newAddress.address_details || newAddress.address_details.length < 10)) {
+      toast({ title: "خطأ", description: "يرجى كتابة العنوان التفصيلي (10 أحرف على الأقل)", variant: "destructive" });
+      return;
+    }
+    if (useNewAddress && (!newAddress.landmark || newAddress.landmark.length < 5)) {
+      toast({ title: "خطأ", description: "يرجى كتابة علامة مميزة قريبة", variant: "destructive" });
+      return;
+    }
     // التحقق من تحديد الموقع على الخريطة - إجباري
     if (useNewAddress && (!newAddress.latitude || !newAddress.longitude)) {
       toast({ title: "خطأ", description: "يرجى تحديد موقعك على الخريطة (إجباري)", variant: "destructive" });
@@ -175,7 +186,9 @@ const CheckoutPage = () => {
           city: newAddress.city, 
           phone: newAddress.phone,
           latitude: newAddress.latitude,
-          longitude: newAddress.longitude
+          longitude: newAddress.longitude,
+          address_details: newAddress.address_details,
+          landmark: newAddress.landmark
         };
       } else {
         const addr = savedAddresses.find(a => a.id === selectedAddressId);
@@ -185,7 +198,9 @@ const CheckoutPage = () => {
           city: addr.city, 
           phone: addr.phone,
           latitude: addr.latitude || null,
-          longitude: addr.longitude || null
+          longitude: addr.longitude || null,
+          address_details: addr.address_details || '',
+          landmark: addr.landmark || ''
         };
       }
 
@@ -439,6 +454,33 @@ const CheckoutPage = () => {
                   className="w-full bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
                   data-testid="new-address-phone"
                 />
+                
+                {/* العنوان التفصيلي - إجباري */}
+                <div className="mt-3 p-2 bg-orange-50 rounded-lg border border-orange-200">
+                  <label className="block text-[11px] font-bold text-orange-700 mb-1">
+                    📍 العنوان التفصيلي *
+                  </label>
+                  <textarea
+                    value={newAddress.address_details}
+                    onChange={(e) => setNewAddress({ ...newAddress, address_details: e.target.value })}
+                    placeholder="الشارع، رقم البناء، الطابق، رقم الباب..."
+                    className="w-full bg-white border border-orange-200 rounded-lg py-2 px-2 text-[11px] placeholder:text-gray-400 min-h-[60px]"
+                    data-testid="new-address-details"
+                  />
+                  
+                  <label className="block text-[11px] font-bold text-orange-700 mb-1 mt-2">
+                    🏪 علامة مميزة قريبة *
+                  </label>
+                  <input
+                    type="text"
+                    value={newAddress.landmark}
+                    onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
+                    placeholder="مثال: قرب صيدلية الأمل، مقابل مسجد..."
+                    className="w-full bg-white border border-orange-200 rounded-lg py-1.5 px-2 text-[11px] placeholder:text-gray-400"
+                    data-testid="new-address-landmark"
+                  />
+                  <p className="text-[9px] text-orange-600 mt-1">⚠️ هذه المعلومات تساعد السائق في إيجاد موقعك بسهولة</p>
+                </div>
                 
                 {/* تحديد الموقع من Google Maps - إجباري */}
                 <GoogleMapsLocationPicker

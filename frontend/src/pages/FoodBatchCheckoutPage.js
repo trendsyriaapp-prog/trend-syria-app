@@ -47,7 +47,9 @@ const FoodBatchCheckoutPage = () => {
     phone: '',
     is_default: false,
     latitude: null,
-    longitude: null
+    longitude: null,
+    address_details: '', // العنوان التفصيلي
+    landmark: '' // علامة مميزة قريبة
   });
   
   // خريطة اختيار الموقع
@@ -202,6 +204,24 @@ const FoodBatchCheckoutPage = () => {
         return;
       }
       
+      // التحقق من العنوان التفصيلي والعلامة المميزة
+      if (!newAddress.address_details || newAddress.address_details.length < 10) {
+        toast({
+          title: "تنبيه",
+          description: "يرجى كتابة العنوان التفصيلي (10 أحرف على الأقل)",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!newAddress.landmark || newAddress.landmark.length < 5) {
+        toast({
+          title: "تنبيه",
+          description: "يرجى كتابة علامة مميزة قريبة",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // التحقق من وجود الموقع على الخريطة
       if (!newAddress.latitude || !newAddress.longitude) {
         toast({
@@ -219,7 +239,9 @@ const FoodBatchCheckoutPage = () => {
         city: newAddress.city,
         phone: newAddress.phone,
         latitude: newAddress.latitude,
-        longitude: newAddress.longitude
+        longitude: newAddress.longitude,
+        address_details: newAddress.address_details,
+        landmark: newAddress.landmark
       };
       
       // حفظ العنوان الجديد
@@ -590,6 +612,33 @@ const FoodBatchCheckoutPage = () => {
                   placeholder="09xxxxxxxx"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
                 />
+              </div>
+              
+              {/* العنوان التفصيلي والعلامة المميزة - إجباري */}
+              <div className="p-3 bg-orange-50 rounded-xl border border-orange-200">
+                <label className="block text-sm font-bold text-orange-700 mb-1">
+                  📍 العنوان التفصيلي *
+                </label>
+                <textarea
+                  value={newAddress.address_details}
+                  onChange={(e) => setNewAddress({ ...newAddress, address_details: e.target.value })}
+                  placeholder="الشارع، رقم البناء، الطابق، رقم الباب..."
+                  className="w-full border border-orange-200 rounded-lg px-3 py-2 text-sm min-h-[70px]"
+                  data-testid="food-address-details"
+                />
+                
+                <label className="block text-sm font-bold text-orange-700 mb-1 mt-3">
+                  🏪 علامة مميزة قريبة *
+                </label>
+                <input
+                  type="text"
+                  value={newAddress.landmark}
+                  onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
+                  placeholder="مثال: قرب صيدلية الأمل، مقابل مسجد..."
+                  className="w-full border border-orange-200 rounded-lg px-3 py-2 text-sm"
+                  data-testid="food-address-landmark"
+                />
+                <p className="text-xs text-orange-600 mt-2">⚠️ هذه المعلومات تساعد السائق في إيجاد موقعك بسهولة</p>
               </div>
               
               {/* زر تحديد الموقع على الخريطة */}
