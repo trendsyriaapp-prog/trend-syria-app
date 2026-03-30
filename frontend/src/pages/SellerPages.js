@@ -1283,7 +1283,7 @@ const SellerDashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - مصغر مع النجوم */}
+      {/* Header - منظم */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -1303,25 +1303,24 @@ const SellerDashboardPage = () => {
                     <span className="text-xs font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs mt-0.5">
+                <div className="flex items-center gap-2 text-xs mt-1">
                   <span className="text-gray-500">{displayItems.length} منتج</span>
                   <span className="text-gray-400">•</span>
                   <span className="text-green-600 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
                     نشط
                   </span>
-                  <span className="text-gray-400">•</span>
-                  <button 
-                    onClick={() => setActiveTab('wallet')}
-                    className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-0.5 rounded-full transition-colors hover:bg-orange-600"
-                  >
-                    <Wallet size={12} />
-                    <span className="font-bold">{walletBalance?.toLocaleString() || 0} ل.س</span>
-                  </button>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setActiveTab('wallet')}
+                className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors"
+              >
+                <Wallet size={14} />
+                <span>{walletBalance?.toLocaleString() || 0}</span>
+              </button>
               <NotificationsDropdown />
               <button
                 onClick={() => setShowAddProduct(true)}
