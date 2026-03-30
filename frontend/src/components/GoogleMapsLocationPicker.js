@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ExternalLink, Check, X, Loader2, Settings } from 'lucide-react';
+import { MapPin, ExternalLink, Check, X, Loader2, Settings, MapPinOff } from 'lucide-react';
 
 /**
  * مكون لاختيار الموقع من Google Maps
@@ -14,6 +14,7 @@ const GoogleMapsLocationPicker = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [showGPSModal, setShowGPSModal] = useState(false);
 
   // فتح إعدادات الموقع في الهاتف
   const openLocationSettings = () => {
@@ -32,6 +33,13 @@ const GoogleMapsLocationPicker = ({
       alert('يرجى تفعيل خدمة الموقع من إعدادات المتصفح أو الهاتف');
     }
     setShowLocationPrompt(false);
+    setShowGPSModal(false);
+  };
+
+  // إغلاق نافذة GPS
+  const closeGPSModal = () => {
+    setShowGPSModal(false);
+    setError(null);
   };
 
   // استخدام GPS الهاتف مباشرة
@@ -52,6 +60,7 @@ const GoogleMapsLocationPicker = ({
       setLoading(false);
       setError('خدمة الموقع (GPS) غير مفعّلة أو بطيئة. يرجى تفعيل GPS.');
       setShowLocationPrompt(true);
+      setShowGPSModal(true);
     }, 8000);
 
     navigator.geolocation.getCurrentPosition(
@@ -66,6 +75,7 @@ const GoogleMapsLocationPicker = ({
         setLoading(false);
         setError(null);
         setShowLocationPrompt(false);
+        setShowGPSModal(false);
       },
       (err) => {
         clearTimeout(timeoutId);
@@ -75,15 +85,19 @@ const GoogleMapsLocationPicker = ({
         if (err.code === 1) {
           setError('تم رفض إذن الموقع. يرجى السماح من إعدادات الهاتف.');
           setShowLocationPrompt(true);
+          setShowGPSModal(true);
         } else if (err.code === 2) {
           setError('خدمة الموقع (GPS) غير مفعّلة. يرجى تفعيلها من الإعدادات.');
           setShowLocationPrompt(true);
+          setShowGPSModal(true);
         } else if (err.code === 3) {
           setError('انتهت المهلة. تأكد من تفعيل GPS وحاول مرة أخرى.');
           setShowLocationPrompt(true);
+          setShowGPSModal(true);
         } else {
           setError('حدث خطأ في تحديد الموقع. حاول مرة أخرى.');
           setShowLocationPrompt(true);
+          setShowGPSModal(true);
         }
       },
       {
@@ -287,7 +301,7 @@ const GoogleMapsLocationPicker = ({
       )}
 
       {/* رسالة الخطأ مع زر فتح الإعدادات */}
-      {error && (
+      {error && !showGPSModal && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-sm font-bold text-red-700 mb-1">⚠️ تعذر تحديد الموقع</p>
           <p className="text-xs text-red-600">{error}</p>
@@ -295,7 +309,7 @@ const GoogleMapsLocationPicker = ({
           {showLocationPrompt && (
             <button
               type="button"
-              onClick={openLocationSettings}
+              onClick={() => setShowGPSModal(true)}
               className="mt-3 w-full flex items-center justify-center gap-2 p-2 bg-orange-500 text-white rounded-lg font-bold text-sm hover:bg-orange-600 transition-all"
             >
               <Settings size={16} />
@@ -306,6 +320,56 @@ const GoogleMapsLocationPicker = ({
           <p className="text-xs text-gray-600 mt-2">
             💡 أو جرّب استخدام زر "لصق من Maps" بدلاً من ذلك
           </p>
+        </div>
+      )}
+
+      {/* نافذة عائمة لتفعيل GPS */}
+      {showGPSModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* رأس النافذة */}
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-center">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPinOff size={40} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-white">
+                خدمة الموقع غير مفعّلة
+              </h3>
+            </div>
+            
+            {/* محتوى النافذة */}
+            <div className="p-6 text-center">
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                يرجى تفعيل خدمة الموقع (GPS) من إعدادات الهاتف لتتمكن من تحديد موقع متجرك تلقائياً
+              </p>
+              
+              {/* زر فتح الإعدادات */}
+              <button
+                type="button"
+                onClick={openLocationSettings}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold text-base hover:from-orange-600 hover:to-red-600 transition-all shadow-lg mb-3"
+              >
+                <Settings size={22} />
+                <span>فتح إعدادات الموقع</span>
+              </button>
+              
+              {/* زر الإلغاء */}
+              <button
+                type="button"
+                onClick={closeGPSModal}
+                className="w-full p-3 text-gray-500 font-medium hover:text-gray-700 transition-colors"
+              >
+                إلغاء
+              </button>
+              
+              {/* نصيحة */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400">
+                  💡 يمكنك أيضاً استخدام زر "لصق من Maps" لتحديد موقعك يدوياً
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
