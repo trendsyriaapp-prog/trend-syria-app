@@ -19,6 +19,7 @@ import SellerAnalytics from '../components/seller/SellerAnalytics';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import SimpleImageCapture from '../components/seller/SimpleImageCapture';
 import DriverWaitingAlert from '../components/seller/DriverWaitingAlert';
+import NotificationsDropdown from '../components/NotificationsDropdown';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
