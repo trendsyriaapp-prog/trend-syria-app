@@ -1089,6 +1089,46 @@ const SellerDashboardPage = () => {
     }
   };
 
+  // تحديث الكمية المتبقية لمنتجات الطعام
+  const handleUpdateFoodStock = async (productId) => {
+    const stockValue = parseInt(newStockValue);
+    if (isNaN(stockValue) || stockValue < 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم صحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // تحديث فوري للواجهة
+    setFoodItems(prevItems => 
+      prevItems.map(item => 
+        item.id === productId 
+          ? { ...item, stock: stockValue }
+          : item
+      )
+    );
+    setEditingStock(null);
+    setNewStockValue('');
+
+    try {
+      await axios.put(`${API}/api/food/products/${productId}`, {
+        stock: stockValue
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // لا نحتاج إشعار نجاح
+    } catch (error) {
+      fetchData();
+      toast({
+        title: "خطأ",
+        description: getErrorMessage(error, "فشل تحديث الكمية"),
+        variant: "destructive"
+      });
+    }
+  };
+
   // تبديل حالة توفر المنتج (إظهار/إخفاء)
   const handleToggleAvailability = async (productId, currentStatus) => {
     // تحديث فوري للواجهة
@@ -1409,7 +1449,7 @@ const SellerDashboardPage = () => {
                                 min="0"
                               />
                               <button
-                                onClick={() => handleUpdateStock(product.id)}
+                                onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
                                 className="p-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
                               >
                                 <Check size={12} />
@@ -1457,7 +1497,7 @@ const SellerDashboardPage = () => {
                         ) : (
                           /* منتج موافق عليه - زر إظهار/إخفاء */
                           <button
-                            onClick={() => handleToggleAvailability(product.id, product.is_available)}
+                            onClick={() => isFoodSeller ? handleChangeFoodAvailability(product.id, product.is_available ? 'unavailable' : 'available') : handleToggleAvailability(product.id, product.is_available)}
                             data-testid={`toggle-availability-${product.id}`}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                               product.is_available 

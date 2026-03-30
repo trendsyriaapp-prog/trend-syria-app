@@ -877,7 +877,7 @@ async def update_food_product(product_id: str, update_data: dict, user: dict = D
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
     # الحقول المسموح بتعديلها
-    allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time", "weight_variants"]
+    allowed_fields = ["name", "description", "price", "original_price", "category", "images", "is_available", "preparation_time", "weight_variants", "stock"]
     update_dict = {k: v for k, v in update_data.items() if k in allowed_fields}
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
