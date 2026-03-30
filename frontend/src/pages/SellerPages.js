@@ -1433,54 +1433,6 @@ const SellerDashboardPage = () => {
                       <div className="flex-1">
                         <h4 className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-gray-900'}`}>{product.name}</h4>
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-[#FF6B00]'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
-                        
-                        {/* عرض الكمية المتبقية - فقط للمنتجات الموافق عليها */}
-                        {(product.approval_status !== 'pending' && product.is_approved !== false) && (
-                          <div className="flex items-center gap-1 mt-2">
-                            {editingStock === product.id ? (
-                              /* وضع التعديل */
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  value={newStockValue}
-                                  onChange={(e) => setNewStockValue(e.target.value)}
-                                  className="w-20 px-2 py-1.5 text-sm border-2 border-[#FF6B00] rounded-lg focus:outline-none"
-                                  placeholder="الكمية"
-                                  autoFocus
-                                  min="0"
-                                />
-                                <button
-                                  onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
-                                  className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                                >
-                                  <Check size={14} />
-                                </button>
-                                <button
-                                  onClick={() => { setEditingStock(null); setNewStockValue(''); }}
-                                  className="p-1.5 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-                            ) : (
-                              /* عرض الكمية - زر أكبر وأوضح */
-                              <button
-                                onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
-                                className={`flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg transition-all border-2 ${
-                                  (product.stock || 0) <= 5 
-                                    ? 'bg-red-50 text-red-600 border-red-300 hover:bg-red-100' 
-                                    : (product.stock || 0) <= 10 
-                                      ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                                      : 'bg-blue-50 text-blue-600 border-blue-300 hover:bg-blue-100'
-                                }`}
-                              >
-                                <Package size={14} />
-                                <span>المخزون: {product.stock || 0}</span>
-                                <Edit2 size={12} />
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         {/* أزرار حسب حالة المنتج */}
@@ -1539,6 +1491,54 @@ const SellerDashboardPage = () => {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      
+                      {/* زر المخزون - أسفل أزرار التعديل والحذف */}
+                      {(product.approval_status !== 'pending' && product.is_approved !== false) && (
+                        <div className="mt-2 w-full">
+                          {editingStock === product.id ? (
+                            /* وضع التعديل */
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={newStockValue}
+                                onChange={(e) => setNewStockValue(e.target.value)}
+                                className="flex-1 px-3 py-2 text-sm border-2 border-[#FF6B00] rounded-lg focus:outline-none"
+                                placeholder="الكمية الجديدة"
+                                autoFocus
+                                min="0"
+                              />
+                              <button
+                                onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
+                                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                              >
+                                <Check size={16} />
+                              </button>
+                              <button
+                                onClick={() => { setEditingStock(null); setNewStockValue(''); }}
+                                className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            /* عرض الكمية - زر كامل العرض */
+                            <button
+                              onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
+                              className={`w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-2 rounded-lg transition-all border-2 ${
+                                (product.stock || 0) <= 5 
+                                  ? 'bg-red-50 text-red-600 border-red-300 hover:bg-red-100' 
+                                  : (product.stock || 0) <= 10 
+                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
+                                    : 'bg-blue-50 text-blue-600 border-blue-300 hover:bg-blue-100'
+                              }`}
+                            >
+                              <Package size={16} />
+                              <span>المخزون: {product.stock || 0} قطعة</span>
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
