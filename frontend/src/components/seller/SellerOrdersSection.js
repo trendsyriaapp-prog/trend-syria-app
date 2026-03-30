@@ -165,13 +165,14 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel, actionLoadi
               
               {/* أزرار التحكم */}
               <div className="flex gap-2 pt-2 border-t border-gray-100">
-                {/* زر طباعة الملصق */}
+                {/* زر طباعة الملصق - أكبر وأوضح */}
                 <button
                   onClick={() => onPrintLabel(order)}
-                  className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-all border border-purple-200"
                   title="طباعة ملصق الطلب"
                 >
-                  <Printer size={14} className="text-gray-600" />
+                  <Printer size={16} />
+                  <span className="text-xs font-bold">طباعة</span>
                 </button>
                 
                 {canConfirm && (
