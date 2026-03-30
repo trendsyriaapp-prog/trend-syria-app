@@ -158,7 +158,7 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
 };
 
 // مكون عرض طلبات الطعام
-const FoodOrdersSection = ({ orders, onStatusChange }) => {
+const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
   if (!orders || orders.length === 0) {
     return (
       <div className="text-center py-8 bg-orange-50 rounded-xl border border-orange-200">
@@ -194,6 +194,8 @@ const FoodOrdersSection = ({ orders, onStatusChange }) => {
     return texts[status] || status;
   };
 
+  const isLoading = (orderId, status) => actionLoading === `food-${orderId}-${status}`;
+
   return (
     <div className="space-y-2">
       {orders.slice(0, 10).map(order => (
@@ -214,20 +216,43 @@ const FoodOrdersSection = ({ orders, onStatusChange }) => {
             <p>العنوان: {order.delivery_address || 'غير محدد'}</p>
           </div>
 
+          {/* كود الاستلام - يظهر عندما يكون الطلب جاهز */}
+          {order.status === 'ready' && order.pickup_code && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2 text-center">
+              <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
+              <div className="flex justify-center gap-2" dir="ltr">
+                {order.pickup_code.split('').map((digit, i) => (
+                  <span 
+                    key={i} 
+                    className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                  >
+                    {digit}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* أزرار الإجراءات حسب الحالة */}
           {order.status === 'pending' && (
             <div className="flex gap-2">
               <button
                 onClick={() => onStatusChange(order.id, 'accepted')}
-                className="flex-1 bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600"
+                disabled={isLoading(order.id, 'accepted')}
+                className="flex-1 bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600 disabled:opacity-70 flex items-center justify-center gap-1"
               >
-                استلام الطلب
+                {isLoading(order.id, 'accepted') ? (
+                  <><Loader2 size={12} className="animate-spin" /> جاري...</>
+                ) : 'استلام الطلب'}
               </button>
               <button
                 onClick={() => onStatusChange(order.id, 'rejected')}
-                className="flex-1 bg-red-100 text-red-600 py-1.5 rounded text-[10px] font-bold hover:bg-red-200"
+                disabled={isLoading(order.id, 'rejected')}
+                className="flex-1 bg-red-100 text-red-600 py-1.5 rounded text-[10px] font-bold hover:bg-red-200 disabled:opacity-70 flex items-center justify-center gap-1"
               >
-                رفض
+                {isLoading(order.id, 'rejected') ? (
+                  <><Loader2 size={12} className="animate-spin" /> جاري...</>
+                ) : 'رفض'}
               </button>
             </div>
           )}
@@ -235,18 +260,24 @@ const FoodOrdersSection = ({ orders, onStatusChange }) => {
           {order.status === 'accepted' && (
             <button
               onClick={() => onStatusChange(order.id, 'preparing')}
-              className="w-full bg-orange-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-orange-600"
+              disabled={isLoading(order.id, 'preparing')}
+              className="w-full bg-orange-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-orange-600 disabled:opacity-70 flex items-center justify-center gap-1"
             >
-              بدء التحضير
+              {isLoading(order.id, 'preparing') ? (
+                <><Loader2 size={12} className="animate-spin" /> جاري...</>
+              ) : 'بدء التحضير'}
             </button>
           )}
           
           {order.status === 'preparing' && (
             <button
               onClick={() => onStatusChange(order.id, 'ready')}
-              className="w-full bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600"
+              disabled={isLoading(order.id, 'ready')}
+              className="w-full bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600 disabled:opacity-70 flex items-center justify-center gap-1"
             >
-              الطلب جاهز
+              {isLoading(order.id, 'ready') ? (
+                <><Loader2 size={12} className="animate-spin" /> جاري...</>
+              ) : 'الطلب جاهز'}
             </button>
           )}
         </div>
@@ -1078,11 +1109,32 @@ const SellerDashboardPage = () => {
   };
 
   const handleFoodOrderStatus = async (orderId, newStatus) => {
+    // 1. تحديث فوري للواجهة (Optimistic Update)
+    setActionLoading(`food-${orderId}-${newStatus}`);
+    setFoodOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId 
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
+    
     try {
-      await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
+      const response = await axios.post(`${API}/api/food/orders/store/orders/${orderId}/status`, null, {
         params: { new_status: newStatus },
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // 2. إذا كان الإجراء "ready"، نحدّث الطلب بكود الاستلام
+      if (newStatus === 'ready' && response.data?.pickup_code) {
+        setFoodOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === orderId 
+              ? { ...order, pickup_code: response.data.pickup_code, pickup_code_verified: false }
+              : order
+          )
+        );
+      }
       
       const statusMessages = {
         'accepted': 'تم قبول الطلب',
@@ -1096,13 +1148,16 @@ const SellerDashboardPage = () => {
         title: "تم بنجاح",
         description: statusMessages[newStatus] || 'تم تحديث حالة الطلب'
       });
-      fetchData();
     } catch (error) {
+      // 3. إرجاع الحالة السابقة عند الفشل
+      fetchData();
       toast({
         title: "خطأ",
         description: getErrorMessage(error, "فشل في تحديث الطلب"),
         variant: "destructive"
       });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -1208,12 +1263,20 @@ const SellerDashboardPage = () => {
                 </span>
               )}
             </h2>
-            <SellerOrdersSection 
-              orders={orders} 
-              onSellerAction={handleSellerAction} 
-              onPrintLabel={setPrintLabelOrder}
-              actionLoading={actionLoading}
-            />
+            {isFoodSeller ? (
+              <FoodOrdersSection 
+                orders={foodOrders} 
+                onStatusChange={handleFoodOrderStatus}
+                actionLoading={actionLoading}
+              />
+            ) : (
+              <SellerOrdersSection 
+                orders={orders} 
+                onSellerAction={handleSellerAction} 
+                onPrintLabel={setPrintLabelOrder}
+                actionLoading={actionLoading}
+              />
+            )}
           </div>
         )}
 
