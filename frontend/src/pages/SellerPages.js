@@ -726,6 +726,7 @@ const SellerDashboardPage = () => {
   const [pendingBalance, setPendingBalance] = useState(0);
   const [totalEarned, setTotalEarned] = useState(0);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // لتتبع الزر قيد التحميل
   const [editPrice, setEditPrice] = useState('');
@@ -1310,7 +1311,7 @@ const SellerDashboardPage = () => {
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <NotificationsDropdown />
               <button 
-                onClick={() => setActiveTab('wallet')}
+                onClick={() => setShowWalletModal(true)}
                 className="h-9 bg-green-500 text-white px-3 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors text-xs font-bold"
                 title="المحفظة"
               >
@@ -1872,6 +1873,68 @@ const SellerDashboardPage = () => {
             fetchWalletData();
           }}
         />
+      )}
+
+      {/* Modal المحفظة */}
+      {showWalletModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={() => setShowWalletModal(false)}>
+          <div 
+            className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Wallet className="text-green-500" size={24} />
+                محفظتي
+              </h2>
+              <button 
+                onClick={() => setShowWalletModal(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* الرصيد */}
+            <div className="bg-gradient-to-l from-green-500 to-green-600 text-white rounded-2xl p-6 mb-4">
+              <p className="text-sm opacity-90 mb-1">الرصيد المتاح</p>
+              <p className="text-3xl font-bold">{walletBalance?.toLocaleString() || 0} ل.س</p>
+            </div>
+
+            {/* الأرباح المعلقة */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock size={18} className="text-yellow-600" />
+                  <span className="text-sm text-yellow-800">أرباح معلقة</span>
+                </div>
+                <span className="font-bold text-yellow-800">{pendingBalance?.toLocaleString() || 0} ل.س</span>
+              </div>
+              <p className="text-xs text-yellow-600 mt-1">تُضاف للرصيد بعد اكتمال التوصيل</p>
+            </div>
+
+            {/* إجمالي الأرباح */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">إجمالي الأرباح</span>
+                <span className="font-bold text-gray-900">{totalEarned?.toLocaleString() || 0} ل.س</span>
+              </div>
+            </div>
+
+            {/* زر طلب سحب */}
+            <button
+              onClick={() => {
+                setShowWalletModal(false);
+                setShowWithdrawModal(true);
+              }}
+              disabled={walletBalance < 50000}
+              className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
+            >
+              {walletBalance < 50000 ? `الحد الأدنى للسحب 50,000 ل.س` : 'طلب سحب'}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Modal طباعة الملصق */}
