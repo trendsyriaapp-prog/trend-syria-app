@@ -25,13 +25,10 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
   - File: `/app/backend/models/schemas.py` - AddressCreate model updated
   - File: `/app/backend/routes/user.py` - create_address and update_address endpoints updated
 - ✅ **Backend API Tests Passed** - 7/7 tests passed for new address fields
-  - Create address with new fields ✓
-  - Get addresses returns new fields ✓  
-  - Update address with new fields ✓
-  - Fields are optional (backward compatible) ✓
-- ✅ **Frontend Address Fields** - Already implemented in previous session
-  - `CheckoutPage.js` - address_details (10+ chars) & landmark (5+ chars) validation
-  - `FoodBatchCheckoutPage.js` - Same validation for food orders
+- ✅ **Food Store Dashboard Improvements**:
+  - Added "Flash Sales" (فلاش) tab to bottom navigation bar (5 tabs now)
+  - Moved Analytics inside Settings page
+  - Bottom bar: الطلبات | الأطباق | فلاش⚡ | المحفظة | الإعدادات
 
 ### March 2026 - Session 2 (29 Mar 2026)
 - ✅ **UltraMsg WhatsApp API Integration** - Ready for activation ($39/month)
@@ -141,6 +138,7 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 ## Files Modified (30 Mar 2026)
 - `/app/backend/models/schemas.py` - Added address_details and landmark to AddressCreate
 - `/app/backend/routes/user.py` - Updated create_address and update_address to save new fields
+- `/app/frontend/src/pages/FoodStoreDashboard.js` - Added Flash tab, moved Analytics to Settings
 
 ## Files Modified (29 Mar 2026)
 - `/app/frontend/src/pages/FoodStoreDashboard.js` - Added approval status badges and conditional buttons

@@ -698,14 +698,8 @@ const FoodStoreDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'analytics' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <BarChart3 size={18} className="text-green-600" />
-              الإحصائيات
-            </h3>
-            <SellerAnalytics storeId={store.id} token={token} />
-          </div>
+        {activeTab === 'flash' && (
+          <FlashSalesTab store={store} products={products} token={token} />
         )}
 
         {activeTab === 'settings' && (
@@ -725,6 +719,7 @@ const FoodStoreDashboard = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'menu', label: 'الأطباق', icon: ChefHat },
+            { id: 'flash', label: 'فلاش', icon: Flame },
             { id: 'wallet', label: 'المحفظة', icon: Wallet },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
@@ -1211,6 +1206,17 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         )}
         حفظ التغييرات
       </button>
+
+      {/* قسم الإحصائيات */}
+      <div className="border-t pt-4 mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-bold text-gray-900 flex items-center gap-2">
+            <BarChart3 size={18} className="text-purple-500" />
+            إحصائيات المتجر
+          </h4>
+        </div>
+        <SellerAnalytics token={token} />
+      </div>
 
       {/* زر تسجيل الخروج */}
       <div className="border-t pt-4 mt-4">
