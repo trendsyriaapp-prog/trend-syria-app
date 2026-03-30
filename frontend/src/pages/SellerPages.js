@@ -1318,13 +1318,6 @@ const SellerDashboardPage = () => {
                 <Wallet size={14} />
                 <span>{walletBalance?.toLocaleString() || 0}</span>
               </button>
-              <button
-                onClick={() => setShowAddProduct(true)}
-                className="h-9 bg-[#FF6B00] text-white px-3 rounded-full text-xs font-bold flex items-center gap-1"
-              >
-                <Plus size={14} />
-                إضافة
-              </button>
             </div>
           </div>
         </div>
