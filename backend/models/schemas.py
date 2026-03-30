@@ -176,6 +176,8 @@ class AddressCreate(BaseModel):
     is_default: bool = False
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    address_details: Optional[str] = None  # العنوان التفصيلي
+    landmark: Optional[str] = None  # علامة مميزة قريبة
 
 class PaymentMethodCreate(BaseModel):
     type: str

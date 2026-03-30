@@ -46,6 +46,8 @@ async def create_address(address: AddressCreate, user: dict = Depends(get_curren
         "is_default": is_default,
         "latitude": address.latitude,
         "longitude": address.longitude,
+        "address_details": address.address_details,
+        "landmark": address.landmark,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.addresses.insert_one(address_doc)
@@ -75,7 +77,9 @@ async def update_address(address_id: str, address: AddressCreate, user: dict = D
             "phone": address.phone,
             "is_default": address.is_default,
             "latitude": address.latitude,
-            "longitude": address.longitude
+            "longitude": address.longitude,
+            "address_details": address.address_details,
+            "landmark": address.landmark
         }}
     )
     return {"message": "تم تحديث العنوان"}
