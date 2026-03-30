@@ -1453,20 +1453,20 @@ const SellerDashboardPage = () => {
                           <button
                             onClick={() => isFoodSeller ? handleChangeFoodAvailability(product.id, product.is_available ? 'unavailable' : 'available') : handleToggleAvailability(product.id, product.is_available)}
                             data-testid={`toggle-availability-${product.id}`}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                               product.is_available 
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                                : 'bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300'
                             }`}
                           >
                             {product.is_available ? (
                               <>
-                                <Eye size={14} />
+                                <Eye size={16} />
                                 <span>متاح</span>
                               </>
                             ) : (
                               <>
-                                <EyeOff size={14} />
+                                <EyeOff size={16} />
                                 <span>إظهار</span>
                               </>
                             )}
@@ -1477,18 +1477,18 @@ const SellerDashboardPage = () => {
                         {product.approval_status !== 'rejected' && (
                           <button
                             onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
+                            className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 border border-blue-300"
                           >
-                            <Edit2 size={16} />
+                            <Edit2 size={18} />
                           </button>
                         )}
                         
                         {/* زر الحذف - للجميع */}
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                          className="p-2.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 border border-red-300"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
@@ -1502,37 +1502,31 @@ const SellerDashboardPage = () => {
                               type="number"
                               value={newStockValue}
                               onChange={(e) => setNewStockValue(e.target.value)}
-                              className="w-16 px-2 py-1 text-xs border border-[#FF6B00] rounded-lg focus:outline-none"
+                              className="w-16 px-2 py-1.5 text-sm border-2 border-[#FF6B00] rounded-lg focus:outline-none"
                               autoFocus
                               min="0"
                             />
                             <button
                               onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
-                              className="p-1 bg-green-500 text-white rounded-lg"
+                              className="p-1.5 bg-green-500 text-white rounded-lg"
                             >
-                              <Check size={14} />
+                              <Check size={16} />
                             </button>
                             <button
                               onClick={() => { setEditingStock(null); setNewStockValue(''); }}
-                              className="p-1 bg-gray-400 text-white rounded-lg"
+                              className="p-1.5 bg-gray-400 text-white rounded-lg"
                             >
-                              <X size={14} />
+                              <X size={16} />
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
-                            className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg transition-all ${
-                              (product.stock || 0) <= 5 
-                                ? 'bg-red-100 text-red-600' 
-                                : (product.stock || 0) <= 10 
-                                  ? 'bg-yellow-100 text-yellow-700'
-                                  : 'bg-gray-100 text-gray-600'
-                            }`}
+                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 hover:bg-[#FF6B00]/20"
                           >
-                            <Package size={12} />
+                            <Package size={14} />
                             <span>المخزون: {product.stock || 0}</span>
-                            <Edit2 size={10} />
+                            <Edit2 size={12} />
                           </button>
                         )}
                       </div>
