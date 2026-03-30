@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ShoppingBag, Printer, Clock, Phone, Truck, AlertTriangle } from 'lucide-react';
+import { ShoppingBag, Printer, Clock, Phone, Truck, AlertTriangle, Loader2 } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
 import { DELIVERY_STATUS_COLORS, ORDER_STATUSES } from '../../utils/constants';
 import ReportDriverModal from '../delivery/ReportDriverModal';
 
-const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
+const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel, actionLoading }) => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -177,28 +177,43 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel }) => {
                 {canConfirm && (
                   <button
                     onClick={() => onSellerAction(order.id, 'confirm')}
-                    className="flex-1 text-[10px] bg-blue-500 text-white py-1.5 rounded-lg font-medium hover:bg-blue-600"
+                    disabled={actionLoading === `${order.id}-confirm`}
+                    className="flex-1 text-[10px] bg-blue-500 text-white py-1.5 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-70 flex items-center justify-center gap-1"
                     data-testid={`confirm-order-${order.id}`}
                   >
-                    استلام الطلب
+                    {actionLoading === `${order.id}-confirm` ? (
+                      <><Loader2 size={12} className="animate-spin" /> جاري...</>
+                    ) : (
+                      'استلام الطلب'
+                    )}
                   </button>
                 )}
                 {canPrepare && (
                   <button
                     onClick={() => onSellerAction(order.id, 'preparing')}
-                    className="flex-1 text-[10px] bg-orange-500 text-white py-1.5 rounded-lg font-medium hover:bg-orange-600"
+                    disabled={actionLoading === `${order.id}-preparing`}
+                    className="flex-1 text-[10px] bg-orange-500 text-white py-1.5 rounded-lg font-medium hover:bg-orange-600 disabled:opacity-70 flex items-center justify-center gap-1"
                     data-testid={`prepare-order-${order.id}`}
                   >
-                    بدء تجهيز الطلب
+                    {actionLoading === `${order.id}-preparing` ? (
+                      <><Loader2 size={12} className="animate-spin" /> جاري...</>
+                    ) : (
+                      'بدء تجهيز الطلب'
+                    )}
                   </button>
                 )}
                 {canShip && (
                   <button
                     onClick={() => onSellerAction(order.id, 'shipped')}
-                    className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600"
+                    disabled={actionLoading === `${order.id}-shipped`}
+                    className="flex-1 text-[10px] bg-green-500 text-white py-1.5 rounded-lg font-medium hover:bg-green-600 disabled:opacity-70 flex items-center justify-center gap-1"
                     data-testid={`ship-order-${order.id}`}
                   >
-                    الطلب جاهز للشحن ✓
+                    {actionLoading === `${order.id}-shipped` ? (
+                      <><Loader2 size={12} className="animate-spin" /> جاري...</>
+                    ) : (
+                      'الطلب جاهز للشحن ✓'
+                    )}
                   </button>
                 )}
                 {!canConfirm && !canPrepare && !canShip && orderStatus !== 'delivered' && orderStatus !== 'cancelled' && (

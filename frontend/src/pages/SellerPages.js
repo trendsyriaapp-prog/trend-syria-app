@@ -693,6 +693,7 @@ const SellerDashboardPage = () => {
   const [totalEarned, setTotalEarned] = useState(0);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null); // لتتبع الزر قيد التحميل
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
@@ -957,6 +958,24 @@ const SellerDashboardPage = () => {
   };
 
   const handleSellerAction = async (orderId, action) => {
+    // تحديد الحالة الجديدة
+    const newStatusMap = {
+      'confirm': 'confirmed',
+      'preparing': 'preparing', 
+      'shipped': 'shipped'
+    };
+    const newStatus = newStatusMap[action];
+    
+    // 1. تحديث فوري للواجهة (Optimistic Update)
+    setActionLoading(`${orderId}-${action}`);
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.id === orderId 
+          ? { ...order, status: newStatus, delivery_status: newStatus }
+          : order
+      )
+    );
+    
     try {
       const endpoints = {
         'confirm': `/api/orders/${orderId}/seller/confirm`,
@@ -978,13 +997,17 @@ const SellerDashboardPage = () => {
         title: "تم بنجاح",
         description: messages[action]
       });
-      fetchData();
+      // لا نحتاج fetchData() - التحديث تم فوراً
     } catch (error) {
+      // 2. إرجاع الحالة السابقة عند الفشل
+      fetchData();
       toast({
         title: "خطأ",
         description: getErrorMessage(error, "فشل في تنفيذ الإجراء"),
         variant: "destructive"
       });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -1178,7 +1201,8 @@ const SellerDashboardPage = () => {
             <SellerOrdersSection 
               orders={orders} 
               onSellerAction={handleSellerAction} 
-              onPrintLabel={setPrintLabelOrder} 
+              onPrintLabel={setPrintLabelOrder}
+              actionLoading={actionLoading}
             />
           </div>
         )}
