@@ -1288,11 +1288,11 @@ const SellerDashboardPage = () => {
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden">
+              <div className="w-14 h-14 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden">
                 {storeLogo ? (
                   <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
                 ) : (
-                  <Package size={20} className="text-[#FF6B00]" />
+                  <Package size={24} className="text-[#FF6B00]" />
                 )}
               </div>
               <div>
@@ -1325,9 +1325,9 @@ const SellerDashboardPage = () => {
               <NotificationsDropdown />
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="flex items-center gap-1.5 bg-[#FF6B00] text-white px-3 py-2 rounded-xl text-sm font-bold"
+                className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-1.5 rounded-lg text-xs font-bold"
               >
-                <Plus size={16} />
+                <Plus size={14} />
                 إضافة
               </button>
             </div>
