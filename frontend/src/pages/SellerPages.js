@@ -1525,7 +1525,13 @@ const SellerDashboardPage = () => {
                         ) : (
                           <button
                             onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
-                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 hover:bg-[#FF6B00]/20"
+                            className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all border ${
+                              (product.stock || 0) <= 5 
+                                ? 'bg-red-100 text-red-600 border-red-300 hover:bg-red-200' 
+                                : (product.stock || 0) <= 10 
+                                  ? 'bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200'
+                                  : 'bg-green-100 text-green-600 border-green-300 hover:bg-green-200'
+                            }`}
                           >
                             <Package size={14} />
                             <span>المخزون: {product.stock || 0}</span>
