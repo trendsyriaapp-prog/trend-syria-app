@@ -1310,10 +1310,13 @@ const SellerDashboardPage = () => {
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button 
                 onClick={() => setActiveTab('wallet')}
-                className="w-9 h-9 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
+                className="flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
                 title="المحفظة"
               >
-                <Wallet size={16} />
+                <div className="w-9 h-9 bg-green-500 text-white rounded-full flex items-center justify-center">
+                  <Wallet size={16} />
+                </div>
+                <span className="text-[10px] font-bold text-green-600 mt-0.5">{walletBalance?.toLocaleString() || 0}</span>
               </button>
               <NotificationsDropdown />
               <button
@@ -1325,15 +1328,6 @@ const SellerDashboardPage = () => {
               </button>
             </div>
           </div>
-          
-          {/* شريط الرصيد */}
-          <button 
-            onClick={() => setActiveTab('wallet')}
-            className="w-full mt-2 bg-gradient-to-l from-green-500 to-green-600 text-white rounded-xl px-4 py-2 flex items-center justify-between"
-          >
-            <span className="text-sm font-bold">💰 رصيدك</span>
-            <span className="text-sm font-bold">{walletBalance?.toLocaleString() || 0} ل.س</span>
-          </button>
         </div>
       </div>
 
