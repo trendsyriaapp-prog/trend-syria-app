@@ -3086,6 +3086,14 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{promo.product_name}</p>
+                  {/* السعر الأصلي والسعر بعد الخصم */}
+                  {promo.discount_percentage > 0 && promo.original_price && (
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      <span className="line-through">{promo.original_price?.toLocaleString()}</span>
+                      <span className="mx-1">←</span>
+                      <span className="text-red-600 font-medium">{(promo.discounted_price || Math.round(promo.original_price * (1 - promo.discount_percentage/100))).toLocaleString()} ل.س</span>
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-1">
                     <PromotionCountdown expiresAt={promo.expires_at} />
                     {promo.discount_percentage > 0 && (
