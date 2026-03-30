@@ -120,7 +120,9 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       setDiscount(0);
       fetchData();
       
-      if (onPromotionSuccess) {
+      // تحديث رصيد المحفظة في الـ parent
+      if (onPromotionSuccess && res.data.new_balance !== undefined) {
+        console.log('Updating wallet balance to:', res.data.new_balance);
         onPromotionSuccess(res.data.new_balance);
       }
     } catch (error) {

@@ -653,7 +653,16 @@ const FoodStoreDashboard = () => {
         )}
 
         {activeTab === 'flash' && (
-          <PromoteFoodTab store={store} products={products} token={token} walletBalance={walletData.balance} onPromotionSuccess={(newBalance) => setWalletData(prev => ({...prev, balance: newBalance}))} />
+          <PromoteFoodTab 
+            store={store} 
+            products={products} 
+            token={token} 
+            walletBalance={walletData.balance} 
+            onPromotionSuccess={(newBalance) => {
+              setWalletData(prev => ({...prev, balance: newBalance}));
+              fetchWalletData(); // إعادة جلب الرصيد للتأكد
+            }} 
+          />
         )}
 
         {activeTab === 'settings' && (

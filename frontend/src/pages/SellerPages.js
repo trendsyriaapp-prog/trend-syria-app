@@ -1590,7 +1590,10 @@ const SellerDashboardPage = () => {
             products={products} 
             token={token} 
             walletBalance={walletBalance}
-            onPromotionSuccess={(newBalance) => setWalletBalance(newBalance)}
+            onPromotionSuccess={(newBalance) => {
+              setWalletBalance(newBalance);
+              fetchWallet(); // إعادة جلب الرصيد للتأكد
+            }}
           />
         )}
 
