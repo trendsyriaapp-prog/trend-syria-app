@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Rocket, Clock, CheckCircle, Loader2, Package, Percent, Wallet, Sparkles, Timer } from 'lucide-react';
+import { Zap, Clock, CheckCircle, Loader2, Package, Percent, Wallet, Sparkles, Timer } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -153,14 +153,14 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
 
   return (
     <div className="space-y-4">
-      {/* بانر الترويج */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-2xl p-4">
+      {/* بانر فلاش */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Rocket size={24} />
-          <h2 className="font-bold text-lg">روّج منتجك</h2>
+          <Zap size={24} />
+          <h2 className="font-bold text-lg">فلاش - روّج منتجك ⚡</h2>
         </div>
         <p className="text-sm opacity-90 mb-3">
-          اجعل منتجك يظهر في الصفحة الرئيسية أمام آلاف العملاء!
+          اجعل منتجك يظهر في عروض فلاش أمام آلاف العملاء!
         </p>
         <div className="flex flex-wrap gap-2">
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
@@ -211,7 +211,7 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       {/* اختيار منتج للترويج */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Package size={18} className="text-purple-500" />
+          <Package size={18} className="text-orange-500" />
           اختر منتج للترويج
         </h3>
         
@@ -233,13 +233,13 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
                 onClick={() => setSelectedProduct(selectedProduct?.id === product.id ? null : product)}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
                   selectedProduct?.id === product.id 
-                    ? 'bg-purple-50 border-2 border-purple-500' 
-                    : 'bg-gray-50 border-2 border-transparent hover:border-purple-200'
+                    ? 'bg-orange-50 border-2 border-orange-500' 
+                    : 'bg-gray-50 border-2 border-transparent hover:border-orange-200'
                 }`}
               >
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                   selectedProduct?.id === product.id 
-                    ? 'border-purple-500 bg-purple-500' 
+                    ? 'border-orange-500 bg-orange-500' 
                     : 'border-gray-300'
                 }`}>
                   {selectedProduct?.id === product.id && (
@@ -314,7 +314,7 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
             </div>
             <div className="text-left">
               <p className="text-sm text-gray-500">التكلفة</p>
-              <p className="font-bold text-purple-600">{settings.cost_per_product?.toLocaleString()} ل.س</p>
+              <p className="font-bold text-orange-600">{settings.cost_per_product?.toLocaleString()} ل.س</p>
             </div>
           </div>
           
@@ -330,7 +330,7 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
             disabled={submitting || walletBalance < settings.cost_per_product}
             className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all ${
               walletBalance >= settings.cost_per_product
-                ? 'bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-90'
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
@@ -346,8 +346,8 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
               </>
             ) : (
               <>
-                <Rocket size={20} />
-                روّج الآن - {settings.cost_per_product?.toLocaleString()} ل.س
+                <Zap size={20} />
+                روّج الآن ⚡ {settings.cost_per_product?.toLocaleString()} ل.س
               </>
             )}
           </button>

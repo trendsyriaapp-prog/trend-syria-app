@@ -1584,7 +1584,7 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
-        {/* تبويب روّج منتجك */}
+        {/* تبويب فلاش */}
         {activeTab === 'flash' && (
           <PromoteProductTab 
             products={products} 
@@ -1825,7 +1825,7 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
-            { id: 'flash', label: 'روّج', icon: Rocket },
+            { id: 'flash', label: 'فلاش', icon: Zap },
             { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (

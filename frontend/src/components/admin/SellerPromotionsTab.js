@@ -1,9 +1,9 @@
 // /app/frontend/src/components/admin/SellerPromotionsTab.js
-// إدارة ترويجات البائعين
+// إدارة فلاش البائعين
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Rocket, Clock, DollarSign, Settings, Trash2, Loader2, CheckCircle, XCircle, TrendingUp, Package } from 'lucide-react';
+import { Zap, Clock, DollarSign, Settings, Trash2, Loader2, CheckCircle, XCircle, TrendingUp, Package } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -42,7 +42,7 @@ const SellerPromotionsTab = () => {
       console.error('Error fetching promotions data:', error);
       toast({
         title: "خطأ",
-        description: "فشل في تحميل بيانات الترويجات",
+        description: "فشل في تحميل بيانات الفلاش",
         variant: "destructive"
       });
     } finally {
@@ -61,7 +61,7 @@ const SellerPromotionsTab = () => {
       
       toast({
         title: "تم الحفظ",
-        description: "تم حفظ إعدادات الترويج بنجاح"
+        description: "تم حفظ إعدادات الفلاش بنجاح"
       });
       setShowSettings(false);
     } catch (error) {
@@ -76,7 +76,7 @@ const SellerPromotionsTab = () => {
   };
 
   const cancelPromotion = async (promotionId) => {
-    if (!window.confirm('هل أنت متأكد من إلغاء هذا الترويج؟ لن يتم استرداد المبلغ.')) return;
+    if (!window.confirm('هل أنت متأكد من إلغاء هذا الفلاش؟ لن يتم استرداد المبلغ.')) return;
     
     try {
       await axios.delete(
@@ -86,13 +86,13 @@ const SellerPromotionsTab = () => {
       
       toast({
         title: "تم الإلغاء",
-        description: "تم إلغاء الترويج وإشعار البائع"
+        description: "تم إلغاء الفلاش وإشعار البائع"
       });
       fetchData();
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل في إلغاء الترويج",
+        description: "فشل في إلغاء الفلاش",
         variant: "destructive"
       });
     }
@@ -101,7 +101,7 @@ const SellerPromotionsTab = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-purple-500" size={32} />
+        <Loader2 className="animate-spin text-orange-500" size={32} />
       </div>
     );
   }
@@ -111,12 +111,12 @@ const SellerPromotionsTab = () => {
       {/* Header with settings button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Rocket className="text-purple-500" size={24} />
-          <h2 className="font-bold text-lg">ترويجات البائعين</h2>
+          <Zap className="text-orange-500" size={24} />
+          <h2 className="font-bold text-lg">فلاش</h2>
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="flex items-center gap-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+          className="flex items-center gap-1 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
         >
           <Settings size={16} />
           <span className="text-sm">الإعدادات</span>
@@ -125,11 +125,11 @@ const SellerPromotionsTab = () => {
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-          <h3 className="font-bold text-purple-800 mb-4">إعدادات الترويج</h3>
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <h3 className="font-bold text-orange-800 mb-4">إعدادات الفلاش</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">تكلفة الترويج (ل.س)</label>
+              <label className="block text-sm text-gray-600 mb-1">تكلفة الفلاش (ل.س)</label>
               <input
                 type="number"
                 value={settings.cost_per_product}
@@ -138,7 +138,7 @@ const SellerPromotionsTab = () => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">مدة الترويج (ساعة)</label>
+              <label className="block text-sm text-gray-600 mb-1">مدة الفلاش (ساعة)</label>
               <input
                 type="number"
                 value={settings.duration_hours}
@@ -147,7 +147,7 @@ const SellerPromotionsTab = () => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">الحد الأقصى للترويجات/يوم</label>
+              <label className="block text-sm text-gray-600 mb-1">الحد الأقصى للفلاش/يوم</label>
               <input
                 type="number"
                 value={settings.max_products_per_day}
@@ -156,12 +156,12 @@ const SellerPromotionsTab = () => {
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">تفعيل الترويج</label>
+              <label className="text-sm text-gray-600">تفعيل الفلاش</label>
               <input
                 type="checkbox"
                 checked={settings.enabled}
                 onChange={(e) => setSettings({...settings, enabled: e.target.checked})}
-                className="w-5 h-5 accent-purple-500"
+                className="w-5 h-5 accent-orange-500"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ const SellerPromotionsTab = () => {
             <button
               onClick={saveSettings}
               disabled={saving}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2"
             >
               {saving ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle size={16} />}
               حفظ
@@ -188,15 +188,15 @@ const SellerPromotionsTab = () => {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-green-600">{promotions.stats?.active_count || 0}</div>
-          <div className="text-xs text-green-700">ترويجات نشطة</div>
+          <div className="text-xs text-green-700">فلاش نشطة</div>
         </div>
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-gray-600">{promotions.stats?.expired_count || 0}</div>
-          <div className="text-xs text-gray-700">ترويجات منتهية</div>
+          <div className="text-xs text-gray-700">فلاش منتهية</div>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-purple-600">{(promotions.stats?.total_revenue || 0).toLocaleString()}</div>
-          <div className="text-xs text-purple-700">إجمالي الإيرادات (ل.س)</div>
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-orange-600">{(promotions.stats?.total_revenue || 0).toLocaleString()}</div>
+          <div className="text-xs text-orange-700">إجمالي الإيرادات (ل.س)</div>
         </div>
       </div>
 
@@ -224,15 +224,15 @@ const SellerPromotionsTab = () => {
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="bg-green-50 px-4 py-2 border-b border-green-200">
           <h3 className="font-bold text-green-800 flex items-center gap-2">
-            <Rocket size={16} />
-            الترويجات النشطة ({promotions.active?.length || 0})
+            <Zap size={16} />
+            الفلاش النشطة ({promotions.active?.length || 0})
           </h3>
         </div>
         
         {promotions.active?.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <Package size={40} className="mx-auto mb-2 opacity-30" />
-            <p>لا توجد ترويجات نشطة</p>
+            <p>لا توجد فلاش نشطة</p>
           </div>
         ) : (
           <div className="divide-y">
@@ -261,7 +261,7 @@ const SellerPromotionsTab = () => {
                 <button
                   onClick={() => cancelPromotion(promo.id)}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                  title="إلغاء الترويج"
+                  title="إلغاء الفلاش"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -277,7 +277,7 @@ const SellerPromotionsTab = () => {
           <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
             <h3 className="font-bold text-gray-700 flex items-center gap-2">
               <Clock size={16} />
-              الترويجات المنتهية (آخر {promotions.expired?.length})
+              الفلاش المنتهية (آخر {promotions.expired?.length})
             </h3>
           </div>
           <div className="divide-y max-h-64 overflow-y-auto">

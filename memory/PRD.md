@@ -22,28 +22,25 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ### March 2026 - Session 4 (30 Mar 2026)
 - ✅ **Added Notifications Bell to Food Seller Dashboard** - Perfectly matches Product Seller UI
-  - File: `/app/frontend/src/pages/FoodStoreDashboard.js` - Added `<NotificationsDropdown />` to header
-  - Food sellers now receive real-time notifications for orders and driver arrivals
-  - UI fully standardized between Food and Product seller dashboards
 - ✅ **Added New Order Sound Alert for Food Sellers**
-  - Integrated `useNotificationSound` hook with `playFood()` function
-  - Added `onNewOrder` callback to `StoreOrdersTab` component
-  - Sound plays automatically when new pending orders arrive (every 30 seconds check)
-  - Shows toast notification with pending order count
 - ✅ **Fixed Commission API Endpoint Error**
-  - Changed `/orders/seller/commission` to `/api/seller/commission` in `SellerPages.js`
-  - Fixed 404 error that was appearing in console logs
-- ✅ **NEW: Replaced Flash Sales with "Promote Your Product" System**
-  - Created simple, user-friendly promotion system for both Product and Food sellers
-  - Backend APIs: `/api/seller/promote-product`, `/api/seller/my-promotions`, `/api/seller/promotion-settings`
-  - Frontend: New `PromoteProductTab.js` component with purple gradient design
-  - Features:
-    - 24-hour promotion duration
-    - 1,000 SYP cost per product
-    - Optional discount (0-50%)
-    - Automatic wallet deduction
-    - No admin approval needed (instant)
-  - Updated bottom nav: "فلاش" → "روّج" with Rocket icon
+- ✅ **NEW: Unified Flash System (replaced old promotion system)**
+  - Renamed "روّج منتجك" to "فلاش - روّج منتجك ⚡"
+  - Changed colors from purple to orange/red (flash theme)
+  - Both Product and Food sellers can promote products
+  - Settings: 1,000 SYP / 24 hours / Optional discount (0-50%)
+  - Admin panel: "فلاش" tab with settings management
+  - Homepage: Seller promoted products appear in "عروض فلاش" section
+  - Removed old "صفقات اليوم" system (replaced by unified flash)
+  - Files updated:
+    - `/app/frontend/src/components/seller/PromoteProductTab.js` (colors + name)
+    - `/app/frontend/src/pages/FoodStoreDashboard.js` (PromoteFoodTab)
+    - `/app/frontend/src/pages/SellerPages.js` (tab name)
+    - `/app/frontend/src/pages/AdminPage.js` (فلاش tab)
+    - `/app/frontend/src/components/admin/SellerPromotionsTab.js` (colors)
+    - `/app/frontend/src/pages/HomePage.js` (integrated promoted products)
+    - `/app/backend/routes/admin.py` (promotions settings APIs)
+    - `/app/backend/routes/orders.py` (seller promotion APIs)
 
 ### March 2026 - Session 3 (30 Mar 2026)
 - ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model

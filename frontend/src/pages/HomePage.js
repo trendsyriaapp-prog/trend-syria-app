@@ -347,7 +347,7 @@ const HomePage = () => {
   // الطريقة القديمة كـ fallback
   const fetchDataLegacy = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes, sellerPromotionsRes] = await Promise.all([
         axios.get(`${API}/api/products/featured`),
         axios.get(`${API}/api/categories`),
         axios.get(`${API}/api/ads/active`).catch(() => ({ data: [] })),
@@ -361,13 +361,31 @@ const HomePage = () => {
           free_shipping_enabled: true,
           best_sellers_enabled: true,
           new_arrivals_enabled: true
-        }}))
+        }})),
+        axios.get(`${API}/api/promoted-products`).catch(() => ({ data: [] }))
       ]);
       setProducts(productsRes.data);
       setSectionsSettings(sectionsRes.data);
       setCategories(categoriesRes.data);
       setAds(adsRes.data || []);
-      setShopFlashProducts(shopFlashRes.data?.products || []);
+      
+      // دمج منتجات فلاش (من المدير) مع منتجات البائعين المروّجة
+      const adminFlashProducts = shopFlashRes.data?.products || [];
+      const sellerPromotedProducts = (sellerPromotionsRes.data || []).map(promo => ({
+        id: promo.product_id,
+        name: promo.product_name,
+        images: promo.product_image ? [promo.product_image] : [],
+        price: promo.original_price,
+        flash_price: promo.discounted_price,
+        flash_discount: promo.discount_percentage,
+        seller_name: promo.seller_name,
+        is_food: promo.is_food
+      }));
+      
+      // دمج القائمتين (البائعين أولاً ثم المدير)
+      const combinedFlashProducts = [...sellerPromotedProducts, ...adminFlashProducts];
+      setShopFlashProducts(combinedFlashProducts);
+      
       setShopFlashSale(shopFlashRes.data?.flash_sale || null);
       setSponsoredProducts(sponsoredRes.data || []);
       

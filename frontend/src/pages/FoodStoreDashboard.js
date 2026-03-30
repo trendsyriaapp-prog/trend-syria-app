@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Rocket, Percent, Sparkles, Loader2 as LoaderIcon
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -682,7 +682,7 @@ const FoodStoreDashboard = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'menu', label: 'الأطباق', icon: ChefHat },
-            { id: 'flash', label: 'روّج', icon: Rocket },
+            { id: 'flash', label: 'فلاش', icon: Zap },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
@@ -3050,14 +3050,14 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
 
   return (
     <div className="space-y-4">
-      {/* بانر الترويج */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-2xl p-4">
+      {/* بانر فلاش */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Rocket size={24} />
-          <h2 className="font-bold text-lg">روّج منتجك</h2>
+          <Zap size={24} />
+          <h2 className="font-bold text-lg">فلاش - روّج منتجك ⚡</h2>
         </div>
         <p className="text-sm opacity-90 mb-3">
-          اجعل منتجك يظهر في الصفحة الرئيسية أمام آلاف العملاء!
+          اجعل منتجك يظهر في عروض فلاش أمام آلاف العملاء!
         </p>
         <div className="flex flex-wrap gap-2">
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
@@ -3102,7 +3102,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
       {/* اختيار منتج للترويج */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Package size={18} className="text-purple-500" />
+          <Package size={18} className="text-orange-500" />
           اختر منتج للترويج
         </h3>
         
@@ -3119,12 +3119,12 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
                 onClick={() => setSelectedProduct(selectedProduct?.id === product.id ? null : product)}
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
                   selectedProduct?.id === product.id 
-                    ? 'bg-purple-50 border-2 border-purple-500' 
-                    : 'bg-gray-50 border-2 border-transparent hover:border-purple-200'
+                    ? 'bg-orange-50 border-2 border-orange-500' 
+                    : 'bg-gray-50 border-2 border-transparent hover:border-orange-200'
                 }`}
               >
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  selectedProduct?.id === product.id ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                  selectedProduct?.id === product.id ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
                 }`}>
                   {selectedProduct?.id === product.id && <Check size={14} className="text-white" />}
                 </div>
@@ -3204,7 +3204,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
             disabled={submitting || walletBalance < settings.cost_per_product}
             className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all ${
               walletBalance >= settings.cost_per_product
-                ? 'bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:opacity-90'
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
@@ -3220,8 +3220,8 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
               </>
             ) : (
               <>
-                <Rocket size={20} />
-                روّج الآن - {settings.cost_per_product?.toLocaleString()} ل.س
+                <Zap size={20} />
+                روّج الآن ⚡ {settings.cost_per_product?.toLocaleString()} ل.س
               </>
             )}
           </button>
