@@ -1560,7 +1560,7 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
         title="طلب انضمام جديد لعرض فلاش",
         message=f"البائع {user.get('name', 'غير معروف')} يطلب الانضمام لعرض {flash_sale.get('name')}",
         notification_type="flash_sale_request",
-        data={"request_id": request_id, "flash_sale_id": flash_sale_id}
+        order_id=request_id
     )
     
     return {
