@@ -455,6 +455,7 @@ const FoodStoreDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-1.5">
+              <NotificationsDropdown />
               <button 
                 onClick={() => setShowWalletModal(true)}
                 className="h-9 bg-green-500 text-white px-3 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors text-xs font-bold"
