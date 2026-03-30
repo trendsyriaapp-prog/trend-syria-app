@@ -1313,7 +1313,7 @@ const SellerDashboardPage = () => {
                   <span className="text-gray-400">•</span>
                   <button 
                     onClick={() => setActiveTab('wallet')}
-                    className="flex items-center gap-1 bg-orange-100 border border-orange-300 text-[#FF6B00] hover:bg-orange-200 px-2 py-0.5 rounded-full transition-colors"
+                    className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-0.5 rounded-full transition-colors hover:bg-orange-600"
                   >
                     <Wallet size={12} />
                     <span className="font-bold">{walletBalance?.toLocaleString() || 0} ل.س</span>
