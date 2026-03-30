@@ -1496,8 +1496,8 @@ const SellerDashboardPage = () => {
                       </div>
                     </div>
                     
-                    {/* زر المخزون - سطر منفصل أسفل كل شيء */}
-                    {(product.approval_status !== 'pending' && product.is_approved !== false) && (
+                    {/* زر المخزون - سطر منفصل أسفل كل شيء - فقط للمنتجات الموافق عليها */}
+                    {(product.is_approved === true && product.approval_status !== 'pending' && product.approval_status !== 'rejected') && (
                       <div className="mt-2 flex justify-end">
                         {editingStock === product.id ? (
                           <div className="flex items-center gap-1">
