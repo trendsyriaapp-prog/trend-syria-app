@@ -2917,6 +2917,47 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
   );
 };
 
+// مكون المؤقت التنازلي للترويج
+const PromotionCountdown = ({ expiresAt }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const expiry = new Date(expiresAt).getTime();
+      const diff = expiry - now;
+
+      if (diff <= 0) {
+        setTimeLeft('انتهى');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        setTimeLeft(`${hours}س ${minutes}د`);
+      } else if (minutes > 0) {
+        setTimeLeft(`${minutes}د ${seconds}ث`);
+      } else {
+        setTimeLeft(`${seconds}ث`);
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  return (
+    <span className="flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+      <Timer size={12} />
+      {timeLeft}
+    </span>
+  );
+};
+
 // Promote Food Tab Component - روّج منتجك (النظام الجديد البسيط)
 const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotionSuccess }) => {
   const { toast } = useToast();
@@ -3036,11 +3077,13 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{promo.product_name}</p>
-                  <p className="text-xs text-green-600">ينتهي: {new Date(promo.expires_at).toLocaleString('ar')}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <PromotionCountdown expiresAt={promo.expires_at} />
+                    {promo.discount_percentage > 0 && (
+                      <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">-{promo.discount_percentage}%</span>
+                    )}
+                  </div>
                 </div>
-                {promo.discount_percentage > 0 && (
-                  <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">-{promo.discount_percentage}%</span>
-                )}
               </div>
             ))}
           </div>
