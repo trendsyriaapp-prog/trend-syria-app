@@ -160,6 +160,7 @@ const FoodStoreDashboard = () => {
   const [selectedProductForDeal, setSelectedProductForDeal] = useState(null);
   const [walletData, setWalletData] = useState({ balance: 0, pending: 0, total_earned: 0, transactions: [] });
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showStoreToggleConfirm, setShowStoreToggleConfirm] = useState(false);
   
   // مرجع لصوت الإشعار
@@ -430,20 +431,18 @@ const FoodStoreDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {store.logo ? (
-                <img src={store.logo} alt={store.name} className="w-12 h-12 rounded-xl object-cover border border-gray-200" />
+                <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-xl object-cover border border-gray-200" />
               ) : (
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Store size={20} className="text-green-600" />
+                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Store size={24} className="text-green-600" />
                 </div>
               )}
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base font-bold text-gray-900">{store.name}</h1>
-                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
-                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-bold text-yellow-700">{store.rating?.toFixed(1) || '0.0'}</span>
-                  </div>
+                <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded-full w-fit mb-1">
+                  <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-[10px] font-bold text-yellow-700">{store.rating?.toFixed(1) || '0.0'}</span>
                 </div>
+                <h1 className="text-sm font-bold text-gray-900">{store.name}</h1>
                 <div className="flex items-center gap-2 text-xs mt-0.5">
                   <span className={`flex items-center gap-1 ${store.manual_close ? 'text-red-600' : 'text-green-600'}`}>
                     <span className={`w-2 h-2 rounded-full ${store.manual_close ? 'bg-red-500' : 'bg-green-500'}`}></span>
@@ -454,17 +453,27 @@ const FoodStoreDashboard = () => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setShowStoreToggleConfirm(true)}
-              disabled={togglingStore}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                store.manual_close 
-                  ? 'bg-green-500 text-white hover:bg-green-600' 
-                  : 'bg-red-100 text-red-600 hover:bg-red-200'
-              }`}
-            >
-              {togglingStore ? '...' : (store.manual_close ? 'فتح المتجر' : 'إغلاق')}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setShowWalletModal(true)}
+                className="h-9 bg-green-500 text-white px-3 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors text-xs font-bold"
+                title="المحفظة"
+              >
+                <Wallet size={14} />
+                <span>{walletData.balance?.toLocaleString() || 0}</span>
+              </button>
+              <button
+                onClick={() => setShowStoreToggleConfirm(true)}
+                disabled={togglingStore}
+                className={`h-9 px-3 rounded-full text-xs font-bold transition-all ${
+                  store.manual_close 
+                    ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                    : 'bg-red-100 text-red-600 hover:bg-red-200'
+                }`}
+              >
+                {togglingStore ? '...' : (store.manual_close ? 'فتح' : 'إغلاق')}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -624,80 +633,6 @@ const FoodStoreDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'wallet' && (
-          <div className="space-y-4">
-            {/* بطاقات الرصيد */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
-                <p className="text-white/80 text-xs">رصيد المحفظة</p>
-                <p className="text-2xl font-bold">{walletData.balance?.toLocaleString() || 0} ل.س</p>
-              </div>
-              <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-xl p-4 text-white">
-                <p className="text-white/80 text-xs">أرباح معلقة</p>
-                <p className="text-2xl font-bold">{walletData.pending?.toLocaleString() || 0} ل.س</p>
-              </div>
-            </div>
-            
-            {/* إجمالي الأرباح */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">إجمالي الأرباح</p>
-                  <p className="text-xl font-bold text-gray-900">{walletData.total_earned?.toLocaleString() || 0} ل.س</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <TrendingUp size={24} className="text-green-600" />
-                </div>
-              </div>
-            </div>
-            
-            {/* زر طلب سحب */}
-            <button
-              onClick={() => setShowWithdrawModal(true)}
-              disabled={walletData.balance < 50000}
-              className="w-full py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Wallet size={18} />
-              طلب سحب
-            </button>
-            {walletData.balance < 50000 && (
-              <p className="text-xs text-center text-gray-400">الحد الأدنى للسحب 50,000 ل.س</p>
-            )}
-            
-            {/* سجل العمليات */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <h4 className="font-bold text-gray-900 mb-3">سجل العمليات</h4>
-              {walletData.transactions && walletData.transactions.length > 0 ? (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {walletData.transactions.slice(0, 10).map((tx, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                        }`}>
-                          {tx.type === 'credit' ? '+' : '-'}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{tx.description}</p>
-                          <p className="text-xs text-gray-400">{new Date(tx.created_at).toLocaleDateString('ar-SY')}</p>
-                        </div>
-                      </div>
-                      <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                        {tx.type === 'credit' ? '+' : '-'}{tx.amount?.toLocaleString()} ل.س
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-400">
-                  <Wallet size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">لا توجد عمليات حتى الآن</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {activeTab === 'flash' && (
           <FlashSalesTab store={store} products={products} token={token} />
         )}
@@ -720,7 +655,6 @@ const FoodStoreDashboard = () => {
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'menu', label: 'الأطباق', icon: ChefHat },
             { id: 'flash', label: 'فلاش', icon: Flame },
-            { id: 'wallet', label: 'المحفظة', icon: Wallet },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
@@ -776,6 +710,68 @@ const FoodStoreDashboard = () => {
               }}
               token={token}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Modal المحفظة */}
+      {showWalletModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={() => setShowWalletModal(false)}>
+          <div 
+            className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Wallet className="text-green-500" size={24} />
+                محفظتي
+              </h2>
+              <button 
+                onClick={() => setShowWalletModal(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* الرصيد */}
+            <div className="bg-gradient-to-l from-green-500 to-green-600 text-white rounded-2xl p-6 mb-4">
+              <p className="text-sm opacity-90 mb-1">الرصيد المتاح</p>
+              <p className="text-3xl font-bold">{walletData.balance?.toLocaleString() || 0} ل.س</p>
+            </div>
+
+            {/* الأرباح المعلقة */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock size={18} className="text-yellow-600" />
+                  <span className="text-sm text-yellow-800">أرباح معلقة</span>
+                </div>
+                <span className="font-bold text-yellow-800">{walletData.pending?.toLocaleString() || 0} ل.س</span>
+              </div>
+              <p className="text-xs text-yellow-600 mt-1">تُضاف للرصيد بعد اكتمال التوصيل</p>
+            </div>
+
+            {/* إجمالي الأرباح */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">إجمالي الأرباح</span>
+                <span className="font-bold text-gray-900">{walletData.total_earned?.toLocaleString() || 0} ل.س</span>
+              </div>
+            </div>
+
+            {/* زر طلب سحب */}
+            <button
+              onClick={() => {
+                setShowWalletModal(false);
+                setShowWithdrawModal(true);
+              }}
+              disabled={walletData.balance < 50000}
+              className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
+            >
+              {walletData.balance < 50000 ? `الحد الأدنى للسحب 50,000 ل.س` : 'طلب سحب'}
+            </button>
           </div>
         </div>
       )}
