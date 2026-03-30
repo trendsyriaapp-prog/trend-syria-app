@@ -20,6 +20,19 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 
 ## What's Been Implemented
 
+### March 2026 - Session 3 (30 Mar 2026)
+- ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model
+  - File: `/app/backend/models/schemas.py` - AddressCreate model updated
+  - File: `/app/backend/routes/user.py` - create_address and update_address endpoints updated
+- ✅ **Backend API Tests Passed** - 7/7 tests passed for new address fields
+  - Create address with new fields ✓
+  - Get addresses returns new fields ✓  
+  - Update address with new fields ✓
+  - Fields are optional (backward compatible) ✓
+- ✅ **Frontend Address Fields** - Already implemented in previous session
+  - `CheckoutPage.js` - address_details (10+ chars) & landmark (5+ chars) validation
+  - `FoodBatchCheckoutPage.js` - Same validation for food orders
+
 ### March 2026 - Session 2 (29 Mar 2026)
 - ✅ **UltraMsg WhatsApp API Integration** - Ready for activation ($39/month)
   - Service file: `/app/backend/services/whatsapp_service.py`
@@ -86,7 +99,7 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 ### P1 - High Priority
 - [ ] Granular permissions for sub-admins (orders manager, products manager roles)
 - [ ] Live payment verification for Sham Cash (`backend/services/payment_providers.py`)
-- [ ] WhatsApp Business API or SMS for password reset OTPs
+- [ ] UltraMsg WhatsApp OTP Activation (requires $39 subscription payment)
 
 ### P2 - Medium Priority
 - [ ] Improve price display formatting (e.g., 9375 → 9.4K)
@@ -124,6 +137,10 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 - Food Seller: `0966666666` / `food123` (Store: مطعم الشام للمأكولات)
 
 ---
+
+## Files Modified (30 Mar 2026)
+- `/app/backend/models/schemas.py` - Added address_details and landmark to AddressCreate
+- `/app/backend/routes/user.py` - Updated create_address and update_address to save new fields
 
 ## Files Modified (29 Mar 2026)
 - `/app/frontend/src/pages/FoodStoreDashboard.js` - Added approval status badges and conditional buttons
