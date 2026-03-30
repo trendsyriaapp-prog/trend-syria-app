@@ -13,7 +13,7 @@ const SellerFlashSalesTab = ({ products, token }) => {
   const [loading, setLoading] = useState(true);
   const [availableSales, setAvailableSales] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
-  const [settings, setSettings] = useState({ join_fee: 5000 });
+  const [settings, setSettings] = useState({ join_fee_per_product: 1000 });
   const [selectedSale, setSelectedSale] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -29,14 +29,14 @@ const SellerFlashSalesTab = ({ products, token }) => {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [salesRes, requestsRes, settingsRes] = await Promise.all([
-        axios.get(`${API}/api/orders/seller/flash-sales/available`, { headers }),
-        axios.get(`${API}/api/orders/seller/my-flash-requests`, { headers }),
-        axios.get(`${API}/api/orders/seller/flash-sale-settings`, { headers })
+        axios.get(`${API}/api/seller/flash-sales/available`, { headers }),
+        axios.get(`${API}/api/seller/my-flash-requests`, { headers }),
+        axios.get(`${API}/api/seller/flash-sale-settings`, { headers })
       ]);
       
       setAvailableSales(salesRes.data || []);
       setMyRequests(requestsRes.data || []);
-      setSettings(settingsRes.data || { join_fee: 5000 });
+      setSettings(settingsRes.data || { join_fee_per_product: 1000 });
     } catch (error) {
       console.error('Error fetching flash data:', error);
     } finally {
@@ -57,7 +57,7 @@ const SellerFlashSalesTab = ({ products, token }) => {
     try {
       setSubmitting(true);
       await axios.post(
-        `${API}/api/orders/seller/flash-sale-request`,
+        `${API}/api/seller/flash-sale-request`,
         {
           flash_sale_id: selectedSale.id,
           product_ids: selectedProducts
@@ -124,7 +124,7 @@ const SellerFlashSalesTab = ({ products, token }) => {
           <h2 className="font-bold text-lg">انضم لعروض الفلاش</h2>
         </div>
         <p className="text-sm opacity-90 mb-3">
-          شارك منتجاتك في عروض الفلاش لزيادة المبيعات! رسوم الانضمام {settings.join_fee?.toLocaleString()} ل.س
+          شارك منتجاتك في عروض الفلاش لزيادة المبيعات! رسوم {(settings.join_fee_per_product || settings.join_fee || 1000)?.toLocaleString()} ل.س لكل منتج
         </p>
         <div className="bg-white/20 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
           <Flame size={14} />
@@ -240,7 +240,7 @@ const SellerFlashSalesTab = ({ products, token }) => {
             ) : (
               <>
                 <Zap size={18} />
-                طلب الانضمام ({settings.join_fee?.toLocaleString()} ل.س)
+                طلب الانضمام ({(selectedProducts.length * (settings.join_fee_per_product || settings.join_fee || 1000))?.toLocaleString()} ل.س)
               </>
             )}
           </button>

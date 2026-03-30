@@ -1444,10 +1444,14 @@ async def get_flash_settings_for_product_seller(user: dict = Depends(get_current
     
     if not settings:
         settings = {
-            "join_fee": 5000,
+            "join_fee_per_product": 1000,
             "min_products": 1,
             "max_products": 10
         }
+    
+    # التوافق مع الإعداد القديم
+    if "join_fee" in settings and "join_fee_per_product" not in settings:
+        settings["join_fee_per_product"] = settings.get("join_fee", 1000)
     
     return settings
 
@@ -1526,7 +1530,8 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
     
     # جلب إعدادات الرسوم
     settings = await db.platform_settings.find_one({"id": "flash_sale"})
-    join_fee = settings.get("join_fee", 5000) if settings else 5000
+    fee_per_product = settings.get("join_fee_per_product", settings.get("join_fee", 1000)) if settings else 1000
+    total_fee = fee_per_product * len(product_ids)
     
     # إنشاء طلب الانضمام
     request_id = str(uuid.uuid4())
@@ -1539,7 +1544,8 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
         "seller_name": user.get("name", user.get("full_name", "بائع")),
         "store_name": user.get("store_name", user.get("name", "متجر")),
         "product_ids": product_ids,
-        "fee_paid": join_fee,
+        "fee_per_product": fee_per_product,
+        "fee_paid": total_fee,
         "status": "pending",
         "created_at": now,
         "updated_at": now
