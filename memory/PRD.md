@@ -1,184 +1,120 @@
-# Trend Syria - Product Requirements Document
+# Trend Syria - E-Commerce & Food Delivery App
 
 ## Original Problem Statement
-Full-stack e-commerce and food delivery platform for the Syrian market, wrapped in a Capacitor Android application for Google Play Store distribution.
+Full-stack e-commerce and food delivery application for the Syrian market, targeting Google Play release. The app supports Arabic (RTL), multiple user roles (Buyer, Seller, Food Seller, Delivery Driver, Admin), and requires native Android integration via Capacitor.
 
-## User Personas
-- **Customers**: Syrian users ordering food and products
-- **Sellers**: Restaurant and shop owners managing their stores
-- **Delivery Drivers**: Personnel delivering orders with GPS tracking
-- **Admins**: Platform administrators managing the entire system
+## Core Features Implemented
 
-## Core Requirements
-- Multi-vendor marketplace with food delivery
-- Real-time order tracking with GPS
-- Native Android app via Capacitor
-- Arabic RTL interface
-- Multiple payment methods (Sham Cash, Cash on Delivery)
+### User Roles & Authentication
+- ✅ Multi-role system: Buyer, Product Seller, Food Seller, Delivery Driver, Admin
+- ✅ Phone-based authentication with OTP (UltraMsg integration - awaiting payment)
+- ✅ JWT token management with refresh tokens
+- ✅ Role-based access control
 
----
+### E-Commerce (Product Sellers)
+- ✅ Product listing with categories, images, pricing
+- ✅ Inventory management
+- ✅ Order management with status tracking
+- ✅ Seller wallet system
+- ✅ Commission tracking
+- ✅ Flash ⚡ self-serve promotions (1,000 SYP for 24h visibility)
 
-## What's Been Implemented
+### Food Delivery (Food Sellers)
+- ✅ Restaurant/store dashboard
+- ✅ Menu management
+- ✅ Order notifications with sound alerts
+- ✅ Integration with delivery drivers
+- ✅ Flash ⚡ promotions support
 
-### March 2026 - Session 4 (30 Mar 2026)
-- ✅ **Added Notifications Bell to Food Seller Dashboard** - Perfectly matches Product Seller UI
-- ✅ **Added New Order Sound Alert for Food Sellers**
-- ✅ **Fixed Commission API Endpoint Error**
-- ✅ **NEW: Unified Flash System (replaced old promotion system)**
-  - Renamed "روّج منتجك" to "فلاش - روّج منتجك ⚡"
-  - Changed colors from purple to orange/red (flash theme)
-  - Both Product and Food sellers can promote products
-  - Settings: 1,000 SYP / 24 hours / Optional discount (0-50%)
-  - Admin panel: "فلاش" tab with settings management
-  - Homepage: Seller promoted products appear in "عروض فلاش" section
-  - Removed old "صفقات اليوم" system (replaced by unified flash)
-  - Files updated:
-    - `/app/frontend/src/components/seller/PromoteProductTab.js` (colors + name)
-    - `/app/frontend/src/pages/FoodStoreDashboard.js` (PromoteFoodTab)
-    - `/app/frontend/src/pages/SellerPages.js` (tab name)
-    - `/app/frontend/src/pages/AdminPage.js` (فلاش tab)
-    - `/app/frontend/src/components/admin/SellerPromotionsTab.js` (colors)
-    - `/app/frontend/src/pages/HomePage.js` (integrated promoted products)
-    - `/app/backend/routes/admin.py` (promotions settings APIs)
-    - `/app/backend/routes/orders.py` (seller promotion APIs)
+### Customer Features
+- ✅ Product browsing with categories
+- ✅ Search functionality
+- ✅ Shopping cart
+- ✅ Order placement and tracking
+- ✅ Flash ⚡ deals section on homepage
 
-### March 2026 - Session 3 (30 Mar 2026)
-- ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model
-  - File: `/app/backend/models/schemas.py` - AddressCreate model updated
-  - File: `/app/backend/routes/user.py` - create_address and update_address endpoints updated
-- ✅ **Backend API Tests Passed** - 7/7 tests passed for new address fields
-- ✅ **Food Store Dashboard Improvements**:
-  - Added "Flash Sales" (فلاش) tab to bottom navigation bar (5 tabs now)
-  - Moved Analytics inside Settings page
-  - Bottom bar: الطلبات | الأطباق | فلاش⚡ | المحفظة | الإعدادات
-- ✅ **Standardized Seller Dashboards**:
-  - Wallet now opens as Modal from top header button (green)
-  - Flash Sales tab added for sellers to join admin campaigns (1000 SYP per product)
-  - Analytics moved inside Settings tab
-  - Removed redundant "+ Add" button from Product Seller header
-  - Fixed store image sizes for consistency
+### Admin Panel
+- ✅ User management
+- ✅ Product/seller approvals
+- ✅ Order oversight
+- ✅ Commission settings
+- ✅ Flash ⚡ promotion settings (cost, duration, limit)
+- ✅ Active promotions monitoring
+- ✅ Platform statistics
 
-### March 2026 - Session 2 (29 Mar 2026)
-- ✅ **UltraMsg WhatsApp API Integration** - Ready for activation ($39/month)
-  - Service file: `/app/backend/services/whatsapp_service.py`
-  - Endpoints: `/api/auth/send-whatsapp-otp`, `/api/auth/verify-whatsapp-otp`
-  - Instance ID: 167761, Token saved in `.env`
-- ✅ **Fixed Image Upload Bug** - Second image upload via "+" button now works
-  - Added `validateAndEnhanceImage` import
-  - Fixed undefined state variables
-- ✅ **Fixed Product Preview Modal** - Swipe gesture to change images
-- ✅ **Fixed All API Endpoints** - Added `/api` prefix to 100+ endpoints across all files
-- ✅ **Fixed "Order Ready for Shipping" Button** - Corrected endpoint path
-- ✅ **Fixed Store Settings** - Logo, latitude, longitude now save and load correctly
-- ✅ **Packaging Guide Tab** - Full content moved from separate page to bottom nav tab
-- ✅ **Removed "Packaging Guide" button** from Settings (no longer needed)
-- ✅ **"Browse as Customer" button** - Changed to orange color
-- ✅ **Store Logo in Header** - Updates immediately when changed in settings
-- ✅ **GPS Location Handler** - Shows error message and "Open Settings" button when GPS is off
-- ✅ **Order Label Print** - Fixed order code to match display (last 6 chars)
-- ✅ **WhatsApp Support Number** - Added `0945570365` to:
-  - About page (green card with direct link)
-  - Orders page (floating help button)
-  - Order tracking page (floating help button)
-  - WhatsApp floating button (default number)
-  - Backend settings
-- ✅ **Python Code Cleanup** - Fixed 539 lint errors (unused variables, bare except, etc.)
+### Flash ⚡ Promotion System (NEW - March 2026)
+- ✅ Self-serve system for sellers
+- ✅ 1,000 SYP per product for 24-hour visibility
+- ✅ Real-time countdown timers
+- ✅ Instant wallet deduction
+- ✅ Admin configurable settings
+- ✅ Customer-facing Flash section on homepage
 
-### March 2026 - Food Store Dashboard Parity (29 Mar 2026)
-- ✅ **Added Product Approval Status Badges to Food Store Dashboard** (`FoodStoreDashboard.js`)
-  - Yellow badge (بانتظار الموافقة) for pending products
-  - Green badge (نشط) for approved products  
-  - Red badge (مرفوض) for rejected products with rejection reason displayed
-- ✅ **Conditional action buttons based on approval status:**
-  - Pending: Edit + Delete only (no visibility toggle)
-  - Approved: Edit + Delete + Show/Hide toggle
-  - Rejected: "Edit & Resubmit" + Delete (no visibility toggle)
-- ✅ Created test food seller account (`0966666666` / `food123`) with store "مطعم الشام للمأكولات"
+## Tech Stack
+- **Frontend**: React 18, Tailwind CSS, Capacitor (Android)
+- **Backend**: FastAPI, Python 3.11
+- **Database**: MongoDB (trend_syria)
+- **Styling**: RTL support, Arabic language
 
-### December 2024 - UI/UX Fixes (28 Dec 2024)
-- ✅ Fixed seller bottom navigation bar position (`bottom-0` + `safe-area-inset-bottom`)
-- ✅ Fixed AddProductModal scroll issue - prevented scroll leaking to background page (`overscroll-contain`)
-- ✅ Fixed ImageBackgroundSelector mobile sizing - proper mobile-first design with slide-up animation
-- ✅ Fixed product shadow positioning - shadow now renders closer to product image
-- ✅ Improved modal animations for mobile - changed from scale to slide-up
-- ✅ **Translated all error messages to Arabic** - Added validation exception handler in server.py and error translation in errorHelpers.js
+## Key API Endpoints
+- `POST /api/auth/login` - User authentication
+- `POST /api/seller/promotions/promote` - Promote a product
+- `GET /api/promoted-products` - Get active promotions (public)
+- `GET /api/admin/promotions/settings` - Admin promotion settings
+- `PUT /api/admin/promotions/settings` - Update promotion settings
 
-### Earlier December 2024
-- ✅ Full e-commerce platform (React + FastAPI + MongoDB)
-- ✅ Capacitor Android wrapper with native integrations
-- ✅ GPS permissions and location tracking for delivery
-- ✅ Android hardware back-button handling for modals
-- ✅ Delivery driver order management (available/my orders)
-- ✅ Fixed scroll position preservation in DeliveryPages
-- ✅ Google Play Store listing preparation
-- ✅ Domain purchased: `trendsyria.app`
-- ✅ **Target API Level updated to 35** (required for Play Store)
+## Database Collections
+- `users` - All user accounts
+- `products` - Product listings
+- `orders` - Customer orders
+- `food_orders` - Food delivery orders
+- `promoted_products` - Active Flash promotions
+- `platform_settings` - App-wide settings including promotion config
+- `wallets` - User wallet balances
+- `transactions` - Financial transactions
 
----
+## Current Status
 
-## Prioritized Backlog
+### Blockers
+- 🔴 **Google Play Identity Verification** - Submitted Turkish Kimlik + TurkNet bill (March 30, 2026)
+- 🟡 **UltraMsg WhatsApp OTP** - Requires $39 subscription payment
 
-### P0 - Blockers
-- [ ] Google Identity Verification (Waiting on Google Support response - 1-3 days)
+### Pending Tasks
+- P1: Sub-admin granular permissions (orders manager, products manager roles)
+- P1: Sham Cash live payment verification
+- P2: Code refactoring (post-launch) - split large files
+- P3: iOS app development
 
-### P1 - High Priority
-- [ ] Granular permissions for sub-admins (orders manager, products manager roles)
-- [ ] Live payment verification for Sham Cash (`backend/services/payment_providers.py`)
-- [ ] UltraMsg WhatsApp OTP Activation (requires $39 subscription payment)
+### Completed (March 2026)
+- ✅ Unified seller dashboards (notifications, sound alerts)
+- ✅ Complete Flash ⚡ promotion system overhaul
+- ✅ Admin promotion settings and monitoring
+- ✅ Customer homepage Flash section
+- ✅ Real-time countdown timers
+- ✅ Wallet integration for promotions
 
-### P2 - Medium Priority
-- [ ] Improve price display formatting (e.g., 9375 → 9.4K)
-- [ ] iOS app development
+## Test Credentials
+- **Admin**: 0912345678 / admin123
+- **Product Seller**: 0922222222 / seller123
+- **Food Seller**: 0966666666 / food123
+- **Customer**: 0933333333 / buyer123
+
+## Files of Reference
+- `/app/frontend/src/components/seller/PromoteProductTab.js`
+- `/app/frontend/src/pages/SellerPages.js`
+- `/app/frontend/src/pages/FoodStoreDashboard.js`
+- `/app/frontend/src/components/admin/SellerPromotionsTab.js`
+- `/app/frontend/src/pages/HomePage.js`
+- `/app/backend/routes/orders.py`
+- `/app/backend/routes/admin.py`
+
+## Post-Launch Roadmap
+1. Complete 14-day closed testing period
+2. Gather user feedback
+3. Code refactoring (split large files)
+4. Sub-admin permissions
+5. Payment gateway verification
+6. iOS development
 
 ---
-
-## Technical Architecture
-
-```
-/app/
-├── backend/           # FastAPI server
-│   └── routes/
-│       ├── auth.py
-│       └── delivery.py
-└── frontend/          # React + Capacitor
-    ├── android/
-    │   └── variables.gradle  # API 35 configured
-    └── src/
-        ├── hooks/useBackButton.js
-        ├── pages/
-        └── components/
-```
-
-## Key Integrations
-- Namecheap (Domain)
-- Google Play Console
-- GitHub Actions (CI/CD)
-- PhotoRoom/rembg (Background removal)
-
-## Test Credentials (Preview)
-- Delivery Driver: `0911222333` / `test123`
-- Seller 1: `0922222222` / `seller123`
-- Seller 2: `0911444555` / `seller123`
-- Food Seller: `0966666666` / `food123` (Store: مطعم الشام للمأكولات)
-
----
-
-## Files Modified (30 Mar 2026)
-- `/app/frontend/src/pages/FoodStoreDashboard.js` - Added NotificationsDropdown to header (standardized with SellerPages)
-- `/app/backend/models/schemas.py` - Added address_details and landmark to AddressCreate
-- `/app/backend/routes/user.py` - Updated create_address and update_address to save new fields
-- `/app/frontend/src/pages/SellerPages.js` - UI refactored (Wallet Modal, Flash Sales Tab)
-- `/app/backend/routes/orders.py` - Added flash sales APIs
-- `/app/frontend/src/components/seller/SellerFlashSalesTab.js` - Created for flash sales
-
-## Files Modified (29 Mar 2026)
-- `/app/frontend/src/pages/FoodStoreDashboard.js` - Added approval status badges and conditional buttons
-
-## Files Modified (28 Dec 2024)
-- `/app/frontend/src/pages/SellerPages.js` - Fixed bottom bar position
-- `/app/frontend/src/components/seller/AddProductModal.js` - Fixed scroll leaking
-- `/app/frontend/src/components/seller/ImageBackgroundSelector.js` - Fixed mobile sizing
-- `/app/frontend/src/components/seller/SimpleImageCapture.js` - Fixed shadow position
-- `/app/backend/server.py` - Added Arabic validation error handler
-- `/app/backend/routes/wallet.py` - Fixed withdraw endpoint to accept JSON body
-- `/app/frontend/src/utils/errorHelpers.js` - Added error message translation
+*Last Updated: March 30, 2026*
