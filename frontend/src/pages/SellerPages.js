@@ -1492,49 +1492,46 @@ const SellerDashboardPage = () => {
                         </button>
                       </div>
                       
-                      {/* زر المخزون - أسفل أزرار التعديل والحذف */}
+                      {/* زر المخزون - صغير أسفل الأزرار */}
                       {(product.approval_status !== 'pending' && product.is_approved !== false) && (
-                        <div className="mt-2 w-full">
+                        <div className="flex justify-end mt-1">
                           {editingStock === product.id ? (
-                            /* وضع التعديل */
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <input
                                 type="number"
                                 value={newStockValue}
                                 onChange={(e) => setNewStockValue(e.target.value)}
-                                className="flex-1 px-3 py-2 text-sm border-2 border-[#FF6B00] rounded-lg focus:outline-none"
-                                placeholder="الكمية الجديدة"
+                                className="w-14 px-1 py-0.5 text-xs border border-[#FF6B00] rounded focus:outline-none"
                                 autoFocus
                                 min="0"
                               />
                               <button
                                 onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
-                                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                                className="p-1 bg-green-500 text-white rounded"
                               >
-                                <Check size={16} />
+                                <Check size={12} />
                               </button>
                               <button
                                 onClick={() => { setEditingStock(null); setNewStockValue(''); }}
-                                className="p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+                                className="p-1 bg-gray-400 text-white rounded"
                               >
-                                <X size={16} />
+                                <X size={12} />
                               </button>
                             </div>
                           ) : (
-                            /* عرض الكمية - زر كامل العرض */
                             <button
                               onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
-                              className={`w-full flex items-center justify-center gap-2 text-sm font-bold px-4 py-2 rounded-lg transition-all border-2 ${
+                              className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded transition-all ${
                                 (product.stock || 0) <= 5 
-                                  ? 'bg-red-50 text-red-600 border-red-300 hover:bg-red-100' 
+                                  ? 'bg-red-100 text-red-600' 
                                   : (product.stock || 0) <= 10 
-                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                                    : 'bg-blue-50 text-blue-600 border-blue-300 hover:bg-blue-100'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-gray-100 text-gray-600'
                               }`}
                             >
-                              <Package size={16} />
-                              <span>المخزون: {product.stock || 0} قطعة</span>
-                              <Edit2 size={14} />
+                              <Package size={10} />
+                              <span>{product.stock || 0}</span>
+                              <Edit2 size={8} />
                             </button>
                           )}
                         </div>
