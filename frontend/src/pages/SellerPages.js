@@ -818,9 +818,9 @@ const SellerDashboardPage = () => {
           axios.get(`${API}/api/orders/seller/my-orders`, { headers })
         ]);
         setProducts(productsRes.data || []);
-        // فلترة الطلبات: لا تظهر الطلبات بانتظار الدفع - فقط المدفوعة فما فوق
+        // فلترة الطلبات: لا تظهر الطلبات بانتظار الدفع فقط - أظهر المدفوعة وما فوق
         const paidOrders = (ordersRes.data || []).filter(order => 
-          order.status !== 'pending' && order.delivery_status !== 'pending'
+          order.status !== 'pending' && order.payment_status !== 'pending'
         );
         setOrders(paidOrders);
       }
