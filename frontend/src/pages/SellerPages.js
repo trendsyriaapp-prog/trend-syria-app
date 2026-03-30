@@ -7,7 +7,7 @@ import {
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
-  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap
+  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -1819,7 +1819,7 @@ const SellerDashboardPage = () => {
             { id: 'products', label: 'المنتجات', icon: Package },
             { id: 'flash', label: 'فلاش', icon: Flame },
             { id: 'packaging', label: 'التغليف', icon: Gift },
-            { id: 'settings', label: 'الإعدادات', icon: Bell },
+            { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
               key={tab.id}
