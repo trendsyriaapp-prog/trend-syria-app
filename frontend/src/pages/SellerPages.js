@@ -800,7 +800,7 @@ const SellerDashboardPage = () => {
 
   const fetchCommissionInfo = async () => {
     try {
-      const endpoint = isFoodSeller ? '/food/my-store/commission' : '/orders/seller/commission';
+      const endpoint = isFoodSeller ? '/api/food/my-store/commission' : '/api/seller/commission';
       const res = await axios.get(`${API}${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

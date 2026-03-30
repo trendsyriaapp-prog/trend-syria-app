@@ -30,6 +30,9 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
   - Added `onNewOrder` callback to `StoreOrdersTab` component
   - Sound plays automatically when new pending orders arrive (every 30 seconds check)
   - Shows toast notification with pending order count
+- ✅ **Fixed Commission API Endpoint Error**
+  - Changed `/orders/seller/commission` to `/api/seller/commission` in `SellerPages.js`
+  - Fixed 404 error that was appearing in console logs
 
 ### March 2026 - Session 3 (30 Mar 2026)
 - ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model
