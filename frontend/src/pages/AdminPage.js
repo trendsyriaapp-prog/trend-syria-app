@@ -199,64 +199,82 @@ const AdminDashboardPage = () => {
 
   // Handlers
   const handleApproveSeller = async (sellerId) => {
+    // تحديث فوري للواجهة
+    setPendingSellers(prev => prev.filter(s => s.id !== sellerId));
+    
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/approve`);
       toast({ title: "تم التفعيل", description: "تم تفعيل حساب البائع بنجاح" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل تفعيل البائع", variant: "destructive" });
     }
   };
 
   const handleRejectSeller = async (sellerId, reason = '') => {
+    // تحديث فوري للواجهة
+    setPendingSellers(prev => prev.filter(s => s.id !== sellerId));
+    
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب البائع" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل رفض البائع", variant: "destructive" });
     }
   };
 
   const handleApproveProduct = async (productId) => {
+    // تحديث فوري للواجهة
+    setPendingProducts(prev => prev.filter(p => p.id !== productId));
+    
     try {
       await axios.post(`${API}/api/admin/products/${productId}/approve`);
       toast({ title: "تم الموافقة", description: "تم الموافقة على المنتج" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل الموافقة على المنتج", variant: "destructive" });
     }
   };
 
   const handleRejectProduct = async (productId, reason = '') => {
+    // تحديث فوري للواجهة
+    setPendingProducts(prev => prev.filter(p => p.id !== productId));
+    
     try {
       await axios.post(`${API}/api/admin/products/${productId}/reject`, { 
         approved: false, 
         rejection_reason: reason 
       });
       toast({ title: "تم الرفض", description: "تم رفض المنتج" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل رفض المنتج", variant: "destructive" });
     }
   };
 
   const handleApproveDelivery = async (driverId) => {
+    // تحديث فوري للواجهة
+    setPendingDelivery(prev => prev.filter(d => d.id !== driverId));
+    
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/approve`);
       toast({ title: "تم التفعيل", description: "تم تفعيل حساب موظف التوصيل بنجاح" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل تفعيل موظف التوصيل", variant: "destructive" });
     }
   };
 
   const handleRejectDelivery = async (driverId, reason = '') => {
+    // تحديث فوري للواجهة
+    setPendingDelivery(prev => prev.filter(d => d.id !== driverId));
+    
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/reject`, { reason });
       toast({ title: "تم الرفض", description: "تم رفض طلب موظف التوصيل" });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل رفض موظف التوصيل", variant: "destructive" });
     }
   };
@@ -265,7 +283,7 @@ const AdminDashboardPage = () => {
     try {
       await axios.post(`${API}/api/admin/sub-admins`, newSubAdmin);
       toast({ title: "تمت الإضافة", description: "تم إضافة المدير التنفيذي بنجاح" });
-      fetchData();
+      fetchData(); // نحتاج fetchData هنا للحصول على البيانات الجديدة
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -281,12 +299,17 @@ const AdminDashboardPage = () => {
 
   const handleDeleteSubAdmin = async () => {
     if (!deleteSubAdminModal.id) return;
+    const idToDelete = deleteSubAdminModal.id;
+    
+    // تحديث فوري للواجهة
+    setSubAdmins(prev => prev.filter(s => s.id !== idToDelete));
+    setDeleteSubAdminModal({ isOpen: false, id: null });
+    
     try {
-      await axios.delete(`${API}/api/admin/sub-admins/${deleteSubAdminModal.id}`);
+      await axios.delete(`${API}/api/admin/sub-admins/${idToDelete}`);
       toast({ title: "تم الحذف", description: "تم حذف المدير التنفيذي" });
-      setDeleteSubAdminModal({ isOpen: false, id: null });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل حذف المدير التنفيذي", variant: "destructive" });
     }
   };
@@ -295,7 +318,7 @@ const AdminDashboardPage = () => {
     try {
       await axios.post(`${API}/api/admin/notifications`, newNotification);
       toast({ title: "تم الإرسال", description: "تم إرسال الإشعار بنجاح" });
-      fetchData();
+      fetchData(); // نحتاج fetchData للحصول على الإشعار الجديد
     } catch (error) {
       toast({ title: "خطأ", description: "فشل إرسال الإشعار", variant: "destructive" });
     }
@@ -303,12 +326,17 @@ const AdminDashboardPage = () => {
 
   const handleDeleteNotification = async () => {
     if (!deleteNotificationModal.id) return;
+    const idToDelete = deleteNotificationModal.id;
+    
+    // تحديث فوري للواجهة
+    setNotifications(prev => prev.filter(n => n.id !== idToDelete));
+    setDeleteNotificationModal({ isOpen: false, id: null });
+    
     try {
-      await axios.delete(`${API}/api/admin/notifications/${deleteNotificationModal.id}`);
+      await axios.delete(`${API}/api/admin/notifications/${idToDelete}`);
       toast({ title: "تم الحذف", description: "تم حذف الإشعار" });
-      setDeleteNotificationModal({ isOpen: false, id: null });
-      fetchData();
     } catch (error) {
+      fetchData();
       toast({ title: "خطأ", description: "فشل حذف الإشعار", variant: "destructive" });
     }
   };

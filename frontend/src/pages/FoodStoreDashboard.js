@@ -2941,6 +2941,9 @@ const FlashSalesTab = ({ store, products, token }) => {
   const cancelRequest = async (requestId) => {
     if (!window.confirm('هل تريد إلغاء هذا الطلب؟ سيتم استرداد الرسوم.')) return;
     
+    // تحديث فوري للواجهة
+    setMyRequests(prev => prev.filter(req => req.id !== requestId));
+    
     try {
       const res = await axios.delete(`${API}/api/food/flash-sale-request/${requestId}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -2949,8 +2952,9 @@ const FlashSalesTab = ({ store, products, token }) => {
         title: "تم الإلغاء", 
         description: `تم استرداد ${res.data.refunded?.toLocaleString() || 0} ل.س` 
       });
-      fetchData();
     } catch (error) {
+      // إرجاع البيانات عند الفشل
+      fetchData();
       toast({ title: "خطأ", description: error.response?.data?.detail || "فشل الإلغاء", variant: "destructive" });
     }
   };
