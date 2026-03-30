@@ -902,6 +902,13 @@ const SellerDashboardPage = () => {
     const itemName = isFoodSeller ? 'الطبق' : 'المنتج';
     if (!window.confirm(`هل تريد حذف هذا ${itemName}؟`)) return;
 
+    // تحديث فوري للواجهة - إخفاء المنتج
+    if (isFoodSeller) {
+      setFoodItems(prevItems => prevItems.filter(item => item.id !== productId));
+    } else {
+      setProducts(prevProducts => prevProducts.filter(product => product.id !== productId));
+    }
+
     try {
       const headers = { Authorization: `Bearer ${token}` };
       
@@ -914,8 +921,9 @@ const SellerDashboardPage = () => {
         title: "تم الحذف",
         description: `تم حذف ${itemName} بنجاح`
       });
-      fetchData();
     } catch (error) {
+      // إرجاع البيانات عند الفشل
+      fetchData();
       toast({
         title: "خطأ",
         description: getErrorMessage(error, `فشل حذف ${itemName}`),
@@ -1054,6 +1062,15 @@ const SellerDashboardPage = () => {
 
   // تبديل حالة توفر المنتج (إظهار/إخفاء)
   const handleToggleAvailability = async (productId, currentStatus) => {
+    // تحديث فوري للواجهة
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        product.id === productId 
+          ? { ...product, is_available: !currentStatus }
+          : product
+      )
+    );
+    
     try {
       await axios.put(`${API}/api/products/${productId}`, {
         is_available: !currentStatus
@@ -1065,9 +1082,15 @@ const SellerDashboardPage = () => {
         title: currentStatus ? "تم إخفاء المنتج" : "تم إظهار المنتج",
         description: currentStatus ? "المنتج مخفي عن العملاء الآن" : "المنتج متاح للعملاء الآن"
       });
-      
-      fetchData();
     } catch (error) {
+      // إرجاع الحالة السابقة عند الفشل
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, is_available: currentStatus }
+            : product
+        )
+      );
       toast({
         title: "خطأ",
         description: getErrorMessage(error, "فشل تحديث حالة المنتج"),
@@ -1079,6 +1102,15 @@ const SellerDashboardPage = () => {
   // دوال خاصة ببائع الطعام
   // Handler جديد لتغيير حالة توفر منتج الطعام (3 حالات)
   const handleChangeFoodAvailability = async (itemId, newStatus) => {
+    // تحديث فوري للواجهة
+    setFoodItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId 
+          ? { ...item, availability_status: newStatus }
+          : item
+      )
+    );
+    
     try {
       await axios.put(`${API}/api/food/products/${itemId}/availability?status=${newStatus}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -1092,8 +1124,9 @@ const SellerDashboardPage = () => {
       
       const msg = statusMessages[newStatus] || { title: 'تم التحديث', desc: '' };
       toast({ title: msg.title, description: msg.desc });
-      fetchData();
     } catch (error) {
+      // إرجاع الحالة السابقة عند الفشل
+      fetchData();
       toast({
         title: "خطأ",
         description: getErrorMessage(error, "فشل في تغيير حالة الطبق"),
