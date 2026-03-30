@@ -1289,11 +1289,11 @@ const SellerDashboardPage = () => {
           <div className="flex items-center justify-between">
             {/* معلومات المتجر */}
             <div className="flex items-center gap-3">
-              <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-[72px] h-[72px] bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                 {storeLogo ? (
                   <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
                 ) : (
-                  <Package size={28} className="text-[#FF6B00]" />
+                  <Package size={32} className="text-[#FF6B00]" />
                 )}
               </div>
               <div className="min-w-0">
@@ -1311,13 +1311,11 @@ const SellerDashboardPage = () => {
               <NotificationsDropdown />
               <button 
                 onClick={() => setActiveTab('wallet')}
-                className="flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
+                className="h-9 bg-green-500 text-white px-2 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors"
                 title="المحفظة"
               >
-                <div className="w-9 h-9 bg-green-500 text-white rounded-full flex items-center justify-center">
-                  <Wallet size={16} />
-                </div>
-                <span className="text-[10px] font-bold text-green-600 mt-0.5">{walletBalance?.toLocaleString() || 0}</span>
+                <Wallet size={16} />
+                <span className="text-xs font-bold">{walletBalance?.toLocaleString() || 0}</span>
               </button>
               <button
                 onClick={() => setShowAddProduct(true)}
