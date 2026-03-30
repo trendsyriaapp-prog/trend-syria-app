@@ -1434,7 +1434,7 @@ const SellerDashboardPage = () => {
                         <h4 className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-gray-900'}`}>{product.name}</h4>
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-[#FF6B00]'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-col items-end gap-1">
                         {/* أزرار حسب حالة المنتج */}
                         {product.approval_status === 'rejected' ? (
                           /* منتج مرفوض - زر إعادة إرسال */
@@ -1473,23 +1473,26 @@ const SellerDashboardPage = () => {
                           </button>
                         )}
                         
-                        {/* زر التعديل - للجميع ما عدا المرفوض (له زر خاص) */}
-                        {product.approval_status !== 'rejected' && (
+                        {/* صف أزرار التعديل والحذف */}
+                        <div className="flex items-center gap-1">
+                          {/* زر التعديل - للجميع ما عدا المرفوض (له زر خاص) */}
+                          {product.approval_status !== 'rejected' && (
+                            <button
+                              onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
+                              className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 border border-blue-300"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                          )}
+                          
+                          {/* زر الحذف - للجميع */}
                           <button
-                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
-                            className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 border border-blue-300"
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="p-2.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 border border-red-300"
                           >
-                            <Edit2 size={18} />
+                            <Trash2 size={18} />
                           </button>
-                        )}
-                        
-                        {/* زر الحذف - للجميع */}
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="p-2.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 border border-red-300"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        </div>
                       </div>
                     </div>
                     
