@@ -1283,54 +1283,59 @@ const SellerDashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - منظم */}
+      {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
+            {/* معلومات المتجر */}
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden">
+              <div className="w-14 h-14 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                 {storeLogo ? (
                   <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
                 ) : (
                   <Package size={24} className="text-[#FF6B00]" />
                 )}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-base font-bold text-gray-900">{user?.name || 'متجري'}</h1>
-                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
-                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
+                  <h1 className="text-sm font-bold text-gray-900 truncate">{user?.name || 'متجري'}</h1>
+                  <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                    <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-[10px] font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs mt-1">
-                  <span className="text-gray-500">{displayItems.length} منتج</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-green-600 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    نشط
-                  </span>
-                </div>
+                <p className="text-xs text-gray-500 mt-0.5">{displayItems.length} منتج • <span className="text-green-600">نشط</span></p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* الأزرار */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <button 
                 onClick={() => setActiveTab('wallet')}
-                className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors"
+                className="w-9 h-9 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors"
+                title="المحفظة"
               >
-                <Wallet size={14} />
-                <span>{walletBalance?.toLocaleString() || 0}</span>
+                <Wallet size={16} />
               </button>
               <NotificationsDropdown />
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="flex items-center gap-1 bg-[#FF6B00] text-white px-2 py-1.5 rounded-lg text-xs font-bold"
+                className="h-9 bg-[#FF6B00] text-white px-3 rounded-full text-xs font-bold flex items-center gap-1"
               >
                 <Plus size={14} />
                 إضافة
               </button>
             </div>
           </div>
+          
+          {/* شريط الرصيد */}
+          <button 
+            onClick={() => setActiveTab('wallet')}
+            className="w-full mt-2 bg-gradient-to-l from-green-500 to-green-600 text-white rounded-xl px-4 py-2 flex items-center justify-between"
+          >
+            <span className="text-sm font-bold">💰 رصيدك</span>
+            <span className="text-sm font-bold">{walletBalance?.toLocaleString() || 0} ل.س</span>
+          </button>
         </div>
       </div>
 
