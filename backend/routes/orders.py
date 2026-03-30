@@ -1568,3 +1568,192 @@ async def request_flash_sale_join_for_seller(request_data: dict, user: dict = De
         "message": "تم إرسال طلب الانضمام بنجاح",
         "request": flash_request
     }
+
+
+
+# ============== نظام ترويج المنتجات الجديد ==============
+
+@router.get("/seller/promotion-settings")
+async def get_promotion_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات الترويج"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
+    
+    if not settings:
+        settings = {
+            "cost_per_product": 1000,
+            "duration_hours": 24,
+            "max_products_per_day": 5
+        }
+    
+    return settings
+
+@router.get("/seller/my-promotions")
+async def get_my_promotions(user: dict = Depends(get_current_user)):
+    """جلب ترويجاتي الحالية والسابقة"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    promotions = await db.product_promotions.find(
+        {"seller_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # تصنيف الترويجات
+    active = []
+    expired = []
+    
+    for promo in promotions:
+        if promo.get("expires_at", "") > now:
+            promo["status"] = "active"
+            active.append(promo)
+        else:
+            promo["status"] = "expired"
+            expired.append(promo)
+    
+    return {
+        "active": active,
+        "expired": expired,
+        "total_active": len(active)
+    }
+
+@router.post("/seller/promote-product")
+async def promote_product(request_data: dict, user: dict = Depends(get_current_user)):
+    """ترويج منتج - يظهر في الصفحة الرئيسية"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    if not user.get("is_approved"):
+        raise HTTPException(status_code=403, detail="حسابك غير معتمد بعد")
+    
+    product_id = request_data.get("product_id")
+    discount_percentage = request_data.get("discount_percentage", 0)  # خصم اختياري
+    
+    if not product_id:
+        raise HTTPException(status_code=400, detail="يجب تحديد المنتج")
+    
+    if discount_percentage < 0 or discount_percentage > 90:
+        raise HTTPException(status_code=400, detail="نسبة الخصم يجب أن تكون بين 0 و 90%")
+    
+    # تحديد نوع المنتج
+    is_food = user.get("user_type") == "food_seller"
+    collection = db.food_products if is_food else db.products
+    
+    # التحقق من المنتج
+    product = await collection.find_one({
+        "id": product_id,
+        "seller_id": user["id"]
+    })
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود أو لا يخصك")
+    
+    if not product.get("is_approved", True):
+        raise HTTPException(status_code=400, detail="المنتج غير موافق عليه بعد")
+    
+    # جلب إعدادات الترويج
+    settings = await db.platform_settings.find_one({"id": "promotions"})
+    cost = settings.get("cost_per_product", 1000) if settings else 1000
+    duration = settings.get("duration_hours", 24) if settings else 24
+    
+    # التحقق من رصيد المحفظة
+    wallet = await db.wallets.find_one({"user_id": user["id"]})
+    balance = wallet.get("balance", 0) if wallet else 0
+    
+    if balance < cost:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"رصيد المحفظة غير كافٍ. المطلوب: {cost} ل.س، المتاح: {balance} ل.س"
+        )
+    
+    # التحقق من عدم وجود ترويج نشط لنفس المنتج
+    now = datetime.now(timezone.utc)
+    now_str = now.isoformat()
+    
+    existing = await db.product_promotions.find_one({
+        "product_id": product_id,
+        "expires_at": {"$gt": now_str}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا المنتج مروّج حالياً")
+    
+    # خصم المبلغ من المحفظة
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"balance": -cost}}
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "promotion_fee",
+        "amount": -cost,
+        "description": f"رسوم ترويج منتج: {product.get('name', 'منتج')}",
+        "created_at": now_str
+    }
+    await db.wallet_transactions.insert_one(transaction)
+    
+    # إنشاء الترويج
+    expires_at = (now + timedelta(hours=duration)).isoformat()
+    
+    promotion = {
+        "id": str(uuid.uuid4()),
+        "product_id": product_id,
+        "product_name": product.get("name", "منتج"),
+        "product_image": product.get("images", [None])[0] if product.get("images") else product.get("image"),
+        "original_price": product.get("price", 0),
+        "discount_percentage": discount_percentage,
+        "discounted_price": int(product.get("price", 0) * (1 - discount_percentage / 100)) if discount_percentage > 0 else product.get("price", 0),
+        "seller_id": user["id"],
+        "seller_name": user.get("name", user.get("full_name", "بائع")),
+        "is_food": is_food,
+        "cost_paid": cost,
+        "duration_hours": duration,
+        "created_at": now_str,
+        "expires_at": expires_at
+    }
+    
+    await db.product_promotions.insert_one(promotion)
+    del promotion["_id"]
+    
+    return {
+        "success": True,
+        "message": f"تم ترويج المنتج بنجاح لمدة {duration} ساعة",
+        "promotion": promotion,
+        "new_balance": balance - cost
+    }
+
+@router.get("/promoted-products")
+async def get_promoted_products(product_type: str = "all"):
+    """جلب المنتجات المروّجة للصفحة الرئيسية"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    query = {"expires_at": {"$gt": now}}
+    
+    if product_type == "food":
+        query["is_food"] = True
+    elif product_type == "products":
+        query["is_food"] = False
+    
+    promotions = await db.product_promotions.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    
+    # إثراء البيانات بمعلومات المنتج الكاملة
+    for promo in promotions:
+        collection = db.food_products if promo.get("is_food") else db.products
+        product = await collection.find_one(
+            {"id": promo["product_id"]},
+            {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1, "image": 1, "category": 1}
+        )
+        if product:
+            promo["product"] = product
+    
+    return promotions

@@ -33,6 +33,17 @@ Full-stack e-commerce and food delivery platform for the Syrian market, wrapped 
 - ✅ **Fixed Commission API Endpoint Error**
   - Changed `/orders/seller/commission` to `/api/seller/commission` in `SellerPages.js`
   - Fixed 404 error that was appearing in console logs
+- ✅ **NEW: Replaced Flash Sales with "Promote Your Product" System**
+  - Created simple, user-friendly promotion system for both Product and Food sellers
+  - Backend APIs: `/api/seller/promote-product`, `/api/seller/my-promotions`, `/api/seller/promotion-settings`
+  - Frontend: New `PromoteProductTab.js` component with purple gradient design
+  - Features:
+    - 24-hour promotion duration
+    - 1,000 SYP cost per product
+    - Optional discount (0-50%)
+    - Automatic wallet deduction
+    - No admin approval needed (instant)
+  - Updated bottom nav: "فلاش" → "روّج" with Rocket icon
 
 ### March 2026 - Session 3 (30 Mar 2026)
 - ✅ **Fixed Address Backend Schema** - Added `address_details` and `landmark` fields to Pydantic model

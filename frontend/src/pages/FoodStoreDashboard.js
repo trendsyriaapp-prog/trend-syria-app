@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Rocket, Percent, Sparkles, Loader2 as LoaderIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -653,7 +653,7 @@ const FoodStoreDashboard = () => {
         )}
 
         {activeTab === 'flash' && (
-          <FlashSalesTab store={store} products={products} token={token} />
+          <PromoteFoodTab store={store} products={products} token={token} walletBalance={walletData.balance} onPromotionSuccess={(newBalance) => setWalletData(prev => ({...prev, balance: newBalance}))} />
         )}
 
         {activeTab === 'settings' && (
@@ -673,7 +673,7 @@ const FoodStoreDashboard = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'menu', label: 'الأطباق', icon: ChefHat },
-            { id: 'flash', label: 'فلاش', icon: Flame },
+            { id: 'flash', label: 'روّج', icon: Rocket },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
@@ -2917,7 +2917,269 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
   );
 };
 
-// Flash Sales Tab Component - طلب الانضمام لعروض الفلاش
+// Promote Food Tab Component - روّج منتجك (النظام الجديد البسيط)
+const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotionSuccess }) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({ cost_per_product: 1000, duration_hours: 24 });
+  const [myPromotions, setMyPromotions] = useState({ active: [], expired: [] });
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, [token]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [settingsRes, promotionsRes] = await Promise.all([
+        axios.get(`${API}/api/seller/promotion-settings`, { headers }),
+        axios.get(`${API}/api/seller/my-promotions`, { headers })
+      ]);
+      
+      setSettings(settingsRes.data || { cost_per_product: 1000, duration_hours: 24 });
+      setMyPromotions(promotionsRes.data || { active: [], expired: [] });
+    } catch (error) {
+      console.error('Error fetching promotion data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePromote = async () => {
+    if (!selectedProduct) {
+      toast({ title: "خطأ", description: "يرجى اختيار منتج للترويج", variant: "destructive" });
+      return;
+    }
+
+    if (walletBalance < settings.cost_per_product) {
+      toast({ title: "رصيد غير كافٍ", description: `تحتاج ${settings.cost_per_product.toLocaleString()} ل.س للترويج`, variant: "destructive" });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await axios.post(
+        `${API}/api/seller/promote-product`,
+        { product_id: selectedProduct.id, discount_percentage: discount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({ title: "تم بنجاح! 🚀", description: `منتجك الآن يظهر في الصفحة الرئيسية لمدة ${settings.duration_hours} ساعة` });
+      
+      setSelectedProduct(null);
+      setDiscount(0);
+      fetchData();
+      
+      if (onPromotionSuccess) {
+        onPromotionSuccess(res.data.new_balance);
+      }
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل في ترويج المنتج", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // المنتجات الموافق عليها فقط
+  const approvedProducts = products?.filter(p => p.is_approved !== false) || [];
+  const activeProductIds = myPromotions.active?.map(p => p.product_id) || [];
+  const availableProducts = approvedProducts.filter(p => !activeProductIds.includes(p.id));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <LoaderIcon className="w-8 h-8 animate-spin text-green-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* بانر الترويج */}
+      <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Rocket size={24} />
+          <h2 className="font-bold text-lg">روّج منتجك</h2>
+        </div>
+        <p className="text-sm opacity-90 mb-3">
+          اجعل منتجك يظهر في الصفحة الرئيسية أمام آلاف العملاء!
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
+            <Clock size={12} />
+            <span>المدة: {settings.duration_hours} ساعة</span>
+          </div>
+          <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
+            <Wallet size={12} />
+            <span>التكلفة: {settings.cost_per_product?.toLocaleString()} ل.س</span>
+          </div>
+        </div>
+      </div>
+
+      {/* الترويجات النشطة */}
+      {myPromotions.active?.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+            <Sparkles size={18} />
+            ترويجاتك النشطة ({myPromotions.active.length})
+          </h3>
+          <div className="space-y-2">
+            {myPromotions.active.map(promo => (
+              <div key={promo.id} className="bg-white rounded-lg p-3 flex items-center gap-3">
+                {promo.product_image && (
+                  <img src={promo.product_image} alt={promo.product_name} className="w-12 h-12 rounded-lg object-cover" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{promo.product_name}</p>
+                  <p className="text-xs text-green-600">ينتهي: {new Date(promo.expires_at).toLocaleString('ar')}</p>
+                </div>
+                {promo.discount_percentage > 0 && (
+                  <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">-{promo.discount_percentage}%</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* اختيار منتج للترويج */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Package size={18} className="text-purple-500" />
+          اختر منتج للترويج
+        </h3>
+        
+        {availableProducts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Package size={40} className="mx-auto mb-2 opacity-30" />
+            <p>لا توجد منتجات متاحة للترويج</p>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {availableProducts.map(product => (
+              <div 
+                key={product.id}
+                onClick={() => setSelectedProduct(selectedProduct?.id === product.id ? null : product)}
+                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                  selectedProduct?.id === product.id 
+                    ? 'bg-purple-50 border-2 border-purple-500' 
+                    : 'bg-gray-50 border-2 border-transparent hover:border-purple-200'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  selectedProduct?.id === product.id ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                }`}>
+                  {selectedProduct?.id === product.id && <Check size={14} className="text-white" />}
+                </div>
+                
+                {(product.images?.[0] || product.image) && (
+                  <img src={product.images?.[0] || product.image} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                )}
+                
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{product.name}</p>
+                  <p className="text-sm text-gray-500">{product.price?.toLocaleString()} ل.س</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* إضافة خصم (اختياري) */}
+      {selectedProduct && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <Percent size={18} className="text-red-500" />
+            إضافة خصم (اختياري)
+          </h3>
+          <p className="text-sm text-gray-500 mb-3">أضف خصم لجذب المزيد من العملاء</p>
+          
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min="0"
+              max="50"
+              step="5"
+              value={discount}
+              onChange={(e) => setDiscount(parseInt(e.target.value))}
+              className="flex-1 accent-red-500"
+            />
+            <div className="w-16 text-center">
+              <span className={`text-lg font-bold ${discount > 0 ? 'text-red-500' : 'text-gray-400'}`}>{discount}%</span>
+            </div>
+          </div>
+          
+          {discount > 0 && (
+            <div className="mt-3 p-3 bg-red-50 rounded-lg">
+              <p className="text-sm text-red-700">
+                السعر بعد الخصم: <span className="font-bold">{Math.round(selectedProduct.price * (1 - discount/100)).toLocaleString()} ل.س</span>
+                <span className="line-through text-gray-400 mr-2">{selectedProduct.price?.toLocaleString()}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* زر الترويج */}
+      {selectedProduct && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm text-gray-500">المنتج المختار</p>
+              <p className="font-bold text-gray-900">{selectedProduct.name}</p>
+            </div>
+            <div className="text-left">
+              <p className="text-sm text-gray-500">التكلفة</p>
+              <p className="font-bold text-purple-600">{settings.cost_per_product?.toLocaleString()} ل.س</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-600">رصيد محفظتك</span>
+            <span className={`font-bold ${walletBalance >= settings.cost_per_product ? 'text-green-600' : 'text-red-600'}`}>
+              {walletBalance?.toLocaleString()} ل.س
+            </span>
+          </div>
+          
+          <button
+            onClick={handlePromote}
+            disabled={submitting || walletBalance < settings.cost_per_product}
+            className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all ${
+              walletBalance >= settings.cost_per_product
+                ? 'bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90'
+                : 'bg-gray-300 cursor-not-allowed'
+            }`}
+          >
+            {submitting ? (
+              <>
+                <LoaderIcon className="animate-spin" size={20} />
+                جاري الترويج...
+              </>
+            ) : walletBalance < settings.cost_per_product ? (
+              <>
+                <Wallet size={20} />
+                رصيد غير كافٍ
+              </>
+            ) : (
+              <>
+                <Rocket size={20} />
+                روّج الآن - {settings.cost_per_product?.toLocaleString()} ل.س
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Flash Sales Tab Component - OLD (kept for reference)
 const FlashSalesTab = ({ store, products, token }) => {
   const { toast } = useToast();
   const [flashSales, setFlashSales] = useState([]);

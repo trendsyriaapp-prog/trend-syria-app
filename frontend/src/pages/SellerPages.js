@@ -7,7 +7,7 @@ import {
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
-  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings
+  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings, Rocket
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -28,7 +28,7 @@ import StoreSettingsTab from '../components/seller/StoreSettingsTab';
 import AddProductModal from '../components/seller/AddProductModal';
 import EditProductModal from '../components/seller/EditProductModal';
 import SellerStatsCard from '../components/seller/SellerStatsCard';
-import SellerFlashSalesTab from '../components/seller/SellerFlashSalesTab';
+import PromoteProductTab from '../components/seller/PromoteProductTab';
 import SellerProductsGrid from '../components/seller/SellerProductsGrid';
 import SellerOrdersSection from '../components/seller/SellerOrdersSection';
 import StatDetailsModal from '../components/seller/StatDetailsModal';
@@ -1584,9 +1584,14 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
-        {/* تبويب عروض الفلاش */}
+        {/* تبويب روّج منتجك */}
         {activeTab === 'flash' && (
-          <SellerFlashSalesTab products={products} token={token} />
+          <PromoteProductTab 
+            products={products} 
+            token={token} 
+            walletBalance={walletBalance}
+            onPromotionSuccess={(newBalance) => setWalletBalance(newBalance)}
+          />
         )}
 
         {/* تبويب إرشادات التغليف */}
@@ -1817,7 +1822,7 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
-            { id: 'flash', label: 'فلاش', icon: Flame },
+            { id: 'flash', label: 'روّج', icon: Rocket },
             { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
