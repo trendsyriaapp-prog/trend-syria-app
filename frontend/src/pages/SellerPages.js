@@ -1289,11 +1289,11 @@ const SellerDashboardPage = () => {
           <div className="flex items-center justify-between">
             {/* معلومات المتجر */}
             <div className="flex items-center gap-3">
-              <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                 {storeLogo ? (
                   <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
                 ) : (
-                  <Package size={36} className="text-[#FF6B00]" />
+                  <Package size={28} className="text-[#FF6B00]" />
                 )}
               </div>
               <div className="min-w-0">
