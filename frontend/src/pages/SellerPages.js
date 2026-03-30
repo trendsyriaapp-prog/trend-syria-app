@@ -1289,11 +1289,11 @@ const SellerDashboardPage = () => {
           <div className="flex items-center justify-between">
             {/* معلومات المتجر */}
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-16 h-16 bg-[#FF6B00]/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                 {storeLogo ? (
                   <img src={storeLogo} alt="شعار المتجر" className="w-full h-full object-cover" />
                 ) : (
-                  <Package size={24} className="text-[#FF6B00]" />
+                  <Package size={28} className="text-[#FF6B00]" />
                 )}
               </div>
               <div className="min-w-0">
@@ -1308,6 +1308,7 @@ const SellerDashboardPage = () => {
             
             {/* الأزرار */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              <NotificationsDropdown />
               <button 
                 onClick={() => setActiveTab('wallet')}
                 className="flex flex-col items-center justify-center hover:opacity-80 transition-opacity"
@@ -1318,7 +1319,6 @@ const SellerDashboardPage = () => {
                 </div>
                 <span className="text-[10px] font-bold text-green-600 mt-0.5">{walletBalance?.toLocaleString() || 0}</span>
               </button>
-              <NotificationsDropdown />
               <button
                 onClick={() => setShowAddProduct(true)}
                 className="h-9 bg-[#FF6B00] text-white px-3 rounded-full text-xs font-bold flex items-center gap-1"
