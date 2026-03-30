@@ -717,6 +717,8 @@ const SellerDashboardPage = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [duplicatingProduct, setDuplicatingProduct] = useState(null); // المنتج المراد نسخه
   const [saving, setSaving] = useState(false);
+  const [editingStock, setEditingStock] = useState(null); // لتعديل الكمية المباشر
+  const [newStockValue, setNewStockValue] = useState('');
   // قراءة التبويب من URL أو استخدام 'orders' كافتراضي (الطلبات هي الصفحة الرئيسية)
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'orders');
   const [walletBalance, setWalletBalance] = useState(0);
@@ -1047,6 +1049,46 @@ const SellerDashboardPage = () => {
     }
   };
 
+  // تحديث الكمية المتبقية مباشرة
+  const handleUpdateStock = async (productId) => {
+    const stockValue = parseInt(newStockValue);
+    if (isNaN(stockValue) || stockValue < 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم صحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // تحديث فوري للواجهة
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        product.id === productId 
+          ? { ...product, stock: stockValue }
+          : product
+      )
+    );
+    setEditingStock(null);
+    setNewStockValue('');
+
+    try {
+      await axios.put(`${API}/api/products/${productId}`, {
+        stock: stockValue
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // لا نحتاج إشعار نجاح
+    } catch (error) {
+      fetchData();
+      toast({
+        title: "خطأ",
+        description: getErrorMessage(error, "فشل تحديث الكمية"),
+        variant: "destructive"
+      });
+    }
+  };
+
   // تبديل حالة توفر المنتج (إظهار/إخفاء)
   const handleToggleAvailability = async (productId, currentStatus) => {
     // تحديث فوري للواجهة
@@ -1351,6 +1393,52 @@ const SellerDashboardPage = () => {
                       <div className="flex-1">
                         <h4 className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-gray-900'}`}>{product.name}</h4>
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-[#FF6B00]'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
+                        
+                        {/* عرض الكمية المتبقية مع إمكانية التعديل */}
+                        <div className="flex items-center gap-1 mt-1">
+                          {editingStock === product.id ? (
+                            /* وضع التعديل */
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                value={newStockValue}
+                                onChange={(e) => setNewStockValue(e.target.value)}
+                                className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-[#FF6B00]"
+                                placeholder="الكمية"
+                                autoFocus
+                                min="0"
+                              />
+                              <button
+                                onClick={() => handleUpdateStock(product.id)}
+                                className="p-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                              >
+                                <Check size={12} />
+                              </button>
+                              <button
+                                onClick={() => { setEditingStock(null); setNewStockValue(''); }}
+                                className="p-1 bg-gray-300 text-gray-600 rounded-lg hover:bg-gray-400"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            /* عرض الكمية */
+                            <button
+                              onClick={() => { setEditingStock(product.id); setNewStockValue(product.stock?.toString() || '0'); }}
+                              className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg transition-all ${
+                                (product.stock || 0) <= 5 
+                                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                                  : (product.stock || 0) <= 10 
+                                    ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              <Package size={12} />
+                              <span>المتبقي: {product.stock || 0}</span>
+                              <Edit2 size={10} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         {/* أزرار حسب حالة المنتج */}
