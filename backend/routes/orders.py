@@ -1418,3 +1418,147 @@ async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depe
         "success": True,
         "message": "تم إبلاغ الإدارة بنجاح"
     }
+
+# ============== Flash Sales للبائعين ==============
+
+@router.get("/seller/flash-sales/available")
+async def get_available_flash_sales_for_seller(user: dict = Depends(get_current_user)):
+    """جلب عروض الفلاش المتاحة للانضمام - للبائعين"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # جلب عروض الفلاش النشطة التي لم تنتهي
+    sales = await db.flash_sales.find({
+        "is_active": True,
+        "end_time": {"$gte": now}
+    }, {"_id": 0}).to_list(20)
+    
+    return sales
+
+@router.get("/seller/flash-sale-settings")
+async def get_flash_settings_for_product_seller(user: dict = Depends(get_current_user)):
+    """جلب إعدادات رسوم الانضمام للفلاش"""
+    settings = await db.platform_settings.find_one({"id": "flash_sale"}, {"_id": 0})
+    
+    if not settings:
+        settings = {
+            "join_fee": 5000,
+            "min_products": 1,
+            "max_products": 10
+        }
+    
+    return settings
+
+@router.get("/seller/my-flash-requests")
+async def get_seller_flash_requests(user: dict = Depends(get_current_user)):
+    """جلب طلبات الانضمام للفلاش الخاصة بالبائع"""
+    if user.get("user_type") != "seller":
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    requests = await db.flash_sale_requests.find(
+        {"seller_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # إضافة معلومات عرض الفلاش
+    for req in requests:
+        flash_sale = await db.flash_sales.find_one(
+            {"id": req.get("flash_sale_id")},
+            {"_id": 0, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
+        )
+        if flash_sale:
+            req["flash_sale"] = flash_sale
+        
+        # معلومات المنتجات
+        if req.get("product_ids"):
+            products = await db.products.find(
+                {"id": {"$in": req["product_ids"]}},
+                {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
+            ).to_list(None)
+            req["products"] = products
+    
+    return requests
+
+@router.post("/seller/flash-sale-request")
+async def request_flash_sale_join_for_seller(request_data: dict, user: dict = Depends(get_current_user)):
+    """طلب الانضمام لعرض فلاش - للبائعين"""
+    if user.get("user_type") != "seller":
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    if not user.get("is_approved"):
+        raise HTTPException(status_code=403, detail="حسابك غير معتمد بعد")
+    
+    # التحقق من البيانات المطلوبة
+    flash_sale_id = request_data.get("flash_sale_id")
+    product_ids = request_data.get("product_ids", [])
+    
+    if not flash_sale_id:
+        raise HTTPException(status_code=400, detail="يجب تحديد عرض الفلاش")
+    
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="يجب اختيار منتج واحد على الأقل")
+    
+    # التحقق من وجود عرض الفلاش
+    flash_sale = await db.flash_sales.find_one({"id": flash_sale_id, "is_active": True})
+    if not flash_sale:
+        raise HTTPException(status_code=404, detail="عرض الفلاش غير موجود أو غير نشط")
+    
+    # التحقق من أن المنتجات تخص البائع
+    products = await db.products.find({
+        "id": {"$in": product_ids},
+        "seller_id": user["id"]
+    }).to_list(None)
+    
+    if len(products) != len(product_ids):
+        raise HTTPException(status_code=400, detail="بعض المنتجات غير موجودة أو لا تخصك")
+    
+    # التحقق من عدم وجود طلب سابق
+    existing = await db.flash_sale_requests.find_one({
+        "flash_sale_id": flash_sale_id,
+        "seller_id": user["id"],
+        "status": {"$in": ["pending", "approved"]}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="لديك طلب انضمام سابق لهذا العرض")
+    
+    # جلب إعدادات الرسوم
+    settings = await db.platform_settings.find_one({"id": "flash_sale"})
+    join_fee = settings.get("join_fee", 5000) if settings else 5000
+    
+    # إنشاء طلب الانضمام
+    request_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    flash_request = {
+        "id": request_id,
+        "flash_sale_id": flash_sale_id,
+        "seller_id": user["id"],
+        "seller_name": user.get("name", user.get("full_name", "بائع")),
+        "store_name": user.get("store_name", user.get("name", "متجر")),
+        "product_ids": product_ids,
+        "fee_paid": join_fee,
+        "status": "pending",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.flash_sale_requests.insert_one(flash_request)
+    del flash_request["_id"]
+    
+    # إنشاء إشعار للإدارة
+    await create_notification_for_role(
+        role="admin",
+        title="طلب انضمام جديد لعرض فلاش",
+        message=f"البائع {user.get('name', 'غير معروف')} يطلب الانضمام لعرض {flash_sale.get('name')}",
+        notification_type="flash_sale_request",
+        data={"request_id": request_id, "flash_sale_id": flash_sale_id}
+    )
+    
+    return {
+        "success": True,
+        "message": "تم إرسال طلب الانضمام بنجاح",
+        "request": flash_request
+    }

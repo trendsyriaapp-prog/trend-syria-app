@@ -7,7 +7,7 @@ import {
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
-  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield
+  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -28,6 +28,7 @@ import StoreSettingsTab from '../components/seller/StoreSettingsTab';
 import AddProductModal from '../components/seller/AddProductModal';
 import EditProductModal from '../components/seller/EditProductModal';
 import SellerStatsCard from '../components/seller/SellerStatsCard';
+import SellerFlashSalesTab from '../components/seller/SellerFlashSalesTab';
 import SellerProductsGrid from '../components/seller/SellerProductsGrid';
 import SellerOrdersSection from '../components/seller/SellerOrdersSection';
 import StatDetailsModal from '../components/seller/StatDetailsModal';
@@ -1309,6 +1310,14 @@ const SellerDashboardPage = () => {
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
                     نشط
                   </span>
+                  <span className="text-gray-400">•</span>
+                  <button 
+                    onClick={() => setActiveTab('wallet')}
+                    className="flex items-center gap-1 text-[#FF6B00] hover:text-orange-600 transition-colors"
+                  >
+                    <Wallet size={12} />
+                    <span className="font-medium">{walletBalance?.toLocaleString() || 0} ل.س</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1587,6 +1596,11 @@ const SellerDashboardPage = () => {
           </div>
         )}
 
+        {/* تبويب عروض الفلاش */}
+        {activeTab === 'flash' && (
+          <SellerFlashSalesTab products={products} token={token} />
+        )}
+
         {/* تبويب إرشادات التغليف */}
         {activeTab === 'packaging' && (
           <div className="space-y-4">
@@ -1815,8 +1829,8 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
+            { id: 'flash', label: 'فلاش', icon: Flame },
             { id: 'packaging', label: 'التغليف', icon: Gift },
-            { id: 'wallet', label: 'المحفظة', icon: Wallet },
             { id: 'settings', label: 'الإعدادات', icon: Bell },
           ].map((tab) => (
             <button
