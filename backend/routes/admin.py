@@ -3358,3 +3358,116 @@ async def reject_food_item(
         })
     
     return {"message": "تم رفض الطبق", "reason": reason if reason else None}
+
+
+
+# ============== إدارة الترويجات ==============
+
+@router.get("/promotions/settings")
+async def get_promotion_settings(user: dict = Depends(get_current_user)):
+    """جلب إعدادات الترويج"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
+    
+    if not settings:
+        default_settings = {
+            "id": "promotions",
+            "cost_per_product": 1000,
+            "duration_hours": 24,
+            "max_products_per_day": 5,
+            "enabled": True,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.platform_settings.insert_one(default_settings.copy())
+        settings = default_settings
+    
+    return settings
+
+@router.put("/promotions/settings")
+async def update_promotion_settings(data: dict, user: dict = Depends(get_current_user)):
+    """تحديث إعدادات الترويج"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    update = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if "cost_per_product" in data:
+        update["cost_per_product"] = int(data["cost_per_product"])
+    if "duration_hours" in data:
+        update["duration_hours"] = int(data["duration_hours"])
+    if "max_products_per_day" in data:
+        update["max_products_per_day"] = int(data["max_products_per_day"])
+    if "enabled" in data:
+        update["enabled"] = bool(data["enabled"])
+    
+    await db.platform_settings.update_one(
+        {"id": "promotions"},
+        {"$set": update},
+        upsert=True
+    )
+    
+    return {"message": "تم تحديث إعدادات الترويج بنجاح", "settings": update}
+
+@router.get("/promotions/all")
+async def get_all_promotions(user: dict = Depends(get_current_user)):
+    """جلب جميع الترويجات النشطة والمنتهية"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # الترويجات النشطة
+    active = await db.product_promotions.find(
+        {"expires_at": {"$gt": now}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # الترويجات المنتهية (آخر 50)
+    expired = await db.product_promotions.find(
+        {"expires_at": {"$lte": now}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # إحصائيات
+    total_revenue = sum(p.get("cost_paid", 0) for p in active + expired)
+    
+    return {
+        "active": active,
+        "expired": expired,
+        "stats": {
+            "active_count": len(active),
+            "expired_count": len(expired),
+            "total_revenue": total_revenue
+        }
+    }
+
+@router.delete("/promotions/{promotion_id}")
+async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء ترويج (بدون استرداد)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    promotion = await db.product_promotions.find_one({"id": promotion_id})
+    if not promotion:
+        raise HTTPException(status_code=404, detail="الترويج غير موجود")
+    
+    # تحديث حالة الترويج ليصبح منتهي
+    await db.product_promotions.update_one(
+        {"id": promotion_id},
+        {"$set": {"expires_at": datetime.now(timezone.utc).isoformat(), "cancelled": True}}
+    )
+    
+    # إشعار البائع
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": promotion.get("seller_id"),
+        "title": "⚠️ تم إلغاء الترويج",
+        "message": f"تم إلغاء ترويج منتج '{promotion.get('product_name', '')}'",
+        "type": "promotion_cancelled",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "تم إلغاء الترويج"}

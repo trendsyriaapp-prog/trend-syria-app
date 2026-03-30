@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Rocket
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -63,6 +63,7 @@ import FeedbackTab from '../components/admin/FeedbackTab';
 import AllPendingJoinRequests from '../components/admin/AllPendingJoinRequests';
 import AllPendingItemsTab from '../components/admin/AllPendingItemsTab';
 import AllWithdrawRequestsTab from '../components/admin/AllWithdrawRequestsTab';
+import SellerPromotionsTab from '../components/admin/SellerPromotionsTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -403,6 +404,7 @@ const AdminDashboardPage = () => {
     'banners': 'إدارة البانرات',
     'coupons': 'كوبونات الخصم',
     'daily-deals': 'صفقات اليوم',
+    'seller-promotions': 'ترويجات البائعين',
     'platform-settings': 'تفعيل/إيقاف الأقسام',
     'analytics': 'التحليلات والإحصائيات',
     'drivers-map': 'خريطة السائقين',
@@ -558,6 +560,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'daily-deals' && user.user_type === 'admin' && (
               <DailyDealsTab />
+            )}
+            {activeTab === 'seller-promotions' && user.user_type === 'admin' && (
+              <SellerPromotionsTab />
             )}
             {activeTab === 'platform-settings' && user.user_type === 'admin' && (
               <PlatformSettingsTab />
@@ -877,6 +882,7 @@ const AdminDashboardPage = () => {
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
                     { icon: Flame, label: 'صفقات اليوم', tab: 'daily-deals' },
+                    { icon: Rocket, label: 'ترويجات البائعين', tab: 'seller-promotions' },
                     { icon: Megaphone, label: 'عروض فلاش', tab: 'food-offers' },
                     { icon: Ticket, label: 'الكوبونات', tab: 'coupons' },
                     { icon: Megaphone, label: 'البانرات', tab: 'banners' },
