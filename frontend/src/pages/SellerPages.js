@@ -966,7 +966,7 @@ const SellerDashboardPage = () => {
     };
     const newStatus = newStatusMap[action];
     
-    // 1. تحديث فوري للواجهة (Optimistic Update)
+    // 1. تحديث فوري للواجهة (Optimistic Update) - بدون الكود مؤقتاً
     setActionLoading(`${orderId}-${action}`);
     setOrders(prevOrders => 
       prevOrders.map(order => 
@@ -983,9 +983,20 @@ const SellerDashboardPage = () => {
         'shipped': `/api/orders/${orderId}/seller/shipped`
       };
       
-      await axios.post(`${API}${endpoints[action]}`, {}, {
+      const response = await axios.post(`${API}${endpoints[action]}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      // 2. إذا كان الإجراء "shipped"، نحدّث الطلب بكود الاستلام
+      if (action === 'shipped' && response.data?.pickup_code) {
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === orderId 
+              ? { ...order, pickup_code: response.data.pickup_code, pickup_code_verified: false }
+              : order
+          )
+        );
+      }
       
       const messages = {
         'confirm': 'تم تأكيد الطلب',
@@ -997,9 +1008,8 @@ const SellerDashboardPage = () => {
         title: "تم بنجاح",
         description: messages[action]
       });
-      // لا نحتاج fetchData() - التحديث تم فوراً
     } catch (error) {
-      // 2. إرجاع الحالة السابقة عند الفشل
+      // 3. إرجاع الحالة السابقة عند الفشل
       fetchData();
       toast({
         title: "خطأ",
