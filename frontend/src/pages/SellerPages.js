@@ -917,10 +917,7 @@ const SellerDashboardPage = () => {
       } else {
         await axios.delete(`${API}/api/products/${productId}`, { headers });
       }
-      toast({
-        title: "تم الحذف",
-        description: `تم حذف ${itemName} بنجاح`
-      });
+      // لا نحتاج إشعار نجاح - اختفاء المنتج كافٍ
     } catch (error) {
       // إرجاع البيانات عند الفشل
       fetchData();
@@ -1036,17 +1033,7 @@ const SellerDashboardPage = () => {
           )
         );
       }
-      
-      const messages = {
-        'confirm': 'تم تأكيد الطلب',
-        'preparing': 'تم بدء التحضير',
-        'shipped': 'تم شحن الطلب'
-      };
-      
-      toast({
-        title: "تم بنجاح",
-        description: messages[action]
-      });
+      // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
       // 3. إرجاع الحالة السابقة عند الفشل
       fetchData();
@@ -1077,11 +1064,7 @@ const SellerDashboardPage = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      toast({
-        title: currentStatus ? "تم إخفاء المنتج" : "تم إظهار المنتج",
-        description: currentStatus ? "المنتج مخفي عن العملاء الآن" : "المنتج متاح للعملاء الآن"
-      });
+      // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
       // إرجاع الحالة السابقة عند الفشل
       setProducts(prevProducts => 
@@ -1115,15 +1098,7 @@ const SellerDashboardPage = () => {
       await axios.put(`${API}/api/food/products/${itemId}/availability?status=${newStatus}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      const statusMessages = {
-        'available': { title: '🟢 تم تفعيل الطبق', desc: 'الطبق متاح الآن للطلب' },
-        'sold_out_today': { title: '🟡 نفد مؤقتاً', desc: 'الطبق سيعود متاحاً غداً تلقائياً' },
-        'unavailable': { title: '🔴 تم إيقاف الطبق', desc: 'الطبق متوقف حتى تفعّله مجدداً' }
-      };
-      
-      const msg = statusMessages[newStatus] || { title: 'تم التحديث', desc: '' };
-      toast({ title: msg.title, description: msg.desc });
+      // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
       // إرجاع الحالة السابقة عند الفشل
       fetchData();
@@ -1168,19 +1143,7 @@ const SellerDashboardPage = () => {
           )
         );
       }
-      
-      const statusMessages = {
-        'accepted': 'تم قبول الطلب',
-        'confirmed': 'تم تأكيد الطلب',
-        'preparing': 'جاري تحضير الطلب',
-        'ready': 'الطلب جاهز للاستلام',
-        'rejected': 'تم رفض الطلب'
-      };
-      
-      toast({
-        title: "تم بنجاح",
-        description: statusMessages[newStatus] || 'تم تحديث حالة الطلب'
-      });
+      // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
     } catch (error) {
       // 3. إرجاع الحالة السابقة عند الفشل
       fetchData();

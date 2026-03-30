@@ -204,7 +204,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/approve`);
-      toast({ title: "تم التفعيل", description: "تم تفعيل حساب البائع بنجاح" });
+      // لا نحتاج إشعار نجاح - اختفاء العنصر كافٍ
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل تفعيل البائع", variant: "destructive" });
@@ -217,7 +217,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/reject`, { reason });
-      toast({ title: "تم الرفض", description: "تم رفض طلب البائع" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل رفض البائع", variant: "destructive" });
@@ -230,7 +230,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/products/${productId}/approve`);
-      toast({ title: "تم الموافقة", description: "تم الموافقة على المنتج" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل الموافقة على المنتج", variant: "destructive" });
@@ -246,7 +246,7 @@ const AdminDashboardPage = () => {
         approved: false, 
         rejection_reason: reason 
       });
-      toast({ title: "تم الرفض", description: "تم رفض المنتج" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل رفض المنتج", variant: "destructive" });
@@ -259,7 +259,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/approve`);
-      toast({ title: "تم التفعيل", description: "تم تفعيل حساب موظف التوصيل بنجاح" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل تفعيل موظف التوصيل", variant: "destructive" });
@@ -272,7 +272,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/reject`, { reason });
-      toast({ title: "تم الرفض", description: "تم رفض طلب موظف التوصيل" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل رفض موظف التوصيل", variant: "destructive" });
@@ -282,7 +282,7 @@ const AdminDashboardPage = () => {
   const handleAddSubAdmin = async (newSubAdmin) => {
     try {
       await axios.post(`${API}/api/admin/sub-admins`, newSubAdmin);
-      toast({ title: "تمت الإضافة", description: "تم إضافة المدير التنفيذي بنجاح" });
+      // لا نحتاج إشعار نجاح
       fetchData(); // نحتاج fetchData هنا للحصول على البيانات الجديدة
     } catch (error) {
       toast({ 
@@ -307,7 +307,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.delete(`${API}/api/admin/sub-admins/${idToDelete}`);
-      toast({ title: "تم الحذف", description: "تم حذف المدير التنفيذي" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل حذف المدير التنفيذي", variant: "destructive" });
@@ -317,7 +317,7 @@ const AdminDashboardPage = () => {
   const handleSendNotification = async (newNotification) => {
     try {
       await axios.post(`${API}/api/admin/notifications`, newNotification);
-      toast({ title: "تم الإرسال", description: "تم إرسال الإشعار بنجاح" });
+      // لا نحتاج إشعار نجاح
       fetchData(); // نحتاج fetchData للحصول على الإشعار الجديد
     } catch (error) {
       toast({ title: "خطأ", description: "فشل إرسال الإشعار", variant: "destructive" });
@@ -334,7 +334,7 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.delete(`${API}/api/admin/notifications/${idToDelete}`);
-      toast({ title: "تم الحذف", description: "تم حذف الإشعار" });
+      // لا نحتاج إشعار نجاح
     } catch (error) {
       fetchData();
       toast({ title: "خطأ", description: "فشل حذف الإشعار", variant: "destructive" });

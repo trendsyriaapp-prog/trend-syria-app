@@ -2175,7 +2175,7 @@ const StoreOrdersTab = ({ token }) => {
         params: { new_status: newStatus },
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast({ title: "تم التحديث", description: "تم تحديث حالة الطلب" });
+      // لا نحتاج إشعار نجاح - تغيير الحالة كافٍ
       fetchOrders();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل تحديث الحالة", variant: "destructive" });
@@ -2191,10 +2191,7 @@ const StoreOrdersTab = ({ token }) => {
         { preparation_time_minutes: prepTime },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast({ 
-        title: "تم بدء التحضير", 
-        description: `سيتم إرسال الطلب للسائق قبل ${Math.max(0, prepTime - 7)} دقيقة من الجهوزية`
-      });
+      // لا نحتاج إشعار نجاح
       setShowPrepModal(null);
       setPrepTime(15);
       fetchOrders();
@@ -2237,11 +2234,7 @@ const StoreOrdersTab = ({ token }) => {
           headers: { Authorization: `Bearer ${token}` } 
         }
       );
-      
-      toast({ 
-        title: "تم الإبلاغ", 
-        description: res.data.warning || "تم إلغاء عداد الانتظار وتسجيل الشكوى"
-      });
+      // لا نحتاج إشعار نجاح
       fetchOrders();
     } catch (error) {
       toast({ 
@@ -2270,18 +2263,7 @@ const StoreOrdersTab = ({ token }) => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      if (res.data.warning) {
-        toast({
-          title: "تم الإرسال",
-          description: res.data.warning,
-        });
-      } else {
-        toast({
-          title: "تم طلب السائق",
-          description: `تم إرسال الطلب إلى ${res.data.drivers_notified} سائق`
-        });
-      }
+      // لا نحتاج إشعار نجاح
       fetchOrders();
     } catch (error) {
       toast({
