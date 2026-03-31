@@ -778,6 +778,7 @@ async def get_product(product_id: str, authorization: Optional[str] = Header(def
     if not is_admin:
         product.pop("seller_name", None)
         product.pop("seller_phone", None)
+        product.pop("admin_video", None)  # فيديو التحقق للأدمن فقط
     
     return product
 

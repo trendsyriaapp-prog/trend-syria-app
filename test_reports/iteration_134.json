@@ -1,0 +1,60 @@
+{
+  "summary": "Tested mandatory admin verification video feature for product submissions. All backend APIs passed (14/14 tests). Frontend UI verified - seller Add Product modal shows mandatory admin video upload section. Fixed security issue where admin_video was exposed to non-admin users.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_verification_video.py",
+    "/app/test_reports/pytest/admin_verification_video_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_admin_verification_video.py",
+    "/app/backend/routes/products.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+  "test_credentials": {
+    "admin": "0912345678 / admin123",
+    "product_seller": "0922222222 / seller123"
+  },
+  "seed_data_creation": "Created TEST_ prefixed products for testing, cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin verification video feature is fully functional. The admin_video field is now properly hidden from non-admin users in product details API. Seller Add Product modal shows mandatory video upload section with orange/red gradient button.",
+  "verified_features": {
+    "backend_apis": {
+      "POST /api/products (with admin_video)": "PASS - Product created with admin_video field",
+      "POST /api/products (without admin_video)": "PASS - Backend accepts (frontend enforces requirement)",
+      "GET /api/admin/products/pending": "PASS - Returns pending products with admin_video for admin",
+      "POST /api/admin/products/{id}/approve": "PASS - Admin can approve product with video",
+      "POST /api/admin/products/{id}/reject": "PASS - Admin can reject product with video",
+      "GET /api/products/{id} (as customer)": "PASS - admin_video is NOT returned (FIXED)",
+      "GET /api/products/{id} (as admin)": "PASS - admin_video is returned",
+      "GET /api/products/seller/my-products": "PASS - Seller can see their products with admin_video"
+    },
+    "frontend_ui": {
+      "seller_add_product_modal": "PASS - Shows mandatory admin video section",
+      "admin_video_upload_button": "PASS - Orange/red gradient button '📹 ارفع فيديو التحقق'",
+      "mandatory_indicator": "PASS - Shows 'إجباري' (Mandatory) with red asterisk",
+      "video_size_limit": "PASS - Shows '30 ثانية / 30MB' limit",
+      "admin_only_notice": "PASS - Shows 'هذا الفيديو للأدمن فقط ولن يظهر للعملاء'",
+      "admin_pending_products_tab": "PASS - PendingProductsTab component has video modal"
+    }
+  },
+  "security_fix_applied": {
+    "issue": "admin_video was exposed to non-admin users in GET /api/products/{id}",
+    "fix": "Added product.pop('admin_video', None) for non-admin users in get_product endpoint",
+    "file": "/app/backend/routes/products.py",
+    "line": "~780"
+  }
+}
