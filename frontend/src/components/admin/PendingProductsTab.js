@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/PendingProductsTab.js
 import { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, Play, Video } from 'lucide-react';
 import RejectModal from './RejectModal';
 
 const formatPrice = (price) => {
@@ -10,6 +10,7 @@ const formatPrice = (price) => {
 const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
   const [rejectModal, setRejectModal] = useState({ isOpen: false, productId: null, productName: '' });
   const [processing, setProcessing] = useState(false);
+  const [videoModal, setVideoModal] = useState({ isOpen: false, videoUrl: null, productName: '' });
 
   const handleRejectClick = (productId, productName) => {
     setRejectModal({ isOpen: true, productId, productName });
@@ -49,6 +50,16 @@ const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
                   <p className="text-[9px] text-gray-400">
                     البائع: {product.seller?.name || product.seller_name}
                   </p>
+                  {/* زر فيديو التحقق */}
+                  {product.admin_video && (
+                    <button
+                      onClick={() => setVideoModal({ isOpen: true, videoUrl: product.admin_video, productName: product.name })}
+                      className="mt-1 flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200"
+                    >
+                      <Play size={10} />
+                      📹 مشاهدة فيديو التحقق
+                    </button>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1">
                   <button
@@ -81,6 +92,38 @@ const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
         itemName={rejectModal.productName}
         processing={processing}
       />
+
+      {/* Video Modal - عرض فيديو التحقق */}
+      {videoModal.isOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden">
+            <div className="bg-orange-500 text-white p-3 flex items-center justify-between">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <Video size={18} />
+                فيديو التحقق: {videoModal.productName}
+              </h3>
+              <button
+                onClick={() => setVideoModal({ isOpen: false, videoUrl: null, productName: '' })}
+                className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-4">
+              <video
+                src={videoModal.videoUrl}
+                controls
+                autoPlay
+                className="w-full rounded-lg"
+                style={{ maxHeight: '400px' }}
+              />
+              <p className="text-[10px] text-gray-500 mt-2 text-center">
+                هذا الفيديو للتحقق فقط - لن يظهر للعملاء
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

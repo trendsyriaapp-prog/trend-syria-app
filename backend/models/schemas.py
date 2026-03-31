@@ -67,6 +67,7 @@ class ProductCreate(BaseModel):
     images: List[str]
     video: Optional[str] = None
     video_url: Optional[str] = None
+    admin_video: Optional[str] = None  # فيديو التحقق للأدمن (إجباري من الفرونت)
     city: Optional[str] = None
     length_cm: Optional[float] = None
     width_cm: Optional[float] = None
@@ -86,6 +87,7 @@ class ProductUpdate(BaseModel):
     images: Optional[List[str]] = None
     video: Optional[str] = None
     video_url: Optional[str] = None
+    admin_video: Optional[str] = None  # فيديو التحقق للأدمن
     city: Optional[str] = None
     length_cm: Optional[float] = None
     width_cm: Optional[float] = None

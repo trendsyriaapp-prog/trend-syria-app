@@ -36,6 +36,7 @@ const AddProductModal = ({
     stock: '',
     images: [],
     video: null,
+    admin_video: null, // فيديو التحقق للأدمن (إجباري)
     length_cm: '',
     width_cm: '',
     height_cm: '',
@@ -66,6 +67,7 @@ const AddProductModal = ({
           stock: product.stock?.toString() || '',
           images: product.images || [],
           video: product.video || null,
+          admin_video: null, // فيديو التحقق يُطلب دائماً عند التعديل
           length_cm: product.length_cm?.toString() || '',
           width_cm: product.width_cm?.toString() || '',
           height_cm: product.height_cm?.toString() || '',
@@ -271,6 +273,35 @@ const AddProductModal = ({
     }
   };
 
+  // رفع فيديو التحقق للأدمن
+  const handleAdminVideoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 30 * 1024 * 1024) {
+        toast({
+          title: "خطأ",
+          description: "حجم الفيديو كبير جداً (الحد الأقصى 30MB)",
+          variant: "destructive"
+        });
+        return;
+      }
+      setUploadingVideo(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct(prev => ({
+          ...prev,
+          admin_video: reader.result
+        }));
+        setUploadingVideo(false);
+        toast({
+          title: "تم رفع فيديو التحقق ✅",
+          description: "سيراجعه الأدمن قبل نشر المنتج"
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // إضافة خيار وزن جديد
   const addWeightVariant = () => {
     if (newWeightVariant.weight && newWeightVariant.price) {
@@ -310,6 +341,16 @@ const AddProductModal = ({
       return;
     }
 
+    // التحقق من فيديو التحقق للأدمن (إجباري)
+    if (!newProduct.admin_video) {
+      toast({
+        title: "فيديو التحقق مطلوب 📹",
+        description: "يرجى رفع فيديو قصير يُظهر المنتج الحقيقي للمراجعة",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const submitData = isFoodSeller ? {
       name: newProduct.name,
       description: newProduct.description,
@@ -317,12 +358,14 @@ const AddProductModal = ({
       category: newProduct.category,
       preparation_time: parseInt(newProduct.preparation_time) || 15,
       is_available: newProduct.is_available,
-      images: newProduct.images
+      images: newProduct.images,
+      admin_video: newProduct.admin_video // فيديو التحقق للأدمن
     } : {
       ...newProduct,
       price: parseFloat(newProduct.price),
       stock: parseInt(newProduct.stock),
       video: newProduct.video || null,
+      admin_video: newProduct.admin_video, // فيديو التحقق للأدمن
       length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
       width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
       height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
@@ -1113,6 +1156,67 @@ const AddProductModal = ({
                 data-testid="product-video-input"
               />
               <p className="text-[8px] text-gray-400 mt-0.5">الحد الأقصى 50MB</p>
+            </div>
+
+            {/* Admin Verification Video Section - فيديو التحقق للأدمن */}
+            <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
+              <label className="block text-[11px] font-bold mb-2 text-orange-800">
+                📹 فيديو التحقق للمراجعة (إجباري)
+                <span className="text-red-500 mr-1">*</span>
+              </label>
+              <p className="text-[9px] text-orange-700 mb-2">
+                صوّر فيديو قصير (30 ثانية) يُظهر المنتج الحقيقي والكمية المتوفرة.
+                <br/>
+                <strong>هذا الفيديو للأدمن فقط ولن يظهر للعملاء.</strong>
+              </p>
+              {newProduct.admin_video ? (
+                <div className="relative bg-orange-100 rounded-lg p-2">
+                  <video 
+                    src={newProduct.admin_video} 
+                    className="w-full h-28 object-cover rounded"
+                    controls
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewProduct({ ...newProduct, admin_video: null });
+                      const adminVideoInput = document.getElementById('admin-video');
+                      if (adminVideoInput) adminVideoInput.value = '';
+                    }}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
+                    ✓ تم الرفع
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('admin-video').click()}
+                  disabled={uploadingVideo}
+                  className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-[11px] flex items-center justify-center gap-2 hover:from-orange-600 hover:to-red-600 font-bold disabled:opacity-50 shadow-md"
+                >
+                  {uploadingVideo ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      📹 ارفع فيديو التحقق
+                    </>
+                  )}
+                </button>
+              )}
+              <input
+                id="admin-video"
+                type="file"
+                accept="video/*"
+                onChange={(e) => handleAdminVideoUpload(e)}
+                className="hidden"
+                data-testid="admin-video-input"
+              />
+              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 30MB</p>
             </div>
 
             <div className="flex gap-2 pt-2">
