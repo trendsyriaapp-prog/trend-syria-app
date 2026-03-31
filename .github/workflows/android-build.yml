@@ -26,20 +26,16 @@ jobs:
     - name: Clean install
       run: |
         cd frontend
-        rm -rf node_modules package-lock.json yarn.lock
+        rm -rf node_modules
         echo "REACT_APP_BACKEND_URL=https://trendsyria.app/api" > .env
-        yarn install --network-timeout 100000
-        yarn add eslint-config-react-app --dev
+        yarn install --frozen-lockfile --network-timeout 100000
         
     - name: Build React App
       run: |
         cd frontend
-        SKIP_PREFLIGHT_CHECK=true CI=false GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true yarn build
+        CI=false yarn build
       env:
         CI: false
-        GENERATE_SOURCEMAP: false
-        DISABLE_ESLINT_PLUGIN: true
-        SKIP_PREFLIGHT_CHECK: true
     
     - name: Decode Keystore
       run: |
