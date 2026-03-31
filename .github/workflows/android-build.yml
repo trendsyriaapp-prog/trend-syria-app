@@ -36,14 +36,23 @@ jobs:
         CI=false npm run build
       env:
         CI: false
-        
-    - name: Build Android
+    
+    - name: Decode Keystore
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/android/app/trendsyria-release.keystore
+      
+    - name: Build Android (Signed)
       run: |
         cd frontend
         npx cap sync android
         cd android
         chmod +x gradlew
         ./gradlew bundleRelease
+      env:
+        KEYSTORE_FILE: ${{ github.workspace }}/frontend/android/app/trendsyria-release.keystore
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         
     - name: Upload AAB
       uses: actions/upload-artifact@v4
