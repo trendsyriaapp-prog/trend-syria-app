@@ -1605,25 +1605,30 @@ async def get_my_promotions(user: dict = Depends(get_current_user)):
     
     # تصنيف الترويجات
     active = []
+    pending = []
     expired = []
     
     for promo in promotions:
-        if promo.get("expires_at", "") > now:
-            promo["status"] = "active"
-            active.append(promo)
-        else:
+        if promo.get("expires_at", "") <= now:
             promo["status"] = "expired"
             expired.append(promo)
+        elif promo.get("starts_at", now) > now:
+            promo["status"] = "pending"
+            pending.append(promo)
+        else:
+            promo["status"] = "active"
+            active.append(promo)
     
     return {
         "active": active,
+        "pending": pending,
         "expired": expired,
-        "total_active": len(active)
+        "total_active": len(active) + len(pending)
     }
 
 @router.post("/seller/promote-product")
 async def promote_product(request_data: dict, user: dict = Depends(get_current_user)):
-    """ترويج منتج - يظهر في الصفحة الرئيسية"""
+    """ترويج منتج - يظهر في Flash المجدول"""
     if user.get("user_type") not in ["seller", "food_seller"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
@@ -1631,7 +1636,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         raise HTTPException(status_code=403, detail="حسابك غير معتمد بعد")
     
     product_id = request_data.get("product_id")
-    discount_percentage = request_data.get("discount_percentage", 0)  # خصم اختياري
+    discount_percentage = request_data.get("discount_percentage", 0)
     
     if not product_id:
         raise HTTPException(status_code=400, detail="يجب تحديد المنتج")
@@ -1655,10 +1660,11 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     if not product.get("is_approved", True):
         raise HTTPException(status_code=400, detail="المنتج غير موافق عليه بعد")
     
-    # جلب إعدادات الترويج
+    # جلب إعدادات الترويج و Flash
     settings = await db.platform_settings.find_one({"id": "promotions"})
     cost = settings.get("cost_per_product", 1000) if settings else 1000
-    duration = settings.get("duration_hours", 24) if settings else 24
+    flash_start_hour = settings.get("flash_start_hour", 13) if settings else 13
+    flash_duration = settings.get("flash_duration_hours", 24) if settings else 24
     
     # التحقق من رصيد المحفظة
     wallet = await db.wallets.find_one({"user_id": user["id"]})
@@ -1670,10 +1676,25 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
             detail=f"رصيد المحفظة غير كافٍ. المطلوب: {cost} ل.س، المتاح: {balance} ل.س"
         )
     
-    # التحقق من عدم وجود ترويج نشط لنفس المنتج
+    # حساب أوقات Flash
+    event = get_flash_event_times_sync(flash_start_hour, flash_duration)
     now = datetime.now(timezone.utc)
     now_str = now.isoformat()
     
+    # تحديد وقت البدء والانتهاء بناءً على حالة Flash
+    if event["is_live"]:
+        starts_at = now_str
+        expires_at = event["current_event_end"]
+        status_msg = "منتجك الآن يظهر في Flash!"
+    else:
+        starts_at = event["next_event_start"]
+        next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
+        expires_at = (next_start + timedelta(hours=flash_duration)).isoformat()
+        start_hour_12 = flash_start_hour if flash_start_hour <= 12 else flash_start_hour - 12
+        am_pm = "ص" if flash_start_hour < 12 else "م"
+        status_msg = f"تم حجز منتجك في Flash القادم الساعة {start_hour_12}:00 {am_pm}"
+    
+    # التحقق من عدم وجود ترويج نشط لنفس المنتج
     existing = await db.product_promotions.find_one({
         "product_id": product_id,
         "expires_at": {"$gt": now_str}
@@ -1694,14 +1715,12 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         "user_id": user["id"],
         "type": "promotion_fee",
         "amount": -cost,
-        "description": f"رسوم ترويج منتج: {product.get('name', 'منتج')}",
+        "description": f"رسوم Flash: {product.get('name', 'منتج')}",
         "created_at": now_str
     }
     await db.wallet_transactions.insert_one(transaction)
     
     # إنشاء الترويج
-    expires_at = (now + timedelta(hours=duration)).isoformat()
-    
     promotion = {
         "id": str(uuid.uuid4()),
         "product_id": product_id,
@@ -1714,9 +1733,11 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         "seller_name": user.get("name", user.get("full_name", "بائع")),
         "is_food": is_food,
         "cost_paid": cost,
-        "duration_hours": duration,
+        "duration_hours": flash_duration,
         "created_at": now_str,
-        "expires_at": expires_at
+        "starts_at": starts_at,
+        "expires_at": expires_at,
+        "flash_status": "live" if event["is_live"] else "pending"
     }
     
     await db.product_promotions.insert_one(promotion)
@@ -1724,17 +1745,29 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     
     return {
         "success": True,
-        "message": f"تم ترويج المنتج بنجاح لمدة {duration} ساعة",
+        "message": status_msg,
         "promotion": promotion,
-        "new_balance": balance - cost
+        "new_balance": balance - cost,
+        "flash_status": "live" if event["is_live"] else "pending"
     }
 
 @router.get("/promoted-products")
 async def get_promoted_products(product_type: str = "all"):
-    """جلب المنتجات المروّجة للصفحة الرئيسية"""
+    """جلب المنتجات المروّجة للصفحة الرئيسية - فقط التي بدأت (Flash نشط)"""
     now = datetime.now(timezone.utc).isoformat()
     
-    query = {"expires_at": {"$gt": now}}
+    # جلب إعدادات Flash للتحقق من الحالة
+    settings = await db.platform_settings.find_one({"id": "promotions"})
+    flash_start_hour = settings.get("flash_start_hour", 13) if settings else 13
+    flash_duration = settings.get("flash_duration_hours", 24) if settings else 24
+    
+    event = get_flash_event_times_sync(flash_start_hour, flash_duration)
+    
+    # فقط المنتجات التي بدأت وغير منتهية
+    query = {
+        "expires_at": {"$gt": now},
+        "starts_at": {"$lte": now}  # فقط التي بدأت
+    }
     
     if product_type == "food":
         query["is_food"] = True
@@ -1861,214 +1894,7 @@ def format_duration(seconds):
     else:
         return f"{secs}ث"
 
-@router.post("/flash/join")
-async def join_flash_event(request_data: dict, user: dict = Depends(get_current_user)):
-    """انضمام منتج لحدث Flash القادم"""
-    if user.get("user_type") not in ["seller", "food_seller"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
-    if not user.get("is_approved"):
-        raise HTTPException(status_code=403, detail="حسابك غير معتمد بعد")
-    
-    product_id = request_data.get("product_id")
-    discount_percentage = request_data.get("discount_percentage", 0)
-    
-    if not product_id:
-        raise HTTPException(status_code=400, detail="يجب تحديد المنتج")
-    
-    if discount_percentage < 0 or discount_percentage > 90:
-        raise HTTPException(status_code=400, detail="نسبة الخصم يجب أن تكون بين 0 و 90%")
-    
-    # تحديد نوع المنتج
-    is_food = user.get("user_type") == "food_seller"
-    collection = db.food_products if is_food else db.products
-    
-    # التحقق من المنتج
-    product = await collection.find_one({
-        "id": product_id,
-        "seller_id": user["id"]
-    })
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="المنتج غير موجود")
-    
-    # جلب إعدادات الترويج
-    settings = await db.platform_settings.find_one({"id": "promotions"})
-    cost = settings.get("cost_per_product", 1000) if settings else 1000
-    flash_duration = settings.get("flash_duration_hours", DEFAULT_FLASH_DURATION_HOURS) if settings else DEFAULT_FLASH_DURATION_HOURS
-    
-    # التحقق من الرصيد
-    wallet = await db.wallets.find_one({"user_id": user["id"]})
-    balance = wallet.get("balance", 0) if wallet else 0
-    
-    if balance < cost:
-        raise HTTPException(status_code=400, detail=f"رصيدك غير كافٍ. المطلوب: {cost} ل.س، المتاح: {balance} ل.س")
-    
-    # حساب وقت الحدث القادم
-    flash_settings = await get_flash_settings()
-    event = get_flash_event_times_sync(flash_settings["start_hour"], flash_settings["duration_hours"])
-    now = datetime.now(timezone.utc)
-    now_str = now.isoformat()
-    
-    # تحديد وقت البدء والانتهاء
-    if event["is_live"]:
-        # Flash نشط - المنتج يبدأ الآن وينتهي مع الحدث
-        starts_at = now_str
-        expires_at = event["current_event_end"]
-    else:
-        # Flash غير نشط - المنتج ينتظر الحدث القادم
-        starts_at = event["next_event_start"]
-        next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
-        expires_at = (next_start + timedelta(hours=flash_duration)).isoformat()
-    
-    # التحقق من عدم وجود ترويج سابق لهذا المنتج في نفس الحدث
-    existing = await db.flash_promotions.find_one({
-        "product_id": product_id,
-        "expires_at": {"$gt": now_str}
-    })
-    
-    if existing:
-        raise HTTPException(status_code=400, detail="هذا المنتج مُضاف بالفعل في Flash")
-    
-    # خصم التكلفة
-    await db.wallets.update_one(
-        {"user_id": user["id"]},
-        {"$inc": {"balance": -cost}}
-    )
-    
-    # تسجيل المعاملة
-    transaction = {
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "type": "flash_fee",
-        "amount": -cost,
-        "description": f"رسوم Flash: {product.get('name', 'منتج')}",
-        "created_at": now_str
-    }
-    await db.wallet_transactions.insert_one(transaction)
-    
-    # إنشاء سجل Flash
-    flash_promo = {
-        "id": str(uuid.uuid4()),
-        "product_id": product_id,
-        "product_name": product.get("name", "منتج"),
-        "product_image": product.get("images", [None])[0] if product.get("images") else product.get("image"),
-        "original_price": product.get("price", 0),
-        "discount_percentage": discount_percentage,
-        "discounted_price": int(product.get("price", 0) * (1 - discount_percentage / 100)) if discount_percentage > 0 else product.get("price", 0),
-        "seller_id": user["id"],
-        "seller_name": user.get("name", user.get("full_name", "بائع")),
-        "is_food": is_food,
-        "cost_paid": cost,
-        "created_at": now_str,
-        "starts_at": starts_at,
-        "expires_at": expires_at,
-        "status": "live" if event["is_live"] else "pending"
-    }
-    
-    await db.flash_promotions.insert_one(flash_promo)
-    del flash_promo["_id"]
-    
-    # أيضاً أضف للنظام القديم للتوافق
-    old_promo = {
-        "id": flash_promo["id"],
-        "product_id": product_id,
-        "product_name": product.get("name", "منتج"),
-        "product_image": flash_promo["product_image"],
-        "original_price": product.get("price", 0),
-        "discount_percentage": discount_percentage,
-        "discounted_price": flash_promo["discounted_price"],
-        "seller_id": user["id"],
-        "seller_name": flash_promo["seller_name"],
-        "is_food": is_food,
-        "cost_paid": cost,
-        "duration_hours": FLASH_DURATION_HOURS,
-        "created_at": now_str,
-        "expires_at": expires_at
-    }
-    await db.product_promotions.insert_one(old_promo)
-    
-    return {
-        "success": True,
-        "message": "تم إضافة منتجك لـ Flash بنجاح!" if event["is_live"] else "تم حجز منتجك في Flash القادم!",
-        "promotion": flash_promo,
-        "new_balance": balance - cost,
-        "flash_status": "live" if event["is_live"] else "pending",
-        "starts_at": starts_at,
-        "expires_at": expires_at
-    }
-
-@router.get("/flash/my-products")
-async def get_my_flash_products(user: dict = Depends(get_current_user)):
-    """جلب منتجاتي في Flash"""
-    if user.get("user_type") not in ["seller", "food_seller"]:
-        raise HTTPException(status_code=403, detail="غير مصرح")
-    
-    now = datetime.now(timezone.utc).isoformat()
-    
-    # المنتجات النشطة والمعلقة
-    promotions = await db.flash_promotions.find(
-        {
-            "seller_id": user["id"],
-            "expires_at": {"$gt": now}
-        },
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(50)
-    
-    # تصنيف حسب الحالة
-    live = [p for p in promotions if p.get("starts_at", "") <= now]
-    pending = [p for p in promotions if p.get("starts_at", "") > now]
-    
-    return {
-        "live": live,
-        "pending": pending,
-        "flash_status": get_flash_event_times()
-    }
-
-@router.get("/flash/products")
-async def get_flash_products(product_type: str = "all"):
-    """جلب منتجات Flash للعملاء (فقط النشطة)"""
-    event = get_flash_event_times()
-    
-    if not event["is_live"]:
-        # Flash غير نشط - أرجع قائمة فارغة مع معلومات الحدث القادم
-        return {
-            "products": [],
-            "flash_status": "upcoming",
-            "starts_at": event["next_event_start"],
-            "message": "Flash يبدأ قريباً!"
-        }
-    
-    now = datetime.now(timezone.utc).isoformat()
-    
-    query = {
-        "starts_at": {"$lte": now},
-        "expires_at": {"$gt": now}
-    }
-    
-    if product_type == "food":
-        query["is_food"] = True
-    elif product_type == "products":
-        query["is_food"] = False
-    
-    promotions = await db.flash_promotions.find(
-        query,
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(50)
-    
-    # إثراء البيانات
-    for promo in promotions:
-        collection = db.food_products if promo.get("is_food") else db.products
-        product = await collection.find_one(
-            {"id": promo["product_id"]},
-            {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1, "image": 1, "category": 1}
-        )
-        if product:
-            promo["product"] = product
-    
-    return {
-        "products": promotions,
-        "flash_status": "live",
-        "ends_at": event["current_event_end"],
-        "message": "Flash نشط الآن!"
-    }
+# ملاحظة: تم توحيد نظام Flash مع الـ APIs القديمة:
+# - /seller/promote-product: يستخدم Flash المجدول الآن
+# - /seller/my-promotions: يظهر الترويجات النشطة والمعلقة
+# - /promoted-products: يعرض فقط المنتجات التي بدأت (Flash نشط)
