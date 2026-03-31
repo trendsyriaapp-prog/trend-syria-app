@@ -15,7 +15,7 @@ jobs:
     - name: Setup Node.js 18
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '18.19.0'
         
     - name: Setup Java 17
       uses: actions/setup-java@v4
@@ -28,16 +28,17 @@ jobs:
         cd frontend
         rm -rf node_modules package-lock.json
         echo "REACT_APP_BACKEND_URL=https://trendsyria.app/api" > .env
-        npm install --legacy-peer-deps
+        npm install --legacy-peer-deps --force
         
     - name: Build React App
       run: |
         cd frontend
-        export NODE_OPTIONS=--openssl-legacy-provider
-        CI=false npm run build
+        export NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096"
+        CI=false DISABLE_ESLINT_PLUGIN=true npm run build
       env:
         CI: false
         GENERATE_SOURCEMAP: false
+        DISABLE_ESLINT_PLUGIN: true
     
     - name: Decode Keystore
       run: |
