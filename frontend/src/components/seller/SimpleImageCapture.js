@@ -55,6 +55,60 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // دالة إيقاف الكاميرا
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
+
+  // دالة الإغلاق المحسّنة
+  const closeModal = useCallback((fromBackButton = false) => {
+    stopCamera();
+    setCapturedImage(null);
+    setProcessedImage(null);
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    setRotation(0);
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setSelectedShadow('none');
+    setShadowOffset(50);
+    setShowAdjustments(false);
+    setShowShadows(false);
+    setShowRotation(false);
+    setStep('capture');
+    setError(null);
+    
+    // إذا تم الإغلاق من زر X (وليس من زر الرجوع)، نحتاج لإزالة الـ history entry
+    if (!fromBackButton) {
+      window.history.back();
+    }
+    
+    onClose();
+  }, [stopCamera, onClose]);
+
+  // معالجة زر الرجوع الفيزيائي في الجوال
+  useEffect(() => {
+    if (isOpen) {
+      // إضافة entry في history عند فتح الـ modal
+      window.history.pushState({ imageCapture: true }, '');
+      
+      const handlePopState = () => {
+        // عند الضغط على زر الرجوع، نغلق الـ modal بدلاً من الرجوع للصفحة السابقة
+        closeModal(true);
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [isOpen, closeModal]);
+
   // إخفاء النصيحة تلقائياً بعد 5 ثواني
   useEffect(() => {
     if (isOpen && showTip) {
@@ -121,13 +175,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       } else {
         setError('لا يمكن الوصول للكاميرا');
       }
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
     }
   };
 
@@ -360,24 +407,9 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setSaturation(100);
   };
 
+  // للاستخدام مع زر X
   const handleClose = () => {
-    stopCamera();
-    setCapturedImage(null);
-    setProcessedImage(null);
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setRotation(0);
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
-    setSelectedShadow('none');
-    setShadowOffset(50);
-    setShowAdjustments(false);
-    setShowShadows(false);
-    setShowRotation(false);
-    setStep('capture');
-    setError(null);
-    onClose();
+    closeModal(false);
   };
 
   if (!isOpen) return null;
