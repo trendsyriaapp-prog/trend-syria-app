@@ -39,8 +39,8 @@ jobs:
     
     - name: Decode Keystore
       run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/android/app/release.keystore
-        ls -la frontend/android/app/release.keystore
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/android/release.keystore
+        ls -la frontend/android/release.keystore
       
     - name: Create keystore.properties
       run: |
