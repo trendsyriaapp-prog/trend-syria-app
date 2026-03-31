@@ -1757,3 +1757,304 @@ async def get_promoted_products(product_type: str = "all"):
             promo["product"] = product
     
     return promotions
+
+
+# ============== Flash Event System (النظام الجديد المجدول) ==============
+# Flash يبدأ الساعة 1:00 ظهراً ويستمر 24 ساعة
+
+FLASH_START_HOUR = 13  # 1:00 PM
+FLASH_DURATION_HOURS = 24
+
+def get_flash_event_times():
+    """حساب أوقات حدث Flash الحالي والقادم"""
+    now = datetime.now(timezone.utc)
+    
+    # حساب وقت بدء Flash اليوم (1:00 PM UTC)
+    today_start = now.replace(hour=FLASH_START_HOUR, minute=0, second=0, microsecond=0)
+    
+    # حساب وقت انتهاء Flash اليوم
+    today_end = today_start + timedelta(hours=FLASH_DURATION_HOURS)
+    
+    # تحديد الحدث الحالي
+    if now < today_start:
+        # لم يبدأ Flash اليوم بعد
+        current_event_start = (today_start - timedelta(days=1))
+        current_event_end = today_start
+        next_event_start = today_start
+        is_live = now >= current_event_start and now < current_event_end
+    elif now >= today_start and now < today_end:
+        # Flash نشط الآن
+        current_event_start = today_start
+        current_event_end = today_end
+        next_event_start = today_start + timedelta(days=1)
+        is_live = True
+    else:
+        # Flash انتهى اليوم، ننتظر الغد
+        current_event_start = today_start
+        current_event_end = today_end
+        next_event_start = today_start + timedelta(days=1)
+        is_live = False
+    
+    return {
+        "is_live": is_live,
+        "current_event_start": current_event_start.isoformat(),
+        "current_event_end": current_event_end.isoformat(),
+        "next_event_start": next_event_start.isoformat(),
+        "now": now.isoformat()
+    }
+
+@router.get("/flash/status")
+async def get_flash_status():
+    """حالة حدث Flash الحالي - للعملاء والبائعين"""
+    event = get_flash_event_times()
+    now = datetime.now(timezone.utc)
+    
+    if event["is_live"]:
+        # Flash نشط - حساب الوقت المتبقي
+        end_time = datetime.fromisoformat(event["current_event_end"].replace('Z', '+00:00'))
+        remaining = end_time - now
+        remaining_seconds = max(0, int(remaining.total_seconds()))
+        
+        return {
+            "status": "live",
+            "message": "Flash نشط الآن!",
+            "ends_at": event["current_event_end"],
+            "remaining_seconds": remaining_seconds,
+            "remaining_formatted": format_duration(remaining_seconds)
+        }
+    else:
+        # Flash غير نشط - حساب الوقت حتى البدء
+        next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
+        until_start = next_start - now
+        until_start_seconds = max(0, int(until_start.total_seconds()))
+        
+        return {
+            "status": "upcoming",
+            "message": "Flash يبدأ قريباً!",
+            "starts_at": event["next_event_start"],
+            "until_start_seconds": until_start_seconds,
+            "until_start_formatted": format_duration(until_start_seconds)
+        }
+
+def format_duration(seconds):
+    """تنسيق المدة بالساعات والدقائق"""
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    
+    if hours > 0:
+        return f"{hours}س {minutes}د"
+    elif minutes > 0:
+        return f"{minutes}د {secs}ث"
+    else:
+        return f"{secs}ث"
+
+@router.post("/flash/join")
+async def join_flash_event(request_data: dict, user: dict = Depends(get_current_user)):
+    """انضمام منتج لحدث Flash القادم"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    if not user.get("is_approved"):
+        raise HTTPException(status_code=403, detail="حسابك غير معتمد بعد")
+    
+    product_id = request_data.get("product_id")
+    discount_percentage = request_data.get("discount_percentage", 0)
+    
+    if not product_id:
+        raise HTTPException(status_code=400, detail="يجب تحديد المنتج")
+    
+    if discount_percentage < 0 or discount_percentage > 90:
+        raise HTTPException(status_code=400, detail="نسبة الخصم يجب أن تكون بين 0 و 90%")
+    
+    # تحديد نوع المنتج
+    is_food = user.get("user_type") == "food_seller"
+    collection = db.food_products if is_food else db.products
+    
+    # التحقق من المنتج
+    product = await collection.find_one({
+        "id": product_id,
+        "seller_id": user["id"]
+    })
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    # جلب إعدادات الترويج
+    settings = await db.platform_settings.find_one({"type": "promotion_settings"})
+    cost = settings.get("cost_per_product", 1000) if settings else 1000
+    
+    # التحقق من الرصيد
+    wallet = await db.wallets.find_one({"user_id": user["id"]})
+    balance = wallet.get("balance", 0) if wallet else 0
+    
+    if balance < cost:
+        raise HTTPException(status_code=400, detail=f"رصيدك غير كافٍ. المطلوب: {cost} ل.س، المتاح: {balance} ل.س")
+    
+    # حساب وقت الحدث القادم
+    event = get_flash_event_times()
+    now = datetime.now(timezone.utc)
+    now_str = now.isoformat()
+    
+    # تحديد وقت البدء والانتهاء
+    if event["is_live"]:
+        # Flash نشط - المنتج يبدأ الآن وينتهي مع الحدث
+        starts_at = now_str
+        expires_at = event["current_event_end"]
+    else:
+        # Flash غير نشط - المنتج ينتظر الحدث القادم
+        starts_at = event["next_event_start"]
+        next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
+        expires_at = (next_start + timedelta(hours=FLASH_DURATION_HOURS)).isoformat()
+    
+    # التحقق من عدم وجود ترويج سابق لهذا المنتج في نفس الحدث
+    existing = await db.flash_promotions.find_one({
+        "product_id": product_id,
+        "expires_at": {"$gt": now_str}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="هذا المنتج مُضاف بالفعل في Flash")
+    
+    # خصم التكلفة
+    await db.wallets.update_one(
+        {"user_id": user["id"]},
+        {"$inc": {"balance": -cost}}
+    )
+    
+    # تسجيل المعاملة
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "type": "flash_fee",
+        "amount": -cost,
+        "description": f"رسوم Flash: {product.get('name', 'منتج')}",
+        "created_at": now_str
+    }
+    await db.wallet_transactions.insert_one(transaction)
+    
+    # إنشاء سجل Flash
+    flash_promo = {
+        "id": str(uuid.uuid4()),
+        "product_id": product_id,
+        "product_name": product.get("name", "منتج"),
+        "product_image": product.get("images", [None])[0] if product.get("images") else product.get("image"),
+        "original_price": product.get("price", 0),
+        "discount_percentage": discount_percentage,
+        "discounted_price": int(product.get("price", 0) * (1 - discount_percentage / 100)) if discount_percentage > 0 else product.get("price", 0),
+        "seller_id": user["id"],
+        "seller_name": user.get("name", user.get("full_name", "بائع")),
+        "is_food": is_food,
+        "cost_paid": cost,
+        "created_at": now_str,
+        "starts_at": starts_at,
+        "expires_at": expires_at,
+        "status": "live" if event["is_live"] else "pending"
+    }
+    
+    await db.flash_promotions.insert_one(flash_promo)
+    del flash_promo["_id"]
+    
+    # أيضاً أضف للنظام القديم للتوافق
+    old_promo = {
+        "id": flash_promo["id"],
+        "product_id": product_id,
+        "product_name": product.get("name", "منتج"),
+        "product_image": flash_promo["product_image"],
+        "original_price": product.get("price", 0),
+        "discount_percentage": discount_percentage,
+        "discounted_price": flash_promo["discounted_price"],
+        "seller_id": user["id"],
+        "seller_name": flash_promo["seller_name"],
+        "is_food": is_food,
+        "cost_paid": cost,
+        "duration_hours": FLASH_DURATION_HOURS,
+        "created_at": now_str,
+        "expires_at": expires_at
+    }
+    await db.product_promotions.insert_one(old_promo)
+    
+    return {
+        "success": True,
+        "message": "تم إضافة منتجك لـ Flash بنجاح!" if event["is_live"] else "تم حجز منتجك في Flash القادم!",
+        "promotion": flash_promo,
+        "new_balance": balance - cost,
+        "flash_status": "live" if event["is_live"] else "pending",
+        "starts_at": starts_at,
+        "expires_at": expires_at
+    }
+
+@router.get("/flash/my-products")
+async def get_my_flash_products(user: dict = Depends(get_current_user)):
+    """جلب منتجاتي في Flash"""
+    if user.get("user_type") not in ["seller", "food_seller"]:
+        raise HTTPException(status_code=403, detail="غير مصرح")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # المنتجات النشطة والمعلقة
+    promotions = await db.flash_promotions.find(
+        {
+            "seller_id": user["id"],
+            "expires_at": {"$gt": now}
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # تصنيف حسب الحالة
+    live = [p for p in promotions if p.get("starts_at", "") <= now]
+    pending = [p for p in promotions if p.get("starts_at", "") > now]
+    
+    return {
+        "live": live,
+        "pending": pending,
+        "flash_status": get_flash_event_times()
+    }
+
+@router.get("/flash/products")
+async def get_flash_products(product_type: str = "all"):
+    """جلب منتجات Flash للعملاء (فقط النشطة)"""
+    event = get_flash_event_times()
+    
+    if not event["is_live"]:
+        # Flash غير نشط - أرجع قائمة فارغة مع معلومات الحدث القادم
+        return {
+            "products": [],
+            "flash_status": "upcoming",
+            "starts_at": event["next_event_start"],
+            "message": "Flash يبدأ قريباً!"
+        }
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    query = {
+        "starts_at": {"$lte": now},
+        "expires_at": {"$gt": now}
+    }
+    
+    if product_type == "food":
+        query["is_food"] = True
+    elif product_type == "products":
+        query["is_food"] = False
+    
+    promotions = await db.flash_promotions.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # إثراء البيانات
+    for promo in promotions:
+        collection = db.food_products if promo.get("is_food") else db.products
+        product = await collection.find_one(
+            {"id": promo["product_id"]},
+            {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1, "image": 1, "category": 1}
+        )
+        if product:
+            promo["product"] = product
+    
+    return {
+        "products": promotions,
+        "flash_status": "live",
+        "ends_at": event["current_event_end"],
+        "message": "Flash نشط الآن!"
+    }

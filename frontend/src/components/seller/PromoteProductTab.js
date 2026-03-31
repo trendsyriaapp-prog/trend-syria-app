@@ -67,12 +67,16 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       setLoading(true);
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [settingsRes, promotionsRes] = await Promise.all([
+      const [settingsRes, promotionsRes, flashStatusRes] = await Promise.all([
         axios.get(`${API}/api/seller/promotion-settings`, { headers }),
-        axios.get(`${API}/api/seller/my-promotions`, { headers })
+        axios.get(`${API}/api/seller/my-promotions`, { headers }),
+        axios.get(`${API}/api/flash/status`)
       ]);
       
-      setSettings(settingsRes.data || { cost_per_product: 1000, duration_hours: 24 });
+      setSettings({
+        ...settingsRes.data,
+        flashStatus: flashStatusRes.data
+      } || { cost_per_product: 1000, duration_hours: 24 });
       setMyPromotions(promotionsRes.data || { active: [], expired: [] });
     } catch (error) {
       console.error('Error fetching promotion data:', error);
@@ -113,7 +117,9 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
       
       toast({
         title: "تم بنجاح! 🚀",
-        description: `منتجك الآن يظهر في الصفحة الرئيسية لمدة ${settings.duration_hours} ساعة`
+        description: settings.flashStatus?.status === 'live' 
+          ? "منتجك الآن يظهر في Flash!" 
+          : "تم حجز منتجك في Flash القادم الساعة 1:00 ظهراً"
       });
       
       setSelectedProduct(null);
@@ -153,6 +159,35 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
 
   return (
     <div className="space-y-4">
+      {/* شريط حالة Flash للبائع */}
+      {settings.flashStatus && (
+        <div className={`rounded-xl p-3 flex items-center justify-between ${
+          settings.flashStatus.status === 'live' 
+            ? 'bg-green-100 border border-green-300' 
+            : 'bg-yellow-100 border border-yellow-300'
+        }`}>
+          <div className="flex items-center gap-2">
+            {settings.flashStatus.status === 'live' ? (
+              <>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="font-bold text-green-800 text-sm">⚡ Flash نشط الآن!</span>
+              </>
+            ) : (
+              <>
+                <span className="text-xl">🔔</span>
+                <span className="font-bold text-yellow-800 text-sm">Flash يبدأ الساعة 1:00 ظهراً</span>
+              </>
+            )}
+          </div>
+          <div className="text-xs font-medium">
+            {settings.flashStatus.status === 'live' 
+              ? `ينتهي خلال: ${settings.flashStatus.remaining_formatted}` 
+              : `يبدأ بعد: ${settings.flashStatus.until_start_formatted}`
+            }
+          </div>
+        </div>
+      )}
+
       {/* بانر فلاش */}
       <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-2">
@@ -160,12 +195,14 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
           <h2 className="font-bold text-lg">فلاش - روّج منتجك ⚡</h2>
         </div>
         <p className="text-sm opacity-90 mb-3">
-          اجعل منتجك يظهر في عروض فلاش أمام آلاف العملاء!
+          {settings.flashStatus?.status === 'live' 
+            ? 'منتجك سيظهر فوراً في Flash النشط!' 
+            : 'أضف منتجك الآن وسيظهر في Flash القادم الساعة 1:00 ظهراً'}
         </p>
         <div className="flex flex-wrap gap-2">
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
             <Clock size={12} />
-            <span>المدة: {settings.duration_hours} ساعة</span>
+            <span>يبدأ: الساعة 1:00 ظهراً يومياً</span>
           </div>
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
             <Wallet size={12} />

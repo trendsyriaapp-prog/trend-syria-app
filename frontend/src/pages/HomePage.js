@@ -73,6 +73,7 @@ const HomePage = () => {
   const [shopFlashProducts, setShopFlashProducts] = useState([]);
   const [shopFlashSale, setShopFlashSale] = useState(null);
   const [sponsoredProducts, setSponsoredProducts] = useState([]);
+  const [flashStatus, setFlashStatus] = useState(null); // حالة Flash الجديدة
   const [loading, setLoading] = useState(true);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
@@ -153,8 +154,11 @@ const HomePage = () => {
         return;
       }
       
-      // جلب البيانات من API الموحد
-      const response = await axios.get(`${API}/api/products/homepage-data`);
+      // جلب البيانات من API الموحد + حالة Flash
+      const [response, flashStatusRes] = await Promise.all([
+        axios.get(`${API}/api/products/homepage-data`),
+        axios.get(`${API}/api/flash/status`).catch(() => ({ data: null }))
+      ]);
       const data = response.data;
       
       // حفظ في الكاش
@@ -162,6 +166,9 @@ const HomePage = () => {
       sessionStorage.setItem('homepage_cache_time', Date.now().toString());
       
       applyHomepageData(data);
+      
+      // تعيين حالة Flash
+      setFlashStatus(flashStatusRes.data);
       
     } catch (error) {
       console.error('Error fetching homepage data:', error);
@@ -347,7 +354,7 @@ const HomePage = () => {
   // الطريقة القديمة كـ fallback
   const fetchDataLegacy = async () => {
     try {
-      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes, sellerPromotionsRes] = await Promise.all([
+      const [productsRes, categoriesRes, adsRes, shopFlashRes, sponsoredRes, promoRes, tickerRes, sectionsRes, sellerPromotionsRes, flashStatusRes] = await Promise.all([
         axios.get(`${API}/api/products/featured`),
         axios.get(`${API}/api/categories`),
         axios.get(`${API}/api/ads/active`).catch(() => ({ data: [] })),
@@ -362,7 +369,8 @@ const HomePage = () => {
           best_sellers_enabled: true,
           new_arrivals_enabled: true
         }})),
-        axios.get(`${API}/api/promoted-products`).catch(() => ({ data: [] }))
+        axios.get(`${API}/api/promoted-products`).catch(() => ({ data: [] })),
+        axios.get(`${API}/api/flash/status`).catch(() => ({ data: null }))
       ]);
       setProducts(productsRes.data);
       setSectionsSettings(sectionsRes.data);
@@ -388,6 +396,9 @@ const HomePage = () => {
       
       setShopFlashSale(shopFlashRes.data?.flash_sale || null);
       setSponsoredProducts(sponsoredRes.data || []);
+      
+      // حالة Flash الجديدة
+      setFlashStatus(flashStatusRes.data);
       
       setTickerMessages(tickerRes.data?.messages || []);
       setTickerEnabled(tickerRes.data?.is_enabled !== false);
@@ -696,6 +707,11 @@ const HomePage = () => {
             linkColor="text-orange-600"
             iconBg="from-orange-500 to-red-500"
           />
+          
+          {/* شريط حالة Flash */}
+          {flashStatus && (
+            <FlashStatusBanner status={flashStatus} />
+          )}
           
           {/* Flash Products Horizontal Scroll */}
           <div className="relative" style={{ minHeight: '200px' }}>
@@ -1112,6 +1128,83 @@ const FlashCountdown = ({ endTime, color = 'orange' }) => {
       </div>
     </div>
   );
+};
+
+// مكون شريط حالة Flash
+const FlashStatusBanner = ({ status }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+  
+  useEffect(() => {
+    const updateTime = () => {
+      if (status?.status === 'live' && status?.ends_at) {
+        const end = new Date(status.ends_at).getTime();
+        const now = new Date().getTime();
+        const diff = end - now;
+        
+        if (diff <= 0) {
+          setTimeLeft('انتهى');
+          return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else if (status?.status === 'upcoming' && status?.starts_at) {
+        const start = new Date(status.starts_at).getTime();
+        const now = new Date().getTime();
+        const diff = start - now;
+        
+        if (diff <= 0) {
+          setTimeLeft('يبدأ الآن!');
+          return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }
+    };
+    
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, [status]);
+  
+  if (!status) return null;
+  
+  if (status.status === 'live') {
+    return (
+      <div className="mb-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          <span className="font-bold text-sm">⚡ Flash نشط الآن!</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs opacity-90">ينتهي خلال</span>
+          <span className="font-mono font-bold bg-white/20 px-2 py-1 rounded">{timeLeft}</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (status.status === 'upcoming') {
+    return (
+      <div className="mb-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🔔</span>
+          <span className="font-bold text-sm">Flash يبدأ قريباً!</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs opacity-90">يبدأ بعد</span>
+          <span className="font-mono font-bold bg-orange-500 px-2 py-1 rounded">{timeLeft}</span>
+        </div>
+      </div>
+    );
+  }
+  
+  return null;
 };
 
 // مكون الشارة الصغيرة للبطاقات المصغرة - مع حركة slide-up
