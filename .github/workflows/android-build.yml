@@ -26,19 +26,17 @@ jobs:
     - name: Clean install
       run: |
         cd frontend
-        rm -rf node_modules package-lock.json
+        rm -rf node_modules package-lock.json yarn.lock
         echo "REACT_APP_BACKEND_URL=https://trendsyria.app/api" > .env
-        npm install --legacy-peer-deps --force
+        yarn install --network-timeout 100000
         
     - name: Build React App
       run: |
         cd frontend
-        export NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096"
-        CI=false DISABLE_ESLINT_PLUGIN=true npm run build
+        CI=false GENERATE_SOURCEMAP=false yarn build
       env:
         CI: false
         GENERATE_SOURCEMAP: false
-        DISABLE_ESLINT_PLUGIN: true
     
     - name: Decode Keystore
       run: |
