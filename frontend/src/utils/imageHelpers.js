@@ -57,37 +57,44 @@ export const validateAndEnhanceImage = (file) => {
         // Draw and enhance
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
         
-        // Auto enhance: slight brightness and contrast boost
+        // تطبيق التحسينات الافتراضية: إضاءة 110%، تشبع 110%، تباين 110%
         const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
         const data = imageData.data;
         
-        // Calculate average brightness
-        let totalBrightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-        }
-        const avgBrightness = totalBrightness / (data.length / 4);
+        // إعدادات التحسين الافتراضية (110%)
+        const brightnessMultiplier = 1.10;  // الإضاءة 110%
+        const contrastMultiplier = 1.10;    // التباين 110%
+        const saturationMultiplier = 1.10;  // التشبع 110%
         
-        // Only enhance if image is dark
-        if (avgBrightness < 120) {
-          const brightnessAdjust = 20;
-          const contrastFactor = 1.1;
+        for (let i = 0; i < data.length; i += 4) {
+          let r = data[i];
+          let g = data[i + 1];
+          let b = data[i + 2];
           
-          for (let i = 0; i < data.length; i += 4) {
-            // Brightness
-            data[i] = Math.min(255, data[i] + brightnessAdjust);
-            data[i + 1] = Math.min(255, data[i + 1] + brightnessAdjust);
-            data[i + 2] = Math.min(255, data[i + 2] + brightnessAdjust);
-            
-            // Contrast
-            data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrastFactor + 128));
-            data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrastFactor + 128));
-            data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrastFactor + 128));
-          }
+          // 1. الإضاءة (Brightness) - 110%
+          r = r * brightnessMultiplier;
+          g = g * brightnessMultiplier;
+          b = b * brightnessMultiplier;
           
-          ctx.putImageData(imageData, 0, 0);
-          warnings.push('تم تحسين إضاءة الصورة تلقائياً');
+          // 2. التباين (Contrast) - 110%
+          r = (r - 128) * contrastMultiplier + 128;
+          g = (g - 128) * contrastMultiplier + 128;
+          b = (b - 128) * contrastMultiplier + 128;
+          
+          // 3. التشبع (Saturation) - 110%
+          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = gray + (r - gray) * saturationMultiplier;
+          g = gray + (g - gray) * saturationMultiplier;
+          b = gray + (b - gray) * saturationMultiplier;
+          
+          // حفظ القيم مع التأكد من البقاء في النطاق 0-255
+          data[i] = Math.min(255, Math.max(0, Math.round(r)));
+          data[i + 1] = Math.min(255, Math.max(0, Math.round(g)));
+          data[i + 2] = Math.min(255, Math.max(0, Math.round(b)));
         }
+        
+        ctx.putImageData(imageData, 0, 0);
+        warnings.push('تم تطبيق تحسينات الصورة (إضاءة، تشبع، تباين 110%)');
         
         // Try WebP first (30% smaller), fallback to JPEG
         let enhancedDataUrl;
@@ -115,7 +122,7 @@ export const validateAndEnhanceImage = (file) => {
           originalHeight: img.height,
           issues,
           warnings,
-          enhanced: avgBrightness < 120
+          enhanced: true // دائماً محسّنة بـ 110%
         });
       };
       img.onerror = () => reject(new Error('فشل تحميل الصورة'));
