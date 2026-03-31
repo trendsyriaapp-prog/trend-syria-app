@@ -58,18 +58,19 @@ const GoogleMapsLocationPicker = ({
     // إعداد timeout يدوي للتأكد من الاستجابة
     const timeoutId = setTimeout(() => {
       setLoading(false);
-      setError('خدمة الموقع (GPS) غير مفعّلة أو بطيئة. يرجى تفعيل GPS.');
+      setError('خدمة الموقع (GPS) غير مفعّلة أو بطيئة. يرجى تفعيل GPS والانتظار.');
       setShowLocationPrompt(true);
       setShowGPSModal(true);
-    }, 8000);
+    }, 20000);  // 20 ثانية للحصول على موقع دقيق
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         clearTimeout(timeoutId);
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
         onLocationSelect({
           latitude,
           longitude,
+          accuracy: Math.round(accuracy), // دقة الموقع بالمتر
           source: 'gps'
         });
         setLoading(false);
@@ -101,9 +102,9 @@ const GoogleMapsLocationPicker = ({
         }
       },
       {
-        enableHighAccuracy: false,
-        timeout: 7000,
-        maximumAge: 60000
+        enableHighAccuracy: true,  // استخدام GPS بأعلى دقة ممكنة
+        timeout: 15000,            // 15 ثانية للحصول على موقع دقيق
+        maximumAge: 0              // دائماً موقع جديد ودقيق
       }
     );
   };
@@ -195,10 +196,15 @@ const GoogleMapsLocationPicker = ({
                 <Check size={20} className="text-white" />
               </div>
               <div>
-                <p className="font-bold text-green-700 text-sm">تم تحديد الموقع ✓</p>
+                <p className="font-bold text-green-700 text-sm">تم تحديد الموقع بدقة ✓</p>
                 <p className="text-xs text-green-600">
                   {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
                 </p>
+                {currentLocation.accuracy && (
+                  <p className="text-[10px] text-green-500 mt-0.5">
+                    📍 دقة: ±{currentLocation.accuracy} متر
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
