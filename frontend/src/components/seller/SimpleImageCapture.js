@@ -54,65 +54,82 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [historyPushed, setHistoryPushed] = useState(false);
+
+  // مرجع لتتبع حالة الـ history
+  const historyPushedRef = useRef(false);
+  const isClosingRef = useRef(false);
 
   // دالة إيقاف الكاميرا
-  const stopCamera = useCallback(() => {
+  const stopCameraStream = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-  }, [stream]);
+  };
 
-  // مرجع لتتبع حالة الإغلاق
-  const isClosingRef = useRef(false);
-
-  // معالجة زر الرجوع الفيزيائي في الجوال
-  useEffect(() => {
-    if (isOpen && !historyPushed) {
-      // إضافة entry واحدة فقط في history عند فتح الـ modal
-      window.history.pushState({ imageCapture: true }, '');
-      setHistoryPushed(true);
-    }
+  // دالة الإغلاق الموحدة
+  const doClose = useCallback((fromBackButton = false) => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     
-    if (!isOpen) {
-      setHistoryPushed(false);
-    }
-  }, [isOpen, historyPushed]);
-
-  // معالج حدث الرجوع
-  useEffect(() => {
-    if (!isOpen) return;
+    stopCameraStream();
+    setCapturedImage(null);
+    setProcessedImage(null);
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    setRotation(0);
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setSelectedShadow('none');
+    setShadowOffset(50);
+    setShowAdjustments(false);
+    setShowShadows(false);
+    setShowRotation(false);
+    setStep('capture');
+    setError(null);
     
-    const handlePopState = (e) => {
-      // منع الإغلاق المتعدد
-      if (isClosingRef.current) return;
-      isClosingRef.current = true;
-      
-      // إغلاق الـ modal مباشرة
-      stopCamera();
-      setCapturedImage(null);
-      setProcessedImage(null);
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
-      setRotation(0);
-      setBrightness(100);
-      setContrast(100);
-      setSaturation(100);
-      setSelectedShadow('none');
-      setShadowOffset(50);
-      setShowAdjustments(false);
-      setShowShadows(false);
-      setShowRotation(false);
-      setStep('capture');
-      setError(null);
-      setHistoryPushed(false);
-      
-      onClose();
-      
+    // إغلاق الـ modal أولاً
+    onClose();
+    
+    // إذا كان الإغلاق من زر X (وليس من زر الرجوع)، نحتاج للعودة في التاريخ
+    if (!fromBackButton && historyPushedRef.current) {
+      historyPushedRef.current = false;
+      // استخدام setTimeout لضمان إغلاق الـ modal قبل العودة في التاريخ
       setTimeout(() => {
-        isClosingRef.current = false;
-      }, 100);
+        window.history.back();
+      }, 50);
+    } else {
+      historyPushedRef.current = false;
+    }
+    
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 300);
+  }, [onClose, stream]);
+
+  // إدارة history وزر الرجوع
+  useEffect(() => {
+    if (!isOpen) {
+      historyPushedRef.current = false;
+      isClosingRef.current = false;
+      return;
+    }
+    
+    // إضافة entry في التاريخ عند فتح الـ modal
+    if (!historyPushedRef.current) {
+      window.history.pushState({ modal: 'imageCapture' }, '');
+      historyPushedRef.current = true;
+    }
+    
+    const handlePopState = () => {
+      // هذا يُستدعى عند الضغط على زر الرجوع
+      doClose(true);
     };
     
     window.addEventListener('popstate', handlePopState);
@@ -120,7 +137,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [isOpen, stopCamera, onClose]);
+  }, [isOpen, doClose]);
 
   // إخفاء النصيحة تلقائياً بعد 5 ثواني
   useEffect(() => {
@@ -137,11 +154,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   }, [isOpen]);
 
+  // تشغيل الكاميرا فقط في وضع الكاميرا
   useEffect(() => {
+    // لا تشغل الكاميرا أبداً في وضع المعرض
+    if (mode === 'gallery') return;
+    
     if (isOpen && mode === 'camera' && step === 'capture') {
       startCamera();
     }
-    return () => stopCamera();
+    
+    return () => {
+      // إيقاف الكاميرا عند الخروج
+      stopCameraStream();
+    };
   }, [isOpen, mode, step, facingMode]);
 
   // إعادة تعيين الحالة عند فتح المحرر
@@ -154,9 +179,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   }, [isOpen]);
 
+  // فتح المعرض تلقائياً في وضع المعرض
   useEffect(() => {
     if (isOpen && mode === 'gallery') {
-      setTimeout(() => fileInputRef.current?.click(), 100);
+      // تأخير قصير للتأكد من أن الـ modal مفتوح بالكامل
+      const timer = setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, mode]);
 
@@ -192,7 +222,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   };
 
   const switchCamera = () => {
-    stopCamera();
+    stopCameraStream();
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
   };
 
@@ -209,7 +239,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     ctx.drawImage(video, offsetX, offsetY, size, size, 0, 0, size, size);
     const imageData = canvas.toDataURL('image/jpeg', 0.95);
     setCapturedImage(imageData);
-    stopCamera();
+    stopCameraStream();
     await processImage(imageData);
   };
 
@@ -424,39 +454,9 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setSaturation(100);
   };
 
-  // للاستخدام مع زر X
+  // للاستخدام مع زر X أو عند إغلاق المعرض بدون اختيار صورة
   const handleClose = () => {
-    if (isClosingRef.current) return;
-    isClosingRef.current = true;
-    
-    stopCamera();
-    setCapturedImage(null);
-    setProcessedImage(null);
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setRotation(0);
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
-    setSelectedShadow('none');
-    setShadowOffset(50);
-    setShowAdjustments(false);
-    setShowShadows(false);
-    setShowRotation(false);
-    setStep('capture');
-    setError(null);
-    
-    // إزالة الـ history entry إذا كانت موجودة
-    if (historyPushed) {
-      setHistoryPushed(false);
-      window.history.back();
-    }
-    
-    onClose();
-    
-    setTimeout(() => {
-      isClosingRef.current = false;
-    }, 100);
+    doClose(false);
   };
 
   if (!isOpen) return null;
