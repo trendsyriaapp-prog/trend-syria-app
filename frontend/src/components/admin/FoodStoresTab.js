@@ -43,7 +43,6 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
     } else {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, typeFilter, pendingOnly]);
 
   const fetchData = async () => {
