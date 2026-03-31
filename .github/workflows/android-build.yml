@@ -24,27 +24,24 @@ jobs:
         java-version: '17'
         
     - name: Install dependencies
+      working-directory: ./frontend
       run: |
-        cd frontend
-        npm install
+        npm install --legacy-peer-deps
         
     - name: Build web app
-      run: |
-        cd frontend
-        npm run build
+      working-directory: ./frontend
+      run: npm run build
         
     - name: Sync Capacitor
-      run: |
-        cd frontend
-        npx cap sync android
+      working-directory: ./frontend
+      run: npx cap sync android
         
     - name: Make gradlew executable
       run: chmod +x frontend/android/gradlew
       
     - name: Build Release AAB
-      run: |
-        cd frontend/android
-        ./gradlew bundleRelease --no-daemon
+      working-directory: ./frontend/android
+      run: ./gradlew bundleRelease --no-daemon
         
     - name: Upload AAB
       uses: actions/upload-artifact@v4
