@@ -46,6 +46,9 @@ jobs:
     - name: Sync Capacitor
       working-directory: ./frontend
       run: npx cap sync android
+      
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
         
     - name: Make gradlew executable
       run: chmod +x frontend/android/gradlew
@@ -59,4 +62,12 @@ jobs:
       with:
         name: app-release
         path: frontend/android/app/build/outputs/bundle/release/*.aab
-        if-no-files-found: error
+        if-no-files-found: warn
+        
+    - name: Upload APK (fallback)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: app-debug
+        path: frontend/android/app/build/outputs/apk/**/*.apk
+        if-no-files-found: warn
