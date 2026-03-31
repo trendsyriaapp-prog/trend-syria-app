@@ -1760,20 +1760,29 @@ async def get_promoted_products(product_type: str = "all"):
 
 
 # ============== Flash Event System (النظام الجديد المجدول) ==============
-# Flash يبدأ الساعة 1:00 ظهراً ويستمر 24 ساعة
+# Flash يبدأ الساعة 1:00 ظهراً ويستمر 24 ساعة (قابل للتعديل من الأدمن)
 
-FLASH_START_HOUR = 13  # 1:00 PM
-FLASH_DURATION_HOURS = 24
+# القيم الافتراضية
+DEFAULT_FLASH_START_HOUR = 13  # 1:00 PM
+DEFAULT_FLASH_DURATION_HOURS = 24
 
-def get_flash_event_times():
-    """حساب أوقات حدث Flash الحالي والقادم"""
+async def get_flash_settings():
+    """جلب إعدادات Flash من قاعدة البيانات"""
+    settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
+    return {
+        "start_hour": settings.get("flash_start_hour", DEFAULT_FLASH_START_HOUR) if settings else DEFAULT_FLASH_START_HOUR,
+        "duration_hours": settings.get("flash_duration_hours", DEFAULT_FLASH_DURATION_HOURS) if settings else DEFAULT_FLASH_DURATION_HOURS
+    }
+
+def get_flash_event_times_sync(start_hour=13, duration_hours=24):
+    """حساب أوقات حدث Flash الحالي والقادم (متزامن)"""
     now = datetime.now(timezone.utc)
     
-    # حساب وقت بدء Flash اليوم (1:00 PM UTC)
-    today_start = now.replace(hour=FLASH_START_HOUR, minute=0, second=0, microsecond=0)
+    # حساب وقت بدء Flash اليوم
+    today_start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
     
     # حساب وقت انتهاء Flash اليوم
-    today_end = today_start + timedelta(hours=FLASH_DURATION_HOURS)
+    today_end = today_start + timedelta(hours=duration_hours)
     
     # تحديد الحدث الحالي
     if now < today_start:
@@ -1800,13 +1809,16 @@ def get_flash_event_times():
         "current_event_start": current_event_start.isoformat(),
         "current_event_end": current_event_end.isoformat(),
         "next_event_start": next_event_start.isoformat(),
-        "now": now.isoformat()
+        "now": now.isoformat(),
+        "start_hour": start_hour,
+        "duration_hours": duration_hours
     }
 
 @router.get("/flash/status")
 async def get_flash_status():
     """حالة حدث Flash الحالي - للعملاء والبائعين"""
-    event = get_flash_event_times()
+    flash_settings = await get_flash_settings()
+    event = get_flash_event_times_sync(flash_settings["start_hour"], flash_settings["duration_hours"])
     now = datetime.now(timezone.utc)
     
     if event["is_live"]:
@@ -1881,8 +1893,9 @@ async def join_flash_event(request_data: dict, user: dict = Depends(get_current_
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
     
     # جلب إعدادات الترويج
-    settings = await db.platform_settings.find_one({"type": "promotion_settings"})
+    settings = await db.platform_settings.find_one({"id": "promotions"})
     cost = settings.get("cost_per_product", 1000) if settings else 1000
+    flash_duration = settings.get("flash_duration_hours", DEFAULT_FLASH_DURATION_HOURS) if settings else DEFAULT_FLASH_DURATION_HOURS
     
     # التحقق من الرصيد
     wallet = await db.wallets.find_one({"user_id": user["id"]})
@@ -1892,7 +1905,8 @@ async def join_flash_event(request_data: dict, user: dict = Depends(get_current_
         raise HTTPException(status_code=400, detail=f"رصيدك غير كافٍ. المطلوب: {cost} ل.س، المتاح: {balance} ل.س")
     
     # حساب وقت الحدث القادم
-    event = get_flash_event_times()
+    flash_settings = await get_flash_settings()
+    event = get_flash_event_times_sync(flash_settings["start_hour"], flash_settings["duration_hours"])
     now = datetime.now(timezone.utc)
     now_str = now.isoformat()
     
@@ -1905,7 +1919,7 @@ async def join_flash_event(request_data: dict, user: dict = Depends(get_current_
         # Flash غير نشط - المنتج ينتظر الحدث القادم
         starts_at = event["next_event_start"]
         next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
-        expires_at = (next_start + timedelta(hours=FLASH_DURATION_HOURS)).isoformat()
+        expires_at = (next_start + timedelta(hours=flash_duration)).isoformat()
     
     # التحقق من عدم وجود ترويج سابق لهذا المنتج في نفس الحدث
     existing = await db.flash_promotions.find_one({

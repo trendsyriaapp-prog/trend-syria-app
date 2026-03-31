@@ -15,7 +15,9 @@ const SellerPromotionsTab = () => {
     cost_per_product: 1000,
     duration_hours: 24,
     max_products_per_day: 5,
-    enabled: true
+    enabled: true,
+    flash_start_hour: 13,
+    flash_duration_hours: 24
   });
   const [promotions, setPromotions] = useState({ active: [], expired: [], stats: {} });
   const [showSettings, setShowSettings] = useState(false);
@@ -138,13 +140,32 @@ const SellerPromotionsTab = () => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">مدة الفلاش (ساعة)</label>
-              <input
-                type="number"
-                value={settings.duration_hours}
-                onChange={(e) => setSettings({...settings, duration_hours: parseInt(e.target.value) || 24})}
+              <label className="block text-sm text-gray-600 mb-1">ساعة بدء Flash (0-23)</label>
+              <select
+                value={settings.flash_start_hour || 13}
+                onChange={(e) => setSettings({...settings, flash_start_hour: parseInt(e.target.value)})}
                 className="w-full p-2 border rounded-lg"
-              />
+              >
+                {[...Array(24)].map((_, i) => (
+                  <option key={i} value={i}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i-12}:00 PM`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">مدة الحدث (ساعة)</label>
+              <select
+                value={settings.flash_duration_hours || 24}
+                onChange={(e) => setSettings({...settings, flash_duration_hours: parseInt(e.target.value)})}
+                className="w-full p-2 border rounded-lg"
+              >
+                <option value={6}>6 ساعات</option>
+                <option value={12}>12 ساعة</option>
+                <option value={24}>24 ساعة</option>
+                <option value={48}>48 ساعة</option>
+                <option value={72}>72 ساعة</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">الحد الأقصى للفلاش/يوم</label>

@@ -3378,10 +3378,18 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
             "duration_hours": 24,
             "max_products_per_day": 5,
             "enabled": True,
+            "flash_start_hour": 13,  # 1:00 PM
+            "flash_duration_hours": 24,  # 24 ساعة
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(default_settings.copy())
         settings = default_settings
+    
+    # إضافة القيم الافتراضية للحقول الجديدة
+    if "flash_start_hour" not in settings:
+        settings["flash_start_hour"] = 13
+    if "flash_duration_hours" not in settings:
+        settings["flash_duration_hours"] = 24
     
     return settings
 
@@ -3401,6 +3409,14 @@ async def update_promotion_settings(data: dict, user: dict = Depends(get_current
         update["max_products_per_day"] = int(data["max_products_per_day"])
     if "enabled" in data:
         update["enabled"] = bool(data["enabled"])
+    if "flash_start_hour" in data:
+        hour = int(data["flash_start_hour"])
+        if 0 <= hour <= 23:
+            update["flash_start_hour"] = hour
+    if "flash_duration_hours" in data:
+        duration = int(data["flash_duration_hours"])
+        if 1 <= duration <= 72:  # بين 1 و 72 ساعة
+            update["flash_duration_hours"] = duration
     
     await db.platform_settings.update_one(
         {"id": "promotions"},
