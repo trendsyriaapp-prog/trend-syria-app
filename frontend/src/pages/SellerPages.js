@@ -28,6 +28,7 @@ import StoreSettingsTab from '../components/seller/StoreSettingsTab';
 import AddProductModal from '../components/seller/AddProductModal';
 import EditProductModal from '../components/seller/EditProductModal';
 import SellerStatsCard from '../components/seller/SellerStatsCard';
+import SellerAnalytics from '../components/seller/SellerAnalytics';
 import PromoteProductTab from '../components/seller/PromoteProductTab';
 import SellerProductsGrid from '../components/seller/SellerProductsGrid';
 import SellerOrdersSection from '../components/seller/SellerOrdersSection';

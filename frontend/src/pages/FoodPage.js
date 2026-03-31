@@ -12,6 +12,7 @@ import {
   ShoppingBasket, Truck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import FreeShippingBanner from '../components/FreeShippingBanner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -119,7 +120,6 @@ const foodCategories = Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
   color: config.color
 }));
 
-import FreeShippingBanner from '../components/FreeShippingBanner';
 
 // مكون المتاجر - تمرير أفقي حر
 const StoresCarousel = ({ stores, featuredStores, isFeatured, StoreCard }) => {
