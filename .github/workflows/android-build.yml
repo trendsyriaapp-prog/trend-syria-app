@@ -39,7 +39,16 @@ jobs:
     
     - name: Decode Keystore
       run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/android/app/trendsyria-release.keystore
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/android/app/release.keystore
+        ls -la frontend/android/app/release.keystore
+      
+    - name: Create keystore.properties
+      run: |
+        cd frontend/android
+        echo "storeFile=release.keystore" > keystore.properties
+        echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
       
     - name: Build Android (Signed)
       run: |
@@ -49,7 +58,7 @@ jobs:
         chmod +x gradlew
         ./gradlew bundleRelease
       env:
-        KEYSTORE_FILE: ${{ github.workspace }}/frontend/android/app/trendsyria-release.keystore
+        KEYSTORE_FILE: release.keystore
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
