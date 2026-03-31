@@ -54,6 +54,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [historyPushed, setHistoryPushed] = useState(false);
 
   // دالة إيقاف الكاميرا
   const stopCamera = useCallback(() => {
@@ -63,51 +64,63 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   }, [stream]);
 
-  // دالة الإغلاق المحسّنة
-  const closeModal = useCallback((fromBackButton = false) => {
-    stopCamera();
-    setCapturedImage(null);
-    setProcessedImage(null);
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setRotation(0);
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
-    setSelectedShadow('none');
-    setShadowOffset(50);
-    setShowAdjustments(false);
-    setShowShadows(false);
-    setShowRotation(false);
-    setStep('capture');
-    setError(null);
-    
-    // إذا تم الإغلاق من زر X (وليس من زر الرجوع)، نحتاج لإزالة الـ history entry
-    if (!fromBackButton) {
-      window.history.back();
-    }
-    
-    onClose();
-  }, [stopCamera, onClose]);
+  // مرجع لتتبع حالة الإغلاق
+  const isClosingRef = useRef(false);
 
   // معالجة زر الرجوع الفيزيائي في الجوال
   useEffect(() => {
-    if (isOpen) {
-      // إضافة entry في history عند فتح الـ modal
+    if (isOpen && !historyPushed) {
+      // إضافة entry واحدة فقط في history عند فتح الـ modal
       window.history.pushState({ imageCapture: true }, '');
-      
-      const handlePopState = () => {
-        // عند الضغط على زر الرجوع، نغلق الـ modal بدلاً من الرجوع للصفحة السابقة
-        closeModal(true);
-      };
-      
-      window.addEventListener('popstate', handlePopState);
-      
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
+      setHistoryPushed(true);
     }
-  }, [isOpen, closeModal]);
+    
+    if (!isOpen) {
+      setHistoryPushed(false);
+    }
+  }, [isOpen, historyPushed]);
+
+  // معالج حدث الرجوع
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handlePopState = (e) => {
+      // منع الإغلاق المتعدد
+      if (isClosingRef.current) return;
+      isClosingRef.current = true;
+      
+      // إغلاق الـ modal مباشرة
+      stopCamera();
+      setCapturedImage(null);
+      setProcessedImage(null);
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      setRotation(0);
+      setBrightness(100);
+      setContrast(100);
+      setSaturation(100);
+      setSelectedShadow('none');
+      setShadowOffset(50);
+      setShowAdjustments(false);
+      setShowShadows(false);
+      setShowRotation(false);
+      setStep('capture');
+      setError(null);
+      setHistoryPushed(false);
+      
+      onClose();
+      
+      setTimeout(() => {
+        isClosingRef.current = false;
+      }, 100);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, stopCamera, onClose]);
 
   // إخفاء النصيحة تلقائياً بعد 5 ثواني
   useEffect(() => {
@@ -202,7 +215,11 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) { onClose(); return; }
+    if (!file) { 
+      // المستخدم ألغى اختيار الصورة
+      handleClose();
+      return; 
+    }
     const reader = new FileReader();
     reader.onload = async (event) => {
       const imageData = event.target.result;
@@ -409,7 +426,37 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   // للاستخدام مع زر X
   const handleClose = () => {
-    closeModal(false);
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    
+    stopCamera();
+    setCapturedImage(null);
+    setProcessedImage(null);
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    setRotation(0);
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setSelectedShadow('none');
+    setShadowOffset(50);
+    setShowAdjustments(false);
+    setShowShadows(false);
+    setShowRotation(false);
+    setStep('capture');
+    setError(null);
+    
+    // إزالة الـ history entry إذا كانت موجودة
+    if (historyPushed) {
+      setHistoryPushed(false);
+      window.history.back();
+    }
+    
+    onClose();
+    
+    setTimeout(() => {
+      isClosingRef.current = false;
+    }, 100);
   };
 
   if (!isOpen) return null;
@@ -469,6 +516,14 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {/* Gallery Mode - شاشة انتظار اختيار الصورة */}
+        {step === 'capture' && mode === 'gallery' && (
+          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+            <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
+            <p className="text-white text-lg">اختر صورة من المعرض...</p>
           </div>
         )}
 
