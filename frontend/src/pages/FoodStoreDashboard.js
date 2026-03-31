@@ -1660,8 +1660,10 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     images: product?.images || [],
     preparation_time: product?.preparation_time || '',
     weight_variants: product?.weight_variants || [],
+    admin_video: null, // فيديو التحقق للأدمن
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showImageCapture, setShowImageCapture] = useState(false);
   const [imageCaptureMode, setImageCaptureMode] = useState('camera');
   const [maxImagesPerProduct, setMaxImagesPerProduct] = useState(3);
@@ -1709,6 +1711,35 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     e.target.value = ''; // إعادة تعيين الـ input
   };
 
+  // رفع فيديو التحقق للأدمن
+  const handleAdminVideoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "خطأ",
+          description: "حجم الفيديو كبير جداً (الحد الأقصى 10MB)",
+          variant: "destructive"
+        });
+        return;
+      }
+      setUploadingVideo(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          admin_video: reader.result
+        }));
+        setUploadingVideo(false);
+        toast({
+          title: "تم رفع فيديو التحقق ✅",
+          description: "سيراجعه الأدمن قبل نشر الطبق"
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // إضافة متغير وزن
   const handleAddWeightVariant = () => {
     if (!newWeightVariant.weight || !newWeightVariant.price) {
@@ -1742,6 +1773,16 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       return;
     }
 
+    // التحقق من فيديو التحقق للأدمن (إجباري للأطباق الجديدة)
+    if (!product && !formData.admin_video) {
+      toast({
+        title: "فيديو التحقق مطلوب 📹",
+        description: "يرجى رفع فيديو قصير يُظهر الطبق الحقيقي للمراجعة",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const submitData = {
@@ -1751,6 +1792,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         preparation_time: formData.preparation_time ? parseInt(formData.preparation_time) : null,
         weight_variants: formData.weight_variants,
+        admin_video: formData.admin_video,
       };
       
       if (product) {
@@ -2124,17 +2166,78 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             )}
           </div>
 
+          {/* قسم فيديو التحقق للأدمن */}
+          {!product && (
+            <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
+              <label className="block text-[11px] font-bold mb-2 text-orange-800">
+                📹 فيديو التحقق للمراجعة (إجباري)
+                <span className="text-red-500 mr-1">*</span>
+              </label>
+              <p className="text-[9px] text-orange-700 mb-2">
+                صوّر فيديو قصير (30 ثانية) يُظهر الطبق الحقيقي.
+                <br/>
+                <strong>هذا الفيديو للأدمن فقط ولن يظهر للعملاء.</strong>
+              </p>
+              {formData.admin_video ? (
+                <div className="relative bg-orange-100 rounded-lg p-2">
+                  <video 
+                    src={formData.admin_video} 
+                    className="w-full h-28 object-cover rounded"
+                    controls
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, admin_video: null })}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
+                    ✓ تم الرفع
+                  </div>
+                </div>
+              ) : (
+                <label className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-[11px] flex items-center justify-center gap-2 hover:from-orange-600 hover:to-red-600 font-bold cursor-pointer shadow-md">
+                  {uploadingVideo ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      📹 ارفع فيديو التحقق
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleAdminVideoUpload}
+                    className="hidden"
+                    disabled={uploadingVideo}
+                  />
+                </label>
+              )}
+              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 10MB</p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={saving}
             className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>جاري رفع الطبق...</span>
+                </div>
+                <span className="text-[9px] opacity-80">يرجى الانتظار</span>
+              </div>
             ) : (
-              <Save size={18} />
+              <>
+                <Save size={18} />
+                {product ? 'حفظ التغييرات' : 'إضافة المنتج'}
+              </>
             )}
-            {product ? 'حفظ التغييرات' : 'إضافة المنتج'}
           </button>
         </form>
       </motion.div>

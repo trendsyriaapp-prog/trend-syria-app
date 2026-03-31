@@ -277,10 +277,10 @@ const AddProductModal = ({
   const handleAdminVideoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 30 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "خطأ",
-          description: "حجم الفيديو كبير جداً (الحد الأقصى 30MB)",
+          description: "حجم الفيديو كبير جداً (الحد الأقصى 10MB)",
           variant: "destructive"
         });
         return;
@@ -1216,7 +1216,7 @@ const AddProductModal = ({
                 className="hidden"
                 data-testid="admin-video-input"
               />
-              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 30MB</p>
+              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 10MB</p>
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -1234,10 +1234,13 @@ const AddProductModal = ({
                 data-testid="save-product-btn"
               >
                 {saving ? (
-                  <>
-                    <Loader2 className="animate-spin" size={12} />
-                    جاري الحفظ...
-                  </>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-1">
+                      <Loader2 className="animate-spin" size={12} />
+                      <span>جاري رفع المنتج...</span>
+                    </div>
+                    <span className="text-[9px] opacity-80">يرجى الانتظار</span>
+                  </div>
                 ) : (
                   labels.submitButton
                 )}
