@@ -131,45 +131,78 @@ const MobileNav = () => {
     );
   }
 
+  // ألوان مميزة لكل أيقونة
+  const getIconColor = (item, isItemActive) => {
+    if (isItemActive) {
+      // الأيقونة النشطة: لون كامل
+      if (item.label === 'الرئيسية' || item.label === 'نظرة عامة') return 'text-blue-500';
+      if (item.label === 'الأصناف') return 'text-purple-500';
+      if (item.label === 'طعام') return 'text-orange-500';
+      if (item.label === 'السلة') return 'text-green-500';
+      if (item.label === 'حسابي' || item.label === 'دخول') return 'text-pink-500';
+      if (item.label === 'المنتجات' || item.label === 'القائمة') return 'text-indigo-500';
+      if (item.label === 'المحفظة') return 'text-emerald-500';
+      if (item.label === 'الإعدادات') return 'text-gray-600';
+      if (item.label === 'الأرباح') return 'text-yellow-500';
+      if (item.label === 'إنجازاتي') return 'text-amber-500';
+      return 'text-[#FF6B00]';
+    } else {
+      // الأيقونات غير النشطة: لون باهت
+      if (item.label === 'الرئيسية' || item.label === 'نظرة عامة') return 'text-blue-300';
+      if (item.label === 'الأصناف') return 'text-purple-300';
+      if (item.label === 'طعام') return 'text-orange-300';
+      if (item.label === 'السلة') return 'text-green-300';
+      if (item.label === 'حسابي' || item.label === 'دخول') return 'text-pink-300';
+      if (item.label === 'المنتجات' || item.label === 'القائمة') return 'text-indigo-300';
+      if (item.label === 'المحفظة') return 'text-emerald-300';
+      if (item.label === 'الإعدادات') return 'text-gray-400';
+      if (item.label === 'الأرباح') return 'text-yellow-300';
+      if (item.label === 'إنجازاتي') return 'text-amber-300';
+      return 'text-gray-400';
+    }
+  };
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg rounded-t-2xl pb-safe">
         <div className="flex items-center justify-around h-16 pb-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={item.isAccount ? handleAccountClick : undefined}
-              className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] transition-colors ${
-                isActive(item.path) || (item.isAccount && showAccountMenu) 
-                  ? 'text-[#FF6B00]' 
-                  : (item.isFood || item.isFoodCart)
-                    ? 'text-[#FF6B00] hover:text-[#E65000]'
-                    : (item.isAccount && !user)
-                      ? 'text-[#FF6B00] font-bold'
-                      : 'text-gray-500 hover:text-gray-700'
-              }`}
-              data-testid={`nav-${item.label}`}
-            >
-              <div className="relative">
-                {item.isFood ? (
-                  <UtensilsCrossed size={20} />
-                ) : item.isFoodCart ? (
-                  <ShoppingBag size={20} />
-                ) : (
-                  <item.icon size={20} />
+          {navItems.map((item) => {
+            const isItemActive = isActive(item.path) || (item.isAccount && showAccountMenu);
+            const iconColor = getIconColor(item, isItemActive);
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={item.isAccount ? handleAccountClick : undefined}
+                className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] transition-all duration-200 ${
+                  isItemActive ? 'scale-110' : 'scale-100'
+                }`}
+                data-testid={`nav-${item.label}`}
+              >
+                <div className={`relative ${iconColor}`}>
+                  {item.isFood ? (
+                    <UtensilsCrossed size={22} strokeWidth={isItemActive ? 2.5 : 2} />
+                  ) : item.isFoodCart ? (
+                    <ShoppingBag size={22} strokeWidth={isItemActive ? 2.5 : 2} />
+                  ) : (
+                    <item.icon size={22} strokeWidth={isItemActive ? 2.5 : 2} />
+                  )}
+                  {item.badge > 0 && (
+                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[9px] font-medium ${isItemActive ? iconColor : 'text-gray-500'}`}>
+                  {item.label}
+                </span>
+                {isItemActive && (
+                  <div className={`absolute bottom-1 w-1 h-1 rounded-full ${iconColor.replace('text-', 'bg-')}`} />
                 )}
-                {item.badge > 0 && (
-                  <span className={`absolute -top-2 -right-2 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center ${
-                    item.isFoodCart ? 'bg-[#FF6B00]' : 'bg-[#FF6B00]'
-                  }`}>
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-              </div>
-              <span className="text-[9px]">{item.label}</span>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
