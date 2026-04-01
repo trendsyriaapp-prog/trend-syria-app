@@ -61,10 +61,10 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
     
-    <!-- الموقع الجغرافي (للتوصيل والخريطة) -->
+    <!-- الموقع الجغرافي (للتوصيل والخريطة) - Foreground فقط حالياً -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- TODO: إضافة ACCESS_BACKGROUND_LOCATION بعد إطلاق التطبيق مع فيديو YouTube -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
     
@@ -76,7 +76,7 @@
     
     <!-- الخدمات في الخلفية -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- TODO: إضافة FOREGROUND_SERVICE_LOCATION مع Background Location لاحقاً -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     

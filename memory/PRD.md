@@ -117,4 +117,28 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 6. iOS development
 
 ---
-*Last Updated: March 30, 2026*
+
+## ⚠️ مهام ما بعد الإطلاق (لا تنسى!)
+
+### 🔴 P1: إضافة تتبع السائق في الخلفية (Background Location)
+**السبب**: تم حذف `ACCESS_BACKGROUND_LOCATION` مؤقتاً لتسهيل نشر التطبيق على Google Play.
+
+**المشكلة الحالية**: عندما يفتح السائق خرائط Google للتنقل، يتوقف تتبع موقعه للزبون.
+
+**ما يجب فعله بعد الإطلاق**:
+1. تصوير فيديو YouTube (30 ثانية) يُظهر:
+   - السائق يفعّل زر تتبع الموقع
+   - رسالة الإفصاح الواضحة للسائق
+   - موقع السائق يظهر للزبون على الخريطة
+2. إضافة الصلاحيات في `AndroidManifest.xml`:
+   - `android.permission.ACCESS_BACKGROUND_LOCATION`
+   - `android.permission.FOREGROUND_SERVICE_LOCATION`
+3. رفع تحديث جديد لـ Google Play مع الفيديو والشرح
+
+**الملفات المتأثرة**:
+- `/app/frontend/android/app/src/main/AndroidManifest.xml`
+- `/app/frontend/src/components/delivery/LocationTracker.js`
+- `/app/frontend/src/hooks/useDriverLocationTracker.js`
+
+---
+*Last Updated: December 2025*
