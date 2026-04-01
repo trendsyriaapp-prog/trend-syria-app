@@ -118,7 +118,17 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 
 ---
 
-## ⚠️ مهام ما بعد الإطلاق (لا تنسى!)
+## ⚠️ مهام ما بعد الإطلاق (لا تنسى!) - تذكير للمستخدم بعد نشر التطبيق
+
+### 🔴 P0: دفع اشتراك UltraMsg للـ OTP ($39)
+**السبب**: خدمة إرسال رمز التحقق عبر WhatsApp متوقفة بسبب عدم الدفع.
+
+**ما يجب فعله**:
+1. ادفع اشتراك UltraMsg بقيمة $39
+2. بعد الدفع، رموز OTP ستعمل تلقائياً
+3. الرابط: https://ultramsg.com
+
+---
 
 ### 🔴 P1: إضافة تتبع السائق في الخلفية (Background Location)
 **السبب**: تم حذف `ACCESS_BACKGROUND_LOCATION` مؤقتاً لتسهيل نشر التطبيق على Google Play.
@@ -141,4 +151,18 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 - `/app/frontend/src/hooks/useDriverLocationTracker.js`
 
 ---
-*Last Updated: December 2025*
+
+## 📅 حالة Google Play (أبريل 2026)
+
+| المرحلة | الحالة | التاريخ المتوقع |
+|---------|--------|-----------------|
+| إرسال للمراجعة | ✅ تم | 1 أبريل 2026 |
+| مراجعة Google | ⏳ جاري | ~7 أيام |
+| الاختبار المغلق | ⏳ انتظار | 14 يوم بعد الموافقة |
+| الإصدار العلني | ⏳ انتظار | ~21 يوم من الآن |
+
+**المختبرون**: 20 شخص
+**الإصدار**: 1.0.3 (رمز 4)
+
+---
+*Last Updated: April 1, 2026*
