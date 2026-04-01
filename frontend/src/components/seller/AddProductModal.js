@@ -921,6 +921,161 @@ const AddProductModal = ({
                     data-testid="product-weight-input"
                   />
                 </div>
+
+                {/* قسم المقاسات */}
+                <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                  <label className="block text-[10px] font-bold mb-2 text-gray-700">
+                    المقاسات المتاحة (اختياري)
+                  </label>
+                  
+                  {/* اختيار نوع المقاس */}
+                  <div className="mb-3">
+                    <select
+                      value={newProduct.size_type}
+                      onChange={(e) => setNewProduct({ ...newProduct, size_type: e.target.value, available_sizes: [] })}
+                      className="w-full bg-white border-2 border-gray-300 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none"
+                      data-testid="size-type-select"
+                    >
+                      <option value="none">بدون مقاسات</option>
+                      <option value="clothes">ملابس (S, M, L, XL...)</option>
+                      <option value="shoes">أحذية (36, 37, 38...)</option>
+                      <option value="pants">بناطيل (28, 30, 32...)</option>
+                      <option value="kids_age">ملابس أطفال (حسب العمر)</option>
+                      <option value="kids_shoes">أحذية أطفال (حسب العمر)</option>
+                    </select>
+                  </div>
+
+                  {/* خيارات المقاسات حسب النوع */}
+                  {newProduct.size_type !== 'none' && (
+                    <div>
+                      <p className="text-[9px] text-gray-500 mb-2">اختر المقاسات المتاحة:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {/* مقاسات الملابس */}
+                        {newProduct.size_type === 'clothes' && ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(size => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              const sizes = newProduct.available_sizes.includes(size)
+                                ? newProduct.available_sizes.filter(s => s !== size)
+                                : [...newProduct.available_sizes, size];
+                              setNewProduct({ ...newProduct, available_sizes: sizes });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              newProduct.available_sizes.includes(size)
+                                ? 'bg-[#FF6B00] text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:border-[#FF6B00]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+
+                        {/* مقاسات الأحذية */}
+                        {newProduct.size_type === 'shoes' && ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'].map(size => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              const sizes = newProduct.available_sizes.includes(size)
+                                ? newProduct.available_sizes.filter(s => s !== size)
+                                : [...newProduct.available_sizes, size];
+                              setNewProduct({ ...newProduct, available_sizes: sizes });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              newProduct.available_sizes.includes(size)
+                                ? 'bg-[#FF6B00] text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:border-[#FF6B00]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+
+                        {/* مقاسات البناطيل */}
+                        {newProduct.size_type === 'pants' && ['28', '30', '32', '34', '36', '38', '40', '42'].map(size => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              const sizes = newProduct.available_sizes.includes(size)
+                                ? newProduct.available_sizes.filter(s => s !== size)
+                                : [...newProduct.available_sizes, size];
+                              setNewProduct({ ...newProduct, available_sizes: sizes });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              newProduct.available_sizes.includes(size)
+                                ? 'bg-[#FF6B00] text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:border-[#FF6B00]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+
+                        {/* مقاسات ملابس الأطفال حسب العمر */}
+                        {newProduct.size_type === 'kids_age' && [
+                          '0-3 شهور', '3-6 شهور', '6-12 شهر', 
+                          '1-2 سنة', '2-3 سنوات', '3-4 سنوات', 
+                          '4-5 سنوات', '5-6 سنوات', '6-7 سنوات',
+                          '7-8 سنوات', '8-10 سنوات', '10-12 سنة'
+                        ].map(size => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              const sizes = newProduct.available_sizes.includes(size)
+                                ? newProduct.available_sizes.filter(s => s !== size)
+                                : [...newProduct.available_sizes, size];
+                              setNewProduct({ ...newProduct, available_sizes: sizes });
+                            }}
+                            className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                              newProduct.available_sizes.includes(size)
+                                ? 'bg-[#FF6B00] text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:border-[#FF6B00]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+
+                        {/* مقاسات أحذية الأطفال حسب العمر */}
+                        {newProduct.size_type === 'kids_shoes' && [
+                          '0-6 شهور', '6-12 شهر', '1-2 سنة', 
+                          '2-3 سنوات', '3-4 سنوات', '4-5 سنوات',
+                          '5-6 سنوات', '6-7 سنوات', '8-10 سنوات', '10-12 سنة'
+                        ].map(size => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              const sizes = newProduct.available_sizes.includes(size)
+                                ? newProduct.available_sizes.filter(s => s !== size)
+                                : [...newProduct.available_sizes, size];
+                              setNewProduct({ ...newProduct, available_sizes: sizes });
+                            }}
+                            className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                              newProduct.available_sizes.includes(size)
+                                ? 'bg-[#FF6B00] text-white'
+                                : 'bg-white border border-gray-300 text-gray-700 hover:border-[#FF6B00]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* عرض المقاسات المختارة */}
+                      {newProduct.available_sizes.length > 0 && (
+                        <div className="mt-2 p-2 bg-green-50 rounded-lg">
+                          <p className="text-[10px] text-green-700 font-bold">
+                            ✓ المقاسات المختارة: {newProduct.available_sizes.join(' - ')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
