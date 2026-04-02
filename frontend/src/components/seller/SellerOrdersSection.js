@@ -79,20 +79,20 @@ const SellerOrdersSection = ({ orders, onSellerAction, onPrintLabel, actionLoadi
               
               {/* كود التسليم - يظهر عند شحن الطلب */}
               {isShipped && order.pickup_code && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2 text-center">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2 text-center">
                   <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
                   <div className="flex justify-center gap-2" dir="ltr">
                     {order.pickup_code.split('').map((digit, i) => (
                       <span 
                         key={i} 
-                        className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                        className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-[#FF6B00] text-white rounded-lg shadow-md"
                       >
                         {digit}
                       </span>
                     ))}
                   </div>
                   {order.pickup_code_verified && (
-                    <p className="text-green-600 text-xs mt-2 font-bold">
+                    <p className="text-[#FF6B00] text-xs mt-2 font-bold">
                       ✅ تم تأكيد الاستلام
                     </p>
                   )}
