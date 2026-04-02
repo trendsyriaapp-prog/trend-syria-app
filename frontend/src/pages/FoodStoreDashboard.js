@@ -2429,6 +2429,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-700',
+      paid: 'bg-blue-100 text-blue-700',
       confirmed: 'bg-blue-100 text-blue-700',
       preparing: 'bg-orange-100 text-orange-700',
       ready: 'bg-orange-100 text-[#FF6B00]',
@@ -2437,6 +2438,20 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
       cancelled: 'bg-red-100 text-red-700'
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: 'بانتظار الدفع',
+      paid: 'مدفوع - بانتظار الموافقة',
+      confirmed: 'تم التأكيد',
+      preparing: 'جاري التحضير',
+      ready: 'جاهز للاستلام',
+      out_for_delivery: 'في الطريق',
+      delivered: 'تم التسليم',
+      cancelled: 'ملغي'
+    };
+    return labels[status] || status;
   };
 
   // الإبلاغ عن وصول كاذب للسائق
@@ -2592,7 +2607,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                     <div>
                       <span className="font-bold text-gray-900">#{order.order_number}</span>
                       <span className={`text-xs px-2 py-1 rounded-full mr-2 ${getStatusColor(order.status)}`}>
-                        {order.status_label}
+                        {getStatusLabel(order.status)}
                       </span>
                     </div>
                     <span className="font-bold text-[#FF6B00]">{order.total?.toLocaleString()} ل.س</span>
