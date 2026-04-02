@@ -35,8 +35,18 @@ const WalletPage = () => {
   // Withdrawal form
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [shamcashPhone, setShamcashPhone] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('shamcash');
+  const [withdrawPhone, setWithdrawPhone] = useState('');
+  const [bankDetails, setBankDetails] = useState({ bank_name: '', account_number: '', account_holder: '' });
   const [submitting, setSubmitting] = useState(false);
+  
+  // طرق السحب المتاحة
+  const withdrawalMethods = [
+    { id: 'shamcash', name: 'شام كاش', icon: '💳', placeholder: '09XXXXXXXX' },
+    { id: 'syriatel_cash', name: 'سيرياتيل كاش', icon: '📱', placeholder: '09XXXXXXXX' },
+    { id: 'mtn_cash', name: 'MTN Cash', icon: '📲', placeholder: '09XXXXXXXX' },
+    { id: 'bank_account', name: 'حساب بنكي', icon: '🏦', placeholder: '' },
+  ];
   
   useEffect(() => {
     if (user && (user.user_type === 'seller' || user.user_type === 'food_seller' || user.user_type === 'delivery')) {
@@ -86,12 +96,21 @@ const WalletPage = () => {
     setSubmitting(true);
     
     try {
-      await axios.post(`${API}/api/wallet/withdraw`, null, {
-        params: {
-          amount: parseInt(withdrawAmount),
-          shamcash_phone: shamcashPhone
-        }
-      });
+      const params = {
+        amount: parseInt(withdrawAmount),
+        method: withdrawMethod,
+      };
+      
+      // إضافة البيانات حسب طريقة السحب
+      if (withdrawMethod === 'bank_account') {
+        params.bank_name = bankDetails.bank_name;
+        params.account_number = bankDetails.account_number;
+        params.account_holder = bankDetails.account_holder;
+      } else {
+        params.phone = withdrawPhone;
+      }
+      
+      await axios.post(`${API}/api/wallet/withdraw`, null, { params });
       
       toast({
         title: "تم إرسال الطلب",
@@ -100,7 +119,9 @@ const WalletPage = () => {
       
       setShowWithdrawForm(false);
       setWithdrawAmount('');
-      setShamcashPhone('');
+      setWithdrawPhone('');
+      setWithdrawMethod('shamcash');
+      setBankDetails({ bank_name: '', account_number: '', account_holder: '' });
       fetchWalletData();
     } catch (error) {
       toast({
@@ -244,17 +265,80 @@ const WalletPage = () => {
                   </p>
                 </div>
                 
+                {/* اختيار طريقة السحب */}
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">رقم شام كاش</label>
-                  <input
-                    type="tel"
-                    value={shamcashPhone}
-                    onChange={(e) => setShamcashPhone(e.target.value)}
-                    placeholder="09XXXXXXXX"
-                    className="w-full p-3 border border-gray-300 rounded-xl"
-                    required
-                  />
+                  <label className="block text-sm text-gray-600 mb-2">طريقة السحب</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {withdrawalMethods.map((method) => (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setWithdrawMethod(method.id)}
+                        className={`p-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center gap-2 ${
+                          withdrawMethod === method.id
+                            ? 'border-[#FF6B00] bg-orange-50 text-[#FF6B00]'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        <span>{method.icon}</span>
+                        <span>{method.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                
+                {/* حقول حسب طريقة السحب */}
+                {withdrawMethod !== 'bank_account' ? (
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      رقم {withdrawalMethods.find(m => m.id === withdrawMethod)?.name}
+                    </label>
+                    <input
+                      type="tel"
+                      value={withdrawPhone}
+                      onChange={(e) => setWithdrawPhone(e.target.value)}
+                      placeholder={withdrawalMethods.find(m => m.id === withdrawMethod)?.placeholder}
+                      className="w-full p-3 border border-gray-300 rounded-xl"
+                      required
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">اسم البنك</label>
+                      <input
+                        type="text"
+                        value={bankDetails.bank_name}
+                        onChange={(e) => setBankDetails({...bankDetails, bank_name: e.target.value})}
+                        placeholder="مثال: بنك سوريا الدولي"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">رقم الحساب</label>
+                      <input
+                        type="text"
+                        value={bankDetails.account_number}
+                        onChange={(e) => setBankDetails({...bankDetails, account_number: e.target.value})}
+                        placeholder="رقم الحساب البنكي"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">اسم صاحب الحساب</label>
+                      <input
+                        type="text"
+                        value={bankDetails.account_holder}
+                        onChange={(e) => setBankDetails({...bankDetails, account_holder: e.target.value})}
+                        placeholder="الاسم كما يظهر في البنك"
+                        className="w-full p-3 border border-gray-300 rounded-xl"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex gap-2">
                   <button
