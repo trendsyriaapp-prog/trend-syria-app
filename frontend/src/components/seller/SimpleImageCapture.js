@@ -96,6 +96,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setStep('capture');
     setError(null);
     fileSelectedRef.current = false;
+    fileProcessingRef.current = false;
     
     // إغلاق الـ modal أولاً
     onClose();
@@ -200,25 +201,10 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   // متغير لتتبع إذا تم اختيار ملف
   const fileSelectedRef = useRef(false);
+  const fileProcessingRef = useRef(false);
 
-  // إغلاق النافذة إذا لم يختر المستخدم صورة من المعرض
-  useEffect(() => {
-    if (mode === 'gallery' && galleryOpened) {
-      const handleFocus = () => {
-        // عندما يعود التركيز للصفحة بعد إغلاق المعرض
-        // ننتظر للتأكد من أن الصورة لم تُحمّل
-        setTimeout(() => {
-          // نتحقق من عدم اختيار ملف وعدم وجود صورة
-          if (!fileSelectedRef.current && step === 'capture' && !capturedImage && !processing) {
-            doClose(false);
-          }
-        }, 800);
-      };
-      
-      window.addEventListener('focus', handleFocus);
-      return () => window.removeEventListener('focus', handleFocus);
-    }
-  }, [mode, galleryOpened, step, capturedImage, processing, doClose]);
+  // لا نستخدم إغلاق تلقائي على focus - على الموبايل يسبب مشاكل
+  // المستخدم يمكنه الإغلاق يدوياً بالضغط على X
 
   const startCamera = async () => {
     try {
@@ -278,16 +264,24 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     if (!file) { 
       // المستخدم ألغى اختيار الصورة
       fileSelectedRef.current = false;
+      fileProcessingRef.current = false;
       doClose(false);
       return; 
     }
-    // تم اختيار ملف
+    // تم اختيار ملف - نبدأ المعالجة
     fileSelectedRef.current = true;
+    fileProcessingRef.current = true;
+    
     const reader = new FileReader();
     reader.onload = async (event) => {
       const imageData = event.target.result;
       setCapturedImage(imageData);
       await processImage(imageData);
+      fileProcessingRef.current = false;
+    };
+    reader.onerror = () => {
+      fileProcessingRef.current = false;
+      doClose(false);
     };
     reader.readAsDataURL(file);
   };
@@ -494,17 +488,25 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   if (!isOpen) return null;
 
-  // في وضع المعرض: لا نعرض أي شيء حتى يختار المستخدم صورة
-  // فقط نعرض input المخفي الذي يفتح المعرض
+  // في وضع المعرض مع step === 'capture': نعرض شاشة تحميل + input مخفي
   if (mode === 'gallery' && step === 'capture') {
     return (
-      <input 
-        ref={fileInputRef} 
-        type="file" 
-        accept="image/*" 
-        onChange={handleFileSelect} 
-        className="hidden" 
-      />
+      <>
+        <input 
+          ref={fileInputRef} 
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileSelect} 
+          className="hidden" 
+        />
+        {/* شاشة تحميل أو إلغاء */}
+        {(processing || fileProcessingRef.current) && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
+            <Loader2 size={48} className="text-white animate-spin mb-4" />
+            <p className="text-white text-lg">جاري معالجة الصورة...</p>
+          </div>
+        )}
+      </>
     );
   }
 
