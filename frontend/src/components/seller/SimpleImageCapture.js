@@ -52,6 +52,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [showRotation, setShowRotation] = useState(false);
   const [showTip, setShowTip] = useState(true);
   const [galleryOpened, setGalleryOpened] = useState(false);
+  const [editorBgDark, setEditorBgDark] = useState(false);
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -518,7 +519,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       <div 
         ref={imageContainerRef}
         className="flex-1 relative overflow-hidden"
-        style={{ touchAction: 'none', backgroundColor: step === 'edit' ? '#FFFFFF' : '#000' }}
+        style={{ touchAction: 'none', backgroundColor: step === 'edit' ? (editorBgDark ? '#4A4A4A' : '#FFFFFF') : '#000' }}
       >
         {/* Camera View */}
         {step === 'capture' && mode === 'camera' && (
@@ -785,6 +786,15 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
               >
                 <Eclipse size={16} className="text-white" />
                 <span className="text-white text-xs">ظل</span>
+              </button>
+              <button 
+                onClick={() => setEditorBgDark(!editorBgDark)}
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
+                  editorBgDark ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
+                }`}
+                data-testid="bg-toggle-button"
+              >
+                <span className="text-white text-xs">{editorBgDark ? '⚪ أبيض' : '⚫ داكن'}</span>
               </button>
             </div>
             

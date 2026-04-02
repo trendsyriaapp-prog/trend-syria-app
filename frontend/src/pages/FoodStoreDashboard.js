@@ -825,7 +825,7 @@ const FoodStoreDashboard = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Wallet className="text-green-500" size={24} />
+                <Wallet className="text-[#FF6B00]" size={24} />
                 محفظتي
               </h2>
               <button 
@@ -837,7 +837,7 @@ const FoodStoreDashboard = () => {
             </div>
 
             {/* الرصيد */}
-            <div className="bg-gradient-to-l from-green-500 to-green-600 text-white rounded-2xl p-6 mb-4">
+            <div className="bg-gradient-to-l from-[#FF6B00] to-[#FF8533] text-white rounded-2xl p-6 mb-4">
               <p className="text-sm opacity-90 mb-1">الرصيد المتاح</p>
               <p className="text-3xl font-bold">{walletData.balance?.toLocaleString() || 0} ل.س</p>
             </div>
