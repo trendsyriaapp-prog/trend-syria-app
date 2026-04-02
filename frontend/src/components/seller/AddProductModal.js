@@ -866,61 +866,66 @@ const AddProductModal = ({
                   </motion.div>
                 )}
 
-                {/* أبعاد المنتج */}
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      value={newProduct.length_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
-                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
-                        newProduct.length_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
-                      }`}
-                      placeholder="الطول"
-                      data-testid="product-length-input"
-                    />
-                    <input
-                      type="number"
-                      value={newProduct.width_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
-                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
-                        newProduct.width_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
-                      }`}
-                      placeholder="العرض"
-                      data-testid="product-width-input"
-                    />
-                    <input
-                      type="number"
-                      value={newProduct.height_cm}
-                      onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
-                      className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
-                        newProduct.height_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
-                      }`}
-                      placeholder="الارتفاع"
-                      data-testid="product-height-input"
-                    />
-                  </div>
-                  <p className="text-[9px] text-red-500 mt-1">
-                    ⚠️ عدم إضافة الأبعاد للمنتجات التي تحتاجها قد يؤدي لإيقاف حسابك
-                  </p>
-                </div>
+                {/* أبعاد المنتج والوزن - تظهر فقط عند البيع بالقطعة */}
+                {sellingType === 'piece' && (
+                  <>
+                    {/* أبعاد المنتج */}
+                    <div>
+                      <label className="block text-[10px] font-medium mb-1 text-gray-700">الأبعاد (سم) - اختياري</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="number"
+                          value={newProduct.length_cm}
+                          onChange={(e) => setNewProduct({ ...newProduct, length_cm: e.target.value })}
+                          className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                            newProduct.length_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                          }`}
+                          placeholder="الطول"
+                          data-testid="product-length-input"
+                        />
+                        <input
+                          type="number"
+                          value={newProduct.width_cm}
+                          onChange={(e) => setNewProduct({ ...newProduct, width_cm: e.target.value })}
+                          className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                            newProduct.width_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                          }`}
+                          placeholder="العرض"
+                          data-testid="product-width-input"
+                        />
+                        <input
+                          type="number"
+                          value={newProduct.height_cm}
+                          onChange={(e) => setNewProduct({ ...newProduct, height_cm: e.target.value })}
+                          className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                            newProduct.height_cm ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                          }`}
+                          placeholder="الارتفاع"
+                          data-testid="product-height-input"
+                        />
+                      </div>
+                      <p className="text-[9px] text-red-500 mt-1">
+                        ⚠️ عدم إضافة الأبعاد للمنتجات التي تحتاجها قد يؤدي لإيقاف حسابك
+                      </p>
+                    </div>
 
-                {/* الوزن */}
-                <div>
-                  <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={newProduct.weight_kg}
-                    onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
-                    className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
-                      newProduct.weight_kg ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
-                    }`}
-                    placeholder="مثال: 1.5"
-                    data-testid="product-weight-input"
-                  />
-                </div>
+                    {/* الوزن */}
+                    <div>
+                      <label className="block text-[10px] font-medium mb-1 text-gray-700">الوزن (كغ) - اختياري</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={newProduct.weight_kg}
+                        onChange={(e) => setNewProduct({ ...newProduct, weight_kg: e.target.value })}
+                        className={`w-full bg-gray-50 border-2 rounded-lg py-1.5 px-2 text-xs text-gray-900 focus:border-[#FF6B00] focus:outline-none transition-colors ${
+                          newProduct.weight_kg ? 'border-green-400 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'
+                        }`}
+                        placeholder="مثال: 1.5"
+                        data-testid="product-weight-input"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* قسم المقاسات */}
                 <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
