@@ -13,6 +13,7 @@ import { useScroll } from '../context/ScrollContext';
 import { useSettings } from '../context/SettingsContext';
 import GiftModal from '../components/GiftModal';
 import ProductCard from '../components/ProductCard';
+import AddToCartModal from '../components/AddToCartModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -769,6 +770,9 @@ const ProductDetailPage = () => {
   
   // Price report modal state
   const [showPriceReportModal, setShowPriceReportModal] = useState(false);
+  
+  // Add to cart modal state
+  const [showAddToCartModal, setShowAddToCartModal] = useState(false);
   
   // Similar products state
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -1709,7 +1713,25 @@ const ProductDetailPage = () => {
             
             {/* زر إضافة للسلة */}
             <button
-              onClick={handleAddToCart}
+              onClick={() => {
+                if (!user) {
+                  toast({
+                    title: "يجب تسجيل الدخول",
+                    description: "سجل دخولك لإضافة المنتجات للسلة",
+                    variant: "destructive"
+                  });
+                  navigate('/login');
+                  return;
+                }
+                // إذا كان المنتج لا يحتاج اختيارات، أضفه مباشرة
+                if ((!product.available_sizes || product.available_sizes.length === 0) && 
+                    (!product.weight_variants || product.weight_variants.length === 0)) {
+                  handleAddToCart();
+                } else {
+                  // افتح النافذة العائمة لاختيار المقاس/الوزن
+                  setShowAddToCartModal(true);
+                }
+              }}
               disabled={product.stock === 0 || addingToCart}
               className="flex items-center justify-center gap-1.5 bg-white border-2 border-[#FF6B00] text-[#FF6B00] font-bold px-4 py-2 rounded-full text-sm hover:bg-[#FF6B00]/5 disabled:opacity-50 transition-colors"
               data-testid="add-to-cart-btn"
@@ -1727,37 +1749,34 @@ const ProductDetailPage = () => {
             {/* زر الطلب المباشر */}
             <button
               onClick={async () => {
-                // التحقق من اختيار المقاس أولاً
-                if (product.available_sizes && product.available_sizes.length > 0 && !selectedSize) {
+                if (!user) {
                   toast({
-                    title: "يرجى اختيار المقاس",
-                    description: "اختر المقاس المناسب قبل الشراء",
+                    title: "يجب تسجيل الدخول",
+                    description: "سجل دخولك للشراء",
                     variant: "destructive"
                   });
+                  navigate('/login');
                   return;
                 }
-                // التحقق من اختيار الوزن أولاً
-                if (product.weight_variants && product.weight_variants.length > 0 && !selectedWeight) {
-                  toast({
-                    title: "يرجى اختيار الوزن",
-                    description: "اختر الوزن المناسب قبل الشراء",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-                
-                setAddingToCart(true);
-                try {
-                  await addToCart(product.id, 1, selectedSize, selectedWeight);
-                  navigate('/checkout');
-                } catch (error) {
-                  toast({
-                    title: "خطأ",
-                    description: error.response?.data?.detail || "حدث خطأ",
-                    variant: "destructive"
-                  });
-                } finally {
-                  setAddingToCart(false);
+                // إذا كان المنتج لا يحتاج اختيارات، اذهب للدفع مباشرة
+                if ((!product.available_sizes || product.available_sizes.length === 0) && 
+                    (!product.weight_variants || product.weight_variants.length === 0)) {
+                  setAddingToCart(true);
+                  try {
+                    await addToCart(product.id, 1, null, null);
+                    navigate('/checkout');
+                  } catch (error) {
+                    toast({
+                      title: "خطأ",
+                      description: error.response?.data?.detail || "حدث خطأ",
+                      variant: "destructive"
+                    });
+                  } finally {
+                    setAddingToCart(false);
+                  }
+                } else {
+                  // افتح النافذة العائمة لاختيار المقاس/الوزن
+                  setShowAddToCartModal(true);
                 }
               }}
               disabled={product.stock === 0 || addingToCart}
@@ -1880,6 +1899,53 @@ const ProductDetailPage = () => {
         productId={product?.id}
         productName={product?.name}
         productType="product"
+      />
+
+      {/* Add to Cart Modal */}
+      <AddToCartModal
+        isOpen={showAddToCartModal}
+        onClose={() => setShowAddToCartModal(false)}
+        product={product}
+        loading={addingToCart}
+        onAddToCart={async (quantity, size, weight) => {
+          setAddingToCart(true);
+          try {
+            for (let i = 0; i < quantity; i++) {
+              await addToCart(product.id, 1, size, weight);
+            }
+            setShowAddToCartModal(false);
+            toast({
+              title: "تمت الإضافة",
+              description: `تم إضافة ${quantity} قطعة للسلة`,
+            });
+          } catch (error) {
+            toast({
+              title: "خطأ",
+              description: error.response?.data?.detail || "حدث خطأ أثناء الإضافة",
+              variant: "destructive"
+            });
+          } finally {
+            setAddingToCart(false);
+          }
+        }}
+        onBuyNow={async (quantity, size, weight) => {
+          setAddingToCart(true);
+          try {
+            for (let i = 0; i < quantity; i++) {
+              await addToCart(product.id, 1, size, weight);
+            }
+            setShowAddToCartModal(false);
+            navigate('/checkout');
+          } catch (error) {
+            toast({
+              title: "خطأ",
+              description: error.response?.data?.detail || "حدث خطأ",
+              variant: "destructive"
+            });
+          } finally {
+            setAddingToCart(false);
+          }
+        }}
       />
     </div>
   );
