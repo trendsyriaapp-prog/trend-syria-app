@@ -99,12 +99,18 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 - ✅ **Mandatory Driver Request Flow**: Food sellers can NO LONGER start preparation until a driver accepts the order
   - Flow: Accept Order → Request Driver (mandatory) → Driver Accepts → Set Prep Time → Start Preparation → Ready
   - Prevents food from getting cold while waiting for drivers
+- ✅ **Driver Food Prep Timer**: Added countdown timer + audio alert for drivers
+  - Shows remaining prep time on driver's order card
+  - Plays 3-beep sound alert when 3 minutes or less remain
+  - Toast notification when food is almost ready
+  - Component: `/app/frontend/src/components/delivery/FoodPrepTimer.js`
 
 ## Test Credentials
 - **Admin**: 0912345678 / admin123
 - **Product Seller**: 0922222222 / seller123
 - **Food Seller**: 0966666666 / food123
 - **Customer**: 0933333333 / buyer123
+- **Delivery Driver**: 0955555555 / driver123
 
 ## Files of Reference
 - `/app/frontend/src/components/seller/PromoteProductTab.js`

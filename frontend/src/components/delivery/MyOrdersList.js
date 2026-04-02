@@ -5,6 +5,7 @@ import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, Chevron
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import PickupWaitingTimer from './PickupWaitingTimer';
+import FoodPrepTimer from './FoodPrepTimer';
 import { OutgoingCallModal } from '../voip/VoIPCallModal';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -684,6 +685,21 @@ const MyOrdersList = ({
                           )}
                         </div>
                       </div>
+
+                      {/* مؤقت وقت تحضير الطعام - للسائق */}
+                      {isFood && order.status === 'preparing' && (
+                        <FoodPrepTimer 
+                          order={order}
+                          theme={theme}
+                          onAlmostReady={(o) => {
+                            toast({
+                              title: "🍽️ الطلب شارف على الجهوزية!",
+                              description: `طلب ${o.order_number} من ${storeName} سيكون جاهزاً قريباً`,
+                              duration: 10000
+                            });
+                          }}
+                        />
+                      )}
 
                       {/* زر الإجراء الرئيسي */}
                       {status === 'to_store' ? (
