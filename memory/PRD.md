@@ -93,6 +93,13 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 - ✅ Real-time countdown timers
 - ✅ Wallet integration for promotions
 
+### Completed (April 2026)
+- ✅ Fixed Arabic labels in Food Seller dashboard ("إضافة طبق جديد" instead of "إضافة منتج جديد")
+- ✅ Fixed all toast messages for food dishes (طبق instead of منتج)
+- ✅ **Mandatory Driver Request Flow**: Food sellers can NO LONGER start preparation until a driver accepts the order
+  - Flow: Accept Order → Request Driver (mandatory) → Driver Accepts → Set Prep Time → Start Preparation → Ready
+  - Prevents food from getting cold while waiting for drivers
+
 ## Test Credentials
 - **Admin**: 0912345678 / admin123
 - **Product Seller**: 0922222222 / seller123
@@ -165,4 +172,4 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 **الإصدار**: 1.0.3 (رمز 4)
 
 ---
-*Last Updated: April 1, 2026*
+*Last Updated: April 2, 2026*

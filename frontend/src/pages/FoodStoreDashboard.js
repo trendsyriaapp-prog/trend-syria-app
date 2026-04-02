@@ -394,16 +394,16 @@ const FoodStoreDashboard = () => {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('هل تريد حذف هذا المنتج؟')) return;
+    if (!window.confirm('هل تريد حذف هذا الطبق؟')) return;
     
     try {
       await axios.delete(`${API}/api/food/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast({ title: "تم الحذف", description: "تم حذف المنتج بنجاح" });
+      toast({ title: "تم الحذف", description: "تم حذف الطبق بنجاح" });
       fetchStoreData();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل حذف المنتج", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل حذف الطبق", variant: "destructive" });
     }
   };
 
@@ -415,7 +415,7 @@ const FoodStoreDashboard = () => {
       );
       fetchStoreData();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل تحديث حالة المنتج", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل تحديث حالة الطبق", variant: "destructive" });
     }
   };
 
@@ -1873,13 +1873,13 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
         await axios.put(`${API}/api/food/products/${product.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast({ title: "تم التحديث", description: "تم تحديث المنتج بنجاح" });
+        toast({ title: "تم التحديث", description: "تم تحديث الطبق بنجاح" });
       } else {
         // Add new product
         await axios.post(`${API}/api/food/products`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast({ title: "تمت الإضافة", description: "تم إضافة المنتج بنجاح" });
+        toast({ title: "تمت الإضافة", description: "تم إضافة الطبق بنجاح" });
       }
       onSave();
     } catch (error) {
@@ -1899,7 +1899,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       >
         <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">
-            {product ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+            {product ? 'تعديل الطبق' : 'إضافة طبق جديد'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={20} />
@@ -1908,7 +1908,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">اسم المنتج *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">اسم الطبق *</label>
             <input
               type="text"
               value={formData.name}
@@ -1924,7 +1924,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="وصف المنتج..."
+              placeholder="وصف الطبق..."
               rows={2}
               className="w-full border border-gray-200 rounded-xl px-4 py-3"
             />
@@ -2164,13 +2164,13 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                صور المنتج ({formData.images.length}/{maxImagesPerProduct})
+                صور الطبق ({formData.images.length}/{maxImagesPerProduct})
               </label>
             </div>
             
             {/* نصيحة الخلفية البيضاء */}
             <p className="text-[10px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
-              📸 ضع خلفية بيضاء خلف المنتج عند التصوير للحصول على جودة أفضل
+              📸 ضع خلفية بيضاء خلف الطبق عند التصوير للحصول على جودة أفضل
             </p>
             
             {/* أزرار الكاميرا والمعرض والرفع المباشر */}
@@ -2308,7 +2308,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             ) : (
               <>
                 <Save size={18} />
-                {product ? 'حفظ التغييرات' : 'إضافة المنتج'}
+                {product ? 'حفظ التغييرات' : 'إضافة الطبق'}
               </>
             )}
           </button>
@@ -2690,14 +2690,17 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                         </div>
                       )}
                       
-                      {/* إذا لم يُطلب سائق بعد */}
+                      {/* إذا لم يُطلب سائق بعد - يجب طلب السائق أولاً قبل بدء التحضير */}
                       {!order.driver_requested && (
-                        <div className="flex gap-2">
+                        <div className="space-y-2">
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-center">
+                            <p className="text-amber-700 text-xs">⚠️ يجب طلب سائق أولاً قبل بدء التحضير</p>
+                          </div>
                           <button
                             onClick={() => requestDriver(order.id)}
                             disabled={requestingDriver === order.id}
                             data-testid={`request-driver-${order.id}`}
-                            className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-50"
+                            className="w-full bg-blue-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-50"
                           >
                             {requestingDriver === order.id ? (
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -2707,14 +2710,6 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                                 طلب سائق
                               </>
                             )}
-                          </button>
-                          <button
-                            onClick={() => setShowPrepModal(order)}
-                            data-testid={`start-prep-${order.id}`}
-                            className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-orange-600"
-                          >
-                            <ChefHat size={16} />
-                            بدء التحضير
                           </button>
                         </div>
                       )}
