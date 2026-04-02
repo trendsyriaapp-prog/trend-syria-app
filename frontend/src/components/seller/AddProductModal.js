@@ -927,8 +927,9 @@ const AddProductModal = ({
                   </>
                 )}
 
-                {/* قسم المقاسات */}
-                <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                {/* قسم المقاسات - يظهر فقط عند البيع بالقطعة */}
+                {sellingType === 'piece' && (
+                  <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
                   <label className="block text-[10px] font-bold mb-2 text-gray-700">
                     المقاسات المتاحة (اختياري)
                   </label>
@@ -1081,6 +1082,7 @@ const AddProductModal = ({
                     </div>
                   )}
                 </div>
+                )}
               </>
             )}
 
