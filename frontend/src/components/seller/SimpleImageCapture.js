@@ -534,9 +534,6 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             ) : (
               <>
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-3/4 aspect-square border-2 border-dashed border-white/40 rounded-2xl" />
-                </div>
                 {/* نصيحة الخلفية البيضاء */}
                 {showTip && (
                   <div className="absolute top-4 left-4 right-4 bg-black/60 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 animate-fade-in">
