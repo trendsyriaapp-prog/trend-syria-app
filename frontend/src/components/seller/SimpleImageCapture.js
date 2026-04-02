@@ -734,67 +734,67 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             )}
 
             {/* Transform Controls */}
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1.5">
               <button 
                 onClick={() => setScale(s => Math.max(MIN_SCALE, s - 0.1))}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 ${
                   scale <= MIN_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
                 }`}
                 disabled={scale <= MIN_SCALE}
                 data-testid="zoom-out-button"
               >
-                <ZoomOut size={16} className="text-white" />
-                <span className="text-white text-xs">تصغير</span>
+                <ZoomOut size={14} className="text-white" />
+                <span className="text-white text-[10px]">تصغير</span>
               </button>
               <button 
                 onClick={() => setScale(s => Math.min(MAX_SCALE, s + 0.1))}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 ${
                   scale >= MAX_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
                 }`}
                 disabled={scale >= MAX_SCALE}
                 data-testid="zoom-in-button"
               >
-                <ZoomIn size={16} className="text-white" />
-                <span className="text-white text-xs">تكبير</span>
+                <ZoomIn size={14} className="text-white" />
+                <span className="text-white text-[10px]">تكبير</span>
               </button>
               <button 
                 onClick={() => { setShowRotation(!showRotation); setShowAdjustments(false); setShowShadows(false); }}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
                   showRotation ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="rotate-button"
               >
-                <RotateCw size={16} className="text-white" />
-                <span className="text-white text-xs">تدوير</span>
+                <RotateCw size={14} className="text-white" />
+                <span className="text-white text-[10px]">تدوير</span>
               </button>
               <button 
                 onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); setShowRotation(false); }}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
                   showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="adjustments-button"
               >
-                <Sliders size={16} className="text-white" />
-                <span className="text-white text-xs">ألوان</span>
+                <Sliders size={14} className="text-white" />
+                <span className="text-white text-[10px]">ألوان</span>
               </button>
               <button 
                 onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); setShowRotation(false); }}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
                   showShadows ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="shadows-button"
               >
-                <Eclipse size={16} className="text-white" />
-                <span className="text-white text-xs">ظل</span>
+                <Eclipse size={14} className="text-white" />
+                <span className="text-white text-[10px]">ظل</span>
               </button>
               <button 
                 onClick={() => setEditorBgDark(!editorBgDark)}
-                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
+                className={`px-2 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
                   editorBgDark ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="bg-toggle-button"
               >
-                <span className="text-white text-xs">{editorBgDark ? '⚪ أبيض' : '⚫ داكن'}</span>
+                <span className="text-white text-[10px]">{editorBgDark ? '⚪ أبيض' : '⚫ داكن'}</span>
               </button>
             </div>
             
