@@ -1728,7 +1728,6 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || '',
-    original_price: product?.original_price || '',
     category: product?.category || '',
     images: product?.images || [],
     preparation_time: product?.preparation_time || '',
@@ -1862,7 +1861,6 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
         ...formData,
         store_id: store.id,
         price: parseFloat(formData.price),
-        original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         preparation_time: formData.preparation_time ? parseInt(formData.preparation_time) : null,
         weight_variants: formData.weight_variants,
         admin_video: formData.admin_video,
@@ -1941,24 +1939,6 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 className="w-full border border-gray-200 rounded-xl px-4 py-3"
                 required
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                السعر الأصلي قبل الخصم
-                <span className="text-gray-400 text-xs mr-1">(اختياري - للعروض)</span>
-              </label>
-              <input
-                type="number"
-                value={formData.original_price}
-                onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                placeholder="ضع السعر القديم هنا لإظهار الخصم"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3"
-              />
-              {formData.original_price && formData.price && Number(formData.original_price) > Number(formData.price) && (
-                <p className="text-xs text-[#FF6B00] mt-1 flex items-center gap-1">
-                  ✅ سيظهر للمشتري: خصم {Math.round((1 - Number(formData.price) / Number(formData.original_price)) * 100)}%
-                </p>
-              )}
             </div>
           </div>
 
