@@ -180,19 +180,38 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   }, [isOpen]);
 
-  // فتح المعرض تلقائياً في وضع المعرض
+  // فتح المعرض تلقائياً في وضع المعرض وإغلاق النافذة
   useEffect(() => {
     if (isOpen && mode === 'gallery') {
-      // تأخير قصير للتأكد من أن الـ modal مفتوح بالكامل
+      // فتح المعرض مباشرة
       const timer = setTimeout(() => {
         setGalleryOpened(true);
-        fileInputRef.current?.click();
-      }, 150);
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        }
+      }, 50);
       return () => clearTimeout(timer);
     } else {
       setGalleryOpened(false);
     }
   }, [isOpen, mode]);
+
+  // إغلاق النافذة إذا لم يختر المستخدم صورة من المعرض
+  useEffect(() => {
+    if (mode === 'gallery' && galleryOpened) {
+      const handleFocus = () => {
+        // عندما يعود التركيز للصفحة بعد إغلاق المعرض
+        setTimeout(() => {
+          if (fileInputRef.current && !fileInputRef.current.files?.length && step === 'capture') {
+            handleClose();
+          }
+        }, 300);
+      };
+      
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, [mode, galleryOpened, step]);
 
   const startCamera = async () => {
     try {
@@ -523,25 +542,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Gallery Mode - شاشة انتظار اختيار الصورة - تظهر فقط قبل فتح المعرض */}
-        {step === 'capture' && mode === 'gallery' && !galleryOpened && (
-          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center z-10">
-            <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
-            <p className="text-white text-lg">جاري فتح المعرض...</p>
-          </div>
-        )}
-        
-        {/* Gallery Mode - بعد فتح المعرض نعرض شاشة شفافة مع زر إلغاء */}
-        {step === 'capture' && mode === 'gallery' && galleryOpened && (
-          <div className="w-full h-full bg-transparent flex flex-col items-center justify-end pb-10 z-10">
-            <button
-              onClick={handleClose}
-              className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg"
-            >
-              إلغاء
-            </button>
-          </div>
-        )}
+        {/* Gallery Mode - لا نعرض أي شاشة، المعرض يفتح مباشرة */}
 
         {/* Processed Image with Reflection Shadow */}
         {step === 'edit' && processedImage && (
