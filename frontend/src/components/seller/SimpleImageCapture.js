@@ -95,6 +95,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setShowRotation(false);
     setStep('capture');
     setError(null);
+    fileSelectedRef.current = false;
     
     // إغلاق الـ modal أولاً
     onClose();
@@ -197,24 +198,27 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     }
   }, [isOpen, mode]);
 
+  // متغير لتتبع إذا تم اختيار ملف
+  const fileSelectedRef = useRef(false);
+
   // إغلاق النافذة إذا لم يختر المستخدم صورة من المعرض
   useEffect(() => {
     if (mode === 'gallery' && galleryOpened) {
       const handleFocus = () => {
         // عندما يعود التركيز للصفحة بعد إغلاق المعرض
-        // ننتظر أطول للتأكد من أن الصورة لم تُحمّل بعد
+        // ننتظر للتأكد من أن الصورة لم تُحمّل
         setTimeout(() => {
-          // نتحقق من عدم وجود صورة ملتقطة أو معالجة وأن الخطوة ما زالت capture
-          if (fileInputRef.current && !fileInputRef.current.files?.length && step === 'capture' && !capturedImage && !processing) {
-            handleClose();
+          // نتحقق من عدم اختيار ملف وعدم وجود صورة
+          if (!fileSelectedRef.current && step === 'capture' && !capturedImage && !processing) {
+            doClose(false);
           }
-        }, 500);
+        }, 800);
       };
       
       window.addEventListener('focus', handleFocus);
       return () => window.removeEventListener('focus', handleFocus);
     }
-  }, [mode, galleryOpened, step, capturedImage, processing]);
+  }, [mode, galleryOpened, step, capturedImage, processing, doClose]);
 
   const startCamera = async () => {
     try {
@@ -273,9 +277,12 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     const file = e.target.files?.[0];
     if (!file) { 
       // المستخدم ألغى اختيار الصورة
-      handleClose();
+      fileSelectedRef.current = false;
+      doClose(false);
       return; 
     }
+    // تم اختيار ملف
+    fileSelectedRef.current = true;
     const reader = new FileReader();
     reader.onload = async (event) => {
       const imageData = event.target.result;
