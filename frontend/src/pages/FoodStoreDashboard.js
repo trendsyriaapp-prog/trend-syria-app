@@ -1941,7 +1941,10 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">وقت التحضير (دقيقة)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                وقت التحضير (دقيقة)
+                <span className="text-gray-400 text-xs mr-1">(للمطاعم فقط - اختياري)</span>
+              </label>
               <input
                 type="number"
                 value={formData.preparation_time}
