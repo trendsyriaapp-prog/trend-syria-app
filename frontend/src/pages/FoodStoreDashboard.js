@@ -2636,7 +2636,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                   </div>
 
                   {/* Actions based on status */}
-                  {order.status === 'pending' && (
+                  {(order.status === 'pending' || order.status === 'paid') && (
                     <div className="space-y-3">
                       {/* مكون حالة السائقين */}
                       <DriverAvailabilityCheck orderId={order.id} token={token} />
@@ -2648,7 +2648,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                           className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-[#E65000]"
                         >
                           <Check size={16} />
-                          تأكيد الطلب
+                          قبول الطلب
                         </button>
                         <button
                           onClick={() => updateStatus(order.id, 'cancelled')}
