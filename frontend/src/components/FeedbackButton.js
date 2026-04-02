@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquarePlus, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { MessageCircleHeart, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -109,12 +109,11 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
         {/* زر الملاحظات الرئيسي */}
         <button
           onClick={() => setIsOpen(true)}
-          className="p-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 animate-pulse"
+          className="p-3.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110"
           title="اقتراحات وملاحظات"
           data-testid="feedback-button"
-          style={{ animationDuration: '3s' }}
         >
-          <MessageSquarePlus size={24} />
+          <MessageCircleHeart size={24} />
         </button>
       </div>
 
