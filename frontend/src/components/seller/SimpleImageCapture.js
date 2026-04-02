@@ -51,6 +51,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [shadowOffsetX, setShadowOffsetX] = useState(50);
   const [showRotation, setShowRotation] = useState(false);
   const [showTip, setShowTip] = useState(true);
+  const [galleryOpened, setGalleryOpened] = useState(false);
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -184,9 +185,12 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     if (isOpen && mode === 'gallery') {
       // تأخير قصير للتأكد من أن الـ modal مفتوح بالكامل
       const timer = setTimeout(() => {
+        setGalleryOpened(true);
         fileInputRef.current?.click();
       }, 150);
       return () => clearTimeout(timer);
+    } else {
+      setGalleryOpened(false);
     }
   }, [isOpen, mode]);
 
@@ -519,14 +523,20 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           </div>
         )}
 
-        {/* Gallery Mode - شاشة انتظار اختيار الصورة */}
-        {step === 'capture' && mode === 'gallery' && !fileInputRef.current?.files?.length && (
-          <div className="w-full h-full bg-gray-900/95 flex flex-col items-center justify-center z-10">
+        {/* Gallery Mode - شاشة انتظار اختيار الصورة - تظهر فقط قبل فتح المعرض */}
+        {step === 'capture' && mode === 'gallery' && !galleryOpened && (
+          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center z-10">
             <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
             <p className="text-white text-lg">جاري فتح المعرض...</p>
+          </div>
+        )}
+        
+        {/* Gallery Mode - بعد فتح المعرض نعرض شاشة شفافة مع زر إلغاء */}
+        {step === 'capture' && mode === 'gallery' && galleryOpened && (
+          <div className="w-full h-full bg-transparent flex flex-col items-center justify-end pb-10 z-10">
             <button
               onClick={handleClose}
-              className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg text-sm"
+              className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg"
             >
               إلغاء
             </button>
