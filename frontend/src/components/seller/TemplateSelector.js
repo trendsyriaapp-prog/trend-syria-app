@@ -233,10 +233,10 @@ const TemplateSelector = ({
                 canUseAI ? 'bg-green-50' : 'bg-red-50'
               }`}>
                 <div className="flex items-center gap-2">
-                  <Wallet size={14} className={canUseAI ? 'text-green-600' : 'text-red-600'} />
+                  <Wallet size={14} className={canUseAI ? 'text-[#FF6B00]' : 'text-red-600'} />
                   <span className="text-xs text-gray-700">رصيد المحفظة:</span>
                 </div>
-                <span className={`text-xs font-bold ${canUseAI ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-xs font-bold ${canUseAI ? 'text-[#FF6B00]' : 'text-red-600'}`}>
                   {walletBalance.toLocaleString()} ل.س
                 </span>
               </div>

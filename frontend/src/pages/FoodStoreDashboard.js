@@ -1460,7 +1460,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`bg-white rounded-xl p-4 border-2 ${
-                offer.is_active ? 'border-green-200' : 'border-gray-200'
+                offer.is_active ? 'border-orange-200' : 'border-gray-200'
               }`}
             >
               <div className="flex items-start justify-between mb-2">
@@ -1955,7 +1955,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 className="w-full border border-gray-200 rounded-xl px-4 py-3"
               />
               {formData.original_price && formData.price && Number(formData.original_price) > Number(formData.price) && (
-                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[#FF6B00] mt-1 flex items-center gap-1">
                   ✅ سيظهر للمشتري: خصم {Math.round((1 - Number(formData.price) / Number(formData.original_price)) * 100)}%
                 </p>
               )}
@@ -2820,7 +2820,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                               )}
                               
                               {order.pickup_code_verified && (
-                                <p className="text-xs text-green-600 mt-2 font-bold">
+                                <p className="text-xs text-[#FF6B00] mt-2 font-bold">
                                   ✅ تم تسليم الطلب للسائق
                                 </p>
                               )}
@@ -3011,7 +3011,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                 <Check size={16} />
                 السائق {showSetPrepTimeModal.driver_name} قبل الطلب!
               </p>
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-[#FF6B00]">
                 سيصل السائق خلال {showSetPrepTimeModal.driver_estimated_arrival_minutes || '?'} دقيقة
               </p>
             </div>
@@ -3069,7 +3069,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">جاهزية الطلب:</span>
-                  <span className="font-medium text-green-600">{newPrepTime} دقيقة</span>
+                  <span className="font-medium text-[#FF6B00]">{newPrepTime} دقيقة</span>
                 </div>
                 {newPrepTime > (showSetPrepTimeModal.driver_estimated_arrival_minutes || 0) && (
                   <div className="flex justify-between text-blue-600">
@@ -3242,7 +3242,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
           <div className="flex items-center gap-2">
             {settings.flashStatus.status === 'live' ? (
               <>
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-pulse"></div>
                 <span className="font-bold text-[#FF6B00] text-sm">⚡ Flash نشط الآن!</span>
               </>
             ) : (
@@ -3936,7 +3936,7 @@ const DailyDealRequestModal = ({ product, token, onClose, onSuccess }) => {
                 <span className="text-gray-400 line-through text-sm mr-2">
                   {originalPrice.toLocaleString()}
                 </span>
-                <span className="text-green-600 font-bold text-lg">
+                <span className="text-[#FF6B00] font-bold text-lg">
                   {discountedPrice.toLocaleString()} ل.س
                 </span>
               </div>

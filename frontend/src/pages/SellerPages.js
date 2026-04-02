@@ -103,8 +103,8 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
                   disabled={currentStatus === 'available'}
                   className={`flex-1 py-1.5 rounded-l text-[9px] font-bold transition-all ${
                     currentStatus === 'available' 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-green-100 text-green-600 hover:bg-green-200'
+                      ? 'bg-[#FF6B00] text-white' 
+                      : 'bg-orange-100 text-[#FF6B00] hover:bg-orange-200'
                   }`}
                   title="متاح"
                 >
@@ -175,7 +175,7 @@ const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
       'pending': 'bg-yellow-100 text-yellow-700',
       'accepted': 'bg-blue-100 text-blue-700',
       'preparing': 'bg-orange-100 text-orange-700',
-      'ready': 'bg-green-100 text-green-700',
+      'ready': 'bg-orange-100 text-[#FF6B00]',
       'out_for_delivery': 'bg-purple-100 text-purple-700',
       'delivered': 'bg-emerald-100 text-emerald-700',
       'cancelled': 'bg-red-100 text-red-700'
@@ -220,13 +220,13 @@ const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
 
           {/* كود الاستلام - يظهر عندما يكون الطلب جاهز */}
           {order.status === 'ready' && order.pickup_code && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2 text-center">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2 text-center">
               <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
               <div className="flex justify-center gap-2" dir="ltr">
                 {order.pickup_code.split('').map((digit, i) => (
                   <span 
                     key={i} 
-                    className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                    className="w-10 h-12 flex items-center justify-center text-xl font-bold bg-[#FF6B00] text-white rounded-lg shadow-md"
                   >
                     {digit}
                   </span>
@@ -241,7 +241,7 @@ const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
               <button
                 onClick={() => onStatusChange(order.id, 'accepted')}
                 disabled={isLoading(order.id, 'accepted')}
-                className="flex-1 bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600 disabled:opacity-70 flex items-center justify-center gap-1"
+                className="flex-1 bg-[#FF6B00] text-white py-1.5 rounded text-[10px] font-bold hover:bg-[#E65000] disabled:opacity-70 flex items-center justify-center gap-1"
               >
                 {isLoading(order.id, 'accepted') ? (
                   <><Loader2 size={12} className="animate-spin" /> جاري...</>
@@ -275,7 +275,7 @@ const FoodOrdersSection = ({ orders, onStatusChange, actionLoading }) => {
             <button
               onClick={() => onStatusChange(order.id, 'ready')}
               disabled={isLoading(order.id, 'ready')}
-              className="w-full bg-green-500 text-white py-1.5 rounded text-[10px] font-bold hover:bg-green-600 disabled:opacity-70 flex items-center justify-center gap-1"
+              className="w-full bg-[#FF6B00] text-white py-1.5 rounded text-[10px] font-bold hover:bg-[#E65000] disabled:opacity-70 flex items-center justify-center gap-1"
             >
               {isLoading(order.id, 'ready') ? (
                 <><Loader2 size={12} className="animate-spin" /> جاري...</>
@@ -1304,7 +1304,7 @@ const SellerDashboardPage = () => {
                   <span className="text-[10px] font-bold text-yellow-700">{user?.rating?.toFixed(1) || '0.0'}</span>
                 </div>
                 <h1 className="text-sm font-bold text-gray-900 truncate">{user?.name || 'متجري'}</h1>
-                <p className="text-xs text-gray-500 mt-0.5">{displayItems.length} منتج • <span className="text-green-600">نشط</span></p>
+                <p className="text-xs text-gray-500 mt-0.5">{displayItems.length} منتج • <span className="text-[#FF6B00]">نشط</span></p>
               </div>
             </div>
             
@@ -1313,7 +1313,7 @@ const SellerDashboardPage = () => {
               <NotificationsDropdown />
               <button 
                 onClick={() => setShowWalletModal(true)}
-                className="h-9 bg-green-500 text-white px-3 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors text-xs font-bold"
+                className="h-9 bg-[#FF6B00] text-white px-3 rounded-full flex items-center gap-1 hover:bg-[#E65000] transition-colors text-xs font-bold"
                 title="المحفظة"
               >
                 <Wallet size={14} />
@@ -1401,7 +1401,7 @@ const SellerDashboardPage = () => {
                         مخفي عن العملاء
                       </div>
                     ) : (
-                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                      <div className="absolute top-2 right-2 bg-[#FF6B00] text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
                         <Check size={10} />
                         نشط
                       </div>
@@ -1453,7 +1453,7 @@ const SellerDashboardPage = () => {
                             data-testid={`toggle-availability-${product.id}`}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                               product.is_available 
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                                ? 'bg-orange-100 text-[#FF6B00] hover:bg-orange-200 border border-orange-300' 
                                 : 'bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300'
                             }`}
                           >
@@ -1509,7 +1509,7 @@ const SellerDashboardPage = () => {
                             />
                             <button
                               onClick={() => isFoodSeller ? handleUpdateFoodStock(product.id) : handleUpdateStock(product.id)}
-                              className="p-1.5 bg-green-500 text-white rounded-lg"
+                              className="p-1.5 bg-[#FF6B00] text-white rounded-lg"
                             >
                               <Check size={16} />
                             </button>
@@ -1528,7 +1528,7 @@ const SellerDashboardPage = () => {
                                 ? 'bg-red-100 text-red-600 border-red-300 hover:bg-red-200' 
                                 : (product.stock || 0) <= 10 
                                   ? 'bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200'
-                                  : 'bg-green-100 text-green-600 border-green-300 hover:bg-green-200'
+                                  : 'bg-orange-100 text-[#FF6B00] border-orange-300 hover:bg-orange-200'
                             }`}
                           >
                             <Package size={14} />
@@ -1562,7 +1562,7 @@ const SellerDashboardPage = () => {
               </div>
               <div className="bg-gray-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500">إجمالي الأرباح</p>
-                <p className="font-bold text-green-600">{formatPrice(totalEarned)}</p>
+                <p className="font-bold text-[#FF6B00]">{formatPrice(totalEarned)}</p>
               </div>
             </div>
             <button
@@ -1672,9 +1672,9 @@ const SellerDashboardPage = () => {
                     <li>• اكتب "قابل للكسر - تعامل بحذر" بخط واضح</li>
                   </ul>
                 </div>
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <h4 className="font-bold text-green-800 mb-2">💄 مستحضرات التجميل</h4>
-                  <ul className="text-xs text-green-700 space-y-1">
+                <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <h4 className="font-bold text-[#FF6B00] mb-2">💄 مستحضرات التجميل</h4>
+                  <ul className="text-xs text-[#FF6B00] space-y-1">
                     <li>• تأكد من إغلاق الأغطية بإحكام</li>
                     <li>• ضع المنتجات السائلة في كيس بلاستيكي</li>
                     <li>• استخدم فواصل بين المنتجات</li>
@@ -1752,8 +1752,8 @@ const SellerDashboardPage = () => {
             </div>
 
             {/* نصائح للتميز */}
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <h3 className="font-bold text-[#FF6B00] mb-3 flex items-center gap-2">
                 <CheckCircle size={18} />
                 نصائح للتميز
               </h3>
@@ -1765,8 +1765,8 @@ const SellerDashboardPage = () => {
                   'صوّر المنتج قبل التغليف كدليل',
                   'تأكد من نظافة الصندوق من الخارج'
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-green-700">
-                    <span className="text-green-500">✓</span>
+                  <div key={index} className="flex items-center gap-2 text-sm text-[#FF6B00]">
+                    <span className="text-[#FF6B00]">✓</span>
                     {item}
                   </div>
                 ))}
@@ -1887,7 +1887,7 @@ const SellerDashboardPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Wallet className="text-green-500" size={24} />
+                <Wallet className="text-[#FF6B00]" size={24} />
                 محفظتي
               </h2>
               <button 
@@ -1899,7 +1899,7 @@ const SellerDashboardPage = () => {
             </div>
 
             {/* الرصيد */}
-            <div className="bg-gradient-to-l from-green-500 to-green-600 text-white rounded-2xl p-6 mb-4">
+            <div className="bg-gradient-to-l from-[#FF6B00] to-[#FF8533] text-white rounded-2xl p-6 mb-4">
               <p className="text-sm opacity-90 mb-1">الرصيد المتاح</p>
               <p className="text-3xl font-bold">{walletBalance?.toLocaleString() || 0} ل.س</p>
             </div>
@@ -1931,7 +1931,7 @@ const SellerDashboardPage = () => {
                 setShowWithdrawModal(true);
               }}
               disabled={walletBalance < 50000}
-              className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
+              className="w-full py-4 bg-[#FF6B00] text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E65000] transition-colors"
             >
               {walletBalance < 50000 ? `الحد الأدنى للسحب 50,000 ل.س` : 'طلب سحب'}
             </button>

@@ -181,7 +181,7 @@ const PaymentSettingsTab = () => {
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Wallet className="text-green-600" size={20} />
+              <Wallet className="text-[#FF6B00]" size={20} />
             </div>
             <div>
               <h3 className="font-bold text-gray-900">شام كاش (ShamCash)</h3>
