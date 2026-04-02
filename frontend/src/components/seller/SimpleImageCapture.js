@@ -736,50 +736,55 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
             <div className="flex justify-center gap-2">
               <button 
                 onClick={() => setScale(s => Math.max(MIN_SCALE, s - 0.1))}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 ${
                   scale <= MIN_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
                 }`}
                 disabled={scale <= MIN_SCALE}
                 data-testid="zoom-out-button"
               >
-                <ZoomOut size={18} className="text-white" />
+                <ZoomOut size={16} className="text-white" />
+                <span className="text-white text-xs">تصغير</span>
               </button>
               <button 
                 onClick={() => setScale(s => Math.min(MAX_SCALE, s + 0.1))}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 ${
                   scale >= MAX_SCALE ? 'bg-white/10 opacity-50' : 'bg-white/20 active:bg-white/30'
                 }`}
                 disabled={scale >= MAX_SCALE}
                 data-testid="zoom-in-button"
               >
-                <ZoomIn size={18} className="text-white" />
+                <ZoomIn size={16} className="text-white" />
+                <span className="text-white text-xs">تكبير</span>
               </button>
               <button 
                 onClick={() => { setShowRotation(!showRotation); setShowAdjustments(false); setShowShadows(false); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
                   showRotation ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="rotate-button"
               >
-                <RotateCw size={18} className="text-white" />
+                <RotateCw size={16} className="text-white" />
+                <span className="text-white text-xs">تدوير</span>
               </button>
               <button 
                 onClick={() => { setShowAdjustments(!showAdjustments); setShowShadows(false); setShowRotation(false); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
                   showAdjustments ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="adjustments-button"
               >
-                <Sliders size={18} className="text-white" />
+                <Sliders size={16} className="text-white" />
+                <span className="text-white text-xs">ألوان</span>
               </button>
               <button 
                 onClick={() => { setShowShadows(!showShadows); setShowAdjustments(false); setShowRotation(false); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                className={`px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-all ${
                   showShadows ? 'bg-[#FF6B00]' : 'bg-white/20 active:bg-white/30'
                 }`}
                 data-testid="shadows-button"
               >
-                <Eclipse size={18} className="text-white" />
+                <Eclipse size={16} className="text-white" />
+                <span className="text-white text-xs">ظل</span>
               </button>
             </div>
             
