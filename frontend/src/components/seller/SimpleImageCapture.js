@@ -520,10 +520,16 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
         )}
 
         {/* Gallery Mode - شاشة انتظار اختيار الصورة */}
-        {step === 'capture' && mode === 'gallery' && (
-          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+        {step === 'capture' && mode === 'gallery' && !fileInputRef.current?.files?.length && (
+          <div className="w-full h-full bg-gray-900/95 flex flex-col items-center justify-center z-10">
             <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
-            <p className="text-white text-lg">اختر صورة من المعرض...</p>
+            <p className="text-white text-lg">جاري فتح المعرض...</p>
+            <button
+              onClick={handleClose}
+              className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg text-sm"
+            >
+              إلغاء
+            </button>
           </div>
         )}
 
