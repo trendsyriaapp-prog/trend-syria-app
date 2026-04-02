@@ -2,7 +2,7 @@
 // لوحة تحكم متجر الطعام
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -739,12 +739,29 @@ const FoodStoreDashboard = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <Settings size={18} className="text-[#FF6B00]" />
-              الإعدادات
-            </h3>
-            <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
+          <div className="space-y-4">
+            {/* رابط تصفح كعميل */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <Link
+                to="/food?view=customer"
+                className="flex items-center justify-between bg-[#FF6B00]/10 border-2 border-[#FF6B00] rounded-xl p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Home size={20} className="text-[#FF6B00]" />
+                  <span className="font-medium text-[#FF6B00]">تصفح كعميل</span>
+                </div>
+                <ChevronRight size={20} className="text-[#FF6B00]" />
+              </Link>
+            </div>
+            
+            {/* الإعدادات */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+                <Settings size={18} className="text-[#FF6B00]" />
+                الإعدادات
+              </h3>
+              <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
+            </div>
           </div>
         )}
       </div>
@@ -2177,7 +2194,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                       setImageCaptureMode('gallery');
                       setShowImageCapture(true);
                     }}
-                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200"
+                    className="flex-1 py-2.5 bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00] rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#FF6B00]/20"
                   >
                     <Image size={16} />
                     من المعرض
