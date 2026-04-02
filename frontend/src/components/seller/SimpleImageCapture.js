@@ -202,17 +202,19 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     if (mode === 'gallery' && galleryOpened) {
       const handleFocus = () => {
         // عندما يعود التركيز للصفحة بعد إغلاق المعرض
+        // ننتظر أطول للتأكد من أن الصورة لم تُحمّل بعد
         setTimeout(() => {
-          if (fileInputRef.current && !fileInputRef.current.files?.length && step === 'capture') {
+          // نتحقق من عدم وجود صورة ملتقطة أو معالجة وأن الخطوة ما زالت capture
+          if (fileInputRef.current && !fileInputRef.current.files?.length && step === 'capture' && !capturedImage && !processing) {
             handleClose();
           }
-        }, 300);
+        }, 500);
       };
       
       window.addEventListener('focus', handleFocus);
       return () => window.removeEventListener('focus', handleFocus);
     }
-  }, [mode, galleryOpened, step]);
+  }, [mode, galleryOpened, step, capturedImage, processing]);
 
   const startCamera = async () => {
     try {
