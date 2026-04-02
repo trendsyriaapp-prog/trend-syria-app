@@ -137,8 +137,8 @@ const MobileNav = () => {
       // الأيقونة النشطة: لون كامل
       if (item.label === 'الرئيسية' || item.label === 'نظرة عامة') return 'text-blue-500';
       if (item.label === 'الأصناف') return 'text-purple-500';
-      if (item.label === 'طعام') return 'text-orange-500';
-      if (item.label === 'السلة') return 'text-green-500';
+      if (item.label === 'طعام') return 'text-green-500';
+      if (item.label === 'السلة') return 'text-[#FF6B00]';
       if (item.label === 'حسابي' || item.label === 'دخول') return 'text-pink-500';
       if (item.label === 'المنتجات' || item.label === 'القائمة') return 'text-indigo-500';
       if (item.label === 'المحفظة') return 'text-emerald-500';
@@ -150,8 +150,8 @@ const MobileNav = () => {
       // الأيقونات غير النشطة: لون باهت
       if (item.label === 'الرئيسية' || item.label === 'نظرة عامة') return 'text-blue-300';
       if (item.label === 'الأصناف') return 'text-purple-300';
-      if (item.label === 'طعام') return 'text-orange-300';
-      if (item.label === 'السلة') return 'text-green-300';
+      if (item.label === 'طعام') return 'text-green-300';
+      if (item.label === 'السلة') return 'text-orange-300';
       if (item.label === 'حسابي' || item.label === 'دخول') return 'text-pink-300';
       if (item.label === 'المنتجات' || item.label === 'القائمة') return 'text-indigo-300';
       if (item.label === 'المحفظة') return 'text-emerald-300';
