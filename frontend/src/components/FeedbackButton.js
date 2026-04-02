@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircleHeart, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { MessageCircleHeart, MessageSquarePlus, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -135,10 +135,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white p-4 flex items-center justify-between">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <MessageSquarePlus size={20} />
-                  اقتراحات وملاحظات
+                  ساعدنا نحسّن التطبيق
                 </h3>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -191,7 +191,7 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
                       'اكتب استفسارك...'
                     }
                     rows={4}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-400 resize-none"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-400 resize-none"
                   />
                 </div>
 
@@ -206,7 +206,7 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
                 <button
                   type="submit"
                   disabled={submitting || !message.trim()}
-                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {submitting ? (
                     <Loader2 size={18} className="animate-spin" />
