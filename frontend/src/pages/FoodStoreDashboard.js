@@ -3225,7 +3225,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <LoaderIcon className="w-8 h-8 animate-spin text-green-500" />
+        <LoaderIcon className="w-8 h-8 animate-spin text-[#FF6B00]" />
       </div>
     );
   }
@@ -3236,14 +3236,14 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
       {settings.flashStatus && (
         <div className={`rounded-xl p-3 flex items-center justify-between ${
           settings.flashStatus.status === 'live' 
-            ? 'bg-green-100 border border-green-300' 
+            ? 'bg-orange-100 border border-orange-300' 
             : 'bg-yellow-100 border border-yellow-300'
         }`}>
           <div className="flex items-center gap-2">
             {settings.flashStatus.status === 'live' ? (
               <>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-bold text-green-800 text-sm">⚡ Flash نشط الآن!</span>
+                <span className="font-bold text-[#FF6B00] text-sm">⚡ Flash نشط الآن!</span>
               </>
             ) : (
               <>
@@ -3287,7 +3287,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
       {/* الترويجات النشطة */}
       {myPromotions.active?.length > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-          <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-[#FF6B00] mb-3 flex items-center gap-2">
             <Sparkles size={18} />
             ترويجاتك النشطة ({myPromotions.active.length})
           </h3>
@@ -4032,24 +4032,24 @@ const DriverAvailabilityCheck = ({ orderId, token }) => {
   if (!data) return null;
 
   const bgColor = {
-    none: 'bg-green-50 border-green-200',
-    low: 'bg-green-50 border-green-200',
+    none: 'bg-orange-50 border-orange-200',
+    low: 'bg-orange-50 border-orange-200',
     medium: 'bg-orange-50 border-orange-200',
     high: 'bg-red-50 border-red-200',
     error: 'bg-gray-50 border-gray-200'
   }[data.warning_level] || 'bg-gray-50 border-gray-200';
 
   const textColor = {
-    none: 'text-green-700',
-    low: 'text-green-700',
+    none: 'text-[#FF6B00]',
+    low: 'text-[#FF6B00]',
     medium: 'text-orange-700',
     high: 'text-red-700',
     error: 'text-gray-700'
   }[data.warning_level] || 'text-gray-700';
 
   const subTextColor = {
-    none: 'text-green-600',
-    low: 'text-green-600',
+    none: 'text-[#FF6B00]',
+    low: 'text-[#FF6B00]',
     medium: 'text-orange-600',
     high: 'text-red-600',
     error: 'text-gray-600'

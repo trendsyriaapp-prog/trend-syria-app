@@ -121,7 +121,7 @@ const FoodBatchSuccessPage = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
       {/* Success Animation */}
       <div className="flex flex-col items-center justify-center pt-12 pb-8">
         <motion.div
