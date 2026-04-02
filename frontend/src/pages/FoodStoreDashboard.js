@@ -1986,7 +1986,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
               <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
               {/* اقتراحات سريعة */}
               <div className="flex flex-wrap gap-1 mb-2">
-                {['وجبات رئيسية', 'مقبلات', 'مشروبات', 'حلويات', 'سلطات', 'فطور', 'إضافات', 'مشاوي', 'سندويشات'].map((suggestion) => (
+                {['وجبات', 'مشروبات', 'حلويات', 'خضار وفواكه', 'لحوم ودجاج', 'ألبان وأجبان', 'مخبوزات', 'مواد غذائية', 'أخرى'].map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
