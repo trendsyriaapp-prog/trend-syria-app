@@ -538,7 +538,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
                 {showTip && (
                   <div className="absolute top-4 left-4 right-4 bg-black/60 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2 animate-fade-in">
                     <p className="text-white text-xs flex-1 text-center">
-                      📸 ضع خلفية بيضاء خلف المنتج للحصول على جودة أفضل
+                      📸 خلفية فاتحة للداكن، وداكنة للفاتح
                     </p>
                     <button 
                       onClick={() => setShowTip(false)}
