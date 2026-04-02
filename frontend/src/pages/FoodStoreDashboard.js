@@ -1940,6 +1940,16 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">وقت التحضير (دقيقة)</label>
+              <input
+                type="number"
+                value={formData.preparation_time}
+                onChange={(e) => setFormData({ ...formData, preparation_time: e.target.value })}
+                placeholder="15"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3"
+              />
+            </div>
           </div>
 
           {/* حاسبة الأرباح والعمولة */}
@@ -1997,16 +2007,6 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="أو اكتب تصنيفك الخاص"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">وقت التحضير (دقيقة)</label>
-              <input
-                type="number"
-                value={formData.preparation_time}
-                onChange={(e) => setFormData({ ...formData, preparation_time: e.target.value })}
-                placeholder="15"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3"
               />
             </div>
           </div>
