@@ -783,6 +783,7 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
     banner_color: flash?.banner_color || '#FF4500',
     is_active: flash?.is_active !== false,
     send_notification: !flash, // مفعّل افتراضياً للعروض الجديدة فقط
+    notify_sellers: !flash, // إشعار البائعين للمشاركة
   });
   const [saving, setSaving] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
@@ -1118,19 +1119,37 @@ const FlashSaleModal = ({ flash, token, onClose, onSave }) => {
 
           {/* خيار إرسال الإشعار */}
           {!flash?.id && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <input
-                type="checkbox"
-                id="send_notification"
-                checked={formData.send_notification}
-                onChange={(e) => setFormData({ ...formData, send_notification: e.target.checked })}
-                className="w-5 h-5 rounded accent-blue-500"
-              />
-              <div>
-                <label htmlFor="send_notification" className="text-sm font-medium text-gray-800 block">
-                  إرسال إشعار لجميع العملاء
-                </label>
-                <span className="text-xs text-gray-500">سيتم تنبيه جميع المستخدمين بهذا العرض</span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <input
+                  type="checkbox"
+                  id="send_notification"
+                  checked={formData.send_notification}
+                  onChange={(e) => setFormData({ ...formData, send_notification: e.target.checked })}
+                  className="w-5 h-5 rounded accent-blue-500"
+                />
+                <div>
+                  <label htmlFor="send_notification" className="text-sm font-medium text-gray-800 block">
+                    إرسال إشعار لجميع العملاء
+                  </label>
+                  <span className="text-xs text-gray-500">سيتم تنبيه جميع المستخدمين بهذا العرض</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                <input
+                  type="checkbox"
+                  id="notify_sellers"
+                  checked={formData.notify_sellers}
+                  onChange={(e) => setFormData({ ...formData, notify_sellers: e.target.checked })}
+                  className="w-5 h-5 rounded accent-orange-500"
+                />
+                <div>
+                  <label htmlFor="notify_sellers" className="text-sm font-medium text-gray-800 block">
+                    دعوة البائعين للمشاركة
+                  </label>
+                  <span className="text-xs text-gray-500">إرسال إشعار للبائعين لإضافة منتجاتهم للعرض</span>
+                </div>
               </div>
             </div>
           )}

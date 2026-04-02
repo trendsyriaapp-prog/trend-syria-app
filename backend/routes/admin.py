@@ -296,6 +296,51 @@ async def send_offer_notification_to_all_users(title: str, message: str, offer_t
     
     return len(notifications)
 
+
+async def send_flash_sale_notification_to_sellers(title: str, message: str, flash_sale_id: str, sale_scope: str = "all"):
+    """إرسال إشعار عرض فلاش للبائعين فقط لدعوتهم للمشاركة"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # تحديد نوع البائعين بناءً على نطاق العرض
+    if sale_scope == "food_only":
+        seller_types = ["food_seller"]
+    elif sale_scope == "shop_only":
+        seller_types = ["seller"]
+    else:  # all
+        seller_types = ["seller", "food_seller"]
+    
+    # جلب البائعين المعتمدين فقط
+    sellers = await db.users.find(
+        {
+            "user_type": {"$in": seller_types},
+            "is_verified": True
+        },
+        {"_id": 0, "id": 1}
+    ).to_list(10000)
+    
+    if not sellers:
+        return 0
+    
+    # إنشاء الإشعارات
+    notifications = []
+    for seller in sellers:
+        notifications.append({
+            "id": str(uuid.uuid4()),
+            "user_id": seller["id"],
+            "title": title,
+            "message": message,
+            "type": "flash_sale_invitation",
+            "data": {"flash_sale_id": flash_sale_id},
+            "is_read": False,
+            "created_at": now
+        })
+    
+    # إدراج الإشعارات دفعة واحدة
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return len(notifications)
+
 # ============== Commission Constants ==============
 
 DEFAULT_CATEGORY_COMMISSIONS = {
@@ -1962,7 +2007,7 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
     await db.flash_sales.insert_one(sale_doc)
     del sale_doc["_id"]
     
-    # إرسال إشعار لجميع المستخدمين إذا طلب ذلك
+    # إرسال إشعار لجميع المستخدمين (العملاء) إذا طلب ذلك
     if sale_data.get("send_notification", False):
         discount = int(sale_doc["discount_percentage"])
         await send_offer_notification_to_all_users(
@@ -1970,6 +2015,16 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
             message=f"{sale_doc.get('description', 'عرض فلاش لفترة محدودة!')} - خصم {discount}%",
             offer_type="flash_sale",
             offer_data={"flash_sale_id": sale_id}
+        )
+    
+    # إرسال إشعار للبائعين لدعوتهم للمشاركة في العرض
+    if sale_data.get("notify_sellers", False):
+        discount = int(sale_doc["discount_percentage"])
+        await send_flash_sale_notification_to_sellers(
+            title=f"🔥 فرصة للمشاركة في عرض فلاش!",
+            message=f"عرض {sale_doc['name']} - خصم {discount}% | شارك منتجاتك الآن واستفد من الترويج المجاني!",
+            flash_sale_id=sale_id,
+            sale_scope=sale_doc.get("sale_scope", "all")
         )
     
     return sale_doc
