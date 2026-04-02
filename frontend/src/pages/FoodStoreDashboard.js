@@ -2031,85 +2031,6 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             </div>
           </div>
 
-          {/* Images Section - محسّن */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                صور المنتج ({formData.images.length}/{maxImagesPerProduct})
-              </label>
-            </div>
-            
-            {/* نصيحة الخلفية البيضاء */}
-            <p className="text-[10px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
-              📸 ضع خلفية بيضاء خلف المنتج عند التصوير للحصول على جودة أفضل
-            </p>
-            
-            {/* أزرار الكاميرا والمعرض والرفع المباشر */}
-            {formData.images.length < maxImagesPerProduct && (
-              <div className="space-y-2 mb-3">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageCaptureMode('camera');
-                      setShowImageCapture(true);
-                    }}
-                    className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E65000]"
-                  >
-                    <Camera size={16} />
-                    تصوير بالكاميرا
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageCaptureMode('gallery');
-                      setShowImageCapture(true);
-                    }}
-                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200"
-                  >
-                    <Image size={16} />
-                    من المعرض
-                  </button>
-                </div>
-                {/* زر الرفع المباشر بدون تعديل */}
-                <label className="w-full py-2 bg-[#FF6B00] text-white rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-[#E65000] cursor-pointer font-bold">
-                  <Upload size={14} />
-                  رفع مباشر بدون تعديل
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleDirectUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            )}
-            
-            {/* معاينة الصور */}
-            <div className="flex gap-2 flex-wrap">
-              {formData.images.map((img, i) => (
-                <div key={i} className="relative group">
-                  <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover border border-gray-200" />
-                  <button
-                    type="button"
-                    onClick={() => setFormData({
-                      ...formData,
-                      images: formData.images.filter((_, idx) => idx !== i)
-                    })}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={14} />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[8px] text-center py-0.5 rounded-b-lg">
-                      رئيسية
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* قسم نوع البيع */}
           <div className="border border-gray-200 rounded-xl p-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2237,6 +2158,85 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 )}
               </>
             )}
+          </div>
+
+          {/* Images Section - محسّن */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                صور المنتج ({formData.images.length}/{maxImagesPerProduct})
+              </label>
+            </div>
+            
+            {/* نصيحة الخلفية البيضاء */}
+            <p className="text-[10px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
+              📸 ضع خلفية بيضاء خلف المنتج عند التصوير للحصول على جودة أفضل
+            </p>
+            
+            {/* أزرار الكاميرا والمعرض والرفع المباشر */}
+            {formData.images.length < maxImagesPerProduct && (
+              <div className="space-y-2 mb-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageCaptureMode('camera');
+                      setShowImageCapture(true);
+                    }}
+                    className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E65000]"
+                  >
+                    <Camera size={16} />
+                    تصوير بالكاميرا
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageCaptureMode('gallery');
+                      setShowImageCapture(true);
+                    }}
+                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-200"
+                  >
+                    <Image size={16} />
+                    من المعرض
+                  </button>
+                </div>
+                {/* زر الرفع المباشر بدون تعديل */}
+                <label className="w-full py-2 bg-[#FF6B00] text-white rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-[#E65000] cursor-pointer font-bold">
+                  <Upload size={14} />
+                  رفع مباشر بدون تعديل
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleDirectUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+            
+            {/* معاينة الصور */}
+            <div className="flex gap-2 flex-wrap">
+              {formData.images.map((img, i) => (
+                <div key={i} className="relative group">
+                  <img src={img} alt="" className="w-20 h-20 rounded-lg object-cover border border-gray-200" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({
+                      ...formData,
+                      images: formData.images.filter((_, idx) => idx !== i)
+                    })}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={14} />
+                  </button>
+                  {i === 0 && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[8px] text-center py-0.5 rounded-b-lg">
+                      رئيسية
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* قسم فيديو التحقق للأدمن */}
