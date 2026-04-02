@@ -140,7 +140,7 @@ const FoodOrderTracking = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -153,7 +153,7 @@ const FoodOrderTracking = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-2">الطلب غير موجود</h2>
           <button
             onClick={() => navigate('/food')}
-            className="bg-green-500 text-white px-6 py-2 rounded-xl font-bold"
+            className="bg-[#FF6B00] text-white px-6 py-2 rounded-xl font-bold"
           >
             العودة للطعام
           </button>
@@ -171,7 +171,7 @@ const FoodOrderTracking = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className={`${isCancelled ? 'bg-red-500' : isDelivered ? 'bg-green-500' : 'bg-gradient-to-b from-green-600 to-green-500'} text-white px-4 py-6`}>
+      <div className={`${isCancelled ? 'bg-red-500' : isDelivered ? 'bg-green-500' : 'bg-gradient-to-b from-[#FF6B00] to-[#FF8533]'} text-white px-4 py-6`}>
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => navigate('/food')}
@@ -213,11 +213,11 @@ const FoodOrderTracking = () => {
                 return (
                   <div key={step.key} className="flex flex-col items-center z-10">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+                      isActive ? 'bg-[#FF6B00] text-white' : 'bg-gray-200 text-gray-400'
                     }`}>
                       <Icon size={18} />
                     </div>
-                    <span className={`text-xs mt-2 text-center ${isActive ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                    <span className={`text-xs mt-2 text-center ${isActive ? 'text-[#FF6B00] font-medium' : 'text-gray-400'}`}>
                       {step.label}
                     </span>
                   </div>
@@ -240,11 +240,11 @@ const FoodOrderTracking = () => {
 
         {/* Estimated Time */}
         {!isCancelled && !isDelivered && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-            <Clock size={24} className="text-green-600" />
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-3">
+            <Clock size={24} className="text-[#FF6B00]" />
             <div>
-              <p className="font-bold text-green-800">الوقت المتوقع للتوصيل</p>
-              <p className="text-sm text-green-600">{order.estimated_delivery_time} دقيقة</p>
+              <p className="font-bold text-[#FF6B00]">الوقت المتوقع للتوصيل</p>
+              <p className="text-sm text-[#FF6B00]">{order.estimated_delivery_time} دقيقة</p>
             </div>
           </div>
         )}
@@ -304,7 +304,7 @@ const FoodOrderTracking = () => {
         {/* Store Info */}
         <div className="bg-white rounded-xl p-4 border border-gray-200">
           <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <Store size={18} className="text-green-600" />
+            <Store size={18} className="text-[#FF6B00]" />
             المتجر
           </h3>
           <p className="text-gray-900 font-medium">{order.store_name}</p>
@@ -335,7 +335,7 @@ const FoodOrderTracking = () => {
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-200">
               <span className="text-gray-900">الإجمالي</span>
-              <span className="text-green-600">{order.total.toLocaleString()} ل.س</span>
+              <span className="text-[#FF6B00]">{order.total.toLocaleString()} ل.س</span>
             </div>
           </div>
         </div>
@@ -343,7 +343,7 @@ const FoodOrderTracking = () => {
         {/* Delivery Info */}
         <div className="bg-white rounded-xl p-4 border border-gray-200 space-y-3">
           <h3 className="font-bold text-gray-900 flex items-center gap-2">
-            <MapPin size={18} className="text-green-600" />
+            <MapPin size={18} className="text-[#FF6B00]" />
             عنوان التوصيل
           </h3>
           <p className="text-gray-900">
@@ -366,7 +366,7 @@ const FoodOrderTracking = () => {
               const encodedAddress = encodeURIComponent(fullAddress);
               window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
             }}
-            className="w-full bg-green-500 text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+            className="w-full bg-[#FF6B00] text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
             data-testid="open-maps-btn"
           >
             <Map size={16} />
@@ -378,7 +378,7 @@ const FoodOrderTracking = () => {
         {order.driver_name && (
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Truck size={18} className="text-green-600" />
+              <Truck size={18} className="text-[#FF6B00]" />
               موظف التوصيل
             </h3>
             <div className="flex items-center justify-between">
@@ -388,7 +388,7 @@ const FoodOrderTracking = () => {
               </div>
               <a
                 href={`tel:${order.driver_phone}`}
-                className="bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+                className="bg-[#FF6B00] text-white px-4 py-2 rounded-xl flex items-center gap-2"
               >
                 <Phone size={16} />
                 اتصال
@@ -454,8 +454,8 @@ const FoodOrderTracking = () => {
 
         {/* Show Rating if already rated */}
         {order.rating && (
-          <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center">
-            <p className="text-sm text-green-700 mb-2">تم تقييم الطلب</p>
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center">
+            <p className="text-sm text-[#FF6B00] mb-2">تم تقييم الطلب</p>
             <div className="flex justify-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -592,7 +592,7 @@ const RatingModal = ({ order, token, onClose, onSuccess }) => {
           <button
             onClick={handleSubmit}
             disabled={submitting || storeRating === 0}
-            className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-[#FF6B00] text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

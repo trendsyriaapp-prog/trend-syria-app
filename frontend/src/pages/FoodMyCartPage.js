@@ -397,7 +397,7 @@ const FoodMyCartPage = () => {
                             <div className="h-full w-full bg-green-500 rounded-full" />
                           </div>
                         </div>
-                        <span className="text-xs font-bold text-green-600">100%</span>
+                        <span className="text-xs font-bold text-[#FF6B00]">100%</span>
                       </div>
                     ) : (
                       <div>

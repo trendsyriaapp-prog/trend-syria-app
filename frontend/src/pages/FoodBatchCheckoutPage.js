@@ -418,7 +418,7 @@ const FoodBatchCheckoutPage = () => {
                     <div className="text-left">
                       <p className="font-bold text-sm text-gray-900">{formatPrice(store.totalAmount)}</p>
                       {deliveryFee === 0 ? (
-                        <p className="text-xs text-green-600 font-medium">توصيل مجاني ✓</p>
+                        <p className="text-xs text-[#FF6B00] font-medium">توصيل مجاني ✓</p>
                       ) : (
                         <p className="text-xs text-gray-500">+ {formatPrice(deliveryFee)} توصيل</p>
                       )}
@@ -658,7 +658,7 @@ const FoodBatchCheckoutPage = () => {
                 >
                   {newAddress.latitude && newAddress.longitude ? (
                     <>
-                      <Check size={18} className="text-green-600" />
+                      <Check size={18} className="text-[#FF6B00]" />
                       <span>تم تحديد الموقع ✓</span>
                     </>
                   ) : (
@@ -894,7 +894,7 @@ const FoodBatchCheckoutPage = () => {
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">رسوم التوصيل ({stores.length} متجر)</span>
             {totalDeliveryFee === 0 ? (
-              <span className="text-green-600 font-medium">مجاني ✓</span>
+              <span className="text-[#FF6B00] font-medium">مجاني ✓</span>
             ) : (
               <span className="text-gray-900">{formatPrice(totalDeliveryFee)}</span>
             )}

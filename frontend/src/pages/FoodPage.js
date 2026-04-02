@@ -107,7 +107,7 @@ const MAIN_SECTIONS = {
   market: {
     name: 'ماركت',
     icon: '🛒',
-    color: 'from-green-500 to-green-600',
+    color: 'from-[#FF6B00] to-[#FF8533]',
     categories: ['supermarket', 'vegetables']
   }
 };
@@ -668,7 +668,7 @@ const FoodPage = () => {
 
       {/* 🚚 شريط فلتر التوصيل المجاني */}
       {showOnlyFreeDelivery && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+        <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -721,7 +721,7 @@ const FoodPage = () => {
               <section className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                    <div className="p-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-lg">
                       <Truck size={16} className="text-white" />
                     </div>
                     <div>
@@ -731,7 +731,7 @@ const FoodPage = () => {
                   </div>
                   <Link 
                     to="/food/free-delivery"
-                    className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 font-medium"
+                    className="flex items-center gap-1 text-xs text-[#FF6B00] hover:text-[#E65000] font-medium"
                   >
                     <span>عرض الكل</span>
                     <ChevronLeft size={14} />
@@ -762,7 +762,7 @@ const FoodPage = () => {
                                   <Package size={32} className="text-gray-300" />
                                 </div>
                               )}
-                              <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                              <div className="absolute top-2 right-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
                                 <Truck size={10} />
                                 توصيل مجاني
                               </div>
@@ -771,12 +771,12 @@ const FoodPage = () => {
                               <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
                               {product.store_name && (
                                 <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-                                  <Store size={10} className="text-green-500" />
+                                  <Store size={10} className="text-[#FF6B00]" />
                                   <span className="text-[10px] truncate">{product.store_name}</span>
                                 </div>
                               )}
                               <div className="flex items-center gap-1.5 mt-1">
-                                <span className="text-green-600 font-bold text-sm">
+                                <span className="text-[#FF6B00] font-bold text-sm">
                                   {product.price?.toLocaleString()} ل.س
                                 </span>
                               </div>
@@ -796,7 +796,7 @@ const FoodPage = () => {
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg">
+                    <div className="p-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-lg">
                       <Truck size={16} className="text-white" />
                     </div>
                     <h2 className="text-lg font-bold text-gray-900">منتجات التوصيل المجاني</h2>

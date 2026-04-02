@@ -128,7 +128,7 @@ const FoodBatchSuccessPage = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg"
+          className="w-24 h-24 bg-[#FF6B00] rounded-full flex items-center justify-center mb-6 shadow-lg"
         >
           <Check size={48} className="text-white" />
         </motion.div>

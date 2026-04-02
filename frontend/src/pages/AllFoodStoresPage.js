@@ -124,7 +124,7 @@ const AllFoodStoresPage = () => {
             
             {/* شارة التوصيل المجاني */}
             {store.free_delivery_threshold && (
-              <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+              <div className="absolute top-2 right-2 bg-[#FF6B00] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
                 <Truck size={10} />
                 توصيل مجاني
               </div>

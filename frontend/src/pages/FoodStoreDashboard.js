@@ -117,7 +117,7 @@ const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
               onClick={() => setMethod(m.id)}
               className={`p-2 rounded-xl border-2 text-xs font-bold transition-all flex items-center gap-1 ${
                 method === m.id
-                  ? 'border-green-500 bg-green-50 text-green-700'
+                  ? 'border-[#FF6B00] bg-orange-50 text-[#FF6B00]'
                   : 'border-gray-200 bg-white text-gray-700'
               }`}
             >
@@ -176,7 +176,7 @@ const WithdrawForm = ({ balance, onClose, onSuccess, token }) => {
         <button
           type="submit"
           disabled={submitting}
-          className="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl disabled:opacity-50"
+          className="flex-1 bg-[#FF6B00] text-white font-bold py-3 rounded-xl disabled:opacity-50"
         >
           {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
         </button>
@@ -422,7 +422,7 @@ const FoodStoreDashboard = () => {
   if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -432,12 +432,12 @@ const FoodStoreDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full shadow-lg">
-          <Store size={48} className="mx-auto text-green-500 mb-4" />
+          <Store size={48} className="mx-auto text-[#FF6B00] mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">ليس لديك متجر طعام</h2>
           <p className="text-gray-600 mb-6">أنشئ متجرك الآن وابدأ ببيع منتجاتك</p>
           <button
             onClick={() => navigate('/join/food-seller')}
-            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600"
+            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000]"
           >
             إنشاء متجر طعام
           </button>
@@ -450,7 +450,7 @@ const FoodStoreDashboard = () => {
   if (!store) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -513,8 +513,8 @@ const FoodStoreDashboard = () => {
               {store.logo ? (
                 <img src={store.logo} alt={store.name} className="w-14 h-14 rounded-xl object-cover border border-gray-200" />
               ) : (
-                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Store size={24} className="text-green-600" />
+                <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Store size={24} className="text-[#FF6B00]" />
                 </div>
               )}
               <div>
@@ -537,7 +537,7 @@ const FoodStoreDashboard = () => {
               <NotificationsDropdown />
               <button 
                 onClick={() => setShowWalletModal(true)}
-                className="h-9 bg-green-500 text-white px-3 rounded-full flex items-center gap-1 hover:bg-green-600 transition-colors text-xs font-bold"
+                className="h-9 bg-[#FF6B00] text-white px-3 rounded-full flex items-center gap-1 hover:bg-[#E65000] transition-colors text-xs font-bold"
                 title="المحفظة"
               >
                 <Wallet size={14} />
@@ -548,7 +548,7 @@ const FoodStoreDashboard = () => {
                 disabled={togglingStore}
                 className={`h-9 px-3 rounded-full text-xs font-bold transition-all ${
                   store.manual_close 
-                    ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                    ? 'bg-orange-100 text-[#FF6B00] hover:bg-orange-200' 
                     : 'bg-red-100 text-red-600 hover:bg-red-200'
                 }`}
               >
@@ -566,7 +566,7 @@ const FoodStoreDashboard = () => {
         {activeTab === 'orders' && (
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <ShoppingBag size={20} className="text-green-600" />
+              <ShoppingBag size={20} className="text-[#FF6B00]" />
               الطلبات
             </h2>
             <StoreOrdersTab 
@@ -589,12 +589,12 @@ const FoodStoreDashboard = () => {
           <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <ChefHat size={18} className="text-green-600" />
+                <ChefHat size={18} className="text-[#FF6B00]" />
                 أطباق المطعم ({products.length})
               </h3>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-600"
+                className="flex items-center gap-2 bg-[#FF6B00] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#E65000]"
               >
                 <Plus size={16} />
                 إضافة طبق
@@ -629,7 +629,7 @@ const FoodStoreDashboard = () => {
                         مخفي عن العملاء
                       </div>
                     ) : (
-                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                      <div className="absolute top-2 right-2 bg-[#FF6B00] text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
                         <Check size={10} />
                         نشط
                       </div>
@@ -681,7 +681,7 @@ const FoodStoreDashboard = () => {
                             data-testid={`toggle-availability-${product.id}`}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                               product.is_available 
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                ? 'bg-orange-100 text-[#FF6B00] hover:bg-orange-200' 
                                 : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                             }`}
                           >
@@ -741,7 +741,7 @@ const FoodStoreDashboard = () => {
         {activeTab === 'settings' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-4">
             <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <Settings size={18} className="text-green-600" />
+              <Settings size={18} className="text-[#FF6B00]" />
               الإعدادات
             </h3>
             <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
@@ -763,7 +763,7 @@ const FoodStoreDashboard = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-3 transition-all ${
                 activeTab === tab.id
-                  ? 'text-green-600 bg-green-50'
+                  ? 'text-[#FF6B00] bg-orange-50'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -869,7 +869,7 @@ const FoodStoreDashboard = () => {
                 setShowWithdrawModal(true);
               }}
               disabled={walletData.balance < 50000}
-              className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600 transition-colors"
+              className="w-full py-4 bg-[#FF6B00] text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E65000] transition-colors"
             >
               {walletData.balance < 50000 ? `الحد الأدنى للسحب 50,000 ل.س` : 'طلب سحب'}
             </button>
@@ -889,7 +889,7 @@ const FoodStoreDashboard = () => {
                 store.manual_close ? 'bg-green-100' : 'bg-red-100'
               }`}>
                 {store.manual_close ? (
-                  <Store size={32} className="text-green-600" />
+                  <Store size={32} className="text-[#FF6B00]" />
                 ) : (
                   <X size={32} className="text-red-600" />
                 )}
@@ -1073,8 +1073,8 @@ const StoreSettings = ({ store, token, onUpdate }) => {
               className="w-20 h-20 rounded-xl object-cover border-2 border-white shadow"
             />
           ) : (
-            <div className="w-20 h-20 rounded-xl bg-green-100 flex items-center justify-center border-2 border-white shadow">
-              <Store size={32} className="text-green-600" />
+            <div className="w-20 h-20 rounded-xl bg-orange-100 flex items-center justify-center border-2 border-white shadow">
+              <Store size={32} className="text-[#FF6B00]" />
             </div>
           )}
           {uploadingLogo && (
@@ -1086,7 +1086,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         <div className="flex-1">
           <p className="font-medium text-gray-900 text-sm">صورة المتجر</p>
           <p className="text-xs text-gray-500 mb-2">PNG, JPG (أقصى 2 ميجابايت)</p>
-          <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium cursor-pointer hover:bg-green-600 transition-colors">
+          <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs font-medium cursor-pointer hover:bg-[#E65000] transition-colors">
             <Camera size={14} />
             {uploadingLogo ? 'جاري الرفع...' : 'تغيير الصورة'}
             <input
@@ -1163,7 +1163,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00]"
               placeholder="الحي، الشارع، رقم البناء (إجباري)"
               required
             />
@@ -1294,7 +1294,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {saving ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1470,7 +1470,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   offer.is_active 
-                    ? 'bg-green-100 text-green-700' 
+                    ? 'bg-orange-100 text-[#FF6B00]' 
                     : 'bg-gray-100 text-gray-500'
                 }`}>
                   {offer.is_active ? 'نشط' : 'معطل'}
@@ -1490,7 +1490,7 @@ const OffersTab = ({ offers, products, token, onUpdate, showAddOffer, setShowAdd
                   className={`flex-1 py-2 rounded-lg font-medium text-sm ${
                     offer.is_active
                       ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-orange-100 text-[#FF6B00] hover:bg-orange-200'
                   }`}
                 >
                   {offer.is_active ? 'تعطيل' : 'تفعيل'}
@@ -1978,9 +1978,9 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                   <span className="text-red-600">عمولة المنصة ({commissionInfo.commission_percentage})</span>
                   <span className="font-bold text-red-600">- {Math.round(Number(formData.price) * commissionInfo.commission_rate).toLocaleString()} ل.س</span>
                 </div>
-                <div className="flex justify-between items-center py-2 bg-green-100 rounded-lg px-3 -mx-1">
-                  <span className="font-bold text-green-700">صافي ربحك ✅</span>
-                  <span className="font-bold text-green-700 text-lg">
+                <div className="flex justify-between items-center py-2 bg-orange-100 rounded-lg px-3 -mx-1">
+                  <span className="font-bold text-[#FF6B00]">صافي ربحك ✅</span>
+                  <span className="font-bold text-[#FF6B00] text-lg">
                     {Math.round(Number(formData.price) * (1 - commissionInfo.commission_rate)).toLocaleString()} ل.س
                   </span>
                 </div>
@@ -2003,8 +2003,8 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                     onClick={() => setFormData({ ...formData, category: suggestion })}
                     className={`px-2 py-1 text-[10px] rounded-full border transition-all ${
                       formData.category === suggestion
-                        ? 'bg-green-500 text-white border-green-500'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-green-400 hover:bg-green-50'
+                        ? 'bg-[#FF6B00] text-white border-[#FF6B00]'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B00] hover:bg-orange-50'
                     }`}
                   >
                     {suggestion}
@@ -2054,7 +2054,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                       setImageCaptureMode('camera');
                       setShowImageCapture(true);
                     }}
-                    className="flex-1 py-2.5 bg-green-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-600"
+                    className="flex-1 py-2.5 bg-[#FF6B00] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#E65000]"
                   >
                     <Camera size={16} />
                     تصوير بالكاميرا
@@ -2101,7 +2101,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                     <X size={14} />
                   </button>
                   {i === 0 && (
-                    <span className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-[8px] text-center py-0.5 rounded-b-lg">
+                    <span className="absolute bottom-0 left-0 right-0 bg-[#FF6B00] text-white text-[8px] text-center py-0.5 rounded-b-lg">
                       رئيسية
                     </span>
                   )}
@@ -2126,7 +2126,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 }}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
                   sellingType === 'piece' 
-                    ? 'bg-green-500 text-white' 
+                    ? 'bg-[#FF6B00] text-white' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -2137,7 +2137,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 onClick={() => setSellingType('weight')}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
                   sellingType === 'weight' 
-                    ? 'bg-green-500 text-white' 
+                    ? 'bg-[#FF6B00] text-white' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -2177,7 +2177,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                         <span className="text-sm font-medium">
                           {variant.weight} {variant.unit === 'g' ? 'جرام' : variant.unit === 'kg' ? 'كيلو' : 'قطعة'}
                         </span>
-                        <span className="text-sm font-bold text-green-600">{variant.price.toLocaleString()} ل.س</span>
+                        <span className="text-sm font-bold text-[#FF6B00]">{variant.price.toLocaleString()} ل.س</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveWeightVariant(index)}
@@ -2226,7 +2226,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                   <button
                     type="button"
                     onClick={handleAddWeightVariant}
-                    className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600"
+                    className="bg-[#FF6B00] text-white p-2 rounded-lg hover:bg-[#E65000]"
                   >
                     <Plus size={20} />
                   </button>
@@ -2265,7 +2265,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                   >
                     <X size={14} />
                   </button>
-                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
+                  <div className="absolute bottom-1 left-1 bg-[#FF6B00] text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
                     ✓ تم الرفع
                   </div>
                 </div>
@@ -2295,7 +2295,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving ? (
               <div className="flex flex-col items-center">
@@ -2431,7 +2431,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
       pending: 'bg-yellow-100 text-yellow-700',
       confirmed: 'bg-blue-100 text-blue-700',
       preparing: 'bg-orange-100 text-orange-700',
-      ready: 'bg-green-100 text-green-700',
+      ready: 'bg-orange-100 text-[#FF6B00]',
       out_for_delivery: 'bg-purple-100 text-purple-700',
       delivered: 'bg-gray-100 text-gray-700',
       cancelled: 'bg-red-100 text-red-700'
@@ -2536,8 +2536,8 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
       case 'driver_accepted':
         return { 
           text: `✅ السائق ${order.driver_name || ''} قبل - سيصل خلال ${order.driver_estimated_arrival_minutes || '?'} دقيقة`, 
-          color: 'text-green-600', 
-          bg: 'bg-green-50' 
+          color: 'text-[#FF6B00]', 
+          bg: 'bg-orange-50' 
         };
       default:
         return null;
@@ -2547,7 +2547,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#FF6B00] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -2568,7 +2568,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
             onClick={() => setFilter(f.id)}
             data-testid={`filter-${f.id}`}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-              filter === f.id ? 'bg-green-500 text-white' : 'bg-white text-gray-600 border'
+              filter === f.id ? 'bg-[#FF6B00] text-white' : 'bg-white text-gray-600 border'
             }`}
           >
             {f.label}
@@ -2595,7 +2595,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                         {order.status_label}
                       </span>
                     </div>
-                    <span className="font-bold text-green-600">{order.total?.toLocaleString()} ل.س</span>
+                    <span className="font-bold text-[#FF6B00]">{order.total?.toLocaleString()} ل.س</span>
                   </div>
 
                   {/* Items */}
@@ -2630,7 +2630,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                         <button
                           onClick={() => updateStatus(order.id, 'confirmed')}
                           data-testid={`confirm-order-${order.id}`}
-                          className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                          className="flex-1 bg-[#FF6B00] text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-[#E65000]"
                         >
                           <Check size={16} />
                           تأكيد الطلب
@@ -2738,7 +2738,7 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                       <button
                         onClick={() => updateStatus(order.id, 'ready')}
                         data-testid={`mark-ready-${order.id}`}
-                        className="w-full bg-green-500 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                        className="w-full bg-[#FF6B00] text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-[#E65000]"
                       >
                         <Package size={16} />
                         الطلب جاهز
@@ -2747,25 +2747,25 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                   )}
 
                   {order.status === 'ready' && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                      <p className="text-green-700 text-sm mb-2">بانتظار موظف التوصيل</p>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                      <p className="text-[#FF6B00] text-sm mb-2">بانتظار موظف التوصيل</p>
                       
                       {/* كود الاستلام */}
                       {order.pickup_code && (
-                        <div className="bg-white rounded-lg p-4 mt-2 border-2 border-dashed border-green-400">
+                        <div className="bg-white rounded-lg p-4 mt-2 border-2 border-dashed border-[#FF6B00]">
                           <p className="text-xs text-gray-500 mb-2">كود الاستلام - أعطه لموظف التوصيل</p>
                           <div className="flex justify-center gap-2" dir="ltr">
                             {order.pickup_code.split('').map((digit, i) => (
                               <span 
                                 key={i} 
-                                className="w-12 h-14 flex items-center justify-center text-2xl font-bold bg-green-500 text-white rounded-lg shadow-md"
+                                className="w-12 h-14 flex items-center justify-center text-2xl font-bold bg-[#FF6B00] text-white rounded-lg shadow-md"
                               >
                                 {digit}
                               </span>
                             ))}
                           </div>
                           {order.pickup_code_verified && (
-                            <p className="text-green-600 text-xs mt-2 font-bold">
+                            <p className="text-[#FF6B00] text-xs mt-2 font-bold">
                               ✅ تم تأكيد الاستلام
                             </p>
                           )}
@@ -3006,8 +3006,8 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
               </button>
             </div>
 
-            <div className="bg-green-50 rounded-xl p-4 mb-4">
-              <p className="text-sm text-green-700 mb-2 font-medium flex items-center gap-2">
+            <div className="bg-orange-50 rounded-xl p-4 mb-4">
+              <p className="text-sm text-[#FF6B00] mb-2 font-medium flex items-center gap-2">
                 <Check size={16} />
                 السائق {showSetPrepTimeModal.driver_name} قبل الطلب!
               </p>
@@ -3286,7 +3286,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
 
       {/* الترويجات النشطة */}
       {myPromotions.active?.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
           <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
             <Sparkles size={18} />
             ترويجاتك النشطة ({myPromotions.active.length})
@@ -3514,7 +3514,7 @@ const FlashSalesTab = ({ store, products, token }) => {
   const getStatusBadge = (status) => {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-700',
-      approved: 'bg-green-100 text-green-700',
+      approved: 'bg-orange-100 text-[#FF6B00]',
       rejected: 'bg-red-100 text-red-700'
     };
     const labels = {

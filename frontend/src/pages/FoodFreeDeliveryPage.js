@@ -21,7 +21,7 @@ const FoodProductCard = ({ product, badgeSettings }) => {
       if (product.price >= threshold) {
         badges.push({
           text: '🚚 توصيل مجاني',
-          color: 'bg-green-500'
+          color: 'bg-[#FF6B00]'
         });
       }
     }
@@ -76,12 +76,12 @@ const FoodProductCard = ({ product, badgeSettings }) => {
           <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
           {product.store_name && (
             <div className="flex items-center gap-1 text-gray-500 mt-0.5">
-              <Store size={10} className="text-green-500" />
+              <Store size={10} className="text-[#FF6B00]" />
               <span className="text-[10px] truncate">{product.store_name}</span>
             </div>
           )}
           <div className="flex items-center justify-between mt-1">
-            <span className="text-green-600 font-bold text-sm">
+            <span className="text-[#FF6B00] font-bold text-sm">
               {product.price?.toLocaleString()} ل.س
             </span>
             {product.rating && (
@@ -147,7 +147,7 @@ const FoodFreeDeliveryPage = () => {
         <div className="text-center">
           <Truck size={48} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">يرجى اختيار مدينتك أولاً</p>
-          <Link to="/food" className="text-green-600 font-medium">
+          <Link to="/food" className="text-[#FF6B00] font-medium">
             العودة لقسم الطعام
           </Link>
         </div>
@@ -158,7 +158,7 @@ const FoodFreeDeliveryPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header مصغّر بدون سهم رجوع */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2">
+      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto flex items-center gap-2">
           <Truck size={20} />
           <h1 className="text-base font-bold">توصيل مجاني</h1>
@@ -169,7 +169,7 @@ const FoodFreeDeliveryPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-4">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
           </div>
         ) : freeDeliveryProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">

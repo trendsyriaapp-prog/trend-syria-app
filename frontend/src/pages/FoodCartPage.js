@@ -800,7 +800,7 @@ const FoodCartPage = () => {
               </div>
             ) : subtotal >= platformFreeDeliveryThreshold ? (
               <div className="flex items-center gap-2 text-green-700">
-                <Check size={18} className="text-green-600" />
+                <Check size={18} className="text-[#FF6B00]" />
                 <span className="font-bold text-sm">🎉 مبروك! حصلت على توصيل مجاني</span>
               </div>
             ) : (
@@ -869,7 +869,7 @@ const FoodCartPage = () => {
                   {/* زر تعديل الموقع */}
                   <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
                     {addr.latitude ? (
-                      <span className="text-[10px] text-green-600 flex items-center gap-1">
+                      <span className="text-[10px] text-[#FF6B00] flex items-center gap-1">
                         <Check size={12} />
                         الموقع محدد على الخريطة
                       </span>
@@ -1501,7 +1501,7 @@ const FoodCartPage = () => {
                 </div>
                 
                 {tempLocation.latitude && (
-                  <p className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
+                  <p className="text-xs text-[#FF6B00] text-center mt-2 flex items-center justify-center gap-1">
                     <Check size={14} />
                     تم تحديد الموقع بنجاح
                   </p>
