@@ -484,6 +484,20 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
 
   if (!isOpen) return null;
 
+  // في وضع المعرض: لا نعرض أي شيء حتى يختار المستخدم صورة
+  // فقط نعرض input المخفي الذي يفتح المعرض
+  if (mode === 'gallery' && step === 'capture') {
+    return (
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        accept="image/*" 
+        onChange={handleFileSelect} 
+        className="hidden" 
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black" data-testid="image-capture-modal">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
