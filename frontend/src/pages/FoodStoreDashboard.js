@@ -394,16 +394,16 @@ const FoodStoreDashboard = () => {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('هل تريد حذف هذا الطبق؟')) return;
+    if (!window.confirm('هل تريد حذف هذا الصنف؟')) return;
     
     try {
       await axios.delete(`${API}/api/food/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast({ title: "تم الحذف", description: "تم حذف الطبق بنجاح" });
+      toast({ title: "تم الحذف", description: "تم حذف الصنف بنجاح" });
       fetchStoreData();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل حذف الطبق", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل حذف الصنف", variant: "destructive" });
     }
   };
 
@@ -415,7 +415,7 @@ const FoodStoreDashboard = () => {
       );
       fetchStoreData();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل تحديث حالة الطبق", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل تحديث حالة الصنف", variant: "destructive" });
     }
   };
 
@@ -529,7 +529,7 @@ const FoodStoreDashboard = () => {
                     {store.manual_close ? 'مغلق' : 'مفتوح'}
                   </span>
                   <span className="text-gray-400">•</span>
-                  <span className="text-gray-500">{products.length} طبق</span>
+                  <span className="text-gray-500">{products.length} صنف</span>
                 </div>
               </div>
             </div>
@@ -584,26 +584,26 @@ const FoodStoreDashboard = () => {
           </div>
         )}
 
-        {/* محتوى الأطباق */}
+        {/* محتوى الأصناف */}
         {activeTab === 'menu' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-gray-900 flex items-center gap-2">
                 <ChefHat size={18} className="text-[#FF6B00]" />
-                أطباق المطعم ({products.length})
+                أصناف المتجر ({products.length})
               </h3>
               <button
                 onClick={() => setShowAddProduct(true)}
                 className="flex items-center gap-2 bg-[#FF6B00] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#E65000]"
               >
                 <Plus size={16} />
-                إضافة طبق
+                إضافة صنف
               </button>
             </div>
             {products.length === 0 ? (
               <div className="bg-gray-50 rounded-xl p-8 text-center">
                 <Package size={40} className="mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">لم تقم بإضافة أي أطباق بعد</p>
+                <p className="text-gray-500">لم تقم بإضافة أي أصناف بعد</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -613,7 +613,7 @@ const FoodStoreDashboard = () => {
                     product.approval_status === 'pending' || !product.is_approved ? 'border-2 border-yellow-300 bg-yellow-50/50' :
                     !product.is_available ? 'border-2 border-dashed border-gray-300' : ''
                   }`}>
-                    {/* شارات حالة الطبق */}
+                    {/* شارات حالة الصنف */}
                     {product.approval_status === 'rejected' ? (
                       <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
                         <X size={10} />
@@ -661,9 +661,9 @@ const FoodStoreDashboard = () => {
                         <p className={`font-bold text-sm ${!product.is_available ? 'text-gray-400' : 'text-green-600'}`}>{(product.price || 0).toLocaleString()} ل.س</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        {/* أزرار حسب حالة الطبق */}
+                        {/* أزرار حسب حالة الصنف */}
                         {product.approval_status === 'rejected' ? (
-                          /* طبق مرفوض - زر إعادة إرسال */
+                          /* صنف مرفوض - زر إعادة إرسال */
                           <button
                             onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200"
@@ -672,10 +672,10 @@ const FoodStoreDashboard = () => {
                             <span>تعديل وإعادة إرسال</span>
                           </button>
                         ) : product.approval_status === 'pending' || !product.is_approved ? (
-                          /* طبق معلق - بدون زر إظهار/إخفاء */
+                          /* صنف معلق - بدون زر إظهار/إخفاء */
                           null
                         ) : (
-                          /* طبق موافق عليه - زر إظهار/إخفاء */
+                          /* صنف موافق عليه - زر إظهار/إخفاء */
                           <button
                             onClick={() => handleToggleAvailability(product.id, product.is_available)}
                             data-testid={`toggle-availability-${product.id}`}
@@ -754,7 +754,7 @@ const FoodStoreDashboard = () => {
         <div className="max-w-4xl mx-auto flex">
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
-            { id: 'menu', label: 'الأطباق', icon: ChefHat },
+            { id: 'menu', label: 'الأصناف', icon: ChefHat },
             { id: 'flash', label: 'فلاش', icon: Zap },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
@@ -1805,7 +1805,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
         setUploadingVideo(false);
         toast({
           title: "تم رفع فيديو التحقق ✅",
-          description: "سيراجعه الأدمن قبل نشر الطبق"
+          description: "سيراجعه الأدمن قبل نشر الصنف"
         });
       };
       reader.readAsDataURL(file);
@@ -1845,11 +1845,11 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       return;
     }
 
-    // التحقق من فيديو التحقق للأدمن (إجباري للأطباق الجديدة)
+    // التحقق من فيديو التحقق للأدمن (إجباري للأصناف الجديدة)
     if (!product && !formData.admin_video) {
       toast({
         title: "فيديو التحقق مطلوب 📹",
-        description: "يرجى رفع فيديو قصير يُظهر الطبق الحقيقي للمراجعة",
+        description: "يرجى رفع فيديو قصير يُظهر الصنف الحقيقي للمراجعة",
         variant: "destructive"
       });
       return;
@@ -1871,13 +1871,13 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
         await axios.put(`${API}/api/food/products/${product.id}`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast({ title: "تم التحديث", description: "تم تحديث الطبق بنجاح" });
+        toast({ title: "تم التحديث", description: "تم تحديث الصنف بنجاح" });
       } else {
         // Add new product
         await axios.post(`${API}/api/food/products`, submitData, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        toast({ title: "تمت الإضافة", description: "تم إضافة الطبق بنجاح" });
+        toast({ title: "تمت الإضافة", description: "تم إضافة الصنف بنجاح" });
       }
       onSave();
     } catch (error) {
@@ -1897,7 +1897,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
       >
         <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">
-            {product ? 'تعديل الطبق' : 'إضافة طبق جديد'}
+            {product ? 'تعديل الصنف' : 'إضافة صنف جديد'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={20} />
@@ -1906,7 +1906,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">اسم الطبق *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">اسم الصنف *</label>
             <input
               type="text"
               value={formData.name}
@@ -1922,7 +1922,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="وصف الطبق..."
+              placeholder="وصف الصنف..."
               rows={2}
               className="w-full border border-gray-200 rounded-xl px-4 py-3"
             />
@@ -2144,13 +2144,13 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                صور الطبق ({formData.images.length}/{maxImagesPerProduct})
+                صور الصنف ({formData.images.length}/{maxImagesPerProduct})
               </label>
             </div>
             
             {/* نصيحة الخلفية البيضاء */}
             <p className="text-[10px] text-blue-600 bg-blue-50 p-2 rounded-lg mb-2">
-              📸 ضع خلفية بيضاء خلف الطبق عند التصوير للحصول على جودة أفضل
+              📸 ضع خلفية بيضاء خلف الصنف عند التصوير للحصول على جودة أفضل
             </p>
             
             {/* أزرار الكاميرا والمعرض والرفع المباشر */}
@@ -2227,7 +2227,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                 <span className="text-red-500 mr-1">*</span>
               </label>
               <p className="text-[9px] text-orange-700 mb-2">
-                صوّر فيديو قصير (30 ثانية) يُظهر الطبق الحقيقي.
+                صوّر فيديو قصير (30 ثانية) يُظهر الصنف الحقيقي.
                 <br/>
                 <strong>هذا الفيديو للأدمن فقط ولن يظهر للعملاء.</strong>
               </p>
@@ -2281,14 +2281,14 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>جاري رفع الطبق...</span>
+                  <span>جاري رفع الصنف...</span>
                 </div>
                 <span className="text-[9px] opacity-80">يرجى الانتظار</span>
               </div>
             ) : (
               <>
                 <Save size={18} />
-                {product ? 'حفظ التغييرات' : 'إضافة الطبق'}
+                {product ? 'حفظ التغييرات' : 'إضافة الصنف'}
               </>
             )}
           </button>
