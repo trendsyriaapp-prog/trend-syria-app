@@ -28,20 +28,20 @@ const SplashScreen = ({ onComplete }) => {
           transition={{ duration: 0.5 }}
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{
-            background: 'linear-gradient(180deg, #FFA500 0%, #FF6B00 100%)'
+            background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C00 50%, #FFA500 100%)'
           }}
         >
           <div className="flex flex-col items-center">
-            {/* اللوجو */}
+            {/* اللوجو كأيقونة بزوايا منحنية */}
             <motion.img
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5 }}
               src="/images/logo.png"
               alt="ترند سورية"
-              className="w-72 h-72 md:w-96 md:h-96 object-contain"
+              className="w-48 h-48 md:w-56 md:h-56 object-cover rounded-[40px] shadow-2xl"
               style={{
-                filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
+                boxShadow: '0 25px 50px rgba(0,0,0,0.4), 0 10px 20px rgba(0,0,0,0.3)',
               }}
             />
           </div>
