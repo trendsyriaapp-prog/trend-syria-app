@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home, XCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -3232,8 +3232,21 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
 
   return (
     <div className="space-y-4">
+      {/* تنبيه إذا كان الفلاش معطل لبائعي الطعام */}
+      {settings.flash_enabled_for_me === false && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-red-700">
+            <XCircle size={20} />
+            <span className="font-bold">الفلاش معطل حالياً</span>
+          </div>
+          <p className="text-sm text-red-600 mt-1">
+            تم تعطيل فلاش الطعام من قبل الإدارة. يرجى المحاولة لاحقاً.
+          </p>
+        </div>
+      )}
+
       {/* شريط حالة Flash للبائع */}
-      {settings.flashStatus && (
+      {settings.flashStatus && settings.flash_enabled_for_me !== false && (
         <div className={`rounded-xl p-3 flex items-center justify-between ${
           settings.flashStatus.status === 'live' 
             ? 'bg-orange-100 border border-orange-300' 

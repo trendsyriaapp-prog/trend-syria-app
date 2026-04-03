@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Zap, Clock, CheckCircle, Loader2, Package, Percent, Wallet, Sparkles, Timer } from 'lucide-react';
+import { Zap, Clock, CheckCircle, Loader2, Package, Percent, Wallet, Sparkles, Timer, XCircle } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -157,8 +157,21 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
 
   return (
     <div className="space-y-4">
+      {/* تنبيه إذا كان الفلاش معطل لهذا النوع من البائعين */}
+      {settings.flash_enabled_for_me === false && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-red-700">
+            <XCircle size={20} />
+            <span className="font-bold">الفلاش معطل حالياً</span>
+          </div>
+          <p className="text-sm text-red-600 mt-1">
+            تم تعطيل الفلاش لهذا النوع من البائعين من قبل الإدارة. يرجى المحاولة لاحقاً.
+          </p>
+        </div>
+      )}
+
       {/* شريط حالة Flash للبائع */}
-      {settings.flashStatus && (
+      {settings.flashStatus && settings.flash_enabled_for_me !== false && (
         <div className={`rounded-xl p-3 flex items-center justify-between ${
           settings.flashStatus.status === 'live' 
             ? 'bg-green-100 border border-green-300' 

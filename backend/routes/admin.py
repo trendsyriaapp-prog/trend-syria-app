@@ -3446,6 +3446,8 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
             "flash_start_hour": 13,  # 1:00 PM
             "flash_duration_hours": 24,  # 24 ساعة
             "flash_days": [0, 1, 2, 3, 4, 5, 6],  # كل أيام الأسبوع (0=الاثنين، 6=الأحد)
+            "food_flash_enabled": True,     # تفعيل فلاش الطعام
+            "products_flash_enabled": True, # تفعيل فلاش المنتجات
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.platform_settings.insert_one(default_settings.copy())
@@ -3458,6 +3460,10 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
         settings["flash_duration_hours"] = 24
     if "flash_days" not in settings:
         settings["flash_days"] = [0, 1, 2, 3, 4, 5, 6]  # كل الأيام
+    if "food_flash_enabled" not in settings:
+        settings["food_flash_enabled"] = True
+    if "products_flash_enabled" not in settings:
+        settings["products_flash_enabled"] = True
     
     return settings
 
@@ -3490,6 +3496,10 @@ async def update_promotion_settings(data: dict, user: dict = Depends(get_current
         # التحقق من صحة الأيام (0-6)
         if isinstance(days, list) and all(isinstance(d, int) and 0 <= d <= 6 for d in days):
             update["flash_days"] = days
+    if "food_flash_enabled" in data:
+        update["food_flash_enabled"] = bool(data["food_flash_enabled"])
+    if "products_flash_enabled" in data:
+        update["products_flash_enabled"] = bool(data["products_flash_enabled"])
     
     await db.platform_settings.update_one(
         {"id": "promotions"},

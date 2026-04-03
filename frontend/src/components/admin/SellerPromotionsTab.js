@@ -18,7 +18,9 @@ const SellerPromotionsTab = () => {
     enabled: true,
     flash_start_hour: 13,
     flash_duration_hours: 24,
-    flash_days: [0, 1, 2, 3, 4, 5, 6]  // كل أيام الأسبوع
+    flash_days: [0, 1, 2, 3, 4, 5, 6],  // كل أيام الأسبوع
+    food_flash_enabled: true,    // تفعيل فلاش الطعام
+    products_flash_enabled: true // تفعيل فلاش المنتجات
   });
   const [promotions, setPromotions] = useState({ active: [], expired: [], stats: {} });
   const [showSettings, setShowSettings] = useState(false);
@@ -178,12 +180,36 @@ const SellerPromotionsTab = () => {
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">تفعيل الفلاش</label>
+              <label className="text-sm text-gray-600">تفعيل الفلاش العام</label>
               <input
                 type="checkbox"
                 checked={settings.enabled}
                 onChange={(e) => setSettings({...settings, enabled: e.target.checked})}
                 className="w-5 h-5 accent-orange-500"
+              />
+            </div>
+            
+            {/* تفعيل فلاش الطعام */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">فلاش الطعام 🍔</label>
+              <input
+                type="checkbox"
+                checked={settings.food_flash_enabled !== false}
+                onChange={(e) => setSettings({...settings, food_flash_enabled: e.target.checked})}
+                className="w-5 h-5 accent-green-500"
+                disabled={!settings.enabled}
+              />
+            </div>
+            
+            {/* تفعيل فلاش المنتجات */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">فلاش المنتجات 📦</label>
+              <input
+                type="checkbox"
+                checked={settings.products_flash_enabled !== false}
+                onChange={(e) => setSettings({...settings, products_flash_enabled: e.target.checked})}
+                className="w-5 h-5 accent-blue-500"
+                disabled={!settings.enabled}
               />
             </div>
             

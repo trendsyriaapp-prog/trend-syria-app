@@ -1585,8 +1585,14 @@ async def get_promotion_settings(user: dict = Depends(get_current_user)):
         settings = {
             "cost_per_product": 1000,
             "duration_hours": 24,
-            "max_products_per_day": 5
+            "max_products_per_day": 5,
+            "food_flash_enabled": True,
+            "products_flash_enabled": True
         }
+    
+    # إضافة حالة التفعيل حسب نوع البائع
+    is_food = user.get("user_type") == "food_seller"
+    settings["flash_enabled_for_me"] = settings.get("food_flash_enabled", True) if is_food else settings.get("products_flash_enabled", True)
     
     return settings
 
@@ -1666,6 +1672,14 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     flash_start_hour = settings.get("flash_start_hour", 13) if settings else 13
     flash_duration = settings.get("flash_duration_hours", 24) if settings else 24
     flash_days = settings.get("flash_days", [0, 1, 2, 3, 4, 5, 6]) if settings else [0, 1, 2, 3, 4, 5, 6]
+    
+    # التحقق من تفعيل الفلاش حسب نوع البائع
+    if is_food:
+        if not settings.get("food_flash_enabled", True):
+            raise HTTPException(status_code=400, detail="فلاش الطعام معطل حالياً من قبل الإدارة")
+    else:
+        if not settings.get("products_flash_enabled", True):
+            raise HTTPException(status_code=400, detail="فلاش المنتجات معطل حالياً من قبل الإدارة")
     
     # التحقق من رصيد المحفظة
     wallet = await db.wallets.find_one({"user_id": user["id"]})
