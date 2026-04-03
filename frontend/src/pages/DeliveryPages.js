@@ -754,6 +754,27 @@ const DeliveryDashboard = () => {
     }
   };
 
+  // قبول طلب منتجات (الخطوة الأولى - السائق يقبل الطلب)
+  const handleAcceptProductOrder = async (order) => {
+    try {
+      await axios.post(`${API}/api/orders/${order.id}/delivery/accept`);
+      toast({
+        title: "تم قبول الطلب ✅",
+        description: "توجه للمتجر لاستلام الطلب"
+      });
+      // إزالة الطلب من القائمة المتاحة
+      setAvailableOrders(prev => prev.filter(o => o.id !== order.id));
+      fetchOrders();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "حدث خطأ",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // استلام طلب منتجات من المتجر (الخطوة الثانية - بعد الوصول للمتجر)
   const handleTakeOrder = async (orderId) => {
     try {
       await axios.post(`${API}/api/orders/${orderId}/delivery/pickup`);
@@ -1292,7 +1313,7 @@ const DeliveryDashboard = () => {
                   orders={orderTypeFilter === 'food' ? [] : availableOrders}
                   foodOrders={orderTypeFilter === 'products' ? [] : availableFoodOrders}
                   isWorkingHours={() => true}
-                  onTakeOrder={(order) => setShowPickupChecklist(order)}
+                  onAcceptProductOrder={handleAcceptProductOrder}
                   onTakeFoodOrder={handleTakeFoodOrder}
                   onAcceptDriverRequest={handleAcceptDriverRequest}
                   orderTypeFilter={orderTypeFilter}

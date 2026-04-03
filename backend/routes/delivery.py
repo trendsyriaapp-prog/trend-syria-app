@@ -751,14 +751,14 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     
     is_locked = hot_fresh_count > 0
     
-    # جلب الطلبات النشطة
+    # جلب الطلبات النشطة (بما في ذلك المقبولة حديثاً)
     orders = await db.orders.find(
         {
             "delivery_driver_id": user["id"],
-            "delivery_status": {"$in": ["out_for_delivery", "picked_up", "on_the_way"]}
+            "delivery_status": {"$in": ["accepted", "out_for_delivery", "picked_up", "on_the_way"]}
         },
         {"_id": 0}
-    ).sort("accepted_at", 1).to_list(20)
+    ).sort("driver_accepted_at", -1).to_list(20)
     
     # جلب الإعدادات
     settings = await db.settings.find_one({"type": "delivery_settings"})

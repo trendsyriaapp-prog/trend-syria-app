@@ -8,7 +8,7 @@ import {
   formatDistance 
 } from '../../utils/distanceCalculator';
 
-const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, onAcceptDriverRequest, orderTypeFilter = 'all', theme = 'dark' }) => {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAcceptProductOrder, onTakeFoodOrder, onAcceptDriverRequest, orderTypeFilter = 'all', theme = 'dark' }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [orderDistances, setOrderDistances] = useState({});
@@ -260,7 +260,10 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                     onTakeFoodOrder(order);
                   }
                 } else {
-                  onTakeOrder(order);
+                  // طلب منتجات - استخدم onAcceptProductOrder
+                  if (onAcceptProductOrder) {
+                    onAcceptProductOrder(order);
+                  }
                 }
               }}
               disabled={!isWorkingHours()}
