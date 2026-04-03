@@ -123,7 +123,9 @@ export const calculateOrderDistances = (driverLocation, order) => {
   let customerLocation;
   
   // استخدام إحداثيات العميل الفعلية إذا وجدت
-  if (order.latitude && order.longitude) {
+  if (order.customer_latitude && order.customer_longitude) {
+    customerLocation = { lat: order.customer_latitude, lon: order.customer_longitude };
+  } else if (order.latitude && order.longitude) {
     customerLocation = { lat: order.latitude, lon: order.longitude };
   } else if (order.buyer_address?.latitude && order.buyer_address?.longitude) {
     customerLocation = { lat: order.buyer_address.latitude, lon: order.buyer_address.longitude };

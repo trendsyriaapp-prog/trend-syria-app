@@ -620,6 +620,21 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
         order["can_accept"] = not has_hot_fresh_orders
         if has_hot_fresh_orders:
             order["cannot_accept_reason"] = "أكمل طلبات الطعام أولاً"
+        
+        # إضافة إحداثيات البائع
+        seller_id = order.get("seller_id")
+        if seller_id:
+            seller = await db.users.find_one({"id": seller_id}, {"_id": 0})
+            if seller:
+                order["store_latitude"] = seller.get("latitude")
+                order["store_longitude"] = seller.get("longitude")
+                order["store_name"] = seller.get("store_name") or seller.get("name", "متجر")
+                order["store_address"] = seller.get("address", "")
+        
+        # إضافة إحداثيات العميل
+        if order.get("buyer_address"):
+            order["customer_latitude"] = order["buyer_address"].get("latitude")
+            order["customer_longitude"] = order["buyer_address"].get("longitude")
     
     # جلب طلبات الطعام الجاهزة - في نفس مدينة السائق فقط
     food_query = {"status": "ready", "driver_id": None}
@@ -647,6 +662,12 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
                 "city": store.get("city", ""),
                 "phone": store.get("phone", "")
             }]
+            # إحداثيات المتجر
+            order["store_latitude"] = store.get("latitude")
+            order["store_longitude"] = store.get("longitude")
+            order["store_name"] = store.get("name")
+            order["store_address"] = store.get("address", "")
+        
         # إضافة معلومات المشتري
         order["buyer_address"] = {
             "name": order.get("customer_name", ""),
@@ -654,6 +675,9 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
             "city": order.get("delivery_city", ""),
             "phone": order.get("delivery_phone", "")
         }
+        # إحداثيات العميل
+        order["customer_latitude"] = order.get("latitude") or order.get("delivery_latitude")
+        order["customer_longitude"] = order.get("longitude") or order.get("delivery_longitude")
         order["items"] = order.get("items", [])
     
     # دمج الطلبات
