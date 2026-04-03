@@ -3269,7 +3269,7 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
         </div>
         <p className="text-sm opacity-90 mb-3">
           {settings.flashStatus?.status === 'live' 
-            ? 'منتجك سيظهر فوراً في Flash النشط!' 
+            ? '⏳ Flash نشط الآن! انتظر انتهاءه لإضافة منتجك للـ Flash القادم' 
             : 'أضف منتجك الآن وسيظهر في Flash القادم الساعة 1:00 ظهراً'}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -3327,7 +3327,25 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
           اختر منتج للترويج
         </h3>
         
-        {availableProducts.length === 0 ? (
+        {/* رسالة تنبيه عند Flash النشط */}
+        {settings.flashStatus?.status === 'live' && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800 font-medium flex items-center gap-2">
+              <Clock size={16} />
+              Flash نشط الآن! لا يمكن إضافة منتجات حتى انتهائه
+            </p>
+            <p className="text-xs text-yellow-600 mt-1">
+              ينتهي خلال: {settings.flashStatus.remaining_formatted}
+            </p>
+          </div>
+        )}
+        
+        {settings.flashStatus?.status === 'live' ? (
+          <div className="text-center py-8 text-gray-400">
+            <Zap size={40} className="mx-auto mb-2 opacity-30" />
+            <p>انتظر انتهاء Flash الحالي</p>
+          </div>
+        ) : availableProducts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Package size={40} className="mx-auto mb-2 opacity-30" />
             <p>لا توجد منتجات متاحة للترويج</p>

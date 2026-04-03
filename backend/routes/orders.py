@@ -1681,18 +1681,20 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     now = datetime.now(timezone.utc)
     now_str = now.isoformat()
     
-    # تحديد وقت البدء والانتهاء بناءً على حالة Flash
+    # منع الإضافة أثناء Flash النشط - يمكن الإضافة فقط للـ Flash القادم
     if event["is_live"]:
-        starts_at = now_str
-        expires_at = event["current_event_end"]
-        status_msg = "منتجك الآن يظهر في Flash!"
-    else:
-        starts_at = event["next_event_start"]
-        next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
-        expires_at = (next_start + timedelta(hours=flash_duration)).isoformat()
-        start_hour_12 = flash_start_hour if flash_start_hour <= 12 else flash_start_hour - 12
-        am_pm = "ص" if flash_start_hour < 12 else "م"
-        status_msg = f"تم حجز منتجك في Flash القادم الساعة {start_hour_12}:00 {am_pm}"
+        raise HTTPException(
+            status_code=400, 
+            detail="لا يمكن إضافة منتجات أثناء Flash النشط. انتظر حتى انتهاء Flash الحالي لإضافة منتجك للـ Flash القادم."
+        )
+    
+    # تحديد وقت البدء والانتهاء - دائماً للـ Flash القادم
+    starts_at = event["next_event_start"]
+    next_start = datetime.fromisoformat(event["next_event_start"].replace('Z', '+00:00'))
+    expires_at = (next_start + timedelta(hours=flash_duration)).isoformat()
+    start_hour_12 = flash_start_hour if flash_start_hour <= 12 else flash_start_hour - 12
+    am_pm = "ص" if flash_start_hour < 12 else "م"
+    status_msg = f"تم حجز منتجك في Flash القادم الساعة {start_hour_12}:00 {am_pm}"
     
     # التحقق من عدم وجود ترويج نشط لنفس المنتج
     existing = await db.product_promotions.find_one({
@@ -1737,7 +1739,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         "created_at": now_str,
         "starts_at": starts_at,
         "expires_at": expires_at,
-        "flash_status": "live" if event["is_live"] else "pending"
+        "flash_status": "pending"  # دائماً pending لأن الإضافة فقط للـ Flash القادم
     }
     
     await db.product_promotions.insert_one(promotion)
@@ -1748,7 +1750,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         "message": status_msg,
         "promotion": promotion,
         "new_balance": balance - cost,
-        "flash_status": "live" if event["is_live"] else "pending"
+        "flash_status": "pending"  # دائماً pending
     }
 
 @router.get("/promoted-products")
