@@ -1316,31 +1316,27 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       </div>
 
       {/* رابط تصفح كعميل */}
-      <div className="mt-4">
-        <Link
-          to="/food?view=customer"
-          className="w-full flex items-center justify-center gap-2 bg-[#FF6B00]/10 border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/20 transition-colors"
-        >
-          <Home size={18} />
-          تصفح كعميل
-        </Link>
-      </div>
+      <Link
+        to="/food?view=customer"
+        className="w-full flex items-center justify-center gap-2 bg-[#FF6B00]/10 border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/20 transition-colors mt-2"
+      >
+        <Home size={18} />
+        تصفح كعميل
+      </Link>
 
       {/* زر تسجيل الخروج */}
-      <div className="border-t pt-4 mt-4">
-        <button
-          onClick={() => {
-            logout();
-            navigate('/login');
-            toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
-          }}
-          className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-          data-testid="logout-btn"
-        >
-          <LogOut size={18} />
-          تسجيل الخروج
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          logout();
+          navigate('/login');
+          toast({ title: 'تم تسجيل الخروج', description: 'نراك قريباً!' });
+        }}
+        className="w-full bg-red-50 text-red-600 py-3 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2 mt-2"
+        data-testid="logout-btn"
+      >
+        <LogOut size={18} />
+        تسجيل الخروج
+      </button>
     </div>
   );
 };

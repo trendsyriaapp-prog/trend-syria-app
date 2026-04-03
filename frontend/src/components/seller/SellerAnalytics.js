@@ -98,7 +98,7 @@ const SellerAnalytics = ({ token }) => {
   const { orders, revenue, products, ratings, chart, peak_hours } = data;
 
   return (
-    <div className="space-y-4 pb-20" data-testid="seller-analytics">
+    <div className="space-y-4" data-testid="seller-analytics">
       {/* فلتر الفترة */}
       <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
         {[
