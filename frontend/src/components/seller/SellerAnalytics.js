@@ -226,33 +226,6 @@ const SellerAnalytics = ({ token }) => {
         </div>
       </div>
 
-      {/* نسبة إتمام الطلبات */}
-      <div className="bg-white rounded-xl p-4 border border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <span className="font-medium text-gray-900">نسبة إتمام الطلبات</span>
-          <span className={`text-lg font-bold ${
-            (orders?.completion_rate || 0) >= 90 ? 'text-green-600' :
-            (orders?.completion_rate || 0) >= 70 ? 'text-yellow-600' : 'text-red-600'
-          }`}>
-            {orders?.completion_rate || 0}%
-          </span>
-        </div>
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${
-              (orders?.completion_rate || 0) >= 90 ? 'bg-green-500' :
-              (orders?.completion_rate || 0) >= 70 ? 'bg-yellow-500' : 'bg-red-500'
-            }`}
-            style={{ width: `${orders?.completion_rate || 0}%` }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
-          <span>🟢 مكتمل: {orders?.completed || 0}</span>
-          <span>🟡 قيد الانتظار: {orders?.pending || 0}</span>
-          <span>🔴 ملغي: {orders?.cancelled || 0}</span>
-        </div>
-      </div>
-
       {/* متوسط قيمة الطلب */}
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
         <div className="flex items-center justify-between">
@@ -394,22 +367,6 @@ const SellerAnalytics = ({ token }) => {
           </p>
         </div>
       )}
-
-      {/* إحصائيات المنتجات */}
-      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-4 border border-orange-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">منتجاتك</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-xl font-bold text-orange-700">{products?.active || 0}</p>
-              <span className="text-sm text-gray-500">/ {products?.total || 0} نشط</span>
-            </div>
-          </div>
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-            <Package size={24} className="text-orange-600" />
-          </div>
-        </div>
-      </div>
 
     </div>
   );
