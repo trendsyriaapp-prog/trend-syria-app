@@ -739,29 +739,12 @@ const FoodStoreDashboard = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="space-y-4">
-            {/* رابط تصفح كعميل */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <Link
-                to="/food?view=customer"
-                className="flex items-center justify-between bg-[#FF6B00]/10 border-2 border-[#FF6B00] rounded-xl p-4"
-              >
-                <div className="flex items-center gap-3">
-                  <Home size={20} className="text-[#FF6B00]" />
-                  <span className="font-medium text-[#FF6B00]">تصفح كعميل</span>
-                </div>
-                <ChevronRight size={20} className="text-[#FF6B00]" />
-              </Link>
-            </div>
-            
-            {/* الإعدادات */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-                <Settings size={18} className="text-[#FF6B00]" />
-                الإعدادات
-              </h3>
-              <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
-            </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <Settings size={18} className="text-[#FF6B00]" />
+              الإعدادات
+            </h3>
+            <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
           </div>
         )}
       </div>
@@ -1330,6 +1313,17 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           </h4>
         </div>
         <SellerAnalytics token={token} />
+      </div>
+
+      {/* رابط تصفح كعميل */}
+      <div className="mt-4">
+        <Link
+          to="/food?view=customer"
+          className="w-full flex items-center justify-center gap-2 bg-[#FF6B00]/10 border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/20 transition-colors"
+        >
+          <Home size={18} />
+          تصفح كعميل
+        </Link>
       </div>
 
       {/* زر تسجيل الخروج */}
