@@ -104,6 +104,10 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
   - Plays 3-beep sound alert when 3 minutes or less remain
   - Toast notification when food is almost ready
   - Component: `/app/frontend/src/components/delivery/FoodPrepTimer.js`
+- ✅ **Analytics Tab for Product Sellers**: Moved to Settings page (inside الإعدادات) instead of bottom nav
+  - Reduced bottom nav from 6 tabs to 5 (الطلبات، المنتجات، فلاش، التغليف، الإعدادات)
+  - Added "الإحصائيات" button in Settings page that opens SellerAnalytics component
+  - Added "رجوع" (back) button to return from Analytics to Settings
 
 ## Test Credentials
 - **Admin**: 0912345678 / admin123
@@ -178,4 +182,4 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 **الإصدار**: 1.0.3 (رمز 4)
 
 ---
-*Last Updated: April 2, 2026*
+*Last Updated: April 3, 2026*

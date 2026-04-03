@@ -1577,10 +1577,20 @@ const SellerDashboardPage = () => {
 
         {activeTab === 'analytics' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-              <TrendingUp size={18} className="text-[#FF6B00]" />
-              الإحصائيات
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <TrendingUp size={18} className="text-[#FF6B00]" />
+                الإحصائيات
+              </h3>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                data-testid="back-to-settings-btn"
+              >
+                <ChevronRight size={16} className="rotate-180" />
+                رجوع
+              </button>
+            </div>
             <SellerAnalytics token={token} />
           </div>
         )}
@@ -1804,7 +1814,21 @@ const SellerDashboardPage = () => {
             <StoreSettingsTab onLogoUpdate={(logo) => setStoreLogo(logo)} />
             
             {/* روابط إضافية */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+              {/* الإحصائيات */}
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition-colors"
+                data-testid="seller-analytics-btn"
+              >
+                <div className="flex items-center gap-3">
+                  <TrendingUp size={20} className="text-[#FF6B00]" />
+                  <span className="font-medium text-gray-900">الإحصائيات</span>
+                </div>
+                <ChevronRight size={20} className="text-gray-400" />
+              </button>
+              
+              {/* تصفح كعميل */}
               <Link
                 to="/?view=customer"
                 className="flex items-center justify-between bg-[#FF6B00]/10 border-2 border-[#FF6B00] rounded-xl p-4"
@@ -1826,7 +1850,6 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
-            { id: 'analytics', label: 'الإحصائيات', icon: TrendingUp },
             { id: 'flash', label: 'فلاش', icon: Zap },
             { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
