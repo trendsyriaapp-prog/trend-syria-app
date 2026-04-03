@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home, XCircle
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home, XCircle, LayoutGrid
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -600,7 +600,7 @@ const FoodStoreDashboard = () => {
           <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <ChefHat size={18} className="text-[#FF6B00]" />
+                <LayoutGrid size={18} className="text-[#FF6B00]" />
                 الأصناف ({products.length})
               </h3>
               <button
@@ -765,7 +765,7 @@ const FoodStoreDashboard = () => {
         <div className="max-w-4xl mx-auto flex">
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
-            { id: 'menu', label: 'الأصناف', icon: ChefHat },
+            { id: 'menu', label: 'الأصناف', icon: LayoutGrid },
             ...(flashEnabledForMe ? [{ id: 'flash', label: 'فلاش', icon: Zap }] : []),
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
