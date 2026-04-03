@@ -3261,7 +3261,9 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
             ) : (
               <>
                 <span className="text-xl">🔔</span>
-                <span className="font-bold text-yellow-800 text-sm">Flash يبدأ الساعة 1:00 ظهراً</span>
+                <span className="font-bold text-yellow-800 text-sm">
+                  Flash يبدأ {settings.flashStatus.next_day_name ? `يوم ${settings.flashStatus.next_day_name}` : 'قريباً'}
+                </span>
               </>
             )}
           </div>
@@ -3283,12 +3285,12 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
         <p className="text-sm opacity-90 mb-3">
           {settings.flashStatus?.status === 'live' 
             ? '⏳ Flash نشط الآن! انتظر انتهاءه لإضافة منتجك للـ Flash القادم' 
-            : 'أضف منتجك الآن وسيظهر في Flash القادم الساعة 1:00 ظهراً'}
+            : `أضف منتجك الآن وسيظهر في Flash ${settings.flashStatus?.next_day_name ? `يوم ${settings.flashStatus.next_day_name}` : 'القادم'}`}
         </p>
         <div className="flex flex-wrap gap-2">
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
             <Clock size={12} />
-            <span>يبدأ: الساعة 1:00 ظهراً يومياً</span>
+            <span>يبدأ: الساعة 1:00 ظهراً {settings.flashStatus?.allowed_days?.length === 7 ? 'يومياً' : ''}</span>
           </div>
           <div className="bg-white/20 rounded-lg px-3 py-1.5 text-xs flex items-center gap-1">
             <Wallet size={12} />

@@ -1194,7 +1194,9 @@ const FlashStatusBanner = ({ status }) => {
       <div className="mb-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">🔔</span>
-          <span className="font-bold text-sm">Flash يبدأ قريباً!</span>
+          <span className="font-bold text-sm">
+            Flash يبدأ {status.next_day_name ? `يوم ${status.next_day_name}` : 'قريباً'}!
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs opacity-90">يبدأ بعد</span>
