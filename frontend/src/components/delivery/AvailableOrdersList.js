@@ -190,7 +190,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                 <div className="flex items-center gap-4">
                   {/* من السائق للبائع */}
                   <div className="text-center">
-                    <div className="text-base mb-0.5">📍→🏪</div>
+                    <div className="text-base mb-0.5">🏪←📍</div>
                     <div className={`text-sm font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                       {distanceDetails.toSeller}
                     </div>
@@ -199,7 +199,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
                   
                   {/* من البائع للعميل */}
                   <div className="text-center">
-                    <div className="text-base mb-0.5">🏪→🏠</div>
+                    <div className="text-base mb-0.5">🏠←🏪</div>
                     <div className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                       {distanceDetails.toCustomer}
                     </div>
