@@ -12,6 +12,14 @@ from core.database import db, get_current_user, create_notification_for_user
 
 router = APIRouter(prefix="/delivery", tags=["Delivery"])
 
+# ============== دالة استخراج الاسم الأول ==============
+
+def get_first_name(full_name: str) -> str:
+    """استخراج الاسم الأول فقط من الاسم الكامل"""
+    if not full_name:
+        return "السائق"
+    return full_name.strip().split()[0] if full_name.strip() else "السائق"
+
 # ============== تصنيفات أنواع المتاجر للقفل ==============
 # الطلبات الساخنة/الطازجة فقط هي التي تقفل المنتجات
 HOT_FRESH_STORE_TYPES = ["restaurants", "cafes", "bakery", "drinks", "sweets"]
@@ -86,7 +94,7 @@ async def update_driver_location(data: LocationUpdate, user: dict = Depends(get_
         {
             "$set": {
                 "driver_id": user["id"],
-                "driver_name": user.get("full_name", user.get("name", "")),
+                "driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "latitude": data.latitude,
                 "longitude": data.longitude,
                 "speed": getattr(data, 'speed', None),
@@ -153,7 +161,7 @@ async def check_proximity_and_notify(order: dict, driver_lat: float, driver_lon:
         return R * c
     
     order_number = order.get("order_number", "")
-    driver_name = driver.get("full_name") or driver.get("name", "السائق")
+    driver_name = get_first_name(driver.get("full_name") or driver.get("name", ""))
     order_id = order.get("id")
     collection = "food_orders" if "store_id" in order else "orders"
     
@@ -901,7 +909,7 @@ async def accept_delivery_order(order_id: str, user: dict = Depends(get_current_
         {
             "$set": {
                 "delivery_driver_id": user["id"],
-                "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_status": "out_for_delivery",
                 "accepted_at": datetime.now(timezone.utc).isoformat()

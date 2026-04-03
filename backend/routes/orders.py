@@ -13,6 +13,14 @@ from routes.loyalty import add_loyalty_points
 
 router = APIRouter(tags=["Orders"])
 
+# ============== دالة استخراج الاسم الأول ==============
+
+def get_first_name(full_name: str) -> str:
+    """استخراج الاسم الأول فقط من الاسم الكامل"""
+    if not full_name:
+        return "السائق"
+    return full_name.strip().split()[0] if full_name.strip() else "السائق"
+
 # ============== Order Tracking Status Flow ==============
 # 1. pending_payment   - في انتظار الدفع (العميل)
 # 2. paid              - تم الدفع (النظام تلقائي)
@@ -835,7 +843,7 @@ async def verify_product_pickup_code(order_id: str, data: VerifyProductPickupCod
                 "pickup_code_verified": True,
                 "pickup_code_verified_at": datetime.now(timezone.utc).isoformat(),
                 "delivery_driver_id": user["id"],
-                "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_driver_photo": user.get("photo", ""),
                 "delivery_status": "picked_up",
@@ -931,7 +939,7 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
         {
             "$set": {
                 "delivery_driver_id": user["id"],
-                "delivery_driver_name": user.get("full_name", user.get("name", "")),
+                "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
                 "delivery_driver_phone": user.get("phone", ""),
                 "delivery_driver_photo": user.get("photo", ""),
                 "delivery_status": "picked_up",
@@ -966,7 +974,7 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
         order_id=order_id,
         extra_data={
             "driver_id": user["id"],
-            "driver_name": user.get("full_name", user.get("name", "")),
+            "driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
             "driver_phone": user.get("phone", ""),
             "driver_photo": user.get("photo", ""),
             "driver_rating": rating
@@ -1044,7 +1052,7 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
         order_id=order_id,
         extra_data={
             "driver_id": user["id"],
-            "driver_name": user.get("full_name", user.get("name", "")),
+            "driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
             "driver_phone": user.get("phone", ""),
             "driver_photo": user.get("photo", ""),
             "driver_rating": rating,
@@ -1399,7 +1407,7 @@ async def report_seller_not_found(data: SellerNotFoundRequest, user: dict = Depe
             "order_id": data.order_id,
             "order_type": data.order_type,
             "driver_id": user["id"],
-            "driver_name": user.get("name"),
+            "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
             "store_name": store_name
         }
     )

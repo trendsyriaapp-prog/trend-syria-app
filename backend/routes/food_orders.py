@@ -12,6 +12,15 @@ from core.database import db, get_current_user
 
 router = APIRouter(prefix="/food/orders", tags=["Food Orders"])
 
+# ============== دالة استخراج الاسم الأول ==============
+
+def get_first_name(full_name: str) -> str:
+    """استخراج الاسم الأول فقط من الاسم الكامل"""
+    if not full_name:
+        return "السائق"
+    # أخذ الكلمة الأولى فقط
+    return full_name.strip().split()[0] if full_name.strip() else "السائق"
+
 # ============== حساب المسافة والأجرة بالكيلومتر ==============
 
 async def get_driver_km_settings():
@@ -2322,7 +2331,7 @@ async def accept_batch_orders(batch_id: str, user: dict = Depends(get_current_us
         {
             "$set": {
                 "driver_id": user["id"],
-                "driver_name": user["name"],
+                "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
                 "driver_phone": user.get("phone"),
                 "driver_image": user.get("photo", ""),
                 "status": "out_for_delivery",
@@ -2695,7 +2704,7 @@ async def accept_food_order(
             {"id": order_id, "driver_id": user["id"]},  # التأكد أن الطلب لا يزال مقفولاً لهذا السائق
             {
                 "$set": {
-                    "driver_name": user["name"],
+                    "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
                     "driver_phone": user.get("phone"),
                     "driver_image": user.get("photo", ""),
                     "status": "out_for_delivery",
@@ -2791,7 +2800,7 @@ async def accept_food_order(
                     data={
                         "order_id": order_id,
                         "order_number": order.get("order_number"),
-                        "driver_name": user["name"],
+                        "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
                         "driver_phone": user.get("phone"),
                         "driver_eta_minutes": driver_eta_to_store,
                         "preparation_suggestion": preparation_suggestion,
@@ -2828,7 +2837,7 @@ async def accept_food_order(
             data={
                 "order_id": order_id,
                 "order_number": order.get("order_number"),
-                "driver_name": user["name"],
+                "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
                 "driver_phone": user.get("phone"),
                 "estimated_arrival": remaining_time,
                 "action": "track_order"
@@ -2984,7 +2993,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "note": f"تم إلغاء الاستلام بواسطة السائق: {data.reason}",
                     "driver_id": user["id"],
-                    "driver_name": user["name"]
+                    "driver_name": get_first_name(user.get("name", user.get("full_name", "")))
                 }
             }
         }
@@ -2994,7 +3003,7 @@ async def driver_cancel_order(order_id: str, data: DriverCancelRequest, user: di
     await db.driver_cancellations.insert_one({
         "id": str(uuid.uuid4()),
         "driver_id": user["id"],
-        "driver_name": user["name"],
+        "driver_name": get_first_name(user.get("name", user.get("full_name", ""))),
         "order_id": order_id,
         "order_number": order.get("order_number"),
         "reason": data.reason,
@@ -4364,7 +4373,7 @@ async def driver_accept_order(
         {"id": order_id},
         {"$set": {
             "driver_id": user["id"],
-            "driver_name": user.get("full_name", "السائق"),
+            "driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
             "driver_phone": user.get("phone", ""),
             "driver_image": user.get("photo", ""),
             "driver_status": "driver_accepted",
@@ -4393,7 +4402,7 @@ async def driver_accept_order(
         "message": f"السائق {user.get('full_name')} قبل الطلب #{order['order_number']} - سيصل خلال {estimated_arrival_minutes} دقيقة",
         "type": "driver_accepted_order",
         "order_id": order_id,
-        "driver_name": user.get("full_name"),
+        "driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
         "driver_phone": user.get("phone"),
         "driver_distance_km": round(distance_km, 2),
         "driver_estimated_arrival_minutes": estimated_arrival_minutes,
