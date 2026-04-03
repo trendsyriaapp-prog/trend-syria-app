@@ -411,18 +411,6 @@ const SellerAnalytics = ({ token }) => {
         </div>
       </div>
 
-      {/* العمولة */}
-      <div className="bg-red-50 rounded-xl p-4 border border-red-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">عمولة المنصة المدفوعة</p>
-            <p className="text-lg font-bold text-red-600">{formatCurrency(revenue?.commission || 0)}</p>
-          </div>
-          <div className="text-xs text-gray-500 text-left">
-            من إجمالي {formatCurrency(revenue?.total || 0)}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
