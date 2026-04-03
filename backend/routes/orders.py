@@ -1665,6 +1665,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
     cost = settings.get("cost_per_product", 1000) if settings else 1000
     flash_start_hour = settings.get("flash_start_hour", 13) if settings else 13
     flash_duration = settings.get("flash_duration_hours", 24) if settings else 24
+    flash_days = settings.get("flash_days", [0, 1, 2, 3, 4, 5, 6]) if settings else [0, 1, 2, 3, 4, 5, 6]
     
     # التحقق من رصيد المحفظة
     wallet = await db.wallets.find_one({"user_id": user["id"]})
@@ -1677,7 +1678,7 @@ async def promote_product(request_data: dict, user: dict = Depends(get_current_u
         )
     
     # حساب أوقات Flash
-    event = get_flash_event_times_sync(flash_start_hour, flash_duration)
+    event = get_flash_event_times_sync(flash_start_hour, flash_duration, flash_days)
     now = datetime.now(timezone.utc)
     now_str = now.isoformat()
     
@@ -1806,55 +1807,128 @@ async def get_flash_settings():
     settings = await db.platform_settings.find_one({"id": "promotions"}, {"_id": 0})
     return {
         "start_hour": settings.get("flash_start_hour", DEFAULT_FLASH_START_HOUR) if settings else DEFAULT_FLASH_START_HOUR,
-        "duration_hours": settings.get("flash_duration_hours", DEFAULT_FLASH_DURATION_HOURS) if settings else DEFAULT_FLASH_DURATION_HOURS
+        "duration_hours": settings.get("flash_duration_hours", DEFAULT_FLASH_DURATION_HOURS) if settings else DEFAULT_FLASH_DURATION_HOURS,
+        "allowed_days": settings.get("flash_days", [0, 1, 2, 3, 4, 5, 6]) if settings else [0, 1, 2, 3, 4, 5, 6]
     }
 
-def get_flash_event_times_sync(start_hour=13, duration_hours=24):
-    """حساب أوقات حدث Flash الحالي والقادم (متزامن)"""
+def get_flash_event_times_sync(start_hour=13, duration_hours=24, allowed_days=None):
+    """حساب أوقات حدث Flash الحالي والقادم (متزامن)
+    
+    Args:
+        start_hour: ساعة البدء (0-23)
+        duration_hours: مدة الفلاش بالساعات
+        allowed_days: قائمة الأيام المسموحة (0=الاثنين، 6=الأحد)، None = كل الأيام
+    """
     now = datetime.now(timezone.utc)
+    
+    # إذا لم تُحدد أيام، كل الأيام مسموحة
+    if allowed_days is None:
+        allowed_days = [0, 1, 2, 3, 4, 5, 6]
     
     # حساب وقت بدء Flash اليوم
     today_start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+    today_weekday = now.weekday()  # 0=الاثنين، 6=الأحد
+    
+    # التحقق إذا كان اليوم من الأيام المسموحة
+    is_today_allowed = today_weekday in allowed_days
     
     # حساب وقت انتهاء Flash اليوم
     today_end = today_start + timedelta(hours=duration_hours)
     
+    # دالة مساعدة لإيجاد اليوم التالي المسموح
+    def find_next_allowed_day(from_date, allowed_days):
+        for i in range(1, 8):  # البحث في الأيام السبعة القادمة
+            next_date = from_date + timedelta(days=i)
+            if next_date.weekday() in allowed_days:
+                return next_date.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+        return from_date + timedelta(days=1)  # fallback
+    
     # تحديد الحدث الحالي
+    if not is_today_allowed:
+        # اليوم ليس من أيام الفلاش
+        next_event_start = find_next_allowed_day(now, allowed_days)
+        return {
+            "is_live": False,
+            "current_event_start": None,
+            "current_event_end": None,
+            "next_event_start": next_event_start.isoformat(),
+            "now": now.isoformat(),
+            "start_hour": start_hour,
+            "duration_hours": duration_hours,
+            "allowed_days": allowed_days
+        }
+    
     if now < today_start:
         # لم يبدأ Flash اليوم بعد
-        current_event_start = (today_start - timedelta(days=1))
-        current_event_end = today_start
-        next_event_start = today_start
-        is_live = now >= current_event_start and now < current_event_end
+        # تحقق من Flash أمس إذا كان يومًا مسموحًا ولا يزال نشطًا
+        yesterday = now - timedelta(days=1)
+        if yesterday.weekday() in allowed_days:
+            yesterday_start = (today_start - timedelta(days=1))
+            yesterday_end = yesterday_start + timedelta(hours=duration_hours)
+            if now < yesterday_end:
+                # Flash أمس لا يزال نشطًا
+                return {
+                    "is_live": True,
+                    "current_event_start": yesterday_start.isoformat(),
+                    "current_event_end": yesterday_end.isoformat(),
+                    "next_event_start": today_start.isoformat(),
+                    "now": now.isoformat(),
+                    "start_hour": start_hour,
+                    "duration_hours": duration_hours,
+                    "allowed_days": allowed_days
+                }
+        
+        # Flash اليوم لم يبدأ بعد
+        return {
+            "is_live": False,
+            "current_event_start": None,
+            "current_event_end": None,
+            "next_event_start": today_start.isoformat(),
+            "now": now.isoformat(),
+            "start_hour": start_hour,
+            "duration_hours": duration_hours,
+            "allowed_days": allowed_days
+        }
     elif now >= today_start and now < today_end:
         # Flash نشط الآن
-        current_event_start = today_start
-        current_event_end = today_end
-        next_event_start = today_start + timedelta(days=1)
-        is_live = True
+        next_event_start = find_next_allowed_day(now, allowed_days)
+        return {
+            "is_live": True,
+            "current_event_start": today_start.isoformat(),
+            "current_event_end": today_end.isoformat(),
+            "next_event_start": next_event_start.isoformat(),
+            "now": now.isoformat(),
+            "start_hour": start_hour,
+            "duration_hours": duration_hours,
+            "allowed_days": allowed_days
+        }
     else:
-        # Flash انتهى اليوم، ننتظر الغد
-        current_event_start = today_start
-        current_event_end = today_end
-        next_event_start = today_start + timedelta(days=1)
-        is_live = False
-    
-    return {
-        "is_live": is_live,
-        "current_event_start": current_event_start.isoformat(),
-        "current_event_end": current_event_end.isoformat(),
-        "next_event_start": next_event_start.isoformat(),
-        "now": now.isoformat(),
-        "start_hour": start_hour,
-        "duration_hours": duration_hours
-    }
+        # Flash انتهى اليوم، ننتظر اليوم التالي المسموح
+        next_event_start = find_next_allowed_day(now, allowed_days)
+        return {
+            "is_live": False,
+            "current_event_start": today_start.isoformat(),
+            "current_event_end": today_end.isoformat(),
+            "next_event_start": next_event_start.isoformat(),
+            "now": now.isoformat(),
+            "start_hour": start_hour,
+            "duration_hours": duration_hours,
+            "allowed_days": allowed_days
+        }
 
 @router.get("/flash/status")
 async def get_flash_status():
     """حالة حدث Flash الحالي - للعملاء والبائعين"""
     flash_settings = await get_flash_settings()
-    event = get_flash_event_times_sync(flash_settings["start_hour"], flash_settings["duration_hours"])
+    event = get_flash_event_times_sync(
+        flash_settings["start_hour"], 
+        flash_settings["duration_hours"],
+        flash_settings["allowed_days"]
+    )
     now = datetime.now(timezone.utc)
+    
+    # أسماء الأيام بالعربية
+    day_names = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
     
     if event["is_live"]:
         # Flash نشط - حساب الوقت المتبقي
@@ -1867,7 +1941,8 @@ async def get_flash_status():
             "message": "Flash نشط الآن!",
             "ends_at": event["current_event_end"],
             "remaining_seconds": remaining_seconds,
-            "remaining_formatted": format_duration(remaining_seconds)
+            "remaining_formatted": format_duration(remaining_seconds),
+            "allowed_days": event.get("allowed_days", [0, 1, 2, 3, 4, 5, 6])
         }
     else:
         # Flash غير نشط - حساب الوقت حتى البدء
@@ -1875,12 +1950,17 @@ async def get_flash_status():
         until_start = next_start - now
         until_start_seconds = max(0, int(until_start.total_seconds()))
         
+        # تحديد اسم اليوم القادم
+        next_day_name = day_names[next_start.weekday()]
+        
         return {
             "status": "upcoming",
-            "message": "Flash يبدأ قريباً!",
+            "message": f"Flash يبدأ يوم {next_day_name}!",
             "starts_at": event["next_event_start"],
             "until_start_seconds": until_start_seconds,
-            "until_start_formatted": format_duration(until_start_seconds)
+            "until_start_formatted": format_duration(until_start_seconds),
+            "next_day_name": next_day_name,
+            "allowed_days": event.get("allowed_days", [0, 1, 2, 3, 4, 5, 6])
         }
 
 def format_duration(seconds):

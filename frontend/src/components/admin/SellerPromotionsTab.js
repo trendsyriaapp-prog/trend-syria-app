@@ -17,7 +17,8 @@ const SellerPromotionsTab = () => {
     max_products_per_day: 5,
     enabled: true,
     flash_start_hour: 13,
-    flash_duration_hours: 24
+    flash_duration_hours: 24,
+    flash_days: [0, 1, 2, 3, 4, 5, 6]  // كل أيام الأسبوع
   });
   const [promotions, setPromotions] = useState({ active: [], expired: [], stats: {} });
   const [showSettings, setShowSettings] = useState(false);
@@ -184,6 +185,48 @@ const SellerPromotionsTab = () => {
                 onChange={(e) => setSettings({...settings, enabled: e.target.checked})}
                 className="w-5 h-5 accent-orange-500"
               />
+            </div>
+            
+            {/* اختيار أيام الفلاش */}
+            <div className="col-span-2">
+              <label className="block text-sm text-gray-600 mb-2">أيام Flash</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { day: 0, name: 'الاثنين' },
+                  { day: 1, name: 'الثلاثاء' },
+                  { day: 2, name: 'الأربعاء' },
+                  { day: 3, name: 'الخميس' },
+                  { day: 4, name: 'الجمعة' },
+                  { day: 5, name: 'السبت' },
+                  { day: 6, name: 'الأحد' }
+                ].map(({ day, name }) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => {
+                      const currentDays = settings.flash_days || [0, 1, 2, 3, 4, 5, 6];
+                      const newDays = currentDays.includes(day)
+                        ? currentDays.filter(d => d !== day)
+                        : [...currentDays, day].sort();
+                      setSettings({...settings, flash_days: newDays});
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      (settings.flash_days || [0, 1, 2, 3, 4, 5, 6]).includes(day)
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {(settings.flash_days || []).length === 7 
+                  ? 'Flash يعمل كل يوم' 
+                  : (settings.flash_days || []).length === 0
+                    ? '⚠️ يجب اختيار يوم واحد على الأقل'
+                    : `Flash يعمل ${(settings.flash_days || []).length} أيام في الأسبوع`}
+              </p>
             </div>
           </div>
           <div className="flex gap-2 mt-4">
