@@ -763,15 +763,25 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     
     now = datetime.now(timezone.utc).isoformat()
     
+    # جلب وثائق السائق للحصول على الصورة الشخصية
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]}
+    )
+    
+    if not doc:
+        raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
+    
     result = await db.delivery_documents.update_one(
         {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
         {"$set": {"status": "approved", "approved_at": now}}
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
+    # تحديث بيانات المستخدم مع الصورة الشخصية
+    user_update = {"is_approved": True}
+    if doc.get("personal_photo"):
+        user_update["photo"] = doc["personal_photo"]
     
-    await db.users.update_one({"id": driver_id}, {"$set": {"is_approved": True}})
+    await db.users.update_one({"id": driver_id}, {"$set": user_update})
     
     # إرسال إشعار لموظف التوصيل بالموافقة
     await db.notifications.insert_one({
