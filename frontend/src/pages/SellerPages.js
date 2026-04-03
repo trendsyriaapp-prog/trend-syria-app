@@ -1270,8 +1270,8 @@ const SellerDashboardPage = () => {
   }
 
   // حساب الإحصائيات حسب نوع البائع
-  const displayOrders = isFoodSeller ? foodOrders : orders;
-  const displayItems = isFoodSeller ? foodItems : products;
+  const displayOrders = (isFoodSeller ? foodOrders : orders) || [];
+  const displayItems = (isFoodSeller ? foodItems : products) || [];
   const totalSales = displayOrders.reduce((sum, o) => sum + (o.status === 'paid' || o.status === 'delivered' ? (o.total || 0) : 0), 0);
   const paidOrders = displayOrders.filter(o => o.status === 'paid' || o.status === 'delivered').length;
 
