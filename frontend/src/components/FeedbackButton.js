@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircleHeart, MessageSquarePlus, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { MessageSquarePlus, X, Send, Lightbulb, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -10,42 +10,23 @@ import { useToast } from '../hooks/use-toast';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const FEEDBACK_TYPES = [
-  { id: 'suggestion', label: 'اقتراح تحسين', icon: Lightbulb, color: 'text-yellow-500 bg-yellow-50 border-yellow-200' },
+  { id: 'suggestion', label: 'اقتراح', icon: Lightbulb, color: 'text-yellow-500 bg-yellow-50 border-yellow-200' },
   { id: 'complaint', label: 'شكوى', icon: AlertCircle, color: 'text-red-500 bg-red-50 border-red-200' },
   { id: 'question', label: 'استفسار', icon: HelpCircle, color: 'text-blue-500 bg-blue-50 border-blue-200' },
 ];
 
-const FeedbackButton = ({ position = 'bottom-left' }) => {
+const FeedbackButton = () => {
   const location = useLocation();
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [isHidden, setIsHidden] = useState(() => {
-    // تحقق إذا كان المستخدم أخفى الزر في هذه الجلسة
-    return sessionStorage.getItem('feedbackButtonHidden') === 'true';
-  });
   const [feedbackType, setFeedbackType] = useState('suggestion');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // إخفاء الزر في صفحة تفاصيل المنتج لأنه يحجب السعر
+  // إخفاء في صفحة تفاصيل المنتج
   const isProductDetailPage = location.pathname.startsWith('/products/');
   if (isProductDetailPage) return null;
-
-  // موقع الزر - أعلى من شريط التنقل السفلي (مرتفع أكثر للسائقين)
-  const positionClasses = {
-    'bottom-left': 'bottom-28 left-4',
-    'bottom-right': 'bottom-28 right-4',
-    'top-left': 'top-20 left-4',
-    'top-right': 'top-20 right-4',
-  };
-
-  // إخفاء الزر
-  const handleHide = (e) => {
-    e.stopPropagation();
-    setIsHidden(true);
-    sessionStorage.setItem('feedbackButtonHidden', 'true');
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,7 +51,7 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
       });
 
       toast({
-        title: "تم الإرسال بنجاح ✅",
+        title: "تم الإرسال بنجاح",
         description: "شكراً لك! سنراجع رسالتك قريباً"
       });
 
@@ -87,35 +68,21 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
     }
   };
 
-  // لا تعرض شيء إذا كان الزر مخفي
-  if (isHidden) {
-    return null;
-  }
-
   return (
     <>
-      {/* زر فتح النموذج مع زر الإخفاء */}
-      <div className={`fixed ${positionClasses[position]} z-[55] flex flex-col items-center gap-1`}>
-        {/* زر الإخفاء */}
-        <button
-          onClick={handleHide}
-          className="w-5 h-5 bg-gray-400/80 hover:bg-gray-500 text-white rounded-full flex items-center justify-center text-xs shadow-md transition-all hover:scale-110"
-          title="إخفاء"
-          data-testid="feedback-hide-button"
-        >
-          <X size={12} />
-        </button>
-        
-        {/* زر الملاحظات الرئيسي */}
-        <button
-          onClick={() => setIsOpen(true)}
-          className="p-3.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110"
-          title="اقتراحات وملاحظات"
-          data-testid="feedback-button"
-        >
-          <MessageCircleHeart size={24} />
-        </button>
-      </div>
+      {/* شريط جانبي على اليسار */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-[55] flex items-center"
+        data-testid="feedback-side-button"
+      >
+        <div className="bg-[#FF6B00]/90 hover:bg-[#FF6B00] text-white py-3 px-1.5 rounded-r-lg shadow-lg transition-all hover:px-2 group">
+          <div className="flex flex-col items-center gap-1">
+            <MessageSquarePlus size={18} />
+            <span className="text-[10px] font-bold writing-vertical">ملاحظات</span>
+          </div>
+        </div>
+      </button>
 
       {/* Modal */}
       <AnimatePresence>
@@ -128,9 +95,9 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
             onClick={() => setIsOpen(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             >
@@ -163,10 +130,10 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
                           key={type.id}
                           type="button"
                           onClick={() => setFeedbackType(type.id)}
-                          className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                          className={`flex-1 p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
                             feedbackType === type.id
-                              ? type.color + ' border-current'
-                              : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                              ? `${type.color} border-current`
+                              : 'bg-gray-50 border-gray-200 text-gray-500'
                           }`}
                         >
                           <Icon size={20} />
@@ -186,30 +153,35 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={
-                      feedbackType === 'suggestion' ? 'اكتب اقتراحك لتحسين التطبيق...' :
-                      feedbackType === 'complaint' ? 'اكتب شكواك وسنعمل على حلها...' :
-                      'اكتب استفسارك...'
+                      feedbackType === 'suggestion' 
+                        ? "أقترح إضافة ميزة..." 
+                        : feedbackType === 'complaint'
+                          ? "واجهت مشكلة في..."
+                          : "لدي استفسار عن..."
                     }
-                    rows={4}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-400 resize-none"
+                    className="w-full p-3 border border-gray-200 rounded-xl resize-none h-28 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 focus:border-[#FF6B00]"
+                    dir="rtl"
                   />
                 </div>
 
                 {/* معلومات المستخدم */}
                 {user && (
-                  <p className="text-xs text-gray-400 text-center">
-                    سيتم إرسال رسالتك باسم: {user.name || user.phone}
-                  </p>
+                  <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+                    سيتم إرسال الرسالة باسم: {user.name || user.phone}
+                  </div>
                 )}
 
                 {/* زر الإرسال */}
                 <button
                   type="submit"
                   disabled={submitting || !message.trim()}
-                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="w-full bg-[#FF6B00] hover:bg-[#E55A00] disabled:bg-gray-300 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   {submitting ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      جارٍ الإرسال...
+                    </>
                   ) : (
                     <>
                       <Send size={18} />
@@ -217,15 +189,19 @@ const FeedbackButton = ({ position = 'bottom-left' }) => {
                     </>
                   )}
                 </button>
-
-                <p className="text-[10px] text-gray-400 text-center">
-                  نقدر ملاحظاتك ونسعى دائماً لتحسين تجربتك معنا
-                </p>
               </form>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* CSS للنص العمودي */}
+      <style>{`
+        .writing-vertical {
+          writing-mode: vertical-rl;
+          text-orientation: mixed;
+        }
+      `}</style>
     </>
   );
 };

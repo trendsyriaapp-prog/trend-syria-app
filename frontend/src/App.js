@@ -323,7 +323,7 @@ function App() {
             <NotificationManager />
             <BuyerNotificationPrompt />
             <FreeShippingFloatingBanner />
-            <FeedbackButton position="bottom-left" />
+            <FeedbackButton />
           </div>
           </PlatformClosedCheck>
           </ForcePasswordChangeWrapper>
