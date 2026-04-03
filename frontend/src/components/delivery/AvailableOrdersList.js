@@ -187,28 +187,21 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
             {/* المسافات */}
             <div className="flex-1">
               {distanceDetails ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {/* من السائق للبائع */}
                   <div className="text-center">
-                    <div className="flex items-center gap-1 justify-center">
-                      <span className="text-xs">📍→🏪</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                        {distanceDetails.toSeller}
-                      </span>
+                    <div className="text-base mb-0.5">📍→🏪</div>
+                    <div className={`text-sm font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {distanceDetails.toSeller}
                     </div>
                     <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>للبائع</p>
                   </div>
                   
-                  {/* خط فاصل صغير */}
-                  <div className={`w-px h-6 ${isDark ? 'bg-[#444]' : 'bg-gray-300'}`}></div>
-                  
                   {/* من البائع للعميل */}
                   <div className="text-center">
-                    <div className="flex items-center gap-1 justify-center">
-                      <span className="text-xs">🏪→🏠</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                        {distanceDetails.toCustomer}
-                      </span>
+                    <div className="text-base mb-0.5">🏪→🏠</div>
+                    <div className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                      {distanceDetails.toCustomer}
                     </div>
                     <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>للعميل</p>
                   </div>
@@ -226,7 +219,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
             </div>
 
             {/* خط فاصل */}
-            <div className={`w-px h-10 mx-2 ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}></div>
+            <div className={`w-px h-12 mx-2 ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}></div>
 
             {/* الربح */}
             <div className="text-center">
