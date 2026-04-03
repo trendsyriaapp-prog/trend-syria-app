@@ -6,6 +6,7 @@ import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import PickupWaitingTimer from './PickupWaitingTimer';
 import FoodPrepTimer from './FoodPrepTimer';
+import WaitingTimerBadge from './WaitingTimerBadge';
 import { OutgoingCallModal } from '../voip/VoIPCallModal';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -686,6 +687,17 @@ const MyOrdersList = ({
                     {status === 'to_customer' ? '🚚 للعميل' : (isFood ? '🍔 للمتجر' : '📦 للمتجر')}
                   </span>
                 </div>
+
+                {/* عداد وقت الانتظار - يظهر إذا السائق عند المتجر */}
+                {order.driver_arrived_at && status === 'to_store' && (
+                  <div className="mt-3">
+                    <WaitingTimerBadge 
+                      arrivedAt={order.driver_arrived_at}
+                      theme={theme}
+                      maxWaitingMinutes={10}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* المحتوى الموسع */}
