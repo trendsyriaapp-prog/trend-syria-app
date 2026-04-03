@@ -1,7 +1,8 @@
 // /app/frontend/src/components/delivery/RouteProgressBar.js
 // شريط تتبع المسار الذكي - يظهر المحطة الحالية وزر الإجراء
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { MapPin, Navigation, Package, User, ChevronDown, ChevronUp, Loader2, Lock, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
@@ -10,6 +11,37 @@ import { useModalBackHandler } from '../../hooks/useBackButton';
 import PickupWaitingTimer from './PickupWaitingTimer';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// Hook للحفاظ على موقع التمرير عند فتح/إغلاق Modal
+const usePreserveScroll = (isModalOpen) => {
+  const scrollRef = useRef(0);
+  const wasOpenRef = useRef(false);
+  
+  useLayoutEffect(() => {
+    if (isModalOpen && !wasOpenRef.current) {
+      // فتح الـ modal - حفظ موقع التمرير
+      scrollRef.current = window.scrollY;
+      wasOpenRef.current = true;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollRef.current}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflowY = 'scroll';
+    } else if (!isModalOpen && wasOpenRef.current) {
+      // إغلاق الـ modal - استعادة موقع التمرير
+      const savedScroll = scrollRef.current;
+      wasOpenRef.current = false;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      if (savedScroll > 0) {
+        window.scrollTo(0, savedScroll);
+      }
+    }
+  }, [isModalOpen]);
+  
+  return scrollRef;
+};
 
 const RouteProgressBar = ({ 
   myOrders = [], 
@@ -32,10 +64,24 @@ const RouteProgressBar = ({
   const [deliveryCode, setDeliveryCode] = useState('');
   const [verifying, setVerifying] = useState(false);
 
+  // 🔄 الحفاظ على موقع التمرير عند فتح/إغلاق الـ modals
+  const isAnyModalOpen = !!(showPickupCodeModal || showDeliveryCodeModal);
+  usePreserveScroll(isAnyModalOpen);
+
   // ⭐ دعم زر الرجوع للـ modals
+  const scrollBeforeModalRef = useRef(0);
+  
   const closePickupModal = useCallback(() => {
-    setShowPickupCodeModal(null);
-    setPickupCode('');
+    const savedScroll = scrollBeforeModalRef.current;
+    // استخدام flushSync لإجبار React على تحديث DOM مباشرة
+    flushSync(() => {
+      setShowPickupCodeModal(null);
+      setPickupCode('');
+    });
+    // استعادة موقع التمرير فوراً بعد تحديث DOM
+    if (savedScroll > 0) {
+      window.scrollTo(0, savedScroll);
+    }
   }, []);
   
   const closeDeliveryModal = useCallback(() => {
@@ -189,6 +235,8 @@ const RouteProgressBar = ({
 
     // طلبات المنتجات: فتح modal الكود مباشرة (تسجيل الوقت الحالي)
     if (!isFood) {
+      // حفظ موقع التمرير قبل فتح الـ modal
+      scrollBeforeModalRef.current = window.scrollY;
       const updatedStation = {
         ...station,
         order: {
@@ -226,6 +274,8 @@ const RouteProgressBar = ({
           if (response.data.success || response.data.message?.includes('تم')) {
             setCheckingLocationFor(null);
             toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
+            // حفظ موقع التمرير قبل فتح الـ modal
+            scrollBeforeModalRef.current = window.scrollY;
             // تحديث driver_arrived_at من response الـ API
             const updatedStation = {
               ...station,

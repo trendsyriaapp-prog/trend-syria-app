@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock } from 'lucide-react';
@@ -13,21 +13,11 @@ import { useAuth } from '../../context/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Hook لمنع التمرير في الخلفية عند فتح Modal مع الحفاظ على موقع التمرير
-// Hook لمنع التمرير في الخلفية عند فتح Modal
-const usePreventBodyScroll = (isOpen) => {
-  useEffect(() => {
-    if (isOpen) {
-      // منع التمرير فقط بدون تغيير الـ position
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-};
+// Hook لمنع التمرير في الخلفية عند فتح Modal (معطل - النسخة الفعالة في RouteProgressBar)
+// const usePreventBodyScroll = (isOpen, scrollRef) => { ... };
+
+// منع التمرير عند فتح Modal (معطل)
+// usePreventBodyScroll(isAnyModalOpen, scrollPositionRef);
 
 const MyOrdersList = ({ 
   orders, 
@@ -67,21 +57,13 @@ const MyOrdersList = ({
   
   // دالة فتح modal الاستلام
   const openPickupModal = (order) => {
-    scrollPositionRef.current = window.scrollY;
     setShowPickupCodeModal(order);
   };
   
   // دالة إغلاق modal الاستلام
   const closePickupModal = () => {
-    const savedScroll = scrollPositionRef.current;
     setShowPickupCodeModal(null);
     setPickupCode('');
-    // استعادة موقع التمرير بعد تأخير كافٍ
-    if (savedScroll > 0) {
-      setTimeout(() => {
-        window.scrollTo(0, savedScroll);
-      }, 150);
-    }
   };
   
   // أرباح اليوم (رقم صغير)
@@ -109,9 +91,9 @@ const MyOrdersList = ({
     fetchTodayEarnings();
   }, []);
 
-  // منع التمرير عند فتح Modal
-  const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showHelpModal);
-  usePreventBodyScroll(isAnyModalOpen);
+  // منع التمرير عند فتح Modal (معطل - تم نقله لـ RouteProgressBar)
+  // const isAnyModalOpen = !!(showCodeModal || showPickupCodeModal || showHelpModal);
+  // usePreventBodyScroll(isAnyModalOpen, scrollPositionRef);
 
   // دمج جميع الطلبات - مع التأكد من أن المصفوفات صالحة
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -766,6 +748,7 @@ const MyOrdersList = ({
                           return (
                             <>
                               <button
+                                data-testid="arrived-at-store-btn"
                                 onClick={() => handleArrivedAtStore(order)}
                                 disabled={isLoading || isLocked}
                                 className={`w-full py-4 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 ${
@@ -874,10 +857,16 @@ const MyOrdersList = ({
           className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
           style={{ touchAction: 'none' }}
           onTouchMove={(e) => e.preventDefault()}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closePickupModal();
+            }
+          }}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
             className={`w-full max-w-sm rounded-2xl p-6 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}
           >
             <div className="text-center mb-4">
