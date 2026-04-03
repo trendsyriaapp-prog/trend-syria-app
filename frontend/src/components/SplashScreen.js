@@ -39,7 +39,7 @@ const SplashScreen = ({ onComplete }) => {
               transition={{ duration: 0.5 }}
               src="/images/logo.png"
               alt="ترند سورية"
-              className="w-48 h-48 md:w-56 md:h-56 object-cover rounded-[40px] shadow-2xl"
+              className="w-64 h-64 md:w-72 md:h-72 object-cover rounded-[40px] shadow-2xl"
               style={{
                 boxShadow: '0 25px 50px rgba(0,0,0,0.4), 0 10px 20px rgba(0,0,0,0.3)',
               }}
