@@ -695,8 +695,26 @@ async def start_dispatch_background_tasks():
     except Exception as e:
         logger.error(f"❌ Failed to start background tasks: {e}")
 
+@app.on_event("startup")
+async def start_flash_scheduler():
+    """⏰ بدء مجدول تذكيرات الفلاش"""
+    try:
+        from services.flash_scheduler import init_scheduler
+        init_scheduler(db)
+        logger.info("✅ Flash reminder scheduler started")
+    except Exception as e:
+        logger.error(f"❌ Failed to start flash scheduler: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # إيقاف مجدول الفلاش
+    try:
+        from services.flash_scheduler import shutdown_scheduler
+        shutdown_scheduler()
+        logger.info("Flash scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping flash scheduler: {e}")
+    
     # إيقاف مهام الخلفية
     try:
         from services.background_tasks import stop_background_tasks
