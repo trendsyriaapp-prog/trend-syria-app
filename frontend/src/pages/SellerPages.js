@@ -1826,6 +1826,7 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
+            { id: 'analytics', label: 'الإحصائيات', icon: TrendingUp },
             { id: 'flash', label: 'فلاش', icon: Zap },
             { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
