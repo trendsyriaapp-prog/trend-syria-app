@@ -430,12 +430,14 @@ const DeliveryDashboard = () => {
     return () => window.removeEventListener('beforeunload', saveScrollPosition);
   }, []);
   
-  // استعادة موضع التمرير عند العودة للصفحة
+  // استعادة موضع التمرير عند العودة للصفحة (مرة واحدة فقط)
+  const hasRestoredScrollRef = useRef(false);
   useEffect(() => {
-    if (!loading && scrollPositionRef.current > 0) {
+    if (!loading && scrollPositionRef.current > 0 && !hasRestoredScrollRef.current) {
       window.scrollTo(0, scrollPositionRef.current);
+      hasRestoredScrollRef.current = true;
     }
-  }, [loading, activeTab]);
+  }, [loading]);
   
   // حالة قفل طلبات المنتجات (عندما يكون هناك طلبات طعام نشطة)
   const [isProductsLocked, setIsProductsLocked] = useState(false);

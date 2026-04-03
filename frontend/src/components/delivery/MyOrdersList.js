@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock } from 'lucide-react';
@@ -13,29 +13,17 @@ import { useAuth } from '../../context/AuthContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Hook لمنع التمرير في الخلفية عند فتح Modal مع الحفاظ على موقع التمرير
 // Hook لمنع التمرير في الخلفية عند فتح Modal
 const usePreventBodyScroll = (isOpen) => {
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
+      // منع التمرير فقط بدون تغيير الـ position
       document.body.style.overflow = 'hidden';
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
     }
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
     };
   }, [isOpen]);
@@ -73,6 +61,28 @@ const MyOrdersList = ({
   const [helpMessage, setHelpMessage] = useState('');
   const [helpLoading, setHelpLoading] = useState(false);
   const [showVoIPCallModal, setShowVoIPCallModal] = useState(null); // VoIP call modal
+  
+  // ref لحفظ موقع التمرير
+  const scrollPositionRef = useRef(0);
+  
+  // دالة فتح modal الاستلام
+  const openPickupModal = (order) => {
+    scrollPositionRef.current = window.scrollY;
+    setShowPickupCodeModal(order);
+  };
+  
+  // دالة إغلاق modal الاستلام
+  const closePickupModal = () => {
+    const savedScroll = scrollPositionRef.current;
+    setShowPickupCodeModal(null);
+    setPickupCode('');
+    // استعادة موقع التمرير بعد تأخير كافٍ
+    if (savedScroll > 0) {
+      setTimeout(() => {
+        window.scrollTo(0, savedScroll);
+      }, 150);
+    }
+  };
   
   // أرباح اليوم (رقم صغير)
   const [todayEarnings, setTodayEarnings] = useState({ current: 0, change: 0 });
@@ -173,7 +183,7 @@ const MyOrdersList = ({
       
       // إذا كان وقت الوصول محفوظاً مسبقاً، استخدمه
       if (order.driver_arrived_at) {
-        setShowPickupCodeModal(order);
+        openPickupModal(order);
         return;
       }
       
@@ -191,7 +201,7 @@ const MyOrdersList = ({
           ...order,
           driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
         };
-        setShowPickupCodeModal(updatedOrder);
+        openPickupModal(updatedOrder);
         
       } catch (error) {
         setCheckingLocationFor(null);
@@ -201,7 +211,7 @@ const MyOrdersList = ({
             ...order,
             driver_arrived_at: error.response.data.arrived_at
           };
-          setShowPickupCodeModal(updatedOrder);
+          openPickupModal(updatedOrder);
         } else {
           toast({ 
             title: "خطأ", 
@@ -220,7 +230,7 @@ const MyOrdersList = ({
         ...order,
         driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
       };
-      setShowPickupCodeModal(updatedOrder);
+      openPickupModal(updatedOrder);
       return;
     }
 
@@ -249,7 +259,7 @@ const MyOrdersList = ({
             ...order,
             driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
           };
-          setShowPickupCodeModal(updatedOrder);
+          openPickupModal(updatedOrder);
           
         } catch (error) {
           setCheckingLocationFor(null);
@@ -342,7 +352,7 @@ const MyOrdersList = ({
           ...order,
           driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
         };
-        setTimeout(() => setShowPickupCodeModal(updatedOrder), 500);
+        setTimeout(() => openPickupModal(updatedOrder), 500);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -371,8 +381,7 @@ const MyOrdersList = ({
       });
       
       toast({ title: "تم!", description: "تم تأكيد الاستلام بنجاح" });
-      setShowPickupCodeModal(null);
-      setPickupCode('');
+      closePickupModal();
       if (onRefresh) onRefresh();
     } catch (error) {
       toast({ 
@@ -901,9 +910,9 @@ const MyOrdersList = ({
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => {
-                  setShowPickupCodeModal(null);
-                  setPickupCode('');
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closePickupModal();
                 }}
                 className={`py-3 rounded-xl font-bold ${
                   isDark ? 'bg-[#252525] text-white' : 'bg-gray-200 text-gray-700'
