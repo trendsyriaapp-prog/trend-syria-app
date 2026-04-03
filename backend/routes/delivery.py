@@ -755,7 +755,7 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     orders = await db.orders.find(
         {
             "delivery_driver_id": user["id"],
-            "delivery_status": {"$in": ["accepted", "out_for_delivery", "picked_up", "on_the_way"]}
+            "delivery_status": {"$in": ["accepted", "driver_at_store", "out_for_delivery", "picked_up", "on_the_way"]}
         },
         {"_id": 0}
     ).sort("driver_accepted_at", -1).to_list(20)

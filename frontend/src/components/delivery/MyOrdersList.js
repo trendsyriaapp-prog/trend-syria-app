@@ -169,12 +169,46 @@ const MyOrdersList = ({
         });
         return;
       }
-      // إذا لم تكن مقفلة، افتح modal الكود مع الوقت الحالي
-      const updatedOrder = {
-        ...order,
-        driver_arrived_at: order.driver_arrived_at || new Date().toISOString()
-      };
-      setShowPickupCodeModal(updatedOrder);
+      
+      // إذا كان وقت الوصول محفوظاً مسبقاً، استخدمه
+      if (order.driver_arrived_at) {
+        setShowPickupCodeModal(order);
+        return;
+      }
+      
+      // تسجيل الوصول في قاعدة البيانات
+      setCheckingLocationFor(order.id);
+      try {
+        const response = await axios.post(`${API}/api/orders/${order.id}/delivery/arrived`, {}, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        setCheckingLocationFor(null);
+        toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
+        
+        const updatedOrder = {
+          ...order,
+          driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
+        };
+        setShowPickupCodeModal(updatedOrder);
+        
+      } catch (error) {
+        setCheckingLocationFor(null);
+        // إذا كان الوقت محفوظاً مسبقاً، استخدمه
+        if (error.response?.data?.arrived_at) {
+          const updatedOrder = {
+            ...order,
+            driver_arrived_at: error.response.data.arrived_at
+          };
+          setShowPickupCodeModal(updatedOrder);
+        } else {
+          toast({ 
+            title: "خطأ", 
+            description: error.response?.data?.detail || "حدث خطأ", 
+            variant: "destructive" 
+          });
+        }
+      }
       return;
     }
     

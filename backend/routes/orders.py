@@ -982,6 +982,65 @@ async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_
     
     return {"message": "تم قبول الطلب بنجاح", "order_id": order_id}
 
+@router.post("/orders/{order_id}/delivery/arrived")
+async def delivery_arrived_at_store(order_id: str, user: dict = Depends(get_current_user)):
+    """تسجيل وصول موظف التوصيل للمتجر - لطلبات المنتجات"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن السائق هو المسند للطلب
+    if order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=400, detail="هذا الطلب ليس مسنداً لك")
+    
+    # إذا كان وقت الوصول محفوظاً مسبقاً، أرجعه
+    if order.get("driver_arrived_at"):
+        return {
+            "message": "تم تسجيل وصولك مسبقاً",
+            "arrived_at": order.get("driver_arrived_at"),
+            "order_id": order_id
+        }
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_arrived_at": now,
+                "delivery_status": "driver_at_store"
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "driver_arrived_at_store",
+                    "timestamp": now,
+                    "actor": get_first_name(user.get("full_name", user.get("name", ""))),
+                    "actor_type": "delivery"
+                }
+            }
+        }
+    )
+    
+    # إشعار البائع
+    seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
+    if seller_ids:
+        await create_notification_for_user(
+            user_id=seller_ids[0],
+            title="🚚 وصل موظف التوصيل",
+            message=f"السائق {get_first_name(user.get('full_name', user.get('name', '')))} وصل لاستلام الطلب",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    return {
+        "message": "تم تسجيل وصولك للمتجر",
+        "arrived_at": now,
+        "order_id": order_id
+    }
+
 @router.post("/orders/{order_id}/delivery/pickup")
 async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)):
     """موظف التوصيل يستلم الطلب من البائع"""
@@ -1000,7 +1059,8 @@ async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    if order.get("delivery_status") not in ["shipped"]:
+    # الحالات المسموحة للاستلام: shipped, accepted, driver_at_store
+    if order.get("delivery_status") not in ["shipped", "accepted", "driver_at_store"]:
         raise HTTPException(status_code=400, detail="الطلب غير جاهز للاستلام")
     
     if order.get("delivery_driver_id") and order.get("delivery_driver_id") != user["id"]:
