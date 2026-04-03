@@ -238,6 +238,7 @@ const FoodStoreDashboard = () => {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showStoreToggleConfirm, setShowStoreToggleConfirm] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [flashEnabledForMe, setFlashEnabledForMe] = useState(true); // هل فلاش الطعام مفعل
   
   // مرجع لصوت الإشعار وتتبع الطلبات
   const audioRef = useRef(null);
@@ -377,6 +378,16 @@ const FoodStoreDashboard = () => {
         setCommissionInfo(commissionRes.data);
       } catch (e) {
         console.log('Commission info not available');
+      }
+      
+      // جلب إعدادات الفلاش للتحقق من التفعيل
+      try {
+        const flashRes = await axios.get(`${API}/api/seller/promotion-settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFlashEnabledForMe(flashRes.data?.flash_enabled_for_me !== false);
+      } catch (e) {
+        console.log('Flash settings not available');
       }
       
       // جلب بيانات المحفظة
@@ -755,7 +766,7 @@ const FoodStoreDashboard = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'menu', label: 'الأصناف', icon: ChefHat },
-            { id: 'flash', label: 'فلاش', icon: Zap },
+            ...(flashEnabledForMe ? [{ id: 'flash', label: 'فلاش', icon: Zap }] : []),
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
             <button
@@ -3230,23 +3241,15 @@ const PromoteFoodTab = ({ store, products, token, walletBalance = 0, onPromotion
     );
   }
 
+  // إذا كان الفلاش معطل لبائعي الطعام، لا نعرض شيئاً
+  if (settings.flash_enabled_for_me === false) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
-      {/* تنبيه إذا كان الفلاش معطل لبائعي الطعام */}
-      {settings.flash_enabled_for_me === false && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-red-700">
-            <XCircle size={20} />
-            <span className="font-bold">الفلاش معطل حالياً</span>
-          </div>
-          <p className="text-sm text-red-600 mt-1">
-            تم تعطيل فلاش الطعام من قبل الإدارة. يرجى المحاولة لاحقاً.
-          </p>
-        </div>
-      )}
-
       {/* شريط حالة Flash للبائع */}
-      {settings.flashStatus && settings.flash_enabled_for_me !== false && (
+      {settings.flashStatus && (
         <div className={`rounded-xl p-3 flex items-center justify-between ${
           settings.flashStatus.status === 'live' 
             ? 'bg-orange-100 border border-orange-300' 

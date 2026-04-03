@@ -155,23 +155,15 @@ const PromoteProductTab = ({ products, token, walletBalance = 0, onPromotionSucc
     );
   }
 
+  // إذا كان الفلاش معطل لهذا النوع من البائعين، لا نعرض شيئاً
+  if (settings.flash_enabled_for_me === false) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
-      {/* تنبيه إذا كان الفلاش معطل لهذا النوع من البائعين */}
-      {settings.flash_enabled_for_me === false && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-red-700">
-            <XCircle size={20} />
-            <span className="font-bold">الفلاش معطل حالياً</span>
-          </div>
-          <p className="text-sm text-red-600 mt-1">
-            تم تعطيل الفلاش لهذا النوع من البائعين من قبل الإدارة. يرجى المحاولة لاحقاً.
-          </p>
-        </div>
-      )}
-
       {/* شريط حالة Flash للبائع */}
-      {settings.flashStatus && settings.flash_enabled_for_me !== false && (
+      {settings.flashStatus && (
         <div className={`rounded-xl p-3 flex items-center justify-between ${
           settings.flashStatus.status === 'live' 
             ? 'bg-green-100 border border-green-300' 

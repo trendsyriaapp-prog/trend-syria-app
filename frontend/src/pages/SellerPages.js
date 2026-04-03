@@ -737,6 +737,7 @@ const SellerDashboardPage = () => {
   const [printLabelOrder, setPrintLabelOrder] = useState(null);
   const [commissionInfo, setCommissionInfo] = useState(null);
   const [storeLogo, setStoreLogo] = useState(null);
+  const [flashEnabled, setFlashEnabled] = useState(true); // هل الفلاش مفعل لهذا البائع
 
   // صوت التنبيه للطلبات الجديدة
   const { playSound } = useNotificationSound();
@@ -838,6 +839,14 @@ const SellerDashboardPage = () => {
         }
       } catch (e) {
         console.log('Could not fetch store logo');
+      }
+      
+      // جلب إعدادات الفلاش للتحقق من التفعيل
+      try {
+        const flashRes = await axios.get(`${API}/api/seller/promotion-settings`, { headers });
+        setFlashEnabled(flashRes.data?.flash_enabled_for_me !== false);
+      } catch (e) {
+        console.log('Could not fetch flash settings');
       }
       
       if (isFoodSeller) {
@@ -1850,7 +1859,7 @@ const SellerDashboardPage = () => {
           {[
             { id: 'orders', label: 'الطلبات', icon: ShoppingBag },
             { id: 'products', label: 'المنتجات', icon: Package },
-            { id: 'flash', label: 'فلاش', icon: Zap },
+            ...(flashEnabled ? [{ id: 'flash', label: 'فلاش', icon: Zap }] : []),
             { id: 'packaging', label: 'التغليف', icon: Gift },
             { id: 'settings', label: 'الإعدادات', icon: Settings },
           ].map((tab) => (
