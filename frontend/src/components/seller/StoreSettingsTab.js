@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText, LogOut, Camera
+  Store, CreditCard, Plus, Edit2, Trash2, Check, X, Save, Loader2, MapPin, Phone, FileText, LogOut, Camera, AlertTriangle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -209,6 +209,22 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
 
   return (
     <div className="space-y-4">
+      {/* تنبيه إذا لم يتم تحديد الموقع */}
+      {!storeSettings.store_latitude && !loading && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-red-700 mb-2">
+            <AlertTriangle size={20} />
+            <span className="font-bold">تنبيه مهم!</span>
+          </div>
+          <p className="text-sm text-red-600">
+            لم يتم تحديد موقع متجرك بعد. هذا يمنع موظفي التوصيل من حساب المسافة وقبول طلباتك.
+          </p>
+          <p className="text-xs text-red-500 mt-1">
+            يرجى تحديد موقعك على الخريطة في الأسفل ثم حفظ الإعدادات.
+          </p>
+        </div>
+      )}
+
       {/* إعدادات المتجر */}
       <div className="bg-white rounded-xl p-4 border border-gray-200">
         <div className="flex items-center gap-2 mb-4">

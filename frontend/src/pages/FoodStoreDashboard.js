@@ -1072,6 +1072,19 @@ const StoreSettings = ({ store, token, onUpdate }) => {
 
   return (
     <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-3">
+      {/* تنبيه إذا لم يتم تحديد الموقع */}
+      {!formData.latitude && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3">
+          <div className="flex items-center gap-2 text-red-700 mb-1">
+            <AlertTriangle size={18} />
+            <span className="font-bold text-sm">تنبيه مهم!</span>
+          </div>
+          <p className="text-xs text-red-600">
+            لم يتم تحديد موقع متجرك. هذا يمنع موظفي التوصيل من حساب المسافة وقبول طلباتك.
+          </p>
+        </div>
+      )}
+
       <h3 className="font-bold text-sm text-gray-900">الإعدادات</h3>
       
       {/* صورة المتجر */}
