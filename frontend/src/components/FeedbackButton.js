@@ -76,10 +76,10 @@ const FeedbackButton = () => {
         className="fixed left-0 top-1/2 -translate-y-1/2 z-[55] flex items-center"
         data-testid="feedback-side-button"
       >
-        <div className="bg-[#FF6B00]/90 hover:bg-[#FF6B00] text-white py-3 px-1.5 rounded-r-lg shadow-lg transition-all hover:px-2 group">
-          <div className="flex flex-col items-center gap-1">
-            <MessageSquarePlus size={18} />
-            <span className="text-[10px] font-bold writing-vertical">ملاحظات</span>
+        <div className="bg-[#FF6B00]/90 hover:bg-[#FF6B00] text-white py-2.5 px-1 rounded-r-lg shadow-lg transition-all hover:px-1.5 group">
+          <div className="flex flex-col items-center gap-0.5">
+            <MessageSquarePlus size={16} />
+            <span className="text-[9px] font-bold writing-vertical">ملاحظات</span>
           </div>
         </div>
       </button>
