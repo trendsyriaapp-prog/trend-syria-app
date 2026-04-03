@@ -523,6 +523,9 @@ const DeliveryDashboard = () => {
   const [showETAModal, setShowETAModal] = useState(null);
   const [estimatedTime, setEstimatedTime] = useState(30);
   
+  // State لعرض الخريطة مع مسار طلب معين
+  const [showRouteMapForOrder, setShowRouteMapForOrder] = useState(null);
+  
   // ⭐ دعم زر الرجوع للـ modals
   const closeETAModal = useCallback(() => setShowETAModal(null), []);
   const closeDeliveryCodeModal = useCallback(() => {
@@ -551,9 +554,6 @@ const DeliveryDashboard = () => {
   const [myFoodOrders, setMyFoodOrders] = useState([]);
   const [driverRequestedOrders, setDriverRequestedOrders] = useState([]); // طلبات من نظام التنسيق الجديد
   const [orderTypeFilter, setOrderTypeFilter] = useState('all'); // 'all', 'products', 'food' - الافتراضي الكل
-  
-  // State لعرض الخريطة مع مسار طلب معين
-  const [showRouteMapForOrder, setShowRouteMapForOrder] = useState(null);
 
   // تتبع موقع السائق تلقائياً عندما يكون لديه طلبات قيد التوصيل
   const currentOrderId = (Array.isArray(myFoodOrders) ? myFoodOrders : []).find(o => o.status === 'out_for_delivery')?.id || 
@@ -1294,6 +1294,7 @@ const DeliveryDashboard = () => {
                   isWorkingHours={() => true}
                   onTakeOrder={(order) => setShowPickupChecklist(order)}
                   onTakeFoodOrder={handleTakeFoodOrder}
+                  onAcceptDriverRequest={handleAcceptDriverRequest}
                   orderTypeFilter={orderTypeFilter}
                   theme={currentTheme}
                   onShowRouteForOrder={(order, type) => setShowRouteMapForOrder({ order, type })}

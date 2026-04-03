@@ -651,6 +651,36 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     # دمج الطلبات
     all_orders = shop_orders + food_orders
     
+    # جلب طلبات الطعام التي طلب البائع فيها سائقاً (نظام التنسيق الجديد)
+    driver_requested_query = {
+        "driver_requested": True,
+        "driver_status": {"$in": ["waiting_for_acceptance", "waiting_for_driver"]},
+        "driver_id": None
+    }
+    if driver_city:
+        driver_requested_query["delivery_city"] = driver_city
+    
+    driver_requested_orders = await db.food_orders.find(
+        driver_requested_query,
+        {"_id": 0}
+    ).sort("driver_requested_at", -1).to_list(50)
+    
+    # تحويل طلبات driver_requested لتنسيق موحد
+    for order in driver_requested_orders:
+        order["order_source"] = "food"
+        order["is_driver_request"] = True
+        order["can_accept"] = True
+        # إضافة معلومات المتجر
+        store = await db.food_stores.find_one({"id": order["store_id"]}, {"_id": 0})
+        if store:
+            order["store_name"] = store.get("name")
+            order["store_address"] = store.get("address", "")
+            order["store_latitude"] = store.get("latitude")
+            order["store_longitude"] = store.get("longitude")
+    
+    # إضافة طلبات driver_requested للقائمة
+    all_orders = all_orders + driver_requested_orders
+    
     return all_orders
 
 @router.get("/my-orders")

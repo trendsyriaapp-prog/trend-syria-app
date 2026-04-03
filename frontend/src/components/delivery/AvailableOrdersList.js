@@ -8,7 +8,7 @@ import {
   formatDistance 
 } from '../../utils/distanceCalculator';
 
-const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, orderTypeFilter = 'all', theme = 'dark' }) => {
+const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOrder, onTakeFoodOrder, onAcceptDriverRequest, orderTypeFilter = 'all', theme = 'dark' }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [orderDistances, setOrderDistances] = useState({});
@@ -225,7 +225,18 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
           ) : (
             /* زر القبول النشط */
             <button
-              onClick={() => isFood && onTakeFoodOrder ? onTakeFoodOrder(order) : onTakeOrder(order)}
+              onClick={() => {
+                if (isFood) {
+                  // إذا كان طلب driver_request
+                  if (order.is_driver_request && onAcceptDriverRequest) {
+                    onAcceptDriverRequest(order);
+                  } else if (onTakeFoodOrder) {
+                    onTakeFoodOrder(order);
+                  }
+                } else {
+                  onTakeOrder(order);
+                }
+              }}
               disabled={!isWorkingHours()}
               className={`w-full py-4 rounded-xl font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
                 isBatch 
