@@ -1004,7 +1004,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           });
           
           setStoreLogo(imageDataUrl);
-          toast({ title: "تم", description: "تم تحديث صورة المتجر" });
+          toast({ title: "تم", description: "تم تحديث الصورة" });
           onUpdate();
         } catch (error) {
           toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
@@ -1037,11 +1037,11 @@ const StoreSettings = ({ store, token, onUpdate }) => {
   const handleSave = async () => {
     // التحقق من الحقول الإجبارية
     if (!formData.address || formData.address.trim() === '') {
-      toast({ title: "خطأ", description: "يرجى كتابة عنوان المتجر (إجباري)", variant: "destructive" });
+      toast({ title: "خطأ", description: "يرجى كتابة العنوان (إجباري)", variant: "destructive" });
       return;
     }
     if (!formData.latitude || !formData.longitude) {
-      toast({ title: "خطأ", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
+      toast({ title: "خطأ", description: "يرجى تحديد الموقع على الخريطة (إجباري)", variant: "destructive" });
       return;
     }
     
@@ -1050,7 +1050,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       await axios.put(`${API}/api/food/my-store`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast({ title: "تم الحفظ", description: "تم تحديث معلومات المتجر" });
+      toast({ title: "تم الحفظ", description: "تم تحديث المعلومات" });
       onUpdate();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حفظ التغييرات", variant: "destructive" });
@@ -1061,7 +1061,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
 
   return (
     <div className="bg-white rounded-lg p-3 border border-gray-100 space-y-3">
-      <h3 className="font-bold text-sm text-gray-900">إعدادات المتجر</h3>
+      <h3 className="font-bold text-sm text-gray-900">الإعدادات</h3>
       
       {/* صورة المتجر */}
       <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
@@ -1069,7 +1069,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           {storeLogo ? (
             <img 
               src={storeLogo} 
-              alt="صورة المتجر" 
+              alt="الصورة الرئيسية" 
               className="w-20 h-20 rounded-xl object-cover border-2 border-white shadow"
             />
           ) : (
@@ -1084,7 +1084,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           )}
         </div>
         <div className="flex-1">
-          <p className="font-medium text-gray-900 text-sm">صورة المتجر</p>
+          <p className="font-medium text-gray-900 text-sm">الصورة الرئيسية</p>
           <p className="text-xs text-gray-500 mb-2">PNG, JPG (أقصى 2 ميجابايت)</p>
           <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs font-medium cursor-pointer hover:bg-[#E65000] transition-colors">
             <Camera size={14} />
@@ -1101,7 +1101,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       </div>
       
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">اسم المتجر</label>
+        <label className="block text-xs font-medium text-gray-700 mb-1">الاسم</label>
         <input
           type="text"
           value={formData.name}
@@ -1157,7 +1157,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           {/* العنوان */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              عنوان المتجر <span className="text-red-500">*</span>
+              العنوان <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -1172,7 +1172,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           {/* الخريطة */}
           <div>
             <GoogleMapsLocationPicker
-              label="📍 موقع المتجر على الخريطة (إجباري)"
+              label="📍 الموقع على الخريطة (إجباري)"
               required={true}
               currentLocation={formData.latitude ? { 
                 latitude: formData.latitude, 
@@ -1287,7 +1287,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
           )}
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          ⏰ سيظهر للعملاء أن متجرك "مغلق" خارج ساعات العمل المحددة
+          ⏰ سيظهر للعملاء "مغلق" خارج ساعات العمل المحددة
         </p>
       </div>
 
@@ -1309,7 +1309,7 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-bold text-gray-900 flex items-center gap-2">
             <BarChart3 size={18} className="text-purple-500" />
-            إحصائيات المتجر
+            الإحصائيات
           </h4>
         </div>
         <SellerAnalytics token={token} />
