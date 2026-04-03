@@ -910,6 +910,78 @@ async def get_seller_pickup_code(order_id: str, user: dict = Depends(get_current
         "order_id": order_id
     }
 
+@router.post("/orders/{order_id}/delivery/accept")
+async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_user)):
+    """موظف التوصيل يقبل الطلب"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    # التحقق من اعتماد الحساب
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+        {"_id": 0}
+    )
+    if not doc or doc.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="يجب اعتماد حسابك أولاً")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # يجب أن يكون الطلب جاهز للتوصيل (shipped)
+    if order.get("delivery_status") not in ["shipped", "pending", None]:
+        raise HTTPException(status_code=400, detail="الطلب غير متاح للقبول")
+    
+    # التحقق من عدم قبوله من سائق آخر
+    if order.get("delivery_driver_id") and order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=400, detail="هذا الطلب مسند لموظف آخر")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_driver_id": user["id"],
+                "delivery_driver_name": get_first_name(user.get("full_name", user.get("name", ""))),
+                "delivery_driver_phone": user.get("phone", ""),
+                "delivery_driver_photo": user.get("photo", ""),
+                "delivery_status": "accepted",
+                "driver_accepted_at": now
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "driver_accepted",
+                    "timestamp": now,
+                    "actor": get_first_name(user.get("full_name", user.get("name", ""))),
+                    "actor_type": "delivery",
+                    "actor_phone": user.get("phone", "")
+                }
+            }
+        }
+    )
+    
+    # إشعار البائع
+    if order.get("seller_id"):
+        await create_notification_for_user(
+            user_id=order["seller_id"],
+            title="🚚 تم قبول طلبك للتوصيل",
+            message=f"موظف التوصيل {get_first_name(user.get('full_name', user.get('name', '')))} قبل الطلب وسيأتي لاستلامه",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="🚚 تم تعيين موظف توصيل لطلبك",
+        message=f"السائق {get_first_name(user.get('full_name', user.get('name', '')))} سيقوم بتوصيل طلبك",
+        notification_type="delivery",
+        order_id=order_id
+    )
+    
+    return {"message": "تم قبول الطلب بنجاح", "order_id": order_id}
+
 @router.post("/orders/{order_id}/delivery/pickup")
 async def delivery_pickup_order(order_id: str, user: dict = Depends(get_current_user)):
     """موظف التوصيل يستلم الطلب من البائع"""
