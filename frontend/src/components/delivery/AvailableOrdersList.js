@@ -90,10 +90,23 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
     return null;
   };
 
+  // الحصول على تفاصيل المسافات
+  const getDistanceDetails = (orderId) => {
+    const distance = orderDistances[orderId];
+    if (distance) {
+      return {
+        toSeller: formatDistance(distance.toSeller),
+        toCustomer: formatDistance(distance.toCustomer),
+        total: formatDistance(distance.total)
+      };
+    }
+    return null;
+  };
+
   // بطاقة الطلب البسيطة
   const SimpleOrderCard = ({ order, isFood = true }) => {
     const earnings = getDriverEarnings(order);
-    const distance = getTotalDistance(order.id);
+    const distanceDetails = getDistanceDetails(order.id);
     const storeName = order.store_name || order.restaurant_name || 'متجر';
     const deliveryArea = order.buyer_address?.city || order.delivery_address?.city || '';
     
@@ -171,15 +184,35 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
           <div className={`flex items-center justify-between p-3 rounded-xl mb-3 ${
             isDark ? 'bg-[#252525]' : 'bg-gray-50'
           }`}>
-            {/* المسافة */}
-            <div className="text-center">
-              {distance ? (
-                <>
-                  <p className={`text-lg font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                    📍 {distance}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>المسافة</p>
-                </>
+            {/* المسافات */}
+            <div className="flex-1">
+              {distanceDetails ? (
+                <div className="flex items-center gap-3">
+                  {/* من السائق للبائع */}
+                  <div className="text-center">
+                    <div className="flex items-center gap-1 justify-center">
+                      <span className="text-xs">📍→🏪</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                        {distanceDetails.toSeller}
+                      </span>
+                    </div>
+                    <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>للبائع</p>
+                  </div>
+                  
+                  {/* خط فاصل صغير */}
+                  <div className={`w-px h-6 ${isDark ? 'bg-[#444]' : 'bg-gray-300'}`}></div>
+                  
+                  {/* من البائع للعميل */}
+                  <div className="text-center">
+                    <div className="flex items-center gap-1 justify-center">
+                      <span className="text-xs">🏪→🏠</span>
+                      <span className={`text-sm font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                        {distanceDetails.toCustomer}
+                      </span>
+                    </div>
+                    <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>للعميل</p>
+                  </div>
+                </div>
               ) : (
                 <button
                   onClick={handleGetLocation}
@@ -193,11 +226,11 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onTakeOr
             </div>
 
             {/* خط فاصل */}
-            <div className={`w-px h-10 ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}></div>
+            <div className={`w-px h-10 mx-2 ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}></div>
 
             {/* الربح */}
             <div className="text-center">
-              <p className={`text-lg font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+              <p className={`text-lg font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
                 💵 {earnings > 0 ? earnings.toLocaleString() : '---'}
               </p>
               <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>ربحك (ل.س)</p>
