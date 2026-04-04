@@ -1,0 +1,58 @@
+{
+  "summary": "Completed backend testing for Order Cancellation System (نظام إلغاء الطلبات). All 8 tests passed successfully. Verified that food orders can only be cancelled when pending, and product orders can only be cancelled before shipped status.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_order_cancellation_system.py",
+    "/app/test_reports/pytest/order_cancellation_system_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_order_cancellation_system.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "N/A - Backend only testing requested"
+  },
+  "test_credentials": {
+    "admin": {
+      "phone": "0912345678",
+      "password": "admin123"
+    }
+  },
+  "seed_data_creation": "Test orders created and cleaned up during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Order cancellation system fully tested. Food orders: can only cancel when status=pending. Product orders: can cancel when delivery_status is pending/confirmed, cannot cancel when shipped/picked_up/on_the_way/delivered.",
+  "features_tested": {
+    "food_order_cancellation": [
+      "POST /api/food/orders/{id}/cancel - pending status (يجب أن ينجح) ✅",
+      "POST /api/food/orders/{id}/cancel - confirmed status (يجب أن يفشل مع رسالة: البائع أكد الطلب) ✅",
+      "POST /api/food/orders/{id}/cancel - preparing status (يجب أن يفشل) ✅"
+    ],
+    "product_order_cancellation": [
+      "POST /api/orders/{id}/cancel - pending status (يجب أن ينجح) ✅",
+      "POST /api/orders/{id}/cancel - confirmed status (يجب أن ينجح) ✅",
+      "POST /api/orders/{id}/cancel - shipped status (يجب أن يفشل مع رسالة: الطلب جاهز للشحن) ✅",
+      "POST /api/orders/{id}/cancel - picked_up status (يجب أن يفشل) ✅"
+    ]
+  },
+  "business_rules_verified": {
+    "food_orders": "طلبات الطعام: لا يمكن الإلغاء بعد أن يؤكد البائع (confirmed)",
+    "product_orders": "طلبات المنتجات: لا يمكن الإلغاء بعد أن يصبح الطلب جاهز للشحن (shipped)"
+  },
+  "error_messages_verified": {
+    "food_confirmed": "لا يمكن إلغاء الطلب - البائع أكد الطلب وبدأ التحضير",
+    "food_preparing": "لا يمكن إلغاء الطلب - الطلب قيد التحضير",
+    "product_shipped": "لا يمكن إلغاء الطلب - الطلب جاهز للشحن",
+    "product_picked_up": "لا يمكن إلغاء الطلب - السائق استلم الطلب"
+  }
+}
