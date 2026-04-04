@@ -225,4 +225,27 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 **الإصدار**: 1.0.3 (رمز 4)
 
 ---
-*Last Updated: April 4, 2026 - Added Delivery Failed System (Return to Store / Cancel Order)*
+*Last Updated: April 4, 2026 - Added Mandatory Delivery Note at Checkout*
+
+## ✅ آخر التحديثات (أبريل 4، 2026)
+
+### ملاحظة التوصيل الإجبارية (Mandatory Delivery Note)
+تم تنفيذ حقل "ملاحظة لموظف التوصيل" كحقل إجباري في صفحات الدفع لمساعدة السائقين في العثور على عنوان العميل بسهولة.
+
+**التغييرات**:
+- ✅ إضافة `delivery_note: str` إلى `OrderCreate` schema (منتجات)
+- ✅ إضافة `delivery_note: str` إلى `FoodOrderCreate` schema (طعام)
+- ✅ إضافة `delivery_note: str` إلى `BatchOrderCreate` schema (طلبات طعام مجمعة)
+- ✅ التحقق من الحد الأدنى 10 أحرف في الواجهة الأمامية
+- ✅ حفظ الملاحظة في قاعدة البيانات
+
+**الملفات المعدلة**:
+- `/app/backend/models/schemas.py` - Line 133
+- `/app/backend/routes/orders.py` - Line 310
+- `/app/backend/routes/food_orders.py` - Lines 489, 513, 1007, 1473
+- `/app/frontend/src/pages/CheckoutPage.js` - Lines 65, 155-158, 248, 512-534
+- `/app/frontend/src/pages/FoodBatchCheckoutPage.js` - Lines 69, 199-214, 346, 703-727
+
+**data-testid**:
+- `delivery-note-input` (صفحة دفع المنتجات)
+- `food-delivery-note-input` (صفحة دفع الطعام)
