@@ -375,6 +375,39 @@ async def request_resignation(data: ResignationRequest, user: dict = Depends(get
     }
 
 
+@router.get("/my-resignation")
+async def get_my_resignation(user: dict = Depends(get_current_user)):
+    """جلب طلب الاستقالة الحالي للسائق"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    request = await db.resignation_requests.find_one(
+        {"driver_id": user["id"], "status": "pending"},
+        {"_id": 0}
+    )
+    
+    return request or {}
+
+
+@router.post("/resign/cancel")
+async def cancel_resignation(user: dict = Depends(get_current_user)):
+    """إلغاء طلب الاستقالة"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    result = await db.resignation_requests.delete_one({
+        "driver_id": user["id"],
+        "status": "pending"
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="لا يوجد طلب استقالة معلق")
+    
+    return {"message": "تم إلغاء طلب الاستقالة"}
+
+
 # ============== Admin Endpoints ==============
 
 @router.get("/admin/pending-deposits")
@@ -667,6 +700,177 @@ async def get_all_driver_deposits(user: dict = Depends(get_current_user)):
             deposit["driver_phone"] = driver.get("phone", "")
     
     return deposits
+
+
+# ============== إدارة حسابات السائقين (للأدمن) ==============
+
+@router.post("/admin/driver/{driver_id}/suspend")
+async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(get_current_user)):
+    """إيقاف حساب سائق"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    driver = await db.users.find_one({"id": driver_id, "user_type": "delivery"})
+    if not driver:
+        raise HTTPException(status_code=404, detail="السائق غير موجود")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"id": driver_id},
+        {
+            "$set": {
+                "is_suspended": True,
+                "suspended_at": now,
+                "suspension_reason": reason or "إيقاف من قبل الإدارة",
+                "suspended_by": user["id"]
+            }
+        }
+    )
+    
+    # إشعار السائق
+    await create_notification_for_user(
+        user_id=driver_id,
+        title="⛔ تم إيقاف حسابك",
+        message=f"تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        notification_type="account_suspended"
+    )
+    
+    return {"message": "تم إيقاف الحساب بنجاح"}
+
+
+@router.post("/admin/driver/{driver_id}/activate")
+async def activate_driver(driver_id: str, user: dict = Depends(get_current_user)):
+    """إعادة تفعيل حساب سائق"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    driver = await db.users.find_one({"id": driver_id, "user_type": "delivery"})
+    if not driver:
+        raise HTTPException(status_code=404, detail="السائق غير موجود")
+    
+    await db.users.update_one(
+        {"id": driver_id},
+        {
+            "$set": {"is_suspended": False},
+            "$unset": {
+                "suspended_at": "",
+                "suspension_reason": "",
+                "suspended_by": ""
+            }
+        }
+    )
+    
+    # إشعار السائق
+    await create_notification_for_user(
+        user_id=driver_id,
+        title="✅ تم تفعيل حسابك",
+        message="تم إعادة تفعيل حسابك. يمكنك الآن استقبال الطلبات",
+        notification_type="account_activated"
+    )
+    
+    return {"message": "تم تفعيل الحساب بنجاح"}
+
+
+@router.delete("/admin/driver/{driver_id}")
+async def delete_driver(driver_id: str, user: dict = Depends(get_current_user)):
+    """حذف حساب سائق نهائياً"""
+    
+    if user.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    driver = await db.users.find_one({"id": driver_id, "user_type": "delivery"})
+    if not driver:
+        raise HTTPException(status_code=404, detail="السائق غير موجود")
+    
+    # التحقق من عدم وجود طلبات نشطة
+    active_orders = await db.orders.count_documents({
+        "delivery_driver_id": driver_id,
+        "delivery_status": {"$nin": ["delivered", "cancelled", "delivery_failed"]}
+    })
+    
+    active_food_orders = await db.food_orders.count_documents({
+        "driver_id": driver_id,
+        "status": {"$nin": ["delivered", "cancelled", "delivery_failed"]}
+    })
+    
+    if active_orders > 0 or active_food_orders > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لا يمكن حذف السائق - لديه {active_orders + active_food_orders} طلب نشط"
+        )
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ بيانات السائق في سجل الحذف
+    await db.deleted_drivers.insert_one({
+        "id": str(uuid.uuid4()),
+        "original_driver_id": driver_id,
+        "driver_data": driver,
+        "deleted_by": user["id"],
+        "deleted_at": now
+    })
+    
+    # حذف بيانات السائق
+    await db.users.delete_one({"id": driver_id})
+    await db.wallets.delete_one({"user_id": driver_id})
+    await db.driver_security_deposits.delete_one({"driver_id": driver_id})
+    
+    return {"message": "تم حذف حساب السائق نهائياً"}
+
+
+@router.get("/admin/drivers")
+async def get_all_drivers(user: dict = Depends(get_current_user)):
+    """جلب جميع السائقين مع حالاتهم"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    drivers = await db.users.find(
+        {"user_type": "delivery"},
+        {
+            "_id": 0, 
+            "id": 1, 
+            "name": 1, 
+            "full_name": 1, 
+            "phone": 1,
+            "is_approved": 1,
+            "is_suspended": 1,
+            "suspended_at": 1,
+            "suspension_reason": 1,
+            "resigned": 1,
+            "behavior_points": 1,
+            "created_at": 1
+        }
+    ).to_list(500)
+    
+    # إضافة معلومات التأمين
+    for driver in drivers:
+        deposit = await db.driver_security_deposits.find_one(
+            {"driver_id": driver["id"]},
+            {"_id": 0, "current_amount": 1, "required_amount": 1, "status": 1}
+        )
+        if deposit:
+            driver["security_deposit"] = deposit
+        else:
+            driver["security_deposit"] = {"current_amount": 0, "status": "pending"}
+        
+        # إحصائيات الطلبات
+        completed_orders = await db.orders.count_documents({
+            "delivery_driver_id": driver["id"],
+            "delivery_status": "delivered"
+        })
+        completed_food = await db.food_orders.count_documents({
+            "driver_id": driver["id"],
+            "status": "delivered"
+        })
+        driver["total_deliveries"] = completed_orders + completed_food
+    
+    return drivers
+
+
 
 
 # ============== Hook: Call after adding earnings ==============

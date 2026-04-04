@@ -29,6 +29,7 @@ import PushNotificationPrompt from '../components/PushNotificationPrompt';
 import EarningsStats from '../components/delivery/EarningsStats';
 import RouteProgressBar from '../components/delivery/RouteProgressBar';
 import SecurityDepositCard from '../components/delivery/SecurityDepositCard';
+import ResignationSection from '../components/delivery/ResignationSection';
 import '../styles/driver-dark-theme.css';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -1402,6 +1403,10 @@ const DeliveryDashboard = () => {
         {activeTab === 'earnings' && (
           <>
             <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
+            
+            {/* قسم الاستقالة */}
+            <ResignationSection token={localStorage.getItem('token')} theme={currentTheme} />
+            
             {/* زر تسجيل الخروج */}
             <div className="mt-4">
               <button
