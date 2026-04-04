@@ -1912,6 +1912,178 @@ async def reject_food_store(
     
     return {"message": "تم رفض المتجر", "reason": reason if reason else None}
 
+
+@router.post("/food/stores/{store_id}/suspend")
+async def suspend_food_store(store_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+    """إيقاف متجر طعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    reason = data.get("reason", "") if data else ""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.food_stores.update_one(
+        {"id": store_id},
+        {
+            "$set": {
+                "is_suspended": True,
+                "suspended_at": now,
+                "suspension_reason": reason or "إيقاف من قبل الإدارة",
+                "suspended_by": user["id"]
+            }
+        }
+    )
+    
+    # إيقاف حساب المالك أيضاً
+    await db.users.update_one(
+        {"id": store["owner_id"]},
+        {"$set": {"is_suspended": True, "suspended_at": now}}
+    )
+    
+    # إشعار صاحب المتجر
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="⛔ تم إيقاف متجرك",
+        message=f"تم إيقاف متجر {store['name']} من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        notification_type="store_suspended"
+    )
+    
+    return {"message": "تم إيقاف المتجر بنجاح"}
+
+
+@router.post("/food/stores/{store_id}/activate")
+async def activate_food_store(store_id: str, user: dict = Depends(get_current_user)):
+    """إعادة تفعيل متجر طعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    await db.food_stores.update_one(
+        {"id": store_id},
+        {
+            "$set": {"is_suspended": False},
+            "$unset": {
+                "suspended_at": "",
+                "suspension_reason": "",
+                "suspended_by": ""
+            }
+        }
+    )
+    
+    # تفعيل حساب المالك
+    await db.users.update_one(
+        {"id": store["owner_id"]},
+        {
+            "$set": {"is_suspended": False},
+            "$unset": {"suspended_at": ""}
+        }
+    )
+    
+    # إشعار صاحب المتجر
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="✅ تم تفعيل متجرك",
+        message=f"تم إعادة تفعيل متجر {store['name']}. يمكنك الآن استقبال الطلبات",
+        notification_type="store_activated"
+    )
+    
+    return {"message": "تم تفعيل المتجر بنجاح"}
+
+
+@router.delete("/food/stores/{store_id}")
+async def delete_food_store(store_id: str, user: dict = Depends(get_current_user)):
+    """حذف متجر طعام نهائياً"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    # التحقق من عدم وجود طلبات نشطة
+    active_orders = await db.food_orders.count_documents({
+        "store_id": store_id,
+        "status": {"$nin": ["delivered", "cancelled"]}
+    })
+    
+    if active_orders > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لا يمكن حذف المتجر - لديه {active_orders} طلب نشط"
+        )
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ بيانات المتجر في سجل الحذف
+    await db.deleted_food_stores.insert_one({
+        "id": str(uuid.uuid4()),
+        "original_store_id": store_id,
+        "store_data": store,
+        "deleted_by": user["id"],
+        "deleted_at": now
+    })
+    
+    # حذف المتجر وحساب المالك
+    await db.food_stores.delete_one({"id": store_id})
+    await db.users.delete_one({"id": store["owner_id"]})
+    await db.wallets.delete_one({"user_id": store["owner_id"]})
+    
+    return {"message": "تم حذف المتجر نهائياً"}
+
+
+@router.get("/food/stores/with-status")
+async def get_food_stores_with_status(user: dict = Depends(get_current_user)):
+    """جلب جميع متاجر الطعام مع حالاتها"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    stores = await db.food_stores.find(
+        {},
+        {
+            "_id": 0, 
+            "id": 1, 
+            "name": 1, 
+            "owner_id": 1,
+            "phone": 1,
+            "store_type": 1,
+            "is_approved": 1,
+            "is_active": 1,
+            "is_suspended": 1,
+            "suspended_at": 1,
+            "suspension_reason": 1,
+            "created_at": 1
+        }
+    ).to_list(500)
+    
+    # إضافة إحصائيات
+    for store in stores:
+        # عدد الأطباق
+        dishes_count = await db.food_dishes.count_documents({"store_id": store["id"]})
+        store["dishes_count"] = dishes_count
+        
+        # عدد الطلبات المكتملة
+        completed_orders = await db.food_orders.count_documents({
+            "store_id": store["id"],
+            "status": "delivered"
+        })
+        store["completed_orders"] = completed_orders
+        
+        # اسم المالك
+        owner = await db.users.find_one({"id": store.get("owner_id")}, {"_id": 0, "name": 1, "phone": 1})
+        if owner:
+            store["owner_name"] = owner.get("name", "")
+            store["owner_phone"] = owner.get("phone", store.get("phone", ""))
+    
+    return stores
+
+
 @router.get("/food/commissions")
 async def get_food_commissions(user: dict = Depends(get_current_user)):
     """جلب عمولات متاجر الطعام"""

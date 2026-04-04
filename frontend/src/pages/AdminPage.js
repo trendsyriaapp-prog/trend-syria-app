@@ -66,6 +66,7 @@ import AllWithdrawRequestsTab from '../components/admin/AllWithdrawRequestsTab';
 import SellerPromotionsTab from '../components/admin/SellerPromotionsTab';
 import DriverSecurityTab from '../components/admin/DriverSecurityTab';
 import SellerManagementTab from '../components/admin/SellerManagementTab';
+import FoodStoreManagementTab from '../components/admin/FoodStoreManagementTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -397,6 +398,7 @@ const AdminDashboardPage = () => {
     'delivery-settings': 'إعدادات التوصيل',
     'driver-security': 'تأمينات السائقين',
     'seller-management': 'إدارة البائعين',
+    'food-store-management': 'إدارة متاجر الطعام',
     'violations': 'مخالفات السائقين',
     'price-reports': 'بلاغات الأسعار',
     'support-tickets': 'محادثات الدعم',
@@ -530,6 +532,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'seller-management' && user.user_type === 'admin' && (
               <SellerManagementTab />
+            )}
+            {activeTab === 'food-store-management' && user.user_type === 'admin' && (
+              <FoodStoreManagementTab />
             )}
             {activeTab === 'violations' && user.user_type === 'admin' && (
               <ViolationsTab />
@@ -798,11 +803,12 @@ const AdminDashboardPage = () => {
                     <Users size={12} /> المستخدمين
                   </h3>
                 </div>
-                <div className="grid grid-cols-4 gap-px bg-gray-100">
+                <div className="grid grid-cols-5 gap-px bg-gray-100">
                   {[
                     { icon: User, label: 'عملاء', tab: 'users' },
                     { icon: Store, label: 'بائعين', tab: 'sellers' },
                     { icon: Store, label: 'إدارة البائعين', tab: 'seller-management' },
+                    { icon: UtensilsCrossed, label: 'إدارة المطاعم', tab: 'food-store-management' },
                     { icon: Truck, label: 'سائقين', tab: 'delivery' },
                   ].map((item, i) => (
                     <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-blue-50 transition-colors">
