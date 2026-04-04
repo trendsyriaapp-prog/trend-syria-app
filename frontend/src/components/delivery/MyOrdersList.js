@@ -424,16 +424,37 @@ const MyOrdersList = ({
 
     setHelpLoading(true);
     try {
-      await axios.post(`${API}/api/support/emergency-help`, {
-        order_id: showHelpModal.id,
-        reason: helpReason,
-        message: helpMessage
-      });
+      // إذا كان السبب "البائع غير موجود"، استدعي endpoint خاص
+      if (helpReason === 'seller_not_found') {
+        const orderType = showHelpModal.restaurant_id ? 'food' : 'product';
+        await axios.post(`${API}/api/driver/seller-not-found`, {
+          order_id: showHelpModal.id,
+          order_type: orderType
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        toast({ 
+          title: "تم!", 
+          description: "تم إبلاغ الإدارة والبائع - سيتم التواصل معك قريباً" 
+        });
+      } else {
+        // باقي الأسباب تذهب لـ emergency-help
+        await axios.post(`${API}/api/support/emergency-help`, {
+          order_id: showHelpModal.id,
+          reason: helpReason,
+          message: helpMessage
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        toast({ title: "تم!", description: "تم إرسال طلب المساعدة - فريق الدعم سيتواصل معك" });
+      }
       
-      toast({ title: "تم!", description: "تم إرسال طلب المساعدة - فريق الدعم سيتواصل معك" });
       setShowHelpModal(null);
       setHelpReason('');
       setHelpMessage('');
+      if (onRefresh) onRefresh();
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -1002,6 +1023,7 @@ const MyOrdersList = ({
 
             <div className="space-y-2 mb-4">
               {[
+                { id: 'seller_not_found', label: '🏪 لم أجد البائع/المتجر' },
                 { id: 'customer_no_answer', label: '📞 العميل لا يرد' },
                 { id: 'wrong_address', label: '📍 العنوان خاطئ' },
                 { id: 'customer_not_found', label: '👤 لم أجد العميل' },
@@ -1021,7 +1043,7 @@ const MyOrdersList = ({
               ))}
             </div>
 
-            {helpReason === 'other' && (
+            {(helpReason === 'other' || helpReason === 'seller_not_found') && (
               <textarea
                 value={helpMessage}
                 onChange={(e) => setHelpMessage(e.target.value)}
