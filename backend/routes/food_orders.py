@@ -1672,7 +1672,7 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
         )
     
     # استرجاع المبلغ إذا كان الدفع بالمحفظة
-    if order["payment_method"] == "wallet" and order["payment_status"] == "paid":
+    if order.get("payment_method") == "wallet" and order.get("payment_status") == "paid":
         await db.wallets.update_one(
             {"user_id": user["id"]},
             {"$inc": {"balance": order["total"]}}
@@ -1683,7 +1683,7 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
             "user_id": user["id"],
             "type": "refund",
             "amount": order["total"],
-            "description": f"استرجاع طلب طعام #{order['order_number']}",
+            "description": f"استرجاع طلب طعام #{order.get('order_number', order_id[:8])}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
