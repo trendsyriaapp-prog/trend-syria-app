@@ -3502,6 +3502,68 @@ async def get_priority_orders(user: dict = Depends(get_current_user)):
 # نظام تأكيد التسليم بالكود
 # ===============================
 
+@router.post("/delivery/{order_id}/arrived-customer")
+async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)):
+    """تسجيل وصول موظف التوصيل للعميل - لطلبات الطعام"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "driver_id": user["id"]
+    })
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً لك")
+    
+    # إذا كان وقت الوصول محفوظاً مسبقاً، أرجعه
+    if order.get("driver_arrived_at_customer"):
+        return {
+            "message": "تم تسجيل وصولك مسبقاً",
+            "arrived_at": order.get("driver_arrived_at_customer"),
+            "order_id": order_id
+        }
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_arrived_at_customer": now,
+                "status": "driver_at_customer"
+            },
+            "$push": {
+                "status_history": {
+                    "status": "driver_arrived_at_customer",
+                    "timestamp": now,
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    customer_id = order.get("customer_id")
+    if customer_id:
+        driver_name = user.get("full_name", user.get("name", "السائق")).split()[0]
+        await db.notifications.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": customer_id,
+            "title": "🚚 السائق وصل!",
+            "message": f"السائق {driver_name} وصل إليك. يرجى تجهيز كود التسليم.",
+            "type": "delivery",
+            "order_id": order_id,
+            "is_read": False,
+            "created_at": now
+        })
+    
+    return {
+        "message": "تم تسجيل وصولك للعميل",
+        "arrived_at": now,
+        "order_id": order_id
+    }
+
 class DeliveryCodeVerification(BaseModel):
     delivery_code: str
 
@@ -3518,7 +3580,7 @@ async def verify_delivery_code(
     order = await db.food_orders.find_one({
         "id": order_id, 
         "driver_id": user["id"], 
-        "status": "out_for_delivery"
+        "status": {"$in": ["out_for_delivery", "driver_at_customer"]}
     })
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")

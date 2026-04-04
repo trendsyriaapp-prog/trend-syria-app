@@ -112,7 +112,7 @@ const RouteProgressBar = ({
       // تحديد حالة المحطة - الاعتماد على pickup_code_verified للطعام
       const isPickedUp = isFood 
         ? (order.pickup_code_verified === true) // فقط إذا تم التحقق من كود الاستلام
-        : (status === 'picked_up' || status === 'out_for_delivery');
+        : (status === 'picked_up' || status === 'out_for_delivery' || status === 'on_the_way' || status === 'driver_at_customer');
       
       const isDelivered = isFood
         ? (status === 'delivered')
@@ -741,7 +741,7 @@ const RouteProgressBar = ({
             {/* عداد الانتظار عند العميل */}
             <PickupWaitingTimer
               arrivedAt={showDeliveryCodeModal?.order?.driver_arrived_at_customer}
-              isDark={isDark}
+              theme={theme}
               maxMinutes={10}
               onMaxReached={() => {
                 // إخفاء العداد عند انتهاء الوقت (يتم التعامل معه في الـ component)

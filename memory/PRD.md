@@ -117,6 +117,22 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
     - Frontend: Updated `AvailableOrdersList.js` to use `onAcceptProductOrder` callback
     - Backend: Updated `my-product-orders` query to include `accepted` status
   - **Correct Flow**: Accept Order → See in "My Orders" → Arrive at Store → Pickup Checklist → Pickup → Deliver
+- ✅ **Driver Waiting Timer at Store (Pickup)** (April 3, 2026)
+  - Drivers receive compensation for waiting at store beyond 10 minutes
+  - Timer starts when driver clicks "وصلت للمتجر" (Arrived at Store)
+  - Compensation: 500 SYP per 5 minutes, max 2,000 SYP
+  - Timer persists even if modal is closed and reopened
+  - Backend: `POST /api/orders/{order_id}/delivery/arrived` stores `driver_arrived_at`
+- ✅ **Driver Waiting Timer at Customer (Drop-off)** (April 4, 2026)
+  - Same compensation system for waiting at customer location
+  - Timer starts when driver clicks "وصلت للعميل" (Arrived at Customer)
+  - Timer auto-hides after 10 minutes (customer should be available by then)
+  - Backend: `POST /api/orders/{order_id}/delivery/arrived-customer` stores `driver_arrived_at_customer`
+  - Backend (food): `POST /api/food/orders/delivery/{order_id}/arrived-customer`
+  - Updated `verify-code` to accept `driver_at_customer` status
+  - Frontend: `PickupWaitingTimer.js` supports `maxMinutes` prop for auto-hide
+  - Frontend: Fixed `RouteProgressBar.js` to use `theme` instead of `isDark`
+  - Frontend: Updated `isPickedUp` logic to include `on_the_way` and `driver_at_customer` statuses
 
 ## Test Credentials
 - **Admin**: 0912345678 / admin123
@@ -191,4 +207,4 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 **الإصدار**: 1.0.3 (رمز 4)
 
 ---
-*Last Updated: April 3, 2026 - Fixed Driver Product Order Acceptance Flow*
+*Last Updated: April 4, 2026 - Added Driver Waiting Timer at Customer (Drop-off)*
