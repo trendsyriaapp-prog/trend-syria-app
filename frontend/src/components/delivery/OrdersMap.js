@@ -2015,7 +2015,7 @@ const OrdersMap = ({
         <Map size={18} />
         {isMyOrdersOnly 
           ? `🗺️ خريطة طلباتي (${totalOrders} طلب)`
-          : `🗺️ عرض الخريطة (${totalOrders} طلب)`
+          : `🗺️ خريطة التطبيق (${totalOrders} طلب)`
         }
       </button>
 
