@@ -32,12 +32,12 @@ async def get_security_settings():
     """جلب إعدادات التأمين"""
     settings = await db.settings.find_one({"type": "driver_security"}, {"_id": 0})
     if not settings:
-        # إعدادات افتراضية
+        # إعدادات افتراضية (بالعملة السورية الجديدة - بدون صفرين)
         settings = {
             "type": "driver_security",
-            "required_amount": 100000,  # المبلغ المطلوب
+            "required_amount": 500,  # 500 ل.س جديدة (المبلغ الموحد لجميع السائقين)
             "is_enabled": True,  # تفعيل النظام
-            "auto_deduct_from_earnings": True,  # خصم تلقائي من الأرباح
+            "auto_deduct_from_earnings": True,  # خصم تلقائي من الأرباح لتعويض التأمين
             "min_behavior_points_for_refund": 50,  # الحد الأدنى لنقاط السلوك للاسترداد
         }
         await db.settings.insert_one(settings)
