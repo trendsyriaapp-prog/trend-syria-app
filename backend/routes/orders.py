@@ -338,7 +338,95 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # البائع سيرى الطلب فقط بعد انتهاء المهلة
     # الإشعار سيُرسل عند تأكيد الطلب تلقائياً
     
-    return {"order_id": order_id, "total": final_total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه خلال ساعة."}
+    return {"order_id": order_id, "total": final_total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه قبل أن يجهز البائع الطلب."}
+
+
+@router.post("/orders/{order_id}/cancel")
+async def cancel_product_order(order_id: str, user: dict = Depends(get_current_user)):
+    """إلغاء طلب منتجات - مسموح فقط قبل أن يصبح الطلب جاهز للشحن"""
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    if order["user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك")
+    
+    # المراحل التي لا يمكن فيها الإلغاء (جاهز للشحن وما بعدها)
+    non_cancellable_statuses = [
+        "shipped",           # جاهز للشحن
+        "accepted",          # السائق قبل
+        "driver_at_store",   # السائق في المتجر
+        "picked_up",         # تم الاستلام
+        "on_the_way",        # في الطريق
+        "driver_at_customer",# السائق وصل للعميل
+        "delivered",         # تم التسليم
+        "cancelled"          # ملغي مسبقاً
+    ]
+    
+    delivery_status = order.get("delivery_status", "pending")
+    
+    if delivery_status in non_cancellable_statuses:
+        status_messages = {
+            "shipped": "الطلب جاهز للشحن",
+            "accepted": "السائق قبل الطلب",
+            "driver_at_store": "السائق في المتجر",
+            "picked_up": "السائق استلم الطلب",
+            "on_the_way": "الطلب في الطريق إليك",
+            "driver_at_customer": "السائق وصل إليك",
+            "delivered": "تم تسليم الطلب",
+            "cancelled": "الطلب ملغي مسبقاً"
+        }
+        reason = status_messages.get(delivery_status, "الطلب في مرحلة متقدمة")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لا يمكن إلغاء الطلب - {reason}"
+        )
+    
+    now = datetime.now(timezone.utc)
+    
+    # استرجاع المبلغ إذا كان الدفع بالمحفظة
+    if order.get("payment_method") == "wallet" and order.get("status") == "paid":
+        await db.wallets.update_one(
+            {"user_id": user["id"]},
+            {"$inc": {"balance": order["total"]}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "type": "refund",
+            "amount": order["total"],
+            "description": f"استرجاع طلب منتجات #{order_id[:8]}",
+            "created_at": now.isoformat()
+        })
+    
+    # تحديث حالة الطلب
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": "cancelled",
+                "status": "cancelled",
+                "cancelled_at": now.isoformat(),
+                "cancelled_by": "customer"
+            }
+        }
+    )
+    
+    # إشعار البائع (إذا كان قد رأى الطلب)
+    for item in order.get("items", []):
+        seller_id = item.get("seller_id")
+        if seller_id:
+            await create_notification_for_user(
+                user_id=seller_id,
+                title="❌ تم إلغاء طلب",
+                message=f"العميل ألغى الطلب #{order_id[:8]}",
+                notification_type="order_cancelled",
+                order_id=order_id
+            )
+    
+    return {"message": "تم إلغاء الطلب بنجاح", "refunded": order.get("payment_method") == "wallet"}
+
 
 @router.get("/orders")
 async def get_orders(user: dict = Depends(get_current_user)):

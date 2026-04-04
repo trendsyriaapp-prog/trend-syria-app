@@ -1646,7 +1646,7 @@ async def get_food_order(order_id: str, user: dict = Depends(get_current_user)):
 
 @router.post("/{order_id}/cancel")
 async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user)):
-    """إلغاء طلب - مسموح فقط خلال 3 دقائق من إنشاء الطلب"""
+    """إلغاء طلب - مسموح فقط قبل أن يؤكد البائع الطلب"""
     order = await db.food_orders.find_one({"id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -1654,21 +1654,21 @@ async def cancel_food_order(order_id: str, user: dict = Depends(get_current_user
     if order["customer_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك")
     
-    # لا يمكن الإلغاء إذا كان الطلب في مرحلة متقدمة
-    if order["status"] in ["out_for_delivery", "delivered", "cancelled"]:
-        raise HTTPException(status_code=400, detail="لا يمكن إلغاء الطلب في هذه المرحلة")
-    
-    # التحقق من مهلة الـ 3 دقائق
-    created_at = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
-    now = datetime.now(timezone.utc)
-    elapsed_seconds = (now - created_at).total_seconds()
-    
-    CANCEL_WINDOW_SECONDS = 3 * 60  # 3 دقائق
-    
-    if elapsed_seconds > CANCEL_WINDOW_SECONDS:
+    # لا يمكن الإلغاء إذا البائع أكد الطلب أو في مرحلة متقدمة
+    # المراحل المسموح فيها الإلغاء: pending فقط
+    if order["status"] != "pending":
+        status_messages = {
+            "confirmed": "البائع أكد الطلب وبدأ التحضير",
+            "preparing": "الطلب قيد التحضير",
+            "ready": "الطلب جاهز للاستلام",
+            "out_for_delivery": "الطلب في الطريق إليك",
+            "delivered": "تم تسليم الطلب",
+            "cancelled": "الطلب ملغي مسبقاً"
+        }
+        reason = status_messages.get(order["status"], "الطلب في مرحلة متقدمة")
         raise HTTPException(
             status_code=400, 
-            detail="انتهت مهلة الإلغاء (3 دقائق). لا يمكن إلغاء الطلب بعد هذه المدة"
+            detail=f"لا يمكن إلغاء الطلب - {reason}"
         )
     
     # استرجاع المبلغ إذا كان الدفع بالمحفظة
