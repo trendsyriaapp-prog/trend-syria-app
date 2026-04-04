@@ -526,6 +526,164 @@ async def reject_seller(seller_id: str, data: dict = None, user: dict = Depends(
     
     return {"message": "تم رفض البائع", "reason": reason if reason else None}
 
+
+@router.post("/sellers/{seller_id}/suspend")
+async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+    """إيقاف حساب بائع"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
+    if not seller:
+        raise HTTPException(status_code=404, detail="البائع غير موجود")
+    
+    reason = data.get("reason", "") if data else ""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"id": seller_id},
+        {
+            "$set": {
+                "is_suspended": True,
+                "suspended_at": now,
+                "suspension_reason": reason or "إيقاف من قبل الإدارة",
+                "suspended_by": user["id"]
+            }
+        }
+    )
+    
+    # إشعار البائع
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": seller_id,
+        "title": "⛔ تم إيقاف حسابك",
+        "message": f"تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        "type": "account_suspended",
+        "is_read": False,
+        "created_at": now
+    })
+    
+    return {"message": "تم إيقاف حساب البائع بنجاح"}
+
+
+@router.post("/sellers/{seller_id}/activate")
+async def activate_seller(seller_id: str, user: dict = Depends(get_current_user)):
+    """إعادة تفعيل حساب بائع"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
+    if not seller:
+        raise HTTPException(status_code=404, detail="البائع غير موجود")
+    
+    await db.users.update_one(
+        {"id": seller_id},
+        {
+            "$set": {"is_suspended": False},
+            "$unset": {
+                "suspended_at": "",
+                "suspension_reason": "",
+                "suspended_by": ""
+            }
+        }
+    )
+    
+    # إشعار البائع
+    now = datetime.now(timezone.utc).isoformat()
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": seller_id,
+        "title": "✅ تم تفعيل حسابك",
+        "message": "تم إعادة تفعيل حسابك. يمكنك الآن استقبال الطلبات",
+        "type": "account_activated",
+        "is_read": False,
+        "created_at": now
+    })
+    
+    return {"message": "تم تفعيل حساب البائع بنجاح"}
+
+
+@router.delete("/sellers/{seller_id}")
+async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)):
+    """حذف حساب بائع نهائياً (للأدمن)"""
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
+    
+    seller = await db.users.find_one({"id": seller_id, "user_type": "seller"})
+    if not seller:
+        raise HTTPException(status_code=404, detail="البائع غير موجود")
+    
+    # التحقق من عدم وجود طلبات نشطة
+    active_orders = await db.orders.count_documents({
+        "seller_id": seller_id,
+        "status": {"$nin": ["delivered", "cancelled"]}
+    })
+    
+    if active_orders > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لا يمكن حذف البائع - لديه {active_orders} طلب نشط"
+        )
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # حفظ بيانات البائع في سجل الحذف
+    await db.deleted_sellers.insert_one({
+        "id": str(uuid.uuid4()),
+        "original_seller_id": seller_id,
+        "seller_data": seller,
+        "deleted_by": user["id"],
+        "deleted_at": now
+    })
+    
+    # حذف بيانات البائع
+    await db.users.delete_one({"id": seller_id})
+    await db.wallets.delete_one({"user_id": seller_id})
+    await db.seller_documents.delete_one({"seller_id": seller_id})
+    # حذف المنتجات (اختياري - يمكن الاحتفاظ بها)
+    # await db.products.delete_many({"seller_id": seller_id})
+    
+    return {"message": "تم حذف حساب البائع نهائياً"}
+
+
+@router.get("/sellers/with-status")
+async def get_all_sellers_with_status(user: dict = Depends(get_current_user)):
+    """جلب جميع البائعين مع حالاتهم"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    sellers = await db.users.find(
+        {"user_type": "seller"},
+        {
+            "_id": 0, 
+            "id": 1, 
+            "name": 1, 
+            "store_name": 1,
+            "phone": 1,
+            "is_approved": 1,
+            "is_suspended": 1,
+            "suspended_at": 1,
+            "suspension_reason": 1,
+            "created_at": 1
+        }
+    ).to_list(500)
+    
+    # إضافة إحصائيات
+    for seller in sellers:
+        # عدد المنتجات
+        products_count = await db.products.count_documents({"seller_id": seller["id"]})
+        seller["products_count"] = products_count
+        
+        # عدد الطلبات المكتملة
+        completed_orders = await db.orders.count_documents({
+            "seller_id": seller["id"],
+            "status": "delivered"
+        })
+        seller["completed_orders"] = completed_orders
+    
+    return sellers
+
+
 # ============== Products Management ==============
 
 @router.get("/products/pending")

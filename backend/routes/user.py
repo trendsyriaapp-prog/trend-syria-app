@@ -187,3 +187,118 @@ async def set_default_payment(payment_id: str, user: dict = Depends(get_current_
         {"$set": {"is_default": True}}
     )
     return {"message": "تم تعيين طريقة الدفع الافتراضية"}
+
+
+
+# ============== Account Deletion ==============
+
+@router.delete("/account")
+async def delete_my_account(user: dict = Depends(get_current_user)):
+    """حذف حساب المستخدم (البائع يستطيع حذف حسابه مباشرة)"""
+    
+    user_type = user.get("user_type")
+    user_id = user["id"]
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # التحقق من نوع المستخدم
+    if user_type == "seller":
+        # التحقق من عدم وجود طلبات نشطة للبائع
+        active_orders = await db.orders.count_documents({
+            "seller_id": user_id,
+            "status": {"$nin": ["delivered", "cancelled"]}
+        })
+        
+        if active_orders > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكن حذف الحساب - لديك {active_orders} طلب نشط. أكمل الطلبات أولاً."
+            )
+        
+        # حفظ بيانات البائع في سجل الحذف
+        seller_data = await db.users.find_one({"id": user_id}, {"_id": 0})
+        await db.deleted_sellers.insert_one({
+            "id": str(uuid.uuid4()),
+            "original_seller_id": user_id,
+            "seller_data": seller_data,
+            "deleted_by": user_id,  # حذف ذاتي
+            "deleted_at": now,
+            "deletion_type": "self_deletion"
+        })
+        
+        # حذف بيانات البائع
+        await db.users.delete_one({"id": user_id})
+        await db.wallets.delete_one({"user_id": user_id})
+        await db.seller_documents.delete_one({"seller_id": user_id})
+        await db.addresses.delete_many({"user_id": user_id})
+        
+        return {"message": "تم حذف حسابك بنجاح. نأسف لرؤيتك تغادر!"}
+    
+    elif user_type == "food_seller":
+        # التحقق من عدم وجود طلبات نشطة لبائع الطعام
+        active_orders = await db.food_orders.count_documents({
+            "store_id": user.get("store_id", user_id),
+            "status": {"$nin": ["delivered", "cancelled"]}
+        })
+        
+        if active_orders > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكن حذف الحساب - لديك {active_orders} طلب نشط. أكمل الطلبات أولاً."
+            )
+        
+        # حفظ البيانات
+        seller_data = await db.users.find_one({"id": user_id}, {"_id": 0})
+        await db.deleted_food_sellers.insert_one({
+            "id": str(uuid.uuid4()),
+            "original_seller_id": user_id,
+            "seller_data": seller_data,
+            "deleted_by": user_id,
+            "deleted_at": now,
+            "deletion_type": "self_deletion"
+        })
+        
+        # حذف البيانات
+        await db.users.delete_one({"id": user_id})
+        await db.wallets.delete_one({"user_id": user_id})
+        await db.food_stores.delete_one({"owner_id": user_id})
+        
+        return {"message": "تم حذف حسابك بنجاح. نأسف لرؤيتك تغادر!"}
+    
+    elif user_type == "customer":
+        # العميل يستطيع حذف حسابه
+        active_orders = await db.orders.count_documents({
+            "user_id": user_id,
+            "status": {"$nin": ["delivered", "cancelled"]}
+        })
+        active_food_orders = await db.food_orders.count_documents({
+            "user_id": user_id,
+            "status": {"$nin": ["delivered", "cancelled"]}
+        })
+        
+        if active_orders + active_food_orders > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكن حذف الحساب - لديك طلبات نشطة. انتظر حتى تكتمل."
+            )
+        
+        # حفظ البيانات
+        customer_data = await db.users.find_one({"id": user_id}, {"_id": 0})
+        await db.deleted_customers.insert_one({
+            "id": str(uuid.uuid4()),
+            "original_customer_id": user_id,
+            "customer_data": customer_data,
+            "deleted_at": now
+        })
+        
+        # حذف البيانات
+        await db.users.delete_one({"id": user_id})
+        await db.addresses.delete_many({"user_id": user_id})
+        await db.cart_items.delete_many({"user_id": user_id})
+        
+        return {"message": "تم حذف حسابك بنجاح. نأسف لرؤيتك تغادر!"}
+    
+    else:
+        raise HTTPException(
+            status_code=400, 
+            detail="لا يمكن حذف هذا النوع من الحسابات من هنا"
+        )

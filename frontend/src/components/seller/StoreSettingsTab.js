@@ -50,6 +50,8 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
   const [paymentAccounts, setPaymentAccounts] = useState([]);
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [newAccount, setNewAccount] = useState({
     type: 'shamcash',
     account_number: '',
@@ -575,8 +577,20 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
         </div>
       )}
       
-      {/* زر تسجيل الخروج */}
+      {/* زر حذف الحساب */}
       <div className="mt-6 pt-4 border-t border-gray-200">
+        <button
+          onClick={() => setShowDeleteAccountModal(true)}
+          className="w-full py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+          data-testid="delete-account-btn"
+        >
+          <Trash2 size={18} />
+          حذف حسابي نهائياً
+        </button>
+      </div>
+      
+      {/* زر تسجيل الخروج */}
+      <div className="mt-3">
         <button
           onClick={() => {
             logout();
@@ -590,6 +604,57 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
           تسجيل الخروج
         </button>
       </div>
+      
+      {/* Modal حذف الحساب */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-6 h-6" />
+              حذف الحساب نهائياً
+            </h3>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-red-700 text-sm font-medium">⚠️ تحذير هام:</p>
+              <ul className="text-red-600 text-sm mt-2 space-y-1 list-disc list-inside">
+                <li>هذا الإجراء لا يمكن التراجع عنه</li>
+                <li>سيتم حذف جميع بياناتك ومنتجاتك</li>
+                <li>يجب إكمال جميع الطلبات النشطة أولاً</li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  setDeletingAccount(true);
+                  try {
+                    await axios.delete(`${API}/api/user/account`);
+                    toast({ title: 'تم حذف الحساب', description: 'نأسف لرؤيتك تغادر!' });
+                    logout();
+                    navigate('/login');
+                  } catch (error) {
+                    toast({ 
+                      title: 'خطأ', 
+                      description: error.response?.data?.detail || 'حدث خطأ أثناء حذف الحساب',
+                      variant: 'destructive'
+                    });
+                  }
+                  setDeletingAccount(false);
+                  setShowDeleteAccountModal(false);
+                }}
+                disabled={deletingAccount}
+                className="flex-1 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deletingAccount ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              </button>
+              <button
+                onClick={() => setShowDeleteAccountModal(false)}
+                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
