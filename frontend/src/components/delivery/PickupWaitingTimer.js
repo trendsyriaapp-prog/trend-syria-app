@@ -21,15 +21,13 @@ const PickupWaitingTimer = ({
   // إعدادات التعويض (من الخادم)
   const [settings, setSettings] = useState({
     max_waiting_time_minutes: 10,
-    compensation_per_5_minutes: 500,
-    max_compensation_per_order: 2000
+    compensation_per_5_minutes: 500
   });
   const [loadingSettings, setLoadingSettings] = useState(true);
   
   // حالة المؤقت
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [compensation, setCompensation] = useState(0);
-  const [timerStopped, setTimerStopped] = useState(false);
 
   // جلب إعدادات التعويض من الخادم
   useEffect(() => {
@@ -39,8 +37,7 @@ const PickupWaitingTimer = ({
         if (res.data) {
           setSettings({
             max_waiting_time_minutes: res.data.max_waiting_time_minutes || 10,
-            compensation_per_5_minutes: res.data.compensation_per_5_minutes || 500,
-            max_compensation_per_order: res.data.max_compensation_per_order || 2000
+            compensation_per_5_minutes: res.data.compensation_per_5_minutes || 500
           });
         }
       } catch (error) {
@@ -63,7 +60,7 @@ const PickupWaitingTimer = ({
     return Math.max(0, diff);
   }, [arrivedAt]);
 
-  // حساب التعويض
+  // حساب التعويض - تعويض واحد ثابت بعد تجاوز الحد
   const calculateCompensation = useCallback((elapsedSecs) => {
     const elapsedMinutes = elapsedSecs / 60;
     const maxWaiting = settings.max_waiting_time_minutes;
@@ -72,10 +69,8 @@ const PickupWaitingTimer = ({
       return 0;
     }
     
-    // حساب التعويض: كل 5 دقائق بعد الحد المسموح
-    const extraMinutes = elapsedMinutes - maxWaiting;
-    const units = Math.ceil(extraMinutes / 5);
-    return Math.min(units * settings.compensation_per_5_minutes, settings.max_compensation_per_order);
+    // تعويض ثابت واحد بعد تجاوز وقت الانتظار المسموح
+    return settings.compensation_per_5_minutes;
   }, [settings]);
 
   // تحديث المؤقت كل ثانية
@@ -93,31 +88,18 @@ const PickupWaitingTimer = ({
         return;
       }
       
-      // التحقق إذا وصلنا للحد الأقصى للتعويض
-      if (comp >= settings.max_compensation_per_order) {
-        setTimerStopped(true);
-        setCompensation(settings.max_compensation_per_order);
-        // حساب الوقت عند الوصول للحد الأقصى
-        // max_compensation / compensation_per_5 = عدد الوحدات
-        // عدد الوحدات * 5 + max_waiting = الوقت الكلي
-        const units = settings.max_compensation_per_order / settings.compensation_per_5_minutes;
-        const maxTimeSeconds = (settings.max_waiting_time_minutes + (units * 5)) * 60;
-        setElapsedSeconds(maxTimeSeconds);
-        return;
-      }
-      
       setElapsedSeconds(elapsed);
       setCompensation(comp);
     };
 
     update();
     
-    // إذا لم يتوقف المؤقت ولم يُخفى، استمر بالتحديث
-    if (!timerStopped && !isHidden) {
+    // استمر بالتحديث
+    if (!isHidden) {
       const interval = setInterval(update, 1000);
       return () => clearInterval(interval);
     }
-  }, [arrivedAt, loadingSettings, calculateElapsed, calculateCompensation, timerStopped, settings, maxMinutes, onMaxReached, isHidden]);
+  }, [arrivedAt, loadingSettings, calculateElapsed, calculateCompensation, settings, maxMinutes, onMaxReached, isHidden]);
 
   // تحويل الثواني لدقائق:ثواني
   const formatTime = (seconds) => {
@@ -130,7 +112,7 @@ const PickupWaitingTimer = ({
   const maxWaitingSeconds = settings.max_waiting_time_minutes * 60;
   const isOvertime = elapsedSeconds >= maxWaitingSeconds;
   const remainingBeforeCompensation = Math.max(0, maxWaitingSeconds - elapsedSeconds);
-  const isMaxCompensation = compensation >= settings.max_compensation_per_order;
+  const hasCompensation = compensation > 0;
 
   if (!arrivedAt || loadingSettings) {
     return null;
@@ -145,13 +127,13 @@ const PickupWaitingTimer = ({
   if (compact) {
     return (
       <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full ${
-        isMaxCompensation 
+        hasCompensation 
           ? 'bg-green-500/20 text-green-400'
           : isOvertime 
             ? 'bg-amber-500/20 text-amber-400' 
             : 'bg-blue-500/20 text-blue-400'
       }`}>
-        {isMaxCompensation ? <CheckCircle size={12} /> : <Clock size={12} />}
+        {hasCompensation ? <CheckCircle size={12} /> : <Clock size={12} />}
         <span className="text-xs font-bold">
           {formatTime(elapsedSeconds)}
         </span>
@@ -167,7 +149,7 @@ const PickupWaitingTimer = ({
   // الشكل الكامل
   return (
     <div className={`rounded-xl overflow-hidden mb-4 ${
-      isMaxCompensation
+      hasCompensation
         ? isDark ? 'bg-green-500/10 border border-green-500/30' : 'bg-green-50 border border-green-200'
         : isOvertime
           ? isDark ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'
@@ -177,7 +159,7 @@ const PickupWaitingTimer = ({
         {/* العنوان والوقت */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            {isMaxCompensation ? (
+            {hasCompensation ? (
               <CheckCircle size={18} className="text-green-500" />
             ) : isOvertime ? (
               <TrendingUp size={18} className="text-amber-500" />
@@ -185,8 +167,8 @@ const PickupWaitingTimer = ({
               <Clock size={18} className={isDark ? 'text-blue-400' : 'text-blue-600'} />
             )}
             <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              {isMaxCompensation 
-                ? '✅ وصلت للحد الأقصى!' 
+              {hasCompensation 
+                ? '✅ تستحق تعويض!' 
                 : isOvertime 
                   ? `⏰ تجاوزت ${labelPrefix}` 
                   : labelPrefix}
@@ -194,7 +176,7 @@ const PickupWaitingTimer = ({
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-xl font-bold ${
-              isMaxCompensation 
+              hasCompensation 
                 ? 'text-green-500'
                 : isOvertime 
                   ? 'text-amber-500' 
@@ -202,11 +184,6 @@ const PickupWaitingTimer = ({
             }`}>
               {formatTime(elapsedSeconds)}
             </span>
-            {timerStopped && (
-              <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                ⏹️
-              </span>
-            )}
           </div>
         </div>
 
@@ -214,54 +191,42 @@ const PickupWaitingTimer = ({
         <div className={`h-2 rounded-full overflow-hidden mb-2 ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}>
           <div 
             className={`h-full rounded-full transition-all duration-500 ${
-              isMaxCompensation 
+              hasCompensation 
                 ? 'bg-green-500'
                 : isOvertime 
                   ? 'bg-amber-500' 
                   : 'bg-blue-500'
             }`}
             style={{ 
-              width: isMaxCompensation ? '100%' : `${Math.min(100, (elapsedSeconds / maxWaitingSeconds) * 100)}%` 
+              width: hasCompensation ? '100%' : `${Math.min(100, (elapsedSeconds / maxWaitingSeconds) * 100)}%` 
             }}
           />
         </div>
 
         {/* معلومات التعويض */}
-        {isMaxCompensation ? (
-          // الحد الأقصى للتعويض
+        {hasCompensation ? (
+          // تستحق تعويض ثابت
           <div className={`p-3 rounded-lg ${
             isDark ? 'bg-green-500/20' : 'bg-green-100'
           }`}>
             <div className="text-center">
               <p className={`text-xs mb-1 ${isDark ? 'text-green-300' : 'text-green-700'}`}>
-                🎉 تعويضك النهائي:
+                💰 تعويضك:
               </p>
               <p className="text-2xl font-bold text-green-500">
-                +{settings.max_compensation_per_order.toLocaleString()} ل.س
-              </p>
-              <p className={`text-xs mt-1 ${isDark ? 'text-green-300/70' : 'text-green-600'}`}>
-                (الحد الأقصى)
+                +{compensation.toLocaleString()} ل.س
               </p>
             </div>
           </div>
         ) : isOvertime ? (
-          // تجاوز الوقت - يظهر التعويض التراكمي
+          // تجاوز الوقت لكن لا تعويض بعد
           <div className={`p-2 rounded-lg ${
             isDark ? 'bg-amber-500/20' : 'bg-amber-100'
           }`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-xs ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                  تعويضك الحالي:
-                </p>
-                <p className="text-lg font-bold text-green-500">
-                  +{compensation.toLocaleString()} ل.س
-                </p>
-              </div>
-              <div className={`text-left text-xs ${isDark ? 'text-amber-300/70' : 'text-amber-600'}`}>
-                <p>يزيد كل 5 دقائق</p>
-                <p>الحد الأقصى: {settings.max_compensation_per_order.toLocaleString()} ل.س</p>
-              </div>
+            <div className="text-center">
+              <p className={`text-sm ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                ⏰ تجاوزت وقت الانتظار المسموح
+              </p>
             </div>
           </div>
         ) : (

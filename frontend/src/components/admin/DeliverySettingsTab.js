@@ -1040,14 +1040,14 @@ const DeliverySettingsTab = () => {
           <div className="bg-rose-50 rounded-lg p-4 border border-rose-200">
             <h4 className="font-bold text-rose-800 mb-2">🛡️ كيف يعمل نظام حماية السائقين:</h4>
             <ol className="text-sm text-rose-700 space-y-1 list-decimal list-inside">
-              <li>السائق يصل للمطعم ويضغط "وصلت للمطعم"</li>
+              <li>السائق يصل للمطعم/المتجر ويضغط "وصلت"</li>
               <li>يبدأ عداد الانتظار</li>
-              <li>إذا تجاوز الانتظار <strong>{waitCompensationSettings.max_waiting_time_minutes} دقائق</strong>، يُحسب التعويض</li>
-              <li>التعويض يُخصم من المطعم ويُضاف لمحفظة السائق</li>
+              <li>إذا تجاوز الانتظار <strong>{waitCompensationSettings.max_waiting_time_minutes} دقائق</strong>، يستحق التعويض</li>
+              <li>التعويض ثابت: <strong>{waitCompensationSettings.compensation_per_5_minutes?.toLocaleString()} ل.س</strong></li>
             </ol>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {/* وقت الانتظار المسموح */}
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center gap-2 mb-1.5">
@@ -1073,15 +1073,15 @@ const DeliverySettingsTab = () => {
               <p className="text-center text-sm text-blue-600 mt-2">دقيقة</p>
             </div>
 
-            {/* التعويض لكل 5 دقائق */}
+            {/* قيمة التعويض */}
             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs">💰</span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">تعويض كل 5 دقائق</h3>
-                  <p className="text-xs text-gray-500">المبلغ المضاف للسائق</p>
+                  <h3 className="font-bold text-gray-800">قيمة التعويض</h3>
+                  <p className="text-xs text-gray-500">المبلغ المضاف للسائق عند تجاوز وقت الانتظار</p>
                 </div>
               </div>
               <input
@@ -1096,52 +1096,6 @@ const DeliverySettingsTab = () => {
                 step={100}
               />
               <p className="text-center text-sm text-green-600 mt-2">ل.س</p>
-            </div>
-
-            {/* الحد الأقصى للتعويض */}
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">🔒</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">الحد الأقصى</h3>
-                  <p className="text-xs text-gray-500">أقصى تعويض للطلب الواحد</p>
-                </div>
-              </div>
-              <input
-                type="number"
-                value={waitCompensationSettings.max_compensation_per_order || ''}
-                onChange={(e) => setWaitCompensationSettings({
-                  ...waitCompensationSettings,
-                  max_compensation_per_order: e.target.value === '' ? '' : parseInt(e.target.value) || 0
-                })}
-                className="w-full p-3 border border-amber-300 rounded-lg text-center text-sm font-bold"
-                min={500}
-                step={500}
-              />
-              <p className="text-center text-sm text-amber-600 mt-2">ل.س</p>
-            </div>
-          </div>
-
-          {/* أمثلة على التعويضات */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200">
-            <h4 className="font-bold text-gray-700 mb-1.5">📊 أمثلة على التعويضات:</h4>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              {[12, 15, 20, 30].map(minutes => {
-                const extraMinutes = Math.max(0, minutes - waitCompensationSettings.max_waiting_time_minutes);
-                const units = Math.ceil(extraMinutes / 5);
-                const comp = Math.min(units * waitCompensationSettings.compensation_per_5_minutes, waitCompensationSettings.max_compensation_per_order);
-                return (
-                  <div key={minutes} className="bg-white rounded-lg p-2 shadow-sm">
-                    <div className="text-xs">⏱️</div>
-                    <div className="text-sm text-gray-600 text-sm">{minutes} دقيقة</div>
-                    <div className={`font-bold ${comp > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                      {comp > 0 ? `+${formatPrice(comp)}` : 'لا تعويض'}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
