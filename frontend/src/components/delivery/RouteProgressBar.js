@@ -334,7 +334,63 @@ const RouteProgressBar = ({
 
   // التحقق من الوصول للعميل
   const handleArrivedAtCustomer = async (station) => {
-    setShowDeliveryCodeModal(station);
+    const order = station.order;
+    const isFood = station.orderType === 'food';
+    
+    // إذا كان وقت الوصول محفوظاً مسبقاً، استخدمه
+    if (order?.driver_arrived_at_customer) {
+      scrollBeforeModalRef.current = window.scrollY;
+      setShowDeliveryCodeModal({
+        ...station,
+        order: {
+          ...order,
+          driver_arrived_at_customer: order.driver_arrived_at_customer
+        }
+      });
+      return;
+    }
+    
+    // تسجيل وصول السائق للعميل في قاعدة البيانات
+    try {
+      const endpoint = isFood 
+        ? `${API}/api/food/orders/delivery/${order.id}/arrived-customer`
+        : `${API}/api/orders/${order.id}/delivery/arrived-customer`;
+      
+      const response = await axios.post(endpoint, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      scrollBeforeModalRef.current = window.scrollY;
+      setShowDeliveryCodeModal({
+        ...station,
+        order: {
+          ...order,
+          driver_arrived_at_customer: response.data?.arrived_at || new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      // إذا كان الوقت محفوظاً مسبقاً، استخدمه
+      if (error.response?.data?.arrived_at) {
+        scrollBeforeModalRef.current = window.scrollY;
+        setShowDeliveryCodeModal({
+          ...station,
+          order: {
+            ...order,
+            driver_arrived_at_customer: error.response.data.arrived_at
+          }
+        });
+      } else {
+        // افتح الـ modal على أي حال مع الوقت الحالي
+        scrollBeforeModalRef.current = window.scrollY;
+        setShowDeliveryCodeModal({
+          ...station,
+          order: {
+            ...order,
+            driver_arrived_at_customer: new Date().toISOString()
+          }
+        });
+      }
+    }
   };
 
   // التحقق من كود الاستلام
@@ -681,6 +737,17 @@ const RouteProgressBar = ({
             <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               اطلب الكود من {showDeliveryCodeModal.name}
             </p>
+            
+            {/* عداد الانتظار عند العميل */}
+            <PickupWaitingTimer
+              arrivedAt={showDeliveryCodeModal?.order?.driver_arrived_at_customer}
+              isDark={isDark}
+              maxMinutes={10}
+              onMaxReached={() => {
+                // إخفاء العداد عند انتهاء الوقت (يتم التعامل معه في الـ component)
+              }}
+              labelPrefix="انتظار العميل"
+            />
             
             <input
               type="text"

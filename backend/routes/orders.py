@@ -1197,6 +1197,66 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
 
 # ============== نظام تأكيد التسليم بالكود ==============
 
+@router.post("/orders/{order_id}/delivery/arrived-customer")
+async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)):
+    """تسجيل وصول موظف التوصيل للعميل - لطلبات المنتجات"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # التحقق من أن السائق هو المسند للطلب
+    if order.get("delivery_driver_id") != user["id"]:
+        raise HTTPException(status_code=400, detail="هذا الطلب ليس مسنداً لك")
+    
+    # إذا كان وقت الوصول محفوظاً مسبقاً، أرجعه
+    if order.get("driver_arrived_at_customer"):
+        return {
+            "message": "تم تسجيل وصولك مسبقاً",
+            "arrived_at": order.get("driver_arrived_at_customer"),
+            "order_id": order_id
+        }
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "driver_arrived_at_customer": now,
+                "delivery_status": "driver_at_customer"
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "driver_arrived_at_customer",
+                    "timestamp": now,
+                    "actor": get_first_name(user.get("full_name", user.get("name", ""))),
+                    "actor_type": "delivery"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    customer_id = order.get("user_id") or order.get("customer_id")
+    if customer_id:
+        driver_name = get_first_name(user.get("full_name", user.get("name", "")))
+        await create_notification_for_user(
+            user_id=customer_id,
+            title="🚚 السائق وصل!",
+            message=f"السائق {driver_name} وصل إليك. يرجى تجهيز كود التسليم.",
+            notification_type="delivery",
+            order_id=order_id
+        )
+    
+    return {
+        "message": "تم تسجيل وصولك للعميل",
+        "arrived_at": now,
+        "order_id": order_id
+    }
+
 class VerifyDeliveryCode(BaseModel):
     delivery_code: str
 
@@ -1213,7 +1273,7 @@ async def verify_shop_delivery_code(
     order = await db.orders.find_one({
         "id": order_id, 
         "delivery_driver_id": user["id"], 
-        "delivery_status": "on_the_way"
+        "delivery_status": {"$in": ["on_the_way", "driver_at_customer"]}
     })
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً إليك")

@@ -7,10 +7,13 @@ import { Clock } from 'lucide-react';
 const WaitingTimerBadge = ({ 
   arrivedAt, // ISO string - وقت وصول السائق
   theme = 'dark',
-  maxWaitingMinutes = 10 // الحد الأقصى قبل التعويض
+  maxWaitingMinutes = 10, // الحد الأقصى قبل التعويض
+  hideAfterMinutes = null, // إخفاء العداد بعد هذا الوقت (null = لا يختفي)
+  label = null // نص مخصص
 }) => {
   const isDark = theme === 'dark';
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isHidden, setIsHidden] = useState(false);
 
   // حساب الوقت المنقضي
   const calculateElapsed = useCallback(() => {

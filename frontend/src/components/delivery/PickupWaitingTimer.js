@@ -10,9 +10,13 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const PickupWaitingTimer = ({ 
   arrivedAt, // ISO string - وقت وصول السائق
   theme = 'dark',
-  compact = false
+  compact = false,
+  maxMinutes = null, // الحد الأقصى بالدقائق (إذا تم تحديده، يختفي العداد بعده)
+  onMaxReached = null, // callback عند الوصول للحد الأقصى
+  labelPrefix = "وقت الانتظار" // نص العنوان
 }) => {
   const isDark = theme === 'dark';
+  const [isHidden, setIsHidden] = useState(false); // لإخفاء العداد بعد انتهاء الوقت
   
   // إعدادات التعويض (من الخادم)
   const [settings, setSettings] = useState({
@@ -82,6 +86,13 @@ const PickupWaitingTimer = ({
       const elapsed = calculateElapsed();
       const comp = calculateCompensation(elapsed);
       
+      // إذا تم تحديد maxMinutes وتجاوزنا الحد، أخفِ العداد
+      if (maxMinutes && elapsed >= maxMinutes * 60) {
+        setIsHidden(true);
+        if (onMaxReached) onMaxReached();
+        return;
+      }
+      
       // التحقق إذا وصلنا للحد الأقصى للتعويض
       if (comp >= settings.max_compensation_per_order) {
         setTimerStopped(true);
@@ -101,12 +112,12 @@ const PickupWaitingTimer = ({
 
     update();
     
-    // إذا لم يتوقف المؤقت، استمر بالتحديث
-    if (!timerStopped) {
+    // إذا لم يتوقف المؤقت ولم يُخفى، استمر بالتحديث
+    if (!timerStopped && !isHidden) {
       const interval = setInterval(update, 1000);
       return () => clearInterval(interval);
     }
-  }, [arrivedAt, loadingSettings, calculateElapsed, calculateCompensation, timerStopped, settings]);
+  }, [arrivedAt, loadingSettings, calculateElapsed, calculateCompensation, timerStopped, settings, maxMinutes, onMaxReached, isHidden]);
 
   // تحويل الثواني لدقائق:ثواني
   const formatTime = (seconds) => {
@@ -122,6 +133,11 @@ const PickupWaitingTimer = ({
   const isMaxCompensation = compensation >= settings.max_compensation_per_order;
 
   if (!arrivedAt || loadingSettings) {
+    return null;
+  }
+  
+  // إخفاء العداد إذا تم تجاوز الحد الأقصى المحدد
+  if (isHidden) {
     return null;
   }
 
@@ -172,8 +188,8 @@ const PickupWaitingTimer = ({
               {isMaxCompensation 
                 ? '✅ وصلت للحد الأقصى!' 
                 : isOvertime 
-                  ? '⏰ تجاوزت وقت الانتظار' 
-                  : 'وقت الانتظار'}
+                  ? `⏰ تجاوزت ${labelPrefix}` 
+                  : labelPrefix}
             </span>
           </div>
           <div className="flex items-center gap-2">
