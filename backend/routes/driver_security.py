@@ -153,6 +153,17 @@ async def process_auto_deduction(driver_id: str):
 
 # ============== Endpoints ==============
 
+def _get_status_message(current: int, required: int, status: str) -> str:
+    """رسالة حالة التأمين"""
+    if current >= required:
+        return "✅ التأمين مكتمل - يمكنك استقبال الطلبات"
+    elif current > 0:
+        remaining = required - current
+        return f"⚠️ التأمين غير مكتمل - متبقي {remaining:,} ل.س"
+    else:
+        return f"❌ يجب دفع التأمين ({required:,} ل.س) للبدء بالعمل"
+
+
 @router.get("/status")
 async def get_security_deposit_status(user: dict = Depends(get_current_user)):
     """حالة تأمين موظف التوصيل"""
@@ -163,7 +174,7 @@ async def get_security_deposit_status(user: dict = Depends(get_current_user)):
     settings = await get_security_settings()
     deposit = await get_driver_security_deposit(user["id"])
     
-    required = settings.get("required_amount", 100000)
+    required = settings.get("required_amount", 500)
     current = deposit.get("current_amount", 0)
     
     return {
@@ -174,20 +185,9 @@ async def get_security_deposit_status(user: dict = Depends(get_current_user)):
         "status": deposit.get("status", "pending"),
         "is_complete": current >= required,
         "can_receive_orders": current >= required,
-        "transactions": deposit.get("transactions", [])[-10:],  # آخر 10 معاملات
-        "message": self._get_status_message(current, required, deposit.get("status"))
+        "transactions": deposit.get("transactions", [])[-10:],
+        "message": _get_status_message(current, required, deposit.get("status"))
     }
-
-
-def _get_status_message(current: int, required: int, status: str) -> str:
-    """رسالة حالة التأمين"""
-    if current >= required:
-        return "✅ التأمين مكتمل - يمكنك استقبال الطلبات"
-    elif current > 0:
-        remaining = required - current
-        return f"⚠️ التأمين غير مكتمل - متبقي {remaining:,} ل.س"
-    else:
-        return f"❌ يجب دفع التأمين ({required:,} ل.س) للبدء بالعمل"
 
 
 @router.get("/settings")

@@ -142,6 +142,15 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
   - حالات جديدة: `returning_to_store`, `delivery_failed`
   - تعويض السائق على الانتظار تلقائياً
   - إشعارات للإدارة والعميل والبائع
+- ✅ **نظام تأمين موظف التوصيل (Security Deposit)** (April 4, 2026)
+  - السائق يجب أن يدفع تأمين (افتراضي 500 ل.س جديدة) بعد موافقة الأدمن
+  - لا يستطيع قبول الطلبات حتى يكتمل التأمين
+  - الأرباح تُخصم تلقائياً لتعويض التأمين إذا نقص
+  - التأمين غير قابل للسحب إلا عند الاستقالة
+  - طرق الدفع: Sham Cash, تحويل بنكي, حوالة, نقداً
+  - Backend: `/app/backend/routes/driver_security.py`
+  - Frontend Driver: `/app/frontend/src/components/delivery/SecurityDepositCard.js`
+  - Frontend Admin: `/app/frontend/src/components/admin/DriverSecurityTab.js`
 
 ## Test Credentials
 - **Admin**: 0912345678 / admin123

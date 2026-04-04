@@ -4060,6 +4060,13 @@ async def add_earnings_directly(driver: dict, amount: float, order: dict, user_t
         "is_read": False,
         "created_at": now.isoformat()
     })
+    
+    # التحقق من التأمين وخصم تلقائي إذا لزم
+    try:
+        from routes.driver_security import check_and_deduct_for_security
+        await check_and_deduct_for_security(driver["id"])
+    except Exception as e:
+        logging.error(f"Error checking security deposit: {e}")
 
 
 async def add_seller_earnings_directly(seller_id: str, amount: float, order: dict):

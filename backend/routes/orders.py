@@ -1351,6 +1351,14 @@ async def verify_shop_delivery_code(
         upsert=True
     )
     
+    # التحقق من التأمين وخصم تلقائي إذا لزم
+    try:
+        from routes.driver_security import check_and_deduct_for_security
+        await check_and_deduct_for_security(user["id"])
+    except Exception as e:
+        import logging
+        logging.error(f"Error checking security deposit: {e}")
+    
     return {
         "success": True,
         "message": "تم التحقق من الكود وإتمام التسليم بنجاح",

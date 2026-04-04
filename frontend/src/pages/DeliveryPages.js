@@ -28,6 +28,7 @@ import PushNotificationPrompt from '../components/PushNotificationPrompt';
 
 import EarningsStats from '../components/delivery/EarningsStats';
 import RouteProgressBar from '../components/delivery/RouteProgressBar';
+import SecurityDepositCard from '../components/delivery/SecurityDepositCard';
 import '../styles/driver-dark-theme.css';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -446,6 +447,9 @@ const DeliveryDashboard = () => {
   // حالة توفر السائق
   const [isAvailable, setIsAvailable] = useState(false);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  
+  // حالة التأمين
+  const [securityDepositComplete, setSecurityDepositComplete] = useState(true);
 
   // ⭐ نظام الثيم (فاتح/داكن) مع تبديل تلقائي
   const [themeMode, setThemeMode] = useState(() => {
@@ -679,6 +683,14 @@ const DeliveryDashboard = () => {
       
       if (statusRes.data.status === 'approved') {
         fetchOrders();
+        // فحص حالة التأمين
+        try {
+          const securityRes = await axios.get(`${API}/api/driver/security/status`);
+          setSecurityDepositComplete(securityRes.data.is_complete || false);
+        } catch (e) {
+          // إذا فشل، نفترض أن التأمين مكتمل (للسائقين القدامى)
+          setSecurityDepositComplete(true);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -758,6 +770,16 @@ const DeliveryDashboard = () => {
 
   // قبول طلب منتجات (الخطوة الأولى - السائق يقبل الطلب)
   const handleAcceptProductOrder = async (order) => {
+    // فحص التأمين
+    if (!securityDepositComplete) {
+      toast({
+        title: "التأمين غير مكتمل",
+        description: "يجب إكمال دفع التأمين قبل قبول الطلبات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       await axios.post(`${API}/api/orders/${order.id}/delivery/accept`);
       toast({
@@ -796,6 +818,16 @@ const DeliveryDashboard = () => {
   };
 
   const handleTakeFoodOrder = async (order) => {
+    // فحص التأمين
+    if (!securityDepositComplete) {
+      toast({
+        title: "التأمين غير مكتمل",
+        description: "يجب إكمال دفع التأمين قبل قبول الطلبات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       // التحقق من نوع الطلب (عادي أم تجميعي)
       if (order.is_batch && order.batch_info?.batch_id) {
@@ -830,6 +862,16 @@ const DeliveryDashboard = () => {
 
   // قبول طلب من نظام التنسيق (البائع طلب سائق)
   const handleAcceptDriverRequest = async (order) => {
+    // فحص التأمين
+    if (!securityDepositComplete) {
+      toast({
+        title: "التأمين غير مكتمل",
+        description: "يجب إكمال دفع التأمين قبل قبول الطلبات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       const res = await axios.post(`${API}/api/food/orders/driver/orders/${order.id}/accept`);
       toast({
@@ -1169,6 +1211,14 @@ const DeliveryDashboard = () => {
         {/* Available Orders */}
         {activeTab === 'available' && (
           <>
+            {/* بطاقة التأمين - تظهر فقط إذا كان غير مكتمل */}
+            {!securityDepositComplete && (
+              <SecurityDepositCard 
+                token={localStorage.getItem('token')}
+                onDepositComplete={() => setSecurityDepositComplete(true)}
+              />
+            )}
+            
             {/* رسالة عندما يكون السائق غير متاح */}
             {!isAvailable && (
               <div className={`rounded-2xl p-6 text-center border mb-4 ${

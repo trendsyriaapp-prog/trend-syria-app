@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
-  ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone,
+  ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone, Shield,
   UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -64,6 +64,7 @@ import AllPendingJoinRequests from '../components/admin/AllPendingJoinRequests';
 import AllPendingItemsTab from '../components/admin/AllPendingItemsTab';
 import AllWithdrawRequestsTab from '../components/admin/AllWithdrawRequestsTab';
 import SellerPromotionsTab from '../components/admin/SellerPromotionsTab';
+import DriverSecurityTab from '../components/admin/DriverSecurityTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -393,6 +394,7 @@ const AdminDashboardPage = () => {
     'delivery-boxes': 'صناديق التوصيل',
     'challenges': 'التحديات والمكافآت',
     'delivery-settings': 'إعدادات التوصيل',
+    'driver-security': 'تأمينات السائقين',
     'violations': 'مخالفات السائقين',
     'price-reports': 'بلاغات الأسعار',
     'support-tickets': 'محادثات الدعم',
@@ -520,6 +522,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'delivery-settings' && user.user_type === 'admin' && (
               <DeliverySettingsTab />
+            )}
+            {activeTab === 'driver-security' && user.user_type === 'admin' && (
+              <DriverSecurityTab />
             )}
             {activeTab === 'violations' && user.user_type === 'admin' && (
               <ViolationsTab />
@@ -833,6 +838,7 @@ const AdminDashboardPage = () => {
                   {[
                     { icon: BarChart2, label: 'الأداء', tab: 'drivers-performance' },
                     { icon: Settings, label: 'الإعدادات', tab: 'delivery-settings' },
+                    { icon: Shield, label: 'التأمينات', tab: 'driver-security' },
                     { icon: Package, label: 'الصناديق', tab: 'delivery-boxes' },
                     { icon: AlertTriangle, label: 'المخالفات', tab: 'violations' },
                     { icon: DollarSign, label: 'التحديات', tab: 'challenges' },
