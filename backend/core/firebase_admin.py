@@ -5,6 +5,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 from pathlib import Path
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,30 @@ def init_firebase():
     """تهيئة Firebase Admin SDK"""
     try:
         if not firebase_admin._apps:
-            cred_path = Path(__file__).parent.parent / "config" / "firebase-service-account.json"
-            cred = credentials.Certificate(str(cred_path))
+            # محاولة قراءة من environment variables أولاً
+            project_id = os.environ.get("FIREBASE_PROJECT_ID")
+            client_email = os.environ.get("FIREBASE_CLIENT_EMAIL")
+            private_key = os.environ.get("FIREBASE_PRIVATE_KEY")
+            
+            if project_id and client_email and private_key:
+                # استخدام credentials من environment variables
+                cred_dict = {
+                    "type": "service_account",
+                    "project_id": project_id,
+                    "client_email": client_email,
+                    "private_key": private_key.replace('\\n', '\n'),
+                    "token_uri": "https://oauth2.googleapis.com/token"
+                }
+                cred = credentials.Certificate(cred_dict)
+                logger.info("✅ Using Firebase credentials from environment variables")
+            else:
+                # fallback: قراءة من ملف JSON
+                cred_path = Path(__file__).parent.parent / "config" / "firebase-service-account.json"
+                if not cred_path.exists():
+                    cred_path = Path(__file__).parent.parent / "firebase-service-account.json"
+                cred = credentials.Certificate(str(cred_path))
+                logger.info("✅ Using Firebase credentials from JSON file")
+            
             firebase_admin.initialize_app(cred)
             logger.info("✅ Firebase Admin initialized successfully")
         return True
