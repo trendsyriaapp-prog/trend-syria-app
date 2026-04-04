@@ -108,8 +108,8 @@ const RouteProgressBar = ({
 
   // دالة إرسال فشل التسليم
   const handleSubmitFailed = async () => {
-    if (!failedReason || !failedAction) {
-      toast({ title: "خطأ", description: "اختر السبب والإجراء", variant: "destructive" });
+    if (!failedReason) {
+      toast({ title: "خطأ", description: "اختر سبب الفشل", variant: "destructive" });
       return;
     }
 
@@ -123,16 +123,15 @@ const RouteProgressBar = ({
 
       const res = await axios.post(endpoint, {
         reason: failedReason,
-        action: failedAction,
+        action: 'return_to_store', // دائماً إرجاع للمتجر
         notes: failedNotes || null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const actionText = failedAction === 'return_to_store' ? 'إرجاع للمتجر' : 'إلغاء الطلب';
       toast({ 
         title: "✅ تم", 
-        description: `${res.data.message}${res.data.compensation > 0 ? ` - تعويضك: ${res.data.compensation} ل.س` : ''}` 
+        description: `تم تسجيل فشل التسليم - سيتم إرجاع الطلب للمتجر${res.data.compensation > 0 ? ` - تعويضك: ${res.data.compensation} ل.س` : ''}` 
       });
       
       closeFailedModal();
@@ -919,30 +918,22 @@ const RouteProgressBar = ({
               ))}
             </div>
 
-            {/* الإجراء المطلوب */}
-            <div className="space-y-2 mb-4">
-              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>الإجراء:</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setFailedAction('return_to_store')}
-                  className={`p-3 rounded-xl text-center font-medium transition-all ${
-                    failedAction === 'return_to_store'
-                      ? 'bg-orange-500 text-white'
-                      : (isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200')
-                  }`}
-                >
-                  🔄 إرجاع للمتجر
-                </button>
-                <button
-                  onClick={() => setFailedAction('cancel_order')}
-                  className={`p-3 rounded-xl text-center font-medium transition-all ${
-                    failedAction === 'cancel_order'
-                      ? 'bg-red-600 text-white'
-                      : (isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200')
-                  }`}
-                >
-                  ❌ إلغاء الطلب
-                </button>
+            {/* الإجراء - إرجاع للمتجر فقط */}
+            <div className="mb-4">
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-orange-500/20 border border-orange-500/30' : 'bg-orange-50 border border-orange-200'}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-xl">🔄</span>
+                  </div>
+                  <div>
+                    <p className={`font-bold ${isDark ? 'text-orange-300' : 'text-orange-700'}`}>
+                      سيتم إرجاع الطلب للمتجر
+                    </p>
+                    <p className={`text-xs ${isDark ? 'text-orange-200/70' : 'text-orange-600'}`}>
+                      الإدارة ستتواصل مع العميل لإعادة الجدولة أو الاسترداد
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -970,17 +961,17 @@ const RouteProgressBar = ({
               </button>
               <button
                 onClick={handleSubmitFailed}
-                disabled={submittingFailed || !failedReason || !failedAction}
+                disabled={submittingFailed || !failedReason}
                 className={`flex-1 py-3 rounded-xl font-bold text-white ${
-                  submittingFailed || !failedReason || !failedAction
+                  submittingFailed || !failedReason
                     ? 'bg-gray-400'
-                    : 'bg-gradient-to-r from-red-500 to-red-600'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600'
                 }`}
               >
                 {submittingFailed ? (
                   <Loader2 size={20} className="animate-spin mx-auto" />
                 ) : (
-                  'تأكيد'
+                  '🔄 تأكيد الإرجاع للمتجر'
                 )}
               </button>
             </div>

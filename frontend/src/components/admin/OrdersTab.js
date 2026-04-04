@@ -23,6 +23,9 @@ const getStatusInfo = (status) => {
     'processing': { label: 'قيد التجهيز', bg: 'bg-purple-100', text: 'text-purple-600' },
     'ready': { label: 'جاهز', bg: 'bg-indigo-100', text: 'text-indigo-600' },
     'on_the_way': { label: 'في الطريق', bg: 'bg-cyan-100', text: 'text-cyan-600' },
+    'driver_at_customer': { label: 'السائق عند العميل', bg: 'bg-teal-100', text: 'text-teal-600' },
+    'returning_to_store': { label: '🔄 إرجاع للمتجر', bg: 'bg-orange-100', text: 'text-orange-600' },
+    'delivery_failed': { label: '❌ فشل التسليم', bg: 'bg-red-100', text: 'text-red-600' },
     'delivered': { label: 'تم التوصيل', bg: 'bg-green-100', text: 'text-green-600' },
     'cancelled': { label: 'ملغي', bg: 'bg-red-100', text: 'text-red-600' },
     'refunded': { label: 'مسترد', bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -115,6 +118,7 @@ const OrdersTab = ({ allOrders, onRefresh }) => {
           { id: 'pending', label: 'قيد الانتظار' },
           { id: 'paid', label: 'مدفوع' },
           { id: 'on_the_way', label: 'في الطريق' },
+          { id: 'returning_to_store', label: '🔄 إرجاع' },
           { id: 'delivered', label: 'تم التوصيل' },
           { id: 'cancelled', label: 'ملغي' },
         ].map(f => (
