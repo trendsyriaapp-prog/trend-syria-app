@@ -133,6 +133,15 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
   - Frontend: `PickupWaitingTimer.js` supports `maxMinutes` prop for auto-hide
   - Frontend: Fixed `RouteProgressBar.js` to use `theme` instead of `isDark`
   - Frontend: Updated `isPickedUp` logic to include `on_the_way` and `driver_at_customer` statuses
+- ✅ **نظام فشل التسليم** (April 4, 2026)
+  - زر "فشل التسليم" يظهر بعد انتظار 10 دقائق عند العميل
+  - خيارات الأسباب: العميل لا يرد، غير موجود، العنوان خاطئ، رفض الاستلام
+  - خيارات الإجراء: إرجاع للمتجر أو إلغاء الطلب
+  - Backend: `POST /api/orders/{order_id}/delivery/failed` (منتجات)
+  - Backend: `POST /api/food/orders/delivery/{order_id}/failed` (طعام)
+  - حالات جديدة: `returning_to_store`, `delivery_failed`
+  - تعويض السائق على الانتظار تلقائياً
+  - إشعارات للإدارة والعميل والبائع
 
 ## Test Credentials
 - **Admin**: 0912345678 / admin123
@@ -207,4 +216,4 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 **الإصدار**: 1.0.3 (رمز 4)
 
 ---
-*Last Updated: April 4, 2026 - Added Driver Waiting Timer at Customer (Drop-off)*
+*Last Updated: April 4, 2026 - Added Delivery Failed System (Return to Store / Cancel Order)*

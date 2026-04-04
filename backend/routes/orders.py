@@ -1546,6 +1546,161 @@ async def get_seller_commission_info(user: dict = Depends(get_current_user)):
 
 
 
+# ============== فشل التسليم ==============
+class DeliveryFailedRequest(BaseModel):
+    reason: str  # customer_not_responding, wrong_address, customer_refused, other
+    action: str  # return_to_store, cancel_order
+    notes: Optional[str] = None
+
+@router.post("/orders/{order_id}/delivery/failed")
+async def report_delivery_failed(
+    order_id: str, 
+    data: DeliveryFailedRequest, 
+    user: dict = Depends(get_current_user)
+):
+    """تسجيل فشل التسليم - العميل غير متجاوب"""
+    
+    if user.get("user_type") != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.orders.find_one({
+        "id": order_id,
+        "delivery_driver_id": user["id"],
+        "delivery_status": {"$in": ["out_for_delivery", "on_the_way", "driver_at_customer"]}
+    })
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مسنداً إليك")
+    
+    # التحقق أن السائق وصل للعميل وانتظر
+    if not order.get("driver_arrived_at_customer"):
+        raise HTTPException(status_code=400, detail="يجب الضغط على 'وصلت للعميل' أولاً والانتظار")
+    
+    # التحقق من مرور الوقت الكافي (10 دقائق على الأقل)
+    arrived_time = datetime.fromisoformat(order["driver_arrived_at_customer"].replace('Z', '+00:00'))
+    now = datetime.now(timezone.utc)
+    waited_minutes = (now - arrived_time).total_seconds() / 60
+    
+    if waited_minutes < 10:
+        remaining = int(10 - waited_minutes)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"يجب الانتظار {remaining} دقيقة إضافية قبل الإبلاغ عن فشل التسليم"
+        )
+    
+    # أسباب الفشل
+    reason_names = {
+        "customer_not_responding": "العميل لا يرد",
+        "wrong_address": "العنوان خاطئ",
+        "customer_refused": "العميل رفض الاستلام",
+        "customer_not_found": "العميل غير موجود",
+        "other": "سبب آخر"
+    }
+    reason_text = reason_names.get(data.reason, data.reason)
+    
+    # تحديد الحالة الجديدة بناءً على الإجراء
+    if data.action == "return_to_store":
+        new_status = "returning_to_store"
+        action_text = "إرجاع للمتجر"
+        customer_message = f"تعذر تسليم طلبك #{order_id[:8]} - السبب: {reason_text}. سيتم إرجاع الطلب للمتجر."
+    else:  # cancel_order
+        new_status = "delivery_failed"
+        action_text = "إلغاء الطلب"
+        customer_message = f"تم إلغاء طلبك #{order_id[:8]} - السبب: {reason_text}. سيتم استرداد المبلغ."
+    
+    # تحديث الطلب
+    await db.orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "delivery_status": new_status,
+                "status": "delivery_failed" if data.action == "cancel_order" else "returning",
+                "delivery_failed_at": now.isoformat(),
+                "delivery_failed_reason": data.reason,
+                "delivery_failed_reason_text": reason_text,
+                "delivery_failed_action": data.action,
+                "delivery_failed_notes": data.notes,
+                "delivery_failed_by": user["id"],
+                "waited_minutes": round(waited_minutes, 1)
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": new_status,
+                    "timestamp": now.isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "note": f"فشل التسليم: {reason_text} - {action_text}"
+                }
+            }
+        }
+    )
+    
+    # حساب تعويض السائق
+    compensation = 0
+    if waited_minutes > 10:
+        extra_minutes = waited_minutes - 10
+        compensation_units = int(extra_minutes // 5)
+        compensation = min(compensation_units * 500, 2000)  # 500 لكل 5 دقائق، حد أقصى 2000
+    
+    # إضافة تعويض السائق إلى رصيده
+    if compensation > 0:
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$inc": {"wallet_balance": compensation}}
+        )
+        
+        # تسجيل المعاملة
+        await db.transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "type": "waiting_compensation",
+            "amount": compensation,
+            "description": f"تعويض انتظار - فشل تسليم طلب #{order_id[:8]}",
+            "order_id": order_id,
+            "created_at": now.isoformat()
+        })
+    
+    # إشعار الإدارة
+    await create_notification_for_role(
+        role="admin",
+        title="⚠️ فشل تسليم طلب",
+        message=f"الطلب #{order_id[:8]} - {reason_text} - {action_text}",
+        notification_type="delivery_failed",
+        data={
+            "order_id": order_id,
+            "driver_id": user["id"],
+            "reason": data.reason,
+            "action": data.action
+        }
+    )
+    
+    # إشعار العميل
+    await create_notification_for_user(
+        user_id=order["user_id"],
+        title="❌ تعذر تسليم طلبك",
+        message=customer_message,
+        notification_type="delivery_failed"
+    )
+    
+    # إشعار البائع
+    seller_id = order.get("seller_id")
+    if seller_id:
+        await create_notification_for_user(
+            user_id=seller_id,
+            title="⚠️ فشل تسليم طلب",
+            message=f"الطلب #{order_id[:8]} - {reason_text}. الإجراء: {action_text}",
+            notification_type="delivery_failed"
+        )
+    
+    return {
+        "success": True,
+        "message": f"تم تسجيل فشل التسليم - {action_text}",
+        "new_status": new_status,
+        "compensation": compensation,
+        "waited_minutes": round(waited_minutes, 1)
+    }
+
+
 # ============== البائع غير موجود ==============
 class SellerNotFoundRequest(BaseModel):
     order_id: str

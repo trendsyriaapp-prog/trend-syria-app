@@ -60,12 +60,17 @@ const RouteProgressBar = ({
   const [checkingLocationFor, setCheckingLocationFor] = useState(null);
   const [showPickupCodeModal, setShowPickupCodeModal] = useState(null);
   const [showDeliveryCodeModal, setShowDeliveryCodeModal] = useState(null);
+  const [showFailedModal, setShowFailedModal] = useState(null); // Modal فشل التسليم
   const [pickupCode, setPickupCode] = useState('');
   const [deliveryCode, setDeliveryCode] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const [failedReason, setFailedReason] = useState('');
+  const [failedAction, setFailedAction] = useState('');
+  const [failedNotes, setFailedNotes] = useState('');
+  const [submittingFailed, setSubmittingFailed] = useState(false);
 
   // 🔄 الحفاظ على موقع التمرير عند فتح/إغلاق الـ modals
-  const isAnyModalOpen = !!(showPickupCodeModal || showDeliveryCodeModal);
+  const isAnyModalOpen = !!(showPickupCodeModal || showDeliveryCodeModal || showFailedModal);
   usePreserveScroll(isAnyModalOpen);
 
   // ⭐ دعم زر الرجوع للـ modals
@@ -88,10 +93,61 @@ const RouteProgressBar = ({
     setShowDeliveryCodeModal(null);
     setDeliveryCode('');
   }, []);
+
+  const closeFailedModal = useCallback(() => {
+    setShowFailedModal(null);
+    setFailedReason('');
+    setFailedAction('');
+    setFailedNotes('');
+  }, []);
   
   // تسجيل الـ modals مع زر الرجوع
   useModalBackHandler(!!showPickupCodeModal, closePickupModal);
   useModalBackHandler(!!showDeliveryCodeModal, closeDeliveryModal);
+  useModalBackHandler(!!showFailedModal, closeFailedModal);
+
+  // دالة إرسال فشل التسليم
+  const handleSubmitFailed = async () => {
+    if (!failedReason || !failedAction) {
+      toast({ title: "خطأ", description: "اختر السبب والإجراء", variant: "destructive" });
+      return;
+    }
+
+    setSubmittingFailed(true);
+    try {
+      const order = showFailedModal.order;
+      const isFood = showFailedModal.isFood;
+      const endpoint = isFood 
+        ? `${API}/api/food/orders/delivery/${order.id}/failed`
+        : `${API}/api/orders/${order.id}/delivery/failed`;
+
+      const res = await axios.post(endpoint, {
+        reason: failedReason,
+        action: failedAction,
+        notes: failedNotes || null
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const actionText = failedAction === 'return_to_store' ? 'إرجاع للمتجر' : 'إلغاء الطلب';
+      toast({ 
+        title: "✅ تم", 
+        description: `${res.data.message}${res.data.compensation > 0 ? ` - تعويضك: ${res.data.compensation} ل.س` : ''}` 
+      });
+      
+      closeFailedModal();
+      if (onRefresh) onRefresh();
+      if (onOrderUpdate) onOrderUpdate();
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "حدث خطأ", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSubmittingFailed(false);
+    }
+  };
 
   // حساب المحطات بالترتيب الصحيح
   const stations = useMemo(() => {
@@ -764,7 +820,7 @@ const RouteProgressBar = ({
               autoFocus
             />
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={closeDeliveryModal}
                 className={`flex-1 py-3 rounded-xl font-bold ${
@@ -788,6 +844,143 @@ const RouteProgressBar = ({
                   <Loader2 size={20} className="animate-spin mx-auto" />
                 ) : (
                   'تأكيد التسليم'
+                )}
+              </button>
+            </div>
+
+            {/* زر فشل التسليم - يظهر بعد 10 دقائق من الوصول */}
+            {showDeliveryCodeModal?.order?.driver_arrived_at_customer && (
+              (() => {
+                const arrivedTime = new Date(showDeliveryCodeModal.order.driver_arrived_at_customer);
+                const now = new Date();
+                const waitedMinutes = (now - arrivedTime) / 1000 / 60;
+                if (waitedMinutes >= 10) {
+                  return (
+                    <button
+                      onClick={() => {
+                        closeDeliveryModal();
+                        setShowFailedModal({
+                          order: showDeliveryCodeModal.order,
+                          isFood: showDeliveryCodeModal.isFood
+                        });
+                      }}
+                      className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center gap-2"
+                    >
+                      ❌ العميل لم يستجب - فشل التسليم
+                    </button>
+                  );
+                }
+                return null;
+              })()
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal فشل التسليم */}
+      {showFailedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className={`w-full max-w-sm rounded-2xl p-6 ${
+            isDark ? 'bg-[#1a1a1a]' : 'bg-white'
+          }`}>
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                <span className="text-3xl">❌</span>
+              </div>
+            </div>
+            
+            <h3 className={`text-xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              فشل التسليم
+            </h3>
+            <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              اختر سبب الفشل والإجراء المطلوب
+            </p>
+
+            {/* أسباب الفشل */}
+            <div className="space-y-2 mb-4">
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>السبب:</p>
+              {[
+                { id: 'customer_not_responding', label: '📞 العميل لا يرد' },
+                { id: 'customer_not_found', label: '👤 العميل غير موجود' },
+                { id: 'wrong_address', label: '📍 العنوان خاطئ' },
+                { id: 'customer_refused', label: '🚫 العميل رفض الاستلام' }
+              ].map(reason => (
+                <button
+                  key={reason.id}
+                  onClick={() => setFailedReason(reason.id)}
+                  className={`w-full p-3 rounded-xl text-right font-medium transition-all ${
+                    failedReason === reason.id
+                      ? 'bg-red-500 text-white'
+                      : (isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200')
+                  }`}
+                >
+                  {reason.label}
+                </button>
+              ))}
+            </div>
+
+            {/* الإجراء المطلوب */}
+            <div className="space-y-2 mb-4">
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>الإجراء:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setFailedAction('return_to_store')}
+                  className={`p-3 rounded-xl text-center font-medium transition-all ${
+                    failedAction === 'return_to_store'
+                      ? 'bg-orange-500 text-white'
+                      : (isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200')
+                  }`}
+                >
+                  🔄 إرجاع للمتجر
+                </button>
+                <button
+                  onClick={() => setFailedAction('cancel_order')}
+                  className={`p-3 rounded-xl text-center font-medium transition-all ${
+                    failedAction === 'cancel_order'
+                      ? 'bg-red-600 text-white'
+                      : (isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200')
+                  }`}
+                >
+                  ❌ إلغاء الطلب
+                </button>
+              </div>
+            </div>
+
+            {/* ملاحظات إضافية */}
+            <textarea
+              value={failedNotes}
+              onChange={(e) => setFailedNotes(e.target.value)}
+              placeholder="ملاحظات إضافية (اختياري)..."
+              className={`w-full p-3 rounded-xl mb-4 text-sm ${
+                isDark ? 'bg-[#252525] text-white border border-[#333]' : 'bg-gray-100 text-gray-900 border border-gray-200'
+              }`}
+              rows={2}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={closeFailedModal}
+                className={`flex-1 py-3 rounded-xl font-bold ${
+                  isDark 
+                    ? 'bg-[#333] text-white' 
+                    : 'bg-gray-200 text-gray-800'
+                }`}
+              >
+                رجوع
+              </button>
+              <button
+                onClick={handleSubmitFailed}
+                disabled={submittingFailed || !failedReason || !failedAction}
+                className={`flex-1 py-3 rounded-xl font-bold text-white ${
+                  submittingFailed || !failedReason || !failedAction
+                    ? 'bg-gray-400'
+                    : 'bg-gradient-to-r from-red-500 to-red-600'
+                }`}
+              >
+                {submittingFailed ? (
+                  <Loader2 size={20} className="animate-spin mx-auto" />
+                ) : (
+                  'تأكيد'
                 )}
               </button>
             </div>
