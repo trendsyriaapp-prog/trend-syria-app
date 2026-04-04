@@ -306,7 +306,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
         "cancel_window_minutes": CANCEL_WINDOW_MINUTES,
         "latitude": order.latitude,
         "longitude": order.longitude,
-        "delivery_note": order.delivery_note if hasattr(order, 'delivery_note') else ""
+        "delivery_note": order.delivery_note
     }
     await db.orders.insert_one(order_doc)
     

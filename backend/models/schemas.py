@@ -129,6 +129,8 @@ class OrderCreate(BaseModel):
     # رسوم التوصيل بالمسافة
     delivery_fee: Optional[float] = None
     delivery_distance_km: Optional[float] = None
+    # ملاحظة لموظف التوصيل (إجبارية من الواجهة)
+    delivery_note: str = ""
 
 # ============== Review Models ==============
 

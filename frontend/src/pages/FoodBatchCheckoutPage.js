@@ -66,6 +66,9 @@ const FoodBatchCheckoutPage = () => {
     is_default: false
   });
   
+  // ملاحظة لموظف التوصيل (إجبارية)
+  const [deliveryNote, setDeliveryNote] = useState('');
+  
   // حساب رسوم التوصيل لكل متجر
   const [deliveryFees, setDeliveryFees] = useState({});
   const [weatherSurcharge, setWeatherSurcharge] = useState({ is_active: false, amount: 0, reason: '' });
@@ -192,6 +195,16 @@ const FoodBatchCheckoutPage = () => {
   };
   
   const handleSubmit = async () => {
+    // التحقق من ملاحظة التوصيل - إجبارية
+    if (!deliveryNote || deliveryNote.trim().length < 10) {
+      toast({
+        title: "تنبيه",
+        description: "يرجى كتابة ملاحظة لموظف التوصيل (10 أحرف على الأقل) مثل: اسم الشارع، رقم البناية، لون الباب",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // التحقق من العنوان
     let addressData;
     if (useNewAddress || savedAddresses.length === 0) {
@@ -330,6 +343,7 @@ const FoodBatchCheckoutPage = () => {
         delivery_phone: addressData.phone,
         delivery_latitude: addressData.latitude || null,
         delivery_longitude: addressData.longitude || null,
+        delivery_note: deliveryNote.trim(),
         payment_method: paymentMethod
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -685,6 +699,30 @@ const FoodBatchCheckoutPage = () => {
                 حفظ كعنوان افتراضي
               </label>
             </div>
+          )}
+        </div>
+        
+        {/* ملاحظة لموظف التوصيل */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+          <h2 className="font-bold text-gray-900 flex items-center gap-2">
+            <Package size={18} className="text-[#FF6B00]" />
+            ملاحظة لموظف التوصيل <span className="text-red-500">*</span>
+          </h2>
+          <textarea
+            value={deliveryNote}
+            onChange={(e) => setDeliveryNote(e.target.value)}
+            placeholder="مثال: البناية أمام صيدلية الشفاء - باب أزرق - الطابق 3 - شقة 5"
+            className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00] outline-none"
+            rows={3}
+            data-testid="food-delivery-note-input"
+          />
+          <p className="text-xs text-gray-500">
+            اكتب تفاصيل تساعد موظف التوصيل للوصول إليك (اسم الشارع، رقم البناية، لون الباب، طابق، علامة مميزة)
+          </p>
+          {deliveryNote.length > 0 && deliveryNote.length < 10 && (
+            <p className="text-xs text-red-500">
+              يجب أن تكون الملاحظة 10 أحرف على الأقل ({deliveryNote.length}/10)
+            </p>
           )}
         </div>
         

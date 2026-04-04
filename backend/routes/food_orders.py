@@ -486,6 +486,7 @@ class FoodOrderCreate(BaseModel):
     delivery_latitude: Optional[float] = None
     delivery_longitude: Optional[float] = None
     notes: Optional[str] = None
+    delivery_note: str = ""  # ملاحظة لموظف التوصيل (إجبارية من الواجهة)
     payment_method: str = "wallet"  # wallet, cash
     batch_id: Optional[str] = None  # معرف الدفعة للطلبات المجمعة
     latitude: Optional[float] = None
@@ -509,6 +510,7 @@ class BatchOrderCreate(BaseModel):
     delivery_address: str
     delivery_city: str
     delivery_phone: str
+    delivery_note: str = ""  # ملاحظة لموظف التوصيل (إجبارية من الواجهة)
     payment_method: str = "wallet"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -1002,6 +1004,7 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
         "latitude": order.delivery_latitude or order.latitude,
         "longitude": order.delivery_longitude or order.longitude,
         "notes": order.notes,
+        "delivery_note": order.delivery_note,
         "payment_method": order.payment_method,
         "payment_status": "paid" if order.payment_method == "wallet" else "pending",
         "status": "scheduled" if order.is_scheduled else "pending",
@@ -1467,6 +1470,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             "latitude": customer_lat,
             "longitude": customer_lng,
             "notes": notes,
+            "delivery_note": batch.delivery_note,
             "payment_method": batch.payment_method,
             "payment_status": "paid" if batch.payment_method == "wallet" else "pending",
             "status": "pending",
