@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
-  MapPin, CreditCard, Check, Loader2, Plus, 
+  MapPin, CreditCard, Check, Loader2, Plus, FileText,
   ShoppingBag, Truck, X, ChevronLeft, Clock, Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -60,6 +60,9 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState(null);
   const [otp, setOtp] = useState('');
   const [orderComplete, setOrderComplete] = useState(false);
+  
+  // ملاحظة لموظف التوصيل (إجبارية)
+  const [deliveryNote, setDeliveryNote] = useState('');
   
   // حالة الشحن
   const [shippingInfo, setShippingInfo] = useState(null);
@@ -146,6 +149,11 @@ const CheckoutPage = () => {
   const handleCreateOrder = async () => {
     if (!useNewAddress && !selectedAddressId) {
       toast({ title: "خطأ", description: "يرجى اختيار عنوان التوصيل", variant: "destructive" });
+      return;
+    }
+    // التحقق من ملاحظة التوصيل - إجبارية
+    if (!deliveryNote || deliveryNote.trim().length < 10) {
+      toast({ title: "خطأ", description: "يرجى كتابة ملاحظة لموظف التوصيل (10 أحرف على الأقل) مثل: اسم الشارع، رقم البناية، لون الباب", variant: "destructive" });
       return;
     }
     if (!useNewPayment && !selectedPaymentId) {
@@ -235,7 +243,9 @@ const CheckoutPage = () => {
           quantity: i.quantity,
           selected_size: i.selected_size 
         })),
-        ...addressData, ...paymentData
+        ...addressData, 
+        ...paymentData,
+        delivery_note: deliveryNote.trim()
       });
 
       setOrderId(res.data.order_id);
@@ -496,6 +506,30 @@ const CheckoutPage = () => {
                   }}
                 />
               </div>
+            )}
+          </div>
+
+          {/* Section: Delivery Note - ملاحظة لموظف التوصيل */}
+          <div className="p-3 border-b border-gray-100">
+            <h3 className="font-bold text-xs text-gray-900 mb-2 flex items-center gap-1.5">
+              <FileText size={14} className="text-[#FF6B00]" />
+              ملاحظة لموظف التوصيل <span className="text-red-500">*</span>
+            </h3>
+            <textarea
+              value={deliveryNote}
+              onChange={(e) => setDeliveryNote(e.target.value)}
+              placeholder="مثال: البناية أمام صيدلية الشفاء - باب أزرق - الطابق 3 - شقة 5"
+              className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00] outline-none"
+              rows={3}
+              data-testid="delivery-note-input"
+            />
+            <p className="text-[10px] text-gray-500 mt-1">
+              اكتب تفاصيل تساعد موظف التوصيل للوصول إليك (اسم الشارع، رقم البناية، لون الباب، طابق، علامة مميزة)
+            </p>
+            {deliveryNote.length > 0 && deliveryNote.length < 10 && (
+              <p className="text-[10px] text-red-500 mt-1">
+                يجب أن تكون الملاحظة 10 أحرف على الأقل ({deliveryNote.length}/10)
+              </p>
             )}
           </div>
 
