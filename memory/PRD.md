@@ -1,5 +1,21 @@
 # Trend Syria - E-Commerce & Food Delivery App
 
+## 🎉 Production Deployment - April 5, 2026
+
+### Live URLs:
+- **Production Domain:** https://trendsyria.app
+- **DigitalOcean Direct:** https://trend-syria-ngv2b.ondigitalocean.app
+
+### Hosting Details:
+- **Platform:** DigitalOcean App Platform
+- **Backend:** 1GB RAM, 2 vCPU shared ($24/mo)
+- **Frontend:** 1GB RAM, 2 vCPU shared ($24/mo)
+- **Database:** MongoDB Atlas
+- **Domain Registrar:** Namecheap
+- **DNS:** DigitalOcean Nameservers
+
+---
+
 ## Original Problem Statement
 Full-stack e-commerce and food delivery application for the Syrian market, targeting Google Play release. The app supports Arabic (RTL), multiple user roles (Buyer, Seller, Food Seller, Delivery Driver, Admin), and requires native Android integration via Capacitor.
 
