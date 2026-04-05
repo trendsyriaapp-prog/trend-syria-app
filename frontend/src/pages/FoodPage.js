@@ -385,28 +385,12 @@ const FoodPage = () => {
       const savedCity = localStorage.getItem('food_delivery_city');
       
       if (gpsGranted === 'true' && savedCity) {
-        // موقع محفوظ - استخدمه ثم حدّث في الخلفية
+        // موقع محفوظ - استخدمه
         setUserCity(savedCity);
         setGpsStatus('success');
-        
-        // تحديث الموقع في الخلفية
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const { latitude, longitude } = position.coords;
-              const city = getNearestCity(latitude, longitude);
-              if (city !== savedCity) {
-                setUserCity(city);
-                localStorage.setItem('food_delivery_city', city);
-              }
-            },
-            () => {}, // تجاهل الأخطاء في التحديث الخلفي
-            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
-          );
-        }
       } else {
-        // طلب GPS لأول مرة - مباشرة بدون انتظار
-        requestGPSLocation();
+        // لم يوافق بعد - اعرض شاشة طلب الموقع
+        setGpsStatus('requesting');
       }
     };
     
@@ -509,20 +493,45 @@ const FoodPage = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center"
+          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
         >
-          <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <MapPin size={40} className="text-[#FF6B00]" />
-            </motion.div>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">خدمة توصيل الطعام</h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              لعرض المطاعم والمتاجر القريبة منك، نحتاج الوصول لموقعك.
+              <br />
+              هذا يضمن لك توصيل أسرع وتجربة أفضل.
+            </p>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">جاري تحديد موقعك...</h2>
-          <p className="text-sm text-gray-500">يرجى السماح بالوصول لموقعك لعرض المطاعم القريبة</p>
-          <div className="mt-4 flex justify-center">
-            <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
+          
+          <div className="space-y-3">
+            <button
+              onClick={requestGPSLocation}
+              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2"
+            >
+              <MapPin size={20} />
+              تفعيل الموقع
+            </button>
+            
+            <Link
+              to="/"
+              className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+            >
+              العودة للرئيسية
+            </Link>
+          </div>
+
+          {/* رسالة توضيحية */}
+          <div className="mt-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
+            <h3 className="font-bold text-orange-800 text-sm mb-2">🛵 لماذا نحتاج موقعك؟</h3>
+            <ul className="text-xs text-orange-700 space-y-1">
+              <li>• عرض المطاعم في مدينتك فقط</li>
+              <li>• ضمان وصول الطلب بسرعة</li>
+              <li>• حساب تكلفة التوصيل بدقة</li>
+            </ul>
           </div>
         </motion.div>
       </div>
