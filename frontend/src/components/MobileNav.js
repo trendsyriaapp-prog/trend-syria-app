@@ -106,9 +106,10 @@ const MobileNav = () => {
       { path: '/settings', icon: Settings, label: 'الإعدادات' }
     ];
   } else if (isInFoodSection && foodEnabled) {
-    // في قسم الطعام: نعرض سلة الطعام فقط
+    // في قسم الطعام: نعرض جميع الأيقونات مع سلة الطعام
     navItems = [
       { path: '/', icon: Home, label: 'الرئيسية' },
+      { path: '/categories', icon: Grid3X3, label: 'الأصناف' },
       { path: '/food', icon: UtensilsCrossed, label: 'طعام', isFood: true },
       { path: getFoodCartPath(), icon: ShoppingBag, label: 'السلة', badge: foodCartCount, isFoodCart: true },
       { path: user ? '#' : '/login', icon: User, label: user ? 'حسابي' : 'دخول', isAccount: true }
