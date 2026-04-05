@@ -37,17 +37,16 @@ class ImageSearchResult(BaseModel):
 async def analyze_image_with_ai(image_base64: str) -> dict:
     """تحليل الصورة واستخراج الخصائص"""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        import openai
+        import base64
         
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="مفتاح API غير متوفر")
         
-        # إنشاء جلسة محادثة جديدة
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"image-search-{uuid.uuid4()}",
-            system_message="""أنت خبير في تحليل صور المنتجات. مهمتك هي تحليل الصورة واستخراج المعلومات التالية بتنسيق JSON فقط:
+        client = openai.OpenAI(api_key=api_key)
+        
+        system_message = """أنت خبير في تحليل صور المنتجات. مهمتك هي تحليل الصورة واستخراج المعلومات التالية بتنسيق JSON فقط:
 {
     "category": "الفئة (ملابس، إلكترونيات، أحذية، إكسسوارات، طعام، أثاث، أخرى)",
     "subcategory": "الفئة الفرعية (مثل: قميص، فستان، هاتف، حقيبة...)",
@@ -59,23 +58,28 @@ async def analyze_image_with_ai(image_base64: str) -> dict:
     "description": "وصف مختصر بالعربية"
 }
 أجب بـ JSON فقط بدون أي نص إضافي."""
-        ).with_model("openai", "gpt-5.2")
-        
-        # إنشاء محتوى الصورة
-        image_content = ImageContent(image_base64=image_base64)
         
         # إرسال الرسالة مع الصورة
-        user_message = UserMessage(
-            text="حلل هذه الصورة واستخرج معلومات المنتج",
-            file_contents=[image_content]
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_message},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "حلل هذه الصورة واستخرج معلومات المنتج"},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                    ]
+                }
+            ]
         )
         
-        response = await chat.send_message(user_message)
+        ai_response = response.choices[0].message.content
         
         # تحويل الرد إلى JSON
         import json
         # تنظيف الرد من علامات markdown
-        clean_response = response.strip()
+        clean_response = ai_response.strip()
         if clean_response.startswith("```json"):
             clean_response = clean_response[7:]
         if clean_response.startswith("```"):
@@ -86,7 +90,7 @@ async def analyze_image_with_ai(image_base64: str) -> dict:
         return json.loads(clean_response.strip())
         
     except json.JSONDecodeError as e:
-        logger.error(f"JSON decode error: {e}, response: {response}")
+        logger.error(f"JSON decode error: {e}")
         # إرجاع قيم افتراضية
         return {
             "category": "أخرى",
