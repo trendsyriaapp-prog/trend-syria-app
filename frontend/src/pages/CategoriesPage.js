@@ -53,16 +53,23 @@ const CategoriesPage = () => {
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/products/categories`);
-      setCategories(res.data);
+      // التأكد من أن البيانات هي Array
+      if (Array.isArray(res.data)) {
+        setCategories(res.data);
+      } else {
+        console.error('Categories data is not an array:', res.data);
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const shoppingCategories = categories.filter(c => c.type === 'shopping');
-  const foodCategories = categories.filter(c => c.type === 'food');
+  const shoppingCategories = Array.isArray(categories) ? categories.filter(c => c.type === 'shopping') : [];
+  const foodCategories = Array.isArray(categories) ? categories.filter(c => c.type === 'food') : [];
 
   if (loading) {
     return (
