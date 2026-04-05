@@ -1,0 +1,38 @@
+spec:
+  name: trend-syria
+  region: fra
+  services:
+    - name: backend
+      source_dir: /backend
+      github:
+        deploy_on_push: true
+      run_command: uvicorn server:app --host 0.0.0.0 --port 8080
+      environment_slug: python
+      instance_size_slug: basic-xxs
+      instance_count: 1
+      http_port: 8080
+      envs:
+        - key: MONGO_URL
+          scope: RUN_TIME
+          type: SECRET
+        - key: DB_NAME
+          scope: RUN_TIME
+          value: trend_syria
+        - key: JWT_SECRET
+          scope: RUN_TIME
+          type: SECRET
+        - key: CORS_ORIGINS
+          scope: RUN_TIME
+          value: "*"
+      routes:
+        - path: /api
+    - name: frontend
+      source_dir: /frontend
+      github:
+        deploy_on_push: true
+      build_command: yarn install && yarn build
+      environment_slug: node-js
+      instance_size_slug: basic-xxs
+      instance_count: 1
+      routes:
+        - path: /
