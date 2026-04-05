@@ -217,20 +217,23 @@ const FoodPage = () => {
     return R * c;
   };
 
-  // تحديد أقرب مدينة من الإحداثيات
+  // تحديد المدينة من الإحداثيات (فقط إذا كان المستخدم داخل سوريا)
   const getNearestCity = (latitude, longitude) => {
-    let nearestCity = 'دمشق';
+    let nearestCity = null;
     let minDistance = Infinity;
+
+    // الحد الأقصى للمسافة (50 كم من مركز أي مدينة سورية)
+    const MAX_DISTANCE_KM = 50;
 
     Object.entries(CITY_COORDINATES).forEach(([city, coords]) => {
       const distance = calculateDistance(latitude, longitude, coords.lat, coords.lng);
-      if (distance < minDistance) {
+      if (distance < minDistance && distance <= MAX_DISTANCE_KM) {
         minDistance = distance;
         nearestCity = city;
       }
     });
 
-    return nearestCity;
+    return nearestCity; // سيكون null إذا كان المستخدم بعيداً عن سوريا
   };
 
   // طلب إذن GPS وتحديد المدينة
@@ -253,14 +256,15 @@ const FoodPage = () => {
         const { latitude, longitude } = position.coords;
         const city = getNearestCity(latitude, longitude);
         
-        // التحقق من أن المدينة ضمن سوريا
+        // التحقق من أن المستخدم ضمن نطاق التوصيل (داخل سوريا)
         if (city) {
           setUserCity(city);
           localStorage.setItem('food_delivery_city', city);
           localStorage.setItem('food_gps_granted', 'true');
           setGpsStatus('success');
         } else {
-          setGpsStatus('error');
+          // المستخدم خارج نطاق التوصيل (خارج سوريا أو بعيد جداً)
+          setGpsStatus('out_of_range');
         }
       },
       (error) => {
@@ -576,6 +580,57 @@ const FoodPage = () => {
     );
   }
 
+  // شاشة خارج نطاق التوصيل (المستخدم خارج سوريا)
+  if (gpsStatus === 'out_of_range') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full"
+        >
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin size={40} className="text-orange-500" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              خارج نطاق التوصيل
+            </h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              عذراً، خدمة توصيل الطعام متوفرة حالياً داخل سوريا فقط.
+              <br />
+              نعمل على التوسع لمناطق أخرى قريباً!
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            <Link
+              to="/"
+              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2"
+            >
+              العودة للرئيسية
+            </Link>
+            
+            <Link
+              to="/categories"
+              className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+            >
+              تصفح المنتجات
+            </Link>
+          </div>
+
+          {/* رسالة توضيحية */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <h3 className="font-bold text-blue-800 text-sm mb-2">📍 المدن المتاحة حالياً:</h3>
+            <p className="text-xs text-blue-700">
+              دمشق • حلب • حمص • حماة • اللاذقية • طرطوس
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
       {/* شريط قسم الطعام مع المدينة - وميض برتقالي */}
@@ -696,31 +751,29 @@ const FoodPage = () => {
             <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : stores.length === 0 && featuredStores.length === 0 && products.length === 0 ? (
-          /* رسالة عدم وجود متاجر */
+          /* رسالة عدم وجود متاجر في المدينة */
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-6">
               <Store size={48} className="text-[#FF6B00]" />
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">لا توجد متاجر في {userCity}</h2>
             <p className="text-gray-500 text-center mb-6 max-w-sm">
-              عذراً، لم نجد متاجر طعام في مدينتك حالياً. نعمل على التوسع قريباً!
+              عذراً، خدمة توصيل الطعام غير متوفرة في مدينتك حالياً.
+              <br />
+              نعمل على التوسع قريباً!
             </p>
             <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button
-                onClick={() => {
-                  setUserCity('دمشق');
-                  localStorage.setItem('food_delivery_city', 'دمشق');
-                }}
-                className="w-full bg-[#FF6B00] hover:bg-[#E65000] text-white py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
-              >
-                <MapPin size={20} />
-                تصفح متاجر دمشق
-              </button>
               <Link
                 to="/"
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#FF6B00] hover:bg-[#E65000] text-white py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
               >
                 العودة للرئيسية
+              </Link>
+              <Link
+                to="/categories"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                تصفح المنتجات
               </Link>
             </div>
           </div>
