@@ -9,12 +9,27 @@ import {
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Store, Heart, Sparkles, Cake,
   Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X,
-  ShoppingBasket, Truck
+  ShoppingBasket, Truck, Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// دالة لفتح إعدادات الموقع على الهاتف
+const openLocationSettings = async () => {
+  try {
+    // محاولة استخدام Capacitor App plugin
+    const { App } = await import('@capacitor/app');
+    if (App && App.openUrl) {
+      // Android
+      await App.openUrl({ url: 'app-settings:' });
+    }
+  } catch (e) {
+    // إذا لم يكن Capacitor متاح، نعرض رسالة للمستخدم
+    alert('يرجى فتح إعدادات الهاتف وتفعيل خدمات الموقع يدوياً:\n\nالإعدادات > الموقع > تفعيل');
+  }
+};
 
 // خريطة الأيقونات الديناميكية
 const ICON_MAP = {
@@ -576,8 +591,6 @@ const FoodPage = () => {
             </h2>
             <p className="text-sm text-gray-500 leading-relaxed">
               لعرض المطاعم والمتاجر القريبة منك، نحتاج الوصول لموقعك.
-              <br />
-              هذا يضمن لك توصيل أسرع وتجربة أفضل.
             </p>
           </div>
           
@@ -587,21 +600,33 @@ const FoodPage = () => {
               className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] text-white py-3 rounded-xl font-bold hover:from-[#E65000] hover:to-[#FF6B00] transition-all flex items-center justify-center gap-2"
             >
               <MapPin size={20} />
-              تفعيل الموقع
+              إعادة المحاولة
             </button>
             
-            <p className="text-xs text-gray-400 text-center">
-              💡 تأكد من تفعيل خدمات الموقع في إعدادات جهازك
-            </p>
+            <button
+              onClick={openLocationSettings}
+              className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+            >
+              <Settings size={20} />
+              فتح إعدادات الموقع
+            </button>
+            
+            <Link
+              to="/"
+              className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            >
+              العودة للرئيسية
+            </Link>
           </div>
 
-          {/* رسالة توضيحية إضافية */}
-          <div className="mt-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
-            <h3 className="font-bold text-orange-800 text-sm mb-2">🛵 لماذا نحتاج موقعك؟</h3>
-            <ul className="text-xs text-orange-700 space-y-1">
-              <li>• عرض المطاعم في مدينتك فقط</li>
-              <li>• ضمان وصول الطلب بسرعة</li>
-              <li>• حساب تكلفة التوصيل بدقة</li>
+          {/* رسالة توضيحية */}
+          <div className="mt-6 p-4 bg-red-50 rounded-xl border border-red-100">
+            <h3 className="font-bold text-red-800 text-sm mb-2">📍 كيف تفعّل الموقع؟</h3>
+            <ul className="text-xs text-red-700 space-y-1">
+              <li>1. افتح <strong>إعدادات</strong> الهاتف</li>
+              <li>2. اذهب إلى <strong>الموقع</strong> أو <strong>Location</strong></li>
+              <li>3. <strong>فعّل</strong> خدمات الموقع</li>
+              <li>4. ارجع للتطبيق واضغط <strong>إعادة المحاولة</strong></li>
             </ul>
           </div>
         </motion.div>
