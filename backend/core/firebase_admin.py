@@ -45,8 +45,12 @@ def init_firebase():
         logger.error(f"❌ Firebase Admin initialization failed: {e}")
         return False
 
-# تهيئة عند استيراد الملف
-firebase_initialized = init_firebase()
+# تهيئة عند استيراد الملف - مع معالجة الأخطاء
+try:
+    firebase_initialized = init_firebase()
+except Exception as e:
+    logger.warning(f"⚠️ Firebase initialization skipped: {e}")
+    firebase_initialized = False
 
 async def send_push_notification(
     fcm_token: str,

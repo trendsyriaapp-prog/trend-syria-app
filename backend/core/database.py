@@ -13,14 +13,34 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
+# MongoDB connection - مع معالجة الأخطاء
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'trend_syria')]
+db_name = os.environ.get('DB_NAME', 'trend_syria')
+
+try:
+    # إنشاء الاتصال مع timeout قصير
+    client = AsyncIOMotorClient(
+        mongo_url,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+        socketTimeoutMS=10000,
+        maxPoolSize=10,
+        retryWrites=True
+    )
+    db = client[db_name]
+    logger.info(f"✅ MongoDB client initialized for database: {db_name}")
+except Exception as e:
+    logger.error(f"❌ MongoDB connection error: {e}")
+    # إنشاء اتصال افتراضي حتى لا يفشل الاستيراد
+    client = AsyncIOMotorClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000)
+    db = client[db_name]
 
 # 🔒 JWT Settings - مفتاح أقوى
 JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))

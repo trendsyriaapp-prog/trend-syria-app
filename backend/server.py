@@ -21,25 +21,44 @@ import time
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Import database
-from core.database import db, client
+# Import database with error handling
+try:
+    from core.database import db, client
+except Exception as e:
+    logging.error(f"❌ Failed to import database: {e}")
+    raise
 
-# ⚡ Import performance module
-from core.performance import (
-    create_database_indexes, 
-    cache, 
-    performance_monitor,
-    IMAGE_OPTIMIZATION_CONFIG
-)
+# ⚡ Import performance module with error handling
+try:
+    from core.performance import (
+        create_database_indexes, 
+        cache, 
+        performance_monitor,
+        IMAGE_OPTIMIZATION_CONFIG
+    )
+except Exception as e:
+    logging.warning(f"⚠️ Performance module not loaded: {e}")
+    cache = None
+    performance_monitor = None
+    IMAGE_OPTIMIZATION_CONFIG = {}
+    async def create_database_indexes(db): pass
 
-# 🔒 Import security module
-from core.security import (
-    limiter, 
-    rate_limit_exceeded_handler,
-    is_ip_blocked,
-    SECURITY_HEADERS
-)
-from slowapi.errors import RateLimitExceeded
+# 🔒 Import security module with error handling
+try:
+    from core.security import (
+        limiter, 
+        rate_limit_exceeded_handler,
+        is_ip_blocked,
+        SECURITY_HEADERS
+    )
+    from slowapi.errors import RateLimitExceeded
+except Exception as e:
+    logging.warning(f"⚠️ Security module not loaded: {e}")
+    limiter = None
+    SECURITY_HEADERS = {}
+    def rate_limit_exceeded_handler(req, exc): pass
+    def is_ip_blocked(ip): return False
+    class RateLimitExceeded(Exception): pass
 
 # Import routers
 from routes.auth import router as auth_router, seller_router, delivery_auth_router
