@@ -426,9 +426,18 @@ def start_background_tasks():
     if task_instance is not None:
         return
     
-    loop = asyncio.get_event_loop()
-    task_instance = loop.create_task(background_dispatch_loop())
-    logger.info("Background tasks started")
+    try:
+        # استخدام asyncio.create_task مباشرة في بيئة async
+        task_instance = asyncio.create_task(background_dispatch_loop())
+        logger.info("Background tasks started")
+    except RuntimeError:
+        # في حالة عدم وجود event loop، نستخدم get_event_loop
+        try:
+            loop = asyncio.get_event_loop()
+            task_instance = loop.create_task(background_dispatch_loop())
+            logger.info("Background tasks started (via event loop)")
+        except Exception as e:
+            logger.warning(f"Could not start background tasks: {e}")
 
 
 def stop_background_tasks():

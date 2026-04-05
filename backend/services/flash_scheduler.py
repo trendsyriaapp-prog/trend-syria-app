@@ -20,19 +20,22 @@ def init_scheduler(database):
     global scheduler, db
     db = database
     
-    scheduler = AsyncIOScheduler()
-    
-    # تشغيل الفحص كل 30 دقيقة
-    scheduler.add_job(
-        check_and_send_flash_reminders,
-        IntervalTrigger(minutes=30),
-        id='flash_reminder_job',
-        name='Flash Reminder Check',
-        replace_existing=True
-    )
-    
-    scheduler.start()
-    logger.info("✅ Flash Scheduler started - checking every 30 minutes")
+    try:
+        scheduler = AsyncIOScheduler()
+        
+        # تشغيل الفحص كل 30 دقيقة
+        scheduler.add_job(
+            check_and_send_flash_reminders,
+            IntervalTrigger(minutes=30),
+            id='flash_reminder_job',
+            name='Flash Reminder Check',
+            replace_existing=True
+        )
+        
+        scheduler.start()
+        logger.info("✅ Flash Scheduler started - checking every 30 minutes")
+    except Exception as e:
+        logger.warning(f"⚠️ Flash Scheduler initialization skipped: {e}")
 
 
 async def check_and_send_flash_reminders():

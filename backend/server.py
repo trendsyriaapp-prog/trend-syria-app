@@ -322,8 +322,11 @@ async def reset_sold_out_products_task():
 @app.on_event("startup")
 async def start_background_tasks():
     """تشغيل المهام الخلفية"""
-    asyncio.create_task(reset_sold_out_products_task())
-    logging.info("🔄 تم تشغيل مهمة إعادة المنتجات المنتهية")
+    try:
+        asyncio.create_task(reset_sold_out_products_task())
+        logging.info("🔄 تم تشغيل مهمة إعادة المنتجات المنتهية")
+    except Exception as e:
+        logging.warning(f"⚠️ Could not start background tasks: {e}")
 
 # ============== Performance Stats ==============
 
@@ -673,19 +676,25 @@ DEFAULT_CATEGORY_COMMISSIONS = {
 @app.on_event("startup")
 async def init_commission_rates():
     """تهيئة نسب العمولات الافتراضية في قاعدة البيانات"""
-    existing = await db.commission_rates.find_one({"id": "main"})
-    if not existing:
-        await db.commission_rates.insert_one({
-            "id": "main",
-            "categories": DEFAULT_CATEGORY_COMMISSIONS,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-        logger.info("تم تهيئة نسب العمولات الافتراضية")
+    try:
+        existing = await db.commission_rates.find_one({"id": "main"})
+        if not existing:
+            await db.commission_rates.insert_one({
+                "id": "main",
+                "categories": DEFAULT_CATEGORY_COMMISSIONS,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            logger.info("تم تهيئة نسب العمولات الافتراضية")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not init commission rates: {e}")
 
 @app.on_event("startup")
 async def init_database_indexes():
     """⚡ إنشاء فهارس قاعدة البيانات لتحسين الأداء"""
-    await create_database_indexes(db)
+    try:
+        await create_database_indexes(db)
+    except Exception as e:
+        logger.warning(f"⚠️ Could not create database indexes: {e}")
 
 @app.on_event("startup")
 async def start_dispatch_background_tasks():
