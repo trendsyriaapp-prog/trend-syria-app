@@ -618,7 +618,7 @@ const HomePage = () => {
       <DailyDeal />
 
       {/* 1. Sponsored Products - مروّج */}
-      {sectionsSettings.sponsored_enabled && (
+      {sectionsSettings.sponsored_enabled && sponsoredProducts.length > 0 && (
       <LazySection 
         className="py-1.5" 
         minHeight="240px"
@@ -682,18 +682,14 @@ const HomePage = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
-                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد منتجات مروّجة حالياً</p>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </LazySection>
       )}
 
       {/* 2. Flash Sale Products - عروض فلاش */}
-      {sectionsSettings.flash_sale_enabled && (
+      {sectionsSettings.flash_sale_enabled && shopFlashProducts.length > 0 && (
       <LazySection 
         className="py-1.5" 
         minHeight="240px"
@@ -764,11 +760,7 @@ const HomePage = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{ minHeight: '200px' }}>
-                <p className="text-gray-400 text-sm text-center py-4 w-full">لا توجد عروض فلاش حالياً</p>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </LazySection>
