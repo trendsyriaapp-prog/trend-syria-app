@@ -165,17 +165,17 @@ const MobileNav = () => {
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg rounded-t-2xl pb-safe">
-        <div className="flex items-center justify-around h-16 pb-2">
-          {navItems.map((item) => {
+        <div className="flex items-center justify-around h-16 pb-2 px-2">
+          {navItems.map((item, index) => {
             const isItemActive = isActive(item.path) || (item.isAccount && showAccountMenu);
             const iconColor = getIconColor(item, isItemActive);
             
             return (
               <Link
-                key={item.path}
+                key={`${item.path}-${index}`}
                 to={item.path}
                 onClick={item.isAccount ? handleAccountClick : undefined}
-                className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] transition-all duration-200 ${
+                className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] flex-1 transition-all duration-200 ${
                   isItemActive ? 'scale-110' : 'scale-100'
                 }`}
                 data-testid={`nav-${item.label}`}
@@ -194,7 +194,7 @@ const MobileNav = () => {
                     </span>
                   )}
                 </div>
-                <span className={`text-[9px] font-medium ${isItemActive ? iconColor : 'text-gray-500'}`}>
+                <span className={`text-[9px] font-medium whitespace-nowrap ${isItemActive ? iconColor : 'text-gray-500'}`}>
                   {item.label}
                 </span>
                 {isItemActive && (
