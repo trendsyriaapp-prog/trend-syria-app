@@ -695,6 +695,35 @@ const FoodPage = () => {
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
           </div>
+        ) : stores.length === 0 && featuredStores.length === 0 && products.length === 0 ? (
+          /* رسالة عدم وجود متاجر */
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-6">
+              <Store size={48} className="text-[#FF6B00]" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">لا توجد متاجر في {userCity}</h2>
+            <p className="text-gray-500 text-center mb-6 max-w-sm">
+              عذراً، لم نجد متاجر طعام في مدينتك حالياً. نعمل على التوسع قريباً!
+            </p>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              <button
+                onClick={() => {
+                  setUserCity('دمشق');
+                  localStorage.setItem('food_delivery_city', 'دمشق');
+                }}
+                className="w-full bg-[#FF6B00] hover:bg-[#E65000] text-white py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                <MapPin size={20} />
+                تصفح متاجر دمشق
+              </button>
+              <Link
+                to="/"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                العودة للرئيسية
+              </Link>
+            </div>
+          </div>
         ) : (
           <>
             {/* Stores Section - 2x2 Grid */}
