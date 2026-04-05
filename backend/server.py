@@ -4,6 +4,18 @@
 # 🔒 محمي بـ 10 طبقات أمان
 # ⚡ محسّن للأداء
 
+import logging
+import sys
+
+# Configure logging early
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+logger = logging.getLogger(__name__)
+logger.info("🚀 Starting Trend Syria API Server...")
+
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -119,13 +131,17 @@ app = FastAPI(
     redoc_url=None
 )
 
+logger.info("✅ FastAPI app created")
+
 # Root level health check (for DigitalOcean)
 @app.get("/")
 async def root_health():
+    logger.info("Health check: /")
     return {"status": "healthy"}
 
 @app.get("/health")
 async def app_health():
+    logger.info("Health check: /health")
     return {"status": "healthy"}
 
 # 🔒 إضافة Rate Limiter
