@@ -8,9 +8,28 @@ import io
 import base64
 import os
 import httpx
-from rembg import remove
+# rembg يتم استيراده بشكل كسول عند الحاجة فقط (ثقيل جداً)
 from typing import Tuple
 from pydantic import BaseModel
+import logging
+
+logger = logging.getLogger(__name__)
+
+# استيراد rembg بشكل كسول
+_rembg_remove = None
+
+def get_rembg_remove():
+    """استيراد rembg بشكل كسول عند الحاجة"""
+    global _rembg_remove
+    if _rembg_remove is None:
+        try:
+            from rembg import remove
+            _rembg_remove = remove
+            logger.info("✅ rembg loaded successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to load rembg: {e}")
+            _rembg_remove = None
+    return _rembg_remove
 
 # استيراد خدمة PhotoRoom
 from services.photoroom import (
@@ -132,8 +151,12 @@ async def remove_background_removebg(image_data: bytes) -> bytes:
 
 def remove_background_local(image_data: bytes) -> bytes:
     """إزالة الخلفية محلياً باستخدام rembg - fallback"""
+    rembg_remove = get_rembg_remove()
+    if rembg_remove is None:
+        raise HTTPException(status_code=500, detail="خدمة إزالة الخلفية غير متاحة")
+    
     input_image = Image.open(io.BytesIO(image_data))
-    output_image = remove(input_image)
+    output_image = rembg_remove(input_image)
     
     # تحسين الحواف
     if output_image.mode == 'RGBA':
@@ -494,11 +517,15 @@ def process_product_image(
 ) -> bytes:
     """معالجة صورة المنتج - إزالة الخلفية وإضافة خلفية جديدة"""
     
+    rembg_remove = get_rembg_remove()
+    if rembg_remove is None:
+        raise HTTPException(status_code=500, detail="خدمة إزالة الخلفية غير متاحة")
+    
     # فتح الصورة
     input_image = Image.open(io.BytesIO(image_data))
     
     # إزالة الخلفية
-    output_image = remove(input_image)
+    output_image = rembg_remove(input_image)
     
     # تحويل إلى RGBA
     if output_image.mode != 'RGBA':
