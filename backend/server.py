@@ -300,6 +300,11 @@ async def get_categories():
 async def root():
     return {"message": "مرحباً بك في ترند سورية API"}
 
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint for DigitalOcean"""
+    return {"status": "healthy", "message": "ترند سورية API يعمل بنجاح"}
+
 # ============== Background Tasks ==============
 
 import asyncio
