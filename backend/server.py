@@ -119,6 +119,15 @@ app = FastAPI(
     redoc_url=None
 )
 
+# Root level health check (for DigitalOcean)
+@app.get("/")
+async def root_health():
+    return {"status": "healthy"}
+
+@app.get("/health")
+async def app_health():
+    return {"status": "healthy"}
+
 # 🔒 إضافة Rate Limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
