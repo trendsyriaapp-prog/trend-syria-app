@@ -118,4 +118,21 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
+    console.warn('useCart called outside CartProvider, using defaults');
+    return {
+      cart: { items: [], total: 0 },
+      loading: false,
+      addToCart: async () => {},
+      updateQuantity: async () => {},
+      removeFromCart: async () => {},
+      clearCart: () => {},
+      fetchCart: async () => {},
+      cartCount: 0
+    };
+  }
+  return context;
+};

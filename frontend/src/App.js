@@ -65,6 +65,7 @@ import ReferralsPage from "./pages/ReferralsPage";
 import GiftsPage from "./pages/GiftsPage";
 import DeliveryMapPage from "./pages/DeliveryMapPage";
 import ChatPage from "./pages/ChatPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Section Pages
 import SponsoredProductsPage from "./pages/SponsoredProductsPage";
@@ -218,6 +219,7 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   return (
+    <ErrorBoundary>
     <ThemeProvider>
       <LanguageProvider>
         <SettingsProvider>
@@ -230,6 +232,7 @@ function App() {
                 <SplashScreen onComplete={() => setShowSplash(false)} />
               )}
               <BrowserRouter>
+                <ErrorBoundary>
                 <ScrollProvider>
                 <BackButtonHandler />
                 <ForcePasswordChangeWrapper>
@@ -328,6 +331,7 @@ function App() {
           </PlatformClosedCheck>
           </ForcePasswordChangeWrapper>
           </ScrollProvider>
+          </ErrorBoundary>
         </BrowserRouter>
         </WebSocketProvider>
         </FoodCartProvider>
@@ -336,6 +340,7 @@ function App() {
   </SettingsProvider>
   </LanguageProvider>
   </ThemeProvider>
+  </ErrorBoundary>
   );
 }
 

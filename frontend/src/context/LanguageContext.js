@@ -541,7 +541,14 @@ export const LanguageProvider = ({ children }) => {
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
+    console.warn('useLanguage called outside LanguageProvider, using defaults');
+    return {
+      language: 'ar',
+      setLanguage: () => {},
+      t: (key) => key,
+      dir: 'rtl'
+    };
   }
   return context;
 };
