@@ -81,15 +81,7 @@ export const SettingsProvider = ({ children }) => {
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {
-    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
-    console.warn('useSettings called outside SettingsProvider, using defaults');
-    return {
-      settings: { free_shipping_threshold: 150000 },
-      platformSettings: { food_enabled: true },
-      loading: false,
-      refreshSettings: async () => {},
-      isFeatureEnabled: () => true
-    };
+    throw new Error('useSettings must be used within a SettingsProvider');
   }
   return context;
 };

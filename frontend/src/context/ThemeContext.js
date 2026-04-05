@@ -42,13 +42,7 @@ export const ThemeProvider = ({ children }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
-    console.warn('useTheme called outside ThemeProvider, using defaults');
-    return {
-      theme: 'light',
-      setTheme: () => {},
-      toggleTheme: () => {}
-    };
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
 };

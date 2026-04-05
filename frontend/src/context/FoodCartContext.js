@@ -5,16 +5,7 @@ const FoodCartContext = createContext();
 export const useFoodCart = () => {
   const context = useContext(FoodCartContext);
   if (!context) {
-    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
-    console.warn('useFoodCart called outside FoodCartProvider, using defaults');
-    return {
-      totalItems: 0,
-      totalAmount: 0,
-      stores: [],
-      clearStoreCart: () => {},
-      clearAllFoodCarts: () => {},
-      refresh: () => {}
-    };
+    throw new Error('useFoodCart must be used within FoodCartProvider');
   }
   return context;
 };

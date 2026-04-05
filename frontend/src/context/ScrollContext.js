@@ -307,17 +307,7 @@ export const ScrollProvider = ({ children }) => {
 export const useScroll = () => {
   const context = useContext(ScrollContext);
   if (!context) {
-    // بدلاً من رمي خطأ، نعيد قيم افتراضية للتوافق
-    console.warn('useScroll called outside ScrollProvider, using defaults');
-    return {
-      saveScrollPosition: () => {},
-      restoreScrollPosition: () => 0,
-      clearScrollPosition: () => {},
-      getScrollPosition: () => 0,
-      signalContentReady: () => {},
-      isNavigatingBack: false,
-      scrollKey: 0
-    };
+    throw new Error('useScroll must be used within a ScrollProvider');
   }
   return context;
 };
