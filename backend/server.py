@@ -72,56 +72,64 @@ except Exception as e:
     def is_ip_blocked(ip): return False
     class RateLimitExceeded(Exception): pass
 
-# Import routers
-from routes.auth import router as auth_router, seller_router, delivery_auth_router
-from routes.products import router as products_router
-from routes.cart import router as cart_router
-from routes.orders import router as orders_router
-from routes.shipping import router as shipping_router
-from routes.stores import router as stores_router
-from routes.messages import router as messages_router
-from routes.reviews import router as reviews_router
-from routes.notifications import router as notifications_router
-from routes.user import router as user_router
-from routes.admin import router as admin_router
-from routes.delivery import router as delivery_router
-from routes.wallet import router as wallet_router
-from routes.payment import router as payment_router
-from routes.settings import router as settings_router
-from routes.ads import router as ads_router
-from routes.discounts import router as discounts_router
-from routes.loyalty import router as loyalty_router
-from routes.image_processing import router as image_router
-from routes.delivery_boxes import router as delivery_boxes_router
-from routes.challenges import router as challenges_router
-from routes.achievements import router as achievements_router
-from routes.chatbot import router as chatbot_router
-from routes.ai_chatbot import router as ai_chatbot_router
-from routes.food import router as food_router
-from routes.food_orders import router as food_orders_router
-from routes.coupons import router as coupons_router
-from routes.referrals import router as referrals_router
-from routes.daily_deals import router as daily_deals_router
-from routes.analytics import router as analytics_router
-from routes.gifts import router as gifts_router
-from routes.recommendations import router as recommendations_router
-from routes.image_search import router as image_search_router
-from routes.push_notifications import router as push_router
-from routes.admin_settings import router as admin_settings_router
-from routes.delivery_time import router as delivery_time_router
-from routes.price_reports import router as price_reports_router
-from routes.websocket import router as websocket_router
-from routes.chat import router as chat_router
-from routes.support import router as support_router
-from routes.categories import router as categories_router
-from routes.activity_log import router as activity_log_router
-from routes.reports_export import router as reports_export_router
-from routes.image_templates import router as image_templates_router
-from routes.call_requests import router as call_requests_router
-from routes.voip import router as voip_router
-from routes.payment_v2 import router as payment_v2_router
-from routes.feedback import router as feedback_router
-from routes.driver_security import router as driver_security_router
+# Import routers with error handling
+logger.info("📦 Importing routers...")
+try:
+    from routes.auth import router as auth_router, seller_router, delivery_auth_router
+    from routes.products import router as products_router
+    from routes.cart import router as cart_router
+    from routes.orders import router as orders_router
+    from routes.shipping import router as shipping_router
+    from routes.stores import router as stores_router
+    from routes.messages import router as messages_router
+    from routes.reviews import router as reviews_router
+    from routes.notifications import router as notifications_router
+    from routes.user import router as user_router
+    from routes.admin import router as admin_router
+    from routes.delivery import router as delivery_router
+    from routes.wallet import router as wallet_router
+    from routes.payment import router as payment_router
+    from routes.settings import router as settings_router
+    from routes.ads import router as ads_router
+    from routes.discounts import router as discounts_router
+    from routes.loyalty import router as loyalty_router
+    from routes.image_processing import router as image_router
+    from routes.delivery_boxes import router as delivery_boxes_router
+    from routes.challenges import router as challenges_router
+    from routes.achievements import router as achievements_router
+    from routes.chatbot import router as chatbot_router
+    from routes.ai_chatbot import router as ai_chatbot_router
+    from routes.food import router as food_router
+    from routes.food_orders import router as food_orders_router
+    from routes.coupons import router as coupons_router
+    from routes.referrals import router as referrals_router
+    from routes.daily_deals import router as daily_deals_router
+    from routes.analytics import router as analytics_router
+    from routes.gifts import router as gifts_router
+    from routes.recommendations import router as recommendations_router
+    from routes.image_search import router as image_search_router
+    from routes.push_notifications import router as push_router
+    from routes.admin_settings import router as admin_settings_router
+    from routes.delivery_time import router as delivery_time_router
+    from routes.price_reports import router as price_reports_router
+    from routes.websocket import router as websocket_router
+    from routes.chat import router as chat_router
+    from routes.support import router as support_router
+    from routes.categories import router as categories_router
+    from routes.activity_log import router as activity_log_router
+    from routes.reports_export import router as reports_export_router
+    from routes.image_templates import router as image_templates_router
+    from routes.call_requests import router as call_requests_router
+    from routes.voip import router as voip_router
+    from routes.payment_v2 import router as payment_v2_router
+    from routes.feedback import router as feedback_router
+    from routes.driver_security import router as driver_security_router
+    logger.info("✅ All routers imported successfully")
+except Exception as e:
+    logger.error(f"❌ Failed to import routers: {e}")
+    import traceback
+    traceback.print_exc()
+    raise
 
 # Create FastAPI app
 app = FastAPI(
