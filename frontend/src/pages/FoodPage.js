@@ -238,7 +238,8 @@ const FoodPage = () => {
 
   // طلب إذن GPS وتحديد المدينة
   const requestGPSLocation = () => {
-    setGpsStatus('requesting');
+    // أظهر شاشة التحميل
+    setGpsStatus('loading');
     
     if (!navigator.geolocation) {
       setGpsStatus('error');
@@ -485,6 +486,25 @@ const FoodPage = () => {
     localStorage.setItem('food_delivery_city', city);
     setGpsStatus('success');
   };
+
+  // شاشة التحميل (عند طلب الموقع)
+  if (gpsStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center"
+        >
+          <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 border-4 border-[#FF6B00] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">جاري تحديد موقعك...</h2>
+          <p className="text-sm text-gray-500">يرجى السماح بالوصول للموقع عند ظهور الطلب</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   // شاشة طلب تفعيل GPS
   if (gpsStatus === 'checking' || gpsStatus === 'requesting') {
