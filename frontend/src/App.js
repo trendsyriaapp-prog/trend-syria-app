@@ -9,6 +9,7 @@ import { ScrollProvider } from "./context/ScrollContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -218,6 +219,7 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   return (
+    <ErrorBoundary>
     <ThemeProvider>
       <LanguageProvider>
         <SettingsProvider>
@@ -230,6 +232,7 @@ function App() {
                 <SplashScreen onComplete={() => setShowSplash(false)} />
               )}
               <BrowserRouter>
+                <ErrorBoundary>
                 <ScrollProvider>
                 <BackButtonHandler />
                 <ForcePasswordChangeWrapper>
@@ -328,6 +331,7 @@ function App() {
           </PlatformClosedCheck>
           </ForcePasswordChangeWrapper>
           </ScrollProvider>
+          </ErrorBoundary>
         </BrowserRouter>
         </WebSocketProvider>
         </FoodCartProvider>
@@ -336,6 +340,7 @@ function App() {
   </SettingsProvider>
   </LanguageProvider>
   </ThemeProvider>
+  </ErrorBoundary>
   );
 }
 
