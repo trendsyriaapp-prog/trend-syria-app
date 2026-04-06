@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area support for Capacitor/Mobile apps */
+:root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    /* Fallback for Android devices that don't support env() */
+    --status-bar-height: 24px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -17,6 +27,24 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     direction: rtl;
+    min-height: 100vh;
+}
+
+/* Capacitor Android safe area fix */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .capacitor-android body {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+}
+
+/* Fallback for Android when env() doesn't work */
+.capacitor-android body {
+    padding-top: var(--status-bar-height, 24px);
+}
+
+/* iOS uses env() properly */
+.capacitor-ios body {
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Premium Card Styles */
@@ -249,4 +277,13 @@ input:-webkit-autofill:focus {
 
 .safe-area-inset-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Safe area top - لمنع تداخل شريط الحالة مع التطبيق */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }

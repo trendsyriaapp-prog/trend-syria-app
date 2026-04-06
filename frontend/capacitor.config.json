@@ -26,8 +26,9 @@
       "spinnerColor": "#FFFFFF"
     },
     "StatusBar": {
-      "style": "light",
-      "backgroundColor": "#FF6B00"
+      "style": "LIGHT",
+      "backgroundColor": "#FF6B00",
+      "overlaysWebView": false
     }
   }
 }

@@ -218,6 +218,18 @@ const BackButtonHandler = () => {
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
+  // إضافة class للـ body حسب المنصة (Android/iOS/Web)
+  useEffect(() => {
+    const platform = Capacitor.getPlatform();
+    if (platform === 'android') {
+      document.body.classList.add('capacitor-android');
+    } else if (platform === 'ios') {
+      document.body.classList.add('capacitor-ios');
+    } else {
+      document.body.classList.add('capacitor-web');
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
     <ThemeProvider>
