@@ -1555,3 +1555,43 @@ async def check_whatsapp_status():
     
     result = await check_connection()
     return result
+
+# ============== إصلاح حساب المدير (مؤقت) ==============
+
+@router.post("/fix-admin-account")
+async def fix_admin_account():
+    """
+    🔧 إصلاح حساب المدير - endpoint مؤقت
+    يحذف حساب المدير القديم ويُنشئ واحد جديد
+    """
+    try:
+        admin_phone = "0945570365"
+        admin_password = "TrendSyria@2026"
+        
+        # حذف الحساب القديم إذا وجد
+        await db.users.delete_one({"phone": admin_phone})
+        
+        # إنشاء حساب جديد
+        admin_doc = {
+            "id": str(uuid.uuid4()),
+            "full_name": "مدير النظام الرئيسي",
+            "name": "Super Admin",
+            "phone": admin_phone,
+            "password": hash_password_secure(admin_password),
+            "city": "دمشق",
+            "user_type": "admin",
+            "is_verified": True,
+            "is_approved": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.users.insert_one(admin_doc)
+        
+        return {
+            "success": True,
+            "message": "تم إصلاح حساب المدير بنجاح",
+            "phone": admin_phone,
+            "password": admin_password
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ: {str(e)}")
