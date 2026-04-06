@@ -398,18 +398,47 @@ async def start_background_tasks():
 
 @app.on_event("startup")
 async def ensure_super_admin_exists():
-    """🔐 التأكد من وجود حساب Super Admin - يتم إنشاؤه تلقائياً إذا لم يكن موجوداً"""
+    """🔐 التأكد من وجود حساب Super Admin - يتم إنشاؤه أو إصلاحه تلقائياً"""
     try:
-        from core.security import hash_password_secure
+        from core.security import hash_password_secure, verify_password
         
         admin_phone = "0945570365"
         admin_password = "TrendSyria@2026"
         
         # التحقق من وجود الحساب
-        existing_admin = await db.users.find_one({"phone": admin_phone})
+        existing_admin = await db.users.find_one({"phone": admin_phone}, {"_id": 0})
         
-        if not existing_admin:
-            # إنشاء حساب Super Admin
+        if existing_admin:
+            # التحقق من صحة كلمة المرور
+            try:
+                if not verify_password(admin_password, existing_admin.get("password", "")):
+                    # كلمة المرور غير صحيحة - تحديثها
+                    await db.users.update_one(
+                        {"phone": admin_phone},
+                        {"$set": {
+                            "password": hash_password_secure(admin_password),
+                            "user_type": "admin",
+                            "is_verified": True,
+                            "is_approved": True
+                        }}
+                    )
+                    logger.info(f"🔧 تم إصلاح كلمة مرور Super Admin: {admin_phone}")
+                else:
+                    logger.info(f"✅ حساب Super Admin موجود وصحيح: {admin_phone}")
+            except Exception as pwd_error:
+                # خطأ في التحقق - إعادة تعيين كلمة المرور
+                await db.users.update_one(
+                    {"phone": admin_phone},
+                    {"$set": {
+                        "password": hash_password_secure(admin_password),
+                        "user_type": "admin",
+                        "is_verified": True,
+                        "is_approved": True
+                    }}
+                )
+                logger.info(f"🔧 تم إصلاح حساب Super Admin (خطأ سابق): {admin_phone}")
+        else:
+            # إنشاء حساب Super Admin جديد
             admin_doc = {
                 "id": str(uuid.uuid4()),
                 "full_name": "مدير النظام الرئيسي",
@@ -425,10 +454,8 @@ async def ensure_super_admin_exists():
             
             await db.users.insert_one(admin_doc)
             logger.info(f"✅ تم إنشاء حساب Super Admin: {admin_phone}")
-        else:
-            logger.info(f"✅ حساب Super Admin موجود: {admin_phone}")
     except Exception as e:
-        logger.error(f"❌ خطأ في إنشاء حساب Super Admin: {e}")
+        logger.error(f"❌ خطأ في إنشاء/إصلاح حساب Super Admin: {e}")
 
 # ============== Performance Stats ==============
 
