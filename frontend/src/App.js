@@ -21,6 +21,7 @@ import SplashScreen from "./components/SplashScreen";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import IncomingCallHandler from "./components/voip/IncomingCallHandler";
 import FeedbackButton from "./components/FeedbackButton";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
@@ -218,6 +219,7 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   return (
+    <ErrorBoundary>
     <ThemeProvider>
       <LanguageProvider>
         <SettingsProvider>
@@ -336,6 +338,7 @@ function App() {
   </SettingsProvider>
   </LanguageProvider>
   </ThemeProvider>
+  </ErrorBoundary>
   );
 }
 

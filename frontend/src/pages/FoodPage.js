@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import FreeShippingBanner from '../components/FreeShippingBanner';
+import ApiErrorDisplay from '../components/ApiErrorDisplay';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -201,6 +202,7 @@ const FoodPage = () => {
   const [freeDeliveryProducts, setFreeDeliveryProducts] = useState([]);
   const [showOnlyFreeDelivery, setShowOnlyFreeDelivery] = useState(filterParam === 'free_delivery');
   const [foodFavorites, setFoodFavorites] = useState([]);
+  const [apiError, setApiError] = useState(null); // لعرض أخطاء API
 
   // إحداثيات المدن السورية الرئيسية
   const CITY_COORDINATES = {
@@ -485,6 +487,13 @@ const FoodPage = () => {
       }
     } catch (error) {
       console.error('Error fetching food data:', error);
+      // حفظ الخطأ لعرضه
+      setApiError({
+        error: error,
+        endpoint: '/api/food/*',
+        method: 'GET',
+        context: 'تحميل بيانات قسم الطعام'
+      });
       setStores([]);
       setProducts([]);
       setFlashSales([]);
@@ -502,8 +511,8 @@ const FoodPage = () => {
     setGpsStatus('success');
   };
 
-  // شاشة التحميل (عند طلب الموقع)
-  if (gpsStatus === 'loading') {
+  // شاشة التحميل (عند طلب الموقع أو التحقق الأولي)
+  if (gpsStatus === 'loading' || gpsStatus === 'checking') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <motion.div
@@ -522,7 +531,7 @@ const FoodPage = () => {
   }
 
   // شاشة طلب تفعيل GPS
-  if (gpsStatus === 'checking' || gpsStatus === 'requesting') {
+  if (gpsStatus === 'requesting') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <motion.div
@@ -681,6 +690,32 @@ const FoodPage = () => {
             </p>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  // عرض خطأ API إذا وجد
+  if (apiError && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-md mx-auto pt-10">
+          <ApiErrorDisplay 
+            error={apiError.error}
+            endpoint={apiError.endpoint}
+            method={apiError.method}
+            context={apiError.context}
+            onRetry={() => {
+              setApiError(null);
+              fetchFoodData();
+            }}
+          />
+          <Link
+            to="/"
+            className="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all mt-4"
+          >
+            العودة للرئيسية
+          </Link>
+        </div>
       </div>
     );
   }
