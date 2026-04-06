@@ -374,7 +374,7 @@ const HomePage = () => {
       ]);
       setProducts(productsRes.data);
       setSectionsSettings(sectionsRes.data);
-      setCategories(categoriesRes.data);
+      setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
       setAds(adsRes.data || []);
       
       // دمج منتجات فلاش (من المدير) مع منتجات البائعين المروّجة

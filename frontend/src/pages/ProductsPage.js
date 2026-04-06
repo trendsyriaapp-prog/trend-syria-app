@@ -237,18 +237,20 @@ const ProductsPage = () => {
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
-      setCategories(res.data);
+      setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]);
     }
   };
 
   const fetchCities = async () => {
     try {
       const res = await axios.get(`${API}/api/shipping/cities`);
-      setCities(res.data);
+      setCities(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Error fetching cities:', error);
+      setCities([]);
     }
   };
 
