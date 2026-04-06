@@ -1,6 +1,6 @@
 {
   "appId": "com.trendsyria.app",
-  "appName": "Trend Syria",
+  "appName": "ترند سوريا",
   "webDir": "build",
   "server": {
     "androidScheme": "https",
