@@ -31,7 +31,19 @@ const MobileNav = () => {
   const foodEnabled = isFeatureEnabled('food_enabled');
   
   // هل نحن في صفحات الطعام؟
-  const isInFoodSection = location.pathname.startsWith('/food');
+  // يجب أن يكون المستخدم في مسار /food وقد فعّل الموقع (دخل فعلياً لصفحة الطعام)
+  const isOnFoodPath = location.pathname.startsWith('/food');
+  const hasActivatedFoodLocation = typeof window !== 'undefined' && localStorage.getItem('food_gps_granted') === 'true';
+  
+  // قسم الطعام يكون نشطاً فقط إذا:
+  // 1. المستخدم في مسار /food
+  // 2. وقد فعّل الموقع (دخل فعلياً لصفحة الطعام)
+  // أو إذا كان في صفحات السلة/الطلب الخاصة بالطعام
+  const isFoodCartOrCheckout = location.pathname.startsWith('/food/cart') || 
+                                location.pathname.startsWith('/food/my-cart') || 
+                                location.pathname.startsWith('/food/checkout') ||
+                                location.pathname.startsWith('/food/batch-checkout');
+  const isInFoodSection = isOnFoodPath && (hasActivatedFoodLocation || isFoodCartOrCheckout);
   
   // هل يتصفح كعميل؟
   const isViewingAsCustomer = searchParams.get('view') === 'customer';
