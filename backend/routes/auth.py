@@ -116,91 +116,146 @@ async def register(request: Request, user: UserRegister):
 @router.post("/login")
 @limiter.limit("15/minute")
 async def login(request: Request, credentials: UserLogin):
-    client_ip = get_remote_address(request)
-    
-    # 🔒 فحص Brute Force
-    check_brute_force(credentials.phone, client_ip)
-    
-    user = await db.users.find_one({"phone": credentials.phone}, {"_id": 0})
-    if not user:
-        record_failed_login(credentials.phone, client_ip)
-        raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
-    
-    # 🔒 التحقق من كلمة المرور (يدعم bcrypt و SHA256 القديم)
-    # DEBUG: طباعة للتحقيق
+    """
+    تسجيل الدخول - مع معالجة أخطاء شاملة
+    """
     import logging
+    import traceback
     auth_logger = logging.getLogger("auth")
-    auth_logger.info(f"DEBUG Login: phone={credentials.phone}, password_input={credentials.password[:3]}***, stored_hash={user['password'][:20]}...")
     
-    if not verify_password(credentials.password, user["password"]):
-        record_failed_login(credentials.phone, client_ip)
-        # 📝 Log للتحقيق في مشاكل تسجيل الدخول
-        import logging
-        auth_logger = logging.getLogger("auth")
-        auth_logger.warning(f"Failed login for {credentials.phone} - password hash type: {'bcrypt' if user['password'].startswith('$2') else 'legacy'}")
-        log_suspicious_activity(
-            "failed_login",
-            f"Failed login attempt for {credentials.phone}",
-            client_ip
-        )
-        raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
-    
-    # 🔒 مسح محاولات الدخول الفاشلة
-    clear_failed_attempts(credentials.phone, client_ip)
-    
-    # 🔒 تحديث كلمة المرور القديمة إلى bcrypt
-    if not user["password"].startswith('$2'):
-        new_hash = hash_password_secure(credentials.password)
-        await db.users.update_one(
-            {"id": user["id"]},
-            {"$set": {"password": new_hash}}
-        )
-    
-    # 🔒 التحقق من الحساب الافتراضي - إجبار تغيير كلمة المرور
-    force_password_change = is_default_account(credentials.phone, credentials.password) or user.get("force_password_change", False)
-    
-    # 🔒 إنشاء توكنات آمنة
-    access_token = create_access_token(user["id"], user["user_type"])
-    refresh_token = create_refresh_token(user["id"])
-    
-    # حفظ refresh token
-    await db.refresh_tokens.update_one(
-        {"user_id": user["id"]},
-        {"$set": {
-            "token": refresh_token,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }},
-        upsert=True
-    )
-    
-    # تحديد is_approved حسب نوع المستخدم
-    is_approved = user.get("is_approved", False)
-    
-    # للسائقين: التحقق من delivery_documents
-    if user["user_type"] == "delivery":
-        delivery_doc = await db.delivery_documents.find_one(
-            {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
-            {"_id": 0, "status": 1}
-        )
-        is_approved = delivery_doc and delivery_doc.get("status") == "approved"
-    
-    # للبائعين: التحقق من is_approved في users أو seller_profile
-    elif user["user_type"] in ["seller", "food_seller"]:
+    try:
+        client_ip = get_remote_address(request)
+        auth_logger.info(f"🔐 Login attempt: phone={credentials.phone}, ip={client_ip}")
+        
+        # 🔒 فحص Brute Force
+        try:
+            check_brute_force(credentials.phone, client_ip)
+        except HTTPException:
+            raise
+        except Exception as bf_error:
+            auth_logger.error(f"Brute force check error: {bf_error}")
+            # استمر حتى لو فشل الفحص
+        
+        # البحث عن المستخدم
+        try:
+            user = await db.users.find_one({"phone": credentials.phone}, {"_id": 0})
+        except Exception as db_error:
+            auth_logger.error(f"Database error finding user: {db_error}")
+            raise HTTPException(status_code=500, detail=f"خطأ في قاعدة البيانات: {str(db_error)[:100]}")
+        
+        if not user:
+            record_failed_login(credentials.phone, client_ip)
+            raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
+        
+        auth_logger.info(f"✅ User found: id={user.get('id', 'N/A')}, type={user.get('user_type', 'N/A')}")
+        
+        # 🔒 التحقق من كلمة المرور
+        stored_password = user.get("password", "")
+        if not stored_password:
+            auth_logger.error(f"❌ User has no password: {credentials.phone}")
+            raise HTTPException(status_code=500, detail="خطأ: حساب بدون كلمة مرور")
+        
+        auth_logger.info(f"Password hash type: {'bcrypt' if stored_password.startswith('$2') else 'legacy_sha256'}, len={len(stored_password)}")
+        
+        try:
+            password_valid = verify_password(credentials.password, stored_password)
+        except Exception as pwd_error:
+            auth_logger.error(f"Password verification error: {pwd_error}")
+            raise HTTPException(status_code=500, detail=f"خطأ في التحقق من كلمة المرور: {str(pwd_error)[:100]}")
+        
+        if not password_valid:
+            record_failed_login(credentials.phone, client_ip)
+            auth_logger.warning(f"Failed login for {credentials.phone}")
+            log_suspicious_activity(
+                "failed_login",
+                f"Failed login attempt for {credentials.phone}",
+                client_ip
+            )
+            raise HTTPException(status_code=401, detail="رقم الهاتف أو كلمة المرور غير صحيحة")
+        
+        auth_logger.info(f"✅ Password verified for {credentials.phone}")
+        
+        # 🔒 مسح محاولات الدخول الفاشلة
+        clear_failed_attempts(credentials.phone, client_ip)
+        
+        # 🔒 تحديث كلمة المرور القديمة إلى bcrypt
+        if not stored_password.startswith('$2'):
+            try:
+                new_hash = hash_password_secure(credentials.password)
+                await db.users.update_one(
+                    {"id": user["id"]},
+                    {"$set": {"password": new_hash}}
+                )
+                auth_logger.info(f"✅ Upgraded password hash for {credentials.phone}")
+            except Exception as upgrade_error:
+                auth_logger.warning(f"Failed to upgrade password hash: {upgrade_error}")
+        
+        # 🔒 التحقق من الحساب الافتراضي
+        force_password_change = is_default_account(credentials.phone, credentials.password) or user.get("force_password_change", False)
+        
+        # 🔒 إنشاء توكنات آمنة
+        try:
+            access_token = create_access_token(user["id"], user["user_type"])
+            refresh_token = create_refresh_token(user["id"])
+        except Exception as token_error:
+            auth_logger.error(f"Token creation error: {token_error}\n{traceback.format_exc()}")
+            raise HTTPException(status_code=500, detail=f"خطأ في إنشاء التوكن: {str(token_error)[:100]}")
+        
+        auth_logger.info(f"✅ Tokens created for {credentials.phone}")
+        
+        # حفظ refresh token
+        try:
+            await db.refresh_tokens.update_one(
+                {"user_id": user["id"]},
+                {"$set": {
+                    "token": refresh_token,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }},
+                upsert=True
+            )
+        except Exception as rt_error:
+            auth_logger.warning(f"Failed to save refresh token: {rt_error}")
+            # استمر حتى لو فشل حفظ التوكن
+        
+        # تحديد is_approved حسب نوع المستخدم
         is_approved = user.get("is_approved", False)
+        
+        # للسائقين: التحقق من delivery_documents
+        if user["user_type"] == "delivery":
+            try:
+                delivery_doc = await db.delivery_documents.find_one(
+                    {"$or": [{"driver_id": user["id"]}, {"delivery_id": user["id"]}]},
+                    {"_id": 0, "status": 1}
+                )
+                is_approved = delivery_doc and delivery_doc.get("status") == "approved"
+            except Exception as dd_error:
+                auth_logger.warning(f"Failed to check delivery documents: {dd_error}")
+        
+        # للبائعين: التحقق من is_approved
+        elif user["user_type"] in ["seller", "food_seller"]:
+            is_approved = user.get("is_approved", False)
+        
+        auth_logger.info(f"✅ Login successful: {credentials.phone}, type={user['user_type']}")
+        
+        return {
+            "token": access_token,
+            "refresh_token": refresh_token,
+            "user": {
+                "id": user["id"],
+                "name": user.get("full_name", user.get("name", "")),
+                "full_name": user.get("full_name", user.get("name", "")),
+                "phone": user["phone"],
+                "user_type": user["user_type"],
+                "is_approved": is_approved
+            },
+            "force_password_change": force_password_change
+        }
     
-    return {
-        "token": access_token,
-        "refresh_token": refresh_token,
-        "user": {
-            "id": user["id"],
-            "name": user.get("full_name", user.get("name", "")),
-            "full_name": user.get("full_name", user.get("name", "")),
-            "phone": user["phone"],
-            "user_type": user["user_type"],
-            "is_approved": is_approved
-        },
-        "force_password_change": force_password_change
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        auth_logger.error(f"❌ Unexpected login error: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"خطأ غير متوقع: {str(e)[:200]}")
 
 @router.post("/reset-brute-force")
 async def reset_brute_force_locks(user: dict = Depends(get_current_user)):
@@ -1324,6 +1379,59 @@ async def get_emergency_phone(user: dict = Depends(get_current_user)):
     user_data = await db.users.find_one({"id": user["id"]}, {"_id": 0, "emergency_phone": 1})
     return {"emergency_phone": user_data.get("emergency_phone", "")}
 
+
+
+# === Debug: تشخيص مشاكل تسجيل الدخول (عام) ===
+@router.get("/debug/login-check/{phone}")
+async def debug_login_check(phone: str):
+    """
+    🔧 تشخيص مشاكل تسجيل الدخول - لا يحتاج مصادقة
+    يُظهر معلومات عامة فقط لتحديد المشكلة
+    """
+    try:
+        # التحقق من اتصال قاعدة البيانات
+        try:
+            await db.command("ping")
+            db_status = "✅ متصل"
+        except Exception as db_err:
+            db_status = f"❌ خطأ: {str(db_err)[:50]}"
+        
+        # البحث عن المستخدم
+        user = await db.users.find_one({"phone": phone}, {"_id": 0, "id": 1, "user_type": 1, "password": 1, "full_name": 1, "is_approved": 1})
+        
+        if not user:
+            return {
+                "status": "not_found",
+                "message": "المستخدم غير موجود في قاعدة البيانات",
+                "db_status": db_status,
+                "phone": phone
+            }
+        
+        # معلومات كلمة المرور (بدون كشفها)
+        password = user.get("password", "")
+        password_info = {
+            "exists": bool(password),
+            "type": "bcrypt" if password.startswith("$2") else "sha256" if len(password) == 64 else "unknown",
+            "length": len(password)
+        }
+        
+        return {
+            "status": "found",
+            "db_status": db_status,
+            "phone": phone,
+            "user_id": user.get("id", "N/A")[:8] + "...",
+            "user_type": user.get("user_type", "N/A"),
+            "full_name": user.get("full_name", "N/A"),
+            "is_approved": user.get("is_approved", False),
+            "password_info": password_info
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()[:500]
+        }
 
 
 # === Admin: تشخيص مشاكل تسجيل الدخول ===
