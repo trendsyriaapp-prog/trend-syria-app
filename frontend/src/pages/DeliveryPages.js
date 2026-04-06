@@ -694,7 +694,10 @@ const DeliveryDashboard = () => {
         }
       }
     } catch (error) {
-      console.error(error);
+      // تجاهل أخطاء 404 - قد يكون السائق جديد
+      if (error.response?.status !== 404) {
+        console.error('Error checking status:', error);
+      }
     } finally {
       setLoading(false);
     }
