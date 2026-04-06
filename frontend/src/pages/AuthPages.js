@@ -134,14 +134,6 @@ const LoginPage = () => {
           </p>
         </form>
 
-        {/* Demo accounts */}
-        <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
-          <p className="text-sm text-gray-500 mb-2">حسابات تجريبية:</p>
-          <div className="space-y-1 text-sm text-gray-700">
-            <p><span className="text-[#FF6B00] font-medium">مدير:</span> 0912345678 / admin123</p>
-            <p><span className="text-[#FF6B00] font-medium">سائق:</span> 0988111333 / driver123</p>
-          </div>
-        </div>
       </motion.div>
     </div>
   );
