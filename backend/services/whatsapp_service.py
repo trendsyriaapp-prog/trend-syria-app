@@ -1,15 +1,25 @@
 """
 UltraMsg WhatsApp Service
 إرسال رسائل واتساب عبر UltraMsg API
+
+🧪 وضع الاختبار: يستخدم رمز OTP ثابت (123456) للمختبرين
 """
 
 import os
 import httpx
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 INSTANCE_ID = os.environ.get("ULTRAMSG_INSTANCE_ID")
 TOKEN = os.environ.get("ULTRAMSG_TOKEN")
 BASE_URL = f"https://api.ultramsg.com/{INSTANCE_ID}"
+
+# 🧪 وضع الاختبار - رمز OTP ثابت للمختبرين
+# يمكن تعطيله في الإنتاج بتغيير القيمة إلى "false"
+TEST_MODE = os.environ.get("OTP_TEST_MODE", "true").lower() == "true"
+TEST_OTP_CODE = "123456"  # رمز OTP الثابت للاختبار
 
 
 async def send_whatsapp_message(phone: str, message: str) -> dict:
@@ -50,6 +60,8 @@ async def send_otp(phone: str, otp_code: str) -> dict:
     """
     إرسال رمز التحقق OTP عبر واتساب
     
+    🧪 في وضع الاختبار: يعيد الرمز الثابت 123456 بدلاً من إرسال رسالة حقيقية
+    
     Args:
         phone: رقم الهاتف
         otp_code: رمز التحقق
@@ -57,6 +69,19 @@ async def send_otp(phone: str, otp_code: str) -> dict:
     Returns:
         dict: نتيجة الإرسال
     """
+    # 🧪 وضع الاختبار - لا نرسل رسالة حقيقية
+    if TEST_MODE:
+        logger.info(f"🧪 [TEST MODE] OTP للرقم {phone}: {TEST_OTP_CODE}")
+        print(f"\n{'='*50}")
+        print(f"🧪 TEST MODE - OTP Code for {phone}: {TEST_OTP_CODE}")
+        print(f"{'='*50}\n")
+        return {
+            "success": True, 
+            "test_mode": True, 
+            "message": "وضع الاختبار - استخدم الرمز 123456",
+            "otp_code": TEST_OTP_CODE
+        }
+    
     message = f"""🔐 *Trend Syria*
 
 رمز التحقق الخاص بك هو:
@@ -72,6 +97,8 @@ async def send_password_reset_otp(phone: str, otp_code: str) -> dict:
     """
     إرسال رمز إعادة تعيين كلمة المرور
     
+    🧪 في وضع الاختبار: يعيد الرمز الثابت 123456 بدلاً من إرسال رسالة حقيقية
+    
     Args:
         phone: رقم الهاتف
         otp_code: رمز التحقق
@@ -79,6 +106,19 @@ async def send_password_reset_otp(phone: str, otp_code: str) -> dict:
     Returns:
         dict: نتيجة الإرسال
     """
+    # 🧪 وضع الاختبار - لا نرسل رسالة حقيقية
+    if TEST_MODE:
+        logger.info(f"🧪 [TEST MODE] Password Reset OTP للرقم {phone}: {TEST_OTP_CODE}")
+        print(f"\n{'='*50}")
+        print(f"🧪 TEST MODE - Password Reset OTP for {phone}: {TEST_OTP_CODE}")
+        print(f"{'='*50}\n")
+        return {
+            "success": True, 
+            "test_mode": True, 
+            "message": "وضع الاختبار - استخدم الرمز 123456",
+            "otp_code": TEST_OTP_CODE
+        }
+    
     message = f"""🔑 *Trend Syria - إعادة تعيين كلمة المرور*
 
 رمز إعادة تعيين كلمة المرور:

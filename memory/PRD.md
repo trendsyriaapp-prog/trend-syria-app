@@ -91,9 +91,14 @@ Full-stack e-commerce and food delivery application for the Syrian market, targe
 
 ## Current Status
 
+### ✅ Recently Completed (December 2025)
+- ✅ **Phone Validation** - Syrian phone numbers strictly validated (09XXXXXXXX format only)
+- ✅ **Test OTP Mode** - Testers can use fixed code `123456` without UltraMsg payment
+- ✅ **Super Admin Account** - Created `0945570365` / `TrendSyria@2026`
+
 ### Blockers
 - 🔴 **Google Play Identity Verification** - Submitted Turkish Kimlik + TurkNet bill (March 30, 2026)
-- 🟡 **UltraMsg WhatsApp OTP** - Requires $39 subscription payment
+- 🟢 **UltraMsg WhatsApp OTP** - Bypassed with TEST MODE (`OTP_TEST_MODE=true`). Set to `false` and pay for UltraMsg when ready for production.
 
 ### Pending Tasks
 - P1: Sub-admin granular permissions (orders manager, products manager roles)

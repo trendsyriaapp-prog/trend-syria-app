@@ -1389,8 +1389,9 @@ async def admin_reset_user_password(phone: str, admin: dict = Depends(get_curren
 async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
     """
     إرسال رمز OTP عبر واتساب لاستعادة كلمة المرور
+    🧪 في وضع الاختبار: يعيد رسالة نجاح مع إرشاد لاستخدام الرمز 123456
     """
-    from services.whatsapp_service import send_password_reset_otp
+    from services.whatsapp_service import send_password_reset_otp, TEST_MODE, TEST_OTP_CODE
     
     get_remote_address(request)
     
@@ -1402,6 +1403,15 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
     user = await db.users.find_one({"phone": data.phone}, {"_id": 0, "id": 1, "full_name": 1})
     if not user:
         raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+    
+    # 🧪 في وضع الاختبار: لا نحتاج لحفظ OTP حقيقي
+    if TEST_MODE:
+        return {
+            "sent": True,
+            "test_mode": True,
+            "message": f"وضع الاختبار - استخدم الرمز: {TEST_OTP_CODE}",
+            "hint": f"الرمز الثابت للاختبار: {TEST_OTP_CODE}"
+        }
     
     # توليد رمز OTP (6 أرقام)
     otp_code = ''.join(random.choices(string.digits, k=6))
@@ -1440,8 +1450,44 @@ async def send_whatsapp_otp(request: Request, data: ForgotPasswordRequest):
 async def verify_whatsapp_otp(request: Request, phone: str, otp: str):
     """
     التحقق من رمز OTP المرسل عبر واتساب
+    🧪 في وضع الاختبار: يقبل الرمز الثابت 123456
     """
     get_remote_address(request)
+    
+    # 🧪 استيراد إعدادات وضع الاختبار
+    from services.whatsapp_service import TEST_MODE, TEST_OTP_CODE
+    
+    # 🧪 في وضع الاختبار: قبول الرمز الثابت 123456 مباشرة
+    if TEST_MODE and otp == TEST_OTP_CODE:
+        # البحث عن المستخدم
+        user = await db.users.find_one({"phone": phone}, {"_id": 0, "id": 1})
+        if not user:
+            raise HTTPException(status_code=404, detail="هذا الرقم غير مسجل في التطبيق")
+        
+        # توليد رمز إعادة التعيين
+        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        
+        # حفظ رمز إعادة التعيين
+        await db.password_resets.update_one(
+            {"phone": phone},
+            {
+                "$set": {
+                    "phone": phone,
+                    "user_id": user["id"],
+                    "token": reset_token,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "used": False
+                }
+            },
+            upsert=True
+        )
+        
+        return {
+            "verified": True,
+            "reset_token": reset_token,
+            "test_mode": True,
+            "message": "تم التحقق بنجاح (وضع الاختبار). يمكنك الآن إعادة تعيين كلمة المرور."
+        }
     
     # البحث عن OTP
     otp_record = await db.otp_codes.find_one({"phone": phone, "used": False}, {"_id": 0})
