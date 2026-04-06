@@ -396,6 +396,40 @@ async def start_background_tasks():
     except Exception as e:
         logging.warning(f"⚠️ Could not start background tasks: {e}")
 
+@app.on_event("startup")
+async def ensure_super_admin_exists():
+    """🔐 التأكد من وجود حساب Super Admin - يتم إنشاؤه تلقائياً إذا لم يكن موجوداً"""
+    try:
+        from core.security import hash_password_secure
+        
+        admin_phone = "0945570365"
+        admin_password = "TrendSyria@2026"
+        
+        # التحقق من وجود الحساب
+        existing_admin = await db.users.find_one({"phone": admin_phone})
+        
+        if not existing_admin:
+            # إنشاء حساب Super Admin
+            admin_doc = {
+                "id": str(uuid.uuid4()),
+                "full_name": "مدير النظام الرئيسي",
+                "name": "Super Admin",
+                "phone": admin_phone,
+                "password": hash_password_secure(admin_password),
+                "city": "دمشق",
+                "user_type": "admin",
+                "is_verified": True,
+                "is_approved": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.users.insert_one(admin_doc)
+            logger.info(f"✅ تم إنشاء حساب Super Admin: {admin_phone}")
+        else:
+            logger.info(f"✅ حساب Super Admin موجود: {admin_phone}")
+    except Exception as e:
+        logger.error(f"❌ خطأ في إنشاء حساب Super Admin: {e}")
+
 # ============== Performance Stats ==============
 
 @api_router.get("/performance/stats")
