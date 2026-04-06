@@ -13,6 +13,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- منع التداخل مع شريط الحالة -->
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
     </style>
 
 
