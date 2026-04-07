@@ -6,10 +6,33 @@ import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { 
   Users, Store, Truck, UtensilsCrossed, Check, X, Eye, Phone, MapPin,
-  Loader2, ChevronDown, ChevronUp, Calendar, Clock
+  Loader2, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// دالة لحساب حالة وثائق السائق
+const getDriverDocumentsStatus = (doc) => {
+  const driver = doc.driver || doc;
+  const requiredDocs = [
+    { key: 'personal_photo', label: 'صورة شخصية', required: true },
+    { key: 'id_photo', label: 'صورة الهوية', required: true },
+    { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
+  ];
+
+  const uploadedCount = requiredDocs.filter(d => doc[d.key]).length;
+  const requiredCount = requiredDocs.filter(d => d.required).length;
+  const isComplete = requiredDocs.filter(d => d.required).every(d => doc[d.key]);
+  const missingRequired = requiredDocs.filter(d => d.required && !doc[d.key]).map(d => d.label);
+
+  return {
+    uploadedCount,
+    totalCount: requiredDocs.length,
+    isComplete,
+    missingRequired,
+    docs: requiredDocs.map(d => ({ ...d, uploaded: !!doc[d.key] }))
+  };
+};
 
 const AllPendingJoinRequests = () => {
   const { toast } = useToast();
@@ -261,19 +284,29 @@ const AllPendingJoinRequests = () => {
           {data.drivers.map((item) => {
             const driver = item.driver || item;
             const driverId = item.driver_id || driver.id;
+            const docStatus = getDriverDocumentsStatus(item);
+            
             return (
-              <div key={driverId} className="bg-white rounded-xl border border-cyan-200 overflow-hidden">
+              <div key={driverId} className={`bg-white rounded-xl border-2 overflow-hidden ${docStatus.isComplete ? 'border-green-200' : 'border-yellow-200'}`}>
                 <div 
-                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-cyan-50/50"
+                  className={`p-4 flex items-center justify-between cursor-pointer ${docStatus.isComplete ? 'hover:bg-green-50/50' : 'hover:bg-yellow-50/50'}`}
                   onClick={() => setExpandedItem(expandedItem === driverId ? null : driverId)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
-                      <Truck size={24} className="text-cyan-600" />
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${docStatus.isComplete ? 'bg-green-100' : 'bg-yellow-100'}`}>
+                      <Truck size={24} className={docStatus.isComplete ? 'text-green-600' : 'text-yellow-600'} />
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-800">{driver.name || driver.full_name}</h4>
                       <p className="text-sm text-gray-500">{driver.phone}</p>
+                      {/* Document status badge */}
+                      <div className={`mt-1 text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${docStatus.isComplete ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {docStatus.isComplete ? (
+                          <><CheckCircle size={12} /> وثائق مكتملة</>
+                        ) : (
+                          <><AlertTriangle size={12} /> وثائق ناقصة ({docStatus.uploadedCount}/{docStatus.totalCount})</>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -283,19 +316,56 @@ const AllPendingJoinRequests = () => {
                 
                 {expandedItem === driverId && (
                   <div className="px-4 pb-4 border-t bg-gray-50">
-                    <div className="grid grid-cols-2 gap-3 py-3 text-sm">
+                    {/* Warning banner if incomplete */}
+                    {!docStatus.isComplete && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 my-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-amber-800">⚠️ الوثائق غير مكتملة</p>
+                            <p className="text-xs text-amber-700 mt-0.5">ناقص: {docStatus.missingRequired.join('، ')}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Documents status grid */}
+                    <div className="grid grid-cols-3 gap-2 py-3">
+                      {docStatus.docs.map((d, idx) => (
+                        <div key={idx} className={`p-2 rounded-lg text-center text-xs ${d.uploaded ? 'bg-green-50 border border-green-200' : (d.required ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200')}`}>
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            {d.uploaded ? (
+                              <CheckCircle size={14} className="text-green-500" />
+                            ) : d.required ? (
+                              <XCircle size={14} className="text-red-500" />
+                            ) : null}
+                            <span className={d.uploaded ? 'text-green-700' : (d.required ? 'text-red-700' : 'text-gray-500')}>
+                              {d.label}
+                            </span>
+                          </div>
+                          <span className="text-[10px]">
+                            {d.uploaded ? '✓ مرفوع' : (d.required ? '✗ مطلوب' : 'اختياري')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
                       <div><span className="text-gray-500">المدينة:</span> {driver.city}</div>
                       <div><span className="text-gray-500">الهاتف:</span> {driver.phone}</div>
-                      {driver.emergency_phone && <div><span className="text-gray-500">هاتف الطوارئ:</span> {driver.emergency_phone}</div>}
+                      <div><span className="text-gray-500">نوع المركبة:</span> {item.vehicle_type_name || item.vehicle_type || 'غير محدد'}</div>
+                      <div><span className="text-gray-500">رقم الهوية:</span> {item.national_id || 'غير محدد'}</div>
                     </div>
+                    
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={() => handleApproveDriver(driverId)}
-                        disabled={actionLoading === driverId}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                        disabled={actionLoading === driverId || !docStatus.isComplete}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-white rounded-lg disabled:opacity-50 ${docStatus.isComplete ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'}`}
+                        title={!docStatus.isComplete ? `الوثائق غير مكتملة: ${docStatus.missingRequired.join('، ')}` : 'قبول السائق'}
                       >
                         {actionLoading === driverId ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                        قبول
+                        {docStatus.isComplete ? 'قبول' : 'وثائق ناقصة'}
                       </button>
                       <button
                         onClick={() => handleRejectDriver(driverId)}
