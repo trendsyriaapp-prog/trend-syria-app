@@ -48,8 +48,8 @@ const BannersTab = ({ token }) => {
   const handleToggleBanner = async (banner, type) => {
     try {
       const endpoint = type === 'homepage' 
-        ? `/admin/homepage-banners/${banner.id}`
-        : `/admin/food-banners/${banner.id}`;
+        ? `/api/admin/homepage-banners/${banner.id}`
+        : `/api/admin/food-banners/${banner.id}`;
       
       await axios.put(`${API}${endpoint}`, 
         { is_active: !banner.is_active },
@@ -67,8 +67,8 @@ const BannersTab = ({ token }) => {
     
     try {
       const endpoint = deleteModal.type === 'homepage' 
-        ? `/admin/homepage-banners/${deleteModal.bannerId}`
-        : `/admin/food-banners/${deleteModal.bannerId}`;
+        ? `/api/admin/homepage-banners/${deleteModal.bannerId}`
+        : `/api/admin/food-banners/${deleteModal.bannerId}`;
       
       await axios.delete(`${API}${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -327,8 +327,8 @@ const BannerModal = ({ banner, type, token, onClose, onSave }) => {
     setSaving(true);
     try {
       const endpoint = type === 'homepage' 
-        ? '/admin/homepage-banners'
-        : '/admin/food-banners';
+        ? '/api/admin/homepage-banners'
+        : '/api/admin/food-banners';
 
       if (banner?.id) {
         await axios.put(`${API}${endpoint}/${banner.id}`, formData, {
