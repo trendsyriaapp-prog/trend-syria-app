@@ -1072,8 +1072,13 @@ async def delivery_accept_order(order_id: str, user: dict = Depends(get_current_
     return {"message": "تم قبول الطلب بنجاح", "order_id": order_id}
 
 @router.post("/orders/{order_id}/delivery/arrived")
-async def delivery_arrived_at_store(order_id: str, user: dict = Depends(get_current_user)):
-    """تسجيل وصول موظف التوصيل للمتجر - لطلبات المنتجات"""
+async def delivery_arrived_at_store(
+    order_id: str, 
+    latitude: float = Query(None, description="خط العرض - إجباري للتحقق من الموقع"),
+    longitude: float = Query(None, description="خط الطول - إجباري للتحقق من الموقع"),
+    user: dict = Depends(get_current_user)
+):
+    """تسجيل وصول موظف التوصيل للمتجر - لطلبات المنتجات (مع فحص GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1093,15 +1098,78 @@ async def delivery_arrived_at_store(order_id: str, user: dict = Depends(get_curr
             "order_id": order_id
         }
     
+    # === Geofencing: التحقق من موقع السائق ===
+    if latitude is not None and longitude is not None:
+        # جلب المسافة المسموحة من الإعدادات (الافتراضي 100 متر)
+        settings = await db.settings.find_one({"type": "delivery_settings"})
+        MAX_DISTANCE_METERS = 100  # الافتراضي 100 متر
+        if settings and settings.get("values", {}).get("geofencing_max_distance_meters"):
+            MAX_DISTANCE_METERS = settings["values"]["geofencing_max_distance_meters"]
+        
+        # جلب موقع البائع من الطلب أو من معلومات البائع
+        seller_lat = None
+        seller_lon = None
+        
+        # محاولة الحصول على موقع البائع من items
+        seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
+        if seller_ids:
+            seller = await db.users.find_one({"id": seller_ids[0]}, {"_id": 0})
+            if seller:
+                seller_lat = seller.get("latitude") or seller.get("store_latitude")
+                seller_lon = seller.get("longitude") or seller.get("store_longitude")
+                
+                # أو من location object
+                if not seller_lat and seller.get("location"):
+                    if isinstance(seller["location"], dict):
+                        seller_lat = seller["location"].get("latitude") or seller["location"].get("lat")
+                        seller_lon = seller["location"].get("longitude") or seller["location"].get("lng")
+                    elif isinstance(seller["location"], list) and len(seller["location"]) >= 2:
+                        seller_lon = seller["location"][0]
+                        seller_lat = seller["location"][1]
+        
+        # 🧪 تجاوز فحص المسافة للحساب التجريبي
+        if user.get("phone") == "0999888777":
+            print(f"🧪 حساب تجريبي - تجاوز فحص المسافة للسائق {user.get('name')}")
+        elif seller_lat and seller_lon:
+            # حساب المسافة بين السائق والبائع (Haversine formula)
+            import math
+            R = 6371000  # نصف قطر الأرض بالمتر
+            
+            lat1_rad = math.radians(latitude)
+            lat2_rad = math.radians(seller_lat)
+            delta_lat = math.radians(seller_lat - latitude)
+            delta_lon = math.radians(seller_lon - longitude)
+            
+            a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            distance_meters = R * c
+            
+            if distance_meters > MAX_DISTANCE_METERS:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"أنت بعيد عن المتجر! المسافة {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
+                )
+        else:
+            print(f"⚠️ البائع ليس له موقع GPS - تخطي فحص المسافة للطلب {order_id}")
+    
     now = datetime.now(timezone.utc).isoformat()
+    
+    update_data = {
+        "driver_arrived_at": now,
+        "delivery_status": "driver_at_store"
+    }
+    
+    # حفظ موقع وصول السائق إذا تم إرساله
+    if latitude is not None and longitude is not None:
+        update_data["driver_arrival_location"] = {
+            "latitude": latitude,
+            "longitude": longitude
+        }
     
     await db.orders.update_one(
         {"id": order_id},
         {
-            "$set": {
-                "driver_arrived_at": now,
-                "delivery_status": "driver_at_store"
-            },
+            "$set": update_data,
             "$push": {
                 "tracking_history": {
                     "status": "driver_arrived_at_store",
@@ -1287,8 +1355,13 @@ async def delivery_on_the_way(order_id: str, body: dict = None, user: dict = Dep
 # ============== نظام تأكيد التسليم بالكود ==============
 
 @router.post("/orders/{order_id}/delivery/arrived-customer")
-async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_current_user)):
-    """تسجيل وصول موظف التوصيل للعميل - لطلبات المنتجات"""
+async def delivery_arrived_at_customer(
+    order_id: str, 
+    latitude: float = Query(None, description="خط العرض - إجباري للتحقق من الموقع"),
+    longitude: float = Query(None, description="خط الطول - إجباري للتحقق من الموقع"),
+    user: dict = Depends(get_current_user)
+):
+    """تسجيل وصول موظف التوصيل للعميل - لطلبات المنتجات (مع فحص GPS)"""
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
@@ -1308,15 +1381,68 @@ async def delivery_arrived_at_customer(order_id: str, user: dict = Depends(get_c
             "order_id": order_id
         }
     
+    # === Geofencing: التحقق من موقع السائق ===
+    if latitude is not None and longitude is not None:
+        # جلب المسافة المسموحة من الإعدادات (الافتراضي 100 متر)
+        settings = await db.settings.find_one({"type": "delivery_settings"})
+        MAX_DISTANCE_METERS = 100  # الافتراضي 100 متر
+        if settings and settings.get("values", {}).get("geofencing_max_distance_meters"):
+            MAX_DISTANCE_METERS = settings["values"]["geofencing_max_distance_meters"]
+        
+        # جلب موقع العميل من الطلب
+        customer_lat = order.get("latitude") or order.get("delivery_latitude")
+        customer_lon = order.get("longitude") or order.get("delivery_longitude")
+        
+        # أو من delivery_address
+        if not customer_lat and order.get("delivery_address"):
+            addr = order["delivery_address"]
+            if isinstance(addr, dict):
+                customer_lat = addr.get("latitude") or addr.get("lat")
+                customer_lon = addr.get("longitude") or addr.get("lng")
+        
+        # 🧪 تجاوز فحص المسافة للحساب التجريبي
+        if user.get("phone") == "0999888777":
+            print(f"🧪 حساب تجريبي - تجاوز فحص المسافة للسائق {user.get('name')}")
+        elif customer_lat and customer_lon:
+            # حساب المسافة بين السائق والعميل (Haversine formula)
+            import math
+            R = 6371000  # نصف قطر الأرض بالمتر
+            
+            lat1_rad = math.radians(latitude)
+            lat2_rad = math.radians(customer_lat)
+            delta_lat = math.radians(customer_lat - latitude)
+            delta_lon = math.radians(customer_lon - longitude)
+            
+            a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            distance_meters = R * c
+            
+            if distance_meters > MAX_DISTANCE_METERS:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"أنت بعيد عن موقع العميل! المسافة {int(distance_meters)} متر (الحد المسموح {MAX_DISTANCE_METERS} متر)"
+                )
+        else:
+            print(f"⚠️ العميل ليس له موقع GPS - تخطي فحص المسافة للطلب {order_id}")
+    
     now = datetime.now(timezone.utc).isoformat()
+    
+    update_data = {
+        "driver_arrived_at_customer": now,
+        "delivery_status": "driver_at_customer"
+    }
+    
+    # حفظ موقع وصول السائق إذا تم إرساله
+    if latitude is not None and longitude is not None:
+        update_data["driver_customer_arrival_location"] = {
+            "latitude": latitude,
+            "longitude": longitude
+        }
     
     await db.orders.update_one(
         {"id": order_id},
         {
-            "$set": {
-                "driver_arrived_at_customer": now,
-                "delivery_status": "driver_at_customer"
-            },
+            "$set": update_data,
             "$push": {
                 "tracking_history": {
                     "status": "driver_arrived_at_customer",

@@ -405,47 +405,95 @@ const RouteProgressBar = ({
       return;
     }
     
-    // تسجيل وصول السائق للعميل في قاعدة البيانات
-    try {
-      const endpoint = isFood 
-        ? `${API}/api/food/orders/delivery/${order.id}/arrived-customer`
-        : `${API}/api/orders/${order.id}/delivery/arrived-customer`;
-      
-      const response = await axios.post(endpoint, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      scrollBeforeModalRef.current = window.scrollY;
-      setShowDeliveryCodeModal({
-        ...station,
-        order: {
-          ...order,
-          driver_arrived_at_customer: response.data?.arrived_at || new Date().toISOString()
+    // طلبات الطعام: تستخدم فحص GPS مختلف (يتم معالجته في Backend)
+    if (isFood) {
+      try {
+        const endpoint = `${API}/api/food/orders/delivery/${order.id}/arrived-customer`;
+        const response = await axios.post(endpoint, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        scrollBeforeModalRef.current = window.scrollY;
+        setShowDeliveryCodeModal({
+          ...station,
+          order: {
+            ...order,
+            driver_arrived_at_customer: response.data?.arrived_at || new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        if (error.response?.data?.arrived_at) {
+          scrollBeforeModalRef.current = window.scrollY;
+          setShowDeliveryCodeModal({
+            ...station,
+            order: {
+              ...order,
+              driver_arrived_at_customer: error.response.data.arrived_at
+            }
+          });
+        } else {
+          toast({ 
+            title: "خطأ", 
+            description: error.response?.data?.detail || "حدث خطأ", 
+            variant: "destructive" 
+          });
         }
-      });
-    } catch (error) {
-      // إذا كان الوقت محفوظاً مسبقاً، استخدمه
-      if (error.response?.data?.arrived_at) {
-        scrollBeforeModalRef.current = window.scrollY;
-        setShowDeliveryCodeModal({
-          ...station,
-          order: {
-            ...order,
-            driver_arrived_at_customer: error.response.data.arrived_at
-          }
-        });
-      } else {
-        // افتح الـ modal على أي حال مع الوقت الحالي
-        scrollBeforeModalRef.current = window.scrollY;
-        setShowDeliveryCodeModal({
-          ...station,
-          order: {
-            ...order,
-            driver_arrived_at_customer: new Date().toISOString()
-          }
-        });
       }
+      return;
     }
+    
+    // طلبات المنتجات: فحص GPS أولاً
+    if (!navigator.geolocation) {
+      toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const endpoint = `${API}/api/orders/${order.id}/delivery/arrived-customer?latitude=${latitude}&longitude=${longitude}`;
+          
+          const response = await axios.post(endpoint, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          scrollBeforeModalRef.current = window.scrollY;
+          setShowDeliveryCodeModal({
+            ...station,
+            order: {
+              ...order,
+              driver_arrived_at_customer: response.data?.arrived_at || new Date().toISOString()
+            }
+          });
+        } catch (error) {
+          if (error.response?.data?.arrived_at) {
+            scrollBeforeModalRef.current = window.scrollY;
+            setShowDeliveryCodeModal({
+              ...station,
+              order: {
+                ...order,
+                driver_arrived_at_customer: error.response.data.arrived_at
+              }
+            });
+          } else {
+            toast({ 
+              title: "خطأ", 
+              description: error.response?.data?.detail || "حدث خطأ", 
+              variant: "destructive" 
+            });
+          }
+        }
+      },
+      (geoError) => {
+        toast({ 
+          title: "خطأ في تحديد الموقع", 
+          description: "يرجى السماح بالوصول للموقع من إعدادات المتصفح", 
+          variant: "destructive" 
+        });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   };
 
   // التحقق من كود الاستلام

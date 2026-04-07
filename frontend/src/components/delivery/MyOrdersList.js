@@ -169,39 +169,62 @@ const MyOrdersList = ({
         return;
       }
       
-      // تسجيل الوصول في قاعدة البيانات
+      // فحص دعم GPS
+      if (!navigator.geolocation) {
+        toast({ title: "خطأ", description: "المتصفح لا يدعم تحديد الموقع", variant: "destructive" });
+        return;
+      }
+      
+      // تسجيل الوصول مع فحص المسافة GPS
       setCheckingLocationFor(order.id);
-      try {
-        const response = await axios.post(`${API}/api/orders/${order.id}/delivery/arrived`, {}, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        setCheckingLocationFor(null);
-        toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
-        
-        const updatedOrder = {
-          ...order,
-          driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
-        };
-        openPickupModal(updatedOrder);
-        
-      } catch (error) {
-        setCheckingLocationFor(null);
-        // إذا كان الوقت محفوظاً مسبقاً، استخدمه
-        if (error.response?.data?.arrived_at) {
-          const updatedOrder = {
-            ...order,
-            driver_arrived_at: error.response.data.arrived_at
-          };
-          openPickupModal(updatedOrder);
-        } else {
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await axios.post(
+              `${API}/api/orders/${order.id}/delivery/arrived?latitude=${latitude}&longitude=${longitude}`, 
+              {}, 
+              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+            
+            setCheckingLocationFor(null);
+            toast({ title: "✅ تم!", description: "تم تسجيل وصولك للمتجر", duration: 2000 });
+            
+            const updatedOrder = {
+              ...order,
+              driver_arrived_at: response.data?.arrived_at || new Date().toISOString()
+            };
+            openPickupModal(updatedOrder);
+            
+          } catch (error) {
+            setCheckingLocationFor(null);
+            // إذا كان الوقت محفوظاً مسبقاً، استخدمه
+            if (error.response?.data?.arrived_at) {
+              const updatedOrder = {
+                ...order,
+                driver_arrived_at: error.response.data.arrived_at
+              };
+              openPickupModal(updatedOrder);
+            } else {
+              toast({ 
+                title: "خطأ", 
+                description: error.response?.data?.detail || "حدث خطأ", 
+                variant: "destructive" 
+              });
+            }
+          }
+        },
+        (geoError) => {
+          setCheckingLocationFor(null);
           toast({ 
-            title: "خطأ", 
-            description: error.response?.data?.detail || "حدث خطأ", 
+            title: "خطأ في تحديد الموقع", 
+            description: "يرجى السماح بالوصول للموقع من إعدادات المتصفح", 
             variant: "destructive" 
           });
-        }
-      }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
       return;
     }
     
