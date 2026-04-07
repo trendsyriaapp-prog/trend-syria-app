@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Trash2, Star, Eye, EyeOff, 
-  Save, ToggleLeft, ToggleRight, Sparkles, AlertCircle
+  Save, ToggleLeft, ToggleRight, Sparkles, AlertCircle, AlertTriangle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -11,9 +11,11 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 const TickerMessagesTab = () => {
   const [messages, setMessages] = useState([]);
+  const [originalMessages, setOriginalMessages] = useState([]);
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [newMessage, setNewMessage] = useState({ text: '', highlight: false });
   const { toast } = useToast();
 
@@ -21,10 +23,34 @@ const TickerMessagesTab = () => {
     fetchMessages();
   }, []);
 
+  // تتبع التغييرات غير المحفوظة
+  useEffect(() => {
+    if (originalMessages.length > 0) {
+      const hasChanges = JSON.stringify(messages) !== JSON.stringify(originalMessages);
+      setHasUnsavedChanges(hasChanges);
+    }
+  }, [messages, originalMessages]);
+
+  // تحذير عند محاولة الخروج من الصفحة
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const fetchMessages = async () => {
     try {
       const res = await axios.get(`${API}/api/settings/ticker-messages/admin`);
-      setMessages(res.data.messages || []);
+      const fetchedMessages = res.data.messages || [];
+      setMessages(fetchedMessages);
+      setOriginalMessages(JSON.parse(JSON.stringify(fetchedMessages)));
       setIsEnabled(res.data.is_enabled !== false);
     } catch (error) {
       console.error('Error fetching ticker messages:', error);
@@ -40,8 +66,10 @@ const TickerMessagesTab = () => {
         messages,
         is_enabled: isEnabled
       });
+      setOriginalMessages(JSON.parse(JSON.stringify(messages)));
+      setHasUnsavedChanges(false);
       toast({
-        title: "تم الحفظ",
+        title: "تم الحفظ ✓",
         description: "تم حفظ رسائل الشريط بنجاح"
       });
     } catch (error) {
@@ -145,6 +173,16 @@ const TickerMessagesTab = () => {
 
   return (
     <div className="space-y-3" data-testid="ticker-messages-tab">
+      {/* تنبيه التغييرات غير المحفوظة */}
+      {hasUnsavedChanges && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+          <AlertTriangle size={20} className="text-yellow-600 flex-shrink-0" />
+          <span className="text-yellow-800 text-sm font-medium">
+            لديك تغييرات غير محفوظة - اضغط "حفظ التغييرات" لحفظها
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -307,8 +345,12 @@ const TickerMessagesTab = () => {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          disabled={saving}
-          className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg font-bold hover:bg-[#E65000] transition-colors flex items-center gap-2 disabled:opacity-50"
+          disabled={saving || !hasUnsavedChanges}
+          className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${
+            hasUnsavedChanges 
+              ? 'bg-[#FF6B00] text-white hover:bg-[#E65000] animate-pulse' 
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+          } disabled:opacity-50 disabled:animate-none`}
           data-testid="save-ticker-btn"
         >
           {saving ? (
@@ -316,7 +358,7 @@ const TickerMessagesTab = () => {
           ) : (
             <Save size={20} />
           )}
-          حفظ التغييرات
+          {hasUnsavedChanges ? 'حفظ التغييرات' : 'لا توجد تغييرات'}
         </button>
       </div>
 
