@@ -7,7 +7,7 @@ import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
-  Car, Bike, Check, MapPin
+  Car, Bike, Check, MapPin, X
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -393,11 +393,83 @@ const DeliveryDocuments = () => {
             </div>
           </div>
 
+          {/* قائمة حالة الوثائق */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <p className="text-sm font-bold text-gray-700 mb-3">📋 حالة الوثائق</p>
+            <div className="space-y-2">
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.national_id ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">رقم الهوية</span>
+                {docs.national_id ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مُدخل</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.personal_photo ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">صورة شخصية</span>
+                {docs.personal_photo ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.id_photo ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">صورة الهوية</span>
+                {docs.id_photo ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.vehicle_type ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">نوع المركبة</span>
+                {docs.vehicle_type ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> محدد</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
+              {requiresLicense && (
+                <div className={`flex items-center justify-between p-2 rounded-lg ${docs.motorcycle_license ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <span className="text-sm">رخصة القيادة</span>
+                  {docs.motorcycle_license ? (
+                    <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
+                  ) : (
+                    <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                  )}
+                </div>
+              )}
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.vehicle_photo ? 'bg-green-50' : 'bg-gray-50'}`}>
+                <span className="text-sm">صورة المركبة</span>
+                {docs.vehicle_photo ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
+                ) : (
+                  <span className="text-gray-500 text-sm">اختياري</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* تحذير إذا كانت الوثائق ناقصة */}
+          {(!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license)) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">يجب إكمال جميع الحقول المطلوبة</p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    لن تتمكن من إرسال الطلب حتى ترفع جميع الوثائق المطلوبة
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* زر الإرسال */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50"
+            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license)}
+            className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'جاري الإرسال...' : 'إرسال الوثائق'}
           </button>

@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/DeliveryTab.js
 import { useState } from 'react';
-import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin } from 'lucide-react';
+import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import RejectModal from './RejectModal';
 import ImageLightbox from '../ui/ImageLightbox';
 
@@ -19,6 +19,35 @@ const DeliveryTab = ({
   const [showMenu, setShowMenu] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, driver: null });
+
+  // دالة لحساب حالة الوثائق
+  const getDocumentsStatus = (doc) => {
+    const requiredDocs = [
+      { key: 'personal_photo', label: 'صورة شخصية', required: true },
+      { key: 'id_photo', label: 'صورة الهوية', required: true },
+      { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
+    ];
+    const optionalDocs = [
+      { key: 'vehicle_photo', label: 'صورة المركبة', required: false },
+    ];
+
+    const allDocs = [...requiredDocs, ...optionalDocs];
+    const uploadedCount = allDocs.filter(d => doc[d.key]).length;
+    const requiredCount = requiredDocs.length;
+    const requiredUploaded = requiredDocs.filter(d => doc[d.key]).length;
+    const isComplete = requiredUploaded === requiredCount;
+    const missingRequired = requiredDocs.filter(d => !doc[d.key]).map(d => d.label);
+
+    return {
+      uploadedCount,
+      totalCount: allDocs.length,
+      requiredCount,
+      requiredUploaded,
+      isComplete,
+      missingRequired,
+      docs: allDocs.map(d => ({ ...d, uploaded: !!doc[d.key] }))
+    };
+  };
 
   const handleRejectClick = (driverId, driverName) => {
     setRejectModal({ isOpen: true, driverId, driverName });
@@ -65,14 +94,17 @@ const DeliveryTab = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {pendingDelivery.map((doc) => (
-              <div key={doc.id} className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-sm">
+            {pendingDelivery.map((doc) => {
+              const docStatus = getDocumentsStatus(doc);
+              
+              return (
+              <div key={doc.id} className={`bg-white rounded-xl border-2 ${docStatus.isComplete ? 'border-green-200' : 'border-yellow-200'} overflow-hidden shadow-sm`}>
                 {/* Header with driver info */}
-                <div className="bg-gradient-to-l from-yellow-50 to-orange-50 p-4 border-b border-yellow-100">
+                <div className={`${docStatus.isComplete ? 'bg-gradient-to-l from-green-50 to-emerald-50 border-green-100' : 'bg-gradient-to-l from-yellow-50 to-orange-50 border-yellow-100'} p-4 border-b`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <Truck size={24} className="text-yellow-600" />
+                      <div className={`w-12 h-12 ${docStatus.isComplete ? 'bg-green-100' : 'bg-yellow-100'} rounded-full flex items-center justify-center`}>
+                        <Truck size={24} className={docStatus.isComplete ? 'text-green-600' : 'text-yellow-600'} />
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900">{doc.driver_name || doc.driver?.full_name || doc.driver?.name}</h3>
@@ -83,7 +115,7 @@ const DeliveryTab = ({
                             {doc.driver_city || doc.driver?.city}
                           </span>
                           <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                            هوية: {doc.national_id}
+                            هوية: {doc.national_id || 'غير محدد'}
                           </span>
                         </div>
                       </div>
@@ -91,8 +123,14 @@ const DeliveryTab = ({
                     <div className="flex gap-2">
                       <button
                         onClick={() => onApprove(doc.driver_id || doc.delivery_id)}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 text-sm font-medium"
+                        disabled={!docStatus.isComplete}
+                        className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
+                          docStatus.isComplete 
+                            ? 'bg-green-500 hover:bg-green-600 cursor-pointer' 
+                            : 'bg-gray-400 cursor-not-allowed'
+                        }`}
                         data-testid={`approve-driver-${doc.driver_id || doc.delivery_id}`}
+                        title={!docStatus.isComplete ? `الوثائق غير مكتملة: ${docStatus.missingRequired.join('، ')}` : 'قبول السائق'}
                       >
                         <Check size={18} />
                         قبول
@@ -109,6 +147,35 @@ const DeliveryTab = ({
                   </div>
                 </div>
 
+                {/* Documents Status Alert */}
+                {!docStatus.isComplete && (
+                  <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800">
+                          ⚠️ الوثائق غير مكتملة ({docStatus.requiredUploaded} من {docStatus.requiredCount} مطلوب)
+                        </p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          ناقص: {docStatus.missingRequired.join('، ')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents Status - Complete */}
+                {docStatus.isComplete && (
+                  <div className="bg-green-50 border-b border-green-200 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={18} className="text-green-600 flex-shrink-0" />
+                      <p className="text-sm font-medium text-green-800">
+                        ✅ جميع الوثائق المطلوبة مكتملة ({docStatus.uploadedCount} من {docStatus.totalCount})
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Documents Section */}
                 <div className="p-4">
                   <p className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
@@ -117,8 +184,12 @@ const DeliveryTab = ({
                   </p>
                   <div className="grid grid-cols-3 gap-3">
                     {/* صورة شخصية */}
-                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">صورة شخصية</p>
+                    <div className={`rounded-xl p-2 border-2 ${doc.personal_photo ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium flex items-center justify-center gap-1">
+                        {doc.personal_photo ? <CheckCircle size={12} className="text-green-500" /> : <XCircle size={12} className="text-red-500" />}
+                        صورة شخصية
+                        <span className="text-[10px] text-red-500">*</span>
+                      </p>
                       {doc.personal_photo ? (
                         <img 
                           src={doc.personal_photo} 
@@ -127,15 +198,20 @@ const DeliveryTab = ({
                           onClick={() => setLightboxImage({ src: doc.personal_photo, alt: 'صورة شخصية' })}
                         />
                       ) : (
-                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        <div className="w-full h-28 bg-red-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-red-300">
+                          <XCircle size={24} className="text-red-400 mb-1" />
+                          <span className="text-red-500 text-xs font-medium">غير مرفوع</span>
                         </div>
                       )}
                     </div>
 
                     {/* صورة الهوية */}
-                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">صورة الهوية</p>
+                    <div className={`rounded-xl p-2 border-2 ${doc.id_photo ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium flex items-center justify-center gap-1">
+                        {doc.id_photo ? <CheckCircle size={12} className="text-green-500" /> : <XCircle size={12} className="text-red-500" />}
+                        صورة الهوية
+                        <span className="text-[10px] text-red-500">*</span>
+                      </p>
                       {doc.id_photo ? (
                         <img 
                           src={doc.id_photo} 
@@ -144,15 +220,20 @@ const DeliveryTab = ({
                           onClick={() => setLightboxImage({ src: doc.id_photo, alt: 'صورة الهوية' })}
                         />
                       ) : (
-                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        <div className="w-full h-28 bg-red-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-red-300">
+                          <XCircle size={24} className="text-red-400 mb-1" />
+                          <span className="text-red-500 text-xs font-medium">غير مرفوع</span>
                         </div>
                       )}
                     </div>
 
                     {/* رخصة القيادة */}
-                    <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
-                      <p className="text-xs text-gray-600 mb-2 text-center font-medium">رخصة القيادة</p>
+                    <div className={`rounded-xl p-2 border-2 ${doc.motorcycle_license ? 'bg-green-50 border-green-200' : (doc.requires_license !== false ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200')}`}>
+                      <p className="text-xs text-gray-600 mb-2 text-center font-medium flex items-center justify-center gap-1">
+                        {doc.motorcycle_license ? <CheckCircle size={12} className="text-green-500" /> : (doc.requires_license !== false ? <XCircle size={12} className="text-red-500" /> : null)}
+                        رخصة القيادة
+                        {doc.requires_license !== false && <span className="text-[10px] text-red-500">*</span>}
+                      </p>
                       {doc.motorcycle_license ? (
                         <img 
                           src={doc.motorcycle_license} 
@@ -161,15 +242,23 @@ const DeliveryTab = ({
                           onClick={() => setLightboxImage({ src: doc.motorcycle_license, alt: 'رخصة القيادة' })}
                         />
                       ) : (
-                        <div className="w-full h-28 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">غير متوفر</span>
+                        <div className={`w-full h-28 rounded-lg flex flex-col items-center justify-center border-2 border-dashed ${doc.requires_license !== false ? 'bg-red-100 border-red-300' : 'bg-gray-100 border-gray-300'}`}>
+                          {doc.requires_license !== false ? (
+                            <>
+                              <XCircle size={24} className="text-red-400 mb-1" />
+                              <span className="text-red-500 text-xs font-medium">غير مرفوع</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-400 text-xs">غير مطلوب</span>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
