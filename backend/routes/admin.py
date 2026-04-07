@@ -3483,6 +3483,44 @@ async def admin_delete_product(
 
 
 
+# ============== إدارة أطباق الطعام ==============
+
+@router.get("/food-items/all")
+async def get_all_food_items(user: dict = Depends(get_current_user)):
+    """جلب جميع أصناف الطعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    items = await db.food_items.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # إضافة معلومات المتجر
+    for item in items:
+        store = await db.food_stores.find_one(
+            {"id": item.get("store_id")},
+            {"_id": 0, "name": 1, "owner_name": 1, "store_type": 1}
+        )
+        if store:
+            item["store_name"] = store.get("name", "")
+            item["owner_name"] = store.get("owner_name", "")
+            item["store_type"] = store.get("store_type", "")
+    
+    return items
+
+@router.delete("/food-items/{item_id}")
+async def delete_food_item(item_id: str, user: dict = Depends(get_current_user)):
+    """حذف صنف طعام"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.food_items.delete_one({"id": item_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الصنف غير موجود")
+    
+    return {"message": "تم حذف الصنف بنجاح"}
+
 # ============== إدارة أطباق الطعام المعلقة ==============
 
 @router.get("/food-items/pending")
