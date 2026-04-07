@@ -26,26 +26,13 @@ const AllWithdrawRequestsTab = () => {
   const fetchWithdrawRequests = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/api/admin/withdraw-requests/all`);
+      // استخدام الـ API الصحيح الموجود
+      const response = await axios.get(`${API}/api/payment/admin/withdrawals`);
       setWithdrawRequests(response.data || []);
     } catch (error) {
-      // fallback: fetch from different endpoints
-      try {
-        const [sellersRes, foodRes, deliveryRes] = await Promise.all([
-          axios.get(`${API}/api/admin/withdraw-requests?user_type=seller`).catch(() => ({ data: [] })),
-          axios.get(`${API}/api/admin/withdraw-requests?user_type=food_seller`).catch(() => ({ data: [] })),
-          axios.get(`${API}/api/admin/withdraw-requests?user_type=delivery`).catch(() => ({ data: [] }))
-        ]);
-        
-        const all = [
-          ...(sellersRes.data || []).map(r => ({ ...r, request_type: 'seller' })),
-          ...(foodRes.data || []).map(r => ({ ...r, request_type: 'food_seller' })),
-          ...(deliveryRes.data || []).map(r => ({ ...r, request_type: 'delivery' }))
-        ];
-        setWithdrawRequests(all);
-      } catch (err) {
-        toast({ title: "خطأ", description: "فشل في جلب طلبات السحب", variant: "destructive" });
-      }
+      console.error('Error fetching withdrawals:', error);
+      toast({ title: "خطأ", description: "فشل في جلب طلبات السحب", variant: "destructive" });
+      setWithdrawRequests([]);
     } finally {
       setLoading(false);
     }
@@ -54,7 +41,7 @@ const AllWithdrawRequestsTab = () => {
   const handleApprove = async (requestId) => {
     setActionLoading(requestId);
     try {
-      await axios.post(`${API}/api/admin/withdraw-requests/${requestId}/approve`);
+      await axios.post(`${API}/api/payment/admin/withdrawals/${requestId}/approve`);
       toast({ title: "تم", description: "تم الموافقة على طلب السحب" });
       fetchWithdrawRequests();
     } catch (error) {
@@ -67,7 +54,7 @@ const AllWithdrawRequestsTab = () => {
   const handleReject = async (requestId) => {
     setActionLoading(requestId);
     try {
-      await axios.post(`${API}/api/admin/withdraw-requests/${requestId}/reject`);
+      await axios.post(`${API}/api/payment/admin/withdrawals/${requestId}/reject`);
       toast({ title: "تم", description: "تم رفض طلب السحب" });
       fetchWithdrawRequests();
     } catch (error) {
