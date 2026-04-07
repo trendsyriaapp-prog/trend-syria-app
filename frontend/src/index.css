@@ -10,8 +10,8 @@
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
-    /* Fallback for Android devices that don't support env() */
-    --status-bar-height: 24px;
+    /* Android Status Bar height - 24dp is standard, 28dp for notched phones */
+    --android-status-bar: 28px;
 }
 
 * {
@@ -30,21 +30,25 @@ body {
     min-height: 100vh;
 }
 
-/* Capacitor Android safe area fix */
-@supports (padding-top: env(safe-area-inset-top)) {
-    .capacitor-android body {
-        padding-top: env(safe-area-inset-top, 0px);
-    }
+/* 
+ * حل مشكلة Status Bar على Android:
+ * بدلاً من padding على body (لا يعمل مع sticky elements)،
+ * نضيف top للعناصر sticky/fixed
+ */
+
+/* للتطبيق على Android */
+.capacitor-android .pt-safe-android {
+    padding-top: var(--android-status-bar) !important;
 }
 
-/* Fallback for Android when env() doesn't work */
-.capacitor-android body {
-    padding-top: var(--status-bar-height, 24px);
+/* للتطبيق على iOS */
+.capacitor-ios .pt-safe-android {
+    padding-top: env(safe-area-inset-top, 0px) !important;
 }
 
-/* iOS uses env() properly */
-.capacitor-ios body {
-    padding-top: env(safe-area-inset-top, 0px);
+/* للموقع - لا شيء */
+.capacitor-web .pt-safe-android {
+    padding-top: 0 !important;
 }
 
 /* Premium Card Styles */
