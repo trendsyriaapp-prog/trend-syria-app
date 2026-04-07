@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -10,6 +10,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  
+  // flag لمنع fetchUser بعد login مباشرة (لأن login يُعيد بيانات المستخدم)
+  const skipFetchUserRef = useRef(false);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
@@ -26,7 +29,8 @@ export const AuthProvider = ({ children }) => {
       (response) => response,
       (error) => {
         // إذا كان الخطأ 401 (رمز غير صالح أو منتهي الصلاحية)
-        if (error.response?.status === 401 && token) {
+        // تجاهل خطأ 401 أثناء عملية تسجيل الدخول
+        if (error.response?.status === 401 && token && !skipFetchUserRef.current) {
           console.log('Token expired or invalid, logging out...');
           logout();
           // توجيه لصفحة الدخول
@@ -44,7 +48,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
+      
+      // إذا تم تعيين skipFetchUser، لا نستدعي fetchUser (لأن login أعاد البيانات)
+      if (skipFetchUserRef.current) {
+        skipFetchUserRef.current = false;
+        setLoading(false);
+      } else {
+        fetchUser();
+      }
+      
       // التحقق من حالة تغيير كلمة المرور
       const savedForceChange = localStorage.getItem('forcePasswordChange');
       if (savedForceChange === 'true') {
@@ -60,6 +72,7 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.get(`${API}/api/auth/me`);
       setUser(res.data);
     } catch (error) {
+      console.error('fetchUser error:', error);
       logout();
     } finally {
       setLoading(false);
@@ -69,10 +82,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (phone, password) => {
     const res = await axios.post(`${API}/api/auth/login`, { phone, password });
     const newToken = res.data.token;
+    
+    // منع fetchUser من الاستدعاء لأننا سنعيّن البيانات مباشرة
+    skipFetchUserRef.current = true;
+    
     localStorage.setItem('token', newToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-    setToken(newToken);
-    setUser(res.data.user);
+    setUser(res.data.user);  // تعيين المستخدم أولاً
+    setToken(newToken);       // ثم تعيين التوكن
+    setLoading(false);
     
     // التحقق من إجبار تغيير كلمة المرور
     if (res.data.force_password_change) {
@@ -86,10 +104,15 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     const res = await axios.post(`${API}/api/auth/register`, data);
     const newToken = res.data.token;
+    
+    // منع fetchUser من الاستدعاء لأننا سنعيّن البيانات مباشرة
+    skipFetchUserRef.current = true;
+    
     localStorage.setItem('token', newToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-    setToken(newToken);
-    setUser(res.data.user);
+    setUser(res.data.user);  // تعيين المستخدم أولاً
+    setToken(newToken);       // ثم تعيين التوكن
+    setLoading(false);
     return res.data;
   };
 
