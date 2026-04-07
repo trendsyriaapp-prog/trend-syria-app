@@ -342,7 +342,7 @@ const DailyDealsTab = () => {
               >
                 <div className="flex items-start gap-3">
                   <img 
-                    src={request.product_image || 'https://via.placeholder.com/60'} 
+                    src={request.product_image || '/placeholder.svg'} 
                     alt={request.product_name}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
@@ -660,7 +660,7 @@ const DailyDealsTab = () => {
                               className="w-4 h-4 text-orange-500 rounded"
                             />
                             <img
-                              src={product.images?.[0] || 'https://via.placeholder.com/40'}
+                              src={product.images?.[0] || '/placeholder.svg'}
                               alt={product.name}
                               className="w-12 h-12 rounded-lg object-cover"
                             />
@@ -692,7 +692,7 @@ const DailyDealsTab = () => {
                       return product ? (
                         <div key={id} className="flex items-center gap-2 bg-orange-50 rounded-lg px-2 py-1">
                           <img
-                            src={product.images?.[0] || 'https://via.placeholder.com/24'}
+                            src={product.images?.[0] || '/placeholder.svg'}
                             alt={product.name}
                             className="w-6 h-6 rounded object-cover"
                           />

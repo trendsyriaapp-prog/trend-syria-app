@@ -162,7 +162,7 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
               )}
 
               <img 
-                src={product.images?.[0] || 'https://via.placeholder.com/150'} 
+                src={product.images?.[0] || '/placeholder.svg'} 
                 alt={product.name}
                 className="w-full h-24 object-cover cursor-pointer"
                 onClick={() => setSelectedProduct(product)}
@@ -204,7 +204,7 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
             <div className="p-3 space-y-2">
               {/* الصورة */}
               <img 
-                src={selectedProduct.images?.[0] || 'https://via.placeholder.com/300'} 
+                src={selectedProduct.images?.[0] || '/placeholder.svg'} 
                 alt={selectedProduct.name}
                 className="w-full h-32 object-cover rounded-lg"
               />

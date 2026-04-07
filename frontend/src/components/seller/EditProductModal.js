@@ -34,7 +34,7 @@ const EditProductModal = ({
         {/* Product Preview */}
         <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-lg">
           <img
-            src={product.images?.[0] || 'https://via.placeholder.com/60'}
+            src={product.images?.[0] || '/placeholder.svg'}
             alt={product.name}
             className="w-12 h-12 object-cover rounded"
           />

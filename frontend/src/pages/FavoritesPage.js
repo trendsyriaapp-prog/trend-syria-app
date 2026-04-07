@@ -131,7 +131,7 @@ const FavoritesPage = () => {
                 <Link to={`/products/${product.id}`}>
                   <div className="aspect-square bg-gray-100">
                     <img
-                      src={product.images?.[0] || 'https://via.placeholder.com/200'}
+                      src={product.images?.[0] || '/placeholder.svg'}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />

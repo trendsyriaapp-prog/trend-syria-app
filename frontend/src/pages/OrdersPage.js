@@ -453,7 +453,7 @@ const OrdersPage = () => {
                           {order.items.slice(0, 4).map((item, i) => (
                             <div key={i} className="flex-shrink-0 relative">
                               <img
-                                src={item.image || item.product_image || 'https://via.placeholder.com/60'}
+                                src={item.image || item.product_image || '/placeholder.svg'}
                                 alt={item.product_name}
                                 className="w-14 h-14 rounded-lg object-cover border border-gray-200"
                               />
@@ -471,7 +471,7 @@ const OrdersPage = () => {
                           {order.items.slice(0, 4).map((item, i) => (
                             <div key={i} className="flex-shrink-0 relative">
                               <img
-                                src={item.image || item.product_image || 'https://via.placeholder.com/60'}
+                                src={item.image || item.product_image || '/placeholder.svg'}
                                 alt={item.product_name}
                                 className="w-14 h-14 rounded-lg object-cover border border-gray-200"
                               />
@@ -561,7 +561,7 @@ const OrdersPage = () => {
                           {order.items.map((item, i) => (
                             <div key={i} className="flex items-center gap-3 bg-white p-2 rounded-lg">
                               <img
-                                src={item.image || 'https://via.placeholder.com/40'}
+                                src={item.image || '/placeholder.svg'}
                                 alt={item.product_name}
                                 className="w-12 h-12 rounded-lg object-cover"
                               />

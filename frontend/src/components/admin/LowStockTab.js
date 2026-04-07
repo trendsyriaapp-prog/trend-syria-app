@@ -98,7 +98,7 @@ const LowStockTab = () => {
             <div key={product.id} className="bg-white rounded-lg border border-gray-200 p-3">
               <div className="flex items-start gap-3">
                 <img
-                  src={product.images?.[0] || 'https://via.placeholder.com/48'}
+                  src={product.images?.[0] || '/placeholder.svg'}
                   alt={product.name}
                   className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
                 />

@@ -20,6 +20,20 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Recent Bug Fixes (December 2025)
 
+### 2026-04-07: Comprehensive Deep-Dive Bug Fixes ✅
+**Problem 1:** Missing `import logging` causing 500 errors on exception handling
+**Fix:** Added `import logging` to `auth.py`, `orders.py`, `food_orders.py`
+
+**Problem 2:** 404 errors on placeholder images (via.placeholder.com blocked by ORB)
+**Fix:** 
+- Created `/placeholder.svg` in public folder
+- Updated 23 files to use `/placeholder.svg` instead of `via.placeholder.com`
+- Fixed `LazyImage.js` to properly fallback to `/placeholder.svg` on error
+
+**Files Fixed:**
+- Backend: `auth.py`, `orders.py`, `food_orders.py` (logging imports)
+- Frontend: `ProductCard.js`, `DailyDeal.js`, `AllFoodStoresPage.js`, `LazyImage.js`, `GiftModal.js`, `EditProductModal.js`, `StatDetailsModal.js`, `SellerAdsTab.js`, `SellerProductsGrid.js`, `SellerAdAnalytics.js`, `FeaturedProducts.js`, `RecommendedProducts.js`, `AdsTab.js`, `PendingProductsTab.js`, `ProductsTab.js`, `DailyDealsTab.js`, `LowStockTab.js`, `AnalyticsDashboard.js`, `CartPage.js`, `SellerPages.js`, `StorePage.js`, `FavoritesPage.js`, `ProductDetailPage.js`, `OrdersPage.js`
+
 ### 2025-12-07: Login State Persistence Fix ✅
 **Problem:** Login succeeds but UI shows user as logged out
 **Root Cause:** Race condition in AuthContext.js - `fetchUser()` called immediately after `setToken()` could fail and trigger `logout()`

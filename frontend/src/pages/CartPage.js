@@ -418,7 +418,7 @@ const CartPage = () => {
                         >
                           <Link to={`/products/${sellerItem.product_id}`} className="flex-shrink-0">
                             <img
-                              src={sellerItem.image || 'https://via.placeholder.com/100'}
+                              src={sellerItem.image || '/placeholder.svg'}
                               alt={sellerItem.name}
                               className="w-14 h-14 object-cover rounded-lg"
                             />
@@ -539,7 +539,7 @@ const CartPage = () => {
                   <div className="flex gap-2">
                     <Link to={`/products/${item.product_id}`} className="flex-shrink-0">
                       <img
-                        src={item.product?.images?.[0] || 'https://via.placeholder.com/100'}
+                        src={item.product?.images?.[0] || '/placeholder.svg'}
                         alt={item.product?.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />

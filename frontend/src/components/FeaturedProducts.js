@@ -151,7 +151,7 @@ const FeaturedProducts = () => {
                 {/* Image */}
                 <div className="aspect-square bg-gray-100 relative">
                   <img
-                    src={item.product.images?.[0] || 'https://via.placeholder.com/150'}
+                    src={item.product.images?.[0] || '/placeholder.svg'}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                     loading="lazy"

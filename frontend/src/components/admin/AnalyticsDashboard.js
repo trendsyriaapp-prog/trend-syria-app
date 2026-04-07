@@ -304,7 +304,7 @@ const AnalyticsDashboard = () => {
                   {index + 1}
                 </span>
                 <img 
-                  src={product.images?.[0] || 'https://via.placeholder.com/40'} 
+                  src={product.images?.[0] || '/placeholder.svg'} 
                   alt={product.name}
                   className="w-10 h-10 rounded-lg object-cover"
                 />

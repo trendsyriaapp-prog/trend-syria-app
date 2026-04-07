@@ -1073,7 +1073,7 @@ const ProductDetailPage = () => {
               onClick={() => { setGalleryIndex(currentImage); setShowFullGallery(true); }}
             >
               <img
-                src={product.images?.[currentImage] || 'https://via.placeholder.com/600'}
+                src={product.images?.[currentImage] || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-full object-contain select-none"
                 onContextMenu={(e) => e.preventDefault()}

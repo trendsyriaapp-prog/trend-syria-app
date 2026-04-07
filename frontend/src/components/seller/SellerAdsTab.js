@@ -216,7 +216,7 @@ const SellerAdsTab = ({ user, products, walletBalance = 0 }) => {
                 <div className="flex items-center gap-3 p-3">
                   {/* Product Image */}
                   <img
-                    src={ad.product_image || 'https://via.placeholder.com/60'}
+                    src={ad.product_image || '/placeholder.svg'}
                     alt={ad.product_name}
                     className="w-14 h-14 rounded-lg object-cover"
                   />

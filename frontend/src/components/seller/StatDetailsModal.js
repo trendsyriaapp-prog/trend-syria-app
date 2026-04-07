@@ -61,7 +61,7 @@ const StatDetailsModal = ({
                 products.map((product) => (
                   <div key={product.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                     <img
-                      src={product.images?.[0] || 'https://via.placeholder.com/50'}
+                      src={product.images?.[0] || '/placeholder.svg'}
                       alt={product.name}
                       className="w-12 h-12 object-cover rounded"
                     />
@@ -124,7 +124,7 @@ const StatDetailsModal = ({
               {products.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0)).slice(0, 5).map((product) => (
                 <div key={product.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                   <img
-                    src={product.images?.[0] || 'https://via.placeholder.com/40'}
+                    src={product.images?.[0] || '/placeholder.svg'}
                     alt={product.name}
                     className="w-10 h-10 object-cover rounded"
                   />

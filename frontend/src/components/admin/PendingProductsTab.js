@@ -39,7 +39,7 @@ const PendingProductsTab = ({ pendingProducts, onApprove, onReject }) => {
             <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="p-2 flex gap-2">
                 <img 
-                  src={product.images?.[0] || 'https://via.placeholder.com/100'} 
+                  src={product.images?.[0] || '/placeholder.svg'} 
                   alt={product.name}
                   className="w-14 h-14 object-cover rounded-lg"
                 />

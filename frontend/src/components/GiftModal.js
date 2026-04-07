@@ -171,7 +171,7 @@ const GiftModal = ({ isOpen, onClose, product }) => {
           <div className="p-4 border-b border-gray-100">
             <div className="flex gap-3">
               <img
-                src={product.images?.[0] || product.image || 'https://via.placeholder.com/80'}
+                src={product.images?.[0] || product.image || '/placeholder.svg'}
                 alt={product.name}
                 className="w-16 h-16 rounded-xl object-cover"
               />

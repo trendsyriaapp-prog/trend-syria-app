@@ -190,7 +190,7 @@ const SellerAdAnalytics = () => {
           </div>
           <div className="flex items-center gap-3">
             <img 
-              src={best_ad.product_image || 'https://via.placeholder.com/50'} 
+              src={best_ad.product_image || '/placeholder.svg'} 
               alt={best_ad.product_name}
               className="w-12 h-12 rounded-lg object-cover"
             />

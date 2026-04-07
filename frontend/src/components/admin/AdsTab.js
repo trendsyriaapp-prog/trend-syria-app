@@ -273,7 +273,7 @@ const AdsTab = ({ user }) => {
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <img
-                          src={ad.product_image || 'https://via.placeholder.com/40'}
+                          src={ad.product_image || '/placeholder.svg'}
                           alt={ad.product_name}
                           className="w-10 h-10 rounded-lg object-cover"
                         />

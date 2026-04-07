@@ -77,7 +77,7 @@ const ProductCard = memo(({ product, sectionColor = 'purple', deliveryBadge, bad
       >
         <div className="relative aspect-square">
           <img
-            src={product.images?.[0] || product.image || 'https://via.placeholder.com/200'}
+            src={product.images?.[0] || product.image || '/placeholder.svg'}
             alt={product.name}
             className="w-full h-full object-cover"
           />

@@ -35,7 +35,7 @@ const SellerProductsGrid = ({ products, onEdit, onDelete, onDuplicate }) => {
             </div>
           )}
           <img
-            src={product.images?.[0] || 'https://via.placeholder.com/200'}
+            src={product.images?.[0] || '/placeholder.svg'}
             alt={product.name}
             className={`w-full aspect-square object-cover ${product.approval_status !== 'approved' ? 'opacity-60' : ''}`}
           />

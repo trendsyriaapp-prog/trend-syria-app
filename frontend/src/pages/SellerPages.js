@@ -79,7 +79,7 @@ const FoodItemsGrid = ({ items, onEdit, onDelete, onChangeAvailability }) => {
           <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden relative">
             <div className="relative">
               <img 
-                src={item.image || 'https://via.placeholder.com/150?text=طبق'} 
+                src={item.image || '/placeholder.svg'} 
                 alt={item.name} 
                 className={`w-full h-24 object-cover ${currentStatus !== 'available' ? 'opacity-60 grayscale' : ''}`}
               />
