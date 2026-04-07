@@ -450,17 +450,9 @@ const HomePage = () => {
     }
   };
 
-  // Seed data on first load
+  // Load data on first load
   useEffect(() => {
-    const seedData = async () => {
-      try {
-        await axios.post(`${API}/api/seed`);
-        fetchData();
-      } catch (error) {
-        // Ignore if already seeded
-      }
-    };
-    seedData();
+    fetchData();
   }, []);
 
   return (
