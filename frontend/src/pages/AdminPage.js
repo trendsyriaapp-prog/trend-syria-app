@@ -56,6 +56,7 @@ import FeaturedStoresTab from '../components/admin/FeaturedStoresTab';
 import RecordedCallsTab from '../components/admin/RecordedCallsTab';
 import HomepageSectionsTab from '../components/admin/HomepageSectionsTab';
 import PendingFoodItemsTab from '../components/admin/PendingFoodItemsTab';
+import FoodItemsTab from '../components/admin/FoodItemsTab';
 import PaymentSettingsTab from '../components/admin/PaymentSettingsTab';
 import PlatformWalletTab from '../components/admin/PlatformWalletTab';
 import FeedbackTab from '../components/admin/FeedbackTab';
@@ -92,6 +93,7 @@ const AdminDashboardPage = () => {
   const [allDelivery, setAllDelivery] = useState([]);
   const [pendingFoodStores, setPendingFoodStores] = useState([]);
   const [pendingFoodItems, setPendingFoodItems] = useState([]);
+  const [allFoodItems, setAllFoodItems] = useState([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [commissionsReport, setCommissionsReport] = useState(null);
   const [commissionRates, setCommissionRates] = useState(null);
@@ -142,7 +144,8 @@ const AdminDashboardPage = () => {
         axios.get(`${API}/api/admin/delivery/all`),
         axios.get(`${API}/api/admin/food/stores?status=pending`),
         axios.get(`${API}/api/payment/admin/withdrawals?status=pending`),
-        axios.get(`${API}/api/admin/food-items/pending`)
+        axios.get(`${API}/api/admin/food-items/pending`),
+        axios.get(`${API}/api/admin/food-items/all`)
       ];
       
       if (user?.user_type === 'admin') {
@@ -163,9 +166,10 @@ const AdminDashboardPage = () => {
       setPendingFoodStores(responses[10]?.data || []);
       setPendingWithdrawals(responses[11]?.data || []);
       setPendingFoodItems(responses[12]?.data || []);
+      setAllFoodItems(responses[13]?.data || []);
       
-      if (user?.user_type === 'admin' && responses[13]) {
-        setSubAdmins(responses[13].data);
+      if (user?.user_type === 'admin' && responses[14]) {
+        setSubAdmins(responses[14].data);
       }
       
       // Fetch commissions data
@@ -430,6 +434,7 @@ const AdminDashboardPage = () => {
     'pending-delivery': 'موظفي التوصيل المعلقين',
     'pending-food-stores': 'متاجر الطعام المعلقة',
     'pending-food-items': 'الأطباق المعلقة',
+    'food-items-all': 'جميع أصناف الطعام',
     'delivery': 'موظفي التوصيل',
     'notifications': 'الإشعارات',
     'sub-admins': 'المدراء التنفيذيين',
@@ -614,6 +619,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'pending-food-items' && (
               <PendingFoodItemsTab />
+            )}
+            {activeTab === 'food-items-all' && (
+              <FoodItemsTab allFoodItems={allFoodItems} onRefresh={fetchData} />
             )}
             
             {activeTab === 'featured-stores' && user.user_type === 'admin' && (
@@ -926,6 +934,7 @@ const AdminDashboardPage = () => {
                 <div className="grid grid-cols-4 gap-px bg-gray-100">
                   {[
                     { icon: Package, label: 'المنتجات', tab: 'products' },
+                    { icon: UtensilsCrossed, label: 'أصناف الطعام', tab: 'food-items-all' },
                     { icon: ShoppingBag, label: 'الطلبات', tab: 'orders' },
                     { icon: DollarSign, label: 'العمولات', tab: 'commissions' },
                     { icon: UtensilsCrossed, label: 'المطاعم', tab: 'food-stores' },

@@ -5,7 +5,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.8 in Closed Testing (Alpha)
+- Android App: v1.0.9 (versionCode: 10) in Closed Testing (Alpha)
 
 ## Core Features Implemented
 - Multi-role system (buyer, seller, food_seller, delivery, admin, sub_admin)
@@ -19,6 +19,30 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Admin dashboard with full controls
 
 ## Recent Bug Fixes (December 2025)
+
+### 2026-04-07: All Food Items Admin Tab ✅
+**Feature:** Added "All Food Items" (أصناف الطعام) tab in Admin Dashboard
+**Implementation:**
+- Created `GET /api/admin/food-items/all` API endpoint in `admin.py`
+- Created `FoodItemsTab.js` component with filters (all, approved, pending, unavailable)
+- Integrated into `AdminPage.js` with icon in "المتاجر والمنتجات" section
+- Added delete functionality for food items
+**Files Changed:**
+- `/app/backend/routes/admin.py` (API endpoint)
+- `/app/frontend/src/components/admin/FoodItemsTab.js` (new component)
+- `/app/frontend/src/pages/AdminPage.js` (integration)
+
+### 2026-04-07: Admin User/Driver Deletion Fixes ✅
+**Problem:** Delete/Ban buttons for users and drivers weren't functional
+**Fix:** Connected `handleDeleteDriver`, `handleBanDriver`, `handleDeleteBuyer`, `handleBanBuyer` functions and passed them as props to `DeliveryTab` and `UsersTab`
+
+### 2026-04-07: Ticker Messages UI Fixes ✅
+**Fixes:**
+- Fixed mobile flex layout
+- Added unsaved changes warning
+- Removed drag-and-drop to fix scrolling issues
+- Unified DB collection reading (`ticker_messages`)
+- Removed "Exclusive" star logic
 
 ### 2026-04-07: Comprehensive Deep-Dive Bug Fixes ✅
 **Problem 1:** Missing `import logging` causing 500 errors on exception handling
@@ -84,6 +108,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ### P0 (Critical)
 - [x] Fix login state persistence on web - DONE 2025-12-07
+- [x] Add "All Food Items" admin tab - DONE 2026-04-07
 
 ### P1 (High Priority)
 - [ ] Granular permissions for sub-admins (roles like "orders manager", "products manager")
