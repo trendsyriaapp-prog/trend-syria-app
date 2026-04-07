@@ -629,9 +629,9 @@ async def get_homepage_data():
             {"_id": 0}
         )
         
-        # إعدادات الشريط المتحرك
-        ticker_settings_task = db.settings.find_one(
-            {"key": "ticker_messages"},
+        # إعدادات الشريط المتحرك - من ticker_messages collection
+        ticker_settings_task = db.ticker_messages.find_one(
+            {"id": "main"},
             {"_id": 0}
         )
         
