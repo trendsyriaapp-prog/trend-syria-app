@@ -282,6 +282,52 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // حذف سائق
+  const handleDeleteDriver = async (driverId) => {
+    // تحديث فوري للواجهة
+    setAllDelivery(prev => prev.filter(d => d.id !== driverId));
+    
+    try {
+      await axios.delete(`${API}/api/admin/users/${driverId}`);
+    } catch (error) {
+      fetchData();
+      toast({ title: "خطأ", description: "فشل حذف السائق", variant: "destructive" });
+    }
+  };
+
+  // حظر سائق
+  const handleBanDriver = async (driverId) => {
+    try {
+      await axios.post(`${API}/api/admin/users/${driverId}/ban`);
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حظر السائق", variant: "destructive" });
+    }
+  };
+
+  // حذف عميل
+  const handleDeleteBuyer = async (buyerId) => {
+    // تحديث فوري للواجهة
+    setAllBuyers(prev => prev.filter(b => b.id !== buyerId));
+    
+    try {
+      await axios.delete(`${API}/api/admin/users/${buyerId}`);
+    } catch (error) {
+      fetchData();
+      toast({ title: "خطأ", description: "فشل حذف العميل", variant: "destructive" });
+    }
+  };
+
+  // حظر عميل
+  const handleBanBuyer = async (buyerId) => {
+    try {
+      await axios.post(`${API}/api/admin/users/${buyerId}/ban`);
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حظر العميل", variant: "destructive" });
+    }
+  };
+
   const handleAddSubAdmin = async (newSubAdmin) => {
     try {
       await axios.post(`${API}/api/admin/sub-admins`, newSubAdmin);
@@ -451,7 +497,13 @@ const AdminDashboardPage = () => {
             </div>
 
             {/* Tab content */}
-            {activeTab === 'users' && <UsersTab allUsers={allUsers} />}
+            {activeTab === 'users' && (
+              <UsersTab 
+                allUsers={allUsers} 
+                onDeleteUser={handleDeleteBuyer}
+                onBanUser={handleBanBuyer}
+              />
+            )}
             {activeTab === 'sellers' && <SellersTab allSellers={allSellers} />}
             {activeTab === 'products' && <ProductsTab allProducts={allProducts} />}
             {activeTab === 'orders' && <OrdersTab allOrders={allOrders} />}
@@ -478,7 +530,12 @@ const AdminDashboardPage = () => {
               />
             )}
             {activeTab === 'delivery' && (
-              <DeliveryTab allDelivery={allDelivery} isPending={false} />
+              <DeliveryTab 
+                allDelivery={allDelivery} 
+                isPending={false} 
+                onDeleteDriver={handleDeleteDriver}
+                onBanDriver={handleBanDriver}
+              />
             )}
             {activeTab === 'sub-admins' && user.user_type === 'admin' && (
               <SubAdminsTab 
