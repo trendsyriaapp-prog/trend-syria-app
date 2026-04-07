@@ -340,7 +340,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # البائع سيرى الطلب فقط بعد انتهاء المهلة
     # الإشعار سيُرسل عند تأكيد الطلب تلقائياً
     
-    return {"order_id": order_id, "total": final_total, "commission": total_commission, "message": "تم إنشاء الطلب. يمكنك إلغاءه قبل أن يجهز البائع الطلب."}
+    return {"order_id": order_id, "total": final_total, "commission": total_commission, "delivery_code": delivery_code, "message": "تم إنشاء الطلب. يمكنك إلغاءه قبل أن يجهز البائع الطلب."}
 
 
 @router.post("/orders/{order_id}/cancel")
@@ -1572,8 +1572,15 @@ async def verify_shop_delivery_code(
         from routes.driver_security import check_and_deduct_for_security
         await check_and_deduct_for_security(user["id"])
     except Exception as e:
-        import logging
         logging.error(f"Error checking security deposit: {e}")
+    
+    # إضافة العمولة لمحفظة المنصة (الأدمن)
+    total_commission = order.get("total_commission", 0)
+    if total_commission > 0:
+        await add_commission_to_platform_wallet(order_id, total_commission, "products")
+    
+    # إضافة أرباح البائعين لمحفظاتهم
+    await distribute_seller_earnings(order)
     
     return {
         "success": True,

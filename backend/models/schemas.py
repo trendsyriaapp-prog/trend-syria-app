@@ -118,7 +118,7 @@ class CartItem(BaseModel):
     selected_weight: Optional[str] = None  # الوزن المحدد مثل "250g", "500g"
 
 class OrderCreate(BaseModel):
-    items: List[CartItem]
+    items: Optional[List[CartItem]] = None  # يتم تجاهله - يُقرأ من السلة
     address: str
     city: str
     phone: str
