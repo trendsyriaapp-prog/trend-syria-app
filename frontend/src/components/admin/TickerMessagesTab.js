@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Trash2, Star, Eye, EyeOff, 
+  Plus, Trash2, Eye, EyeOff, 
   Save, ToggleLeft, ToggleRight, Sparkles, AlertCircle, AlertTriangle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -16,7 +16,7 @@ const TickerMessagesTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [newMessage, setNewMessage] = useState({ text: '', highlight: false });
+  const [newMessage, setNewMessage] = useState({ text: '' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,7 +96,7 @@ const TickerMessagesTab = () => {
     try {
       const res = await axios.post(`${API}/api/settings/ticker-messages/add`, newMessage);
       setMessages([...messages, res.data.message]);
-      setNewMessage({ text: '', highlight: false });
+      setNewMessage({ text: '' });
       toast({
         title: "تمت الإضافة",
         description: "تمت إضافة الرسالة بنجاح"
@@ -130,12 +130,6 @@ const TickerMessagesTab = () => {
   const toggleMessageActive = (messageId) => {
     setMessages(messages.map(m => 
       m.id === messageId ? { ...m, is_active: !m.is_active } : m
-    ));
-  };
-
-  const toggleMessageHighlight = (messageId) => {
-    setMessages(messages.map(m => 
-      m.id === messageId ? { ...m, highlight: !m.highlight } : m
     ));
   };
 
@@ -225,7 +219,6 @@ const TickerMessagesTab = () => {
           <div className="ticker-content animate-ticker flex items-center gap-8 whitespace-nowrap px-4">
             {messages.filter(m => m.is_active !== false).map((msg, i) => (
               <span key={i} className="flex items-center gap-2 text-sm font-medium">
-                {msg.highlight && <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">حصري</span>}
                 {msg.text}
                 <span className="text-white/50">|</span>
               </span>
@@ -249,26 +242,14 @@ const TickerMessagesTab = () => {
             className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#FF6B00]/20 focus:border-[#FF6B00] outline-none text-sm"
             data-testid="new-message-input"
           />
-          <div className="flex gap-2">
-            <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 flex-1 sm:flex-none">
-              <input
-                type="checkbox"
-                checked={newMessage.highlight}
-                onChange={(e) => setNewMessage({ ...newMessage, highlight: e.target.checked })}
-                className="rounded text-[#FF6B00] focus:ring-[#FF6B00]"
-              />
-              <Star size={16} className="text-yellow-500" />
-              <span className="text-sm text-gray-700">حصري</span>
-            </label>
-            <button
-              onClick={handleAddMessage}
-              className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg font-medium hover:bg-[#E65000] transition-colors flex items-center gap-2 flex-1 sm:flex-none justify-center"
-              data-testid="add-message-btn"
-            >
-              <Plus size={18} />
-              إضافة
-            </button>
-          </div>
+          <button
+            onClick={handleAddMessage}
+            className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg font-medium hover:bg-[#E65000] transition-colors flex items-center gap-2 flex-1 sm:flex-none justify-center"
+            data-testid="add-message-btn"
+          >
+            <Plus size={18} />
+            إضافة
+          </button>
         </div>
       </div>
 
@@ -300,19 +281,6 @@ const TickerMessagesTab = () => {
                 </div>
                 
                 <div className="flex items-center gap-2 justify-end">
-                  {/* Highlight Toggle */}
-                  <button
-                    onClick={() => toggleMessageHighlight(message.id)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      message.highlight 
-                        ? 'bg-yellow-100 text-yellow-600' 
-                        : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                    }`}
-                    title={message.highlight ? 'إزالة شارة حصري' : 'إضافة شارة حصري'}
-                  >
-                    <Star size={18} />
-                  </button>
-                  
                   {/* Active Toggle */}
                   <button
                     onClick={() => toggleMessageActive(message.id)}

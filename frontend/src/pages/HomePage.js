@@ -477,7 +477,6 @@ const HomePage = () => {
                 }`}
               >
                 <span className="flex items-center gap-1.5 md:gap-2 text-[11px] md:text-sm font-medium">
-                  {msg.highlight && <span className="bg-white/20 px-1.5 md:px-2 py-0.5 rounded-full text-[9px] md:text-xs">حصري</span>}
                   {msg.text}
                 </span>
               </div>
