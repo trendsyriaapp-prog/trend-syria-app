@@ -217,12 +217,12 @@ const BannersTab = ({ token }) => {
                     onClick={() => handleToggleBanner(banner, activeSection)}
                     className={`p-2 rounded-lg ${
                       banner.is_active
-                        ? 'bg-gray-100 text-gray-600'
-                        : 'bg-green-100 text-green-600'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-gray-100 text-gray-600'
                     }`}
                     title={banner.is_active ? 'تعطيل' : 'تفعيل'}
                   >
-                    {banner.is_active ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {banner.is_active ? <Eye size={18} /> : <EyeOff size={18} />}
                   </button>
                   <button
                     onClick={() => setDeleteModal({ isOpen: true, bannerId: banner.id, type: activeSection, title: banner.title })}
