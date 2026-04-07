@@ -35,7 +35,6 @@ import SupportTicketsTab from '../components/admin/SupportTicketsTab';
 import DriverReportsTab from '../components/admin/DriverReportsTab';
 import FoodStoresTab from '../components/admin/FoodStoresTab';
 import FoodOffersTab from '../components/admin/FoodOffersTab';
-import BannersTab from '../components/admin/BannersTab';
 import CouponsTab from '../components/admin/CouponsTab';
 import DailyDealsTab from '../components/admin/DailyDealsTab';
 import PlatformSettingsTab from '../components/admin/PlatformSettingsTab';
@@ -407,7 +406,6 @@ const AdminDashboardPage = () => {
     'food-stores': 'متاجر الطعام',
     'featured-stores': 'المتاجر المميزة',
     'food-offers': 'عروض الفلاش',
-    'banners': 'إدارة البانرات',
     'coupons': 'كوبونات الخصم',
     'daily-deals': 'صفقات اليوم',
     'seller-promotions': 'فلاش',
@@ -566,9 +564,6 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'food-offers' && user.user_type === 'admin' && (
               <FoodOffersTab token={localStorage.getItem('token')} />
-            )}
-            {activeTab === 'banners' && user.user_type === 'admin' && (
-              <BannersTab token={localStorage.getItem('token')} />
             )}
             {activeTab === 'coupons' && user.user_type === 'admin' && (
               <CouponsTab token={localStorage.getItem('token')} />
@@ -903,7 +898,6 @@ const AdminDashboardPage = () => {
                     { icon: Zap, label: 'فلاش', tab: 'seller-promotions' },
                     { icon: Megaphone, label: 'عروض فلاش', tab: 'food-offers' },
                     { icon: Ticket, label: 'الكوبونات', tab: 'coupons' },
-                    { icon: Megaphone, label: 'البانرات', tab: 'banners' },
                     { icon: Megaphone, label: 'الإعلانات', tab: 'ads' },
                     { icon: Megaphone, label: 'شريط العروض', tab: 'ticker-messages' },
                     { icon: Flame, label: 'شارات المنتجات', tab: 'product-badges' },
