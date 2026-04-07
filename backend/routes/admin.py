@@ -1405,8 +1405,15 @@ async def get_admin_notifications(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
+    # جلب فقط الإشعارات التي أنشأها الأدمن (لها created_by أو target)
+    # وليس إشعارات المستخدمين الشخصية
     notifications = await db.notifications.find(
-        {},
+        {
+            "$or": [
+                {"created_by": {"$exists": True}},  # إشعارات أنشأها أدمن
+                {"target": {"$exists": True}}        # إشعارات موجهة لمجموعة
+            ]
+        },
         {"_id": 0}
     ).sort("created_at", -1).limit(100).to_list(100)
     
