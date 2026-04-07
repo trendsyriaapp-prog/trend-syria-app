@@ -409,34 +409,43 @@ async def ensure_super_admin_exists():
         existing_admin = await db.users.find_one({"phone": admin_phone}, {"_id": 0})
         
         if existing_admin:
-            # التحقق من صحة كلمة المرور
+            needs_update = False
+            update_fields = {}
+            
+            # التحقق من نوع المستخدم - يجب أن يكون admin
+            if existing_admin.get("user_type") != "admin":
+                update_fields["user_type"] = "admin"
+                needs_update = True
+                logger.info(f"🔧 سيتم تحديث نوع الحساب من {existing_admin.get('user_type')} إلى admin")
+            
+            # التحقق من is_verified و is_approved
+            if not existing_admin.get("is_verified"):
+                update_fields["is_verified"] = True
+                needs_update = True
+            if not existing_admin.get("is_approved"):
+                update_fields["is_approved"] = True
+                needs_update = True
+            
+            # التحقق من كلمة المرور
             try:
                 if not verify_password(admin_password, existing_admin.get("password", "")):
-                    # كلمة المرور غير صحيحة - تحديثها
-                    await db.users.update_one(
-                        {"phone": admin_phone},
-                        {"$set": {
-                            "password": hash_password_secure(admin_password),
-                            "user_type": "admin",
-                            "is_verified": True,
-                            "is_approved": True
-                        }}
-                    )
-                    logger.info(f"🔧 تم إصلاح كلمة مرور Super Admin: {admin_phone}")
-                else:
-                    logger.info(f"✅ حساب Super Admin موجود وصحيح: {admin_phone}")
+                    update_fields["password"] = hash_password_secure(admin_password)
+                    needs_update = True
+                    logger.info(f"🔧 سيتم تحديث كلمة مرور Super Admin")
             except Exception as pwd_error:
-                # خطأ في التحقق - إعادة تعيين كلمة المرور
+                update_fields["password"] = hash_password_secure(admin_password)
+                needs_update = True
+                logger.info(f"🔧 خطأ في التحقق من كلمة المرور، سيتم إعادة تعيينها")
+            
+            # تطبيق التحديثات إذا لزم الأمر
+            if needs_update:
                 await db.users.update_one(
                     {"phone": admin_phone},
-                    {"$set": {
-                        "password": hash_password_secure(admin_password),
-                        "user_type": "admin",
-                        "is_verified": True,
-                        "is_approved": True
-                    }}
+                    {"$set": update_fields}
                 )
-                logger.info(f"🔧 تم إصلاح حساب Super Admin (خطأ سابق): {admin_phone}")
+                logger.info(f"✅ تم إصلاح حساب Super Admin: {admin_phone} - التحديثات: {list(update_fields.keys())}")
+            else:
+                logger.info(f"✅ حساب Super Admin موجود وصحيح: {admin_phone}")
         else:
             # إنشاء حساب Super Admin جديد
             admin_doc = {
