@@ -990,45 +990,6 @@ const HomePage = () => {
         </LazySection>
       )}
 
-      {/* CTA Banner - Modern Style */}
-      <section className="py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-[#FF6B00] via-[#FF7B1C] to-[#FF8C00] p-6 md:p-10"
-          >
-            {/* Decorative Elements */}
-            <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-60 h-60 bg-black/5 rounded-full translate-x-1/3 translate-y-1/3" />
-            
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-right">
-                <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 mb-3">
-                  <Package size={14} className="text-white" />
-                  <span className="text-white/90 text-xs font-medium">انضم لأكثر من 500 بائع</span>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold mb-2 text-white">
-                  هل أنت بائع؟
-                </h3>
-                <p className="text-white/85 text-sm md:text-base max-w-md">
-                  ابدأ ببيع منتجاتك لآلاف العملاء في جميع أنحاء سورية
-                </p>
-              </div>
-              <Link
-                to="/register?type=seller"
-                className="inline-flex items-center gap-2 bg-white text-[#FF6B00] font-bold px-6 py-3 rounded-full hover:bg-gray-50 hover:shadow-lg transition-all group"
-                data-testid="become-seller-btn"
-              >
-                سجل كبائع مجاناً
-                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Footer Section */}
       <footer className="bg-white border-t border-gray-100 py-6 mt-4">
         <div className="max-w-7xl mx-auto px-4">
