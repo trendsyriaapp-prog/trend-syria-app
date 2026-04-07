@@ -3,7 +3,8 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
-// Build version: 2026-04-07-v2 - Force rebuild
+// App build info
+window.APP_BUILD_VERSION = "2026-04-07-v3";
 
 // تسجيل Service Worker للـ PWA
 if ('serviceWorker' in navigator) {
