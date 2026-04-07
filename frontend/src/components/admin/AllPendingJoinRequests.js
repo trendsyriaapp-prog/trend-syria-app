@@ -106,13 +106,23 @@ const AllPendingJoinRequests = () => {
   };
 
   const handleRejectDriver = async (driverId) => {
+    console.log('Rejecting driver with ID:', driverId);
+    
+    if (!driverId) {
+      toast({ title: "خطأ", description: "معرّف السائق غير موجود", variant: "destructive" });
+      return;
+    }
+    
     setActionLoading(driverId);
     try {
-      await axios.post(`${API}/api/admin/delivery/${driverId}/reject`);
+      const response = await axios.post(`${API}/api/admin/delivery/${driverId}/reject`);
+      console.log('Reject response:', response.data);
       toast({ title: "تم", description: "تم رفض طلب السائق" });
       fetchAllPending();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل الرفض", variant: "destructive" });
+      console.error('Reject error:', error.response?.data || error.message);
+      const errorMsg = error.response?.data?.detail || "فشل الرفض";
+      toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -283,8 +293,16 @@ const AllPendingJoinRequests = () => {
           </h3>
           {data.drivers.map((item) => {
             const driver = item.driver || item;
-            const driverId = item.driver_id || driver.id;
+            const driverId = item.driver_id || item.delivery_id || driver.id;
             const docStatus = getDriverDocumentsStatus(item);
+            
+            // Debug logging
+            console.log('Driver item:', { 
+              item_driver_id: item.driver_id,
+              item_delivery_id: item.delivery_id,
+              driver_id: driver.id,
+              resolved_driverId: driverId 
+            });
             
             return (
               <div key={driverId} className={`bg-white rounded-xl border-2 overflow-hidden ${docStatus.isComplete ? 'border-green-200' : 'border-yellow-200'}`}>
@@ -371,6 +389,7 @@ const AllPendingJoinRequests = () => {
                         onClick={() => handleRejectDriver(driverId)}
                         disabled={actionLoading === driverId}
                         className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                        data-testid={`reject-driver-btn-${driverId}`}
                       >
                         <X size={16} />
                         رفض
