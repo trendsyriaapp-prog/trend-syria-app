@@ -1,9 +1,9 @@
 // /app/frontend/src/components/admin/FoodItemsTab.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { 
   UtensilsCrossed, Trash2, X, MoreVertical,
-  Store, Tag, CheckCircle, XCircle, RefreshCw
+  Store, Tag, CheckCircle, XCircle, RefreshCw, Search
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -20,6 +20,17 @@ const FoodItemsTab = ({ allFoodItems = [], onRefresh }) => {
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // فلترة أصناف الطعام حسب البحث
+  const searchedItems = useMemo(() => {
+    if (!searchQuery.trim()) return allFoodItems;
+    const query = searchQuery.trim().toLowerCase();
+    return allFoodItems.filter(item => 
+      (item.name || '').toLowerCase().includes(query) ||
+      (item.store_name || '').toLowerCase().includes(query)
+    );
+  }, [allFoodItems, searchQuery]);
 
   // منع التمرير في الخلفية عند فتح المربع
   useEffect(() => {
@@ -34,14 +45,14 @@ const FoodItemsTab = ({ allFoodItems = [], onRefresh }) => {
   }, [selectedItem, showDeleteModal]);
 
   const filteredItems = filter === 'all' 
-    ? allFoodItems 
+    ? searchedItems 
     : filter === 'approved' 
-      ? allFoodItems.filter(item => item.is_approved)
+      ? searchedItems.filter(item => item.is_approved)
       : filter === 'pending'
-        ? allFoodItems.filter(item => !item.is_approved)
+        ? searchedItems.filter(item => !item.is_approved)
         : filter === 'unavailable'
-          ? allFoodItems.filter(item => !item.is_available)
-          : allFoodItems;
+          ? searchedItems.filter(item => !item.is_available)
+          : searchedItems;
 
   // حذف الصنف
   const handleDelete = async (itemId) => {
@@ -61,14 +72,33 @@ const FoodItemsTab = ({ allFoodItems = [], onRefresh }) => {
 
   return (
     <section>
+      {/* حقل البحث */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث بالاسم أو اسم المتجر..."
+            className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+          />
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-500 mt-1">
+            عدد النتائج: {searchedItems.length} من {allFoodItems.length}
+          </p>
+        )}
+      </div>
+
       {/* فلاتر */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <span className="text-sm text-gray-600">عرض:</span>
         {[
-          { key: 'all', label: 'الكل', count: allFoodItems.length },
-          { key: 'approved', label: 'معتمد', count: allFoodItems.filter(i => i.is_approved).length },
-          { key: 'pending', label: 'معلق', count: allFoodItems.filter(i => !i.is_approved).length },
-          { key: 'unavailable', label: 'غير متوفر', count: allFoodItems.filter(i => !i.is_available).length },
+          { key: 'all', label: 'الكل', count: searchedItems.length },
+          { key: 'approved', label: 'معتمد', count: searchedItems.filter(i => i.is_approved).length },
+          { key: 'pending', label: 'معلق', count: searchedItems.filter(i => !i.is_approved).length },
+          { key: 'unavailable', label: 'غير متوفر', count: searchedItems.filter(i => !i.is_available).length },
         ].map(f => (
           <button
             key={f.key}
@@ -88,7 +118,9 @@ const FoodItemsTab = ({ allFoodItems = [], onRefresh }) => {
       {filteredItems.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <UtensilsCrossed size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500">لا توجد أصناف طعام</p>
+          <p className="text-gray-500">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا توجد أصناف طعام'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

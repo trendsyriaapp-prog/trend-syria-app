@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/UsersTab.js
-import { useState } from 'react';
-import { Users, MapPin, Phone, Calendar, MoreVertical, Trash2, Ban, Eye, X, Key, CheckCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Users, MapPin, Phone, Calendar, MoreVertical, Trash2, Ban, Eye, X, Key, CheckCircle, Search } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 
@@ -12,6 +12,17 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
   const [showMenu, setShowMenu] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, user: null });
   const [resetPasswordModal, setResetPasswordModal] = useState({ isOpen: false, user: null, success: false, loading: false });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // فلترة المستخدمين حسب البحث
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return allUsers;
+    const query = searchQuery.trim().toLowerCase();
+    return allUsers.filter(user => 
+      (user.full_name || user.name || '').toLowerCase().includes(query) ||
+      (user.phone || '').includes(query)
+    );
+  }, [allUsers, searchQuery]);
 
   const handleAction = (action, user) => {
     setShowMenu(null);
@@ -65,14 +76,35 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
 
   return (
     <section>
-      {allUsers.length === 0 ? (
+      {/* حقل البحث */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث بالاسم أو رقم الهاتف..."
+            className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+          />
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-500 mt-1">
+            عدد النتائج: {filteredUsers.length} من {allUsers.length}
+          </p>
+        )}
+      </div>
+
+      {filteredUsers.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
           <Users size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">لا يوجد مستخدمين</p>
+          <p className="text-gray-500 text-sm">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا يوجد مستخدمين'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {allUsers.map((u) => (
+          {filteredUsers.map((u) => (
             <div 
               key={u.id} 
               className="bg-white rounded-lg border border-gray-200 p-3 relative"

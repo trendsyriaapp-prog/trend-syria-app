@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/DeliveryTab.js
-import { useState } from 'react';
-import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Truck, Check, X, MoreVertical, Trash2, Ban, Eye, Phone, MapPin, AlertTriangle, CheckCircle, XCircle, Search } from 'lucide-react';
 import RejectModal from './RejectModal';
 import ImageLightbox from '../ui/ImageLightbox';
 
@@ -19,6 +19,26 @@ const DeliveryTab = ({
   const [showMenu, setShowMenu] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, driver: null });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // فلترة موظفي التوصيل حسب البحث
+  const filteredAllDelivery = useMemo(() => {
+    if (!searchQuery.trim()) return allDelivery;
+    const query = searchQuery.trim().toLowerCase();
+    return allDelivery.filter(driver => 
+      (driver.full_name || driver.name || '').toLowerCase().includes(query) ||
+      (driver.phone || '').includes(query)
+    );
+  }, [allDelivery, searchQuery]);
+
+  const filteredPendingDelivery = useMemo(() => {
+    if (!searchQuery.trim()) return pendingDelivery;
+    const query = searchQuery.trim().toLowerCase();
+    return pendingDelivery.filter(doc => 
+      (doc.driver_name || doc.driver?.full_name || doc.driver?.name || '').toLowerCase().includes(query) ||
+      (doc.driver_phone || doc.driver?.phone || '').includes(query)
+    );
+  }, [pendingDelivery, searchQuery]);
 
   // دالة لحساب حالة الوثائق
   const getDocumentsStatus = (doc) => {
@@ -87,14 +107,35 @@ const DeliveryTab = ({
   if (isPending) {
     return (
       <section>
-        {pendingDelivery.length === 0 ? (
+        {/* حقل البحث */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="بحث بالاسم أو رقم الهاتف..."
+              className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+            />
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-gray-500 mt-1">
+              عدد النتائج: {filteredPendingDelivery.length} من {pendingDelivery.length}
+            </p>
+          )}
+        </div>
+
+        {filteredPendingDelivery.length === 0 ? (
           <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
             <Check size={36} className="text-green-500 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">لا يوجد موظفي توصيل في انتظار الموافقة</p>
+            <p className="text-gray-500 text-sm">
+              {searchQuery ? 'لا توجد نتائج للبحث' : 'لا يوجد موظفي توصيل في انتظار الموافقة'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {pendingDelivery.map((doc) => {
+            {filteredPendingDelivery.map((doc) => {
               const docStatus = getDocumentsStatus(doc);
               
               return (
@@ -278,14 +319,35 @@ const DeliveryTab = ({
   // All delivery drivers view
   return (
     <section>
-      {allDelivery.length === 0 ? (
+      {/* حقل البحث */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث بالاسم أو رقم الهاتف..."
+            className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+          />
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-500 mt-1">
+            عدد النتائج: {filteredAllDelivery.length} من {allDelivery.length}
+          </p>
+        )}
+      </div>
+
+      {filteredAllDelivery.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
           <Truck size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">لا يوجد موظفي توصيل</p>
+          <p className="text-gray-500 text-sm">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا يوجد موظفي توصيل'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {allDelivery.map((driver) => (
+          {filteredAllDelivery.map((driver) => (
             <div key={driver.id} className="bg-white rounded-lg border border-gray-200 p-3 relative">
               <div className="flex items-start justify-between">
                 <div 

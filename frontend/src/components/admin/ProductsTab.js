@@ -1,9 +1,9 @@
 // /app/frontend/src/components/admin/ProductsTab.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { 
   Package, Eye, EyeOff, Trash2, Edit, X, MoreVertical,
-  Store, Tag, Layers, AlertTriangle, CheckCircle, RefreshCw
+  Store, Tag, Layers, AlertTriangle, CheckCircle, RefreshCw, Search
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -20,6 +20,17 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
   const [processing, setProcessing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // فلترة المنتجات حسب البحث
+  const searchedProducts = useMemo(() => {
+    if (!searchQuery.trim()) return allProducts;
+    const query = searchQuery.trim().toLowerCase();
+    return allProducts.filter(product => 
+      (product.name || '').toLowerCase().includes(query) ||
+      (product.seller_name || '').toLowerCase().includes(query)
+    );
+  }, [allProducts, searchQuery]);
 
   // منع التمرير في الخلفية عند فتح المربع
   useEffect(() => {
@@ -34,12 +45,12 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
   }, [selectedProduct, showDeleteModal]);
 
   const filteredProducts = filter === 'all' 
-    ? allProducts 
+    ? searchedProducts 
     : filter === 'hidden' 
-      ? allProducts.filter(p => p.is_hidden)
+      ? searchedProducts.filter(p => p.is_hidden)
       : filter === 'low_stock'
-        ? allProducts.filter(p => p.stock < 10)
-        : allProducts;
+        ? searchedProducts.filter(p => p.stock < 10)
+        : searchedProducts;
 
   // إخفاء/إظهار المنتج
   const handleToggleVisibility = async (productId, currentStatus) => {
@@ -77,12 +88,31 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
 
   return (
     <section>
+      {/* حقل البحث */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث بالاسم أو اسم البائع..."
+            className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+          />
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-500 mt-1">
+            عدد النتائج: {searchedProducts.length} من {allProducts.length}
+          </p>
+        )}
+      </div>
+
       {/* فلاتر */}
       <div className="flex gap-1.5 flex-wrap mb-3">
         {[
-          { id: 'all', label: 'الكل', count: allProducts.length },
-          { id: 'hidden', label: 'مخفي', count: allProducts.filter(p => p.is_hidden).length },
-          { id: 'low_stock', label: 'مخزون منخفض', count: allProducts.filter(p => p.stock < 10).length },
+          { id: 'all', label: 'الكل', count: searchedProducts.length },
+          { id: 'hidden', label: 'مخفي', count: searchedProducts.filter(p => p.is_hidden).length },
+          { id: 'low_stock', label: 'مخزون منخفض', count: searchedProducts.filter(p => p.stock < 10).length },
         ].map(f => (
           <button
             key={f.id}
@@ -102,7 +132,9 @@ const ProductsTab = ({ allProducts, onRefresh }) => {
       {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
           <Package size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">لا يوجد منتجات</p>
+          <p className="text-gray-500 text-sm">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا يوجد منتجات'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">

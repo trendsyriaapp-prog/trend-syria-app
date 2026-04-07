@@ -1,6 +1,6 @@
 // /app/frontend/src/components/admin/SellersTab.js
-import { useState } from 'react';
-import { Store, Phone, MapPin, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Store, Phone, MapPin, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, XCircle, RefreshCw, Search } from 'lucide-react';
 import ImageLightbox from '../ui/ImageLightbox';
 
 const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, onRejectSeller }) => {
@@ -8,6 +8,18 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
   const [showMenu, setShowMenu] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, seller: null });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // فلترة البائعين حسب البحث
+  const filteredSellers = useMemo(() => {
+    if (!searchQuery.trim()) return allSellers;
+    const query = searchQuery.trim().toLowerCase();
+    return allSellers.filter(seller => 
+      (seller.full_name || seller.name || '').toLowerCase().includes(query) ||
+      (seller.documents?.business_name || '').toLowerCase().includes(query) ||
+      (seller.phone || '').includes(query)
+    );
+  }, [allSellers, searchQuery]);
 
   const handleAction = (action, seller) => {
     setShowMenu(null);
@@ -35,14 +47,35 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
 
   return (
     <section>
-      {allSellers.length === 0 ? (
+      {/* حقل البحث */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث بالاسم أو اسم المتجر أو رقم الهاتف..."
+            className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm"
+          />
+        </div>
+        {searchQuery && (
+          <p className="text-xs text-gray-500 mt-1">
+            عدد النتائج: {filteredSellers.length} من {allSellers.length}
+          </p>
+        )}
+      </div>
+
+      {filteredSellers.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
           <Store size={36} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">لا يوجد بائعين</p>
+          <p className="text-gray-500 text-sm">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا يوجد بائعين'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {allSellers.map((s) => (
+          {filteredSellers.map((s) => (
             <div key={s.id} className="bg-white rounded-lg border border-gray-200 p-3 relative">
               <div className="flex items-start justify-between">
                 <div 
