@@ -540,7 +540,7 @@ export default function DriverSecurityTab() {
               <input
                 type="number"
                 value={settings.required_amount}
-                onChange={(e) => setSettings({ ...settings, required_amount: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setSettings({ ...settings, required_amount: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
                 className="w-full p-3 border rounded-lg"
                 min={0}
               />
@@ -585,7 +585,7 @@ export default function DriverSecurityTab() {
               <input
                 type="number"
                 value={settings.min_behavior_points_for_refund}
-                onChange={(e) => setSettings({ ...settings, min_behavior_points_for_refund: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setSettings({ ...settings, min_behavior_points_for_refund: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
                 className="w-full p-3 border rounded-lg"
                 min={0}
                 max={100}

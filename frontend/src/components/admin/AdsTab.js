@@ -153,10 +153,10 @@ const AdsTab = ({ user }) => {
                     </label>
                     <input
                       type="number"
-                      value={prices[`featured_product_${d}`] || 0}
+                      value={prices[`featured_product_${d}`] ?? 0}
                       onChange={(e) => setPrices({
                         ...prices,
-                        [`featured_product_${d}`]: parseInt(e.target.value) || 0
+                        [`featured_product_${d}`]: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                       })}
                       className="w-full p-2 border border-yellow-300 rounded-lg text-sm text-center font-bold"
                     />
@@ -179,10 +179,10 @@ const AdsTab = ({ user }) => {
                     </label>
                     <input
                       type="number"
-                      value={prices[`banner_${d}`] || 0}
+                      value={prices[`banner_${d}`] ?? 0}
                       onChange={(e) => setPrices({
                         ...prices,
-                        [`banner_${d}`]: parseInt(e.target.value) || 0
+                        [`banner_${d}`]: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                       })}
                       className="w-full p-2 border border-purple-300 rounded-lg text-sm text-center font-bold"
                     />
@@ -205,10 +205,10 @@ const AdsTab = ({ user }) => {
                     </label>
                     <input
                       type="number"
-                      value={prices[`search_top_${d}`] || 0}
+                      value={prices[`search_top_${d}`] ?? 0}
                       onChange={(e) => setPrices({
                         ...prices,
-                        [`search_top_${d}`]: parseInt(e.target.value) || 0
+                        [`search_top_${d}`]: e.target.value === '' ? '' : parseInt(e.target.value) || 0
                       })}
                       className="w-full p-2 border border-blue-300 rounded-lg text-sm text-center font-bold"
                     />

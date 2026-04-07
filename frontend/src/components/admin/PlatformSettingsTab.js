@@ -416,7 +416,7 @@ const ReferralProgramSettings = () => {
             <input
               type="number"
               value={settings.referrer_reward}
-              onChange={(e) => setSettings({ ...settings, referrer_reward: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setSettings({ ...settings, referrer_reward: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
               className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="10000"
             />
@@ -433,7 +433,7 @@ const ReferralProgramSettings = () => {
               min="0"
               max="100"
               value={settings.referee_discount}
-              onChange={(e) => setSettings({ ...settings, referee_discount: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setSettings({ ...settings, referee_discount: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
               className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="20"
             />
@@ -448,7 +448,7 @@ const ReferralProgramSettings = () => {
             <input
               type="number"
               value={settings.min_order_for_reward}
-              onChange={(e) => setSettings({ ...settings, min_order_for_reward: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setSettings({ ...settings, min_order_for_reward: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
               className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-pink-500 focus:outline-none"
               placeholder="30000"
             />
@@ -1292,12 +1292,22 @@ const PlatformSettingsTab = () => {
   };
 
   const handleProductsFreeShippingChange = (value) => {
+    if (value === '') {
+      setProductsFreeShipping('');
+      setSettings(prev => ({ ...prev, products_free_shipping_threshold: 0 }));
+      return;
+    }
     const numValue = parseInt(value) || 0;
     setProductsFreeShipping(numValue);
     setSettings(prev => ({ ...prev, products_free_shipping_threshold: numValue }));
   };
 
   const handleFoodFreeDeliveryChange = (value) => {
+    if (value === '') {
+      setFoodFreeDelivery('');
+      setSettings(prev => ({ ...prev, food_free_delivery_threshold: 0 }));
+      return;
+    }
     const numValue = parseInt(value) || 0;
     setFoodFreeDelivery(numValue);
     setSettings(prev => ({ ...prev, food_free_delivery_threshold: numValue }));
@@ -1517,8 +1527,8 @@ const PlatformSettingsTab = () => {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={settings?.food_delivery_fee || 5000}
-                onChange={(e) => setSettings(prev => ({ ...prev, food_delivery_fee: parseInt(e.target.value) || 0 }))}
+                value={settings?.food_delivery_fee ?? 5000}
+                onChange={(e) => setSettings(prev => ({ ...prev, food_delivery_fee: e.target.value === '' ? '' : parseInt(e.target.value) || 0 }))}
                 className="flex-1 border border-gray-300 rounded-lg py-2 px-3 text-sm focus:border-orange-500 focus:outline-none"
                 placeholder="5000"
               />

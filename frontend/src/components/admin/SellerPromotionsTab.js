@@ -138,7 +138,7 @@ const SellerPromotionsTab = () => {
               <input
                 type="number"
                 value={settings.cost_per_product}
-                onChange={(e) => setSettings({...settings, cost_per_product: parseInt(e.target.value) || 0})}
+                onChange={(e) => setSettings({...settings, cost_per_product: e.target.value === '' ? '' : parseInt(e.target.value) || 0})}
                 className="w-full p-2 border rounded-lg"
               />
             </div>

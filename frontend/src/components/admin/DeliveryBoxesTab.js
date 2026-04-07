@@ -387,7 +387,7 @@ const DeliveryBoxesTab = () => {
               <input
                 type="number"
                 value={depositAmount}
-                onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                onChange={(e) => setDepositAmount(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                 className="w-full p-2 border border-gray-300 rounded-lg text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">الإيداع المطلوب: {formatPrice(settings.deposit_amount)}</p>
