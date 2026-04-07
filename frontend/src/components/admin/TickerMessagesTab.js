@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Trash2, Star, Eye, EyeOff, GripVertical, 
+  Plus, Trash2, Star, Eye, EyeOff, 
   Save, ToggleLeft, ToggleRight, Sparkles, AlertCircle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
@@ -246,21 +246,13 @@ const TickerMessagesTab = () => {
             <p className="text-gray-500">لا توجد رسائل حالياً</p>
           </div>
         ) : (
-          <Reorder.Group 
-            axis="y" 
-            values={messages} 
-            onReorder={setMessages}
-            className="divide-y divide-gray-100"
-          >
+          <div className="divide-y divide-gray-100">
             {messages.map((message) => (
-              <Reorder.Item
+              <div
                 key={message.id}
-                value={message}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50 cursor-grab active:cursor-grabbing"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white hover:bg-gray-50"
               >
                 <div className="flex items-center gap-2 flex-1">
-                  <GripVertical size={20} className="text-gray-400 flex-shrink-0 hidden sm:block" />
-                  
                   <input
                     type="text"
                     value={message.text}
@@ -305,9 +297,9 @@ const TickerMessagesTab = () => {
                     <Trash2 size={18} />
                   </button>
                 </div>
-              </Reorder.Item>
+              </div>
             ))}
-          </Reorder.Group>
+          </div>
         )}
       </div>
 
