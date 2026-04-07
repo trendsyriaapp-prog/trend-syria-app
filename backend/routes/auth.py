@@ -1427,7 +1427,7 @@ async def debug_login_check(phone: str, admin: dict = Depends(get_current_user))
             "is_approved": user.get("is_approved", False),
             "password_info": password_info
         }
-    except Exception as e:
+    except Exception:
         return {
             "status": "error",
             "error": "حدث خطأ في التحقق"

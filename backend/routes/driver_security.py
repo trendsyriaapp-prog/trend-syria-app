@@ -104,7 +104,7 @@ async def process_auto_deduction(driver_id: str):
                     "id": str(uuid.uuid4()),
                     "type": "security_deposit_auto",
                     "amount": -deduct_amount,
-                    "description": f"خصم تلقائي لإكمال التأمين",
+                    "description": "خصم تلقائي لإكمال التأمين",
                     "created_at": now
                 }
             }
@@ -733,7 +733,7 @@ async def suspend_driver(driver_id: str, reason: str = "", user: dict = Depends(
     await create_notification_for_user(
         user_id=driver_id,
         title="⛔ تم إيقاف حسابك",
-        message=f"تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        message="تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
         notification_type="account_suspended"
     )
     

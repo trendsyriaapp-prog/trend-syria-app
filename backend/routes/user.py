@@ -278,7 +278,7 @@ async def delete_my_account(user: dict = Depends(get_current_user)):
         if active_orders + active_food_orders > 0:
             raise HTTPException(
                 status_code=400, 
-                detail=f"لا يمكن حذف الحساب - لديك طلبات نشطة. انتظر حتى تكتمل."
+                detail="لا يمكن حذف الحساب - لديك طلبات نشطة. انتظر حتى تكتمل."
             )
         
         # حفظ البيانات

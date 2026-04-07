@@ -557,7 +557,7 @@ async def suspend_seller(seller_id: str, data: dict = None, user: dict = Depends
         "id": str(uuid.uuid4()),
         "user_id": seller_id,
         "title": "⛔ تم إيقاف حسابك",
-        "message": f"تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
+        "message": "تم إيقاف حسابك من قبل الإدارة" + (f". السبب: {reason}" if reason else ""),
         "type": "account_suspended",
         "is_read": False,
         "created_at": now
@@ -929,7 +929,7 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     if not doc:
         raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
     
-    result = await db.delivery_documents.update_one(
+    await db.delivery_documents.update_one(
         {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
         {"$set": {"status": "approved", "approved_at": now}}
     )
@@ -2361,7 +2361,7 @@ async def create_flash_sale(sale_data: dict, user: dict = Depends(get_current_us
     if sale_data.get("notify_sellers", False):
         discount = int(sale_doc["discount_percentage"])
         await send_flash_sale_notification_to_sellers(
-            title=f"🔥 فرصة للمشاركة في عرض فلاش!",
+            title="🔥 فرصة للمشاركة في عرض فلاش!",
             message=f"عرض {sale_doc['name']} - خصم {discount}% | شارك منتجاتك الآن واستفد من الترويج المجاني!",
             flash_sale_id=sale_id,
             sale_scope=sale_doc.get("sale_scope", "all")
