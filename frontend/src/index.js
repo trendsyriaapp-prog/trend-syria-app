@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
+// Build version: 2026-04-07-v2 - Force rebuild
+
 // تسجيل Service Worker للـ PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
