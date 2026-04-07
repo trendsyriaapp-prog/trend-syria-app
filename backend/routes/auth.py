@@ -31,6 +31,7 @@ from models.schemas import (
 import random
 import string
 import os
+import logging
 from slowapi.util import get_remote_address
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -119,7 +120,6 @@ async def login(request: Request, credentials: UserLogin):
     """
     تسجيل الدخول - مع معالجة أخطاء شاملة
     """
-    import logging
     import traceback
     auth_logger = logging.getLogger("auth")
     

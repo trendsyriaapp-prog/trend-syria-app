@@ -87,7 +87,7 @@ const LazyImage = memo(({
       {/* الصورة الفعلية */}
       {isInView && (
         <img
-          src={hasError ? '/placeholder-image.svg' : src}
+          src={hasError ? '/placeholder.svg' : src}
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"

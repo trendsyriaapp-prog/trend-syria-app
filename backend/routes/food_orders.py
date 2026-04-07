@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import uuid
 import math
+import logging
 
 from core.database import db, get_current_user
 

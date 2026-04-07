@@ -151,7 +151,7 @@ const DailyDeal = ({ onAddToCart }) => {
               >
                 <div className="relative">
                   <img
-                    src={item.images?.[0] || item.image || 'https://via.placeholder.com/80'}
+                    src={item.images?.[0] || item.image || '/placeholder.png'}
                     alt={item.name}
                     className="w-16 h-16 object-cover rounded-lg bg-white"
                   />

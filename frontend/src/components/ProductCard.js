@@ -240,7 +240,7 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
         {/* Image Section */}
         <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-b from-gray-100 to-gray-50">
           <LazyImage
-            src={product.images?.[0] || 'https://via.placeholder.com/400?text=No+Image'}
+            src={product.images?.[0] || '/placeholder.png'}
             alt={product.name}
             className="w-full h-full"
             aspectRatio="4/5"

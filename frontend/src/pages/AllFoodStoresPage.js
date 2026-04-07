@@ -108,7 +108,7 @@ const AllFoodStoresPage = () => {
           {/* صورة الغلاف */}
           <div className="relative h-32">
             <LazyImage
-              src={store.cover_image || store.logo || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'}
+              src={store.cover_image || store.logo || '/placeholder.png'}
               alt={store.name}
               wrapperClassName="w-full h-full"
             />
