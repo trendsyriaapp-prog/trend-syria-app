@@ -1381,13 +1381,15 @@ async def get_emergency_phone(user: dict = Depends(get_current_user)):
 
 
 
-# === Debug: تشخيص مشاكل تسجيل الدخول (عام) ===
+# === Debug: تشخيص مشاكل تسجيل الدخول (للأدمن فقط) ===
 @router.get("/debug/login-check/{phone}")
-async def debug_login_check(phone: str):
+async def debug_login_check(phone: str, admin: dict = Depends(get_current_user)):
     """
-    🔧 تشخيص مشاكل تسجيل الدخول - لا يحتاج مصادقة
+    🔧 تشخيص مشاكل تسجيل الدخول - للأدمن فقط
     يُظهر معلومات عامة فقط لتحديد المشكلة
     """
+    if admin.get("user_type") != "admin":
+        raise HTTPException(status_code=403, detail="للمدير الرئيسي فقط")
     try:
         # التحقق من اتصال قاعدة البيانات
         try:
@@ -1426,11 +1428,9 @@ async def debug_login_check(phone: str):
             "password_info": password_info
         }
     except Exception as e:
-        import traceback
         return {
             "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc()[:500]
+            "error": "حدث خطأ في التحقق"
         }
 
 
