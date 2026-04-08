@@ -75,6 +75,7 @@ import BestSellersPage from "./pages/BestSellersPage";
 import NewArrivalsPage from "./pages/NewArrivalsPage";
 import AllProductsPage from "./pages/AllProductsPage";
 import BuyerWalletPage from "./pages/BuyerWalletPage";
+import DeleteAccountPage from "./pages/DeleteAccountPage";
 
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
@@ -309,6 +310,7 @@ function App() {
                 <Route path="/returns" element={<ReturnPolicyPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/packaging-guide" element={<PackagingGuidePage />} />
+                <Route path="/delete-account" element={<DeleteAccountPage />} />
                 
                 {/* Landing Pages */}
                 <Route path="/join/seller" element={<JoinAsSellerPage />} />

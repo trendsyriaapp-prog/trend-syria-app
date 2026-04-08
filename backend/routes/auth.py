@@ -1663,3 +1663,49 @@ async def check_whatsapp_status():
     
     result = await check_connection()
     return result
+
+
+
+@router.delete("/delete-account")
+async def delete_account(user: dict = Depends(get_current_user)):
+    """
+    حذف حساب المستخدم نهائياً
+    """
+    user_id = user["id"]
+    user_type = user.get("user_type", "buyer")
+    
+    # لا يمكن للأدمن حذف حسابه
+    if user_type == "admin":
+        raise HTTPException(status_code=403, detail="لا يمكن حذف حساب الأدمن")
+    
+    try:
+        # حذف المستخدم من جدول users
+        await db.users.delete_one({"id": user_id})
+        
+        # حذف البيانات المرتبطة
+        await db.wallets.delete_one({"user_id": user_id})
+        await db.notifications.delete_many({"user_id": user_id})
+        await db.carts.delete_one({"user_id": user_id})
+        await db.favorites.delete_many({"user_id": user_id})
+        await db.reviews.delete_many({"user_id": user_id})
+        
+        # إذا كان سائق
+        if user_type == "delivery":
+            await db.delivery_documents.delete_one({"driver_id": user_id})
+            await db.driver_locations.delete_one({"driver_id": user_id})
+            await db.driver_security_deposits.delete_one({"driver_id": user_id})
+        
+        # إذا كان بائع
+        if user_type == "seller":
+            await db.seller_documents.delete_one({"seller_id": user_id})
+            await db.products.delete_many({"seller_id": user_id})
+        
+        # إذا كان بائع طعام
+        if user_type == "food_seller":
+            await db.food_stores.delete_one({"owner_id": user_id})
+            await db.food_items.delete_many({"seller_id": user_id})
+        
+        return {"success": True, "message": "تم حذف حسابك بنجاح"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء حذف الحساب: {str(e)}")
