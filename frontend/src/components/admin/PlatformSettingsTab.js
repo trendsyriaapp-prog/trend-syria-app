@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, UtensilsCrossed, ShoppingBag, Truck, Wallet, 
   Users, Flame, Zap, Save, RefreshCw, Bell, X, Send, MessageSquare, MessageCircle, Phone,
-  Gift, Calendar, AlertCircle, Megaphone, TrendingUp, Sparkles
+  Gift, Calendar, AlertCircle, Megaphone, TrendingUp, Sparkles, Trash2, AlertTriangle
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useSettings } from '../../context/SettingsContext';
@@ -179,6 +179,200 @@ const GlobalFreeShippingPromo = () => {
         {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
         {promo.is_active ? 'تفعيل العرض' : 'حفظ الإعدادات'}
       </button>
+    </div>
+  );
+};
+
+// 🗑️ مكون مسح قاعدة البيانات
+const DatabaseResetSection = () => {
+  const { toast } = useToast();
+  const [showModal, setShowModal] = useState(false);
+  const [confirmStep, setConfirmStep] = useState(0);
+  const [confirmText, setConfirmText] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleReset = async () => {
+    if (confirmText !== 'أؤكد مسح جميع البيانات') {
+      toast({ title: "خطأ", description: "كلمة التأكيد غير صحيحة", variant: "destructive" });
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const res = await axios.post(`${API}/api/admin/reset-database`, {
+        confirmation: confirmText
+      });
+      setResult(res.data);
+      toast({ title: "تم بنجاح", description: "تم مسح قاعدة البيانات" });
+    } catch (error) {
+      toast({ 
+        title: "خطأ", 
+        description: error.response?.data?.detail || "فشل مسح قاعدة البيانات", 
+        variant: "destructive" 
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setConfirmStep(0);
+    setConfirmText('');
+    setResult(null);
+  };
+
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-6">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+          <Trash2 size={20} className="text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-red-800">أدوات الصيانة</h3>
+          <p className="text-xs text-red-600">للأدمن الرئيسي فقط</p>
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
+        data-testid="reset-database-btn"
+      >
+        <Trash2 size={18} />
+        مسح قاعدة البيانات
+      </button>
+
+      <p className="text-xs text-red-600 mt-2 text-center">
+        ⚠️ هذا الإجراء لا يمكن التراجع عنه!
+      </p>
+
+      {/* نافذة التأكيد */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl w-full max-w-md overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-red-500 p-4 text-white">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle size={28} />
+                  <div>
+                    <h3 className="font-bold text-lg">تحذير!</h3>
+                    <p className="text-sm text-red-100">مسح قاعدة البيانات</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4">
+                {result ? (
+                  // نتيجة المسح
+                  <div className="text-center py-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Trash2 size={32} className="text-green-600" />
+                    </div>
+                    <h3 className="font-bold text-lg text-green-700 mb-2">تم بنجاح!</h3>
+                    <p className="text-sm text-gray-600">تم مسح قاعدة البيانات</p>
+                    <button
+                      onClick={closeModal}
+                      className="mt-4 w-full py-2 bg-gray-100 rounded-lg font-bold"
+                    >
+                      إغلاق
+                    </button>
+                  </div>
+                ) : confirmStep === 0 ? (
+                  // الخطوة 1: التحذير
+                  <>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                      <h4 className="font-bold text-red-800 mb-2">سيتم حذف:</h4>
+                      <ul className="text-sm text-red-700 space-y-1">
+                        <li>❌ جميع المستخدمين (ما عدا الأدمن)</li>
+                        <li>❌ جميع البائعين ومتاجرهم</li>
+                        <li>❌ جميع موظفي التوصيل</li>
+                        <li>❌ جميع المنتجات وأصناف الطعام</li>
+                        <li>❌ جميع الطلبات والمحافظ</li>
+                      </ul>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                      <h4 className="font-bold text-green-800 mb-2">سيبقى:</h4>
+                      <ul className="text-sm text-green-700 space-y-1">
+                        <li>✅ حسابك (الأدمن الرئيسي)</li>
+                        <li>✅ إعدادات المنصة</li>
+                        <li>✅ رسائل الشريط العلوي</li>
+                      </ul>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={closeModal}
+                        className="flex-1 py-2 border border-gray-300 rounded-lg font-bold"
+                      >
+                        إلغاء
+                      </button>
+                      <button
+                        onClick={() => setConfirmStep(1)}
+                        className="flex-1 py-2 bg-red-500 text-white rounded-lg font-bold"
+                      >
+                        متابعة
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // الخطوة 2: كتابة التأكيد
+                  <>
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600 mb-2">للتأكيد، اكتب العبارة التالية:</p>
+                      <p className="font-bold text-red-600 bg-red-50 py-2 px-4 rounded-lg inline-block">
+                        أؤكد مسح جميع البيانات
+                      </p>
+                    </div>
+                    <input
+                      type="text"
+                      value={confirmText}
+                      onChange={(e) => setConfirmText(e.target.value)}
+                      placeholder="اكتب العبارة هنا..."
+                      className="w-full border border-gray-300 rounded-lg py-2 px-3 text-center mb-4 focus:border-red-500 focus:outline-none"
+                      dir="rtl"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setConfirmStep(0)}
+                        className="flex-1 py-2 border border-gray-300 rounded-lg font-bold"
+                        disabled={resetting}
+                      >
+                        رجوع
+                      </button>
+                      <button
+                        onClick={handleReset}
+                        disabled={resetting || confirmText !== 'أؤكد مسح جميع البيانات'}
+                        className="flex-1 py-2 bg-red-500 text-white rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {resetting ? (
+                          <RefreshCw size={16} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                        {resetting ? 'جاري المسح...' : 'مسح الآن'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -1538,6 +1732,9 @@ const PlatformSettingsTab = () => {
           </div>
         </div>
       </div>
+
+      {/* 🔧 أدوات الصيانة */}
+      <DatabaseResetSection />
 
       {/* نافذة الإشعار */}
       <AnimatePresence>

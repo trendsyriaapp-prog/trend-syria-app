@@ -3859,3 +3859,95 @@ async def cancel_promotion(promotion_id: str, user: dict = Depends(get_current_u
     })
     
     return {"message": "تم إلغاء الترويج"}
+
+
+
+# ============== Database Reset (للأدمن الرئيسي فقط) ==============
+
+@router.post("/reset-database")
+async def reset_database(data: dict, user: dict = Depends(get_current_user)):
+    """مسح قاعدة البيانات - للأدمن الرئيسي فقط"""
+    
+    # التحقق من أن المستخدم هو الأدمن الرئيسي فقط (ليس sub_admin)
+    if user["user_type"] != "admin":
+        raise HTTPException(status_code=403, detail="هذه العملية متاحة للأدمن الرئيسي فقط")
+    
+    # التحقق من كلمة التأكيد
+    confirmation = data.get("confirmation", "")
+    if confirmation != "أؤكد مسح جميع البيانات":
+        raise HTTPException(status_code=400, detail="كلمة التأكيد غير صحيحة")
+    
+    admin_id = user["id"]
+    admin_phone = user.get("phone", "")
+    
+    try:
+        # الجداول التي سيتم مسحها
+        collections_to_clear = [
+            "users",           # المستخدمين (ما عدا الأدمن)
+            "products",        # المنتجات
+            "orders",          # الطلبات
+            "food_orders",     # طلبات الطعام
+            "food_items",      # أصناف الطعام
+            "food_stores",     # متاجر الطعام
+            "wallets",         # المحافظ (ما عدا محفظة الأدمن)
+            "wallet_transactions",  # معاملات المحافظ
+            "withdrawal_requests",  # طلبات السحب
+            "seller_documents",     # وثائق البائعين
+            "delivery_documents",   # وثائق السائقين
+            "driver_locations",     # مواقع السائقين
+            "driver_security_deposits",  # ودائع السائقين
+            "notifications",        # الإشعارات
+            "carts",               # سلات التسوق
+            "favorites",           # المفضلة
+            "reviews",             # التقييمات
+            "price_reports",       # بلاغات الأسعار
+            "driver_reports",      # بلاغات السائقين
+            "chat_messages",       # رسائل الدردشة
+            "call_logs",           # سجلات المكالمات
+            "referrals",           # الإحالات
+            "achievements",        # الإنجازات
+            "user_achievements",   # إنجازات المستخدمين
+            "flash_deals",         # عروض الفلاش
+            "promotions",          # الترويجات
+            "sponsored_products",  # المنتجات المروجة
+            "banners",             # البانرات
+            "featured_stores",     # المتاجر المميزة
+        ]
+        
+        deleted_counts = {}
+        
+        for collection_name in collections_to_clear:
+            collection = db[collection_name]
+            
+            if collection_name == "users":
+                # حذف جميع المستخدمين ما عدا الأدمن الرئيسي
+                result = await collection.delete_many({"id": {"$ne": admin_id}})
+            elif collection_name == "wallets":
+                # حذف جميع المحافظ ما عدا محفظة الأدمن
+                result = await collection.delete_many({"user_id": {"$ne": admin_id}})
+            else:
+                # حذف جميع السجلات
+                result = await collection.delete_many({})
+            
+            deleted_counts[collection_name] = result.deleted_count
+        
+        # إعادة تعيين محفظة المنصة
+        await db.platform_wallet.update_one(
+            {"id": "main"},
+            {"$set": {
+                "balance": 0,
+                "total_earnings": 0,
+                "pending_withdrawals": 0,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": "تم مسح قاعدة البيانات بنجاح",
+            "deleted_counts": deleted_counts
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء المسح: {str(e)}")
