@@ -228,45 +228,50 @@ const AllPendingJoinRequests = () => {
             <Store size={18} />
             بائعين منتجات ({data.sellers.length})
           </h3>
-          {data.sellers.map((seller) => (
-            <div key={seller.id} className="bg-white rounded-xl border border-amber-200 overflow-hidden">
+          {data.sellers.map((item) => {
+            // البيانات تأتي من API كـ {seller_id, status, seller: {...}}
+            const seller = item.seller || item;
+            const sellerId = item.seller_id || seller.id;
+            
+            return (
+            <div key={sellerId} className="bg-white rounded-xl border border-amber-200 overflow-hidden">
               <div 
                 className="p-4 flex items-center justify-between cursor-pointer hover:bg-amber-50/50"
-                onClick={() => setExpandedItem(expandedItem === seller.id ? null : seller.id)}
+                onClick={() => setExpandedItem(expandedItem === sellerId ? null : sellerId)}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
                     <Store size={24} className="text-amber-600" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-800">{seller.store_name || seller.name}</h4>
-                    <p className="text-sm text-gray-500">{seller.phone}</p>
+                    <h4 className="font-bold text-gray-800">{seller.store_name || seller.name || seller.full_name || 'بدون اسم'}</h4>
+                    <p className="text-sm text-gray-500">{seller.phone || 'بدون رقم'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {expandedItem === seller.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  {expandedItem === sellerId ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </div>
               </div>
               
-              {expandedItem === seller.id && (
+              {expandedItem === sellerId && (
                 <div className="px-4 pb-4 border-t bg-gray-50">
                   <div className="grid grid-cols-2 gap-3 py-3 text-sm">
-                    <div><span className="text-gray-500">المدينة:</span> {seller.city}</div>
-                    <div><span className="text-gray-500">الهاتف:</span> {seller.phone}</div>
+                    <div><span className="text-gray-500">المدينة:</span> {seller.city || 'غير محدد'}</div>
+                    <div><span className="text-gray-500">الهاتف:</span> {seller.phone || 'غير محدد'}</div>
                     {seller.store_address && <div className="col-span-2"><span className="text-gray-500">العنوان:</span> {typeof seller.store_address === 'object' ? [seller.store_address?.area, seller.store_address?.street, seller.store_address?.building].filter(Boolean).join(', ') : seller.store_address}</div>}
                   </div>
                   <div className="flex gap-2 mt-3">
                     <button
-                      onClick={() => handleApproveSeller(seller.id)}
-                      disabled={actionLoading === seller.id}
+                      onClick={() => handleApproveSeller(sellerId)}
+                      disabled={actionLoading === sellerId}
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                     >
-                      {actionLoading === seller.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      {actionLoading === sellerId ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                       قبول
                     </button>
                     <button
-                      onClick={() => handleRejectSeller(seller.id)}
-                      disabled={actionLoading === seller.id}
+                      onClick={() => handleRejectSeller(sellerId)}
+                      disabled={actionLoading === sellerId}
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
                     >
                       <X size={16} />
@@ -276,7 +281,7 @@ const AllPendingJoinRequests = () => {
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
       )}
 
