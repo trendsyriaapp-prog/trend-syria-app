@@ -38,7 +38,7 @@ import OrderTrackingPage from "./pages/OrderTrackingPage";
 import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
+import { SellerDocumentsPage, SellerDashboardPage, SellerPendingApproval } from "./pages/SellerPages";
 import { DeliveryDocuments, DeliveryDashboard, DeliveryPendingApproval } from "./pages/DeliveryPages";
 import AdminDashboardPage from "./pages/AdminPage";
 import StorePage from "./pages/StorePage";
@@ -296,6 +296,7 @@ function App() {
                 
                 {/* Seller Routes */}
                 <Route path="/seller/documents" element={<SellerDocumentsPage />} />
+                <Route path="/seller/pending" element={<SellerPendingApproval />} />
                 <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
                 <Route path="/wallet" element={<WalletPage />} />
                 

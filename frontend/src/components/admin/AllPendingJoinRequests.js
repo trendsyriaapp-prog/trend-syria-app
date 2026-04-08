@@ -43,6 +43,10 @@ const AllPendingJoinRequests = () => {
   const [activeSection, setActiveSection] = useState('all'); // all, sellers, drivers, food_stores
   const [expandedItem, setExpandedItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // Modal الرفض
+  const [rejectModal, setRejectModal] = useState(null); // {type: 'seller'|'driver'|'food_store', id: string, name: string}
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     fetchAllPending();
@@ -79,17 +83,10 @@ const AllPendingJoinRequests = () => {
     }
   };
 
-  const handleRejectSeller = async (sellerId) => {
-    setActionLoading(sellerId);
-    try {
-      await axios.post(`${API}/api/admin/sellers/${sellerId}/reject`);
-      toast({ title: "تم", description: "تم رفض طلب البائع" });
-      fetchAllPending();
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل الرفض", variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleRejectSeller = async (sellerId, sellerName = '') => {
+    // فتح Modal لإدخال سبب الرفض
+    setRejectModal({ type: 'seller', id: sellerId, name: sellerName });
+    setRejectReason('');
   };
 
   const handleApproveDriver = async (driverId) => {
@@ -105,23 +102,10 @@ const AllPendingJoinRequests = () => {
     }
   };
 
-  const handleRejectDriver = async (driverId) => {
-    if (!driverId) {
-      toast({ title: "خطأ", description: "معرّف السائق غير موجود", variant: "destructive" });
-      return;
-    }
-    
-    setActionLoading(driverId);
-    try {
-      const response = await axios.post(`${API}/api/admin/delivery/${driverId}/reject`);
-      toast({ title: "تم", description: "تم رفض طلب السائق" });
-      fetchAllPending();
-    } catch (error) {
-      const errorMsg = error.response?.data?.detail || "فشل الرفض";
-      toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleRejectDriver = async (driverId, driverName = '') => {
+    // فتح Modal لإدخال سبب الرفض
+    setRejectModal({ type: 'driver', id: driverId, name: driverName });
+    setRejectReason('');
   };
 
   const handleApproveFoodStore = async (storeId) => {
@@ -137,14 +121,44 @@ const AllPendingJoinRequests = () => {
     }
   };
 
-  const handleRejectFoodStore = async (storeId) => {
-    setActionLoading(storeId);
+  const handleRejectFoodStore = async (storeId, storeName = '') => {
+    // فتح Modal لإدخال سبب الرفض
+    setRejectModal({ type: 'food_store', id: storeId, name: storeName });
+    setRejectReason('');
+  };
+
+  // تنفيذ الرفض الفعلي بعد إدخال السبب
+  const executeReject = async () => {
+    if (!rejectModal) return;
+    if (!rejectReason.trim()) {
+      toast({ title: "خطأ", description: "يرجى إدخال سبب الرفض", variant: "destructive" });
+      return;
+    }
+    
+    setActionLoading(rejectModal.id);
     try {
-      await axios.post(`${API}/api/admin/food/stores/${storeId}/reject`);
-      toast({ title: "تم", description: "تم رفض متجر الطعام" });
+      let endpoint = '';
+      let successMsg = '';
+      
+      if (rejectModal.type === 'seller') {
+        endpoint = `/api/admin/sellers/${rejectModal.id}/reject`;
+        successMsg = 'تم رفض طلب البائع';
+      } else if (rejectModal.type === 'driver') {
+        endpoint = `/api/admin/delivery/${rejectModal.id}/reject`;
+        successMsg = 'تم رفض طلب السائق';
+      } else if (rejectModal.type === 'food_store') {
+        endpoint = `/api/admin/food/stores/${rejectModal.id}/reject`;
+        successMsg = 'تم رفض متجر الطعام';
+      }
+      
+      await axios.post(`${API}${endpoint}`, { reason: rejectReason });
+      toast({ title: "تم", description: successMsg });
+      setRejectModal(null);
+      setRejectReason('');
       fetchAllPending();
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل الرفض", variant: "destructive" });
+      const errorMsg = error.response?.data?.detail || "فشل الرفض";
+      toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -270,7 +284,7 @@ const AllPendingJoinRequests = () => {
                       قبول
                     </button>
                     <button
-                      onClick={() => handleRejectSeller(sellerId)}
+                      onClick={() => handleRejectSeller(sellerId, seller.store_name || seller.name || seller.full_name)}
                       disabled={actionLoading === sellerId}
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
                     >
@@ -379,7 +393,7 @@ const AllPendingJoinRequests = () => {
                         {docStatus.isComplete ? 'قبول' : 'وثائق ناقصة'}
                       </button>
                       <button
-                        onClick={() => handleRejectDriver(driverId)}
+                        onClick={() => handleRejectDriver(driverId, driver.name || driver.full_name)}
                         disabled={actionLoading === driverId}
                         className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
                         data-testid={`reject-driver-btn-${driverId}`}
@@ -445,7 +459,7 @@ const AllPendingJoinRequests = () => {
                       قبول
                     </button>
                     <button
-                      onClick={() => handleRejectFoodStore(store.id)}
+                      onClick={() => handleRejectFoodStore(store.id, store.name)}
                       disabled={actionLoading === store.id}
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
                     >
@@ -457,6 +471,55 @@ const AllPendingJoinRequests = () => {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal سبب الرفض */}
+      {rejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">رفض الطلب</h3>
+            <p className="text-gray-600 mb-4">
+              أنت على وشك رفض طلب <strong>{rejectModal.name || 'هذا الطلب'}</strong>
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                سبب الرفض <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="اكتب سبب الرفض هنا..."
+                className="w-full p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setRejectModal(null);
+                  setRejectReason('');
+                }}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={executeReject}
+                disabled={actionLoading === rejectModal.id || !rejectReason.trim()}
+                className="flex-1 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {actionLoading === rejectModal.id ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <XCircle size={18} />
+                )}
+                تأكيد الرفض
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
