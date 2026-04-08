@@ -180,7 +180,14 @@ const BackButtonHandler = () => {
 
     const handleBackButton = ({ canGoBack }) => {
       // الصفحات الرئيسية التي يجب الخروج منها عند الضغط على الرجوع
-      const mainPages = ['/', '/home'];
+      // كل نوع مستخدم له صفحة رئيسية خاصة به
+      const mainPages = [
+        '/', '/home',                    // العميل
+        '/admin',                        // المدير
+        '/seller/dashboard',             // البائع
+        '/food/dashboard',               // بائع الطعام
+        '/delivery/dashboard'            // موظف التوصيل
+      ];
       
       // الصفحات الفرعية الرئيسية (المستوى الأول)
       const firstLevelPages = ['/products', '/food', '/categories', '/cart', '/orders', '/settings', '/favorites', '/following', '/messages', '/wallet', '/my-wallet', '/gifts', '/referrals'];
