@@ -5,7 +5,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.10 (versionCode: 11) in Closed Testing (Alpha)
+- Android App: v1.0.12 (versionCode: 12) in Closed Testing (Alpha)
 
 ## Core Features Implemented
 - Multi-role system (buyer, seller, food_seller, delivery, admin, sub_admin)
@@ -19,6 +19,17 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Admin dashboard with full controls
 
 ## Recent Bug Fixes (December 2025)
+
+### 2026-04-08: Admin Reject Join Requests - UI Instant Update ✅
+**Problem:** When Admin rejects a seller/driver join request, the item stays visible in the "Pending" list until page refresh
+**Root Cause:** After successful reject API call, `fetchAllPending()` was called but relied on re-fetching from server which could be slow or cached
+**Fix:** Instead of refetching, directly remove the item from React state after successful API response
+**Implementation:**
+- `executeReject()`: After successful reject, filter out the item from `pendingSellers`, `pendingDrivers`, or `pendingFoodStores` state
+- `handleApproveSeller/Driver/FoodStore()`: Same pattern - remove item from state immediately after successful approve
+- Also close expanded item with `setExpandedItem(null)` for cleaner UX
+**Files Changed:**
+- `/app/frontend/src/components/admin/AllPendingJoinRequests.js`
 
 ### 2026-04-08: Google Play Account Deletion Policy Compliance ✅
 **Requirement:** Google Play requires apps to have an accessible "Delete Account" option from within the app

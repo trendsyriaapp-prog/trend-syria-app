@@ -75,7 +75,9 @@ const AllPendingJoinRequests = () => {
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/approve`);
       toast({ title: "تم", description: "تم تفعيل حساب البائع" });
-      fetchAllPending();
+      // إزالة من القائمة فوراً
+      setPendingSellers(prev => prev.filter(item => (item.seller_id || item.seller?.id) !== sellerId));
+      setExpandedItem(null);
     } catch (error) {
       toast({ title: "خطأ", description: "فشل التفعيل", variant: "destructive" });
     } finally {
@@ -94,7 +96,9 @@ const AllPendingJoinRequests = () => {
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/approve`);
       toast({ title: "تم", description: "تم تفعيل حساب السائق" });
-      fetchAllPending();
+      // إزالة من القائمة فوراً
+      setPendingDrivers(prev => prev.filter(item => (item.driver_id || item.delivery_id || item.driver?.id) !== driverId));
+      setExpandedItem(null);
     } catch (error) {
       toast({ title: "خطأ", description: "فشل التفعيل", variant: "destructive" });
     } finally {
@@ -113,7 +117,9 @@ const AllPendingJoinRequests = () => {
     try {
       await axios.post(`${API}/api/admin/food/stores/${storeId}/approve`);
       toast({ title: "تم", description: "تم تفعيل متجر الطعام" });
-      fetchAllPending();
+      // إزالة من القائمة فوراً
+      setPendingFoodStores(prev => prev.filter(item => item.id !== storeId));
+      setExpandedItem(null);
     } catch (error) {
       toast({ title: "خطأ", description: "فشل التفعيل", variant: "destructive" });
     } finally {
@@ -153,9 +159,19 @@ const AllPendingJoinRequests = () => {
       
       await axios.post(`${API}${endpoint}`, { reason: rejectReason });
       toast({ title: "تم", description: successMsg });
+      
+      // إزالة العنصر من الـ state مباشرة لتحديث UI فوري
+      if (rejectModal.type === 'seller') {
+        setPendingSellers(prev => prev.filter(item => (item.seller_id || item.seller?.id) !== rejectModal.id));
+      } else if (rejectModal.type === 'driver') {
+        setPendingDrivers(prev => prev.filter(item => (item.driver_id || item.delivery_id || item.driver?.id) !== rejectModal.id));
+      } else if (rejectModal.type === 'food_store') {
+        setPendingFoodStores(prev => prev.filter(item => item.id !== rejectModal.id));
+      }
+      
       setRejectModal(null);
       setRejectReason('');
-      fetchAllPending();
+      setExpandedItem(null); // إغلاق أي عنصر مفتوح
     } catch (error) {
       const errorMsg = error.response?.data?.detail || "فشل الرفض";
       toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
