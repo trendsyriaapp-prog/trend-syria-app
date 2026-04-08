@@ -98,15 +98,11 @@ async def request_topup(
     if user["user_type"] != "buyer":
         raise HTTPException(status_code=403, detail="شحن المحفظة متاح للعملاء فقط")
     
-    # التحقق من الحد الأدنى والأقصى (بالعملة الجديدة - بعد إزالة صفرين)
-    MIN_TOPUP = 100       # 100 ل.س جديدة
-    MAX_TOPUP = 50000     # 50,000 ل.س جديدة
+    # التحقق من الحد الأدنى فقط
+    MIN_TOPUP = 100       # 100 ل.س جديدة (الحد الأدنى)
     
     if data.amount < MIN_TOPUP:
         raise HTTPException(status_code=400, detail=f"الحد الأدنى للشحن {MIN_TOPUP:,} ل.س")
-    
-    if data.amount > MAX_TOPUP:
-        raise HTTPException(status_code=400, detail=f"الحد الأقصى للشحن {MAX_TOPUP:,} ل.س")
     
     # إنشاء طلب الشحن
     topup_id = str(uuid.uuid4())

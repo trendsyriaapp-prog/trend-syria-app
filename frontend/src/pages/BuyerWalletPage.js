@@ -44,8 +44,7 @@ const BuyerWalletPage = () => {
   const [paymentSettings, setPaymentSettings] = useState(null);
   
   // الحدود (بالعملة الجديدة - بعد إزالة صفرين)
-  const MIN_TOPUP = 100;      // 100 ل.س جديدة (= 10,000 قديمة)
-  const MAX_TOPUP = 50000;    // 50,000 ل.س جديدة (= 5,000,000 قديمة)
+  const MIN_TOPUP = 100;      // 100 ل.س جديدة (= 10,000 قديمة) - الحد الأدنى فقط
   
   // مبالغ سريعة للشحن (بالعملة الجديدة)
   const quickAmounts = [250, 500, 1000, 2500, 5000];
@@ -99,15 +98,6 @@ const BuyerWalletPage = () => {
       toast({
         title: "خطأ",
         description: `الحد الأدنى للشحن ${formatPrice(MIN_TOPUP)}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (amount > MAX_TOPUP) {
-      toast({
-        title: "خطأ",
-        description: `الحد الأقصى للشحن ${formatPrice(MAX_TOPUP)}`,
         variant: "destructive"
       });
       return;
