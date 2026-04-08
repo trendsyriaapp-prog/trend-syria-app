@@ -39,7 +39,7 @@ import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { SellerDocumentsPage, SellerDashboardPage } from "./pages/SellerPages";
-import { DeliveryDocuments, DeliveryDashboard } from "./pages/DeliveryPages";
+import { DeliveryDocuments, DeliveryDashboard, DeliveryPendingApproval } from "./pages/DeliveryPages";
 import AdminDashboardPage from "./pages/AdminPage";
 import StorePage from "./pages/StorePage";
 import FollowingPage from "./pages/FollowingPage";
@@ -302,6 +302,7 @@ function App() {
                 {/* Delivery Routes */}
                 <Route path="/delivery" element={<Navigate to="/delivery/dashboard" replace />} />
                 <Route path="/delivery/documents" element={<DeliveryDocuments />} />
+                <Route path="/delivery/pending" element={<DeliveryPendingApproval />} />
                 <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
                 <Route path="/delivery/map" element={<DeliveryMapPage />} />
                 

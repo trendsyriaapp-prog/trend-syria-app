@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import axios from 'axios';
 
+const API = process.env.REACT_APP_BACKEND_URL;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة'];
 
 const LoginPage = () => {
@@ -33,7 +35,31 @@ const LoginPage = () => {
       } else if (userType === 'food_seller') {
         navigate('/food/dashboard', { replace: true });
       } else if (userType === 'delivery') {
-        navigate('/delivery/dashboard', { replace: true });
+        // موظف التوصيل: التحقق من حالة الوثائق أولاً
+        try {
+          const token = response.token;
+          const docRes = await axios.get(`${API}/api/delivery/documents/status`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const docStatus = docRes.data?.status;
+          
+          if (!docStatus || docStatus === 'not_submitted') {
+            // لم يرفع الوثائق بعد
+            navigate('/delivery/documents', { replace: true });
+          } else if (docStatus === 'pending') {
+            // في انتظار الموافقة
+            navigate('/delivery/pending', { replace: true });
+          } else if (docStatus === 'rejected') {
+            // مرفوض - يحتاج إعادة رفع
+            navigate('/delivery/documents', { replace: true });
+          } else {
+            // معتمد
+            navigate('/delivery/dashboard', { replace: true });
+          }
+        } catch (docError) {
+          // إذا فشل التحقق، نوجهه لصفحة الوثائق
+          navigate('/delivery/documents', { replace: true });
+        }
       } else {
         navigate('/', { replace: true });
       }
