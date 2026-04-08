@@ -231,6 +231,35 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // حذف بائع
+  const handleDeleteSeller = async (sellerId) => {
+    // تحديث فوري للواجهة
+    setAllSellers(prev => prev.filter(s => s.id !== sellerId));
+    
+    try {
+      await axios.delete(`${API}/api/admin/sellers/${sellerId}`);
+    } catch (error) {
+      fetchData();
+      toast({ title: "خطأ", description: "فشل حذف البائع", variant: "destructive" });
+    }
+  };
+
+  // إيقاف/تفعيل بائع
+  const handleSuspendSeller = async (sellerId) => {
+    try {
+      // تحقق من حالة البائع الحالية
+      const seller = allSellers.find(s => s.id === sellerId);
+      if (seller?.is_suspended) {
+        await axios.post(`${API}/api/admin/sellers/${sellerId}/activate`);
+      } else {
+        await axios.post(`${API}/api/admin/sellers/${sellerId}/suspend`);
+      }
+      fetchData();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل تغيير حالة البائع", variant: "destructive" });
+    }
+  };
+
   const handleApproveProduct = async (productId) => {
     // تحديث فوري للواجهة
     setPendingProducts(prev => prev.filter(p => p.id !== productId));
@@ -509,7 +538,15 @@ const AdminDashboardPage = () => {
                 onBanUser={handleBanBuyer}
               />
             )}
-            {activeTab === 'sellers' && <SellersTab allSellers={allSellers} />}
+            {activeTab === 'sellers' && (
+              <SellersTab 
+                allSellers={allSellers} 
+                onDeleteSeller={handleDeleteSeller}
+                onBanSeller={handleSuspendSeller}
+                onApproveSeller={handleApproveSeller}
+                onRejectSeller={handleRejectSeller}
+              />
+            )}
             {activeTab === 'products' && <ProductsTab allProducts={allProducts} />}
             {activeTab === 'orders' && <OrdersTab allOrders={allOrders} />}
             {activeTab === 'pending-products' && (
