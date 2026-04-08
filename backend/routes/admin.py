@@ -1881,7 +1881,8 @@ async def get_food_admin_stats(user: dict = Depends(get_current_user)):
     total_stores = await db.food_stores.count_documents({})
     active_stores = await db.food_stores.count_documents({"is_active": True, "is_approved": True})
     pending_stores = await db.food_stores.count_documents({"is_approved": False})
-    total_products = await db.food_products.count_documents({})
+    # حساب أصناف الطعام من food_items
+    total_products = await db.food_items.count_documents({})
     
     # حسب النوع
     restaurants_count = await db.food_stores.count_documents({"store_type": "restaurants"})
