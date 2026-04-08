@@ -425,6 +425,70 @@ async def get_all_users(user: dict = Depends(get_current_user)):
     
     return users
 
+# ============== Users/Drivers Delete & Ban ==============
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
+    """حذف مستخدم أو سائق"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # لا يمكن حذف الأدمن الرئيسي
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    if target_user.get("user_type") == "admin":
+        raise HTTPException(status_code=403, detail="لا يمكن حذف الأدمن الرئيسي")
+    
+    # حذف المستخدم
+    await db.users.delete_one({"id": user_id})
+    
+    # حذف البيانات المرتبطة
+    await db.wallets.delete_one({"user_id": user_id})
+    await db.notifications.delete_many({"user_id": user_id})
+    
+    # إذا كان سائق، حذف بيانات التوصيل
+    if target_user.get("user_type") == "delivery":
+        await db.delivery_documents.delete_one({"driver_id": user_id})
+        await db.driver_locations.delete_one({"driver_id": user_id})
+        await db.driver_security_deposits.delete_one({"driver_id": user_id})
+    
+    # إذا كان بائع، حذف بيانات البائع
+    if target_user.get("user_type") == "seller":
+        await db.seller_documents.delete_one({"seller_id": user_id})
+        await db.products.delete_many({"seller_id": user_id})
+    
+    # إذا كان بائع طعام، حذف بيانات متجر الطعام
+    if target_user.get("user_type") == "food_seller":
+        await db.food_stores.delete_one({"owner_id": user_id})
+        await db.food_items.delete_many({"seller_id": user_id})
+    
+    return {"message": "تم حذف المستخدم بنجاح"}
+
+@router.post("/users/{user_id}/ban")
+async def ban_user(user_id: str, user: dict = Depends(get_current_user)):
+    """حظر مستخدم أو سائق"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    if target_user.get("user_type") == "admin":
+        raise HTTPException(status_code=403, detail="لا يمكن حظر الأدمن الرئيسي")
+    
+    # تبديل حالة الحظر
+    current_status = target_user.get("is_banned", False)
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_banned": not current_status}}
+    )
+    
+    action = "حظر" if not current_status else "إلغاء حظر"
+    return {"message": f"تم {action} المستخدم بنجاح", "is_banned": not current_status}
+
 # ============== Sellers Management ==============
 
 @router.get("/sellers/pending")
