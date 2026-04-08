@@ -112,11 +112,13 @@ const OrdersPage = () => {
         axios.get(`${API}/api/food/orders/my-orders`).catch(() => ({ data: [] }))
       ]);
       
-      setOrders(ordersRes.data);
-      setFoodOrders(foodRes.data);
+      // التأكد من أن البيانات مصفوفات
+      setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
+      setFoodOrders(Array.isArray(foodRes.data) ? foodRes.data : []);
       
       // Check which orders have been rated
-      const delivered = ordersRes.data.filter(o => o.delivery_status === 'delivered');
+      const allOrders = Array.isArray(ordersRes.data) ? ordersRes.data : [];
+      const delivered = allOrders.filter(o => o.delivery_status === 'delivered');
       for (const order of delivered) {
         try {
           const ratingRes = await axios.get(`${API}/api/delivery/check-rating/${order.id}`);
@@ -129,6 +131,8 @@ const OrdersPage = () => {
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
+      setOrders([]);
+      setFoodOrders([]);
     } finally {
       setLoading(false);
     }
@@ -243,15 +247,15 @@ const OrdersPage = () => {
 
   // دمج وترتيب جميع الطلبات
   const getAllOrders = () => {
-    const productOrdersFormatted = orders.map(o => ({ ...o, type: 'product' }));
-    const foodOrdersFormatted = foodOrders.map(o => ({ ...o, type: 'food' }));
+    const productOrdersFormatted = (orders || []).map(o => ({ ...o, type: 'product' }));
+    const foodOrdersFormatted = (foodOrders || []).map(o => ({ ...o, type: 'food' }));
     return [...productOrdersFormatted, ...foodOrdersFormatted]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
   const getFilteredOrders = () => {
-    if (activeTab === 'products') return orders.map(o => ({ ...o, type: 'product' }));
-    if (activeTab === 'food') return foodOrders.map(o => ({ ...o, type: 'food' }));
+    if (activeTab === 'products') return (orders || []).map(o => ({ ...o, type: 'product' }));
+    if (activeTab === 'food') return (foodOrders || []).map(o => ({ ...o, type: 'food' }));
     return getAllOrders();
   };
 
@@ -450,7 +454,7 @@ const OrdersPage = () => {
                             <Gift size={16} className="text-pink-500" />
                             <span className="text-xs text-pink-600 font-medium">هدية من {order.gift_sender_name || 'صديق'}</span>
                           </div>
-                          {order.items.slice(0, 4).map((item, i) => (
+                          {(order.items || []).slice(0, 4).map((item, i) => (
                             <div key={i} className="flex-shrink-0 relative">
                               <img
                                 src={item.image || item.product_image || '/placeholder.svg'}
@@ -468,7 +472,7 @@ const OrdersPage = () => {
                       ) : (
                         // طلب عادي
                         <>
-                          {order.items.slice(0, 4).map((item, i) => (
+                          {(order.items || []).slice(0, 4).map((item, i) => (
                             <div key={i} className="flex-shrink-0 relative">
                               <img
                                 src={item.image || item.product_image || '/placeholder.svg'}
@@ -558,7 +562,7 @@ const OrdersPage = () => {
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <h4 className="font-bold text-gray-900 mb-3">المنتجات</h4>
                         <div className="space-y-2">
-                          {order.items.map((item, i) => (
+                          {(order.items || []).map((item, i) => (
                             <div key={i} className="flex items-center gap-3 bg-white p-2 rounded-lg">
                               <img
                                 src={item.image || '/placeholder.svg'}
