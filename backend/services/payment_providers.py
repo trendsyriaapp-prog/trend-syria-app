@@ -462,7 +462,11 @@ class PaymentManager:
         """الحصول على مزود الدفع المناسب"""
         providers = {
             "shamcash": self.shamcash,
+            "sham_cash": self.shamcash,
             "syriatel_cash": self.syriatel,
+            "syriatel": self.syriatel,
+            "mtn_cash": self.shamcash,  # يستخدم نفس shamcash في الاختبار
+            "mtn": self.shamcash,       # يستخدم نفس shamcash في الاختبار
             "card": self.bank_card,
             "bank_card": self.bank_card
         }
