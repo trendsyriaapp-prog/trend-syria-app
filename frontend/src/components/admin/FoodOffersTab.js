@@ -491,6 +491,23 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
     }
   };
 
+  const handleDeleteRequest = async (requestId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+    
+    setProcessing(requestId);
+    try {
+      await axios.delete(`${API}/api/admin/flash-sale-requests/${requestId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الحذف", description: "تم حذف الطلب بنجاح" });
+      onUpdate();
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || "فشل الحذف", variant: "destructive" });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const filteredRequests = requests.filter(req => {
     if (filter === 'all') return true;
     return req.status === filter;
@@ -645,6 +662,28 @@ const FlashRequestsSection = ({ requests, stats, token, onUpdate }) => {
                       >
                         <XCircle size={18} />
                         رفض
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRequest(req.id)}
+                        disabled={processing === req.id}
+                        className="px-3 bg-gray-100 text-gray-600 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        title="حذف الطلب"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* زر حذف للطلبات المرفوضة أو الموافق عليها */}
+                  {(req.status === 'rejected' || req.status === 'approved') && (
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => handleDeleteRequest(req.id)}
+                        disabled={processing === req.id}
+                        className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-red-100 hover:text-red-600 disabled:opacity-50"
+                      >
+                        <Trash2 size={14} />
+                        حذف الطلب
                       </button>
                     </div>
                   )}

@@ -458,9 +458,16 @@ async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
     if target_user.get("user_type") == "seller":
         await db.seller_documents.delete_one({"seller_id": user_id})
         await db.products.delete_many({"seller_id": user_id})
+        # حذف طلبات الترويج والفلاش
+        await db.product_promotions.delete_many({"seller_id": user_id})
     
     # إذا كان بائع طعام، حذف بيانات متجر الطعام
     if target_user.get("user_type") == "food_seller":
+        # جلب المتجر أولاً للحصول على store_id
+        store = await db.food_stores.find_one({"owner_id": user_id})
+        if store:
+            # حذف طلبات الفلاش المرتبطة بالمتجر
+            await db.flash_sale_requests.delete_many({"store_id": store["id"]})
         await db.food_stores.delete_one({"owner_id": user_id})
         await db.food_items.delete_many({"seller_id": user_id})
     
@@ -704,6 +711,8 @@ async def delete_seller(seller_id: str, user: dict = Depends(get_current_user)):
     await db.users.delete_one({"id": seller_id})
     await db.wallets.delete_one({"user_id": seller_id})
     await db.seller_documents.delete_one({"seller_id": seller_id})
+    # حذف طلبات الترويج المرتبطة بالبائع
+    await db.product_promotions.delete_many({"seller_id": seller_id})
     # حذف المنتجات (اختياري - يمكن الاحتفاظ بها)
     # await db.products.delete_many({"seller_id": seller_id})
     
@@ -2544,6 +2553,13 @@ async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_c
     if req["status"] != "pending":
         raise HTTPException(status_code=400, detail="الطلب ليس في حالة انتظار")
     
+    # التحقق من وجود المتجر (قد يكون محذوفاً)
+    store = await db.food_stores.find_one({"id": req["store_id"]})
+    if not store:
+        # المتجر محذوف - حذف الطلب اليتيم تلقائياً
+        await db.flash_sale_requests.delete_one({"id": request_id})
+        raise HTTPException(status_code=400, detail="المتجر محذوف - تم حذف الطلب تلقائياً")
+    
     now = datetime.now(timezone.utc).isoformat()
     
     # تحديث الطلب
@@ -2575,14 +2591,12 @@ async def approve_flash_sale_request(request_id: str, user: dict = Depends(get_c
         )
     
     # إشعار صاحب المتجر
-    store = await db.food_stores.find_one({"id": req["store_id"]})
-    if store:
-        await create_notification_for_user(
-            user_id=store["owner_id"],
-            title="✅ تمت الموافقة على طلب الانضمام للفلاش",
-            message="تمت الموافقة على منتجاتك للانضمام لعرض الفلاش",
-            notification_type="flash_request_approved"
-        )
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="✅ تمت الموافقة على طلب الانضمام للفلاش",
+        message="تمت الموافقة على منتجاتك للانضمام لعرض الفلاش",
+        notification_type="flash_request_approved"
+    )
     
     return {"message": "تمت الموافقة على الطلب وإضافة المنتجات لعرض الفلاش"}
 
@@ -2604,6 +2618,13 @@ async def reject_flash_sale_request(
     if req["status"] != "pending":
         raise HTTPException(status_code=400, detail="الطلب ليس في حالة انتظار")
     
+    # التحقق من وجود المتجر (قد يكون محذوفاً)
+    store = await db.food_stores.find_one({"id": req["store_id"]})
+    if not store:
+        # المتجر محذوف - حذف الطلب اليتيم تلقائياً
+        await db.flash_sale_requests.delete_one({"id": request_id})
+        raise HTTPException(status_code=400, detail="المتجر محذوف - تم حذف الطلب تلقائياً")
+    
     now = datetime.now(timezone.utc).isoformat()
     
     # تحديث الطلب
@@ -2621,8 +2642,7 @@ async def reject_flash_sale_request(
     )
     
     # استرداد الرسوم إذا تم الدفع
-    store = await db.food_stores.find_one({"id": req["store_id"]})
-    if store and refund and req.get("fee_paid", 0) > 0:
+    if refund and req.get("fee_paid", 0) > 0:
         # استرداد للمحفظة
         wallet = await db.wallets.find_one({"user_id": store["owner_id"]})
         if wallet:
@@ -2644,19 +2664,34 @@ async def reject_flash_sale_request(
             await db.wallet_transactions.insert_one(transaction)
     
     # إشعار صاحب المتجر
-    if store:
-        message = f"تم رفض طلب الانضمام لعرض الفلاش. السبب: {reason}"
-        if refund and req.get("fee_paid", 0) > 0:
-            message += f"\n✅ تم استرداد الرسوم ({req['fee_paid']:,} ل.س) إلى محفظتك"
-        
-        await create_notification_for_user(
-            user_id=store["owner_id"],
-            title="❌ تم رفض طلب الانضمام للفلاش",
-            message=message,
-            notification_type="flash_request_rejected"
-        )
+    message = f"تم رفض طلب الانضمام لعرض الفلاش. السبب: {reason}"
+    if refund and req.get("fee_paid", 0) > 0:
+        message += f"\n✅ تم استرداد الرسوم ({req['fee_paid']:,} ل.س) إلى محفظتك"
+    
+    await create_notification_for_user(
+        user_id=store["owner_id"],
+        title="❌ تم رفض طلب الانضمام للفلاش",
+        message=message,
+        notification_type="flash_request_rejected"
+    )
     
     return {"message": "تم رفض الطلب", "refunded": refund}
+
+
+@router.delete("/flash-sale-requests/{request_id}")
+async def delete_flash_sale_request(request_id: str, user: dict = Depends(get_current_user)):
+    """حذف طلب انضمام للفلاش (للطلبات اليتيمة أو القديمة)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    req = await db.flash_sale_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # حذف الطلب
+    await db.flash_sale_requests.delete_one({"id": request_id})
+    
+    return {"message": "تم حذف الطلب بنجاح"}
 
 
 # ============== إعدادات رسوم الفلاش ==============
