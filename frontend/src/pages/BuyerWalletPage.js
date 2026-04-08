@@ -373,10 +373,9 @@ const BuyerWalletPage = () => {
                     placeholder="مثال: 1000"
                       className="w-full p-3 border border-gray-300 rounded-xl text-lg"
                       min={MIN_TOPUP}
-                      max={MAX_TOPUP}
                     />
                     <p className="text-xs text-gray-400 mt-1">
-                      الحد الأدنى: {formatPrice(MIN_TOPUP)} | الأقصى: {formatPrice(MAX_TOPUP)}
+                      الحد الأدنى: {formatPrice(MIN_TOPUP)}
                     </p>
                   </div>
                   
