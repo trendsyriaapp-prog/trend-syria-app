@@ -6,7 +6,7 @@ import {
   CreditCard, MapPin, Plus, Trash2, Edit2, Check, X, 
   ArrowRight, User, Phone, Building, Home, Award,
   Shield, FileText, RefreshCcw, Gift, Moon, Sun, MessageCircle, Globe,
-  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft, Camera, Mic
+  LogOut, Wallet, Star, Truck, Volume2, Users, HelpCircle, Bell, ChevronLeft, Camera, Mic, UserX
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -842,7 +842,17 @@ const SettingsPage = () => {
         </section>
 
         {/* زر تسجيل الخروج */}
-        <section className="mt-4">
+        <section className="mt-4 space-y-2">
+          {/* رابط حذف الحساب */}
+          <button
+            onClick={() => navigate('/delete-account')}
+            className="w-full p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center gap-2 text-red-400 font-medium hover:bg-red-100 transition-colors"
+            data-testid="delete-account-settings-btn"
+          >
+            <UserX size={18} />
+            حذف الحساب
+          </button>
+          
           <button
             onClick={() => {
               logout();

@@ -25,11 +25,13 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 **Implementation:**
 - Created `DeleteAccountPage.js` at `/delete-account` route
 - Created `DELETE /api/auth/account` backend API for authenticated account deletion
-- Added "حذف الحساب" (Delete Account) link in MobileNav.js account menu dropdown
+- Added "حذف الحساب" (Delete Account) link in MobileNav.js account menu dropdown (for buyers)
+- Added "حذف الحساب" button in SettingsPage.js (accessible to ALL user types: buyers, sellers, drivers)
 - Link appears with red UserX icon above the logout button
 **Files Changed:**
 - `/app/frontend/src/pages/DeleteAccountPage.js` (new page)
-- `/app/frontend/src/components/MobileNav.js` (added navigation link)
+- `/app/frontend/src/components/MobileNav.js` (added navigation link for buyers)
+- `/app/frontend/src/pages/SettingsPage.js` (added delete account button for all users)
 - `/app/backend/routes/auth.py` (added DELETE /api/auth/account endpoint)
 - `/app/frontend/src/App.js` (added route)
 
