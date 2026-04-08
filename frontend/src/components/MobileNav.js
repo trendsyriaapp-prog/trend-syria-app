@@ -261,16 +261,19 @@ const MobileNav = () => {
 
               {/* Menu Items */}
               <div className="p-4 space-y-2">
-                <Link
-                  to="/orders"
-                  onClick={() => setShowAccountMenu(false)}
-                  className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
-                >
-                  <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
-                    <Package size={20} className="text-[#FF6B00]" />
-                  </div>
-                  <span className="font-medium text-gray-900">طلباتي</span>
-                </Link>
+                {/* طلباتي - مخفية لموظفي التوصيل */}
+                {user?.user_type !== 'delivery' && (
+                  <Link
+                    to="/orders"
+                    onClick={() => setShowAccountMenu(false)}
+                    className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+                      <Package size={20} className="text-[#FF6B00]" />
+                    </div>
+                    <span className="font-medium text-gray-900">طلباتي</span>
+                  </Link>
+                )}
 
                 <Link
                   to="/messages"

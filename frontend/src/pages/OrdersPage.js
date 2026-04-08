@@ -99,8 +99,15 @@ const OrdersPage = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'products', 'food'
   const [reorderLoading, setReorderLoading] = useState(null); // track which order is being reordered
 
+  // حماية الصفحة من موظفي التوصيل - لهم صفحة خاصة
   useEffect(() => {
-    if (user) {
+    if (user?.user_type === 'delivery') {
+      navigate('/delivery/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (user && user.user_type !== 'delivery') {
       fetchOrders();
     }
   }, [user]);
