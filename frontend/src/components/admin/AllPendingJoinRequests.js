@@ -106,8 +106,6 @@ const AllPendingJoinRequests = () => {
   };
 
   const handleRejectDriver = async (driverId) => {
-    console.log('Rejecting driver with ID:', driverId);
-    
     if (!driverId) {
       toast({ title: "خطأ", description: "معرّف السائق غير موجود", variant: "destructive" });
       return;
@@ -116,11 +114,9 @@ const AllPendingJoinRequests = () => {
     setActionLoading(driverId);
     try {
       const response = await axios.post(`${API}/api/admin/delivery/${driverId}/reject`);
-      console.log('Reject response:', response.data);
       toast({ title: "تم", description: "تم رفض طلب السائق" });
       fetchAllPending();
     } catch (error) {
-      console.error('Reject error:', error.response?.data || error.message);
       const errorMsg = error.response?.data?.detail || "فشل الرفض";
       toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {
@@ -295,14 +291,6 @@ const AllPendingJoinRequests = () => {
             const driver = item.driver || item;
             const driverId = item.driver_id || item.delivery_id || driver.id;
             const docStatus = getDriverDocumentsStatus(item);
-            
-            // Debug logging
-            console.log('Driver item:', { 
-              item_driver_id: item.driver_id,
-              item_delivery_id: item.delivery_id,
-              driver_id: driver.id,
-              resolved_driverId: driverId 
-            });
             
             return (
               <div key={driverId} className={`bg-white rounded-xl border-2 overflow-hidden ${docStatus.isComplete ? 'border-green-200' : 'border-yellow-200'}`}>
