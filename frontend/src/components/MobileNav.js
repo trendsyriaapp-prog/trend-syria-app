@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign, UserX } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
@@ -378,7 +378,19 @@ const MobileNav = () => {
                   </Link>
                 )}
 
-                <div className="pt-2 border-t border-gray-100">
+                <div className="pt-2 border-t border-gray-100 space-y-2">
+                  <Link
+                    to="/delete-account"
+                    onClick={() => setShowAccountMenu(false)}
+                    className="w-full flex items-center gap-4 p-3 hover:bg-red-50 rounded-xl transition-colors"
+                    data-testid="delete-account-link"
+                  >
+                    <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                      <UserX size={20} className="text-red-400" />
+                    </div>
+                    <span className="font-medium text-red-400">حذف الحساب</span>
+                  </Link>
+                  
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-4 p-3 hover:bg-red-50 rounded-xl transition-colors"

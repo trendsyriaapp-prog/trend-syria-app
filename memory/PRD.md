@@ -5,7 +5,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.9 (versionCode: 10) in Closed Testing (Alpha)
+- Android App: v1.0.10 (versionCode: 11) in Closed Testing (Alpha)
 
 ## Core Features Implemented
 - Multi-role system (buyer, seller, food_seller, delivery, admin, sub_admin)
@@ -19,6 +19,19 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Admin dashboard with full controls
 
 ## Recent Bug Fixes (December 2025)
+
+### 2026-04-08: Google Play Account Deletion Policy Compliance ✅
+**Requirement:** Google Play requires apps to have an accessible "Delete Account" option from within the app
+**Implementation:**
+- Created `DeleteAccountPage.js` at `/delete-account` route
+- Created `DELETE /api/auth/account` backend API for authenticated account deletion
+- Added "حذف الحساب" (Delete Account) link in MobileNav.js account menu dropdown
+- Link appears with red UserX icon above the logout button
+**Files Changed:**
+- `/app/frontend/src/pages/DeleteAccountPage.js` (new page)
+- `/app/frontend/src/components/MobileNav.js` (added navigation link)
+- `/app/backend/routes/auth.py` (added DELETE /api/auth/account endpoint)
+- `/app/frontend/src/App.js` (added route)
 
 ### 2026-04-07: All Food Items Admin Tab ✅
 **Feature:** Added "All Food Items" (أصناف الطعام) tab in Admin Dashboard
@@ -109,6 +122,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 ### P0 (Critical)
 - [x] Fix login state persistence on web - DONE 2025-12-07
 - [x] Add "All Food Items" admin tab - DONE 2026-04-07
+- [x] Google Play Account Deletion Policy Compliance - DONE 2026-04-08
 
 ### P1 (High Priority)
 - [ ] Granular permissions for sub-admins (roles like "orders manager", "products manager")
