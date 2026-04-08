@@ -113,17 +113,17 @@ const RecordedCallsTab = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <Phone className="text-green-500" />
             المكالمات المسجلة
           </h2>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1">
             استمع إلى تسجيلات المكالمات لحل النزاعات
           </p>
         </div>
         <button
           onClick={fetchCalls}
-          className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-all"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           تحديث
