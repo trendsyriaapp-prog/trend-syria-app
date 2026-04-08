@@ -67,6 +67,7 @@ import SellerPromotionsTab from '../components/admin/SellerPromotionsTab';
 import DriverSecurityTab from '../components/admin/DriverSecurityTab';
 import SellerManagementTab from '../components/admin/SellerManagementTab';
 import FoodStoreManagementTab from '../components/admin/FoodStoreManagementTab';
+import ResetDatabaseTab from '../components/admin/ResetDatabaseTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -507,7 +508,8 @@ const AdminDashboardPage = () => {
     'feedback': 'اقتراحات المستخدمين',
     'all-join-requests': 'جميع طلبات الانضمام',
     'all-pending-items': 'جميع العناصر المعلقة',
-    'all-withdraw-requests': 'جميع طلبات السحب'
+    'all-withdraw-requests': 'جميع طلبات السحب',
+    'reset-database': 'مسح قاعدة البيانات'
   };
 
   return (
@@ -735,6 +737,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'all-withdraw-requests' && (
               <AllWithdrawRequestsTab />
+            )}
+            {activeTab === 'reset-database' && user.user_type === 'admin' && (
+              <ResetDatabaseTab />
             )}
           </>
         ) : (
@@ -1031,10 +1036,11 @@ const AdminDashboardPage = () => {
                       { icon: Package, label: 'الفئات', tab: 'categories' },
                       { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
                       { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
+                      { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },
                     ].map((item, i) => (
-                      <button key={i} onClick={() => setActiveTab(item.tab)} className="bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors">
-                        <item.icon size={16} className="text-gray-600" />
-                        <span className="text-[10px] text-gray-600">{item.label}</span>
+                      <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>
+                        <item.icon size={16} className={item.danger ? 'text-red-500' : 'text-gray-600'} />
+                        <span className={`text-[10px] ${item.danger ? 'text-red-500 font-bold' : 'text-gray-600'}`}>{item.label}</span>
                         {item.badge > 0 && <span className="text-[8px] bg-blue-500 text-white px-1 rounded-full">{item.badge}</span>}
                       </button>
                     ))}
