@@ -1,17 +1,13 @@
 // /app/frontend/src/components/admin/UsersTab.js
 import { useState, useMemo } from 'react';
-import { Users, MapPin, Phone, Calendar, MoreVertical, Trash2, Ban, Eye, X, Key, CheckCircle, Search } from 'lucide-react';
-import axios from 'axios';
+import { Users, MapPin, Phone, Calendar, MoreVertical, Trash2, Ban, Eye, X, CheckCircle, Search } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
-
-const API = process.env.REACT_APP_BACKEND_URL;
 
 const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showMenu, setShowMenu] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, user: null });
-  const [resetPasswordModal, setResetPasswordModal] = useState({ isOpen: false, user: null, success: false, loading: false });
   const [searchQuery, setSearchQuery] = useState('');
 
   // فلترة المستخدمين حسب البحث
@@ -32,36 +28,6 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
       setActionModal({ isOpen: true, type: 'delete', user });
     } else if (action === 'ban') {
       setActionModal({ isOpen: true, type: 'ban', user });
-    } else if (action === 'reset_password') {
-      setResetPasswordModal({ isOpen: true, user, success: false, loading: false });
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!resetPasswordModal.user) return;
-    
-    setResetPasswordModal(prev => ({ ...prev, loading: true }));
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API}/api/auth/admin/reset-user-password/${resetPasswordModal.user.phone}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setResetPasswordModal(prev => ({ ...prev, success: true, loading: false }));
-      toast({
-        title: "تم بنجاح",
-        description: `تم إعادة تعيين كلمة مرور ${resetPasswordModal.user.full_name || resetPasswordModal.user.name}`,
-      });
-    } catch (error) {
-      setResetPasswordModal(prev => ({ ...prev, loading: false }));
-      toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "فشل إعادة تعيين كلمة المرور",
-        variant: "destructive"
-      });
     }
   };
 
@@ -145,13 +111,6 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
                     عرض التفاصيل
                   </button>
                   <button
-                    onClick={() => handleAction('reset_password', u)}
-                    className="w-full px-3 py-2 text-right text-xs hover:bg-gray-50 flex items-center gap-2 text-green-600"
-                  >
-                    <Key size={14} />
-                    إعادة تعيين كلمة المرور
-                  </button>
-                  <button
                     onClick={() => handleAction('ban', u)}
                     className="w-full px-3 py-2 text-right text-xs hover:bg-gray-50 flex items-center gap-2 text-orange-600"
                   >
@@ -226,18 +185,18 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
             </div>
             <div className="mt-4 pt-4 border-t flex gap-2">
               <button
-                onClick={() => { handleAction('reset_password', selectedUser); setSelectedUser(null); }}
-                className="flex-1 py-2 bg-green-100 text-green-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
-              >
-                <Key size={14} />
-                إعادة تعيين كلمة المرور
-              </button>
-              <button
                 onClick={() => { handleAction('ban', selectedUser); setSelectedUser(null); }}
                 className="flex-1 py-2 bg-orange-100 text-orange-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
               >
                 <Ban size={14} />
                 حظر
+              </button>
+              <button
+                onClick={() => { handleAction('delete', selectedUser); setSelectedUser(null); }}
+                className="flex-1 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1"
+              >
+                <Trash2 size={14} />
+                حذف
               </button>
             </div>
           </div>
@@ -292,82 +251,6 @@ const UsersTab = ({ allUsers, onDeleteUser, onBanUser }) => {
                 {actionModal.type === 'delete' ? 'حذف' : 'حظر'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Password Modal */}
-      {resetPasswordModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-4">
-            {!resetPasswordModal.success ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100">
-                    <Key size={20} className="text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold">إعادة تعيين كلمة المرور</h3>
-                    <p className="text-xs text-gray-500">
-                      {resetPasswordModal.user?.full_name || resetPasswordModal.user?.name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-amber-800">
-                    سيتم إعادة تعيين كلمة المرور إلى: <strong dir="ltr">test1234</strong>
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">
-                    سيُطلب من المستخدم تغييرها عند أول تسجيل دخول
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setResetPasswordModal({ isOpen: false, user: null, success: false, loading: false })}
-                    className="flex-1 py-2 border border-gray-300 rounded-lg text-sm"
-                    disabled={resetPasswordModal.loading}
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    onClick={handleResetPassword}
-                    disabled={resetPasswordModal.loading}
-                    className="flex-1 py-2 bg-green-500 text-white rounded-lg text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {resetPasswordModal.loading ? (
-                      <span className="animate-spin">⏳</span>
-                    ) : (
-                      <Key size={16} />
-                    )}
-                    {resetPasswordModal.loading ? 'جاري...' : 'تأكيد'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle size={32} className="text-green-600" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">تم بنجاح!</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    تم إعادة تعيين كلمة مرور <strong>{resetPasswordModal.user?.full_name || resetPasswordModal.user?.name}</strong>
-                  </p>
-                  <div className="bg-gray-100 rounded-lg p-3 mt-3">
-                    <p className="text-xs text-gray-500">كلمة المرور الجديدة:</p>
-                    <p className="font-mono font-bold text-lg" dir="ltr">test1234</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setResetPasswordModal({ isOpen: false, user: null, success: false, loading: false })}
-                  className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm mt-4"
-                >
-                  إغلاق
-                </button>
-              </>
-            )}
           </div>
         </div>
       )}
