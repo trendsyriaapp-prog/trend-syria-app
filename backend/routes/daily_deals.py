@@ -441,6 +441,20 @@ async def reject_deal_request(request_id: str, data: dict, user: dict = Depends(
     return {"message": "تم رفض الطلب"}
 
 
+@router.delete("/requests/{request_id}")
+async def delete_deal_request(request_id: str, user: dict = Depends(get_current_user)):
+    """حذف طلب صفقة (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.deal_requests.delete_one({"id": request_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    return {"message": "تم حذف الطلب بنجاح"}
+
+
 @router.get("/seller/my-requests")
 async def get_my_deal_requests(user: dict = Depends(get_current_user)):
     """جلب طلباتي للمشاركة في صفقات اليوم (للبائع)"""

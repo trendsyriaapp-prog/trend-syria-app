@@ -124,6 +124,19 @@ const DailyDealsTab = () => {
     }
   };
 
+  // حذف طلب بائع
+  const deleteRequest = async (requestId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+    
+    try {
+      await axios.delete(`${API}/api/daily-deals/requests/${requestId}`);
+      toast({ title: "تم الحذف", description: "تم حذف الطلب بنجاح" });
+      fetchDealRequests();
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل في حذف الطلب", variant: "destructive" });
+    }
+  };
+
   // تصفية المنتجات
   const filteredProducts = products.filter(product => {
     const matchesSearch = !productSearch || 
@@ -389,6 +402,26 @@ const DailyDealsTab = () => {
                     >
                       <XCircle size={16} />
                       رفض
+                    </button>
+                    <button
+                      onClick={() => deleteRequest(request.id)}
+                      className="px-3 flex items-center justify-center bg-gray-100 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-200"
+                      title="حذف الطلب"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {/* زر حذف للطلبات المرفوضة أو المقبولة */}
+                {(request.status === 'rejected' || request.status === 'approved') && (
+                  <div className="flex justify-end mt-3">
+                    <button
+                      onClick={() => deleteRequest(request.id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs hover:bg-red-100 hover:text-red-600"
+                    >
+                      <Trash2 size={14} />
+                      حذف الطلب
                     </button>
                   </div>
                 )}
