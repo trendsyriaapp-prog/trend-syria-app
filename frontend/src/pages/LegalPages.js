@@ -127,7 +127,7 @@ export const PrivacyPolicyPage = () => {
             </p>
             <div className="flex items-center gap-2 text-xs opacity-75">
               <Clock size={12} />
-              <span>آخر تحديث: ديسمبر 2025</span>
+              <span>آخر تحديث: أبريل 2026</span>
             </div>
           </div>
         </motion.div>
@@ -361,7 +361,7 @@ export const TermsOfServicePage = () => {
             </p>
             <div className="flex items-center gap-2 text-xs opacity-75">
               <Clock size={12} />
-              <span>آخر تحديث: ديسمبر 2025</span>
+              <span>آخر تحديث: أبريل 2026</span>
             </div>
           </div>
         </motion.div>
