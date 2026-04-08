@@ -509,6 +509,20 @@ async def update_support_request(request_id: str, status: str, user: dict = Depe
     return {"message": "تم تحديث الحالة"}
 
 
+@router.delete("/admin/support-requests/{request_id}")
+async def delete_support_request(request_id: str, user: dict = Depends(get_current_user)):
+    """حذف طلب دعم (للمدراء)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.support_requests.delete_one({"id": request_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    return {"message": "تم حذف الطلب بنجاح"}
+
+
 class AdminReply(BaseModel):
     ticket_id: str
     user_id: str

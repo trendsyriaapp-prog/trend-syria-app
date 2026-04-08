@@ -341,6 +341,22 @@ async def assign_ticket(
     return {"message": "تم تعيين التذكرة"}
 
 
+@router.delete("/admin/tickets/{ticket_id}")
+async def delete_ticket(ticket_id: str, user: dict = Depends(get_current_user)):
+    """حذف تذكرة دعم (للمدراء)"""
+    
+    if user.get("user_type") not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    ticket = await db.support_tickets.find_one({"id": ticket_id})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="التذكرة غير موجودة")
+    
+    await db.support_tickets.delete_one({"id": ticket_id})
+    
+    return {"message": "تم حذف التذكرة بنجاح"}
+
+
 # ============== طلبات المساعدة الطارئة للسائقين ==============
 
 class EmergencyHelpRequest(BaseModel):

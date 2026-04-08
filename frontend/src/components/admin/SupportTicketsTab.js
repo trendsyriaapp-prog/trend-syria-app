@@ -8,7 +8,7 @@ import {
   Headphones, MessageCircle, Clock, CheckCircle, User,
   Phone, Calendar, Filter, Search, X, Send, AlertCircle,
   Loader2, ChevronDown, ChevronUp, Star, TrendingUp,
-  BarChart3, Users, Timer, PieChart
+  BarChart3, Users, Timer, PieChart, Trash2
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 
@@ -84,6 +84,21 @@ const SupportTicketsTab = () => {
         setSelectedTicket({ ...selectedTicket, status: newStatus });
       }
       toast({ title: "تم بنجاح", description: "تم تحديث حالة التذكرة" });
+    } catch (error) {
+      toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
+    }
+  };
+
+  const deleteTicket = async (ticketId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذه التذكرة نهائياً؟')) return;
+    
+    try {
+      await axios.delete(`${API}/api/chatbot/admin/support-requests/${ticketId}`);
+      fetchTickets();
+      if (selectedTicket && selectedTicket.id === ticketId) {
+        setSelectedTicket(null);
+      }
+      toast({ title: "تم الحذف", description: "تم حذف التذكرة بنجاح" });
     } catch (error) {
       toast({ title: "خطأ", description: error.response?.data?.detail || 'حدث خطأ', variant: "destructive" });
     }
@@ -292,6 +307,7 @@ const SupportTicketsTab = () => {
               ticket={selectedTicket}
               chatHistory={chatHistory}
               onUpdateStatus={updateTicketStatus}
+              onDelete={deleteTicket}
               onClose={() => setSelectedTicket(null)}
               toast={toast}
             />
@@ -375,7 +391,7 @@ const TicketRow = ({ ticket, isSelected, onClick }) => {
   );
 };
 
-const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose, toast }) => {
+const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onDelete, onClose, toast }) => {
   const [replyMessage, setReplyMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -528,6 +544,15 @@ const TicketDetails = ({ ticket, chatHistory, onUpdateStatus, onClose, toast }) 
                 إعادة فتح
               </button>
             )}
+            {/* زر الحذف */}
+            <button
+              onClick={() => onDelete(ticket.id)}
+              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-1"
+              title="حذف التذكرة"
+            >
+              <Trash2 size={16} />
+              حذف
+            </button>
           </div>
 
           {/* Contact Info */}
