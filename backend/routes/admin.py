@@ -882,9 +882,12 @@ async def approve_product(product_id: str, user: dict = Depends(get_current_user
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/products/{product_id}/reject")
-async def reject_product(product_id: str, approval: ProductApproval, user: dict = Depends(get_current_user)):
+async def reject_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # سبب الرفض
+    reason = data.get("reason", "").strip() if data else ""
     
     # جلب المنتج أولاً
     product = await db.products.find_one({"id": product_id})
@@ -897,7 +900,7 @@ async def reject_product(product_id: str, approval: ProductApproval, user: dict 
             "$set": {
                 "is_approved": False,
                 "approval_status": "rejected",
-                "rejection_reason": approval.rejection_reason,
+                "rejection_reason": reason,
                 "rejected_by": user["id"],
                 "rejected_at": datetime.now(timezone.utc).isoformat()
             }
@@ -909,13 +912,13 @@ async def reject_product(product_id: str, approval: ProductApproval, user: dict 
         "id": str(uuid.uuid4()),
         "user_id": product.get("seller_id"),
         "title": "تم رفض منتجك ❌",
-        "message": f"تم رفض منتج '{product.get('name')}'. السبب: {approval.rejection_reason or 'غير محدد'}",
+        "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
         "type": "product_rejected",
         "read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "تم رفض المنتج"}
+    return {"message": "تم رفض المنتج", "reason": reason if reason else None}
 
 # ============== موافقة منتجات الطعام ==============
 
@@ -976,10 +979,13 @@ async def approve_food_product(product_id: str, user: dict = Depends(get_current
     return {"message": "تم الموافقة على المنتج"}
 
 @router.post("/food-products/{product_id}/reject")
-async def reject_food_product(product_id: str, approval: ProductApproval, user: dict = Depends(get_current_user)):
+async def reject_food_product(product_id: str, data: dict = None, user: dict = Depends(get_current_user)):
     """رفض منتج طعام"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # سبب الرفض
+    reason = data.get("reason", "").strip() if data else ""
     
     product = await db.food_products.find_one({"id": product_id})
     if not product:
@@ -991,7 +997,7 @@ async def reject_food_product(product_id: str, approval: ProductApproval, user: 
             "$set": {
                 "is_approved": False,
                 "approval_status": "rejected",
-                "rejection_reason": approval.rejection_reason,
+                "rejection_reason": reason,
                 "rejected_by": user["id"],
                 "rejected_at": datetime.now(timezone.utc).isoformat()
             }
@@ -1005,13 +1011,13 @@ async def reject_food_product(product_id: str, approval: ProductApproval, user: 
             "id": str(uuid.uuid4()),
             "user_id": store.get("owner_id"),
             "title": "تم رفض منتجك ❌",
-            "message": f"تم رفض منتج '{product.get('name')}'. السبب: {approval.rejection_reason or 'غير محدد'}",
+            "message": f"تم رفض منتج '{product.get('name')}'. السبب: {reason or 'غير محدد'}",
             "type": "product_rejected",
             "read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
-    return {"message": "تم رفض المنتج"}
+    return {"message": "تم رفض المنتج", "reason": reason if reason else None}
 
 
 

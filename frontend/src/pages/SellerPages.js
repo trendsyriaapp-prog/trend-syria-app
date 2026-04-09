@@ -401,6 +401,7 @@ const SellerDocumentsPage = () => {
   const [healthCert, setHealthCert] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState(null);
 
   // أنواع البائعين
   const sellerTypes = [
@@ -432,6 +433,7 @@ const SellerDocumentsPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStatus(res.data.status);
+      setRejectionReason(res.data.rejection_reason);
       if (res.data.business_name) {
         setBusinessName(res.data.business_name);
       }
@@ -583,9 +585,16 @@ const SellerDocumentsPage = () => {
               <X size={32} className="text-red-500" />
             </div>
             <h3 className="font-bold mb-2">تم الرفض</h3>
-            <p className="text-white/50 text-sm mb-4">
-              عذراً، تم رفض طلبك. يمكنك إعادة المحاولة بمستندات صحيحة.
-            </p>
+            {rejectionReason ? (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-right">
+                <p className="text-red-400 text-sm font-medium">سبب الرفض:</p>
+                <p className="text-white/70 text-sm mt-1">{rejectionReason}</p>
+              </div>
+            ) : (
+              <p className="text-white/50 text-sm mb-4">
+                عذراً، تم رفض طلبك. يمكنك إعادة المحاولة بمستندات صحيحة.
+              </p>
+            )}
             <button
               onClick={() => setStatus(null)}
               className="bg-[#FF6B00] text-black font-bold px-6 py-2 rounded-full"

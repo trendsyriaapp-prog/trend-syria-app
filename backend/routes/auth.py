@@ -364,6 +364,16 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
     if existing:
         raise HTTPException(status_code=400, detail="تم رفع المستندات مسبقاً")
     
+    # التحقق من الحقول الإلزامية
+    if not docs.business_name or not docs.business_name.strip():
+        raise HTTPException(status_code=400, detail="اسم النشاط التجاري مطلوب")
+    
+    if not docs.national_id or not docs.national_id.strip():
+        raise HTTPException(status_code=400, detail="صورة الهوية مطلوبة")
+    
+    if not docs.commercial_registration or not docs.commercial_registration.strip():
+        raise HTTPException(status_code=400, detail="صورة السجل التجاري مطلوبة")
+    
     # التحقق من نوع البائع
     valid_seller_types = ["traditional_shop", "restaurant"]
     if docs.seller_type not in valid_seller_types:
@@ -374,11 +384,11 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
     
     # التحقق من الوثائق المطلوبة حسب النوع
     if docs.seller_type == "traditional_shop":
-        if not docs.shop_photo:
+        if not docs.shop_photo or not docs.shop_photo.strip():
             raise HTTPException(status_code=400, detail="صورة المحل مطلوبة للمتاجر التقليدية")
     
     if docs.seller_type == "restaurant":
-        if not docs.health_certificate:
+        if not docs.health_certificate or not docs.health_certificate.strip():
             raise HTTPException(status_code=400, detail="الشهادة الصحية مطلوبة للمطاعم")
     
     # ترجمة نوع البائع
@@ -434,7 +444,8 @@ async def get_documents_status(user: dict = Depends(get_current_user)):
         "status": doc["status"],
         "business_name": doc.get("business_name"),
         "seller_type": doc.get("seller_type"),
-        "seller_type_name": doc.get("seller_type_name")
+        "seller_type_name": doc.get("seller_type_name"),
+        "rejection_reason": doc.get("rejection_reason")
     }
 
 # ============== Delivery Routes ==============
@@ -449,6 +460,16 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     existing = await db.delivery_documents.find_one({"delivery_id": user["id"]})
     if existing:
         raise HTTPException(status_code=400, detail="تم رفع المستندات مسبقاً")
+    
+    # التحقق من الحقول الإلزامية (الصور)
+    if not docs.personal_photo or not docs.personal_photo.strip():
+        raise HTTPException(status_code=400, detail="الصورة الشخصية مطلوبة")
+    
+    if not docs.id_photo or not docs.id_photo.strip():
+        raise HTTPException(status_code=400, detail="صورة الهوية مطلوبة")
+    
+    if not docs.national_id or not docs.national_id.strip():
+        raise HTTPException(status_code=400, detail="رقم الهوية مطلوب")
     
     # التحقق من نوع المركبة
     valid_vehicle_types = ["car", "motorcycle", "electric_scooter", "bicycle"]
@@ -500,14 +521,18 @@ async def get_delivery_documents_status(user: dict = Depends(get_current_user)):
     if user["user_type"] != "delivery":
         raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
     
-    doc = await db.delivery_documents.find_one({"delivery_id": user["id"]}, {"_id": 0})
+    doc = await db.delivery_documents.find_one(
+        {"$or": [{"delivery_id": user["id"]}, {"driver_id": user["id"]}]}, 
+        {"_id": 0}
+    )
     if not doc:
         return {"status": "not_submitted"}
     return {
         "status": doc["status"],
         "vehicle_type": doc.get("vehicle_type"),
         "vehicle_type_name": doc.get("vehicle_type_name"),
-        "requires_license": doc.get("requires_license", True)
+        "requires_license": doc.get("requires_license", True),
+        "rejection_reason": doc.get("rejection_reason")
     }
 
 @delivery_auth_router.get("/vehicle-types")

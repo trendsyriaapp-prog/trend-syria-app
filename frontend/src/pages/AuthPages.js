@@ -57,7 +57,31 @@ const LoginPage = () => {
           navigate('/seller/documents', { replace: true });
         }
       } else if (userType === 'food_seller') {
-        navigate('/food/dashboard', { replace: true });
+        // بائع الطعام: التحقق من حالة الوثائق أولاً
+        try {
+          const token = response.token;
+          const docRes = await axios.get(`${API}/api/seller/documents/status`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const docStatus = docRes.data?.status;
+          
+          if (!docStatus || docStatus === 'not_submitted') {
+            // لم يرفع الوثائق بعد
+            navigate('/seller/documents', { replace: true });
+          } else if (docStatus === 'pending') {
+            // في انتظار الموافقة
+            navigate('/seller/pending', { replace: true });
+          } else if (docStatus === 'rejected') {
+            // مرفوض - يعرض سبب الرفض
+            navigate('/seller/documents', { replace: true });
+          } else {
+            // معتمد
+            navigate('/food/dashboard', { replace: true });
+          }
+        } catch (docError) {
+          // إذا فشل التحقق، نوجهه لصفحة الوثائق
+          navigate('/seller/documents', { replace: true });
+        }
       } else if (userType === 'delivery') {
         // موظف التوصيل: التحقق من حالة الوثائق أولاً
         try {

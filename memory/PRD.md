@@ -36,6 +36,39 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - `/app/backend/routes/admin.py` (APIs + save logic)
 - `/app/frontend/src/components/admin/AllPendingJoinRequests.js` (UI)
 
+### 2026-04-09: Comprehensive Join Request & Product Approval Testing ✅
+**Testing Completed:**
+1. **Delivery Drivers:**
+   - ❌ Incomplete documents (missing photos) → Rejected with proper error message
+   - ✅ Complete documents → Accepted and visible to admin
+   - ✅ Admin approval → Driver can access dashboard
+   - ✅ Admin rejection → Driver sees rejection reason
+   
+2. **Product Sellers:**
+   - ❌ Incomplete documents → Rejected with proper error message  
+   - ✅ Complete documents → Accepted and visible to admin
+   - ✅ Admin approval → Seller can access dashboard
+   - ✅ Admin rejection → Seller sees rejection reason with "Retry" button
+   
+3. **Food Sellers:**
+   - ✅ Same flow as product sellers (fixed routing bug)
+   - ✅ Admin rejection → Food seller sees rejection reason
+   
+4. **Products:**
+   - ✅ Products visible to admin with full details
+   - ✅ Admin approval → Product visible to customers
+   - ✅ Admin rejection with reason → Seller sees reason and can edit/resubmit
+   
+**Bugs Fixed:**
+- Backend: Added mandatory field validation for delivery documents (personal_photo, id_photo, national_id)
+- Backend: Added mandatory field validation for seller documents (business_name, national_id, commercial_registration)
+- Backend: Fixed product reject API to accept simple JSON `{reason: "..."}` instead of `ProductApproval` schema
+- Backend: Fixed food product reject API (same issue)
+- Backend: Added `rejection_reason` to documents/status API response
+- Frontend: Added `rejectionReason` state to DeliveryPages.js and SellerPages.js
+- Frontend: Display rejection reason in red box for rejected users
+- Frontend: Fixed food_seller routing to check documents status before dashboard access
+
 ### 2026-04-08: Admin Reject Join Requests - UI Instant Update ✅
 **Problem:** When Admin rejects a seller/driver join request, the item stays visible in the "Pending" list until page refresh
 **Root Cause:** After successful reject API call, `fetchAllPending()` was called but relied on re-fetching from server which could be slow or cached

@@ -41,6 +41,7 @@ const DeliveryDocuments = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState(null);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [docs, setDocs] = useState({
     national_id: '',
@@ -77,6 +78,7 @@ const DeliveryDocuments = () => {
     try {
       const res = await axios.get(`${API}/api/delivery/documents/status`);
       setStatus(res.data.status);
+      setRejectionReason(res.data.rejection_reason);
     } catch (error) {
       console.error(error);
     }
@@ -171,7 +173,15 @@ const DeliveryDocuments = () => {
         <div className="bg-white rounded-xl p-6 text-center max-w-sm">
           <AlertTriangle size={48} className="text-red-500 mx-auto mb-4" />
           <h2 className="text-lg font-bold text-gray-900 mb-2">تم رفض طلبك</h2>
-          <p className="text-sm text-gray-500">للأسف تم رفض طلبك. يرجى التواصل مع الإدارة للمزيد من المعلومات</p>
+          {rejectionReason ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+              <p className="text-sm text-red-700 font-medium">سبب الرفض:</p>
+              <p className="text-sm text-red-600 mt-1">{rejectionReason}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 mb-3">للأسف تم رفض طلبك.</p>
+          )}
+          <p className="text-xs text-gray-400">يمكنك التواصل مع الإدارة للمزيد من المعلومات</p>
         </div>
       </div>
     );
