@@ -9,6 +9,26 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Latest Update: 2026-04-09
 
+### ✅ Admin Push Notifications Feature - COMPLETED
+**Description:** إشعارات Push للمدير عند حدوث أحداث مهمة
+
+| Event | Notification | Trigger |
+|-------|--------------|---------|
+| بائع جديد | 📦 طلب انضمام بائع جديد | POST /api/seller/documents |
+| سائق جديد | 🚗 طلب انضمام سائق جديد | POST /api/delivery/documents |
+| متجر طعام | 🍽️ متجر طعام جديد بانتظار الموافقة | POST /api/food/stores |
+| منتج جديد | 📦 منتج جديد بانتظار الموافقة | POST /api/products |
+| طبق طعام | 🍽️ طبق طعام جديد بانتظار الموافقة | POST /api/food/items |
+| طلب سحب | 💰 طلب سحب جديد | POST /api/wallet/withdraw |
+
+**Files Modified:**
+- `/app/backend/core/firebase_admin.py` - Added `send_push_to_admins()` function
+- `/app/backend/routes/auth.py` - Added notifications for seller & driver registration
+- `/app/backend/routes/food.py` - Added notifications for food store & food items
+- `/app/backend/routes/products.py` - Added notification for new products
+- `/app/backend/routes/wallet.py` - Added notification for withdrawal requests
+- `/app/backend/routes/notifications.py` - Added new notification types to filter
+
 ### ✅ Admin Approval Dashboard - Comprehensive Testing Completed
 **Testing Results:** 100% Backend & Frontend Working
 
@@ -20,9 +40,6 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 | Products | ✅ | Creation with `admin_video` + Approval/Reject |
 | Food Items | ✅ | Creation with `admin_video` + Approval/Reject |
 | Verification Video | ✅ | Both products & food items display `admin_video` to admin |
-
-**Bug Fixed (by testing_agent):**
-- Added `admin_video` field support to food item creation in `/app/backend/routes/food.py`
 
 ---
 
