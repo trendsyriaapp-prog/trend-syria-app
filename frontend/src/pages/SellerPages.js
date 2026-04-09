@@ -521,9 +521,9 @@ const SellerDocumentsPage = () => {
   // مكون رفع الصور
   const ImageUploader = ({ label, value, onChange, inputId }) => (
     <div>
-      <label className="block text-sm font-medium mb-2">{label}</label>
+      <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
       <div 
-        className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer"
+        className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#FF6B00]/50 transition-colors cursor-pointer bg-gray-50"
         onClick={() => document.getElementById(inputId).click()}
       >
         {value ? (
@@ -539,8 +539,8 @@ const SellerDocumentsPage = () => {
           </div>
         ) : (
           <>
-            <Upload size={24} className="mx-auto mb-2 text-white/40" />
-            <p className="text-white/50 text-sm">اضغط للرفع</p>
+            <Upload size={24} className="mx-auto mb-2 text-gray-400" />
+            <p className="text-gray-500 text-sm">اضغط للرفع</p>
           </>
         )}
       </div>
@@ -555,7 +555,7 @@ const SellerDocumentsPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -565,53 +565,53 @@ const SellerDocumentsPage = () => {
           <div className="w-16 h-16 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mx-auto mb-4">
             <FileText size={32} className="text-[#FF6B00]" />
           </div>
-          <h1 className="text-2xl font-bold">تأكيد حساب البائع</h1>
-          <p className="text-white/50 mt-2 text-sm">ارفع المستندات المطلوبة للموافقة على حسابك</p>
+          <h1 className="text-2xl font-bold text-gray-900">تأكيد حساب البائع</h1>
+          <p className="text-gray-500 mt-2 text-sm">ارفع المستندات المطلوبة للموافقة على حسابك</p>
         </div>
 
         {status === 'pending' ? (
-          <div className="bg-[#121212] rounded-2xl p-6 border border-white/5 text-center">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center">
             <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
               <Clock size={32} className="text-yellow-500" />
             </div>
-            <h3 className="font-bold mb-2">في انتظار الموافقة</h3>
-            <p className="text-white/50 text-sm">
+            <h3 className="font-bold mb-2 text-gray-900">في انتظار الموافقة</h3>
+            <p className="text-gray-500 text-sm">
               تم رفع مستنداتك بنجاح. سيتم مراجعتها والرد عليك قريباً.
             </p>
           </div>
         ) : status === 'rejected' ? (
-          <div className="bg-[#121212] rounded-2xl p-6 border border-white/5 text-center">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center">
             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
               <X size={32} className="text-red-500" />
             </div>
-            <h3 className="font-bold mb-2">تم الرفض</h3>
+            <h3 className="font-bold mb-2 text-gray-900">تم الرفض</h3>
             {rejectionReason ? (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-right">
-                <p className="text-red-400 text-sm font-medium">سبب الرفض:</p>
-                <p className="text-white/70 text-sm mt-1">{rejectionReason}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-right">
+                <p className="text-red-600 text-sm font-medium">سبب الرفض:</p>
+                <p className="text-gray-700 text-sm mt-1">{rejectionReason}</p>
               </div>
             ) : (
-              <p className="text-white/50 text-sm mb-4">
+              <p className="text-gray-500 text-sm mb-4">
                 عذراً، تم رفض طلبك. يمكنك إعادة المحاولة بمستندات صحيحة.
               </p>
             )}
             <button
               onClick={() => setStatus(null)}
-              className="bg-[#FF6B00] text-black font-bold px-6 py-2 rounded-full"
+              className="bg-[#FF6B00] text-white font-bold px-6 py-2 rounded-full"
             >
               إعادة المحاولة
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-[#121212] rounded-2xl p-5 border border-white/5 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
             {/* اسم النشاط */}
             <div>
-              <label className="block text-sm font-medium mb-2">اسم النشاط التجاري</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">اسم النشاط التجاري</label>
               <input
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg py-3 px-4 text-white placeholder:text-white/30 focus:border-[#FF6B00] focus:outline-none"
+                className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
                 placeholder="اسم نشاطك التجاري"
                 required
                 data-testid="business-name-input"
@@ -620,7 +620,7 @@ const SellerDocumentsPage = () => {
 
             {/* اختيار نوع النشاط */}
             <div>
-              <label className="block text-sm font-medium mb-2">نوع النشاط</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700">نوع النشاط</label>
               <div className="grid grid-cols-2 gap-3">
                 {sellerTypes.map((type) => (
                   <button
@@ -630,12 +630,12 @@ const SellerDocumentsPage = () => {
                     className={`p-4 rounded-xl border-2 transition-all text-center ${
                       sellerType === type.id
                         ? 'border-[#FF6B00] bg-[#FF6B00]/10'
-                        : 'border-white/10 hover:border-white/20'
+                        : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                     }`}
                   >
                     <span className="text-3xl block mb-2">{type.icon}</span>
-                    <span className="text-sm font-medium block">{type.name}</span>
-                    <span className="text-[10px] text-white/50 block mt-1">{type.description}</span>
+                    <span className="text-sm font-medium block text-gray-900">{type.name}</span>
+                    <span className="text-[10px] text-gray-500 block mt-1">{type.description}</span>
                   </button>
                 ))}
               </div>
@@ -648,7 +648,7 @@ const SellerDocumentsPage = () => {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="space-y-4 pt-2"
               >
-                <p className="text-xs text-white/50 text-center">📋 الوثائق المطلوبة لـ{selectedType?.name}</p>
+                <p className="text-xs text-gray-500 text-center">📋 الوثائق المطلوبة لـ{selectedType?.name}</p>
                 
                 {/* صورة الهوية - مطلوبة للجميع */}
                 <ImageUploader
@@ -691,7 +691,7 @@ const SellerDocumentsPage = () => {
             <button
               type="submit"
               disabled={loading || !sellerType}
-              className="w-full bg-[#FF6B00] text-black font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               data-testid="submit-docs-btn"
             >
               {loading ? (
