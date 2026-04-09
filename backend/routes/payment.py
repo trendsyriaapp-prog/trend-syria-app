@@ -347,10 +347,7 @@ async def pay_with_wallet(
     order_id: str = Query(...),
     user: dict = Depends(get_current_user)
 ):
-    """الدفع من المحفظة - للعملاء فقط"""
-    
-    if user["user_type"] != "buyer":
-        raise HTTPException(status_code=403, detail="الدفع بالمحفظة للعملاء فقط")
+    """الدفع من المحفظة - متاح لجميع المستخدمين"""
     
     # Get order
     order = await db.orders.find_one({"id": order_id, "user_id": user["id"]})
