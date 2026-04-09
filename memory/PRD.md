@@ -20,6 +20,11 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Recent Bug Fixes (December 2025)
 
+### 2026-04-09: Food Products Now Require Admin Approval ✅
+**Bug Fixed:** Food products were being created without `approval_status` field, so they never appeared in admin's pending list
+**Fix:** Added `is_approved: False` and `approval_status: "pending"` to food product creation in `/app/backend/routes/food.py`
+**Result:** Food products now appear in `/api/admin/food-products/pending` and require admin approval before being visible to customers
+
 ### 2026-04-09: سجل الطلبات المرفوضة (Rejected Join Requests Log) ✅
 **Feature:** إضافة سجل للطلبات المرفوضة (بائعين وسائقين) مع حذف تلقائي بعد 30 يوم
 **Implementation:**

@@ -676,11 +676,13 @@ async def create_food_product(product: FoodProductCreate, user: dict = Depends(g
         "rating": 0,
         "reviews_count": 0,
         "sales_count": 0,
+        "is_approved": False,
+        "approval_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.food_products.insert_one(product_doc)
-    return {"id": product_id, "message": "تم إضافة المنتج بنجاح"}
+    return {"id": product_id, "message": "تم إضافة المنتج بنجاح، في انتظار موافقة الإدارة"}
 
 # ===============================
 # الإحصائيات
