@@ -2801,9 +2801,14 @@ const StoreOrdersTab = ({ token, onNewOrder }) => {
                   {/* Items */}
                   <div className="space-y-1 mb-3">
                     {order.items?.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span className="text-gray-600">{item.name} x{item.quantity}</span>
-                        <span className="text-gray-900">{item.total?.toLocaleString()}</span>
+                      <div key={i} className="flex flex-col">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">{item.name} x{item.quantity}</span>
+                          <span className="text-gray-900">{item.total?.toLocaleString()}</span>
+                        </div>
+                        {item.notes && (
+                          <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded mr-2 mt-0.5 inline-block">📝 {item.notes}</span>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -421,9 +421,9 @@ const FoodCartPage = () => {
     setCartItems(items);
   };
 
-  const updateQuantity = (productId, delta) => {
-    const newItems = cartItems.map(item => {
-      if (item.product_id === productId) {
+  const updateQuantity = (itemIndex, delta) => {
+    const newItems = cartItems.map((item, idx) => {
+      if (idx === itemIndex) {
         const newQty = item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : null;
       }
@@ -433,8 +433,8 @@ const FoodCartPage = () => {
     saveCart(newItems);
   };
 
-  const removeItem = (productId) => {
-    const newItems = cartItems.filter(item => item.product_id !== productId);
+  const removeItem = (itemIndex) => {
+    const newItems = cartItems.filter((_, idx) => idx !== itemIndex);
     saveCart(newItems);
   };
 
@@ -572,7 +572,8 @@ const FoodCartPage = () => {
           product_id: item.product_id,
           name: item.name,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          notes: item.notes || null
         })),
         delivery_address: addressData.address,
         delivery_city: addressData.city,
@@ -688,9 +689,9 @@ const FoodCartPage = () => {
           </div>
           
           <AnimatePresence>
-            {cartItems.map((item) => (
+            {cartItems.map((item, itemIndex) => (
               <motion.div
-                key={item.product_id}
+                key={`${item.product_id}-${itemIndex}`}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -708,24 +709,27 @@ const FoodCartPage = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+                    {item.notes && (
+                      <p className="text-xs text-gray-500 truncate">📝 {item.notes}</p>
+                    )}
                     <p className="text-[#E65000] font-bold">{item.price.toLocaleString()} ل.س</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateQuantity(item.product_id, -1)}
+                      onClick={() => updateQuantity(itemIndex, -1)}
                       className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
                     >
                       <Minus size={16} />
                     </button>
                     <span className="w-8 text-center font-bold">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.product_id, 1)}
+                      onClick={() => updateQuantity(itemIndex, 1)}
                       className="w-8 h-8 bg-orange-100 text-[#E65000] rounded-full flex items-center justify-center hover:bg-orange-200"
                     >
                       <Plus size={16} />
                     </button>
                     <button
-                      onClick={() => removeItem(item.product_id)}
+                      onClick={() => removeItem(itemIndex)}
                       className="w-8 h-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center"
                     >
                       <Trash2 size={16} />

@@ -122,7 +122,7 @@ const FoodStorePage = () => {
     window.dispatchEvent(new CustomEvent('foodCartUpdated'));
   };
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, notes = '') => {
     // منع الإضافة إذا الزائر غير مسجل
     if (!user) {
       toast({ 
@@ -143,7 +143,22 @@ const FoodStorePage = () => {
       return;
     }
     
-    const existingIndex = cart.findIndex(item => item.product_id === product.id);
+    // إذا كان هناك ملاحظة، نضيف كعنصر جديد حتى لو نفس المنتج
+    if (notes) {
+      const newItem = {
+        product_id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0] || null,
+        quantity: quantity,
+        notes: notes
+      };
+      saveCart([...cart, newItem]);
+      return;
+    }
+    
+    // بدون ملاحظة: نبحث عن منتج موجود بدون ملاحظة
+    const existingIndex = cart.findIndex(item => item.product_id === product.id && !item.notes);
     
     if (existingIndex >= 0) {
       const newCart = [...cart];
@@ -384,8 +399,8 @@ const FoodStorePage = () => {
           <ProductModal
             product={selectedProduct}
             cartQuantity={getCartQuantity(selectedProduct.id)}
-            onAdd={(qty) => {
-              addToCart(selectedProduct, qty);
+            onAdd={(qty, notes) => {
+              addToCart(selectedProduct, qty, notes);
               setSelectedProduct(null);
             }}
             onClose={() => setSelectedProduct(null)}
@@ -543,6 +558,7 @@ const ProductCard = ({ product, cartQuantity, onAdd, onView, isStoreClosed, badg
 
 const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
   const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState('');
 
   return (
     <motion.div
@@ -600,8 +616,21 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
             </div>
           )}
 
+          {/* حقل الملاحظات */}
+          <div className="mt-4">
+            <label className="text-xs text-gray-500 mb-1 block">ملاحظات (اختياري)</label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="مثال: بدون بصل، إضافة ثوم..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00]/20"
+              maxLength={100}
+            />
+          </div>
+
           {/* Quantity Selector */}
-          <div className="flex items-center justify-center gap-6 mt-6">
+          <div className="flex items-center justify-center gap-6 mt-4">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200"
@@ -619,8 +648,8 @@ const ProductModal = ({ product, cartQuantity, onAdd, onClose }) => {
 
           {/* Add Button */}
           <button
-            onClick={() => onAdd(quantity)}
-            className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold mt-6 mb-20 flex items-center justify-center gap-2 hover:bg-[#E65000]"
+            onClick={() => onAdd(quantity, notes.trim())}
+            className="w-full bg-[#FF6B00] text-white py-4 rounded-xl font-bold mt-4 mb-20 flex items-center justify-center gap-2 hover:bg-[#E65000]"
           >
             <Plus size={20} />
             إضافة للسلة - {(product.price * quantity).toLocaleString()} ل.س
