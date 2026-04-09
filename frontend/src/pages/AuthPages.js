@@ -233,6 +233,18 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSellerType, setShowSellerType] = useState(false);
+
+  // عند الضغط على "بائع"، نظهر خيارات نوع البيع
+  const handleSellerClick = () => {
+    setShowSellerType(true);
+  };
+
+  // اختيار نوع البيع
+  const selectSellerType = (type) => {
+    setFormData({ ...formData, user_type: type });
+    setShowSellerType(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -276,6 +288,8 @@ const RegisterPage = () => {
       
       if (formData.user_type === 'seller') {
         navigate('/seller/documents', { replace: true });
+      } else if (formData.user_type === 'food_seller') {
+        navigate('/food-seller/setup', { replace: true });
       } else if (formData.user_type === 'delivery') {
         navigate('/delivery/documents', { replace: true });
       } else {
@@ -311,10 +325,13 @@ const RegisterPage = () => {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           {/* Account Type */}
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-full mb-6">
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-full mb-4">
             <button
               type="button"
-              onClick={() => setFormData({ ...formData, user_type: 'buyer' })}
+              onClick={() => {
+                setFormData({ ...formData, user_type: 'buyer' });
+                setShowSellerType(false);
+              }}
               className={`flex-1 py-2 rounded-full transition-colors text-sm ${
                 formData.user_type === 'buyer' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
@@ -324,9 +341,9 @@ const RegisterPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => setFormData({ ...formData, user_type: 'seller' })}
+              onClick={handleSellerClick}
               className={`flex-1 py-2 rounded-full transition-colors text-sm ${
-                formData.user_type === 'seller' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
+                (formData.user_type === 'seller' || formData.user_type === 'food_seller') ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
               data-testid="seller-type-btn"
             >
@@ -334,7 +351,10 @@ const RegisterPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => setFormData({ ...formData, user_type: 'delivery' })}
+              onClick={() => {
+                setFormData({ ...formData, user_type: 'delivery' });
+                setShowSellerType(false);
+              }}
               className={`flex-1 py-2 rounded-full transition-colors text-sm ${
                 formData.user_type === 'delivery' ? 'bg-[#FF6B00] text-white font-bold' : 'text-gray-600'
               }`}
@@ -343,6 +363,55 @@ const RegisterPage = () => {
               موظف توصيل
             </button>
           </div>
+
+          {/* Seller Type Selection */}
+          {showSellerType && (
+            <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-200">
+              <p className="text-sm text-gray-700 mb-3 text-center font-medium">ما نوع البيع؟</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => selectSellerType('seller')}
+                  className={`flex-1 py-3 px-2 rounded-xl border-2 transition-all text-sm ${
+                    formData.user_type === 'seller' 
+                      ? 'border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00] font-bold' 
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-[#FF6B00]/50'
+                  }`}
+                >
+                  <span className="text-lg mb-1 block">📦</span>
+                  منتجات عادية
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectSellerType('food_seller')}
+                  className={`flex-1 py-3 px-2 rounded-xl border-2 transition-all text-sm ${
+                    formData.user_type === 'food_seller' 
+                      ? 'border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00] font-bold' 
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-[#FF6B00]/50'
+                  }`}
+                >
+                  <span className="text-lg mb-1 block">🍔</span>
+                  طعام / ماركت
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Show selected seller type badge */}
+          {!showSellerType && (formData.user_type === 'seller' || formData.user_type === 'food_seller') && (
+            <div className="mb-4 flex items-center justify-center gap-2">
+              <span className="text-xs bg-[#FF6B00]/10 text-[#FF6B00] px-3 py-1 rounded-full">
+                {formData.user_type === 'seller' ? '📦 بائع منتجات' : '🍔 بائع طعام/ماركت'}
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setShowSellerType(true)}
+                className="text-xs text-gray-500 hover:text-[#FF6B00]"
+              >
+                تغيير
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
