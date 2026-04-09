@@ -3,8 +3,7 @@
   "appName": "ترند سورية",
   "webDir": "build",
   "server": {
-    "androidScheme": "https",
-    "hostname": "trendsyria.app"
+    "androidScheme": "https"
   },
   "android": {
     "allowMixedContent": false,
