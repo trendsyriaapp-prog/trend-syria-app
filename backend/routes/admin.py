@@ -511,6 +511,46 @@ async def get_pending_sellers(user: dict = Depends(get_current_user)):
             result.append({**doc, "seller": seller})
     return result
 
+# ============== سجل الطلبات المرفوضة ==============
+
+@router.get("/rejected-requests")
+async def get_rejected_requests(user: dict = Depends(get_current_user)):
+    """جلب سجل الطلبات المرفوضة (بائعين + سائقين) - حذف تلقائي بعد 30 يوم"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    from datetime import timedelta
+    
+    # حذف السجلات الأقدم من 30 يوم تلقائياً
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    delete_result = await db.rejected_join_requests.delete_many({
+        "rejected_at": {"$lt": thirty_days_ago}
+    })
+    
+    # جلب السجلات المتبقية
+    requests = await db.rejected_join_requests.find(
+        {},
+        {"_id": 0, "original_data": 0}  # استبعاد البيانات الكاملة لتخفيف الحجم
+    ).sort("rejected_at", -1).to_list(100)
+    
+    return {
+        "requests": requests,
+        "deleted_old_records": delete_result.deleted_count,
+        "retention_days": 30
+    }
+
+@router.delete("/rejected-requests/{request_id}")
+async def delete_rejected_request(request_id: str, user: dict = Depends(get_current_user)):
+    """حذف سجل طلب مرفوض يدوياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.rejected_join_requests.delete_one({"id": request_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="السجل غير موجود")
+    
+    return {"message": "تم حذف السجل"}
+
 @router.get("/sellers/all")
 async def get_all_sellers(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
@@ -565,6 +605,10 @@ async def reject_seller(seller_id: str, data: dict = None, user: dict = Depends(
     
     now = datetime.now(timezone.utc).isoformat()
     
+    # جلب بيانات البائع قبل الرفض
+    seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
+    seller_docs = await db.seller_documents.find_one({"seller_id": seller_id}, {"_id": 0})
+    
     update_data = {
         "status": "rejected",
         "rejected_by": user["id"],
@@ -578,8 +622,26 @@ async def reject_seller(seller_id: str, data: dict = None, user: dict = Depends(
         {"$set": update_data}
     )
     
+    # حفظ في سجل الطلبات المرفوضة
+    await db.rejected_join_requests.insert_one({
+        "id": str(uuid.uuid4()),
+        "type": "seller",
+        "user_id": seller_id,
+        "name": seller.get("name") or seller.get("full_name") if seller else "غير معروف",
+        "store_name": seller.get("store_name") if seller else None,
+        "phone": seller.get("phone") if seller else None,
+        "city": seller.get("city") if seller else None,
+        "reason": reason,
+        "rejected_by": user["id"],
+        "rejected_by_name": user.get("name") or user.get("full_name"),
+        "rejected_at": now,
+        "original_data": {
+            "user": seller,
+            "documents": seller_docs
+        }
+    })
+    
     # إرسال إشعار للبائع
-    seller = await db.users.find_one({"id": seller_id})
     if seller:
         message = "تم رفض طلبك للتسجيل كبائع."
         if reason:
@@ -1038,6 +1100,13 @@ async def reject_delivery_driver(driver_id: str, data: dict = None, user: dict =
     
     now = datetime.now(timezone.utc).isoformat()
     
+    # جلب بيانات السائق قبل الرفض
+    driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "password": 0})
+    driver_docs = await db.delivery_documents.find_one(
+        {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
+        {"_id": 0}
+    )
+    
     update_data = {
         "status": "rejected",
         "rejected_by": user["id"],
@@ -1053,6 +1122,25 @@ async def reject_delivery_driver(driver_id: str, data: dict = None, user: dict =
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
+    
+    # حفظ في سجل الطلبات المرفوضة
+    await db.rejected_join_requests.insert_one({
+        "id": str(uuid.uuid4()),
+        "type": "driver",
+        "user_id": driver_id,
+        "name": driver.get("name") or driver.get("full_name") if driver else "غير معروف",
+        "phone": driver.get("phone") if driver else None,
+        "city": driver.get("city") if driver else None,
+        "vehicle_type": driver_docs.get("vehicle_type") if driver_docs else None,
+        "reason": reason,
+        "rejected_by": user["id"],
+        "rejected_by_name": user.get("name") or user.get("full_name"),
+        "rejected_at": now,
+        "original_data": {
+            "user": driver,
+            "documents": driver_docs
+        }
+    })
     
     # إرسال إشعار لموظف التوصيل
     message = "تم رفض طلبك للتسجيل كموظف توصيل."

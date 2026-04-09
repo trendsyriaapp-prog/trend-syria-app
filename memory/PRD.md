@@ -20,6 +20,22 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Recent Bug Fixes (December 2025)
 
+### 2026-04-09: سجل الطلبات المرفوضة (Rejected Join Requests Log) ✅
+**Feature:** إضافة سجل للطلبات المرفوضة (بائعين وسائقين) مع حذف تلقائي بعد 30 يوم
+**Implementation:**
+- Backend: 
+  - إضافة collection جديد `rejected_join_requests`
+  - تعديل `reject_seller` و `reject_delivery_driver` لحفظ نسخة في السجل
+  - إضافة `GET /api/admin/rejected-requests` لجلب السجل مع حذف تلقائي للقديم
+  - إضافة `DELETE /api/admin/rejected-requests/{id}` للحذف اليدوي
+- Frontend:
+  - إضافة تبويب "المرفوضة" في `AllPendingJoinRequests.js`
+  - عرض اسم، نوع (بائع/سائق)، سبب الرفض، التاريخ
+  - زر حذف يدوي لكل سجل
+**Files Changed:**
+- `/app/backend/routes/admin.py` (APIs + save logic)
+- `/app/frontend/src/components/admin/AllPendingJoinRequests.js` (UI)
+
 ### 2026-04-08: Admin Reject Join Requests - UI Instant Update ✅
 **Problem:** When Admin rejects a seller/driver join request, the item stays visible in the "Pending" list until page refresh
 **Root Cause:** After successful reject API call, `fetchAllPending()` was called but relied on re-fetching from server which could be slow or cached

@@ -6,7 +6,8 @@ import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { 
   Users, Store, Truck, UtensilsCrossed, Check, X, Eye, Phone, MapPin,
-  Loader2, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle
+  Loader2, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle,
+  Archive, Trash2
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -40,7 +41,8 @@ const AllPendingJoinRequests = () => {
   const [pendingSellers, setPendingSellers] = useState([]);
   const [pendingDrivers, setPendingDrivers] = useState([]);
   const [pendingFoodStores, setPendingFoodStores] = useState([]);
-  const [activeSection, setActiveSection] = useState('all'); // all, sellers, drivers, food_stores
+  const [rejectedRequests, setRejectedRequests] = useState([]);
+  const [activeSection, setActiveSection] = useState('all'); // all, sellers, drivers, food_stores, rejected
   const [expandedItem, setExpandedItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   
@@ -55,14 +57,16 @@ const AllPendingJoinRequests = () => {
   const fetchAllPending = async () => {
     setLoading(true);
     try {
-      const [sellersRes, driversRes, foodStoresRes] = await Promise.all([
+      const [sellersRes, driversRes, foodStoresRes, rejectedRes] = await Promise.all([
         axios.get(`${API}/api/admin/sellers/pending`),
         axios.get(`${API}/api/admin/delivery/pending`),
-        axios.get(`${API}/api/admin/food/stores?status=pending`)
+        axios.get(`${API}/api/admin/food/stores?status=pending`),
+        axios.get(`${API}/api/admin/rejected-requests`)
       ]);
       setPendingSellers(sellersRes.data || []);
       setPendingDrivers(driversRes.data || []);
       setPendingFoodStores(foodStoresRes.data || []);
+      setRejectedRequests(rejectedRes.data?.requests || []);
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في جلب البيانات", variant: "destructive" });
     } finally {
@@ -172,12 +176,51 @@ const AllPendingJoinRequests = () => {
       setRejectModal(null);
       setRejectReason('');
       setExpandedItem(null); // إغلاق أي عنصر مفتوح
+      
+      // إضافة السجل للقائمة المرفوضة محلياً
+      const newRejectedItem = {
+        id: Date.now().toString(),
+        type: rejectModal.type === 'driver' ? 'driver' : 'seller',
+        name: rejectModal.name,
+        reason: rejectReason,
+        rejected_at: new Date().toISOString()
+      };
+      setRejectedRequests(prev => [newRejectedItem, ...prev]);
     } catch (error) {
       const errorMsg = error.response?.data?.detail || "فشل الرفض";
       toast({ title: "خطأ", description: errorMsg, variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // حذف سجل مرفوض يدوياً
+  const handleDeleteRejected = async (requestId) => {
+    setActionLoading(requestId);
+    try {
+      await axios.delete(`${API}/api/admin/rejected-requests/${requestId}`);
+      toast({ title: "تم", description: "تم حذف السجل" });
+      setRejectedRequests(prev => prev.filter(item => item.id !== requestId));
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل حذف السجل", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // تنسيق التاريخ
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'غير محدد';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'اليوم';
+    if (diffDays === 1) return 'أمس';
+    if (diffDays < 7) return `منذ ${diffDays} أيام`;
+    if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`;
+    return date.toLocaleDateString('ar-SY');
   };
 
   const totalPending = pendingSellers.length + pendingDrivers.length + pendingFoodStores.length;
@@ -241,18 +284,98 @@ const AllPendingJoinRequests = () => {
           <UtensilsCrossed size={16} />
           متاجر طعام ({pendingFoodStores.length})
         </button>
+        <button
+          onClick={() => setActiveSection('rejected')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+            activeSection === 'rejected' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100'
+          }`}
+        >
+          <Archive size={16} />
+          المرفوضة ({rejectedRequests.length})
+        </button>
       </div>
 
       {/* Empty State */}
-      {totalPending === 0 && (
+      {totalPending === 0 && activeSection !== 'rejected' && (
         <div className="text-center py-12 bg-gray-50 rounded-xl">
           <Users size={48} className="mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500">لا توجد طلبات انضمام معلقة</p>
         </div>
       )}
 
+      {/* Rejected Requests Section */}
+      {activeSection === 'rejected' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between bg-red-50 px-3 py-2 rounded-lg">
+            <h3 className="font-bold text-red-700 flex items-center gap-2">
+              <Archive size={18} />
+              سجل الطلبات المرفوضة ({rejectedRequests.length})
+            </h3>
+            <span className="text-xs text-red-500 bg-red-100 px-2 py-1 rounded-full">
+              تُحذف تلقائياً بعد 30 يوم
+            </span>
+          </div>
+          
+          {rejectedRequests.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <Archive size={48} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500">لا توجد طلبات مرفوضة</p>
+            </div>
+          ) : (
+            rejectedRequests.map((item) => (
+              <div key={item.id} className="bg-white rounded-xl border border-red-200 p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.type === 'driver' ? 'bg-cyan-100' : 'bg-amber-100'}`}>
+                      {item.type === 'driver' ? (
+                        <Truck size={20} className="text-cyan-600" />
+                      ) : (
+                        <Store size={20} className="text-amber-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800">{item.name || 'غير معروف'}</h4>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${item.type === 'driver' ? 'bg-cyan-100 text-cyan-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {item.type === 'driver' ? 'سائق' : 'بائع'}
+                        </span>
+                        <span>•</span>
+                        <span>{formatDate(item.rejected_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteRejected(item.id)}
+                    disabled={actionLoading === item.id}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="حذف السجل"
+                  >
+                    {actionLoading === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                  </button>
+                </div>
+                
+                {item.reason && (
+                  <div className="mt-3 p-3 bg-red-50 rounded-lg">
+                    <p className="text-sm text-red-700">
+                      <span className="font-medium">سبب الرفض:</span> {item.reason}
+                    </p>
+                  </div>
+                )}
+                
+                {item.phone && (
+                  <div className="mt-2 text-sm text-gray-500 flex items-center gap-1">
+                    <Phone size={14} />
+                    {item.phone}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
       {/* Sellers Section */}
-      {data.sellers.length > 0 && (
+      {data.sellers.length > 0 && activeSection !== 'rejected' && (
         <div className="space-y-3">
           <h3 className="font-bold text-amber-700 flex items-center gap-2 bg-amber-50 px-3 py-2 rounded-lg">
             <Store size={18} />
@@ -316,7 +439,7 @@ const AllPendingJoinRequests = () => {
       )}
 
       {/* Drivers Section */}
-      {data.drivers.length > 0 && (
+      {data.drivers.length > 0 && activeSection !== 'rejected' && (
         <div className="space-y-3">
           <h3 className="font-bold text-cyan-700 flex items-center gap-2 bg-cyan-50 px-3 py-2 rounded-lg">
             <Truck size={18} />
@@ -427,7 +550,7 @@ const AllPendingJoinRequests = () => {
       )}
 
       {/* Food Stores Section */}
-      {data.foodStores.length > 0 && (
+      {data.foodStores.length > 0 && activeSection !== 'rejected' && (
         <div className="space-y-3">
           <h3 className="font-bold text-green-700 flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
             <UtensilsCrossed size={18} />
