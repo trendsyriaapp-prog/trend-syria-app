@@ -17,7 +17,8 @@ const NotificationGuide = ({ userType }) => {
     isSupported,
     isSubscribed,
     permission,
-    subscribe
+    subscribe,
+    isNative
   } = usePushNotifications(userType);
 
   // تحديد الرسائل حسب نوع المستخدم
@@ -114,6 +115,16 @@ const NotificationGuide = ({ userType }) => {
 
   // حالة الإشعارات الحالية
   const getStatusInfo = () => {
+    // للتطبيق الأصلي (Android/iOS)
+    if (isNative) {
+      return {
+        icon: <CheckCircle2 className="text-green-500" size={24} />,
+        title: 'الإشعارات مفعّلة',
+        description: 'ستتلقى إشعارات التطبيق مباشرة على جهازك. تأكد من تفعيل الإشعارات في إعدادات التطبيق.',
+        color: 'green'
+      };
+    }
+    
     if (!isSupported) {
       return {
         icon: <XCircle className="text-red-500" size={24} />,

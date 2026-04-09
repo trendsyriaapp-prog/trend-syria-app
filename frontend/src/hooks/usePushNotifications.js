@@ -5,8 +5,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { getFCMToken, setupForegroundHandler } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// التحقق إذا كان التطبيق يعمل داخل Capacitor (Android/iOS)
+const isNativeApp = () => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
 
 const usePushNotifications = (userType = null) => {
   const { token: authToken, user } = useAuth();
@@ -17,10 +27,21 @@ const usePushNotifications = (userType = null) => {
   const [error, setError] = useState(null);
   const [isSupported, setIsSupported] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
   // التحقق من دعم الإشعارات
   useEffect(() => {
     const checkSupport = () => {
+      // إذا كان التطبيق يعمل داخل Capacitor (Android/iOS)
+      // الإشعارات تُدار بواسطة Capacitor Push Notifications plugin
+      if (isNativeApp()) {
+        setIsNative(true);
+        setIsSupported(true); // مدعوم عبر Native
+        setIsSubscribed(true); // نفترض أنها مفعّلة في التطبيق
+        return true;
+      }
+      
+      // للمتصفحات العادية
       if (!('Notification' in window)) {
         setIsSupported(false);
         setError('المتصفح لا يدعم الإشعارات');
@@ -34,14 +55,17 @@ const usePushNotifications = (userType = null) => {
       return true;
     };
 
-    if (checkSupport()) {
+    if (checkSupport() && !isNativeApp()) {
       setPermission(Notification.permission);
       setIsSubscribed(Notification.permission === 'granted');
     }
   }, []);
 
-  // تسجيل Service Worker
+  // تسجيل Service Worker - فقط للمتصفحات وليس للتطبيق الأصلي
   useEffect(() => {
+    // لا تسجل Service Worker في تطبيق Capacitor
+    if (isNativeApp()) return;
+    
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then((registration) => {
@@ -55,6 +79,13 @@ const usePushNotifications = (userType = null) => {
 
   // طلب الإذن والحصول على Token
   const requestPermission = useCallback(async () => {
+    // في التطبيق الأصلي، الإشعارات تُدار بواسطة Capacitor
+    if (isNativeApp()) {
+      setIsSubscribed(true);
+      setPermission('granted');
+      return 'native-app';
+    }
+    
     if (!isSupported) return null;
     
     setLoading(true);
@@ -160,6 +191,7 @@ const usePushNotifications = (userType = null) => {
     loading,
     error,
     isSupported,
+    isNative,
     requestPermission,
     unregisterToken,
     
