@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { 
   Package, UtensilsCrossed, Check, X, Eye, 
-  Loader2, ChevronDown, ChevronUp, Image as ImageIcon
+  Loader2, ChevronDown, ChevronUp, Image as ImageIcon, Video, Play
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -21,6 +21,7 @@ const AllPendingItemsTab = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
+  const [videoModal, setVideoModal] = useState({ isOpen: false, videoUrl: null, productName: '' });
 
   useEffect(() => {
     fetchAllPending();
@@ -204,6 +205,21 @@ const AllPendingItemsTab = () => {
               
               {expandedItem === product.id && (
                 <div className="px-4 pb-4 border-t bg-gray-50">
+                  {/* زر فيديو التحقق */}
+                  {product.admin_video && (
+                    <button
+                      onClick={() => setVideoModal({ isOpen: true, videoUrl: product.admin_video, productName: product.name })}
+                      className="w-full mb-3 flex items-center justify-center gap-2 py-2.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                    >
+                      <Play size={18} />
+                      📹 مشاهدة فيديو التحقق
+                    </button>
+                  )}
+                  {!product.admin_video && (
+                    <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                      <span className="text-yellow-700 text-sm">⚠️ لا يوجد فيديو تحقق</span>
+                    </div>
+                  )}
                   <div className="py-3 text-sm space-y-2">
                     <p><span className="text-gray-500">الوصف:</span> {product.description || 'لا يوجد'}</p>
                     <p><span className="text-gray-500">الفئة:</span> {product.category}</p>
@@ -339,6 +355,34 @@ const AllPendingItemsTab = () => {
                 {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
                 رفض
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Video Modal - عرض فيديو التحقق */}
+      {videoModal.isOpen && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-bold text-gray-800">📹 فيديو التحقق: {videoModal.productName}</h3>
+              <button
+                onClick={() => setVideoModal({ isOpen: false, videoUrl: null, productName: '' })}
+                className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-4">
+              <video 
+                src={videoModal.videoUrl} 
+                controls 
+                autoPlay
+                className="w-full rounded-lg max-h-[60vh]"
+              />
+              <p className="text-xs text-gray-500 text-center mt-3">
+                هذا الفيديو مرفوع من البائع للتحقق من وجود المنتج
+              </p>
             </div>
           </div>
         </div>
