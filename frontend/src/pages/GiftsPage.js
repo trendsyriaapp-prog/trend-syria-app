@@ -379,10 +379,13 @@ const GiftsPage = () => {
               >
                 {receivedGifts.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Gift size={40} className="text-gray-300" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Gift size={40} className="text-pink-400" />
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400">لا توجد هدايا مستلمة</p>
+                    <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">لا توجد هدايا مستلمة</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                      عندما يرسل لك أحد هدية، ستظهر هنا
+                    </p>
                   </div>
                 ) : (
                   receivedGifts.map((gift) => (
@@ -556,16 +559,13 @@ const GiftsPage = () => {
               >
                 {sentGifts.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Send size={40} className="text-gray-300" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Send size={40} className="text-pink-400" />
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">لم ترسل أي هدايا بعد</p>
-                    <button
-                      onClick={() => navigate('/products')}
-                      className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold"
-                    >
-                      تصفح المنتجات
-                    </button>
+                    <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">لم ترسل أي هدايا بعد</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                      يمكنك إرسال هدية لأي شخص من خلال الضغط على زر "إرسال كهدية" عند تصفح المنتجات
+                    </p>
                   </div>
                 ) : (
                   sentGifts.map((gift) => (
