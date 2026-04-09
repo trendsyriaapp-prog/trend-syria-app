@@ -224,7 +224,9 @@ const BackButtonHandler = () => {
 };
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  // التحقق إذا تم عرض الـ Splash سابقاً
+  const hasSeenSplash = sessionStorage.getItem('hasSeenSplash') === 'true';
+  const [showSplash, setShowSplash] = useState(!hasSeenSplash);
 
   // إضافة class للـ body حسب المنصة (Android/iOS/Web)
   useEffect(() => {
@@ -236,6 +238,23 @@ function App() {
     } else {
       document.body.classList.add('capacitor-web');
     }
+  }, []);
+
+  // معالجة حالة التطبيق (الخروج والعودة)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleAppStateChange = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        // التطبيق عاد للواجهة - لا نعرض الـ Splash مرة أخرى
+        console.log('App resumed - skipping splash');
+        sessionStorage.setItem('hasSeenSplash', 'true');
+      }
+    });
+
+    return () => {
+      handleAppStateChange.remove();
+    };
   }, []);
 
   return (

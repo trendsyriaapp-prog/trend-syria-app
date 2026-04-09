@@ -9,6 +9,8 @@
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#FF6B00",
+    "webContentsDebuggingEnabled": false,
+    "appendUserAgent": "TrendSyria-App",
     "buildOptions": {
       "keystorePath": null,
       "keystorePassword": null,
@@ -19,7 +21,8 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
       "backgroundColor": "#FF6B00",
       "showSpinner": false,
       "androidSpinnerStyle": "small",
@@ -29,6 +32,9 @@
       "style": "LIGHT",
       "backgroundColor": "#FF6B00",
       "overlaysWebView": false
+    },
+    "App": {
+      "iosWebViewClass": "WKWebView"
     }
   }
 }

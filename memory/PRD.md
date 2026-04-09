@@ -20,6 +20,23 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Recent Bug Fixes (December 2025)
 
+### 2026-04-09: Fix App Reload on Resume (Capacitor) ✅
+**Problem:** When user switches to another app and returns, the app reloads from the beginning showing splash screen again
+**Root Cause:** 
+- SplashScreen component always starts with `showSplash: true`
+- No state persistence between app lifecycle changes
+- No listener for `appStateChange` event
+**Fix:**
+1. **SplashScreen.js**: Check `sessionStorage.hasSeenSplash` before showing splash
+2. **App.js**: Add `appStateChange` listener to mark splash as seen on resume
+3. **capacitor.config.json**: Set `launchShowDuration: 0` and `launchAutoHide: true`
+4. **MainActivity.java**: Override `onSaveInstanceState` and `onRestoreInstanceState` to preserve WebView state
+**Files Changed:**
+- `/app/frontend/src/components/SplashScreen.js`
+- `/app/frontend/src/App.js`
+- `/app/frontend/capacitor.config.json`
+- `/app/frontend/android/app/src/main/java/com/trendsyria/app/MainActivity.java`
+
 ### 2026-04-09: Food Products Now Require Admin Approval ✅
 **Bug Fixed:** Food products were being created without `approval_status` field, so they never appeared in admin's pending list
 **Fix:** Added `is_approved: False` and `approval_status: "pending"` to food product creation in `/app/backend/routes/food.py`

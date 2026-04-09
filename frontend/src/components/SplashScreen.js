@@ -5,19 +5,29 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SplashScreen = ({ onComplete }) => {
-  const [isVisible, setIsVisible] = useState(true);
+  // التحقق إذا تم عرض الـ Splash سابقاً في هذه الجلسة
+  const hasSeenSplash = sessionStorage.getItem('hasSeenSplash') === 'true';
+  const [isVisible, setIsVisible] = useState(!hasSeenSplash);
 
   useEffect(() => {
+    // إذا رأى المستخدم الـ Splash سابقاً، تخطي مباشرة
+    if (hasSeenSplash) {
+      onComplete();
+      return;
+    }
+
     // إخفاء شاشة البداية بعد 2 ثانية
     const timer = setTimeout(() => {
       setIsVisible(false);
+      // حفظ أن المستخدم رأى الـ Splash
+      sessionStorage.setItem('hasSeenSplash', 'true');
       setTimeout(() => {
         onComplete();
       }, 500);
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, hasSeenSplash]);
 
   return (
     <AnimatePresence>
