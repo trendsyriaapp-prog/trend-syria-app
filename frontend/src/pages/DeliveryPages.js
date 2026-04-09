@@ -7,7 +7,7 @@ import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
-  Car, Bike, Check, MapPin, X
+  Car, Bike, Check, MapPin, X, Trash2
 } from 'lucide-react';
 import { PickupChecklist, DeliveryChecklist, ReturnChecklist } from '../components/delivery/DeliveryChecklists';
 import AvailableOrdersList from '../components/delivery/AvailableOrdersList';
@@ -501,6 +501,10 @@ const DeliveryDashboard = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'available');
   const [docStatus, setDocStatus] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [walletTransactions, setWalletTransactions] = useState([]);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingTransactions, setDeletingTransactions] = useState(false);
   
   // ⭐ حفظ موضع التمرير واستعادته عند العودة
   const scrollPositionRef = useRef(0);
@@ -752,10 +756,33 @@ const DeliveryDashboard = () => {
 
   const fetchWallet = async () => {
     try {
-      const res = await axios.get(`${API}/api/wallet/balance`);
-      setWalletBalance(res.data.balance || 0);
+      const [balanceRes, transRes] = await Promise.all([
+        axios.get(`${API}/api/wallet/balance`),
+        axios.get(`${API}/api/wallet/transactions?limit=20`)
+      ]);
+      setWalletBalance(balanceRes.data.balance || 0);
+      setWalletTransactions(transRes.data || []);
     } catch (error) {
       console.error('Error fetching wallet:', error);
+    }
+  };
+  
+  // حذف سجلات المحفظة
+  const handleClearTransactions = async () => {
+    setDeletingTransactions(true);
+    try {
+      await axios.delete(`${API}/api/wallet/transactions/clear`);
+      toast({ title: "تم الحذف", description: "تم حذف سجلات المحفظة بنجاح" });
+      setWalletTransactions([]);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل حذف السجلات",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingTransactions(false);
     }
   };
 
@@ -1505,6 +1532,54 @@ const DeliveryDashboard = () => {
           <>
             <EarningsStats token={localStorage.getItem('token')} theme={currentTheme} />
             
+            {/* سجل معاملات المحفظة */}
+            <div className={`rounded-2xl p-4 border mt-4 ${
+              currentTheme === 'dark' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-200 shadow-sm'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`font-bold flex items-center gap-2 ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  <Wallet size={18} className="text-green-500" />
+                  سجل المحفظة
+                </h3>
+                {walletTransactions.length > 0 && (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 bg-red-500/10 px-2 py-1 rounded-lg"
+                  >
+                    <Trash2 size={12} />
+                    حذف
+                  </button>
+                )}
+              </div>
+              
+              {walletTransactions.length === 0 ? (
+                <div className={`text-center py-6 rounded-xl ${currentTheme === 'dark' ? 'bg-[#252525]' : 'bg-gray-50'}`}>
+                  <p className={currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>لا توجد معاملات</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {walletTransactions.slice(0, 10).map((tx) => (
+                    <div key={tx.id} className={`rounded-lg p-3 flex items-center justify-between ${
+                      currentTheme === 'dark' ? 'bg-[#252525]' : 'bg-gray-50'
+                    }`}>
+                      <div>
+                        <p className={`text-xs ${currentTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{tx.description}</p>
+                        <p className={`text-[10px] ${currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {new Date(tx.created_at).toLocaleDateString('ar-SY')}
+                        </p>
+                      </div>
+                      <span className={`font-bold text-sm ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount?.toLocaleString()} ل.س
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className={`text-[10px] mt-2 text-center ${currentTheme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>
+                السجلات الأقدم من 3 أشهر تُحذف تلقائياً
+              </p>
+            </div>
+            
             {/* قسم الاستقالة */}
             <ResignationSection token={localStorage.getItem('token')} theme={currentTheme} />
             
@@ -1748,6 +1823,45 @@ const DeliveryDashboard = () => {
           onClose={() => setShowRouteMapForOrder(null)}
           theme={currentTheme}
         />
+      )}
+
+      {/* Modal تأكيد حذف السجلات */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div 
+            className={`rounded-2xl p-6 w-full max-w-sm ${currentTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-white'}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-red-500/20 flex items-center justify-center mb-3">
+                <Trash2 size={32} className="text-red-500" />
+              </div>
+              <h2 className={`text-lg font-bold ${currentTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>حذف سجلات المحفظة</h2>
+              <p className={`text-sm mt-2 ${currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                هل أنت متأكد من حذف جميع سجلات المعاملات؟
+              </p>
+              <p className="text-xs text-green-500 mt-2 bg-green-500/10 rounded-lg p-2">
+                ✓ الرصيد الحالي لن يتغير
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className={`flex-1 py-3 rounded-xl font-bold ${currentTheme === 'dark' ? 'bg-[#252525] text-gray-300' : 'bg-gray-100 text-gray-700'}`}
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleClearTransactions}
+                disabled={deletingTransactions}
+                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deletingTransactions ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

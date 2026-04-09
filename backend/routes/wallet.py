@@ -74,12 +74,33 @@ async def get_wallet_transactions(
 ):
     """سجل المعاملات - متاح لجميع المستخدمين"""
     
+    # حذف السجلات الأقدم من 3 أشهر تلقائياً
+    from datetime import timedelta
+    three_months_ago = datetime.now(timezone.utc) - timedelta(days=90)
+    await db.wallet_transactions.delete_many({
+        "user_id": user["id"],
+        "created_at": {"$lt": three_months_ago.isoformat()}
+    })
+    
     transactions = await db.wallet_transactions.find(
         {"user_id": user["id"]},
         {"_id": 0}
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
     return transactions
+
+
+@router.delete("/transactions/clear")
+async def clear_wallet_transactions(user: dict = Depends(get_current_user)):
+    """حذف جميع سجلات المحفظة للمستخدم الحالي - الرصيد لن يتغير"""
+    
+    result = await db.wallet_transactions.delete_many({"user_id": user["id"]})
+    
+    return {
+        "success": True,
+        "message": "تم حذف سجلات المحفظة بنجاح",
+        "deleted_count": result.deleted_count
+    }
 
 
 # ============== شحن المحفظة للعملاء (Top Up) ==============

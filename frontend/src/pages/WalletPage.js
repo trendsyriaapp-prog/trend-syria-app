@@ -7,7 +7,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
   Wallet, ArrowDownCircle, ArrowUpCircle, Clock, 
-  CheckCircle, XCircle, ChevronRight, Banknote
+  CheckCircle, XCircle, ChevronRight, Banknote, Trash2, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -39,6 +39,8 @@ const WalletPage = () => {
   const [withdrawPhone, setWithdrawPhone] = useState('');
   const [bankDetails, setBankDetails] = useState({ bank_name: '', account_number: '', account_holder: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingTransactions, setDeletingTransactions] = useState(false);
   
   // طرق السحب المتاحة
   const withdrawalMethods = [
@@ -151,6 +153,25 @@ const WalletPage = () => {
         description: error.response?.data?.detail || "فشل الإلغاء",
         variant: "destructive"
       });
+    }
+  };
+  
+  // حذف سجلات المحفظة
+  const handleClearTransactions = async () => {
+    setDeletingTransactions(true);
+    try {
+      await axios.delete(`${API}/api/wallet/transactions/clear`);
+      toast({ title: "تم الحذف", description: "تم حذف سجلات المحفظة بنجاح" });
+      setTransactions([]);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل حذف السجلات",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingTransactions(false);
     }
   };
   
@@ -388,6 +409,19 @@ const WalletPage = () => {
         {/* Transactions List */}
         {activeTab === 'overview' && (
           <div className="space-y-2">
+            {/* زر حذف السجلات */}
+            {transactions.length > 0 && (
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Trash2 size={14} />
+                  حذف السجلات
+                </button>
+              </div>
+            )}
+            
             {transactions.length === 0 ? (
               <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
                 <Wallet size={40} className="text-gray-300 mx-auto mb-3" />
@@ -420,6 +454,9 @@ const WalletPage = () => {
                 </div>
               ))
             )}
+            
+            {/* معلومة */}
+            <p className="text-[10px] text-gray-400 text-center mt-2">السجلات الأقدم من 3 أشهر تُحذف تلقائياً</p>
           </div>
         )}
         
@@ -501,6 +538,52 @@ const WalletPage = () => {
                 >
                   <XCircle size={16} />
                   إلغاء الطلب
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Modal تأكيد حذف السجلات */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+            <div 
+              className="bg-white rounded-2xl p-6 w-full max-w-sm"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-3">
+                  <Trash2 size={32} className="text-red-600" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">حذف سجلات المحفظة</h2>
+                <p className="text-sm text-gray-500 mt-2">
+                  هل أنت متأكد من حذف جميع سجلات المعاملات؟
+                </p>
+                <p className="text-xs text-green-600 mt-2 bg-green-50 rounded-lg p-2">
+                  ✓ الرصيد الحالي لن يتغير
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={handleClearTransactions}
+                  disabled={deletingTransactions}
+                  className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deletingTransactions ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      جاري الحذف...
+                    </>
+                  ) : (
+                    'تأكيد الحذف'
+                  )}
                 </button>
               </div>
             </div>

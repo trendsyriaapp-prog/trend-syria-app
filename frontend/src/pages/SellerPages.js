@@ -735,8 +735,11 @@ const SellerDashboardPage = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [totalEarned, setTotalEarned] = useState(0);
+  const [walletTransactions, setWalletTransactions] = useState([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingTransactions, setDeletingTransactions] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // لتتبع الزر قيد التحميل
   const [editPrice, setEditPrice] = useState('');
@@ -853,18 +856,45 @@ const SellerDashboardPage = () => {
 
   const fetchWallet = async () => {
     try {
-      const res = await axios.get(`${API}/api/wallet/balance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setWalletBalance(res.data.balance || 0);
-      setPendingBalance(res.data.pending_balance || 0);
-      setTotalEarned(res.data.total_earned || 0);
+      const [balanceRes, transRes] = await Promise.all([
+        axios.get(`${API}/api/wallet/balance`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/api/wallet/transactions?limit=20`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setWalletBalance(balanceRes.data.balance || 0);
+      setPendingBalance(balanceRes.data.pending_balance || 0);
+      setTotalEarned(balanceRes.data.total_earned || 0);
+      setWalletTransactions(transRes.data || []);
     } catch (error) {
       console.error('Error fetching wallet:', error);
     }
   };
   
   const fetchWalletData = fetchWallet;
+  
+  // حذف سجلات المحفظة
+  const handleClearTransactions = async () => {
+    setDeletingTransactions(true);
+    try {
+      await axios.delete(`${API}/api/wallet/transactions/clear`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "تم الحذف", description: "تم حذف سجلات المحفظة بنجاح" });
+      setWalletTransactions([]);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل حذف السجلات",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingTransactions(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -1953,7 +1983,7 @@ const SellerDashboardPage = () => {
       {showWalletModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={() => setShowWalletModal(false)}>
           <div 
-            className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300"
+            className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1989,11 +2019,50 @@ const SellerDashboardPage = () => {
             </div>
 
             {/* إجمالي الأرباح */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">إجمالي الأرباح</span>
                 <span className="font-bold text-gray-900">{totalEarned?.toLocaleString() || 0} ل.س</span>
               </div>
+            </div>
+            
+            {/* سجل المعاملات */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-900 text-sm">سجل المعاملات</h3>
+                {walletTransactions.length > 0 && (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 size={12} />
+                    حذف
+                  </button>
+                )}
+              </div>
+              
+              {walletTransactions.length === 0 ? (
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-gray-400 text-sm">لا توجد معاملات</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {walletTransactions.slice(0, 5).map((tx) => (
+                    <div key={tx.id} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-gray-700">{tx.description}</p>
+                        <p className="text-[10px] text-gray-400">
+                          {new Date(tx.created_at).toLocaleDateString('ar-SY')}
+                        </p>
+                      </div>
+                      <span className={`font-bold text-sm ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount?.toLocaleString()} ل.س
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-gray-400 mt-2 text-center">السجلات الأقدم من 3 أشهر تُحذف تلقائياً</p>
             </div>
 
             {/* زر طلب سحب */}
@@ -2007,6 +2076,45 @@ const SellerDashboardPage = () => {
             >
               {walletBalance < 50000 ? `الحد الأدنى للسحب 50,000 ل.س` : 'طلب سحب'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal تأكيد حذف السجلات */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div 
+            className="bg-white rounded-2xl p-6 w-full max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-3">
+                <Trash2 size={32} className="text-red-600" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">حذف سجلات المحفظة</h2>
+              <p className="text-sm text-gray-500 mt-2">
+                هل أنت متأكد من حذف جميع سجلات المعاملات؟
+              </p>
+              <p className="text-xs text-green-600 mt-2 bg-green-50 rounded-lg p-2">
+                ✓ الرصيد الحالي لن يتغير
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleClearTransactions}
+                disabled={deletingTransactions}
+                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deletingTransactions ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              </button>
+            </div>
           </div>
         </div>
       )}
