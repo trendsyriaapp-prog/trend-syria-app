@@ -173,6 +173,20 @@ const NotificationsDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // تحديد الإشعارات كمقروءة تلقائياً عند فتح القائمة
+  useEffect(() => {
+    let timeoutId;
+    if (isOpen && unreadCount > 0) {
+      // تحديد كمقروء بعد ثانيتين من فتح القائمة
+      timeoutId = setTimeout(() => {
+        markAllAsRead();
+      }, 2000);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isOpen, unreadCount]);
+
   // تحديد إشعار كمقروء
   const markAsRead = async (notificationId) => {
     try {
@@ -189,7 +203,8 @@ const NotificationsDropdown = () => {
   // تحديد الكل كمقروء
   const markAllAsRead = async () => {
     try {
-      await axios.post(`${API}/api/notifications/read-all`);
+      const context = getNotificationContext();
+      await axios.post(`${API}/api/notifications/read-all?context=${context}`);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (err) {

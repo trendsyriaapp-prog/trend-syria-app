@@ -142,13 +142,8 @@ async def request_topup(
     
     await db.topup_requests.insert_one(topup_request)
     
-    # إشعار الإدارة
-    await create_notification_for_user(
-        user_id="admin",  # سيُرسل لجميع المدراء
-        title="💳 طلب شحن محفظة جديد",
-        message=f"طلب شحن بقيمة {data.amount:,} ل.س من {user.get('name', '')}",
-        notification_type="topup_request"
-    )
+    # ملاحظة: لا نرسل إشعار للمدير لأن النظام يتحقق تلقائياً من التحويل
+    # المدير يمكنه مراجعة الطلبات المعلقة من لوحة التحكم إذا لزم الأمر
     
     return {
         "success": True,

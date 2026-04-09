@@ -33,7 +33,7 @@ CUSTOMER_NOTIFICATION_TYPES = [
 ADMIN_NOTIFICATION_TYPES = [
     'new_seller_registration', 'new_driver_registration', 'withdrawal_request',
     'seller_document_submitted', 'driver_document_submitted', 'report_submitted',
-    'support_ticket', 'system_alert', 'low_stock_alert', 'topup_request',
+    'support_ticket', 'system_alert', 'low_stock_alert',
     'admin_notification', 'seller_approved', 'seller_rejected', 'delivery_approved', 'delivery_rejected'
 ]
 
@@ -155,17 +155,37 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(get_
     return {"message": "تم تحديد الإشعار كمقروء"}
 
 @router.post("/read-all")
-async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
+async def mark_all_notifications_read(
+    user: dict = Depends(get_current_user),
+    context: Optional[str] = Query(default=None)
+):
+    """تحديد جميع الإشعارات كمقروءة"""
     user_type = user.get("user_type", "buyer")
     target_role = user_type + "s" if not user_type.endswith("s") else user_type
     
+    # بناء query مطابق لـ get_notifications
+    base_query = {"$or": [
+        {"target": "all"},
+        {"target": target_role},
+        {"target": user_type},
+        {"user_id": user["id"]}
+    ]}
+    
+    # فلتر حسب السياق (مثل get_notifications)
+    if context:
+        if context == 'seller' and user_type in ['seller', 'food_seller']:
+            base_query = {"$and": [base_query, {"type": {"$in": SELLER_NOTIFICATION_TYPES}}]}
+        elif context == 'delivery' and user_type == 'delivery':
+            base_query = {"$and": [base_query, {"type": {"$in": DELIVERY_NOTIFICATION_TYPES}}]}
+        elif context == 'admin' and user_type in ['admin', 'sub_admin']:
+            base_query = {"$and": [base_query, {"type": {"$in": ADMIN_NOTIFICATION_TYPES}}]}
+        elif context == 'customer':
+            base_query = {"$and": [base_query, {"type": {"$in": CUSTOMER_NOTIFICATION_TYPES}}]}
+    elif user_type in ['admin', 'sub_admin']:
+        base_query = {"$and": [base_query, {"type": {"$in": ADMIN_NOTIFICATION_TYPES}}]}
+    
     notifications = await db.notifications.find(
-        {"$or": [
-            {"target": "all"},
-            {"target": target_role},
-            {"target": user_type},
-            {"user_id": user["id"]}
-        ]},
+        base_query,
         {"_id": 0, "id": 1}
     ).to_list(100)
     
@@ -180,7 +200,7 @@ async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
             upsert=True
         )
     
-    return {"message": "تم تحديد جميع الإشعارات كمقروءة"}
+    return {"message": "تم تحديد جميع الإشعارات كمقروءة", "count": len(notifications)}
 
 # ============== Firebase Cloud Messaging ==============
 
