@@ -824,75 +824,117 @@ const AdminDashboardPage = () => {
             {/* الموافقات المعلقة - 3 أيقونات رئيسية */}
             <div className="grid grid-cols-3 gap-3 mb-4">
               {/* طلبات الانضمام (بائعين + سائقين + متاجر طعام) */}
-              <div 
-                className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('all-join-requests')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                    <Users size={20} className="text-amber-600" />
-                  </div>
-                  <span className="text-xl font-bold text-amber-600">
-                    {(stats?.pending_sellers || pendingSellers.length || 0) + 
+              {(() => {
+                const joinRequestsCount = (stats?.pending_sellers || pendingSellers.length || 0) + 
                      (stats?.pending_delivery || pendingDelivery.length || 0) + 
-                     (pendingFoodStores.length || 0)}
-                  </span>
-                </div>
-                <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات الانضمام</h3>
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
-                    بائعين: {stats?.pending_sellers || pendingSellers.length || 0}
-                  </span>
-                  <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">
-                    سائقين: {stats?.pending_delivery || pendingDelivery.length || 0}
-                  </span>
-                  <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
-                    متاجر: {pendingFoodStores.length || 0}
-                  </span>
-                </div>
-              </div>
+                     (pendingFoodStores.length || 0);
+                return (
+                  <div 
+                    className="relative bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => setActiveTab('all-join-requests')}
+                  >
+                    {/* نقطة التنبيه الحمراء */}
+                    {joinRequestsCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-[8px] text-white font-bold">
+                          {joinRequestsCount > 9 ? '9+' : joinRequestsCount}
+                        </span>
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        <Users size={20} className="text-amber-600" />
+                      </div>
+                      <span className="text-xl font-bold text-amber-600">
+                        {joinRequestsCount}
+                      </span>
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات الانضمام</h3>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                        بائعين: {stats?.pending_sellers || pendingSellers.length || 0}
+                      </span>
+                      <span className="text-[9px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full">
+                        سائقين: {stats?.pending_delivery || pendingDelivery.length || 0}
+                      </span>
+                      <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                        متاجر: {pendingFoodStores.length || 0}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* العناصر المعلقة (منتجات + أطباق) */}
-              <div 
-                className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('all-pending-items')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Package size={20} className="text-blue-600" />
+              {(() => {
+                const pendingItemsCount = (stats?.pending_products || pendingProducts.length || 0) + 
+                     (pendingFoodItems.length || 0);
+                return (
+                  <div 
+                    className="relative bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => setActiveTab('all-pending-items')}
+                  >
+                    {/* نقطة التنبيه الحمراء */}
+                    {pendingItemsCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-[8px] text-white font-bold">
+                          {pendingItemsCount > 9 ? '9+' : pendingItemsCount}
+                        </span>
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Package size={20} className="text-blue-600" />
+                      </div>
+                      <span className="text-xl font-bold text-blue-600">
+                        {pendingItemsCount}
+                      </span>
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-800 mb-1">العناصر المعلقة</h3>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                        منتجات: {stats?.pending_products || pendingProducts.length || 0}
+                      </span>
+                      <span className="text-[9px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                        أطباق: {pendingFoodItems.length || 0}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xl font-bold text-blue-600">
-                    {(stats?.pending_products || pendingProducts.length || 0) + 
-                     (pendingFoodItems.length || 0)}
-                  </span>
-                </div>
-                <h3 className="text-xs font-bold text-gray-800 mb-1">العناصر المعلقة</h3>
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
-                    منتجات: {stats?.pending_products || pendingProducts.length || 0}
-                  </span>
-                  <span className="text-[9px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
-                    أطباق: {pendingFoodItems.length || 0}
-                  </span>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* السحوبات */}
-              <div 
-                className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => setActiveTab('all-withdraw-requests')}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <DollarSign size={20} className="text-purple-600" />
+              {(() => {
+                const withdrawalsCount = pendingWithdrawals.length || 0;
+                return (
+                  <div 
+                    className="relative bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-3 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => setActiveTab('all-withdraw-requests')}
+                  >
+                    {/* نقطة التنبيه الحمراء */}
+                    {withdrawalsCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-[8px] text-white font-bold">
+                          {withdrawalsCount > 9 ? '9+' : withdrawalsCount}
+                        </span>
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <DollarSign size={20} className="text-purple-600" />
+                      </div>
+                      <span className="text-xl font-bold text-purple-600">
+                        {withdrawalsCount}
+                      </span>
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات السحب</h3>
+                    <p className="text-[9px] text-gray-500">بانتظار الموافقة</p>
                   </div>
-                  <span className="text-xl font-bold text-purple-600">
-                    {pendingWithdrawals.length || 0}
-                  </span>
-                </div>
-                <h3 className="text-xs font-bold text-gray-800 mb-1">طلبات السحب</h3>
-                <p className="text-[9px] text-gray-500">بانتظار الموافقة</p>
-              </div>
+                );
+              })()}
             </div>
 
             {/* ======== الأقسام المجمّعة ======== */}
