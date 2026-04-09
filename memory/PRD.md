@@ -7,6 +7,25 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.12 (versionCode: 12) in Closed Testing (Alpha)
 
+## Latest Update: 2026-04-09
+
+### ✅ Admin Approval Dashboard - Comprehensive Testing Completed
+**Testing Results:** 100% Backend & Frontend Working
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| Product Sellers | ✅ | Registration + Documents + Approval/Reject |
+| Food Sellers | ✅ | Registration + Store Creation + Approval/Reject |
+| Delivery Drivers | ✅ | Registration + Documents (photo, ID, license) + Approval/Reject |
+| Products | ✅ | Creation with `admin_video` + Approval/Reject |
+| Food Items | ✅ | Creation with `admin_video` + Approval/Reject |
+| Verification Video | ✅ | Both products & food items display `admin_video` to admin |
+
+**Bug Fixed (by testing_agent):**
+- Added `admin_video` field support to food item creation in `/app/backend/routes/food.py`
+
+---
+
 ## Core Features Implemented
 - Multi-role system (buyer, seller, food_seller, delivery, admin, sub_admin)
 - Product management with categories
