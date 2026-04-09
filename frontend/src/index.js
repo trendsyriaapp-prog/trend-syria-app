@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 
 // App build info
-window.APP_BUILD_VERSION = "2026-04-07-v3";
+window.APP_BUILD_VERSION = "2026-04-09-debug";
 
 // تسجيل Service Worker للـ PWA
 if ('serviceWorker' in navigator) {

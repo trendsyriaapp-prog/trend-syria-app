@@ -9,7 +9,7 @@
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#FF6B00",
-    "webContentsDebuggingEnabled": false,
+    "webContentsDebuggingEnabled": true,
     "appendUserAgent": "TrendSyria-App",
     "buildOptions": {
       "keystorePath": null,

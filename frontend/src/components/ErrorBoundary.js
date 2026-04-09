@@ -1,5 +1,5 @@
 // /app/frontend/src/components/ErrorBoundary.js
-// نظام عرض الأخطاء للمطور - يعرض كل التفاصيل
+// نظام عرض الأخطاء - يعرض الخطأ على الشاشة مباشرة
 
 import React from 'react';
 
@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
       timestamp: new Date().toLocaleString('ar-SY')
     });
     
-    // طباعة في Console أيضاً
+    // طباعة في Console
     console.error('🔴 ErrorBoundary caught error:', error);
     console.error('📍 Component Stack:', errorInfo.componentStack);
   }
@@ -35,56 +35,51 @@ class ErrorBoundary extends React.Component {
       return (
         <div dir="rtl" style={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+          background: '#FF6B00',
           padding: '20px',
-          fontFamily: 'Tajawal, sans-serif'
+          fontFamily: 'Tajawal, Arial, sans-serif',
+          color: 'white'
         }}>
           <div style={{
-            maxWidth: '800px',
-            margin: '0 auto',
-            background: '#fff',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            maxWidth: '100%',
+            margin: '0 auto'
           }}>
             {/* Header */}
             <div style={{
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              padding: '24px',
-              color: 'white'
+              textAlign: 'center',
+              marginBottom: '20px'
             }}>
-              <div style={{ fontSize: '48px', marginBottom: '8px' }}>❌</div>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+              <div style={{ fontSize: '60px', marginBottom: '10px' }}>⚠️</div>
+              <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
                 حدث خطأ في التطبيق
               </h1>
               <p style={{ opacity: 0.9, margin: 0, fontSize: '14px' }}>
-                التقط صورة لهذه الشاشة وأرسلها للمطور
+                التقط صورة لهذه الشاشة وأرسلها للدعم الفني
               </p>
             </div>
 
-            {/* Error Details */}
-            <div style={{ padding: '24px' }}>
-              {/* Error Name & Message */}
+            {/* Error Box */}
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '16px'
+            }}>
+              {/* Error Name */}
               <div style={{
-                background: '#fef2f2',
-                border: '2px solid #fecaca',
+                background: 'rgba(255,255,255,0.2)',
                 borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px'
+                padding: '12px',
+                marginBottom: '12px'
               }}>
-                <div style={{ 
-                  fontSize: '12px', 
-                  color: '#991b1b', 
-                  fontWeight: 'bold',
-                  marginBottom: '8px'
-                }}>
-                  🔴 نوع الخطأ
+                <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>
+                  نوع الخطأ:
                 </div>
                 <div style={{ 
-                  fontSize: '18px', 
+                  fontSize: '16px', 
                   fontWeight: 'bold',
-                  color: '#dc2626',
-                  fontFamily: 'monospace'
+                  fontFamily: 'monospace',
+                  wordBreak: 'break-word'
                 }}>
                   {this.state.error?.name || 'Error'}
                 </div>
@@ -92,25 +87,19 @@ class ErrorBoundary extends React.Component {
 
               {/* Error Message */}
               <div style={{
-                background: '#fff7ed',
-                border: '2px solid #fed7aa',
+                background: 'rgba(255,255,255,0.2)',
                 borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px'
+                padding: '12px',
+                marginBottom: '12px'
               }}>
-                <div style={{ 
-                  fontSize: '12px', 
-                  color: '#c2410c', 
-                  fontWeight: 'bold',
-                  marginBottom: '8px'
-                }}>
-                  📝 رسالة الخطأ
+                <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>
+                  رسالة الخطأ:
                 </div>
                 <div style={{ 
                   fontSize: '14px', 
-                  color: '#ea580c',
                   fontFamily: 'monospace',
-                  wordBreak: 'break-word'
+                  wordBreak: 'break-word',
+                  lineHeight: '1.5'
                 }}>
                   {this.state.error?.message || 'Unknown error'}
                 </div>
@@ -118,34 +107,29 @@ class ErrorBoundary extends React.Component {
 
               {/* Timestamp & Page */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-                marginBottom: '16px'
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '12px'
               }}>
                 <div style={{
-                  background: '#f0fdf4',
-                  border: '2px solid #bbf7d0',
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.2)',
                   borderRadius: '12px',
-                  padding: '12px'
+                  padding: '10px'
                 }}>
-                  <div style={{ fontSize: '12px', color: '#166534', fontWeight: 'bold' }}>
-                    🕐 الوقت
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#15803d', marginTop: '4px' }}>
+                  <div style={{ fontSize: '10px', opacity: 0.8 }}>الوقت:</div>
+                  <div style={{ fontSize: '12px', marginTop: '2px' }}>
                     {this.state.timestamp}
                   </div>
                 </div>
                 <div style={{
-                  background: '#eff6ff',
-                  border: '2px solid #bfdbfe',
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.2)',
                   borderRadius: '12px',
-                  padding: '12px'
+                  padding: '10px'
                 }}>
-                  <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: 'bold' }}>
-                    📍 الصفحة
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#1d4ed8', marginTop: '4px', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '10px', opacity: 0.8 }}>الصفحة:</div>
+                  <div style={{ fontSize: '12px', marginTop: '2px', fontFamily: 'monospace' }}>
                     {window.location.pathname}
                   </div>
                 </div>
@@ -153,86 +137,81 @@ class ErrorBoundary extends React.Component {
 
               {/* Component Stack */}
               <div style={{
-                background: '#f8fafc',
-                border: '2px solid #e2e8f0',
+                background: 'rgba(0,0,0,0.3)',
                 borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px'
+                padding: '12px',
+                marginBottom: '12px'
               }}>
-                <div style={{ 
-                  fontSize: '12px', 
-                  color: '#475569', 
-                  fontWeight: 'bold',
-                  marginBottom: '8px'
-                }}>
-                  📚 مكان الخطأ (Component Stack)
+                <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '6px' }}>
+                  مكان الخطأ:
                 </div>
                 <pre style={{ 
-                  fontSize: '11px', 
-                  color: '#64748b',
+                  fontSize: '10px', 
                   fontFamily: 'monospace',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
                   margin: 0,
-                  maxHeight: '200px',
+                  maxHeight: '150px',
                   overflow: 'auto',
-                  background: '#f1f5f9',
-                  padding: '12px',
-                  borderRadius: '8px'
+                  lineHeight: '1.4'
                 }}>
-                  {this.state.errorInfo?.componentStack || 'No stack available'}
+                  {this.state.errorInfo?.componentStack?.slice(0, 500) || 'No stack available'}
                 </pre>
               </div>
 
               {/* Full Stack Trace */}
               {this.state.error?.stack && (
                 <div style={{
-                  background: '#1e1e1e',
+                  background: 'rgba(0,0,0,0.4)',
                   borderRadius: '12px',
-                  padding: '16px',
-                  marginBottom: '16px'
+                  padding: '12px'
                 }}>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: '#10b981', 
-                    fontWeight: 'bold',
-                    marginBottom: '8px'
-                  }}>
-                    🔍 Stack Trace الكامل
+                  <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '6px' }}>
+                    Stack Trace:
                   </div>
                   <pre style={{ 
-                    fontSize: '10px', 
-                    color: '#e2e8f0',
+                    fontSize: '9px', 
                     fontFamily: 'monospace',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
                     margin: 0,
-                    maxHeight: '250px',
-                    overflow: 'auto'
+                    maxHeight: '200px',
+                    overflow: 'auto',
+                    lineHeight: '1.4'
                   }}>
-                    {this.state.error.stack}
+                    {this.state.error.stack.slice(0, 1000)}
                   </pre>
                 </div>
               )}
+            </div>
 
-              {/* Reload Button */}
-              <button
-                onClick={() => window.location.reload()}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontFamily: 'Tajawal, sans-serif'
-                }}
-              >
-                🔄 إعادة تحميل الصفحة
-              </button>
+            {/* Reload Button */}
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: 'white',
+                color: '#FF6B00',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontFamily: 'Tajawal, Arial, sans-serif'
+              }}
+            >
+              🔄 إعادة تحميل التطبيق
+            </button>
+
+            {/* App Version */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: '16px',
+              fontSize: '11px',
+              opacity: 0.7
+            }}>
+              إصدار التطبيق: {window.APP_BUILD_VERSION || 'غير محدد'}
             </div>
           </div>
         </div>
