@@ -21,7 +21,7 @@ LOYALTY_TIERS = [
     {"name": "فضي", "name_en": "silver", "min_points": 500, "max_points": 1999, "bonus_percent": 5, "color": "#C0C0C0"},
     {"name": "ذهبي", "name_en": "gold", "min_points": 2000, "max_points": 4999, "bonus_percent": 10, "color": "#FFD700"},
     {"name": "بلاتيني", "name_en": "platinum", "min_points": 5000, "max_points": 9999, "bonus_percent": 15, "color": "#E5E4E2"},
-    {"name": "ماسي", "name_en": "diamond", "min_points": 10000, "max_points": float('inf'), "bonus_percent": 20, "color": "#B9F2FF"},
+    {"name": "ماسي", "name_en": "diamond", "min_points": 10000, "max_points": 999999999, "bonus_percent": 20, "color": "#B9F2FF"},
 ]
 
 def get_tier(total_points: int) -> dict:
