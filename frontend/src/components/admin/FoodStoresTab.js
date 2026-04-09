@@ -314,12 +314,12 @@ const FoodStoresTab = ({ pendingOnly = false, pendingFoodStores = [], onRefresh 
                       )}
                       {store.documents.id_photo && (
                         <div>
-                          <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                          <p className="text-[10px] text-gray-400 mb-1">الهوية / إخراج القيد</p>
                           <img 
                             src={store.documents.id_photo} 
-                            alt="صورة الهوية" 
+                            alt="صورة الهوية / إخراج القيد" 
                             className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
-                            onClick={() => setLightboxImage({ src: store.documents.id_photo, alt: 'صورة الهوية' })}
+                            onClick={() => setLightboxImage({ src: store.documents.id_photo, alt: 'صورة الهوية / إخراج القيد' })}
                           />
                         </div>
                       )}

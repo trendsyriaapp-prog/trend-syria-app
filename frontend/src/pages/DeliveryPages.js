@@ -300,7 +300,7 @@ const DeliveryDocuments = () => {
 
           <ImageUploadField
             field="id_photo"
-            label="صورة الهوية كاملة (الوجهين)"
+            label="صورة الهوية / إخراج القيد (الوجهين)"
             icon={CreditCard}
             value={docs.id_photo}
             onUpload={handleImageUpload('id_photo')}
@@ -424,7 +424,7 @@ const DeliveryDocuments = () => {
                 )}
               </div>
               <div className={`flex items-center justify-between p-2 rounded-lg ${docs.id_photo ? 'bg-green-50' : 'bg-red-50'}`}>
-                <span className="text-sm">صورة الهوية</span>
+                <span className="text-sm">صورة الهوية / إخراج القيد</span>
                 {docs.id_photo ? (
                   <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> مرفوع</span>
                 ) : (

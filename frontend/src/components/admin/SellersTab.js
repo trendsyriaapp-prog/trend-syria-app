@@ -180,12 +180,12 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                   <div className="grid grid-cols-2 gap-2">
                     {s.documents.national_id && (
                       <div>
-                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                        <p className="text-[10px] text-gray-400 mb-1">الهوية / إخراج القيد</p>
                         <img 
                           src={s.documents.national_id} 
-                          alt="صورة الهوية" 
+                          alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setLightboxImage({ src: s.documents.national_id, alt: 'صورة الهوية' })}
+                          onClick={() => setLightboxImage({ src: s.documents.national_id, alt: 'صورة الهوية / إخراج القيد' })}
                         />
                       </div>
                     )}
@@ -284,10 +284,10 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                   <div className="grid grid-cols-2 gap-2">
                     {selectedSeller.documents.national_id && (
                       <div>
-                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                        <p className="text-[10px] text-gray-400 mb-1">الهوية / إخراج القيد</p>
                         <img 
                           src={selectedSeller.documents.national_id} 
-                          alt="صورة الهوية" 
+                          alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
                           onClick={() => window.open(selectedSeller.documents.national_id, '_blank')}
                         />

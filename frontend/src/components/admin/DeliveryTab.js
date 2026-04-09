@@ -44,7 +44,7 @@ const DeliveryTab = ({
   const getDocumentsStatus = (doc) => {
     const requiredDocs = [
       { key: 'personal_photo', label: 'صورة شخصية', required: true },
-      { key: 'id_photo', label: 'صورة الهوية', required: true },
+      { key: 'id_photo', label: 'صورة الهوية / إخراج القيد', required: true },
       { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
     ];
     const optionalDocs = [
@@ -250,15 +250,15 @@ const DeliveryTab = ({
                     <div className={`rounded-xl p-2 border-2 ${doc.id_photo ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                       <p className="text-xs text-gray-600 mb-2 text-center font-medium flex items-center justify-center gap-1">
                         {doc.id_photo ? <CheckCircle size={12} className="text-green-500" /> : <XCircle size={12} className="text-red-500" />}
-                        صورة الهوية
+                        الهوية / إخراج القيد
                         <span className="text-[10px] text-red-500">*</span>
                       </p>
                       {doc.id_photo ? (
                         <img 
                           src={doc.id_photo} 
-                          alt="صورة الهوية" 
+                          alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-28 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform border-2 border-white shadow-sm"
-                          onClick={() => setLightboxImage({ src: doc.id_photo, alt: 'صورة الهوية' })}
+                          onClick={() => setLightboxImage({ src: doc.id_photo, alt: 'صورة الهوية / إخراج القيد' })}
                         />
                       ) : (
                         <div className="w-full h-28 bg-red-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-red-300">
@@ -361,7 +361,7 @@ const DeliveryTab = ({
                     {driver.documents?.national_id && (
                       <>
                         <span className="text-gray-300">•</span>
-                        <span className="text-xs text-gray-500">هوية: {driver.documents.national_id}</span>
+                        <span className="text-xs text-gray-500">رقم الهوية: {driver.documents.national_id}</span>
                       </>
                     )}
                   </div>
@@ -482,10 +482,10 @@ const DeliveryTab = ({
                     )}
                     {selectedDriver.documents.id_photo && (
                       <div>
-                        <p className="text-[10px] text-gray-400 mb-1">صورة الهوية</p>
+                        <p className="text-[10px] text-gray-400 mb-1">الهوية / إخراج القيد</p>
                         <img 
                           src={selectedDriver.documents.id_photo} 
-                          alt="صورة الهوية" 
+                          alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
                           onClick={() => window.open(selectedDriver.documents.id_photo, '_blank')}
                         />

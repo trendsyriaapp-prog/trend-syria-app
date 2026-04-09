@@ -463,7 +463,7 @@ const SellerDocumentsPage = () => {
       return;
     }
     if (!nationalId) {
-      toast({ title: "خطأ", description: "يرجى رفع صورة الهوية", variant: "destructive" });
+      toast({ title: "خطأ", description: "يرجى رفع صورة الهوية / إخراج القيد", variant: "destructive" });
       return;
     }
     if (!commercialReg) {
@@ -652,7 +652,7 @@ const SellerDocumentsPage = () => {
                 
                 {/* صورة الهوية - مطلوبة للجميع */}
                 <ImageUploader
-                  label="صورة الهوية الشخصية"
+                  label="صورة الهوية / إخراج القيد"
                   value={nationalId}
                   onChange={handleFileChange(setNationalId)}
                   inputId="national-id-input"

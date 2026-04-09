@@ -17,7 +17,7 @@ const getDriverDocumentsStatus = (doc) => {
   const driver = doc.driver || doc;
   const requiredDocs = [
     { key: 'personal_photo', label: 'صورة شخصية', required: true },
-    { key: 'id_photo', label: 'صورة الهوية', required: true },
+    { key: 'id_photo', label: 'صورة الهوية / إخراج القيد', required: true },
     { key: 'motorcycle_license', label: 'رخصة القيادة', required: doc.requires_license !== false },
   ];
 
