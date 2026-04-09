@@ -293,6 +293,21 @@ const AllPendingItemsTab = () => {
               
               {expandedItem === item.id && (
                 <div className="px-4 pb-4 border-t bg-gray-50">
+                  {/* زر فيديو التحقق */}
+                  {item.admin_video && (
+                    <button
+                      onClick={() => setVideoModal({ isOpen: true, videoUrl: item.admin_video, productName: item.name })}
+                      className="w-full mb-3 flex items-center justify-center gap-2 py-2.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                    >
+                      <Play size={18} />
+                      📹 مشاهدة فيديو التحقق
+                    </button>
+                  )}
+                  {!item.admin_video && (
+                    <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                      <span className="text-yellow-700 text-sm">⚠️ لا يوجد فيديو تحقق</span>
+                    </div>
+                  )}
                   <div className="py-3 text-sm space-y-2">
                     <p><span className="text-gray-500">الوصف:</span> {item.description || 'لا يوجد'}</p>
                     <p><span className="text-gray-500">الفئة:</span> {item.category}</p>
