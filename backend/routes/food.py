@@ -752,6 +752,7 @@ async def create_food_item(item_data: dict, user: dict = Depends(get_current_use
         "category": item_data.get("category", "main"),
         "preparation_time": item_data.get("preparation_time", 15),
         "image": item_data.get("images", [None])[0] if item_data.get("images") else None,
+        "admin_video": item_data.get("admin_video"),  # فيديو التحقق للأدمن
         "is_available": True,
         "is_approved": False,  # يحتاج موافقة المدير
         "created_at": datetime.now(timezone.utc).isoformat()
