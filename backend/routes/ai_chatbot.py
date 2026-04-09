@@ -8,7 +8,9 @@ from datetime import datetime, timezone
 import uuid
 import os
 from dotenv import load_dotenv
-import openai
+
+# استخدام emergentintegrations بدلاً من openai مباشرة
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 from core.database import db, get_current_user, get_optional_user
 
@@ -17,7 +19,7 @@ load_dotenv()
 router = APIRouter(prefix="/ai-chatbot", tags=["AI Chatbot"])
 
 # إعداد مفتاح API
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
+API_KEY = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("OPENAI_API_KEY")
 
 # رسالة النظام للشات بوت
 SYSTEM_MESSAGE = """أنت مساعد ذكي لخدمة العملاء في تطبيق "ترند سورية" - منصة توصيل طعام ومنتجات في سوريا.
@@ -115,16 +117,17 @@ class SupportRequest(BaseModel):
     message: str
     session_id: str
 
-def get_or_create_chat(session_id: str, user_id: str) -> dict:
+def get_or_create_chat(session_id: str, user_id: str) -> LlmChat:
     """الحصول على جلسة محادثة موجودة أو إنشاء جديدة"""
     cache_key = f"{user_id}_{session_id}"
     
     if cache_key not in chat_sessions:
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
-        chat_sessions[cache_key] = {
-            "client": client,
-            "messages": [{"role": "system", "content": SYSTEM_MESSAGE}]
-        }
+        chat = LlmChat(
+            api_key=API_KEY,
+            session_id=cache_key,
+            system_message=SYSTEM_MESSAGE
+        ).with_model("openai", "gpt-4o")
+        chat_sessions[cache_key] = chat
     
     return chat_sessions[cache_key]
 
@@ -132,7 +135,7 @@ def get_or_create_chat(session_id: str, user_id: str) -> dict:
 async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_user)):
     """إرسال رسالة للشات بوت الذكي - متاح للجميع (مسجلين وزوار)"""
     
-    if not OPENAI_API_KEY:
+    if not API_KEY:
         raise HTTPException(status_code=500, detail="مفتاح API غير متوفر")
     
     session_id = data.session_id or str(uuid.uuid4())
@@ -158,20 +161,11 @@ async def send_ai_message(data: ChatMessage, user: dict = Depends(get_optional_u
             full_message = f"[معلومات العميل: {user_context}]\n\nسؤال العميل: {data.message}"
         
         # الحصول على جلسة المحادثة
-        chat_data = get_or_create_chat(session_id, user_id)
+        chat = get_or_create_chat(session_id, user_id)
         
-        # إضافة رسالة المستخدم
-        chat_data["messages"].append({"role": "user", "content": full_message})
-        
-        # إرسال الرسالة للـ AI
-        response = chat_data["client"].chat.completions.create(
-            model="gpt-4o",
-            messages=chat_data["messages"]
-        )
-        ai_response = response.choices[0].message.content
-        
-        # حفظ رد الـ AI في المحادثة
-        chat_data["messages"].append({"role": "assistant", "content": ai_response})
+        # إنشاء رسالة المستخدم وإرسالها
+        user_message = UserMessage(text=full_message)
+        ai_response = await chat.send_message(user_message)
         
         # حفظ رد البوت
         await db.ai_chat_messages.insert_one({
