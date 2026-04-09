@@ -87,13 +87,13 @@ export const PrivacyPolicyPage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
+        <div className="max-w-2xl mx-auto px-3 py-2 flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <Shield className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">سياسة الخصوصية</h1>
+            <Shield className="text-[#FF6B00]" size={18} />
+            <h1 className="font-bold text-gray-900 text-sm">سياسة الخصوصية</h1>
           </div>
         </div>
       </div>
@@ -103,64 +103,57 @@ export const PrivacyPolicyPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-gradient-to-r from-[#FF6B00] via-orange-500 to-amber-500 text-white p-5 mb-4 overflow-hidden"
+          className="relative bg-gradient-to-r from-[#FF6B00] via-orange-500 to-amber-500 text-white p-3 mb-3 overflow-hidden"
         >
-          {/* خلفية مزخرفة */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-2 right-8 text-5xl">🔒</div>
-            <div className="absolute bottom-2 left-10 text-4xl">🛡️</div>
-            <div className="absolute top-1/2 left-1/3 text-3xl">✨</div>
-          </div>
-          
           <div className="relative max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <Shield size={24} />
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <Shield size={18} />
               </div>
               <div>
-                <h2 className="font-bold text-lg">خصوصيتك تهمنا</h2>
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">محمية 100%</span>
+                <h2 className="font-bold text-sm">خصوصيتك تهمنا</h2>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[9px]">محمية 100%</span>
               </div>
             </div>
-            <p className="text-sm opacity-90 mb-2">
+            <p className="text-xs opacity-90 mb-1.5">
               نلتزم بحماية خصوصيتك وبياناتك الشخصية بأعلى معايير الأمان العالمية.
             </p>
-            <div className="flex items-center gap-2 text-xs opacity-75">
-              <Clock size={12} />
+            <div className="flex items-center gap-1.5 text-[10px] opacity-75">
+              <Clock size={10} />
               <span>آخر تحديث: أبريل 2026</span>
             </div>
           </div>
         </motion.div>
 
         {/* Sections */}
-        <div className="space-y-3 px-4">
+        <div className="space-y-2 px-3">
           {sections.map((section, index) => (
             <motion.div
               key={section.key}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
               <button
                 onClick={() => toggleSection(section.key)}
-                className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                className="w-full p-2.5 flex items-center justify-between hover:bg-gray-50"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
-                    <section.icon size={18} className="text-[#FF6B00]" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-[#FF6B00]/10 rounded-full flex items-center justify-center">
+                    <section.icon size={14} className="text-[#FF6B00]" />
                   </div>
-                  <span className="font-bold text-gray-900">{section.title}</span>
+                  <span className="font-bold text-gray-900 text-xs">{section.title}</span>
                 </div>
                 {openSections[section.key] ? (
-                  <ChevronUp size={20} className="text-gray-400" />
+                  <ChevronUp size={16} className="text-gray-400" />
                 ) : (
-                  <ChevronDown size={20} className="text-gray-400" />
+                  <ChevronDown size={16} className="text-gray-400" />
                 )}
               </button>
               {openSections[section.key] && (
-                <div className="px-4 pb-4">
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                <div className="px-2.5 pb-2.5">
+                  <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-700 leading-relaxed whitespace-pre-line">
                     {section.content}
                   </div>
                 </div>
@@ -174,20 +167,20 @@ export const PrivacyPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl border border-gray-200 p-4 mt-4"
+          className="bg-white rounded-lg border border-gray-200 p-3 mt-3 mx-3"
         >
-          <h3 className="font-bold text-gray-900 mb-3">تواصل معنا</h3>
-          <div className="space-y-2 text-sm text-gray-600">
+          <h3 className="font-bold text-gray-900 mb-2 text-xs">تواصل معنا</h3>
+          <div className="space-y-1.5 text-xs text-gray-600">
             <p className="flex items-center gap-2">
-              <Mail size={16} className="text-[#FF6B00]" />
+              <Mail size={14} className="text-[#FF6B00]" />
               trendsyria.app@gmail.com
             </p>
             <p className="flex items-center gap-2">
-              <MapPin size={16} className="text-[#FF6B00]" />
+              <MapPin size={14} className="text-[#FF6B00]" />
               حلب، سوريا
             </p>
             <p className="flex items-center gap-2">
-              <Lock size={16} className="text-[#FF6B00]" />
+              <Lock size={14} className="text-[#FF6B00]" />
               ساعات الدعم: 10:00 صباحاً - 11:00 مساءً
             </p>
           </div>
@@ -321,13 +314,13 @@ export const TermsOfServicePage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
+        <div className="max-w-2xl mx-auto px-3 py-2 flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <FileText className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">شروط الاستخدام</h1>
+            <FileText className="text-[#FF6B00]" size={18} />
+            <h1 className="font-bold text-gray-900 text-sm">شروط الاستخدام</h1>
           </div>
         </div>
       </div>
@@ -337,59 +330,52 @@ export const TermsOfServicePage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 text-white p-5 mb-4 overflow-hidden"
+          className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 text-white p-3 mb-3 overflow-hidden"
         >
-          {/* خلفية مزخرفة */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-2 right-8 text-5xl">📋</div>
-            <div className="absolute bottom-2 left-10 text-4xl">⚖️</div>
-            <div className="absolute top-1/2 left-1/4 text-3xl">📜</div>
-          </div>
-          
           <div className="relative max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <FileText size={24} />
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <FileText size={18} />
               </div>
               <div>
-                <h2 className="font-bold text-lg">شروط وأحكام الاستخدام</h2>
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">اقرأ بعناية</span>
+                <h2 className="font-bold text-sm">شروط وأحكام الاستخدام</h2>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[9px]">اقرأ بعناية</span>
               </div>
             </div>
-            <p className="text-sm opacity-90 mb-2">
+            <p className="text-xs opacity-90 mb-1.5">
               تحكم هذه الشروط استخدامك لمنصة "ترند سورية" وتحدد حقوقك وواجباتك.
             </p>
-            <div className="flex items-center gap-2 text-xs opacity-75">
-              <Clock size={12} />
+            <div className="flex items-center gap-1.5 text-[10px] opacity-75">
+              <Clock size={10} />
               <span>آخر تحديث: أبريل 2026</span>
             </div>
           </div>
         </motion.div>
 
         {/* Sections */}
-        <div className="space-y-3 px-4">
+        <div className="space-y-2 px-3">
           {sections.map((section, index) => (
             <motion.div
               key={section.key}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
               <button
                 onClick={() => toggleSection(section.key)}
-                className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                className="w-full p-2.5 flex items-center justify-between hover:bg-gray-50"
               >
-                <span className="font-bold text-gray-900 text-right">{section.title}</span>
+                <span className="font-bold text-gray-900 text-right text-xs">{section.title}</span>
                 {openSections[section.key] ? (
-                  <ChevronUp size={20} className="text-gray-400" />
+                  <ChevronUp size={16} className="text-gray-400" />
                 ) : (
-                  <ChevronDown size={20} className="text-gray-400" />
+                  <ChevronDown size={16} className="text-gray-400" />
                 )}
               </button>
               {openSections[section.key] && (
-                <div className="px-4 pb-4">
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                <div className="px-2.5 pb-2.5">
+                  <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-700 leading-relaxed whitespace-pre-line">
                     {section.content}
                   </div>
                 </div>
@@ -410,42 +396,35 @@ export const ReturnPolicyPage = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
-            <ArrowRight size={20} />
+        <div className="max-w-2xl mx-auto px-3 py-2 flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full">
+            <ArrowRight size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <RefreshCcw className="text-[#FF6B00]" size={20} />
-            <h1 className="font-bold text-gray-900">سياسة الإرجاع والاستبدال</h1>
+            <RefreshCcw className="text-[#FF6B00]" size={18} />
+            <h1 className="font-bold text-gray-900 text-sm">سياسة الإرجاع والاستبدال</h1>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-3 px-3">
         {/* Intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white p-5 overflow-hidden"
+          className="relative bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white p-3 overflow-hidden"
         >
-          {/* خلفية مزخرفة */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-2 right-8 text-5xl">↩️</div>
-            <div className="absolute bottom-2 left-10 text-4xl">📦</div>
-            <div className="absolute top-1/2 left-1/3 text-3xl">✅</div>
-          </div>
-          
           <div className="relative max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <RefreshCcw size={24} />
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                <RefreshCcw size={18} />
               </div>
               <div>
-                <h2 className="font-bold text-lg">الإرجاع عند التسليم فقط</h2>
-                <span className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-[10px] font-bold">مهم جداً</span>
+                <h2 className="font-bold text-sm">الإرجاع عند التسليم فقط</h2>
+                <span className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-[9px] font-bold">مهم جداً</span>
               </div>
             </div>
-            <p className="text-sm opacity-90">
+            <p className="text-xs opacity-90">
               يجب فحص المنتج أمام موظف التوصيل عند الاستلام. لا يمكن الإرجاع بعد التوقيع!
             </p>
           </div>
@@ -456,14 +435,13 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="relative bg-red-50 border-2 border-red-300 p-4 mx-4 overflow-hidden"
+          className="relative bg-red-50 border-2 border-red-300 p-3 overflow-hidden rounded-lg"
         >
-          <div className="absolute top-2 left-2 text-4xl opacity-10">⚠️</div>
-          <h3 className="font-bold text-red-800 mb-2 flex items-center gap-2">
-            <span className="text-xl">⚠️</span>
+          <h3 className="font-bold text-red-800 mb-1.5 flex items-center gap-1.5 text-xs">
+            <span className="text-base">⚠️</span>
             تنبيه هام
           </h3>
-          <p className="text-red-700 text-sm leading-relaxed font-medium">
+          <p className="text-red-700 text-xs leading-relaxed">
             بمجرد استلام المنتج والتوقيع على التسليم، <strong>لا يمكن إرجاع المنتج</strong>. يرجى فحص المنتج جيداً أمام موظف التوصيل قبل التوقيع.
           </p>
         </motion.div>
@@ -473,15 +451,15 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-white rounded-lg border border-gray-200 p-3"
         >
-          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-              <Truck size={16} className="text-[#FF6B00]" />
+          <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2 text-xs">
+            <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+              <Truck size={12} className="text-[#FF6B00]" />
             </div>
             سياسة الإرجاع
           </h3>
-          <div className="space-y-3 text-sm text-gray-700">
+          <div className="space-y-1.5 text-xs text-gray-700">
             <p>• الإرجاع متاح <strong>فقط عند لحظة التسليم</strong> وأمام موظف التوصيل.</p>
             <p>• يجب فحص المنتج والتأكد من سلامته قبل التوقيع على الاستلام.</p>
             <p>• بعد التوقيع على الاستلام، يعتبر البيع نهائياً ولا يمكن الإرجاع.</p>
@@ -494,24 +472,24 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-white rounded-lg border border-gray-200 p-3"
         >
-          <h3 className="font-bold text-gray-900 mb-4">كيفية الإرجاع عند التسليم</h3>
-          <div className="space-y-4">
+          <h3 className="font-bold text-gray-900 mb-2 text-xs">كيفية الإرجاع عند التسليم</h3>
+          <div className="space-y-2">
             {[
-              { step: 1, title: 'فحص المنتج', desc: 'افحص المنتج جيداً أمام موظف التوصيل قبل التوقيع' },
-              { step: 2, title: 'التأكد من المواصفات', desc: 'تأكد أن المنتج مطابق لما طلبته (اللون، المقاس، الكمية)' },
-              { step: 3, title: 'إعلام الموظف', desc: 'إذا كان هناك مشكلة، أخبر موظف التوصيل فوراً قبل التوقيع' },
-              { step: 4, title: 'رفض الاستلام', desc: 'يحق لك رفض استلام المنتج إذا لم يكن مطابقاً' },
+              { step: 1, title: 'فحص المنتج', desc: 'افحص المنتج جيداً أمام موظف التوصيل' },
+              { step: 2, title: 'التأكد من المواصفات', desc: 'تأكد أن المنتج مطابق لما طلبته' },
+              { step: 3, title: 'إعلام الموظف', desc: 'أخبر موظف التوصيل فوراً قبل التوقيع' },
+              { step: 4, title: 'رفض الاستلام', desc: 'يحق لك رفض المنتج إذا لم يكن مطابقاً' },
               { step: 5, title: 'استرداد المبلغ', desc: 'سيتم إضافة المبلغ لمحفظتك خلال 24-48 ساعة' }
             ].map((item) => (
-              <div key={item.step} className="flex gap-3">
-                <div className="w-8 h-8 bg-[#FF6B00] text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm">
+              <div key={item.step} className="flex gap-2">
+                <div className="w-6 h-6 bg-[#FF6B00] text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px]">
                   {item.step}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm">{item.title}</p>
-                  <p className="text-gray-600 text-xs">{item.desc}</p>
+                  <p className="font-bold text-gray-900 text-[11px]">{item.title}</p>
+                  <p className="text-gray-600 text-[10px]">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -523,10 +501,10 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-white rounded-lg border border-gray-200 p-3"
         >
-          <h3 className="font-bold text-gray-900 mb-3">حالات يمكن فيها الإرجاع</h3>
-          <div className="space-y-3">
+          <h3 className="font-bold text-gray-900 mb-2 text-xs">حالات يمكن فيها الإرجاع</h3>
+          <div className="space-y-1.5">
             {[
               'المنتج تالف أو مكسور عند الاستلام',
               'المنتج مختلف عن الصور أو الوصف',
@@ -534,9 +512,9 @@ export const ReturnPolicyPage = () => {
               'نقص في الكمية المطلوبة',
               'المنتج منتهي الصلاحية (للمنتجات الغذائية)'
             ].map((condition, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-xs">✓</span>
+              <div key={index} className="flex items-center gap-1.5 text-[11px] text-gray-700">
+                <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-[10px]">✓</span>
                 </div>
                 {condition}
               </div>
@@ -549,10 +527,10 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-red-50 border border-red-200 rounded-xl p-4"
+          className="bg-red-50 border border-red-200 rounded-lg p-3"
         >
-          <h3 className="font-bold text-red-800 mb-3">حالات لا يمكن فيها الإرجاع</h3>
-          <div className="space-y-2">
+          <h3 className="font-bold text-red-800 mb-2 text-xs">حالات لا يمكن فيها الإرجاع</h3>
+          <div className="space-y-1.5">
             {[
               'بعد التوقيع على استلام الطلب',
               'تغيير رأي العميل بعد الاستلام',
@@ -560,8 +538,8 @@ export const ReturnPolicyPage = () => {
               'الملابس الداخلية ومنتجات العناية الشخصية',
               'المنتجات المصنوعة حسب الطلب'
             ].map((item, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-red-700">
-                <span className="text-red-500">✕</span>
+              <div key={index} className="flex items-center gap-1.5 text-[11px] text-red-700">
+                <span className="text-red-500 text-xs">✕</span>
                 {item}
               </div>
             ))}
@@ -573,41 +551,33 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4"
+          className="bg-orange-50 border-2 border-orange-300 rounded-lg p-3"
         >
-          <h3 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
-            <span className="text-xl">📦</span>
+          <h3 className="font-bold text-orange-800 mb-2 flex items-center gap-1.5 text-xs">
+            <span className="text-base">📦</span>
             أخطاء التغليف - مسؤولية البائع
           </h3>
-          <p className="text-sm text-orange-700 leading-relaxed mb-3">
-            إذا وصل المنتج تالفاً بسبب <strong>خطأ في التغليف من البائع</strong>، فإن تكلفة شحن الاستبدال أو الاسترجاع تكون <strong>على حساب البائع</strong> وليس العميل.
+          <p className="text-[11px] text-orange-700 leading-relaxed mb-2">
+            إذا وصل المنتج تالفاً بسبب <strong>خطأ في التغليف من البائع</strong>، فإن تكلفة شحن الاستبدال تكون <strong>على حساب البائع</strong>.
           </p>
-          <div className="bg-white rounded-lg p-3 border border-orange-200">
-            <p className="text-xs font-bold text-orange-800 mb-2">أخطاء التغليف التي يتحمل البائع تكلفتها:</p>
-            <div className="grid grid-cols-2 gap-2 text-xs text-orange-700">
+          <div className="bg-white rounded-lg p-2 border border-orange-200">
+            <p className="text-[10px] font-bold text-orange-800 mb-1.5">أخطاء التغليف التي يتحمل البائع تكلفتها:</p>
+            <div className="grid grid-cols-2 gap-1 text-[10px] text-orange-700">
               <div className="flex items-center gap-1">
                 <span className="text-red-500">✕</span>
                 <span>تغليف ضعيف أو غير كافٍ</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-red-500">✕</span>
-                <span>عدم استخدام فلين للمنتجات القابلة للكسر</span>
+                <span>عدم استخدام فلين للكسر</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-red-500">✕</span>
-                <span>صندوق أكبر/أصغر من المنتج</span>
+                <span>صندوق غير مناسب</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-red-500">✕</span>
                 <span>عدم وضع علامة "قابل للكسر"</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-red-500">✕</span>
-                <span>إهمال حماية المنتج من الرطوبة</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-red-500">✕</span>
-                <span>تغليف ملابس بدون كيس بلاستيكي</span>
               </div>
             </div>
           </div>
@@ -618,11 +588,11 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-yellow-50 border border-yellow-200 rounded-xl p-4"
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-3"
         >
-          <h3 className="font-bold text-yellow-800 mb-3">العيوب المصنعية</h3>
-          <p className="text-sm text-yellow-700 leading-relaxed">
-            إذا اكتشفت عيباً مصنعياً بعد الاستلام، تواصل معنا خلال <strong>24 ساعة</strong> مع إرفاق صور واضحة للعيب. سنقوم بمراجعة طلبك والرد عليك خلال 48 ساعة.
+          <h3 className="font-bold text-yellow-800 mb-1.5 text-xs">العيوب المصنعية</h3>
+          <p className="text-[11px] text-yellow-700 leading-relaxed">
+            إذا اكتشفت عيباً مصنعياً بعد الاستلام، تواصل معنا خلال <strong>24 ساعة</strong> مع إرفاق صور واضحة للعيب.
           </p>
         </motion.div>
 
@@ -631,20 +601,20 @@ export const ReturnPolicyPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-white rounded-lg border border-gray-200 p-3"
         >
-          <h3 className="font-bold text-gray-900 mb-3">تواصل معنا</h3>
-          <div className="space-y-2 text-sm text-gray-600">
+          <h3 className="font-bold text-gray-900 mb-2 text-xs">تواصل معنا</h3>
+          <div className="space-y-1.5 text-xs text-gray-600">
             <p className="flex items-center gap-2">
-              <Mail size={16} className="text-[#FF6B00]" />
+              <Mail size={14} className="text-[#FF6B00]" />
               trendsyria.app@gmail.com
             </p>
             <p className="flex items-center gap-2">
-              <MapPin size={16} className="text-[#FF6B00]" />
+              <MapPin size={14} className="text-[#FF6B00]" />
               حلب، سوريا
             </p>
             <p className="flex items-center gap-2">
-              <Phone size={16} className="text-[#FF6B00]" />
+              <Phone size={14} className="text-[#FF6B00]" />
               ساعات الدعم: 10:00 صباحاً - 11:00 مساءً
             </p>
           </div>
