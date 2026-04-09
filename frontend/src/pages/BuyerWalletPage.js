@@ -60,7 +60,7 @@ const BuyerWalletPage = () => {
   ];
   
   useEffect(() => {
-    if (user && user.user_type === 'buyer') {
+    if (user) {
       fetchWalletData();
       fetchPaymentSettings();
     }
@@ -230,11 +230,11 @@ const BuyerWalletPage = () => {
     }
   };
   
-  // إذا لم يكن المستخدم عميل، نعيد توجيهه
-  if (!user || user.user_type !== 'buyer') {
+  // إذا لم يكن المستخدم مسجل دخول، نعيد توجيهه
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">هذه الصفحة للعملاء فقط</p>
+        <p className="text-gray-500">يرجى تسجيل الدخول أولاً</p>
       </div>
     );
   }

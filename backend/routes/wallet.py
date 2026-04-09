@@ -115,9 +115,7 @@ async def request_topup(
     data: TopUpRequest,
     user: dict = Depends(get_current_user)
 ):
-    """طلب شحن رصيد المحفظة - للعملاء فقط"""
-    if user["user_type"] != "buyer":
-        raise HTTPException(status_code=403, detail="شحن المحفظة متاح للعملاء فقط")
+    """طلب شحن رصيد المحفظة - متاح لجميع المستخدمين"""
     
     # التحقق من الحد الأدنى فقط
     MIN_TOPUP = 100       # 100 ل.س جديدة (الحد الأدنى)
@@ -163,9 +161,7 @@ async def request_topup(
 
 @router.get("/topup/history")
 async def get_topup_history(user: dict = Depends(get_current_user)):
-    """سجل طلبات الشحن - للعملاء"""
-    if user["user_type"] != "buyer":
-        raise HTTPException(status_code=403, detail="للعملاء فقط")
+    """سجل طلبات الشحن - متاح لجميع المستخدمين"""
     
     topups = await db.topup_requests.find(
         {"user_id": user["id"]},
@@ -213,8 +209,6 @@ async def verify_topup_payment(
     
     يقوم بالتحقق من التحويل عبر API Syria وإضافة الرصيد تلقائياً
     """
-    if user["user_type"] != "buyer":
-        raise HTTPException(status_code=403, detail="للعملاء فقط")
     
     # جلب طلب الشحن
     topup = await db.topup_requests.find_one({

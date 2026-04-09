@@ -298,22 +298,21 @@ const MobileNav = () => {
                   <span className="font-medium text-gray-900">هداياي</span>
                 </Link>
 
-                {user.user_type === 'buyer' && (
-                  <Link
-                    to="/my-wallet"
-                    onClick={() => setShowAccountMenu(false)}
-                    className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
-                    data-testid="buyer-wallet-menu-link"
-                  >
-                    <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
-                      <Wallet size={20} className="text-orange-500" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="font-medium text-gray-900">محفظتي</span>
-                      <p className="text-xs text-orange-600">اشحن واستخدم للدفع</p>
-                    </div>
-                  </Link>
-                )}
+                {/* المحفظة - متاحة لجميع المستخدمين */}
+                <Link
+                  to="/my-wallet"
+                  onClick={() => setShowAccountMenu(false)}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+                  data-testid="buyer-wallet-menu-link"
+                >
+                  <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
+                    <Wallet size={20} className="text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-900">محفظتي</span>
+                    <p className="text-xs text-orange-600">اشحن واستخدم للدفع</p>
+                  </div>
+                </Link>
 
                 <Link
                   to="/referrals"
