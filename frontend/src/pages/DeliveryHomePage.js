@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   Truck, Package, Wallet, Star, Clock, MapPin, 
-  CheckCircle, TrendingUp, ShoppingBag,
+  CheckCircle, TrendingUp, ShoppingBag, ShoppingCart,
   Phone, DollarSign, ToggleLeft, ToggleRight, ChevronLeft, Settings, Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -103,8 +103,8 @@ const DeliveryHomePage = () => {
               to="/?view=customer"
               className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-[10px] hover:bg-white/30"
             >
-              <Home size={12} />
-              <span>تصفح كعميل</span>
+              <ShoppingCart size={12} />
+              <span>تسوّق الآن</span>
             </Link>
             <button
               onClick={toggleAvailability}
@@ -222,7 +222,7 @@ const DeliveryHomePage = () => {
               { to: '/delivery/dashboard', icon: TrendingUp, label: 'لوحة التحكم', color: 'text-[#FF6B00]' },
               { to: '/wallet', icon: Wallet, label: 'المحفظة', color: 'text-[#FF6B00]' },
               { to: '/delivery/history', icon: Clock, label: 'السجل', color: 'text-blue-500' },
-              { to: '/?view=customer', icon: ShoppingBag, label: 'تصفح كعميل', color: 'text-purple-500' }
+              { to: '/?view=customer', icon: ShoppingCart, label: 'تسوّق الآن', color: 'text-purple-500' }
             ].map((item, i) => (
               <Link key={i} to={item.to}>
                 <div className="bg-white rounded-lg p-3 border text-center hover:border-[#FF6B00] transition-colors">

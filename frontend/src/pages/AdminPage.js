@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone, Shield,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap, ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -1113,12 +1113,12 @@ const AdminDashboardPage = () => {
               )}
             </div>
 
-            {/* تصفح كعميل */}
+            {/* تسوّق الآن */}
             <Link to="/?view=customer" className="block mt-3">
               <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] rounded-lg p-2.5 text-white flex items-center justify-between hover:opacity-90 transition-all">
                 <div className="flex items-center gap-2">
-                  <Home size={16} />
-                  <span className="text-xs font-bold">تصفح كعميل</span>
+                  <ShoppingCart size={16} />
+                  <span className="text-xs font-bold">تسوّق الآن</span>
                 </div>
                 <ChevronRight size={16} className="rotate-180" />
               </div>

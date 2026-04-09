@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   Upload, FileText, Check, Clock, X, Plus, 
   Package, DollarSign, ShoppingBag, Loader2,
-  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home,
+  Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home, ShoppingCart,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
   Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings, Rocket
 } from 'lucide-react';
@@ -1906,14 +1906,14 @@ const SellerDashboardPage = () => {
                 <ChevronRight size={20} className="text-gray-400" />
               </button>
               
-              {/* تصفح كعميل */}
+              {/* تسوّق الآن */}
               <Link
                 to="/?view=customer"
                 className="flex items-center justify-between bg-[#FF6B00]/10 border-2 border-[#FF6B00] rounded-xl p-4"
               >
                 <div className="flex items-center gap-3">
-                  <Home size={20} className="text-[#FF6B00]" />
-                  <span className="font-medium text-[#FF6B00]">تصفح كعميل</span>
+                  <ShoppingCart size={20} className="text-[#FF6B00]" />
+                  <span className="font-medium text-[#FF6B00]">تسوّق الآن</span>
                 </div>
                 <ChevronRight size={20} className="text-[#FF6B00]" />
               </Link>

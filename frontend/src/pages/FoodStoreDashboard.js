@@ -10,7 +10,7 @@ import {
   Clock, DollarSign, Star, TrendingUp, Eye, EyeOff,
   Image, Save, X, ChevronRight, AlertTriangle, Check, 
   ChefHat, Truck, Phone, MapPin, Timer, Wallet, Bell, Navigation, BarChart3,
-  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home, XCircle, LayoutGrid
+  LogOut, Settings, User, Flame, Camera, Upload, RotateCcw, Zap, Percent, Sparkles, Loader2 as LoaderIcon, Home, XCircle, LayoutGrid, ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -1447,13 +1447,13 @@ const StoreSettings = ({ store, token, onUpdate }) => {
         <SellerAnalytics token={token} />
       </div>
 
-      {/* رابط تصفح كعميل */}
+      {/* رابط تسوّق الآن */}
       <Link
         to="/food?view=customer"
         className="w-full flex items-center justify-center gap-2 bg-[#FF6B00]/10 border-2 border-[#FF6B00] text-[#FF6B00] py-3 rounded-xl font-bold hover:bg-[#FF6B00]/20 transition-colors mt-2"
       >
-        <Home size={18} />
-        تصفح كعميل
+        <ShoppingCart size={18} />
+        تسوّق الآن
       </Link>
 
       {/* زر حذف الحساب */}
