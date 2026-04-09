@@ -194,42 +194,77 @@ const LoyaltyCard = () => {
               <Gift size={12} className={isDarkMode ? 'text-green-400' : 'text-[#FF6B00]'} />
               استبدال النقاط
             </p>
-            <div className="flex gap-1.5">
-              <div className="flex-1 relative">
-                <input
-                  type="number"
-                  value={redeemAmount}
-                  onChange={(e) => setRedeemAmount(e.target.value)}
-                  placeholder={`الحد الأدنى ${data.min_redeem}`}
-                  className={`w-full p-1.5 border rounded-lg text-xs focus:outline-none text-left ${
-                    isDarkMode 
-                      ? 'bg-[#1a1a1a] border-[#444] text-white focus:border-green-500' 
-                      : 'border-gray-300 focus:border-[#FF6B00]'
-                  }`}
-                  min={data.min_redeem}
-                  max={data.available_points}
-                />
+            
+            {/* إذا لم يكن هناك نقاط متاحة */}
+            {data.available_points < data.min_redeem ? (
+              <div className={`text-center py-2 rounded-lg ${isDarkMode ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  تحتاج {data.min_redeem} نقطة على الأقل للاستبدال
+                </p>
+                <p className={`text-[9px] mt-0.5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  رصيدك الحالي: {data.available_points} نقطة
+                </p>
               </div>
-              <button
-                onClick={handleRedeem}
-                disabled={redeeming || !redeemAmount || parseInt(redeemAmount) < data.min_redeem}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-50 flex items-center gap-1 ${
-                  isDarkMode ? 'bg-green-600 text-white' : 'bg-[#FF6B00] text-white'
-                }`}
-              >
-                {redeeming ? (
-                  <Loader2 size={12} className="animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles size={12} />
-                    استبدال
-                  </>
+            ) : (
+              <>
+                <div className="flex gap-1.5">
+                  <div className="flex-1 relative">
+                    <input
+                      type="number"
+                      value={redeemAmount}
+                      onChange={(e) => setRedeemAmount(e.target.value)}
+                      placeholder={`الحد الأدنى ${data.min_redeem}`}
+                      className={`w-full p-1.5 border rounded-lg text-xs focus:outline-none text-left ${
+                        isDarkMode 
+                          ? 'bg-[#1a1a1a] border-[#444] text-white focus:border-green-500' 
+                          : 'border-gray-300 focus:border-[#FF6B00]'
+                      } ${redeemAmount && parseInt(redeemAmount) > data.available_points ? (isDarkMode ? 'border-red-500' : 'border-red-400') : ''}`}
+                      min={data.min_redeem}
+                      max={data.available_points}
+                    />
+                  </div>
+                  <button
+                    onClick={handleRedeem}
+                    disabled={
+                      redeeming || 
+                      !redeemAmount || 
+                      parseInt(redeemAmount) < data.min_redeem ||
+                      parseInt(redeemAmount) > data.available_points
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold disabled:opacity-50 flex items-center gap-1 ${
+                      isDarkMode ? 'bg-green-600 text-white' : 'bg-[#FF6B00] text-white'
+                    }`}
+                  >
+                    {redeeming ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles size={12} />
+                        استبدال
+                      </>
+                    )}
+                  </button>
+                </div>
+                {/* رسالة الخطأ إذا تجاوز الرصيد */}
+                {redeemAmount && parseInt(redeemAmount) > data.available_points && (
+                  <p className="text-[9px] mt-1 text-red-500">
+                    رصيدك {data.available_points} نقطة فقط
+                  </p>
                 )}
-              </button>
-            </div>
-            <p className={`text-[9px] mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              كل نقطة = {data.points_value} ل.س
-            </p>
+                {/* رسالة إذا أقل من الحد الأدنى */}
+                {redeemAmount && parseInt(redeemAmount) < data.min_redeem && parseInt(redeemAmount) > 0 && (
+                  <p className="text-[9px] mt-1 text-red-500">
+                    الحد الأدنى {data.min_redeem} نقطة
+                  </p>
+                )}
+                {/* رسالة القيمة إذا كل شيء صحيح */}
+                {(!redeemAmount || (parseInt(redeemAmount) >= data.min_redeem && parseInt(redeemAmount) <= data.available_points)) && (
+                  <p className={`text-[9px] mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    كل نقطة = {data.points_value} ل.س
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
         
