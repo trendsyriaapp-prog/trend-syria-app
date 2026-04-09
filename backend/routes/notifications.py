@@ -32,6 +32,7 @@ CUSTOMER_NOTIFICATION_TYPES = [
 # أنواع إشعارات المدير
 ADMIN_NOTIFICATION_TYPES = [
     'new_seller_registration', 'new_driver_registration', 'withdrawal_request',
+    'new_food_store', 'new_product', 'new_food_item',  # إشعارات العناصر الجديدة
     'seller_document_submitted', 'driver_document_submitted', 'report_submitted',
     'support_ticket', 'system_alert', 'low_stock_alert',
     'admin_notification', 'seller_approved', 'seller_rejected', 'delivery_approved', 'delivery_rejected'

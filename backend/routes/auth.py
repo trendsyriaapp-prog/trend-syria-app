@@ -34,6 +34,9 @@ import os
 import logging
 from slowapi.util import get_remote_address
 
+# إعداد logger
+auth_logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register")
@@ -411,6 +414,19 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.seller_documents.insert_one(doc)
+    
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        await send_push_to_admins(
+            title="📦 طلب انضمام بائع جديد",
+            body=f"بائع جديد '{docs.business_name}' بانتظار الموافقة",
+            notification_type="new_seller_registration",
+            data={"seller_id": user["id"], "business_name": docs.business_name}
+        )
+    except Exception as e:
+        auth_logger.warning(f"Failed to send admin notification for new seller: {e}")
+    
     return {"message": "تم رفع المستندات بنجاح، سيتم مراجعتها قريباً"}
 
 @seller_router.get("/seller-types")
@@ -513,6 +529,19 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.delivery_documents.insert_one(doc)
+    
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        driver_name = user.get("name", user.get("full_name", "سائق جديد"))
+        await send_push_to_admins(
+            title="🚗 طلب انضمام سائق جديد",
+            body=f"سائق جديد '{driver_name}' بانتظار الموافقة",
+            notification_type="new_driver_registration",
+            data={"driver_id": user["id"], "driver_name": driver_name}
+        )
+    except Exception as e:
+        auth_logger.warning(f"Failed to send admin notification for new driver: {e}")
     
     return {"message": "تم رفع المستندات بنجاح، سيتم مراجعتها قريباً"}
 

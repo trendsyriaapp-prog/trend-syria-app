@@ -274,3 +274,105 @@ async def send_push_to_user(
         logger.error(f"❌ Push to user failed: {e}")
         return False
 
+
+async def send_push_to_admins(
+    title: str,
+    body: str,
+    notification_type: str,
+    data: dict = None,
+    image: str = None
+) -> dict:
+    """
+    إرسال إشعار Push لجميع المدراء (admin + sub_admin)
+    
+    Args:
+        title: عنوان الإشعار
+        body: نص الإشعار
+        notification_type: نوع الإشعار (مثل: new_seller, new_product, withdrawal_request)
+        data: بيانات إضافية (اختياري)
+        image: رابط صورة (اختياري)
+    
+    Returns:
+        {"success": int, "failed": int, "total_admins": int}
+    """
+    if not firebase_initialized:
+        logger.warning("Firebase not initialized - skipping admin push notification")
+        return {"success": 0, "failed": 0, "total_admins": 0}
+    
+    try:
+        from core.database import db
+        import uuid
+        from datetime import datetime, timezone
+        
+        # جلب جميع المدراء
+        admins = await db.users.find(
+            {"user_type": {"$in": ["admin", "sub_admin"]}},
+            {"_id": 0, "id": 1, "name": 1}
+        ).to_list(50)
+        
+        if not admins:
+            logger.warning("No admins found to notify")
+            return {"success": 0, "failed": 0, "total_admins": 0}
+        
+        admin_ids = [a["id"] for a in admins]
+        
+        # جلب FCM tokens لجميع المدراء
+        tokens_cursor = db.push_tokens.find({"user_id": {"$in": admin_ids}})
+        tokens_list = await tokens_cursor.to_list(100)
+        
+        # أيضاً تحقق من fcm_token في جدول المستخدمين
+        for admin in admins:
+            admin_data = await db.users.find_one({"id": admin["id"]}, {"fcm_token": 1})
+            if admin_data and admin_data.get("fcm_token"):
+                tokens_list.append({"token": admin_data["fcm_token"], "user_id": admin["id"]})
+        
+        fcm_tokens = list(set([t["token"] for t in tokens_list if t.get("token")]))
+        
+        # حفظ إشعار داخلي لكل مدير
+        now = datetime.now(timezone.utc).isoformat()
+        notifications = []
+        for admin_id in admin_ids:
+            notifications.append({
+                "id": str(uuid.uuid4()),
+                "user_id": admin_id,
+                "title": title,
+                "message": body,
+                "type": notification_type,
+                "data": data or {},
+                "is_read": False,
+                "created_at": now
+            })
+        
+        if notifications:
+            await db.notifications.insert_many(notifications)
+            logger.info(f"✅ Saved {len(notifications)} internal notifications for admins")
+        
+        # إرسال Push notifications
+        if not fcm_tokens:
+            logger.warning("No FCM tokens found for admins - internal notifications saved only")
+            return {"success": 0, "failed": 0, "total_admins": len(admins), "internal_saved": len(notifications)}
+        
+        # إعداد البيانات الإضافية
+        push_data = {
+            "type": notification_type,
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            **(data or {})
+        }
+        # تحويل جميع القيم إلى strings (مطلوب لـ FCM)
+        push_data = {k: str(v) for k, v in push_data.items()}
+        
+        result = await send_push_to_multiple(fcm_tokens, title, body, push_data, image)
+        
+        logger.info(f"✅ Admin push notifications: {result['success']} success, {result['failed']} failed")
+        
+        return {
+            "success": result["success"],
+            "failed": result["failed"],
+            "total_admins": len(admins),
+            "internal_saved": len(notifications)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Push to admins failed: {e}")
+        return {"success": 0, "failed": 0, "total_admins": 0, "error": str(e)}
+

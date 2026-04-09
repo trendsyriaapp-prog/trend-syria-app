@@ -114,6 +114,20 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.products.insert_one(product_doc)
+    
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        await send_push_to_admins(
+            title="📦 منتج جديد بانتظار الموافقة",
+            body=f"منتج '{product.name}' من البائع '{user['name']}' بانتظار الموافقة",
+            notification_type="new_product",
+            data={"product_id": product_id, "product_name": product.name, "seller_name": user["name"]}
+        )
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to send admin notification for new product: {e}")
+    
     return {"id": product_id, "message": "تم إضافة المنتج بنجاح، في انتظار موافقة الإدارة"}
 
 @router.get("")

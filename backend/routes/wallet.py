@@ -523,6 +523,20 @@ async def request_withdrawal(
     }
     await db.withdrawal_requests.insert_one(withdrawal)
     
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        user_name = user.get("full_name", user.get("name", "مستخدم"))
+        await send_push_to_admins(
+            title="💰 طلب سحب جديد",
+            body=f"طلب سحب {amount:,} ل.س من '{user_name}'",
+            notification_type="withdrawal_request",
+            data={"withdrawal_id": withdrawal_id, "amount": str(amount), "user_name": user_name}
+        )
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to send admin notification for withdrawal request: {e}")
+    
     return {
         "message": "تم إرسال طلب السحب بنجاح",
         "withdrawal_id": withdrawal_id,

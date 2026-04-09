@@ -464,6 +464,20 @@ async def create_food_store(store: FoodStoreCreate, user: dict = Depends(get_cur
     }
     
     await db.food_stores.insert_one(store_doc)
+    
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        await send_push_to_admins(
+            title="🍽️ متجر طعام جديد بانتظار الموافقة",
+            body=f"متجر '{store.name}' في {store.city} بانتظار الموافقة",
+            notification_type="new_food_store",
+            data={"store_id": store_id, "store_name": store.name}
+        )
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to send admin notification for new food store: {e}")
+    
     return {"id": store_id, "message": "تم إنشاء المتجر بنجاح، في انتظار موافقة الإدارة"}
 
 # ===============================
@@ -759,6 +773,22 @@ async def create_food_item(item_data: dict, user: dict = Depends(get_current_use
     }
     
     await db.food_items.insert_one(new_item)
+    
+    # إرسال إشعار Push للمدراء
+    try:
+        from core.firebase_admin import send_push_to_admins
+        item_name = item_data.get("name", "طبق جديد")
+        store_name = store.get("name", "متجر")
+        await send_push_to_admins(
+            title="🍽️ طبق طعام جديد بانتظار الموافقة",
+            body=f"طبق '{item_name}' من متجر '{store_name}' بانتظار الموافقة",
+            notification_type="new_food_item",
+            data={"item_id": item_id, "item_name": item_name, "store_name": store_name}
+        )
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to send admin notification for new food item: {e}")
+    
     return {"message": "تم إضافة الطبق بنجاح وينتظر موافقة الإدارة", "id": item_id}
 
 @router.put("/items/{item_id}/availability")
