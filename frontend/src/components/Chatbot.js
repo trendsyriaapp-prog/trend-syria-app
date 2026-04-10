@@ -27,7 +27,7 @@ const Chatbot = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [pendingRatingTicket, setPendingRatingTicket] = useState(null);
-  const [useAI, setUseAI] = useState(true); // استخدام الشات بوت الذكي افتراضياً
+  const [useAI, setUseAI] = useState(false); // استخدام المجيب الآلي (بدون AI) - تم تعطيل AI مؤقتاً
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
   const userOpenedRef = useRef(false);
