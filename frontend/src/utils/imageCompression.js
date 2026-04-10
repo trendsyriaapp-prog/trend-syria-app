@@ -84,25 +84,26 @@ export const compressImage = (file, options = {}) => {
 
 /**
  * ضغط صورة مع إعدادات محددة مسبقاً للوثائق
- * جودة أعلى للوثائق الرسمية
+ * جودة 90% للحفاظ على وضوح الوثائق والصور الشخصية
  */
 export const compressDocumentImage = (file) => {
   return compressImage(file, {
     maxWidth: 1500,
     maxHeight: 1500,
-    quality: 0.85,
+    quality: 0.9,
     outputType: 'image/jpeg'
   });
 };
 
 /**
  * ضغط صورة مع إعدادات محددة مسبقاً للمنتجات
+ * جودة 90% للحفاظ على جمال صور المنتجات والطعام
  */
 export const compressProductImage = (file) => {
   return compressImage(file, {
     maxWidth: 1200,
     maxHeight: 1200,
-    quality: 0.8,
+    quality: 0.9,
     outputType: 'image/jpeg'
   });
 };
