@@ -1,6 +1,7 @@
 # /app/backend/core/database.py
 # إعداد قاعدة البيانات والمصادقة
 # 🔒 محمي بنظام JWT محسّن مع تجديد تلقائي
+# ⚡ محسّن للأداء والاستقرار
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import HTTPException, Depends
@@ -10,37 +11,132 @@ import jwt
 import hashlib
 import secrets
 import uuid
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 import logging
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection - مع معالجة الأخطاء
+# MongoDB connection settings
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'trend_syria')
 
+# ⚡ إعدادات محسّنة للاتصال
+MONGO_SETTINGS = {
+    # Timeouts
+    'serverSelectionTimeoutMS': 10000,  # 10 ثواني للعثور على سيرفر
+    'connectTimeoutMS': 10000,          # 10 ثواني للاتصال
+    'socketTimeoutMS': 30000,           # 30 ثانية للعمليات
+    
+    # Connection Pool - إبقاء اتصالات جاهزة
+    'minPoolSize': 5,                   # 5 اتصالات جاهزة دائماً
+    'maxPoolSize': 50,                  # 50 اتصال كحد أقصى
+    'maxIdleTimeMS': 60000,             # إغلاق الاتصال الخامل بعد دقيقة
+    
+    # Keep-Alive - إبقاء الاتصال حياً
+    'heartbeatFrequencyMS': 10000,      # نبضة قلب كل 10 ثواني
+    
+    # Retry - إعادة المحاولة
+    'retryWrites': True,                # إعادة محاولة الكتابة
+    'retryReads': True,                 # إعادة محاولة القراءة
+    
+    # تحسينات إضافية
+    'w': 'majority',                    # تأكيد الكتابة من أغلب السيرفرات
+    'journal': True,                    # تأكيد الحفظ في السجل
+    'compressors': ['zstd', 'snappy', 'zlib'],  # ضغط البيانات
+    
+    # App Name للتتبع
+    'appName': 'TrendSyria'
+}
+
 try:
-    # إنشاء الاتصال مع timeout قصير
-    client = AsyncIOMotorClient(
-        mongo_url,
-        serverSelectionTimeoutMS=5000,
-        connectTimeoutMS=5000,
-        socketTimeoutMS=10000,
-        maxPoolSize=10,
-        retryWrites=True
-    )
+    # إنشاء الاتصال مع الإعدادات المحسّنة
+    client = AsyncIOMotorClient(mongo_url, **MONGO_SETTINGS)
     db = client[db_name]
     logger.info(f"✅ MongoDB client initialized for database: {db_name}")
+    logger.info(f"   Pool: min={MONGO_SETTINGS['minPoolSize']}, max={MONGO_SETTINGS['maxPoolSize']}")
 except Exception as e:
     logger.error(f"❌ MongoDB connection error: {e}")
     # إنشاء اتصال افتراضي حتى لا يفشل الاستيراد
     client = AsyncIOMotorClient('mongodb://localhost:27017', serverSelectionTimeoutMS=1000)
     db = client[db_name]
+
+
+# ============== Database Retry Helper ==============
+
+def with_retry(max_retries=3, delay=0.5):
+    """
+    Decorator لإعادة المحاولة عند فشل عمليات قاعدة البيانات
+    يعمل مع الدوال async فقط
+    """
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(max_retries):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e).lower()
+                    
+                    # أخطاء يمكن إعادة المحاولة
+                    retryable_errors = [
+                        'timeout', 'timed out', 'connection', 'network',
+                        'serverselection', 'no servers', 'not master',
+                        'socket', 'reset by peer'
+                    ]
+                    
+                    is_retryable = any(err in error_str for err in retryable_errors)
+                    
+                    if is_retryable and attempt < max_retries - 1:
+                        wait_time = delay * (attempt + 1)  # زيادة وقت الانتظار
+                        logger.warning(f"⚠️ Retry {attempt + 1}/{max_retries} for {func.__name__}: {e}")
+                        await asyncio.sleep(wait_time)
+                    else:
+                        raise last_error
+            raise last_error
+        return wrapper
+    return decorator
+
+
+# ============== Database Health Check ==============
+
+async def check_database_connection():
+    """
+    فحص صحة الاتصال بقاعدة البيانات
+    يُستخدم في health check endpoint
+    """
+    try:
+        # محاولة عملية بسيطة
+        await client.admin.command('ping')
+        return True, "Connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        return False, str(e)
+
+
+async def warm_up_connection():
+    """
+    "تسخين" الاتصال بقاعدة البيانات
+    يُستدعى عند بدء التطبيق
+    """
+    try:
+        # تنفيذ عملية بسيطة لفتح الاتصالات
+        await client.admin.command('ping')
+        # جلب document واحد لتفعيل connection pool
+        await db.users.find_one({}, {'_id': 1})
+        logger.info("✅ Database connection warmed up")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Database warm-up failed: {e}")
+        return False
 
 # 🔒 JWT Settings - مفتاح أقوى
 JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))

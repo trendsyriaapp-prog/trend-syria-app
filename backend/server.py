@@ -155,16 +155,36 @@ app = FastAPI(
 
 logger.info("✅ FastAPI app created")
 
+# ⚡ تسخين قاعدة البيانات عند بدء التطبيق
+@app.on_event("startup")
+async def startup_event():
+    """تسخين الاتصالات عند بدء التطبيق"""
+    from core.database import warm_up_connection
+    logger.info("🚀 Starting application...")
+    await warm_up_connection()
+    logger.info("✅ Application startup complete")
+
 # Root level health check (for DigitalOcean)
 @app.get("/")
 async def root_health():
-    logger.info("Health check: /")
     return {"status": "healthy"}
 
 @app.get("/health")
 async def app_health():
-    logger.info("Health check: /health")
     return {"status": "healthy"}
+
+# Health check مع فحص قاعدة البيانات
+@app.get("/api/health")
+async def api_health_check():
+    """فحص صحة التطبيق وقاعدة البيانات"""
+    from core.database import check_database_connection
+    db_ok, db_msg = await check_database_connection()
+    
+    return {
+        "status": "healthy" if db_ok else "degraded",
+        "message": "ترند سورية API يعمل بنجاح",
+        "database": "connected" if db_ok else "disconnected"
+    }
 
 # 🔒 إضافة Rate Limiter
 app.state.limiter = limiter
