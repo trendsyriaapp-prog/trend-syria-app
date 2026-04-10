@@ -505,6 +505,7 @@ const DeliveryDashboard = () => {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingTransactions, setDeletingTransactions] = useState(false);
+  const [processingOrderId, setProcessingOrderId] = useState(null); // لمنع الضغط المتكرر
   
   // ⭐ حفظ موضع التمرير واستعادته عند العودة
   const scrollPositionRef = useRef(0);
@@ -899,6 +900,9 @@ const DeliveryDashboard = () => {
 
   // قبول طلب منتجات (الخطوة الأولى - السائق يقبل الطلب)
   const handleAcceptProductOrder = async (order) => {
+    // منع الضغط المتكرر
+    if (processingOrderId === order.id) return;
+    
     // فحص التأمين
     if (!securityDepositComplete) {
       toast({
@@ -909,6 +913,7 @@ const DeliveryDashboard = () => {
       return;
     }
     
+    setProcessingOrderId(order.id);
     try {
       await axios.post(`${API}/api/orders/${order.id}/delivery/accept`);
       toast({
@@ -924,11 +929,17 @@ const DeliveryDashboard = () => {
         description: error.response?.data?.detail || "فشل قبول الطلب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
   // استلام طلب منتجات من المتجر (الخطوة الثانية - بعد الوصول للمتجر)
   const handleTakeOrder = async (orderId) => {
+    // منع الضغط المتكرر
+    if (processingOrderId === orderId) return;
+    
+    setProcessingOrderId(orderId);
     try {
       await axios.post(`${API}/api/orders/${orderId}/delivery/pickup`);
       toast({
@@ -943,10 +954,15 @@ const DeliveryDashboard = () => {
         description: error.response?.data?.detail || "فشل استلام الطلب من البائع، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
   const handleTakeFoodOrder = async (order) => {
+    // منع الضغط المتكرر
+    if (processingOrderId === order.id) return;
+    
     // فحص التأمين
     if (!securityDepositComplete) {
       toast({
@@ -957,6 +973,7 @@ const DeliveryDashboard = () => {
       return;
     }
     
+    setProcessingOrderId(order.id);
     try {
       // التحقق من نوع الطلب (عادي أم تجميعي)
       if (order.is_batch && order.batch_info?.batch_id) {
@@ -986,11 +1003,16 @@ const DeliveryDashboard = () => {
         description: error.response?.data?.detail || "فشل قبول الطلب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
   // قبول طلب من نظام التنسيق (البائع طلب سائق)
   const handleAcceptDriverRequest = async (order) => {
+    // منع الضغط المتكرر
+    if (processingOrderId === order.id) return;
+    
     // فحص التأمين
     if (!securityDepositComplete) {
       toast({
@@ -1001,6 +1023,7 @@ const DeliveryDashboard = () => {
       return;
     }
     
+    setProcessingOrderId(order.id);
     try {
       const res = await axios.post(`${API}/api/food/orders/driver/orders/${order.id}/accept`);
       toast({
@@ -1016,6 +1039,8 @@ const DeliveryDashboard = () => {
         description: error.response?.data?.detail || "فشل قبول الطلب من المطعم، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
@@ -1467,19 +1492,21 @@ const DeliveryDashboard = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleAcceptDriverRequest(order)}
+                              disabled={processingOrderId === order.id}
                               data-testid={`accept-driver-request-${order.id}`}
-                              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                              className={`flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 ${processingOrderId === order.id ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
-                              ✅ قبول التوصيل
+                              {processingOrderId === order.id ? '⏳ جاري القبول...' : '✅ قبول التوصيل'}
                             </button>
                             <button
                               onClick={() => handleRejectDriverRequest(order.id)}
+                              disabled={processingOrderId === order.id}
                               data-testid={`reject-driver-request-${order.id}`}
                               className={`px-4 py-3 rounded-xl font-bold text-sm ${
                                 currentTheme === 'dark' 
                                   ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
                                   : 'bg-red-50 text-red-600 border border-red-200'
-                              }`}
+                              } ${processingOrderId === order.id ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                               ❌
                             </button>
