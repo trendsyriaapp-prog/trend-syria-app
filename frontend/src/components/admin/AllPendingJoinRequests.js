@@ -7,10 +7,92 @@ import { useToast } from '../../hooks/use-toast';
 import { 
   Users, Store, Truck, UtensilsCrossed, Check, X, Eye, Phone, MapPin,
   Loader2, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle,
-  Archive, Trash2
+  Archive, Trash2, Image, ZoomIn
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// ============== مكون عرض صورة الوثيقة ==============
+const DocumentImage = ({ src, label, onClick }) => {
+  if (!src) {
+    return (
+      <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="w-16 h-16 flex items-center justify-center bg-gray-200 rounded-lg">
+          <Image size={24} className="text-gray-400" />
+        </div>
+        <span className="text-xs text-gray-500 mt-1 text-center">{label}</span>
+        <span className="text-[10px] text-red-500">غير مرفق</span>
+      </div>
+    );
+  }
+  
+  return (
+    <div 
+      className="flex flex-col items-center p-2 bg-green-50 rounded-lg border-2 border-green-200 cursor-pointer hover:border-green-400 transition-all"
+      onClick={() => onClick(src, label)}
+    >
+      <div className="w-16 h-16 rounded-lg overflow-hidden bg-white shadow-sm relative group">
+        <img 
+          src={src} 
+          alt={label}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+        <div className="hidden w-full h-full items-center justify-center bg-gray-200">
+          <Image size={20} className="text-gray-400" />
+        </div>
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+          <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-all" />
+        </div>
+      </div>
+      <span className="text-xs text-green-700 mt-1 text-center font-medium">{label}</span>
+      <span className="text-[10px] text-green-600">✓ مرفق</span>
+    </div>
+  );
+};
+
+// ============== مكون Modal لعرض الصورة بحجم كامل ==============
+const ImageViewerModal = ({ image, label, onClose }) => {
+  if (!image) return null;
+  
+  return (
+    <div 
+      className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4"
+      onClick={onClose}
+    >
+      <div className="relative max-w-4xl max-h-[90vh] w-full">
+        {/* زر الإغلاق */}
+        <button 
+          onClick={onClose}
+          className="absolute -top-12 right-0 text-white hover:text-gray-300 flex items-center gap-2"
+        >
+          <X size={24} />
+          <span>إغلاق</span>
+        </button>
+        
+        {/* عنوان الصورة */}
+        <div className="absolute -top-12 left-0 text-white font-bold">
+          {label}
+        </div>
+        
+        {/* الصورة */}
+        <div 
+          className="bg-white rounded-xl overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img 
+            src={image} 
+            alt={label}
+            className="w-full h-auto max-h-[85vh] object-contain"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // دالة لحساب حالة وثائق السائق
 const getDriverDocumentsStatus = (doc) => {
@@ -49,6 +131,9 @@ const AllPendingJoinRequests = () => {
   // Modal الرفض
   const [rejectModal, setRejectModal] = useState(null); // {type: 'seller'|'driver'|'food_store', id: string, name: string}
   const [rejectReason, setRejectReason] = useState('');
+  
+  // Modal عرض الصورة
+  const [viewImage, setViewImage] = useState(null); // {src: string, label: string}
 
   useEffect(() => {
     fetchAllPending();
@@ -408,7 +493,32 @@ const AllPendingJoinRequests = () => {
               
               {expandedItem === sellerId && (
                 <div className="px-4 pb-4 border-t bg-gray-50">
-                  <div className="grid grid-cols-2 gap-3 py-3 text-sm">
+                  {/* صور الوثائق */}
+                  <div className="py-3">
+                    <h5 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                      <Image size={16} />
+                      الوثائق المرفقة
+                    </h5>
+                    <div className="grid grid-cols-3 gap-2">
+                      <DocumentImage 
+                        src={item.national_id_image || seller.national_id_image} 
+                        label="صورة الهوية / إخراج القيد"
+                        onClick={(src, label) => setViewImage({ src, label })}
+                      />
+                      <DocumentImage 
+                        src={item.commercial_registration || seller.commercial_registration} 
+                        label="السجل التجاري"
+                        onClick={(src, label) => setViewImage({ src, label })}
+                      />
+                      <DocumentImage 
+                        src={item.shop_photo || seller.shop_photo || seller.store_logo} 
+                        label="صورة المحل"
+                        onClick={(src, label) => setViewImage({ src, label })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
                     <div><span className="text-gray-500">المدينة:</span> {seller.city || 'غير محدد'}</div>
                     <div><span className="text-gray-500">الهاتف:</span> {seller.phone || 'غير محدد'}</div>
                     {seller.store_address && <div className="col-span-2"><span className="text-gray-500">العنوان:</span> {typeof seller.store_address === 'object' ? [seller.store_address?.area, seller.store_address?.street, seller.store_address?.building].filter(Boolean).join(', ') : seller.store_address}</div>}
