@@ -12,9 +12,26 @@ const API = process.env.REACT_APP_BACKEND_URL;
 // التحقق إذا كان التطبيق يعمل داخل Capacitor (Android/iOS)
 const isNativeApp = () => {
   try {
-    return Capacitor.isNativePlatform();
-  } catch {
+    // طريقة 1: Capacitor API
+    if (Capacitor.isNativePlatform()) {
+      return true;
+    }
+    // طريقة 2: التحقق من platform
+    if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+      return true;
+    }
+    // طريقة 3: التحقق من User Agent (TrendSyria-App)
+    if (navigator.userAgent.includes('TrendSyria-App')) {
+      return true;
+    }
+    // طريقة 4: التحقق من window.Capacitor
+    if (window.Capacitor?.isNativePlatform?.()) {
+      return true;
+    }
     return false;
+  } catch {
+    // طريقة احتياطية: User Agent
+    return navigator.userAgent.includes('TrendSyria-App');
   }
 };
 
