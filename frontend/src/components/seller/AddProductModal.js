@@ -10,6 +10,7 @@ import { CATEGORIES } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/errorHelpers';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
 import { compressProductImage } from '../../utils/imageCompression';
+import { processVideo, VIDEO_CONFIG } from '../../utils/videoValidation';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -250,56 +251,88 @@ const AddProductModal = ({
     }
   };
 
-  const handleVideoUpload = (e) => {
+  const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 50 * 1024 * 1024) {
+    if (!file) return;
+    
+    setUploadingVideo(true);
+    
+    try {
+      // الفيديو العادي للمنتج - بدون تحقق من المدة (اختياري)
+      const result = await processVideo(file, (progress) => {
+        console.log(progress);
+      });
+      
+      if (!result.success) {
         toast({
-          title: "خطأ",
-          description: "حجم الفيديو كبير جداً (الحد الأقصى 50MB)",
+          title: "خطأ في الفيديو",
+          description: result.error,
           variant: "destructive"
         });
+        setUploadingVideo(false);
         return;
       }
-      setUploadingVideo(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewProduct(prev => ({
-          ...prev,
-          video: reader.result
-        }));
-        setUploadingVideo(false);
-      };
-      reader.readAsDataURL(file);
+      
+      setNewProduct(prev => ({
+        ...prev,
+        video: result.data
+      }));
+      
+      toast({
+        title: "تم رفع الفيديو ✅",
+        description: `مدة الفيديو: ${result.duration} ثانية`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في معالجة الفيديو",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
   // رفع فيديو التحقق للأدمن
-  const handleAdminVideoUpload = (e) => {
+  const handleAdminVideoUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
+    if (!file) return;
+    
+    setUploadingVideo(true);
+    
+    try {
+      const result = await processVideo(file, (progress) => {
+        // يمكن إضافة شريط تقدم هنا
+        console.log(progress);
+      });
+      
+      if (!result.success) {
         toast({
-          title: "خطأ",
-          description: "حجم الفيديو كبير جداً (الحد الأقصى 10MB)",
+          title: "خطأ في الفيديو",
+          description: result.error,
           variant: "destructive"
         });
+        setUploadingVideo(false);
         return;
       }
-      setUploadingVideo(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewProduct(prev => ({
-          ...prev,
-          admin_video: reader.result
-        }));
-        setUploadingVideo(false);
-        toast({
-          title: "تم رفع فيديو التحقق ✅",
-          description: "سيراجعه الأدمن قبل نشر المنتج"
-        });
-      };
-      reader.readAsDataURL(file);
+      
+      setNewProduct(prev => ({
+        ...prev,
+        admin_video: result.data
+      }));
+      
+      toast({
+        title: "تم رفع فيديو التحقق ✅",
+        description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في معالجة الفيديو",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -1331,7 +1364,7 @@ const AddProductModal = ({
                 <span className="text-red-500 mr-1">*</span>
               </label>
               <p className="text-[9px] text-orange-700 mb-2">
-                صوّر فيديو قصير (30 ثانية) يُظهر المنتج الحقيقي والكمية المتوفرة.
+                صوّر فيديو قصير (من 1 إلى 30 ثانية كحد أقصى) يُظهر المنتج الحقيقي والكمية المتوفرة.
                 <br/>
                 <strong>هذا الفيديو للأدمن فقط ولن يظهر للعملاء.</strong>
               </p>
@@ -1365,7 +1398,10 @@ const AddProductModal = ({
                   className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-[11px] flex items-center justify-center gap-2 hover:from-orange-600 hover:to-red-600 font-bold disabled:opacity-50 shadow-md"
                 >
                   {uploadingVideo ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      جاري معالجة الفيديو...
+                    </>
                   ) : (
                     <>
                       <Upload size={14} />
@@ -1382,7 +1418,7 @@ const AddProductModal = ({
                 className="hidden"
                 data-testid="admin-video-input"
               />
-              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 10MB</p>
+              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 50MB</p>
             </div>
 
             <div className="flex gap-2 pt-2">
