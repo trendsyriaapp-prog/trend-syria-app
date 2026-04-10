@@ -289,7 +289,7 @@ const RegisterPage = () => {
       if (formData.user_type === 'seller') {
         navigate('/seller/documents', { replace: true });
       } else if (formData.user_type === 'food_seller') {
-        navigate('/food-seller/setup', { replace: true });
+        navigate('/join/food-seller', { replace: true });
       } else if (formData.user_type === 'delivery') {
         navigate('/delivery/documents', { replace: true });
       } else {
