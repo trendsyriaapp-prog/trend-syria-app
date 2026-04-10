@@ -501,7 +501,7 @@ const AllPendingJoinRequests = () => {
                     </h5>
                     <div className="grid grid-cols-3 gap-2">
                       <DocumentImage 
-                        src={item.national_id_image || seller.national_id_image} 
+                        src={item.national_id || seller.national_id} 
                         label="صورة الهوية / إخراج القيد"
                         onClick={(src, label) => setViewImage({ src, label })}
                       />
@@ -511,8 +511,8 @@ const AllPendingJoinRequests = () => {
                         onClick={(src, label) => setViewImage({ src, label })}
                       />
                       <DocumentImage 
-                        src={item.shop_photo || seller.shop_photo || seller.store_logo} 
-                        label="صورة المحل"
+                        src={item.shop_photo || item.health_certificate || seller.shop_photo} 
+                        label={item.seller_type === 'restaurant' ? "الشهادة الصحية" : "صورة المحل"}
                         onClick={(src, label) => setViewImage({ src, label })}
                       />
                     </div>
@@ -603,25 +603,34 @@ const AllPendingJoinRequests = () => {
                       </div>
                     )}
                     
-                    {/* Documents status grid */}
-                    <div className="grid grid-cols-3 gap-2 py-3">
-                      {docStatus.docs.map((d, idx) => (
-                        <div key={idx} className={`p-2 rounded-lg text-center text-xs ${d.uploaded ? 'bg-green-50 border border-green-200' : (d.required ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200')}`}>
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            {d.uploaded ? (
-                              <CheckCircle size={14} className="text-green-500" />
-                            ) : d.required ? (
-                              <XCircle size={14} className="text-red-500" />
-                            ) : null}
-                            <span className={d.uploaded ? 'text-green-700' : (d.required ? 'text-red-700' : 'text-gray-500')}>
-                              {d.label}
-                            </span>
-                          </div>
-                          <span className="text-[10px]">
-                            {d.uploaded ? '✓ مرفوع' : (d.required ? '✗ مطلوب' : 'اختياري')}
-                          </span>
-                        </div>
-                      ))}
+                    {/* صور الوثائق */}
+                    <div className="py-3">
+                      <h5 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                        <Image size={16} />
+                        الوثائق المرفقة
+                      </h5>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <DocumentImage 
+                          src={item.personal_photo || driver.personal_photo} 
+                          label="صورة شخصية"
+                          onClick={(src, label) => setViewImage({ src, label })}
+                        />
+                        <DocumentImage 
+                          src={item.id_photo || driver.id_photo} 
+                          label="صورة الهوية"
+                          onClick={(src, label) => setViewImage({ src, label })}
+                        />
+                        <DocumentImage 
+                          src={item.motorcycle_license || driver.motorcycle_license} 
+                          label="رخصة القيادة"
+                          onClick={(src, label) => setViewImage({ src, label })}
+                        />
+                        <DocumentImage 
+                          src={item.vehicle_photo || driver.vehicle_photo} 
+                          label="صورة المركبة"
+                          onClick={(src, label) => setViewImage({ src, label })}
+                        />
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
@@ -692,7 +701,27 @@ const AllPendingJoinRequests = () => {
               
               {expandedItem === store.id && (
                 <div className="px-4 pb-4 border-t bg-gray-50">
-                  <div className="grid grid-cols-2 gap-3 py-3 text-sm">
+                  {/* صور المتجر */}
+                  <div className="py-3">
+                    <h5 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                      <Image size={16} />
+                      صور المتجر
+                    </h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <DocumentImage 
+                        src={store.logo} 
+                        label="شعار المتجر"
+                        onClick={(src, label) => setViewImage({ src, label })}
+                      />
+                      <DocumentImage 
+                        src={store.cover_image} 
+                        label="صورة الغلاف"
+                        onClick={(src, label) => setViewImage({ src, label })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
                     <div><span className="text-gray-500">المدينة:</span> {store.city}</div>
                     <div><span className="text-gray-500">الهاتف:</span> {store.phone}</div>
                     {store.cuisine_type && <div><span className="text-gray-500">نوع المطبخ:</span> {store.cuisine_type}</div>}
@@ -770,6 +799,15 @@ const AllPendingJoinRequests = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal عرض الصورة بحجم كامل */}
+      {viewImage && (
+        <ImageViewerModal 
+          image={viewImage.src} 
+          label={viewImage.label} 
+          onClose={() => setViewImage(null)} 
+        />
       )}
     </div>
   );

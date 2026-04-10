@@ -7,7 +7,39 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.12 (versionCode: 12) in Closed Testing (Alpha)
 
-## Latest Update: 2026-04-09
+## Latest Update: 2026-04-10
+
+### ✅ Admin Document Images Display & Modal Fix - COMPLETED
+**Date:** 2026-04-10
+**Problem:** 
+1. الأدمن يرى نص "تم الرفع" بدلاً من الصور الفعلية للمستندات قبل الموافقة
+2. عند النقر على صورة لتكبيرها، تظهر شاشة بيضاء فارغة
+
+**Root Cause Analysis:**
+1. `ImageViewerModal` موجود كمكون لكنه غير مستخدم في الـ JSX الرئيسي
+2. قسم السائقين كان يعرض فقط status text وليس الصور الفعلية
+3. قسم متاجر الطعام لم يكن يعرض أي وثائق
+4. بعض حقول الصور كانت تستخدم أسماء خاطئة (`national_id_image` بدلاً من `national_id`)
+
+**Fix Applied:**
+1. أضيف `ImageViewerModal` في نهاية الـ JSX قبل إغلاق الـ div الرئيسي
+2. حُدث قسم البائعين لاستخدام حقول الصور الصحيحة (`national_id`, `commercial_registration`, `shop_photo`/`health_certificate`)
+3. حُدث قسم السائقين ليعرض الصور الفعلية (`personal_photo`, `id_photo`, `motorcycle_license`, `vehicle_photo`) بدلاً من status text
+4. حُدث قسم متاجر الطعام ليعرض (`logo`, `cover_image`)
+
+**Files Modified:**
+- `/app/frontend/src/components/admin/AllPendingJoinRequests.js`
+
+**Test Results:**
+- ✅ صور البائعين تظهر بشكل صحيح (3 صور: هوية، سجل تجاري، صورة محل/شهادة صحية)
+- ✅ صور السائقين تظهر بشكل صحيح (4 صور: شخصية، هوية، رخصة، مركبة)
+- ✅ صور متاجر الطعام تظهر بشكل صحيح (2 صور: شعار، غلاف)
+- ✅ Modal يعمل بشكل مثالي - عرض الصورة بحجم كامل مع عنوان وزر إغلاق
+- ✅ لا شاشة بيضاء عند النقر على الصور
+
+---
+
+## Previous Update: 2026-04-09
 
 ### ✅ Admin Push Notifications Feature - COMPLETED
 **Description:** إشعارات Push للمدير عند حدوث أحداث مهمة
