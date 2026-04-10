@@ -5,7 +5,7 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.12 (versionCode: 12) in Closed Testing (Alpha)
+- Android App: v1.0.16 (versionCode: 17) in Closed Testing (Alpha)
 
 ## Latest Update: 2026-04-11
 
