@@ -23,19 +23,24 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   }, []);
 
-  // إعداد axios interceptor لمعالجة خطأ 401
+  // إعداد axios interceptor لمعالجة الأخطاء
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
+        const status = error.response?.status;
+        
         // إذا كان الخطأ 401 (رمز غير صالح أو منتهي الصلاحية)
         // تجاهل خطأ 401 أثناء عملية تسجيل الدخول
-        if (error.response?.status === 401 && token && !skipFetchUserRef.current) {
+        if (status === 401 && token && !skipFetchUserRef.current) {
           console.log('Token expired or invalid, logging out...');
           logout();
-          // توجيه لصفحة الدخول
           window.location.href = '/login';
         }
+        
+        // لا نُخرج المستخدم عند أخطاء السيرفر (500+) أو أخطاء الشبكة
+        // هذه أخطاء مؤقتة ويجب إعادة المحاولة
+        
         return Promise.reject(error);
       }
     );
@@ -67,12 +72,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const fetchUser = async () => {
+  const fetchUser = async (retryCount = 0) => {
+    const maxRetries = 2;
+    
     try {
       const res = await axios.get(`${API}/api/auth/me`);
       setUser(res.data);
     } catch (error) {
       console.error('fetchUser error:', error);
+      
+      // التحقق من نوع الخطأ
+      const status = error.response?.status;
+      const isNetworkError = !error.response;
+      const isServerError = status >= 500;
+      const isTimeoutError = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      
+      // إذا كان خطأ مؤقت (شبكة، سيرفر، timeout) - نحاول مرة أخرى
+      if ((isNetworkError || isServerError || isTimeoutError) && retryCount < maxRetries) {
+        console.log(`Retrying fetchUser (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        // انتظار قبل إعادة المحاولة
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return fetchUser(retryCount + 1);
+      }
+      
+      // إذا كان 401 (غير مصرح) - نُخرج المستخدم
+      if (status === 401) {
+        logout();
+        return;
+      }
+      
+      // إذا كان خطأ آخر بعد استنفاد المحاولات - نبقي المستخدم
+      // لكن نُظهر له الصفحة الرئيسية بدون بيانات المستخدم
+      if (isNetworkError || isServerError || isTimeoutError) {
+        console.log('Server temporarily unavailable, keeping user session');
+        // لا نُخرج المستخدم - ربما الخادم مؤقتاً غير متاح
+        // المستخدم سيرى الصفحة وعند التفاعل سيتم إعادة المحاولة
+        return;
+      }
+      
+      // أي خطأ آخر غير معروف
       logout();
     } finally {
       setLoading(false);

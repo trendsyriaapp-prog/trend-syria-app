@@ -41,13 +41,50 @@ const ERROR_TRANSLATIONS = {
   'invalid file type': 'نوع الملف غير مدعوم',
   'upload failed': 'فشل رفع الملف، يرجى المحاولة مرة أخرى',
   'connection refused': 'فشل الاتصال بالخادم',
-  'timeout': 'انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى',
+  'timeout': 'الخادم مشغول، يرجى المحاولة بعد لحظات',
+  'timed out': 'الخادم مشغول، يرجى المحاولة بعد لحظات',
   'store not found': 'المتجر غير موجود',
   'product not found': 'المنتج غير موجود',
   'order not found': 'الطلب غير موجود',
   'user not found': 'المستخدم غير موجود',
   'insufficient balance': 'الرصيد غير كافٍ',
   'out of stock': 'المنتج غير متوفر حالياً',
+  // أخطاء قاعدة البيانات والسيرفر - يجب إخفاؤها
+  'mongodb': 'الخادم مشغول حالياً، يرجى المحاولة بعد لحظات',
+  'database': 'الخادم مشغول حالياً، يرجى المحاولة بعد لحظات',
+  'connection error': 'مشكلة في الاتصال، يرجى المحاولة مرة أخرى',
+  'server busy': 'الخادم مشغول، يرجى المحاولة بعد لحظات',
+  'service unavailable': 'الخدمة غير متاحة حالياً، يرجى المحاولة لاحقاً',
+  'temporarily unavailable': 'الخدمة غير متاحة مؤقتاً، يرجى المحاولة بعد لحظات',
+};
+
+// أنماط للكشف عن الأخطاء التقنية التي يجب إخفاؤها
+const TECHNICAL_ERROR_PATTERNS = [
+  /mongodb/i,
+  /\.mongodb\.net/i,
+  /pymongo/i,
+  /motor/i,
+  /:\d{4,5}/,  // أرقام المنافذ مثل :27017
+  /shard-\d+/i,
+  /replica/i,
+  /connection.*pool/i,
+  /socket/i,
+  /tcp/i,
+  /dns/i,
+  /ssl/i,
+  /certificate/i,
+  /traceback/i,
+  /exception/i,
+  /error.*line \d+/i,
+  /file ".*\.py"/i,
+];
+
+/**
+ * التحقق إذا كانت الرسالة تحتوي على تفاصيل تقنية
+ */
+const isTechnicalError = (msg) => {
+  if (!msg || typeof msg !== 'string') return false;
+  return TECHNICAL_ERROR_PATTERNS.some(pattern => pattern.test(msg));
 };
 
 /**
@@ -55,6 +92,11 @@ const ERROR_TRANSLATIONS = {
  */
 const translateError = (msg) => {
   if (!msg || typeof msg !== 'string') return msg;
+  
+  // إذا كانت رسالة تقنية - نُرجع رسالة عامة
+  if (isTechnicalError(msg)) {
+    return 'الخادم مشغول حالياً، يرجى المحاولة بعد لحظات';
+  }
   
   // البحث عن ترجمة مطابقة
   for (const [eng, ar] of Object.entries(ERROR_TRANSLATIONS)) {
@@ -73,6 +115,23 @@ const translateError = (msg) => {
  * @returns {string} رسالة الخطأ
  */
 export const getErrorMessage = (error, defaultMsg = "حدث خطأ") => {
+  // أخطاء الشبكة (لا يوجد response)
+  if (!error?.response) {
+    if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+      return 'الخادم مشغول، يرجى المحاولة بعد لحظات';
+    }
+    if (error?.message?.includes('Network')) {
+      return 'مشكلة في الاتصال، تحقق من الإنترنت';
+    }
+    return 'مشكلة في الاتصال بالخادم';
+  }
+  
+  // أخطاء السيرفر (500+)
+  const status = error.response?.status;
+  if (status >= 500) {
+    return 'الخادم مشغول حالياً، يرجى المحاولة بعد لحظات';
+  }
+  
   const detail = error?.response?.data?.detail;
   
   // إذا كان نص عادي

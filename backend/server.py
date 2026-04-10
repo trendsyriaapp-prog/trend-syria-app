@@ -68,9 +68,12 @@ except Exception as e:
     logging.warning(f"⚠️ Security module not loaded: {e}")
     limiter = None
     SECURITY_HEADERS = {}
-    def rate_limit_exceeded_handler(req, exc): pass
-    def is_ip_blocked(ip): return False
-    class RateLimitExceeded(Exception): pass
+    def rate_limit_exceeded_handler(req, exc): 
+        pass
+    def is_ip_blocked(ip): 
+        return False
+    class RateLimitExceeded(Exception): 
+        pass
 
 # Import routers with error handling
 logger.info("📦 Importing routers...")
@@ -236,6 +239,67 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content={"detail": "، ".join(arabic_errors) if arabic_errors else "خطأ في البيانات المدخلة"}
+    )
+
+# 🔒 معالج الأخطاء العام - يُخفي التفاصيل التقنية عن المستخدمين
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    معالج الأخطاء العام - يحمي من تسريب المعلومات التقنية
+    - يسجل الخطأ الكامل للمبرمج
+    - يُرجع رسالة عامة للمستخدم
+    """
+    import traceback
+    
+    # تسجيل الخطأ الكامل للمبرمج
+    error_id = str(uuid.uuid4())[:8]
+    logger.error(f"[Error ID: {error_id}] Unhandled exception at {request.url.path}")
+    logger.error(f"[Error ID: {error_id}] {type(exc).__name__}: {str(exc)}")
+    logger.error(f"[Error ID: {error_id}] Traceback: {traceback.format_exc()}")
+    
+    # تحديد نوع الخطأ وإرجاع رسالة مناسبة
+    error_message = "حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى"
+    status_code = 500
+    
+    error_str = str(exc).lower()
+    error_type = type(exc).__name__
+    
+    # أخطاء قاعدة البيانات
+    if any(db_err in error_str for db_err in ['mongodb', 'database', 'connection', 'timeout', 'timed out', 'pymongo', 'motor']):
+        error_message = "الخادم مشغول حالياً، يرجى المحاولة بعد لحظات"
+        status_code = 503
+    
+    # أخطاء الشبكة
+    elif any(net_err in error_str for net_err in ['network', 'connection refused', 'unreachable']):
+        error_message = "مشكلة في الاتصال، يرجى التحقق من الإنترنت"
+        status_code = 503
+    
+    # أخطاء الذاكرة/الموارد
+    elif any(mem_err in error_str for mem_err in ['memory', 'resource', 'limit exceeded']):
+        error_message = "الخادم مشغول، يرجى المحاولة لاحقاً"
+        status_code = 503
+    
+    # أخطاء الصلاحيات
+    elif error_type in ['PermissionError', 'AuthorizationError']:
+        error_message = "ليس لديك صلاحية لهذا الإجراء"
+        status_code = 403
+    
+    # أخطاء البيانات
+    elif error_type in ['ValueError', 'ValidationError', 'TypeError']:
+        error_message = "البيانات المدخلة غير صحيحة"
+        status_code = 400
+    
+    # أخطاء الملفات
+    elif error_type in ['FileNotFoundError', 'IOError']:
+        error_message = "الملف غير موجود أو لا يمكن الوصول إليه"
+        status_code = 404
+    
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "detail": error_message,
+            "error_id": error_id  # للدعم الفني
+        }
     )
 
 # 🔒 Middleware للتحقق من IPs المحظورة
@@ -431,11 +495,11 @@ async def ensure_super_admin_exists():
                 if not verify_password(admin_password, existing_admin.get("password", "")):
                     update_fields["password"] = hash_password_secure(admin_password)
                     needs_update = True
-                    logger.info(f"🔧 سيتم تحديث كلمة مرور Super Admin")
-            except Exception as pwd_error:
+                    logger.info("🔧 سيتم تحديث كلمة مرور Super Admin")
+            except Exception:
                 update_fields["password"] = hash_password_secure(admin_password)
                 needs_update = True
-                logger.info(f"🔧 خطأ في التحقق من كلمة المرور، سيتم إعادة تعيينها")
+                logger.info("🔧 خطأ في التحقق من كلمة المرور، سيتم إعادة تعيينها")
             
             # تطبيق التحديثات إذا لزم الأمر
             if needs_update:
