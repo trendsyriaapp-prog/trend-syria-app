@@ -62,12 +62,12 @@ const PushNotificationButton = ({ userType, showLabel = false, size = 'default' 
     return (
       <button
         onClick={() => toast({
-          title: "الإشعارات غير متاحة",
-          description: "للحصول على الإشعارات، استخدم تطبيق ترند سورية من Google Play أو متصفح Chrome",
+          title: "غير مدعوم",
+          description: "متصفحك لا يدعم إشعارات Push. جرب Chrome أو Firefox",
           variant: "destructive"
         })}
         className="relative flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-200 text-gray-400 cursor-not-allowed"
-        title="الإشعارات غير متاحة حالياً"
+        title="متصفحك لا يدعم إشعارات Push"
       >
         <span>--</span>
       </button>

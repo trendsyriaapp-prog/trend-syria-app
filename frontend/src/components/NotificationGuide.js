@@ -128,8 +128,8 @@ const NotificationGuide = ({ userType }) => {
     if (!isSupported) {
       return {
         icon: <XCircle className="text-red-500" size={24} />,
-        title: 'الإشعارات غير متاحة',
-        description: 'للحصول على الإشعارات، تأكد من استخدام تطبيق ترند سورية من Google Play أو متصفح Chrome/Firefox.',
+        title: 'المتصفح غير مدعوم',
+        description: 'متصفحك لا يدعم إشعارات Push. جرب Chrome أو Firefox.',
         color: 'red'
       };
     }
