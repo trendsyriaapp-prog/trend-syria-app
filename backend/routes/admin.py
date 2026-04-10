@@ -1,7 +1,7 @@
 # /app/backend/routes/admin.py
 # مسارات لوحة الإدارة
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from datetime import datetime, timezone
 import uuid
 import hashlib
@@ -577,7 +577,8 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     now = datetime.now(timezone.utc).isoformat()
     
     await db.users.update_one({"id": seller_id}, {"$set": {"is_approved": True}})
-    await db.seller_documents.update_one({"seller_id": seller_id}, {"$set": {"status": "approved", "approved_at": now}})
+    # تحديث جميع وثائق البائع (في حالة وجود طلبات متعددة)
+    await db.seller_documents.update_many({"seller_id": seller_id}, {"$set": {"status": "approved", "approved_at": now}})
     
     # إرسال إشعار للبائع بالموافقة
     seller = await db.users.find_one({"id": seller_id})
@@ -595,7 +596,7 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     return {"message": "تم تفعيل البائع"}
 
 @router.post("/sellers/{seller_id}/reject")
-async def reject_seller(seller_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def reject_seller(seller_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)):
     """رفض بائع مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
@@ -1070,7 +1071,8 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     if not doc:
         raise HTTPException(status_code=404, detail="لم يتم العثور على الوثائق")
     
-    await db.delivery_documents.update_one(
+    # تحديث جميع وثائق السائق (في حالة وجود طلبات متعددة)
+    await db.delivery_documents.update_many(
         {"$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}]},
         {"$set": {"status": "approved", "approved_at": now}}
     )
@@ -1096,7 +1098,7 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
     return {"message": "تم اعتماد موظف التوصيل"}
 
 @router.post("/delivery/{driver_id}/reject")
-async def reject_delivery_driver(driver_id: str, data: dict = None, user: dict = Depends(get_current_user)):
+async def reject_delivery_driver(driver_id: str, data: dict = Body(default={}), user: dict = Depends(get_current_user)):
     """رفض موظف توصيل مع سبب الرفض (اختياري)"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
