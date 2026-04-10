@@ -9,6 +9,25 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Latest Update: 2026-04-11
 
+### ✅ Approved Driver Appearing as New Join Request - FIXED
+**Date:** 2026-04-11
+**Problem:**
+عندما سائق معتمد يقوم بإيداع التأمين أو يدخل لوحة التحكم، يظهر للأدمن كطلب انضمام جديد.
+
+**Root Cause Analysis:**
+1. في `delivery.py` - دالتا `get_availability()` و `update_availability()` كانتا تنشئان سجل في `delivery_documents` بـ `status: "pending"` إذا لم يوجد سجل
+2. هذا يحدث حتى للسائقين المعتمدين، مما يجعلهم يظهرون في قائمة طلبات الانضمام المعلقة
+
+**Fix Applied:**
+1. `delivery.py`: تحقق من `user.is_approved` قبل إنشاء السجل - إذا معتمد يستخدم `status: "approved"`
+2. `admin.py`: `get_pending_delivery()` و `get_pending_sellers()` يتجاهلان المستخدمين المعتمدين ويصححان السجلات الخاطئة تلقائياً
+
+**Files Modified:**
+- `/app/backend/routes/delivery.py` - `get_availability()`, `update_availability()`
+- `/app/backend/routes/admin.py` - `get_pending_delivery()`, `get_pending_sellers()`
+
+---
+
 ### ✅ Admin Page Refresh Fix - COMPLETED
 **Date:** 2026-04-11
 **Problem:** 

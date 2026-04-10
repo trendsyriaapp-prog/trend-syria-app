@@ -427,11 +427,14 @@ async def get_availability(user: dict = Depends(get_current_user)):
     )
     
     # إذا لم توجد وثائق، إنشاء وثيقة افتراضية
+    # مع مراعاة حالة اعتماد المستخدم
     if not driver_doc:
+        # تحديد الحالة بناءً على اعتماد المستخدم
+        doc_status = "approved" if user.get("is_approved") else "pending"
         new_doc = {
             "driver_id": user["id"],
             "delivery_id": user["id"],
-            "status": "pending",
+            "status": doc_status,
             "is_available": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
@@ -455,11 +458,14 @@ async def update_availability(data: AvailabilityUpdate, user: dict = Depends(get
     )
     
     # إذا لم توجد وثائق، إنشاء وثيقة جديدة
+    # مع مراعاة حالة اعتماد المستخدم
     if not driver_doc:
+        # تحديد الحالة بناءً على اعتماد المستخدم
+        doc_status = "approved" if user.get("is_approved") else "pending"
         new_doc = {
             "driver_id": user["id"],
             "delivery_id": user["id"],
-            "status": "pending",
+            "status": doc_status,
             "is_available": data.is_available,
             "availability_updated_at": datetime.now(timezone.utc).isoformat(),
             "created_at": datetime.now(timezone.utc).isoformat()

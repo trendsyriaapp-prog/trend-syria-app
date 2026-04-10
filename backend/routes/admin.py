@@ -508,6 +508,14 @@ async def get_pending_sellers(user: dict = Depends(get_current_user)):
     for doc in docs:
         seller = await db.users.find_one({"id": doc["seller_id"]}, {"_id": 0, "password": 0})
         if seller:
+            # تجاهل البائعين المعتمدين - لأن وثائقهم pending قد تكون خطأ
+            if seller.get("is_approved"):
+                # تصحيح حالة الوثائق تلقائياً للبائع المعتمد
+                await db.seller_documents.update_many(
+                    {"seller_id": seller["id"]},
+                    {"$set": {"status": "approved"}}
+                )
+                continue
             result.append({**doc, "seller": seller})
     return result
 
@@ -1034,6 +1042,14 @@ async def get_pending_delivery(user: dict = Depends(get_current_user)):
     for doc in docs:
         driver = await db.users.find_one({"id": doc.get("driver_id") or doc.get("delivery_id")}, {"_id": 0, "password": 0})
         if driver:
+            # تجاهل السائقين المعتمدين - لأن وثائقهم pending قد تكون خطأ
+            if driver.get("is_approved"):
+                # تصحيح حالة الوثائق تلقائياً للسائق المعتمد
+                await db.delivery_documents.update_many(
+                    {"$or": [{"driver_id": driver["id"]}, {"delivery_id": driver["id"]}]},
+                    {"$set": {"status": "approved"}}
+                )
+                continue
             result.append({**doc, "driver": driver})
     return result
 
