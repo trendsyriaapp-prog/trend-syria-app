@@ -409,7 +409,7 @@ const WithdrawModal = ({ balance, onClose, onSuccess, token }) => {
 // Seller Documents Upload Page
 const SellerDocumentsPage = () => {
   const navigate = useNavigate();
-  const { user, fetchUser, token } = useAuth();
+  const { user, fetchUser, token, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [businessName, setBusinessName] = useState('');
@@ -534,13 +534,22 @@ const SellerDocumentsPage = () => {
     }
   };
 
+  // انتظار تحميل بيانات المستخدم
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+
   if (!user || !['seller', 'food_seller'].includes(user.user_type)) {
-    navigate('/');
+    navigate('/', { replace: true });
     return null;
   }
 
   if (user.is_approved) {
-    navigate('/seller/dashboard');
+    navigate('/seller/dashboard', { replace: true });
     return null;
   }
 
@@ -740,7 +749,7 @@ const SellerDocumentsPage = () => {
 const SellerDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   // تحديد نوع البائع (منتجات أو طعام)
@@ -1346,13 +1355,22 @@ const SellerDashboardPage = () => {
     }
   };
 
+  // انتظار تحميل بيانات المستخدم
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+
   if (!user || (user.user_type !== 'seller' && user.user_type !== 'food_seller')) {
-    navigate('/');
+    navigate('/', { replace: true });
     return null;
   }
 
   if (!user.is_approved) {
-    navigate('/seller/documents');
+    navigate('/seller/documents', { replace: true });
     return null;
   }
 
@@ -2160,7 +2178,7 @@ export default SellerDashboardPage;
 
 // صفحة انتظار موافقة الإدارة على وثائق البائع
 const SellerPendingApproval = () => {
-  const { user, logout, token } = useAuth();
+  const { user, logout, token, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [checking, setChecking] = useState(false);
@@ -2193,6 +2211,21 @@ const SellerPendingApproval = () => {
     logout();
     navigate('/login', { replace: true });
   };
+
+  // انتظار تحميل بيانات المستخدم
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+
+  // إذا لم يكن هناك مستخدم
+  if (!user) {
+    navigate('/login', { replace: true });
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center p-4">

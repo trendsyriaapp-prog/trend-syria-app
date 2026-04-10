@@ -7,7 +7,46 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.12 (versionCode: 12) in Closed Testing (Alpha)
 
-## Latest Update: 2026-04-10
+## Latest Update: 2026-04-11
+
+### ✅ Admin Page Refresh Fix - COMPLETED
+**Date:** 2026-04-11
+**Problem:** 
+عندما يكون المدير في صفحة `/admin?tab=all-pending-items` ويضغط على تحديث الصفحة (F5)، التطبيق يذهب للصفحة الرئيسية بدلاً من البقاء في صفحة الأدمن.
+
+**Root Cause Analysis:**
+1. صفحات الأدمن والبائعين والسائقين كانت تتحقق من `user` قبل انتهاء تحميل بيانات المستخدم من `AuthContext`
+2. عند تحديث الصفحة، `loading = true` و `user = null` مؤقتاً
+3. الكود كان يوجه المستخدم للصفحة الرئيسية عندما `user === null` بدون انتظار انتهاء التحميل
+
+**Fix Applied:**
+1. إضافة `loading: authLoading` من `useAuth()` في جميع الصفحات المحمية
+2. إضافة شرط `if (authLoading) return <spinner />` قبل أي تحقق من `user`
+3. تغيير `navigate('/')` إلى `navigate('/', { replace: true })` لمنع التاريخ الزائد
+
+**Files Modified:**
+- `/app/frontend/src/pages/AdminPage.js` - إضافة `authLoading` check
+- `/app/frontend/src/pages/SellerPages.js` - إصلاح `SellerDocumentsPage`, `SellerDashboardPage`, `SellerPendingApproval`
+- `/app/frontend/src/pages/DeliveryPages.js` - إصلاح `DeliveryDashboard`, `DeliveryPendingApproval`
+
+---
+
+### ✅ Video Upload Validation Fix - COMPLETED
+**Date:** 2026-04-11
+**Problem:**
+1. حد رفع الفيديو كان 10MB فقط - صغير جداً للفيديوهات العادية من الهاتف
+2. لم يكن هناك تحقق من مدة الفيديو في صفحة متاجر الطعام
+
+**Fix Applied:**
+1. تم إنشاء `videoValidation.js` في الجلسة السابقة (50MB، 1-30 ثانية)
+2. تم تطبيقه على `AddProductModal.js` في الجلسة السابقة
+3. **هذه الجلسة:** تم تطبيقه على `FoodStoreDashboard.js`
+4. تم تحديث نص واجهة المستخدم من "10MB" إلى "50MB"
+
+**Files Modified:**
+- `/app/frontend/src/pages/FoodStoreDashboard.js` - إضافة import و تحديث `handleAdminVideoUpload`
+
+---
 
 ### ✅ Admin Document Images Display & Modal Fix - COMPLETED
 **Date:** 2026-04-10

@@ -74,7 +74,7 @@ const API = process.env.REACT_APP_BACKEND_URL;
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   // State
@@ -430,13 +430,27 @@ const AdminDashboardPage = () => {
     setCommissionRates(res.data);
   };
 
-  // Auth check
+  // Auth check - ننتظر انتهاء تحميل بيانات المستخدم أولاً
   useEffect(() => {
-    if (user && user.user_type !== 'admin' && user.user_type !== 'sub_admin') {
-      navigate('/');
+    // لا نتخذ أي قرار توجيه حتى ينتهي تحميل بيانات المستخدم
+    if (authLoading) return;
+    
+    // إذا لا يوجد مستخدم أو ليس أدمن - نوجه للصفحة الرئيسية
+    if (!user || (user.user_type !== 'admin' && user.user_type !== 'sub_admin')) {
+      navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
+  // إظهار شاشة التحميل أثناء التحقق من المستخدم
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+
+  // إذا لم يكن أدمن بعد انتهاء التحميل
   if (!user || (user.user_type !== 'admin' && user.user_type !== 'sub_admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

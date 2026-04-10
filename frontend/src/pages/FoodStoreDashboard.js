@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { compressProductImage, compressDocumentImage } from '../utils/imageCompression';
+import { processVideo, VIDEO_CONFIG } from '../utils/videoValidation';
 import useNotificationSound from '../hooks/useNotificationSound';
 import SellerDriverTrackingMap from '../components/SellerDriverTrackingMap';
 import SellerAnalytics from '../components/seller/SellerAnalytics';
@@ -1973,31 +1974,44 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
   };
 
   // رفع فيديو التحقق للأدمن
-  const handleAdminVideoUpload = (e) => {
+  const handleAdminVideoUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
+    if (!file) return;
+    
+    setUploadingVideo(true);
+    
+    try {
+      const result = await processVideo(file, (progress) => {
+        console.log(progress);
+      });
+      
+      if (!result.success) {
         toast({
-          title: "خطأ",
-          description: "حجم الفيديو كبير جداً (الحد الأقصى 10MB)",
+          title: "خطأ في الفيديو",
+          description: result.error,
           variant: "destructive"
         });
+        setUploadingVideo(false);
         return;
       }
-      setUploadingVideo(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          admin_video: reader.result
-        }));
-        setUploadingVideo(false);
-        toast({
-          title: "تم رفع فيديو التحقق ✅",
-          description: "سيراجعه الأدمن قبل نشر الصنف"
-        });
-      };
-      reader.readAsDataURL(file);
+      
+      setFormData(prev => ({
+        ...prev,
+        admin_video: result.data
+      }));
+      
+      toast({
+        title: "تم رفع فيديو التحقق ✅",
+        description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في معالجة الفيديو",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -2460,7 +2474,7 @@ const ProductModal = ({ store, product, token, commissionInfo, onClose, onSave }
                   />
                 </label>
               )}
-              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 10MB</p>
+              <p className="text-[8px] text-orange-600 mt-1">الحد الأقصى: 30 ثانية / 50MB</p>
             </div>
           )}
 

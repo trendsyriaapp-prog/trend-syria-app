@@ -491,7 +491,7 @@ const DeliveryDocuments = () => {
 
 // لوحة تحكم موظف التوصيل
 const DeliveryDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -740,11 +740,17 @@ const DeliveryDashboard = () => {
   }, [docStatus]);
 
   useEffect(() => {
+    // انتظار تحميل بيانات المستخدم قبل فحص الحالة
+    if (authLoading) return;
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
     checkStatusAndFetch();
     fetchWallet();
     fetchMyRatings();
     fetchAvailability();
-  }, []);
+  }, [authLoading, user]);
 
   const fetchMyRatings = async () => {
     try {
@@ -1897,7 +1903,7 @@ const DeliveryDashboard = () => {
 
 // صفحة انتظار موافقة الإدارة على الوثائق
 const DeliveryPendingApproval = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [checking, setChecking] = useState(false);
@@ -1928,6 +1934,21 @@ const DeliveryPendingApproval = () => {
     logout();
     navigate('/login', { replace: true });
   };
+
+  // انتظار تحميل بيانات المستخدم
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FF6B00]" />
+      </div>
+    );
+  }
+
+  // إذا لم يكن هناك مستخدم
+  if (!user) {
+    navigate('/login', { replace: true });
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center p-4">
