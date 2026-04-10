@@ -624,11 +624,17 @@ const FoodCartPage = () => {
     } catch (error) {
       console.error('Order error:', error.response?.data);
       const errorDetail = error.response?.data?.detail;
-      const errorMessage = typeof errorDetail === 'string' 
+      let errorMessage = typeof errorDetail === 'string' 
         ? errorDetail 
-        : (Array.isArray(errorDetail) ? errorDetail.map(e => e.msg || e).join(', ') : "فشل إنشاء الطلب");
+        : (Array.isArray(errorDetail) ? errorDetail.map(e => e.msg || e).join(', ') : "فشل إنشاء الطلب، يرجى المحاولة مرة أخرى");
+      
+      // تحويل رسائل الخطأ لرسائل واضحة
+      if (errorMessage === "Not Found" || errorMessage === "not found") {
+        errorMessage = "المتجر غير متاح حالياً، يرجى المحاولة لاحقاً";
+      }
+      
       toast({ 
-        title: "خطأ", 
+        title: "خطأ في إنشاء الطلب", 
         description: errorMessage, 
         variant: "destructive" 
       });

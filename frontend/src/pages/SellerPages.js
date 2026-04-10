@@ -37,9 +37,27 @@ import StatDetailsModal from '../components/seller/StatDetailsModal';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 // دالة مساعدة لاستخراج رسالة الخطأ من الـ API
-const getErrorMessage = (error, defaultMsg = "حدث خطأ") => {
+const getErrorMessage = (error, defaultMsg = "حدث خطأ، يرجى المحاولة مرة أخرى") => {
   const detail = error?.response?.data?.detail;
-  if (typeof detail === 'string') return detail;
+  
+  // تحويل Not Found لرسالة عربية
+  if (detail === "Not Found" || detail === "not found") {
+    return "العنصر غير موجود أو تم حذفه";
+  }
+  
+  if (typeof detail === 'string') {
+    // تحويل رسائل إنجليزية شائعة
+    if (detail.includes("already registered") || detail.includes("مسجل مسبقاً")) {
+      return "هذا العنصر مسجل مسبقاً";
+    }
+    if (detail.includes("not found")) {
+      return "العنصر غير موجود";
+    }
+    if (detail.includes("unauthorized") || detail.includes("Unauthorized")) {
+      return "غير مصرح لك بهذا الإجراء، يرجى تسجيل الدخول مرة أخرى";
+    }
+    return detail;
+  }
   if (Array.isArray(detail)) return detail.map(d => d.msg || d).join(', ');
   if (detail?.msg) return detail.msg;
   return defaultMsg;
@@ -499,8 +517,8 @@ const SellerDocumentsPage = () => {
       setStatus('pending');
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: getErrorMessage(error, "حدث خطأ"),
+        title: "خطأ في رفع الوثائق",
+        description: getErrorMessage(error, "فشل رفع الوثائق، يرجى التأكد من رفع جميع الصور المطلوبة"),
         variant: "destructive"
       });
     } finally {

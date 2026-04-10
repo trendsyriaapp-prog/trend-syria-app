@@ -141,8 +141,8 @@ const DeliveryDocuments = () => {
       setStatus('pending');
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في رفع الوثائق",
+        description: error.response?.data?.detail || "حدث خطأ أثناء رفع الوثائق، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     } finally {
@@ -920,8 +920,8 @@ const DeliveryDashboard = () => {
       fetchOrders();
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في قبول الطلب",
+        description: error.response?.data?.detail || "فشل قبول الطلب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -939,8 +939,8 @@ const DeliveryDashboard = () => {
       fetchOrders();
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في استلام الطلب",
+        description: error.response?.data?.detail || "فشل استلام الطلب من البائع، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -982,8 +982,8 @@ const DeliveryDashboard = () => {
     } catch (error) {
       // عند الفشل، لا نغير شيء - الطلب يبقى كما هو
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في قبول طلب الطعام",
+        description: error.response?.data?.detail || "فشل قبول الطلب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -1012,8 +1012,8 @@ const DeliveryDashboard = () => {
       fetchOrders();
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في قبول الطلب",
+        description: error.response?.data?.detail || "فشل قبول الطلب من المطعم، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -1030,8 +1030,8 @@ const DeliveryDashboard = () => {
       setDriverRequestedOrders(prev => prev.filter(o => o.id !== orderId));
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في رفض الطلب",
+        description: error.response?.data?.detail || "فشل رفض الطلب، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -1051,8 +1051,8 @@ const DeliveryDashboard = () => {
       fetchOrders();
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ",
+        title: "خطأ في التحديث",
+        description: error.response?.data?.detail || "فشل إعلام العميل، يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
@@ -1097,8 +1097,8 @@ const DeliveryDashboard = () => {
         }
       } else {
         toast({
-          title: "خطأ",
-          description: error.response?.data?.detail || "حدث خطأ",
+          title: "خطأ في تسليم الطلب",
+          description: error.response?.data?.detail || "فشل تسليم الطلب، يرجى التحقق من كود التسليم",
           variant: "destructive"
         });
       }

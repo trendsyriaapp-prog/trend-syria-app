@@ -296,9 +296,19 @@ const RegisterPage = () => {
         navigate('/', { replace: true });
       }
     } catch (error) {
+      const errorMessage = error.response?.data?.detail || "حدث خطأ في التسجيل";
+      let friendlyMessage = errorMessage;
+      
+      // تحويل رسائل الخطأ لرسائل واضحة
+      if (errorMessage.includes("مسجل مسبقاً") || errorMessage.includes("already registered")) {
+        friendlyMessage = "رقم الهاتف مسجل مسبقاً، يرجى تسجيل الدخول بدلاً من إنشاء حساب جديد";
+      } else if (errorMessage.includes("Not Found") || errorMessage === "Not Found") {
+        friendlyMessage = "رقم الهاتف مسجل مسبقاً، يرجى تسجيل الدخول";
+      }
+      
       toast({
-        title: "خطأ",
-        description: error.response?.data?.detail || "حدث خطأ في التسجيل",
+        title: "خطأ في التسجيل",
+        description: friendlyMessage,
         variant: "destructive"
       });
     } finally {

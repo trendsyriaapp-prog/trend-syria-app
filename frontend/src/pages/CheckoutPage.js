@@ -271,7 +271,9 @@ const CheckoutPage = () => {
         toast({ title: "تم إنشاء الطلب", description: "أدخل رمز التحقق لإتمام الدفع" });
       }
     } catch (error) {
-      toast({ title: "خطأ", description: error.response?.data?.detail || "حدث خطأ", variant: "destructive" });
+      let errorMsg = error.response?.data?.detail || "فشل إنشاء الطلب، يرجى المحاولة مرة أخرى";
+      if (errorMsg === "Not Found") errorMsg = "المنتج غير متوفر حالياً";
+      toast({ title: "خطأ في إنشاء الطلب", description: errorMsg, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
