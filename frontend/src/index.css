@@ -36,6 +36,11 @@ body {
  * نضيف top للعناصر sticky/fixed
  */
 
+/* =====================================================
+   إعدادات التطبيق الأصلي (Native App)
+   هذه الإعدادات تُطبق فقط على التطبيق، لا تؤثر على الموقع
+   ===================================================== */
+
 /* للتطبيق على Android */
 .capacitor-android .pt-safe-android {
     padding-top: var(--android-status-bar) !important;
@@ -49,6 +54,45 @@ body {
 /* للموقع - لا شيء */
 .capacitor-web .pt-safe-android {
     padding-top: 0 !important;
+}
+
+/* منع تحديد النص في التطبيق الأصلي فقط (ليبدو كتطبيق وليس موقع) */
+.capacitor-android,
+.capacitor-ios {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* السماح بتحديد النص في حقول الإدخال (مطلوب للنسخ واللصق) */
+.capacitor-android input,
+.capacitor-android textarea,
+.capacitor-android select,
+.capacitor-android [contenteditable="true"],
+.capacitor-ios input,
+.capacitor-ios textarea,
+.capacitor-ios select,
+.capacitor-ios [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+}
+
+/* السماح بتحديد النصوص المهمة (أرقام الطلبات، أرقام الهواتف) */
+.capacitor-android .selectable-text,
+.capacitor-ios .selectable-text,
+.capacitor-android [data-selectable="true"],
+.capacitor-ios [data-selectable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 /* Premium Card Styles */

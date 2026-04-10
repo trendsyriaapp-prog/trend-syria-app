@@ -10,10 +10,37 @@ import { Capacitor } from '@capacitor/core';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 // التحقق إذا كان التطبيق يعمل داخل Capacitor (Android/iOS)
+// نستخدم طرق متعددة للتأكد
 const isNativeApp = () => {
   try {
-    return Capacitor.isNativePlatform();
-  } catch {
+    // الطريقة الأساسية: Capacitor API
+    if (Capacitor.isNativePlatform()) {
+      return true;
+    }
+    
+    // طريقة بديلة: التحقق من المنصة
+    const platform = Capacitor.getPlatform();
+    if (platform === 'android' || platform === 'ios') {
+      return true;
+    }
+    
+    // طريقة بديلة: التحقق من وجود class على body
+    if (document.body.classList.contains('capacitor-android') || 
+        document.body.classList.contains('capacitor-ios')) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    // في حالة فشل Capacitor، نتحقق من class على body
+    try {
+      if (document.body.classList.contains('capacitor-android') || 
+          document.body.classList.contains('capacitor-ios')) {
+        return true;
+      }
+    } catch {
+      // تجاهل
+    }
     return false;
   }
 };
