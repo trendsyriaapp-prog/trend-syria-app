@@ -230,14 +230,46 @@ function App() {
 
   // إضافة class للـ body حسب المنصة (Android/iOS/Web)
   useEffect(() => {
-    const platform = Capacitor.getPlatform();
-    if (platform === 'android') {
-      document.body.classList.add('capacitor-android');
-    } else if (platform === 'ios') {
-      document.body.classList.add('capacitor-ios');
-    } else {
-      document.body.classList.add('capacitor-web');
-    }
+    // طرق متعددة للتحقق من المنصة
+    const detectPlatform = () => {
+      try {
+        const platform = Capacitor.getPlatform();
+        const isNative = Capacitor.isNativePlatform();
+        const userAgent = navigator.userAgent;
+        
+        // التحقق من Android
+        if (platform === 'android' || (isNative && userAgent.includes('Android')) || userAgent.includes('TrendSyria-App')) {
+          document.body.classList.remove('capacitor-web', 'capacitor-ios');
+          document.body.classList.add('capacitor-android');
+          console.log('Platform detected: Android Native App');
+          return;
+        }
+        
+        // التحقق من iOS
+        if (platform === 'ios' || (isNative && /iPad|iPhone|iPod/.test(userAgent))) {
+          document.body.classList.remove('capacitor-web', 'capacitor-android');
+          document.body.classList.add('capacitor-ios');
+          console.log('Platform detected: iOS Native App');
+          return;
+        }
+        
+        // الافتراضي: Web
+        document.body.classList.remove('capacitor-android', 'capacitor-ios');
+        document.body.classList.add('capacitor-web');
+        console.log('Platform detected: Web Browser');
+      } catch (error) {
+        // في حالة فشل Capacitor، نتحقق من User Agent
+        if (navigator.userAgent.includes('TrendSyria-App')) {
+          document.body.classList.add('capacitor-android');
+          console.log('Platform detected via UserAgent: Android');
+        } else {
+          document.body.classList.add('capacitor-web');
+          console.log('Platform fallback: Web');
+        }
+      }
+    };
+    
+    detectPlatform();
   }, []);
 
   // معالجة حالة التطبيق (الخروج والعودة)

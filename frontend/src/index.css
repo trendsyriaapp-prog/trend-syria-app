@@ -20,6 +20,56 @@
     box-sizing: border-box;
 }
 
+/* ===== إعدادات التطبيق الأصلي (Native App Settings) ===== */
+/* منع سلوك المتصفح في التطبيق الأصلي */
+.capacitor-android,
+.capacitor-ios {
+    /* منع تحديد النص */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* منع اللمس المطول (context menu) */
+    -webkit-touch-callout: none;
+    
+    /* منع تمييز العناصر عند اللمس */
+    -webkit-tap-highlight-color: transparent;
+    
+    /* منع سحب الصور */
+    -webkit-user-drag: none;
+    
+    /* تحسين اللمس */
+    touch-action: manipulation;
+}
+
+/* السماح بتحديد النص في الحقول النصية فقط */
+.capacitor-android input,
+.capacitor-android textarea,
+.capacitor-android [contenteditable="true"],
+.capacitor-ios input,
+.capacitor-ios textarea,
+.capacitor-ios [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* منع سحب الصور في التطبيق */
+.capacitor-android img,
+.capacitor-ios img {
+    -webkit-user-drag: none;
+    user-drag: none;
+    pointer-events: auto;
+}
+
+/* للموقع - السماح بالسلوك الطبيعي */
+.capacitor-web {
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+
 body {
     font-family: 'Cairo', 'Almarai', sans-serif;
     background-color: #FAFAFA;
