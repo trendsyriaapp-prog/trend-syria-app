@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
+import { compressDocumentImage } from '../utils/imageCompression';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
   Car, Bike, Check, MapPin, X, Trash2
@@ -89,22 +90,21 @@ const DeliveryDocuments = () => {
   const selectedVehicle = allVehicleTypes.find(v => v.id === docs.vehicle_type);
   const requiresLicense = docs.vehicle_type ? (selectedVehicle?.requires_license ?? true) : true;
 
-  const handleImageUpload = (field) => (e) => {
+  const handleImageUpload = (field) => async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      try {
+        // ضغط الصورة تلقائياً قبل الرفع
+        const compressedImage = await compressDocumentImage(file);
+        setDocs(prev => ({ ...prev, [field]: compressedImage }));
+      } catch (error) {
+        console.error('Error compressing image:', error);
         toast({
           title: "خطأ",
-          description: "حجم الصورة يجب أن يكون أقل من 5MB",
+          description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",
           variant: "destructive"
         });
-        return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDocs(prev => ({ ...prev, [field]: reader.result }));
-      };
-      reader.readAsDataURL(file);
     }
   };
 

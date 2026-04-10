@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { useAuth } from '../../context/AuthContext';
+import { compressDocumentImage } from '../../utils/imageCompression';
 import GoogleMapsLocationPicker from '../GoogleMapsLocationPicker';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -90,38 +91,26 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
       return;
     }
     
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "خطأ", description: "حجم الصورة يجب أن يكون أقل من 2 ميجابايت", variant: "destructive" });
-      return;
-    }
-    
     setUploadingLogo(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const imageDataUrl = event.target.result;
-        
-        try {
-          await axios.put(`${API}/api/auth/seller/store-settings`, { 
-            ...storeSettings,
-            store_logo: imageDataUrl 
-          });
-          
-          setStoreLogo(imageDataUrl);
-          // تحديث الصورة في الهيدر
-          if (onLogoUpdate) {
-            onLogoUpdate(imageDataUrl);
-          }
-          toast({ title: "تم", description: "تم تحديث صورة المتجر" });
-        } catch (error) {
-          toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
-        } finally {
-          setUploadingLogo(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      // ضغط الصورة تلقائياً
+      const compressedImage = await compressDocumentImage(file);
+      
+      await axios.put(`${API}/api/auth/seller/store-settings`, { 
+        ...storeSettings,
+        store_logo: compressedImage 
+      });
+      
+      setStoreLogo(compressedImage);
+      // تحديث الصورة في الهيدر
+      if (onLogoUpdate) {
+        onLogoUpdate(compressedImage);
+      }
+      toast({ title: "تم", description: "تم تحديث صورة المتجر" });
     } catch (error) {
-      toast({ title: "خطأ", description: "فشل قراءة الصورة", variant: "destructive" });
+      console.error('Error uploading logo:', error);
+      toast({ title: "خطأ", description: "فشل تحديث الصورة", variant: "destructive" });
+    } finally {
       setUploadingLogo(false);
     }
   };

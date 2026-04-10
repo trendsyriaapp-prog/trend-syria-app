@@ -9,6 +9,7 @@ import ProductPreviewModal from './ProductPreviewModal';
 import { CATEGORIES } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/errorHelpers';
 import { validateAndEnhanceImage } from '../../utils/imageHelpers';
+import { compressProductImage } from '../../utils/imageCompression';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -1168,20 +1169,23 @@ const AddProductModal = ({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
+                        try {
+                          // ضغط الصورة تلقائياً
+                          const compressedImage = await compressProductImage(file);
                           if (newProduct.images.length < maxImagesPerProduct) {
                             setNewProduct(prev => ({
                               ...prev,
-                              images: [...prev.images, reader.result]
+                              images: [...prev.images, compressedImage]
                             }));
                             toast?.({ title: "تم بنجاح", description: "تم رفع الصورة" });
                           }
-                        };
-                        reader.readAsDataURL(file);
+                        } catch (error) {
+                          console.error('Error compressing image:', error);
+                          toast?.({ title: "خطأ", description: "فشل في معالجة الصورة", variant: "destructive" });
+                        }
                         e.target.value = '';
                       }}
                       className="hidden"

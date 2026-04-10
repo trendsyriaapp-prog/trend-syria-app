@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
+import { compressDocumentImage } from '../utils/imageCompression';
 import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -197,12 +198,18 @@ const JoinAsFoodSellerPage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Convert to base64 for simplicity
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({ ...formData, [field]: reader.result });
-    };
-    reader.readAsDataURL(file);
+    try {
+      // ضغط الصورة تلقائياً قبل الرفع
+      const compressedImage = await compressDocumentImage(file);
+      setFormData({ ...formData, [field]: compressedImage });
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSubmit = async (e) => {

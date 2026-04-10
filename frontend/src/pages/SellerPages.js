@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
+import { compressDocumentImage } from '../utils/imageCompression';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import PushNotificationButton from '../components/PushNotificationButton';
@@ -460,14 +461,21 @@ const SellerDocumentsPage = () => {
     }
   };
 
-  const handleFileChange = (setter) => (e) => {
+  const handleFileChange = (setter) => async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setter(reader.result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // ضغط الصورة تلقائياً قبل الرفع
+        const compressedImage = await compressDocumentImage(file);
+        setter(compressedImage);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        toast({
+          title: "خطأ",
+          description: "فشل في معالجة الصورة، يرجى المحاولة مرة أخرى",
+          variant: "destructive"
+        });
+      }
     }
   };
 
