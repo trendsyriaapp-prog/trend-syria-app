@@ -212,12 +212,17 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
               المبلغ (ل.س)
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              max={status.remaining_amount}
-              min={1}
-              className="w-full p-3 border rounded-lg text-lg"
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val === '' || (parseInt(val) <= status.remaining_amount)) {
+                  setDepositAmount(val);
+                }
+              }}
+              className="w-full p-3 border rounded-lg text-lg text-center"
               placeholder="أدخل المبلغ"
               required
             />
@@ -231,18 +236,25 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
               طريقة الدفع
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {settings?.payment_methods?.map((method) => (
+              {[
+                { id: 'shamcash', name: 'Sham Cash', icon: '💳' },
+                { id: 'syriatel', name: 'Syriatel Cash', icon: '📱' },
+                { id: 'mtn', name: 'MTN Cash', icon: '📱' },
+                { id: 'bank', name: 'تحويل بنكي', icon: '🏦' },
+                { id: 'hawala', name: 'حوالة', icon: '💸' },
+                { id: 'cash', name: 'نقداً (للمكتب)', icon: '💵' }
+              ].map((method) => (
                 <button
                   key={method.id}
                   type="button"
                   onClick={() => setPaymentMethod(method.id)}
-                  className={`p-3 border rounded-lg flex items-center gap-2 transition-all ${
+                  className={`p-3 border rounded-lg flex items-center justify-center gap-2 transition-all ${
                     paymentMethod === method.id 
-                      ? 'border-amber-500 bg-amber-50 text-amber-700' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium' 
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  {getPaymentMethodIcon(method.id)}
+                  <span>{method.icon}</span>
                   <span className="text-sm">{method.name}</span>
                 </button>
               ))}
