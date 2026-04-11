@@ -1962,18 +1962,10 @@ async def get_ticker_messages():
     ticker = await db.ticker_messages.find_one({"id": "main"}, {"_id": 0})
     
     if not ticker:
-        # رسائل افتراضية
-        default_messages = [
-            {"id": str(uuid.uuid4()), "text": "🔥 عروض رمضان - خصومات تصل إلى 50%", "highlight": True, "is_active": True},
-            {"id": str(uuid.uuid4()), "text": "🚚 توصيل مجاني للطلبات فوق 50,000 ل.س", "highlight": False, "is_active": True},
-            {"id": str(uuid.uuid4()), "text": "⚡ عروض فلاش جديدة كل يوم!", "highlight": True, "is_active": True},
-            {"id": str(uuid.uuid4()), "text": "💳 ادفع عند الاستلام متاح الآن", "highlight": False, "is_active": True},
-            {"id": str(uuid.uuid4()), "text": "🎁 اشترِ 2 واحصل على الثالث مجاناً", "highlight": True, "is_active": True},
-            {"id": str(uuid.uuid4()), "text": "⭐ منتجات جديدة كل أسبوع", "highlight": False, "is_active": True},
-        ]
+        # لا توجد رسائل افتراضية - الأدمن يضيف ما يريد من لوحة التحكم
         ticker = {
             "id": "main",
-            "messages": default_messages,
+            "messages": [],
             "is_enabled": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
