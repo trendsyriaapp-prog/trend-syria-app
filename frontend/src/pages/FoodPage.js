@@ -9,7 +9,7 @@ import {
   UtensilsCrossed, ShoppingCart, Apple, Search, MapPin, 
   Star, Clock, ChevronLeft, Filter, Store, Heart, Sparkles, Cake,
   Scale, Package, Utensils, IceCream, Coffee, Croissant, GlassWater, X,
-  ShoppingBasket, Truck, Settings
+  ShoppingBasket, Truck, Settings, SprayCan
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import FreeShippingBanner from '../components/FreeShippingBanner';
@@ -35,7 +35,7 @@ const openLocationSettings = async () => {
 // خريطة الأيقونات الديناميكية
 const ICON_MAP = {
   UtensilsCrossed, ShoppingCart, Apple, Store, Cake, Coffee, 
-  Croissant, GlassWater, ShoppingBasket, Package, Scale, Utensils, IceCream
+  Croissant, GlassWater, ShoppingBasket, Package, Scale, Utensils, IceCream, SprayCan
 };
 
 // دالة للحصول على الأيقونة
@@ -109,6 +109,46 @@ const CATEGORY_CONFIG = {
     unitIcon: Scale,
     emoji: '🥬',
     mainCategory: 'market'
+  },
+  // أصناف التسوق السريع (تظهر في قسم الطعام والصفحة الرئيسية)
+  groceries: {
+    name: 'مواد غذائية',
+    icon: ShoppingBasket,
+    color: 'bg-green-600',
+    textColor: 'text-green-600',
+    bgLight: 'bg-green-50',
+    borderColor: 'border-green-600',
+    gradient: 'from-green-600 to-green-700',
+    unit: 'قطعة',
+    unitIcon: Package,
+    emoji: '🛒',
+    mainCategory: 'quick_shop'
+  },
+  canned_food: {
+    name: 'معلبات',
+    icon: Package,
+    color: 'bg-orange-500',
+    textColor: 'text-orange-500',
+    bgLight: 'bg-orange-50',
+    borderColor: 'border-orange-500',
+    gradient: 'from-orange-500 to-orange-600',
+    unit: 'قطعة',
+    unitIcon: Package,
+    emoji: '🥫',
+    mainCategory: 'quick_shop'
+  },
+  cleaners: {
+    name: 'منظفات',
+    icon: SprayCan,
+    color: 'bg-cyan-500',
+    textColor: 'text-cyan-500',
+    bgLight: 'bg-cyan-50',
+    borderColor: 'border-cyan-500',
+    gradient: 'from-cyan-500 to-cyan-600',
+    unit: 'قطعة',
+    unitIcon: Package,
+    emoji: '🧹',
+    mainCategory: 'quick_shop'
   }
 };
 
@@ -125,6 +165,12 @@ const MAIN_SECTIONS = {
     icon: '🛒',
     color: 'from-[#FF6B00] to-[#FF8533]',
     categories: ['supermarket', 'vegetables']
+  },
+  quick_shop: {
+    name: 'تسوق سريع',
+    icon: '🚀',
+    color: 'from-green-500 to-emerald-500',
+    categories: ['groceries', 'canned_food', 'cleaners']
   }
 };
 
@@ -784,7 +830,11 @@ const FoodPage = () => {
               <Store size={12} />
               <span className="text-xs font-medium">الكل</span>
             </button>
-            {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories).map((cat) => {
+            {(dynamicCategories.length > 0 ? dynamicCategories : foodCategories).filter(cat => {
+              // إخفاء أصناف التسوق السريع من الشريط الرئيسي (ستظهر في شريط منفصل)
+              const quickShopIds = ['groceries', 'canned_food', 'cleaners'];
+              return !quickShopIds.includes(cat.id);
+            }).map((cat) => {
               const IconComp = typeof cat.icon === 'string' ? getIcon(cat.icon) : cat.icon;
               return (
                 <button
@@ -801,6 +851,43 @@ const FoodPage = () => {
                 </button>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      {/* 🚀 شريط التسوق السريع - الأصناف الثلاثة (معلبات، مواد غذائية، منظفات) */}
+      <div className="bg-gradient-to-r from-green-500 to-emerald-500">
+        <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-white">
+              <Truck size={16} />
+              <span className="text-xs font-bold">تسوق سريع:</span>
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
+              {['groceries', 'canned_food', 'cleaners'].map((catId) => {
+                const config = CATEGORY_CONFIG[catId];
+                if (!config) return null;
+                const IconComp = config.icon;
+                return (
+                  <button
+                    key={catId}
+                    onClick={() => handleCategoryChange(catId)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+                      activeCategory === catId
+                        ? 'bg-white text-green-600 font-bold'
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                    data-testid={`quick-shop-${catId}`}
+                  >
+                    <IconComp size={12} />
+                    <span className="text-xs font-medium">{config.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mr-auto text-white text-[10px] hidden sm:block">
+              توصيل سريع 🚀
+            </div>
           </div>
         </div>
       </div>

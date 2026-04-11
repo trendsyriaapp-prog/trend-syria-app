@@ -5,9 +5,47 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.16 (versionCode: 17) in Closed Testing (Alpha)
+- Android App: v1.0.18 (versionCode: 19) in Closed Testing (Alpha)
 
 ## Latest Update: 2026-04-11
+
+### ✅ Food Page Quick Shop Categories - COMPLETED
+**Date:** 2026-04-11
+**Request:**
+إضافة شريط للأصناف الثلاثة (معلبات، مواد غذائية، منظفات) في صفحة الطعام، مع إبقائها في الصفحة الرئيسية أيضاً، ليتمكن العميل من الاختيار بين:
+- **التسوق السريع** (صفحة الطعام) → توصيل سريع 🚀
+- **التسوق العادي** (الصفحة الرئيسية) → شحن عادي 🚚
+
+**Implementation:**
+1. **FoodPage.js:**
+   - إضافة 3 أصناف جديدة في `CATEGORY_CONFIG`: `groceries` (مواد غذائية)، `canned_food` (معلبات)، `cleaners` (منظفات)
+   - إضافة قسم `quick_shop` في `MAIN_SECTIONS`
+   - إضافة شريط أخضر جديد "تسوق سريع" أسفل شريط الفئات الرئيسي
+   - الشريط يعرض الأزرار الثلاثة بتصميم جذاب
+   - إخفاء هذه الأصناف من الشريط الرئيسي لتجنب التكرار
+
+2. **categories.py (Backend):**
+   - إضافة `canned_food` (معلبات) و `cleaners` (منظفات) في `DEFAULT_CATEGORIES`
+
+3. **products.py (Backend):**
+   - تحديث `categories_with_icons` لتشمل الأصناف الجديدة
+
+4. **HomePage.js:**
+   - إضافة ترجمات الأصناف الجديدة في `getCategoryNameAr`
+   - إضافة أيقونات الأصناف الجديدة في `getCategoryIcon`
+
+**Files Modified:**
+- `/app/frontend/src/pages/FoodPage.js`
+- `/app/frontend/src/pages/HomePage.js`
+- `/app/backend/routes/categories.py`
+- `/app/backend/routes/products.py`
+
+**Result:**
+- صفحة الطعام تعرض شريط "تسوق سريع" أخضر مع 3 أزرار (مواد غذائية، معلبات، منظفات)
+- الصفحة الرئيسية تعرض نفس الأصناف مع بقية الأصناف العادية
+- العميل يمكنه الاختيار بين سرعة التوصيل حسب القسم الذي يتسوق منه
+
+---
 
 ### ✅ Approved Driver Appearing as New Join Request - FIXED
 **Date:** 2026-04-11

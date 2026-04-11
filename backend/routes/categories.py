@@ -93,6 +93,8 @@ DEFAULT_CATEGORIES = [
     {"id": "vegetables", "name": "خضروات وفواكه", "name_en": "Vegetables", "icon": "Apple", "type": "food", "color": "#22C55E", "order": 2, "parent_id": "grocery", "is_parent": False},
     {"id": "market", "name": "ماركت", "name_en": "Market", "icon": "Store", "type": "food", "color": "#0EA5E9", "order": 3, "parent_id": "grocery", "is_parent": False},
     {"id": "meat", "name": "لحوم ودواجن", "name_en": "Meat", "icon": "Beef", "type": "food", "color": "#DC2626", "order": 4, "parent_id": "grocery", "is_parent": False},
+    {"id": "canned_food", "name": "معلبات", "name_en": "Canned Food", "icon": "Package", "type": "food", "color": "#F59E0B", "order": 5, "parent_id": "grocery", "is_parent": False},
+    {"id": "cleaners", "name": "منظفات", "name_en": "Cleaners", "icon": "SprayCan", "type": "food", "color": "#0EA5E9", "order": 6, "parent_id": "grocery", "is_parent": False},
 ]
 
 async def init_default_categories():

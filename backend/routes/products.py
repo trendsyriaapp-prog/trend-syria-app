@@ -52,7 +52,8 @@ async def get_categories():
         {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
         {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
         {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
-        {"id": "canned_food", "name": "أطعمة معلبة وجافة", "icon": "Package", "type": "shopping"},
+        {"id": "canned_food", "name": "معلبات", "icon": "Package", "type": "shopping"},
+        {"id": "cleaners", "name": "منظفات", "icon": "SprayCan", "type": "shopping"},
         # قسم الطعام
         {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
         {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
