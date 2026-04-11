@@ -303,11 +303,11 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
             {myRequests.slice(0, 5).map((req) => (
               <div 
                 key={req.id} 
-                className="flex items-center justify-between bg-white p-2 rounded-lg text-sm"
+                className="flex items-center justify-between bg-white p-2 rounded-lg text-sm border border-gray-100"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-gray-700">
                   {getPaymentMethodIcon(req.payment_method)}
-                  <span>{req.amount.toLocaleString()} ل.س</span>
+                  <span className="font-medium text-gray-900">{req.amount?.toLocaleString() || 0} ل.س</span>
                 </div>
                 {getStatusBadge(req.status)}
               </div>
