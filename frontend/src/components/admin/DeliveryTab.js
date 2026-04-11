@@ -476,7 +476,7 @@ const DeliveryTab = ({
                           src={selectedDriver.documents.personal_photo} 
                           alt="صورة شخصية" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedDriver.documents.personal_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.personal_photo, alt: 'صورة شخصية' })}
                         />
                       </div>
                     )}
@@ -487,7 +487,7 @@ const DeliveryTab = ({
                           src={selectedDriver.documents.id_photo} 
                           alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedDriver.documents.id_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.id_photo, alt: 'صورة الهوية / إخراج القيد' })}
                         />
                       </div>
                     )}
@@ -498,7 +498,7 @@ const DeliveryTab = ({
                           src={selectedDriver.documents.motorcycle_license} 
                           alt="رخصة القيادة" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedDriver.documents.motorcycle_license, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.motorcycle_license, alt: 'رخصة القيادة' })}
                         />
                       </div>
                     )}
@@ -509,7 +509,7 @@ const DeliveryTab = ({
                           src={selectedDriver.documents.vehicle_photo} 
                           alt="صورة المركبة" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedDriver.documents.vehicle_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedDriver.documents.vehicle_photo, alt: 'صورة المركبة' })}
                         />
                       </div>
                     )}

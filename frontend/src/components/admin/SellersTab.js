@@ -289,7 +289,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={selectedSeller.documents.national_id} 
                           alt="صورة الهوية / إخراج القيد" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedSeller.documents.national_id, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedSeller.documents.national_id, alt: 'صورة الهوية / إخراج القيد' })}
                         />
                       </div>
                     )}
@@ -300,7 +300,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={selectedSeller.documents.commercial_registration} 
                           alt="السجل التجاري" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedSeller.documents.commercial_registration, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedSeller.documents.commercial_registration, alt: 'السجل التجاري' })}
                         />
                       </div>
                     )}
@@ -311,7 +311,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={selectedSeller.documents.shop_photo} 
                           alt="صورة المحل" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedSeller.documents.shop_photo, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedSeller.documents.shop_photo, alt: 'صورة المحل' })}
                         />
                       </div>
                     )}
@@ -322,7 +322,7 @@ const SellersTab = ({ allSellers, onDeleteSeller, onBanSeller, onApproveSeller, 
                           src={selectedSeller.documents.health_certificate} 
                           alt="الشهادة الصحية" 
                           className="w-full h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border"
-                          onClick={() => window.open(selectedSeller.documents.health_certificate, '_blank')}
+                          onClick={() => setLightboxImage({ src: selectedSeller.documents.health_certificate, alt: 'الشهادة الصحية' })}
                         />
                       </div>
                     )}
