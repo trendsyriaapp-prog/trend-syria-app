@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useToast } from '../../hooks/use-toast';
 import { 
   Package, UtensilsCrossed, Check, X, Eye, 
-  Loader2, ChevronDown, ChevronUp, Image as ImageIcon, Video, Play
+  Loader2, ChevronDown, ChevronUp, Image as ImageIcon, Video, Play, Trash2
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -99,6 +99,40 @@ const AllPendingItemsTab = () => {
       fetchAllPending();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل الرفض", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // ============== دوال الحذف النهائي ==============
+  
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) return;
+    
+    setActionLoading(productId);
+    try {
+      await axios.delete(`${API}/api/admin/products/pending/${productId}`);
+      toast({ title: "تم", description: "تم حذف المنتج نهائياً" });
+      setPendingProducts(prev => prev.filter(p => p.id !== productId));
+      setExpandedItem(null);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteFoodItem = async (itemId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطبق نهائياً؟')) return;
+    
+    setActionLoading(itemId);
+    try {
+      await axios.delete(`${API}/api/admin/food-items/pending/${itemId}`);
+      toast({ title: "تم", description: "تم حذف الطبق نهائياً" });
+      setPendingFoodItems(prev => prev.filter(f => f.id !== itemId));
+      setExpandedItem(null);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -249,6 +283,14 @@ const AllPendingItemsTab = () => {
                       <X size={16} />
                       رفض
                     </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      disabled={actionLoading === product.id}
+                      className="flex items-center justify-center gap-1 py-2 px-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                      title="حذف نهائي"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               )}
@@ -329,6 +371,14 @@ const AllPendingItemsTab = () => {
                     >
                       <X size={16} />
                       رفض
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFoodItem(item.id)}
+                      disabled={actionLoading === item.id}
+                      className="flex items-center justify-center gap-1 py-2 px-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                      title="حذف نهائي"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>

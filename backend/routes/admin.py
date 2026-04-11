@@ -559,6 +559,85 @@ async def delete_rejected_request(request_id: str, user: dict = Depends(get_curr
     
     return {"message": "تم حذف السجل"}
 
+
+# ============== حذف الطلبات المعلقة ==============
+
+@router.delete("/sellers/pending/{seller_id}")
+async def delete_pending_seller(seller_id: str, user: dict = Depends(get_current_user)):
+    """حذف طلب انضمام بائع معلق نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # حذف وثائق البائع
+    result = await db.seller_documents.delete_many({"seller_id": seller_id, "status": "pending"})
+    
+    # حذف المستخدم إذا كان غير معتمد
+    seller = await db.users.find_one({"id": seller_id})
+    if seller and not seller.get("is_approved"):
+        await db.users.delete_one({"id": seller_id})
+        await db.wallets.delete_one({"user_id": seller_id})
+        await db.notifications.delete_many({"user_id": seller_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    return {"message": "تم حذف طلب الانضمام"}
+
+
+@router.delete("/delivery/pending/{driver_id}")
+async def delete_pending_driver(driver_id: str, user: dict = Depends(get_current_user)):
+    """حذف طلب انضمام سائق معلق نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # حذف وثائق السائق
+    result = await db.delivery_documents.delete_many({
+        "$or": [{"driver_id": driver_id}, {"delivery_id": driver_id}],
+        "status": "pending"
+    })
+    
+    # حذف المستخدم إذا كان غير معتمد
+    driver = await db.users.find_one({"id": driver_id})
+    if driver and not driver.get("is_approved"):
+        await db.users.delete_one({"id": driver_id})
+        await db.wallets.delete_one({"user_id": driver_id})
+        await db.notifications.delete_many({"user_id": driver_id})
+        await db.driver_security_deposits.delete_many({"driver_id": driver_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    return {"message": "تم حذف طلب الانضمام"}
+
+
+@router.delete("/products/pending/{product_id}")
+async def delete_pending_product(product_id: str, user: dict = Depends(get_current_user)):
+    """حذف منتج معلق نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.products.delete_one({"id": product_id, "is_approved": False})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    
+    return {"message": "تم حذف المنتج"}
+
+
+@router.delete("/food-items/pending/{item_id}")
+async def delete_pending_food_item(item_id: str, user: dict = Depends(get_current_user)):
+    """حذف صنف طعام معلق نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    result = await db.food_items.delete_one({"id": item_id, "is_approved": False})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الصنف غير موجود")
+    
+    return {"message": "تم حذف صنف الطعام"}
+
+
 @router.get("/sellers/all")
 async def get_all_sellers(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
@@ -2104,6 +2183,32 @@ async def reject_food_store(
     )
     
     return {"message": "تم رفض المتجر", "reason": reason if reason else None}
+
+
+@router.delete("/food/stores/pending/{store_id}")
+async def delete_pending_food_store(store_id: str, user: dict = Depends(get_current_user)):
+    """حذف متجر طعام معلق نهائياً"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    store = await db.food_stores.find_one({"id": store_id})
+    if not store:
+        raise HTTPException(status_code=404, detail="المتجر غير موجود")
+    
+    # حذف المتجر
+    await db.food_stores.delete_one({"id": store_id})
+    
+    # حذف أصناف الطعام التابعة له
+    await db.food_items.delete_many({"store_id": store_id})
+    
+    # حذف المستخدم إذا كان غير معتمد
+    owner = await db.users.find_one({"id": store.get("owner_id")})
+    if owner and not owner.get("is_approved"):
+        await db.users.delete_one({"id": store.get("owner_id")})
+        await db.wallets.delete_one({"user_id": store.get("owner_id")})
+        await db.notifications.delete_many({"user_id": store.get("owner_id")})
+    
+    return {"message": "تم حذف المتجر نهائياً"}
 
 
 @router.post("/food/stores/{store_id}/suspend")

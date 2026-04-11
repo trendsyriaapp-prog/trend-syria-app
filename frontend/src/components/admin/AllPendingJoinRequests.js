@@ -222,6 +222,56 @@ const AllPendingJoinRequests = () => {
     setRejectReason('');
   };
 
+  // ============== دوال الحذف النهائي ==============
+  
+  const handleDeleteSeller = async (sellerId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+    
+    setActionLoading(sellerId);
+    try {
+      await axios.delete(`${API}/api/admin/sellers/pending/${sellerId}`);
+      toast({ title: "تم", description: "تم حذف طلب الانضمام نهائياً" });
+      setPendingSellers(prev => prev.filter(item => (item.seller_id || item.seller?.id) !== sellerId));
+      setExpandedItem(null);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteDriver = async (driverId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+    
+    setActionLoading(driverId);
+    try {
+      await axios.delete(`${API}/api/admin/delivery/pending/${driverId}`);
+      toast({ title: "تم", description: "تم حذف طلب الانضمام نهائياً" });
+      setPendingDrivers(prev => prev.filter(item => (item.driver_id || item.delivery_id || item.driver?.id) !== driverId));
+      setExpandedItem(null);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteFoodStore = async (storeId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+    
+    setActionLoading(storeId);
+    try {
+      await axios.delete(`${API}/api/admin/food/stores/pending/${storeId}`);
+      toast({ title: "تم", description: "تم حذف طلب المتجر نهائياً" });
+      setPendingFoodStores(prev => prev.filter(item => item.id !== storeId));
+      setExpandedItem(null);
+    } catch (error) {
+      toast({ title: "خطأ", description: "فشل الحذف", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // تنفيذ الرفض الفعلي بعد إدخال السبب
   const executeReject = async () => {
     if (!rejectModal) return;
@@ -540,6 +590,14 @@ const AllPendingJoinRequests = () => {
                       <X size={16} />
                       رفض
                     </button>
+                    <button
+                      onClick={() => handleDeleteSeller(sellerId)}
+                      disabled={actionLoading === sellerId}
+                      className="flex items-center justify-center gap-1 py-2 px-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                      title="حذف نهائي"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               )}
@@ -659,6 +717,14 @@ const AllPendingJoinRequests = () => {
                         <X size={16} />
                         رفض
                       </button>
+                      <button
+                        onClick={() => handleDeleteDriver(driverId)}
+                        disabled={actionLoading === driverId}
+                        className="flex items-center justify-center gap-1 py-2 px-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                        title="حذف نهائي"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 )}
@@ -743,6 +809,14 @@ const AllPendingJoinRequests = () => {
                     >
                       <X size={16} />
                       رفض
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFoodStore(store.id)}
+                      disabled={actionLoading === store.id}
+                      className="flex items-center justify-center gap-1 py-2 px-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                      title="حذف نهائي"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
