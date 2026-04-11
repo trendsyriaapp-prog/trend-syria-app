@@ -582,8 +582,34 @@ async def get_homepage_data():
     try:
         # جلب جميع البيانات بشكل متوازي باستخدام الفلاتر الصحيحة
         
-        # الفئات من API الموجود
-        categories_task = db.products.distinct("category")
+        # الأصناف الثابتة (تظهر دائماً حتى لو فارغة)
+        categories_list = [
+            {"id": "electronics", "name": "إلكترونيات", "icon": "Smartphone", "type": "shopping"},
+            {"id": "mobiles", "name": "موبايلات", "icon": "Smartphone", "type": "shopping"},
+            {"id": "computers", "name": "كمبيوتر ولابتوب", "icon": "Laptop", "type": "shopping"},
+            {"id": "clothes", "name": "ملابس", "icon": "Shirt", "type": "shopping"},
+            {"id": "shoes", "name": "أحذية", "icon": "Footprints", "type": "shopping"},
+            {"id": "accessories", "name": "إكسسوارات", "icon": "Watch", "type": "shopping"},
+            {"id": "perfumes", "name": "عطور", "icon": "Sparkles", "type": "shopping"},
+            {"id": "home", "name": "المنزل", "icon": "Home", "type": "shopping"},
+            {"id": "furniture", "name": "أثاث", "icon": "Sofa", "type": "shopping"},
+            {"id": "appliances", "name": "أجهزة منزلية", "icon": "Refrigerator", "type": "shopping"},
+            {"id": "beauty", "name": "تجميل", "icon": "SprayCan", "type": "shopping"},
+            {"id": "sports", "name": "رياضة", "icon": "Dumbbell", "type": "shopping"},
+            {"id": "kids", "name": "أطفال", "icon": "Gamepad2", "type": "shopping"},
+            {"id": "books", "name": "كتب", "icon": "BookOpen", "type": "shopping"},
+            {"id": "gifts", "name": "هدايا", "icon": "Gift", "type": "shopping"},
+            {"id": "medicines", "name": "أدوية", "icon": "Pill", "type": "shopping"},
+            {"id": "cars", "name": "سيارات", "icon": "Car", "type": "shopping"},
+            {"id": "canned_food", "name": "أطعمة معلبة وجافة", "icon": "Package", "type": "shopping"},
+            {"id": "restaurants", "name": "مطاعم", "icon": "UtensilsCrossed", "type": "food"},
+            {"id": "cafes", "name": "مقاهي", "icon": "Coffee", "type": "food"},
+            {"id": "sweets", "name": "حلويات", "icon": "Cake", "type": "food"},
+            {"id": "bakery", "name": "مخابز", "icon": "Croissant", "type": "food"},
+            {"id": "drinks", "name": "مشروبات", "icon": "GlassWater", "type": "food"},
+            {"id": "groceries", "name": "مواد غذائية", "icon": "ShoppingBasket", "type": "food"},
+            {"id": "vegetables", "name": "خضروات وفواكه", "icon": "Apple", "type": "food"},
+        ]
         
         # الإعلانات النشطة
         ads_task = db.ads.find(
@@ -682,7 +708,6 @@ async def get_homepage_data():
         
         # تنفيذ جميع الطلبات بشكل متوازي
         results = await gather(
-            categories_task,
             ads_task,
             sponsored_task,
             flash_sale_task,
@@ -698,18 +723,17 @@ async def get_homepage_data():
         )
         
         # معالجة النتائج
-        categories = results[0] if not isinstance(results[0], Exception) else []
-        ads = results[1] if not isinstance(results[1], Exception) else []
-        sponsored_products = results[2] if not isinstance(results[2], Exception) else []
-        flash_sale = results[3] if not isinstance(results[3], Exception) else None
-        free_shipping_products = results[4] if not isinstance(results[4], Exception) else []
-        best_sellers = results[5] if not isinstance(results[5], Exception) else []
-        new_arrivals = results[6] if not isinstance(results[6], Exception) else []
-        extra_products = results[7] if not isinstance(results[7], Exception) else []
-        sections_settings = results[8] if not isinstance(results[8], Exception) else None
-        free_shipping_settings = results[9] if not isinstance(results[9], Exception) else None
-        ticker_settings = results[10] if not isinstance(results[10], Exception) else None
-        badge_settings = results[11] if not isinstance(results[11], Exception) else None
+        ads = results[0] if not isinstance(results[0], Exception) else []
+        sponsored_products = results[1] if not isinstance(results[1], Exception) else []
+        flash_sale = results[2] if not isinstance(results[2], Exception) else None
+        free_shipping_products = results[3] if not isinstance(results[3], Exception) else []
+        best_sellers = results[4] if not isinstance(results[4], Exception) else []
+        new_arrivals = results[5] if not isinstance(results[5], Exception) else []
+        extra_products = results[6] if not isinstance(results[6], Exception) else []
+        sections_settings = results[7] if not isinstance(results[7], Exception) else None
+        free_shipping_settings = results[8] if not isinstance(results[8], Exception) else None
+        ticker_settings = results[9] if not isinstance(results[9], Exception) else None
+        badge_settings = results[10] if not isinstance(results[10], Exception) else None
         
         # جلب منتجات فلاش إذا كان هناك عرض نشط
         flash_products = []
@@ -749,7 +773,7 @@ async def get_homepage_data():
         
         # تجميع البيانات
         homepage_data = {
-            "categories": categories,
+            "categories": categories_list,
             "ads": ads,
             "sponsored_products": sponsored_products,
             "flash_sale": flash_sale,
@@ -781,7 +805,7 @@ async def get_homepage_data():
         logging.error(f"Error fetching homepage data: {e}")
         # إرجاع بيانات فارغة في حالة الخطأ
         return {
-            "categories": [],
+            "categories": categories_list,
             "ads": [],
             "sponsored_products": [],
             "flash_sale": None,
