@@ -1483,9 +1483,9 @@ const ProductDetailPage = () => {
               </div>
               
               {/* معلومات البائع والموقع للمدير فقط */}
-              {user?.user_type === 'admin' && (
+              {(user?.user_type === 'admin' || user?.user_type === 'sub_admin') && (
                 <div className="mt-1.5 pt-1.5 border-t border-gray-200">
-                  <p className="text-[10px] text-red-500 font-bold mb-0.5">معلومات للمدير فقط:</p>
+                  <p className="text-[10px] text-red-500 font-bold mb-0.5">🔒 معلومات للمدير فقط:</p>
                   <p className="text-[10px] text-gray-600">اسم البائع: {product.seller_name}</p>
                   {product.seller_phone && (
                     <p className="text-[10px] text-gray-600">رقم الهاتف: {product.seller_phone}</p>
