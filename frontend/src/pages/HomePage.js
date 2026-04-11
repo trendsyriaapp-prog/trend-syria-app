@@ -17,6 +17,7 @@ import RecommendedProducts from '../components/RecommendedProducts';
 import FreeShippingBanner from '../components/FreeShippingBanner';
 import LazyImage from '../components/LazyImage';
 import LazySection from '../components/LazySection';
+import HomePageSkeleton from '../components/HomePageSkeleton';
 import { useSettings } from '../context/SettingsContext';
 import { useScroll } from '../context/ScrollContext';
 
@@ -75,6 +76,7 @@ const HomePage = () => {
   const [sponsoredProducts, setSponsoredProducts] = useState([]);
   const [flashStatus, setFlashStatus] = useState(null); // حالة Flash الجديدة
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true); // ========== الحل 1: Skeleton ==========
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [globalFreeShipping, setGlobalFreeShipping] = useState(null);
   const [tickerMessages, setTickerMessages] = useState([]);
@@ -139,9 +141,29 @@ const HomePage = () => {
     }
   }, [tickerMessages.length]);
 
+  // ========== الحل 2: Offline-First Cache ==========
+  // عرض البيانات المحفوظة فوراً عند فتح التطبيق
+  useEffect(() => {
+    const showCachedDataImmediately = () => {
+      try {
+        // محاولة جلب البيانات من localStorage (دائم) أولاً
+        const persistentCache = localStorage.getItem('homepage_persistent_cache');
+        if (persistentCache) {
+          const data = JSON.parse(persistentCache);
+          applyHomepageData(data);
+          // لا نوقف loading لأننا سنجلب بيانات جديدة
+        }
+      } catch (e) {
+        console.log('No cached data available');
+      }
+    };
+    
+    showCachedDataImmediately();
+  }, []);
+
   const fetchData = async () => {
     try {
-      // التحقق من الكاش أولاً
+      // التحقق من الكاش المؤقت (sessionStorage) أولاً
       const cachedData = sessionStorage.getItem('homepage_cache');
       const cacheTimestamp = sessionStorage.getItem('homepage_cache_time');
       const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
@@ -154,16 +176,55 @@ const HomePage = () => {
         return;
       }
       
-      // جلب البيانات من API الموحد + حالة Flash
+      // ========== الحل 3: تحميل تدريجي ==========
+      // جلب البيانات الأساسية أولاً (الأصناف والـ ticker)
+      try {
+        const [categoriesRes, tickerRes] = await Promise.all([
+          axios.get(`${API}/api/categories`).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } }))
+        ]);
+        
+        // عرض الأصناف والـ ticker فوراً
+        if (categoriesRes.data && Array.isArray(categoriesRes.data)) {
+          const categoriesData = categoriesRes.data.map((cat) => {
+            if (typeof cat === 'string') {
+              return {
+                id: cat,
+                name: getCategoryNameAr(cat),
+                icon: getCategoryIcon(cat),
+                type: ['food', 'restaurants', 'meals'].includes(cat) ? 'food' : 'products'
+              };
+            }
+            return cat;
+          });
+          setCategories(categoriesData);
+        }
+        
+        if (tickerRes.data) {
+          setTickerMessages(tickerRes.data.messages || []);
+          setTickerEnabled(tickerRes.data.is_enabled !== false);
+        }
+      } catch (e) {
+        console.log('Progressive load - basic data failed:', e);
+      }
+      
+      // جلب باقي البيانات
       const [response, flashStatusRes] = await Promise.all([
         axios.get(`${API}/api/products/homepage-data`),
         axios.get(`${API}/api/flash/status`).catch(() => ({ data: null }))
       ]);
       const data = response.data;
       
-      // حفظ في الكاش
+      // حفظ في الكاش المؤقت (sessionStorage)
       sessionStorage.setItem('homepage_cache', JSON.stringify(data));
       sessionStorage.setItem('homepage_cache_time', Date.now().toString());
+      
+      // ========== حفظ في الكاش الدائم (localStorage) للمرة القادمة ==========
+      try {
+        localStorage.setItem('homepage_persistent_cache', JSON.stringify(data));
+      } catch (e) {
+        console.log('Failed to save persistent cache:', e);
+      }
       
       applyHomepageData(data);
       
@@ -203,6 +264,9 @@ const HomePage = () => {
     setNewlyAddedProducts(data.new_arrivals || []);
     setExtraProducts(data.extra_products || []);
     setProducts(data.best_sellers || []);
+    
+    // ========== إلغاء حالة التحميل الأولي ==========
+    setInitialLoad(false);
     
     // الإعدادات
     if (data.settings) {
@@ -454,6 +518,12 @@ const HomePage = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // ========== الحل 1: Skeleton Loading ==========
+  // عرض Skeleton أثناء التحميل الأولي (فقط إذا لا توجد بيانات محفوظة)
+  if (initialLoad && categories.length === 0 && bestSellers.length === 0) {
+    return <HomePageSkeleton />;
+  }
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-[#FAFAFA]">

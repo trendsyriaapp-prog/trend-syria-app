@@ -747,8 +747,8 @@ async def get_homepage_data():
             }
         }
         
-        # حفظ في الكاش لمدة دقيقة
-        cache.set("homepage_data", homepage_data, ttl_seconds=60)
+        # حفظ في الكاش لمدة 10 دقائق (الحل 4: زيادة كاش الخادم)
+        cache.set("homepage_data", homepage_data, ttl_seconds=600)
         
         return homepage_data
         
