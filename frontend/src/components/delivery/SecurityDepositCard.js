@@ -222,7 +222,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
                   setDepositAmount(val);
                 }
               }}
-              className="w-full p-3 border rounded-lg text-lg text-center"
+              className="w-full p-3 border rounded-lg text-lg text-center text-gray-900 bg-white"
               placeholder="أدخل المبلغ"
               required
             />
@@ -270,7 +270,7 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
                 type="text"
                 value={paymentReference}
                 onChange={(e) => setPaymentReference(e.target.value)}
-                className="w-full p-3 border rounded-lg"
+                className="w-full p-3 border rounded-lg text-gray-900 bg-white"
                 placeholder="أدخل رقم العملية للتسهيل"
               />
             </div>
