@@ -1219,6 +1219,11 @@ const FoodProductCard = ({ product, badgeSettings, foodFavorites = [], toggleFoo
   // التحقق من حالة المتجر (مفتوح/مغلق)
   const isStoreOpen = product.store_is_open !== false;
   
+  // التحقق إذا كان المنتج من أصناف التسوق السريع
+  const quickShopCategories = ['groceries', 'canned_food', 'cleaners'];
+  const isQuickShopProduct = quickShopCategories.includes(product.category) || 
+                             quickShopCategories.includes(product.store_type);
+  
   const [badgeIndex, setBadgeIndex] = useState(0);
   const [activeBadge, setActiveBadge] = useState(null);
   
@@ -1342,6 +1347,16 @@ const FoodProductCard = ({ product, badgeSettings, foodFavorites = [], toggleFoo
                 {activeBadge.messages[badgeIndex]}
               </motion.div>
             </AnimatePresence>
+          </div>
+        )}
+        
+        {/* شارة توصيل سريع - للمنتجات من أصناف التسوق السريع */}
+        {isQuickShopProduct && isStoreOpen && (
+          <div className="absolute bottom-1 right-1">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <Truck size={10} />
+              <span>توصيل سريع</span>
+            </div>
           </div>
         )}
         
