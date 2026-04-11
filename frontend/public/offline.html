@@ -1,97 +1,208 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>غير متصل - ترند سورية</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-        p {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        .btn {
-            background: linear-gradient(135deg, #FF6B00 0%, #ff8533 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .btn:hover {
-            transform: scale(1.05);
-        }
-        .btn:active {
-            transform: scale(0.95);
-        }
-        .features {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .features p {
-            font-size: 14px;
-            color: #999;
-            margin: 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FF6B00">
+  <title>غير متصل | ترند سوريا</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #FF6B00 0%, #FF8533 50%, #FFA366 100%);
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 32px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, #FFF3E6 0%, #FFE4CC 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    
+    .icon svg {
+      width: 60px;
+      height: 60px;
+      color: #FF6B00;
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #FF6B00;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 22px;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #FF6B00 0%, #FF8533 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+    }
+    
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+    }
+    
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+    
+    .retry-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .status {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #FFF3E6;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #CC5500;
+      display: none;
+    }
+    
+    .status.checking {
+      display: block;
+      background: #E6F4FF;
+      color: #0066CC;
+    }
+    
+    .status.online {
+      display: block;
+      background: #E6FFE6;
+      color: #00AA00;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">📡</div>
-        <h1>أنت غير متصل بالإنترنت</h1>
-        <p>
-            لا يمكن الوصول إلى الإنترنت حالياً.
-            <br>
-            تحقق من اتصالك وحاول مرة أخرى.
-        </p>
-        <button class="btn" onclick="window.location.reload()">
-            إعادة المحاولة
-        </button>
-        <div class="features">
-            <p>💡 ترند سورية يعمل بشكل جزئي بدون إنترنت</p>
-        </div>
+  <div class="container">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+      </svg>
     </div>
     
-    <script>
-        // التحقق من الاتصال تلقائياً
-        window.addEventListener('online', () => {
+    <div class="logo">ترند سوريا</div>
+    
+    <h1>أنت غير متصل بالإنترنت</h1>
+    
+    <p>يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى</p>
+    
+    <button class="retry-btn" onclick="retryConnection()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      إعادة المحاولة
+    </button>
+    
+    <div class="status" id="status"></div>
+  </div>
+  
+  <script>
+    function retryConnection() {
+      const status = document.getElementById('status');
+      status.className = 'status checking';
+      status.textContent = 'جاري التحقق من الاتصال...';
+      
+      // التحقق من الاتصال
+      fetch(window.location.origin + '/api/health', { 
+        method: 'GET',
+        cache: 'no-store'
+      })
+      .then(response => {
+        if (response.ok || navigator.onLine) {
+          status.className = 'status online';
+          status.textContent = 'تم الاتصال! جاري إعادة التحميل...';
+          setTimeout(() => {
             window.location.reload();
-        });
-    </script>
+          }, 1000);
+        } else {
+          throw new Error('Still offline');
+        }
+      })
+      .catch(() => {
+        if (navigator.onLine) {
+          status.className = 'status online';
+          status.textContent = 'تم الاتصال! جاري إعادة التحميل...';
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          status.className = 'status';
+          status.style.display = 'block';
+          status.textContent = 'لا يزال غير متصل. يرجى المحاولة لاحقاً.';
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 3000);
+        }
+      });
+    }
+    
+    // التحقق التلقائي عند عودة الاتصال
+    window.addEventListener('online', () => {
+      const status = document.getElementById('status');
+      status.className = 'status online';
+      status.textContent = 'تم الاتصال! جاري إعادة التحميل...';
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    });
+  </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
-const CACHE_NAME = 'trend-syria-v3';
-const STATIC_CACHE = 'trend-syria-static-v3';
-const DYNAMIC_CACHE = 'trend-syria-dynamic-v3';
-const API_CACHE = 'trend-syria-api-v3';
+const CACHE_NAME = 'trend-syria-v4';
+const STATIC_CACHE = 'trend-syria-static-v4';
+const DYNAMIC_CACHE = 'trend-syria-dynamic-v4';
+const API_CACHE = 'trend-syria-api-v4';
 
 const urlsToCache = [
   '/',
