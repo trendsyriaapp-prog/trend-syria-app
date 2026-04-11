@@ -8,6 +8,7 @@ from pydantic import BaseModel
 import uuid
 import math
 import logging
+import random
 
 from core.database import db, get_current_user
 
@@ -943,7 +944,9 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     
     # إنشاء الطلب
     order_id = str(uuid.uuid4())
-    order_number = f"FO{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:4].upper()}"
+    # توليد رقم طلب بسيط (6 أرقام) للعميل
+    import random
+    order_number = str(random.randint(100000, 999999))
     now = datetime.now(timezone.utc)
     # مهلة الإلغاء لطلبات الطعام: 3 دقائق
     CANCEL_WINDOW_MINUTES = 3
@@ -1438,7 +1441,8 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
             })
         
         order_id = str(uuid.uuid4())
-        order_number = f"FO{datetime.now().strftime('%y%m%d')}{str(uuid.uuid4())[:4].upper()}"
+        # توليد رقم طلب بسيط (6 أرقام) للعميل
+        order_number = str(random.randint(100000, 999999))
         
         order_doc = {
             "id": order_id,

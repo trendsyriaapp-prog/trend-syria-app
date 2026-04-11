@@ -280,8 +280,12 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     import random
     delivery_code = str(random.randint(1000, 9999))
     
+    # توليد رقم طلب بسيط (6 أرقام) للعميل
+    order_number = str(random.randint(100000, 999999))
+    
     order_doc = {
         "id": order_id,
+        "order_number": order_number,  # رقم الطلب المختصر للعميل
         "user_id": user["id"],
         "user_name": user.get("full_name", user.get("name", "")),
         "items": items_details,
@@ -340,7 +344,7 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     # البائع سيرى الطلب فقط بعد انتهاء المهلة
     # الإشعار سيُرسل عند تأكيد الطلب تلقائياً
     
-    return {"order_id": order_id, "total": final_total, "commission": total_commission, "delivery_code": delivery_code, "message": "تم إنشاء الطلب. يمكنك إلغاءه قبل أن يجهز البائع الطلب."}
+    return {"order_id": order_id, "order_number": order_number, "total": final_total, "commission": total_commission, "delivery_code": delivery_code, "message": "تم إنشاء الطلب. يمكنك إلغاءه قبل أن يجهز البائع الطلب."}
 
 
 @router.post("/orders/{order_id}/cancel")

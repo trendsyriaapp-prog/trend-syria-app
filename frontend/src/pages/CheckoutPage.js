@@ -58,6 +58,7 @@ const CheckoutPage = () => {
   });
 
   const [orderId, setOrderId] = useState(null);
+  const [orderNumber, setOrderNumber] = useState(null);
   const [otp, setOtp] = useState('');
   const [orderComplete, setOrderComplete] = useState(false);
   
@@ -249,6 +250,7 @@ const CheckoutPage = () => {
       });
 
       setOrderId(res.data.order_id);
+      setOrderNumber(res.data.order_number);
       
       // معالجة مختلفة حسب طريقة الدفع
       if (paymentData.payment_method === 'wallet') {
@@ -337,7 +339,7 @@ const CheckoutPage = () => {
             <p className="text-gray-500 text-sm mb-4">شكراً لتسوقك من ترند سورية<br />سيتم التوصيل خلال 2-5 أيام</p>
             <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <p className="text-xs text-gray-500">رقم الطلب</p>
-              <p className="font-bold text-[#FF6B00] text-lg">{orderId?.slice(0, 8).toUpperCase()}</p>
+              <p className="font-bold text-[#FF6B00] text-lg">#{orderNumber || orderId?.slice(0, 8).toUpperCase()}</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => navigate('/orders')} className="flex-1 bg-[#FF6B00] text-white font-bold py-2.5 rounded-full text-sm" data-testid="view-orders-btn">متابعة الطلب</button>
