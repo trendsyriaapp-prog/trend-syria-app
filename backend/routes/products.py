@@ -591,6 +591,25 @@ async def get_homepage_data():
             {"_id": 0}
         ).sort("created_at", -1).limit(5).to_list(5)
         
+        # حقول المنتجات المطلوبة فقط (تقليل حجم البيانات)
+        PRODUCT_FIELDS = {
+            "_id": 0,
+            "id": 1,
+            "name": 1,
+            "price": 1,
+            "images": 1,
+            "category": 1,
+            "city": 1,
+            "seller_id": 1,
+            "seller_name": 1,
+            "stock": 1,
+            "sales_count": 1,
+            "is_sponsored": 1,
+            "free_shipping": 1,
+            "discount_percentage": 1,
+            "created_at": 1
+        }
+        
         # المنتجات الدعائية (Sponsored) - بنفس فلتر API الأصلي
         sponsored_task = db.products.find(
             {
@@ -598,7 +617,7 @@ async def get_homepage_data():
                 "is_approved": True,
                 "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
             },
-            {"_id": 0}
+            PRODUCT_FIELDS
         ).limit(10).to_list(10)
         
         # عروض فلاش النشطة
@@ -610,25 +629,25 @@ async def get_homepage_data():
         # منتجات الشحن المجاني
         free_shipping_products_task = db.products.find(
             {"is_active": True, "is_approved": True, "free_shipping": True},
-            {"_id": 0}
+            PRODUCT_FIELDS
         ).limit(10).to_list(10)
         
         # الأكثر مبيعاً - بنفس فلتر API الأصلي
         best_sellers_task = db.products.find(
             {"is_active": True, "is_approved": True, "sales_count": {"$gt": 0}},
-            {"_id": 0}
+            PRODUCT_FIELDS
         ).sort("sales_count", -1).limit(10).to_list(10)
         
         # منتجات جديدة - بنفس فلتر API الأصلي
         new_arrivals_task = db.products.find(
             {"is_active": True, "is_approved": True, "stock": {"$gt": 0}},
-            {"_id": 0}
+            PRODUCT_FIELDS
         ).sort("created_at", -1).limit(10).to_list(10)
         
         # المزيد من المنتجات
         extra_products_task = db.products.find(
             {"is_active": True, "is_approved": True},
-            {"_id": 0}
+            PRODUCT_FIELDS
         ).sort("created_at", -1).skip(20).limit(12).to_list(12)
         
         # إعدادات الأقسام

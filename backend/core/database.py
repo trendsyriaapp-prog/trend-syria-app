@@ -138,6 +138,87 @@ async def warm_up_connection():
         logger.error(f"❌ Database warm-up failed: {e}")
         return False
 
+
+# ============== MongoDB Indexes للسرعة ==============
+
+async def create_indexes():
+    """
+    إنشاء فهارس MongoDB لتسريع الاستعلامات
+    هذا يحسن سرعة البحث بشكل كبير (من ثواني إلى ميلي ثانية)
+    """
+    try:
+        logger.info("🔧 Creating MongoDB indexes...")
+        
+        # فهارس جدول المنتجات (الأهم)
+        await db.products.create_index("id", unique=True)
+        await db.products.create_index("is_active")
+        await db.products.create_index("is_approved")
+        await db.products.create_index("category")
+        await db.products.create_index("seller_id")
+        await db.products.create_index("created_at")
+        await db.products.create_index("sales_count")
+        await db.products.create_index("is_sponsored")
+        await db.products.create_index("free_shipping")
+        # فهرس مركب للبحث الشائع
+        await db.products.create_index([
+            ("is_active", 1),
+            ("is_approved", 1),
+            ("created_at", -1)
+        ])
+        await db.products.create_index([
+            ("is_active", 1),
+            ("is_approved", 1),
+            ("sales_count", -1)
+        ])
+        
+        # فهارس جدول المستخدمين
+        await db.users.create_index("id", unique=True)
+        await db.users.create_index("phone", unique=True)
+        await db.users.create_index("user_type")
+        await db.users.create_index("is_approved")
+        
+        # فهارس جدول الطلبات
+        await db.orders.create_index("id", unique=True)
+        await db.orders.create_index("buyer_id")
+        await db.orders.create_index("seller_id")
+        await db.orders.create_index("status")
+        await db.orders.create_index("created_at")
+        await db.orders.create_index([("buyer_id", 1), ("created_at", -1)])
+        
+        # فهارس طلبات الطعام
+        await db.food_orders.create_index("id", unique=True)
+        await db.food_orders.create_index("buyer_id")
+        await db.food_orders.create_index("store_id")
+        await db.food_orders.create_index("driver_id")
+        await db.food_orders.create_index("status")
+        await db.food_orders.create_index("created_at")
+        
+        # فهارس الإعلانات
+        await db.ads.create_index("is_active")
+        await db.ads.create_index("created_at")
+        
+        # فهارس الإعدادات
+        await db.settings.create_index("key", unique=True)
+        await db.ticker_messages.create_index("id", unique=True)
+        
+        # فهارس وثائق البائعين والسائقين
+        await db.seller_documents.create_index("seller_id")
+        await db.seller_documents.create_index("status")
+        await db.delivery_documents.create_index("driver_id")
+        await db.delivery_documents.create_index("delivery_id")
+        await db.delivery_documents.create_index("status")
+        
+        # فهارس المحافظ
+        await db.wallets.create_index("user_id", unique=True)
+        await db.wallet_transactions.create_index("user_id")
+        await db.wallet_transactions.create_index("created_at")
+        
+        logger.info("✅ MongoDB indexes created successfully")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to create indexes: {e}")
+        return False
+
 # 🔒 JWT Settings - مفتاح أقوى
 JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
 ALGORITHM = "HS256"

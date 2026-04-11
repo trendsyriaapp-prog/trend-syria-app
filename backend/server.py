@@ -18,6 +18,7 @@ logger.info("🚀 Starting Trend Syria API Server...")
 
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 import logging
@@ -153,15 +154,20 @@ app = FastAPI(
     redoc_url=None
 )
 
-logger.info("✅ FastAPI app created")
+# ⚡ GZip Compression - تقليل حجم البيانات المرسلة بنسبة 70-90%
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+logger.info("✅ FastAPI app created with GZip compression")
 
 # ⚡ تسخين قاعدة البيانات عند بدء التطبيق
 @app.on_event("startup")
 async def startup_event():
-    """تسخين الاتصالات عند بدء التطبيق"""
-    from core.database import warm_up_connection
+    """تسخين الاتصالات وإنشاء الفهارس عند بدء التطبيق"""
+    from core.database import warm_up_connection, create_indexes
     logger.info("🚀 Starting application...")
     await warm_up_connection()
+    # إنشاء فهارس MongoDB للسرعة
+    await create_indexes()
     logger.info("✅ Application startup complete")
 
 # Root level health check (for DigitalOcean)
