@@ -597,16 +597,22 @@ async def get_homepage_data():
             "id": 1,
             "name": 1,
             "price": 1,
+            "original_price": 1,
             "images": 1,
+            "video": 1,
             "category": 1,
             "city": 1,
             "seller_id": 1,
             "seller_name": 1,
             "stock": 1,
             "sales_count": 1,
+            "views": 1,
+            "rating": 1,
+            "reviews_count": 1,
             "is_sponsored": 1,
             "free_shipping": 1,
             "discount_percentage": 1,
+            "available_sizes": 1,
             "created_at": 1
         }
         
