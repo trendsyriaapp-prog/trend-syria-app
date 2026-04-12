@@ -619,21 +619,18 @@ async def get_homepage_data():
         ).sort("created_at", -1).limit(5).to_list(5)
         
         # حقول المنتجات المطلوبة فقط (تقليل حجم البيانات)
+        # ========== تحسين: إرسال أول صورة فقط بدلاً من كل الصور ==========
         PRODUCT_FIELDS = {
             "_id": 0,
             "id": 1,
             "name": 1,
             "price": 1,
             "original_price": 1,
-            "images": 1,
-            "video": 1,
+            "images": {"$slice": 1},  # أول صورة فقط للصفحة الرئيسية
             "category": 1,
             "city": 1,
-            "seller_id": 1,
-            "seller_name": 1,
             "stock": 1,
             "sales_count": 1,
-            "views": 1,
             "rating": 1,
             "reviews_count": 1,
             "is_sponsored": 1,
@@ -797,8 +794,8 @@ async def get_homepage_data():
             }
         }
         
-        # حفظ في الكاش لمدة 10 دقائق (الحل 4: زيادة كاش الخادم)
-        cache.set("homepage_data", homepage_data, ttl_seconds=600)
+        # ========== تحسين: زيادة وقت الكاش إلى 30 دقيقة ==========
+        cache.set("homepage_data", homepage_data, ttl_seconds=1800)
         
         return homepage_data
         

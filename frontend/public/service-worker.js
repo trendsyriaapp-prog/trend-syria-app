@@ -1,7 +1,8 @@
-const CACHE_NAME = 'trend-syria-v4';
-const STATIC_CACHE = 'trend-syria-static-v4';
-const DYNAMIC_CACHE = 'trend-syria-dynamic-v4';
-const API_CACHE = 'trend-syria-api-v4';
+const CACHE_NAME = 'trend-syria-v5';
+const STATIC_CACHE = 'trend-syria-static-v5';
+const DYNAMIC_CACHE = 'trend-syria-dynamic-v5';
+const API_CACHE = 'trend-syria-api-v5';
+const IMAGE_CACHE = 'trend-syria-images-v5';
 
 const urlsToCache = [
   '/',
@@ -13,11 +14,12 @@ const urlsToCache = [
   '/offline.html'
 ];
 
-// APIs للتخزين المؤقت (للعمل offline)
+// APIs للتخزين المؤقت (للعمل offline والسرعة)
 const CACHEABLE_APIS = [
   '/api/categories',
-  '/api/products',
-  '/api/admin/settings/public'
+  '/api/products/homepage-data',
+  '/api/admin/settings/public',
+  '/api/settings/ticker-messages'
 ];
 
 // Install event
@@ -39,6 +41,35 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  
+  // ========== تخزين الصور ==========
+  if (request.destination === 'image' || url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then(cache => {
+        return cache.match(request).then(cachedResponse => {
+          if (cachedResponse) {
+            // تحديث الكاش في الخلفية (Stale While Revalidate)
+            fetch(request).then(response => {
+              if (response.ok) {
+                cache.put(request, response.clone());
+              }
+            }).catch(() => {});
+            return cachedResponse;
+          }
+          return fetch(request).then(response => {
+            if (response.ok) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          }).catch(() => {
+            // صورة placeholder إذا فشل التحميل
+            return new Response('', { status: 404 });
+          });
+        });
+      })
+    );
+    return;
+  }
   
   // API Requests
   if (url.pathname.includes('/api/')) {
@@ -110,7 +141,7 @@ self.addEventListener('fetch', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
+  const cacheWhitelist = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, IMAGE_CACHE];
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
