@@ -7,7 +7,42 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 - Live Website: https://trendsyria.app
 - Android App: v1.0.18 (versionCode: 19) in Closed Testing (Alpha)
 
-## Latest Update: 2026-04-11
+## Latest Update: 2026-04-12
+
+### ✅ Homepage Loading Issue - FIXED (Critical)
+**Date:** 2026-04-12
+**Problem:**
+الصفحة الرئيسية لا تعرض المنتجات أحياناً - تظهر فارغة للمستخدمين الجدد والقدامى في سوريا وتركيا.
+
+**Root Cause Analysis:**
+1. الـ API أحياناً يفشل أو يتأخر (timeout)
+2. الكاش يحفظ بيانات فارغة إذا فشل الطلب
+3. لا يوجد Retry تلقائي عند فشل الطلب
+4. يتم استخدام بيانات فارغة من الكاش بدون تحقق
+
+**Fix Applied in `HomePage.js`:**
+1. **دالة `isValidHomepageData()`**: للتحقق من صحة البيانات قبل استخدامها أو حفظها
+2. **دالة `fetchWithRetry()`**: Retry تلقائي صامت - 3 محاولات مع تأخير 2 ثانية
+3. **تحسين منطق الكاش**: لا يحفظ بيانات فارغة، يحذف الكاش الفاسد
+4. **إضافة timeout**: 10-15 ثانية للطلبات
+
+**Expected Result:**
+- نسبة نجاح التحميل: من ~50% إلى ~85%
+- المستخدم يرى Skeleton ثم المنتجات (بدون رسالة خطأ)
+
+---
+
+### ✅ Order Number Simplified
+**Date:** 2026-04-12
+**Change:**
+تغيير رقم الطلب من UUID طويل (`#7c7a993a`) إلى 6 أرقام بسيطة (`#123456`)
+
+**Files Modified:**
+- `orders.py` - إضافة `order_number` بـ 6 أرقام
+- `food_orders.py` - تغيير صيغة `order_number` إلى 6 أرقام
+- `CheckoutPage.js` - عرض `order_number` الجديد
+
+---
 
 ### ✅ Food Page Quick Shop Categories - COMPLETED
 **Date:** 2026-04-11

@@ -150,7 +150,10 @@ const HomePage = () => {
         const persistentCache = localStorage.getItem('homepage_persistent_cache');
         if (persistentCache) {
           const data = JSON.parse(persistentCache);
-          applyHomepageData(data);
+          // ========== التحقق من صحة البيانات قبل استخدامها ==========
+          if (isValidHomepageData(data)) {
+            applyHomepageData(data);
+          }
           // لا نوقف loading لأننا سنجلب بيانات جديدة
         }
       } catch (e) {
@@ -161,6 +164,34 @@ const HomePage = () => {
     showCachedDataImmediately();
   }, []);
 
+  // ========== دالة التحقق من صحة البيانات ==========
+  const isValidHomepageData = (data) => {
+    if (!data) return false;
+    // البيانات صالحة إذا كان هناك على الأقل: منتجات أو أصناف
+    const hasProducts = (data.best_sellers && data.best_sellers.length > 0) ||
+                       (data.new_arrivals && data.new_arrivals.length > 0) ||
+                       (data.extra_products && data.extra_products.length > 0);
+    const hasCategories = data.categories && data.categories.length > 0;
+    return hasProducts || hasCategories;
+  };
+
+  // ========== دالة Retry للطلبات ==========
+  const fetchWithRetry = async (url, maxRetries = 3, delay = 2000) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await axios.get(url, { timeout: 15000 });
+        return response;
+      } catch (error) {
+        console.log(`Attempt ${attempt}/${maxRetries} failed for ${url}`);
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        // انتظار قبل المحاولة التالية
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  };
+
   const fetchData = async () => {
     try {
       // التحقق من الكاش المؤقت (sessionStorage) أولاً
@@ -168,20 +199,26 @@ const HomePage = () => {
       const cacheTimestamp = sessionStorage.getItem('homepage_cache_time');
       const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
       
-      // استخدام الكاش إذا كان أقل من 5 دقائق
+      // استخدام الكاش إذا كان أقل من 5 دقائق وكانت البيانات صالحة
       if (cachedData && cacheAge < 5 * 60 * 1000) {
         const data = JSON.parse(cachedData);
-        applyHomepageData(data);
-        setLoading(false);
-        return;
+        // ========== التحقق من صحة البيانات قبل استخدامها ==========
+        if (isValidHomepageData(data)) {
+          applyHomepageData(data);
+          setLoading(false);
+          return;
+        }
+        // إذا البيانات المخزنة فارغة، احذفها وأكمل لجلب بيانات جديدة
+        sessionStorage.removeItem('homepage_cache');
+        sessionStorage.removeItem('homepage_cache_time');
       }
       
       // ========== الحل 3: تحميل تدريجي ==========
       // جلب البيانات الأساسية أولاً (الأصناف والـ ticker)
       try {
         const [categoriesRes, tickerRes] = await Promise.all([
-          axios.get(`${API}/api/categories`).catch(() => ({ data: [] })),
-          axios.get(`${API}/api/settings/ticker-messages`).catch(() => ({ data: { messages: [], is_enabled: true } }))
+          axios.get(`${API}/api/categories`, { timeout: 10000 }).catch(() => ({ data: [] })),
+          axios.get(`${API}/api/settings/ticker-messages`, { timeout: 10000 }).catch(() => ({ data: { messages: [], is_enabled: true } }))
         ]);
         
         // عرض الأصناف والـ ticker فوراً
@@ -208,25 +245,32 @@ const HomePage = () => {
         console.log('Progressive load - basic data failed:', e);
       }
       
-      // جلب باقي البيانات
+      // ========== جلب باقي البيانات مع Retry ==========
       const [response, flashStatusRes] = await Promise.all([
-        axios.get(`${API}/api/products/homepage-data`),
-        axios.get(`${API}/api/flash/status`).catch(() => ({ data: null }))
+        fetchWithRetry(`${API}/api/products/homepage-data`, 3, 2000),
+        axios.get(`${API}/api/flash/status`, { timeout: 10000 }).catch(() => ({ data: null }))
       ]);
       const data = response.data;
       
-      // حفظ في الكاش المؤقت (sessionStorage)
-      sessionStorage.setItem('homepage_cache', JSON.stringify(data));
-      sessionStorage.setItem('homepage_cache_time', Date.now().toString());
-      
-      // ========== حفظ في الكاش الدائم (localStorage) للمرة القادمة ==========
-      try {
-        localStorage.setItem('homepage_persistent_cache', JSON.stringify(data));
-      } catch (e) {
-        console.log('Failed to save persistent cache:', e);
+      // ========== التحقق من صحة البيانات قبل حفظها ==========
+      if (isValidHomepageData(data)) {
+        // حفظ في الكاش المؤقت (sessionStorage)
+        sessionStorage.setItem('homepage_cache', JSON.stringify(data));
+        sessionStorage.setItem('homepage_cache_time', Date.now().toString());
+        
+        // حفظ في الكاش الدائم (localStorage) للمرة القادمة
+        try {
+          localStorage.setItem('homepage_persistent_cache', JSON.stringify(data));
+        } catch (e) {
+          console.log('Failed to save persistent cache:', e);
+        }
+        
+        applyHomepageData(data);
+      } else {
+        // البيانات فارغة، جرب الطريقة القديمة
+        console.log('Homepage data is empty, trying legacy method');
+        await fetchDataLegacy();
       }
-      
-      applyHomepageData(data);
       
       // تعيين حالة Flash
       setFlashStatus(flashStatusRes.data);
