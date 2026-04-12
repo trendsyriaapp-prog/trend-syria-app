@@ -211,13 +211,23 @@ async def get_top_sellers(limit: int = 10, user: dict = Depends(get_current_user
     
     sellers_stats = await db.orders.aggregate(pipeline).to_list(limit)
     
-    # جلب بيانات البائعين
+    if not sellers_stats:
+        return []
+    
+    # جلب معرفات البائعين
+    seller_ids = [stat["_id"] for stat in sellers_stats]
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "full_name": 1, "business_name": 1, "phone": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    # بناء النتيجة
     result = []
     for stat in sellers_stats:
-        seller = await db.users.find_one(
-            {"id": stat["_id"]},
-            {"_id": 0, "id": 1, "full_name": 1, "business_name": 1, "phone": 1}
-        )
+        seller = sellers_map.get(stat["_id"])
         if seller:
             result.append({
                 **seller,

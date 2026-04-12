@@ -1751,13 +1751,21 @@ async def get_store_orders(
     
     orders = await db.food_orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
     
-    # إرسال إشعارات للطلبات الجديدة التي لم يُبلّغ عنها بعد
+    # جمع الطلبات التي تحتاج إشعار
+    orders_to_notify = []
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
         
-        # إرسال إشعار للمتجر إذا لم يُرسل بعد
+        # جمع الطلبات الجديدة التي لم يُبلّغ عنها بعد
         if not order.get("seller_notified", False) and order["status"] == "pending":
-            await db.notifications.insert_one({
+            orders_to_notify.append(order)
+    
+    # إرسال الإشعارات دفعة واحدة
+    if orders_to_notify:
+        notifications = []
+        order_ids_to_update = []
+        for order in orders_to_notify:
+            notifications.append({
                 "id": str(uuid.uuid4()),
                 "user_id": user["id"],
                 "title": "🍽️ طلب جديد!",
@@ -1766,9 +1774,16 @@ async def get_store_orders(
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
-            # تحديث حالة الإشعار
-            await db.food_orders.update_one(
-                {"id": order["id"]},
+            order_ids_to_update.append(order["id"])
+        
+        # إدخال الإشعارات دفعة واحدة
+        if notifications:
+            await db.notifications.insert_many(notifications)
+        
+        # تحديث حالة الإشعار للطلبات دفعة واحدة
+        if order_ids_to_update:
+            await db.food_orders.update_many(
+                {"id": {"$in": order_ids_to_update}},
                 {"$set": {"seller_notified": True}}
             )
     
@@ -3208,9 +3223,17 @@ async def get_optimized_route(user: dict = Depends(get_current_user)):
     if not orders:
         return {"optimized_route": [], "total_distance_km": 0, "estimated_time_min": 0}
     
-    # إضافة معلومات المتاجر
+    # جلب معرفات المتاجر وجلب جميع المتاجر دفعة واحدة
+    store_ids = list(set([o.get("store_id") for o in orders if o.get("store_id")]))
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "latitude": 1, "longitude": 1, "name": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # إضافة معلومات المتاجر من الـ cache
     for order in orders:
-        store = await db.food_stores.find_one({"id": order.get("store_id")})
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_lat"] = store.get("latitude")
             order["store_lng"] = store.get("longitude")

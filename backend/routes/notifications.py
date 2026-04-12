@@ -190,16 +190,25 @@ async def mark_all_notifications_read(
         {"_id": 0, "id": 1}
     ).to_list(100)
     
-    for n in notifications:
-        await db.notification_reads.update_one(
-            {"user_id": user["id"], "notification_id": n["id"]},
-            {"$set": {
-                "user_id": user["id"],
-                "notification_id": n["id"],
-                "read_at": datetime.now(timezone.utc).isoformat()
-            }},
-            upsert=True
-        )
+    # إنشاء جميع سجلات القراءة دفعة واحدة
+    if notifications:
+        now = datetime.now(timezone.utc).isoformat()
+        # استخدام bulk_write للتحديث الدفعي
+        from pymongo import UpdateOne
+        operations = []
+        for n in notifications:
+            operations.append(UpdateOne(
+                {"user_id": user["id"], "notification_id": n["id"]},
+                {"$set": {
+                    "user_id": user["id"],
+                    "notification_id": n["id"],
+                    "read_at": now
+                }},
+                upsert=True
+            ))
+        
+        if operations:
+            await db.notification_reads.bulk_write(operations)
     
     return {"message": "تم تحديد جميع الإشعارات كمقروءة", "count": len(notifications)}
 
