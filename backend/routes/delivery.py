@@ -619,6 +619,16 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
+    # جلب معلومات البائعين دفعة واحدة لطلبات المتجر
+    seller_ids = list(set([o.get("seller_id") for o in shop_orders if o.get("seller_id")]))
+    sellers_map = {}
+    if seller_ids:
+        sellers_list = await db.users.find(
+            {"id": {"$in": seller_ids}},
+            {"_id": 0}
+        ).to_list(None)
+        sellers_map = {s["id"]: s for s in sellers_list}
+    
     # تحويل طلبات المتجر لتنسيق موحد مع إضافة can_accept
     for order in shop_orders:
         order["order_source"] = "shop"
@@ -627,15 +637,14 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
         if has_hot_fresh_orders:
             order["cannot_accept_reason"] = "أكمل طلبات الطعام أولاً"
         
-        # إضافة إحداثيات البائع
+        # إضافة إحداثيات البائع من الـ cache
         seller_id = order.get("seller_id")
-        if seller_id:
-            seller = await db.users.find_one({"id": seller_id}, {"_id": 0})
-            if seller:
-                order["store_latitude"] = seller.get("latitude")
-                order["store_longitude"] = seller.get("longitude")
-                order["store_name"] = seller.get("store_name") or seller.get("name", "متجر")
-                order["store_address"] = seller.get("address", "")
+        if seller_id and seller_id in sellers_map:
+            seller = sellers_map[seller_id]
+            order["store_latitude"] = seller.get("latitude")
+            order["store_longitude"] = seller.get("longitude")
+            order["store_name"] = seller.get("store_name") or seller.get("name", "متجر")
+            order["store_address"] = seller.get("address", "")
         
         # إضافة إحداثيات العميل
         if order.get("buyer_address"):
@@ -652,14 +661,42 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", 1).to_list(50)
     
+    # جلب طلبات الطعام التي طلب البائع فيها سائقاً (نظام التنسيق الجديد)
+    driver_requested_query = {
+        "driver_requested": True,
+        "driver_status": {"$in": ["waiting_for_acceptance", "waiting_for_driver"]},
+        "driver_id": None
+    }
+    if driver_city:
+        driver_requested_query["delivery_city"] = driver_city
+    
+    driver_requested_orders = await db.food_orders.find(
+        driver_requested_query,
+        {"_id": 0}
+    ).sort("driver_requested_at", -1).to_list(50)
+    
+    # جمع معرفات المتاجر من جميع طلبات الطعام
+    all_food_orders = food_orders + driver_requested_orders
+    store_ids = list(set([o.get("store_id") for o in all_food_orders if o.get("store_id")]))
+    
+    # جلب معلومات المتاجر دفعة واحدة
+    stores_map = {}
+    if store_ids:
+        stores_list = await db.food_stores.find(
+            {"id": {"$in": store_ids}},
+            {"_id": 0}
+        ).to_list(None)
+        stores_map = {s["id"]: s for s in stores_list}
+    
     # تحويل طلبات الطعام لتنسيق يناسب عرض السائق
     for order in food_orders:
         order["order_source"] = "food"
         order["total"] = order.get("total", 0)
         # يمكن دائماً قبول طلبات الطعام (الأولوية للطعام الطازج)
         order["can_accept"] = True
-        # إضافة معلومات المتجر كـ seller
-        store = await db.food_stores.find_one({"id": order["store_id"]}, {"_id": 0})
+        
+        # إضافة معلومات المتجر من الـ cache
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["seller_addresses"] = [{
                 "name": store.get("name"),
@@ -686,38 +723,22 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
         order["customer_longitude"] = order.get("longitude") or order.get("delivery_longitude")
         order["items"] = order.get("items", [])
     
-    # دمج الطلبات
-    all_orders = shop_orders + food_orders
-    
-    # جلب طلبات الطعام التي طلب البائع فيها سائقاً (نظام التنسيق الجديد)
-    driver_requested_query = {
-        "driver_requested": True,
-        "driver_status": {"$in": ["waiting_for_acceptance", "waiting_for_driver"]},
-        "driver_id": None
-    }
-    if driver_city:
-        driver_requested_query["delivery_city"] = driver_city
-    
-    driver_requested_orders = await db.food_orders.find(
-        driver_requested_query,
-        {"_id": 0}
-    ).sort("driver_requested_at", -1).to_list(50)
-    
     # تحويل طلبات driver_requested لتنسيق موحد
     for order in driver_requested_orders:
         order["order_source"] = "food"
         order["is_driver_request"] = True
         order["can_accept"] = True
-        # إضافة معلومات المتجر
-        store = await db.food_stores.find_one({"id": order["store_id"]}, {"_id": 0})
+        
+        # إضافة معلومات المتجر من الـ cache
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_name"] = store.get("name")
             order["store_address"] = store.get("address", "")
             order["store_latitude"] = store.get("latitude")
             order["store_longitude"] = store.get("longitude")
     
-    # إضافة طلبات driver_requested للقائمة
-    all_orders = all_orders + driver_requested_orders
+    # دمج الطلبات
+    all_orders = shop_orders + food_orders + driver_requested_orders
     
     return all_orders
 

@@ -2113,6 +2113,19 @@ async def get_available_food_orders(
         {"_id": 0}
     ).sort("driver_requested_at", -1).to_list(None)
     
+    # جمع جميع معرفات المتاجر من كل الطلبات
+    all_orders_for_stores = orders + driver_requested_orders
+    store_ids = list(set([o.get("store_id") for o in all_orders_for_stores if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_map = {}
+    if store_ids:
+        stores_list = await db.food_stores.find(
+            {"id": {"$in": store_ids}},
+            {"_id": 0, "id": 1, "latitude": 1, "longitude": 1, "address": 1, "city": 1, "name": 1}
+        ).to_list(None)
+        stores_map = {s["id"]: s for s in stores_list}
+    
     # دالة حساب المسافة
     def calculate_distance(lat1, lon1, lat2, lon2):
         if not all([lat1, lon1, lat2, lon2]):
@@ -2131,11 +2144,14 @@ async def get_available_food_orders(
     batched_orders = {}
     single_orders = []
     
+    # جمع معرفات الطلبات التي تحتاج إشعار للتحديث دفعة واحدة
+    orders_to_notify = []
+    
     for order in orders:
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
         
-        # إضافة إحداثيات المتجر للسائق
-        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0, "latitude": 1, "longitude": 1, "address": 1, "city": 1})
+        # إضافة إحداثيات المتجر من الـ cache
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_latitude"] = store.get("latitude")
             order["store_longitude"] = store.get("longitude")
@@ -2182,24 +2198,9 @@ async def get_available_food_orders(
                 "longitude": order.get("longitude")
             }
         
-        # إرسال إشعار للسائق إذا لم يُرسل بعد
+        # جمع الطلبات التي تحتاج إشعار
         if not order.get("driver_notified", False):
-            order_num = order.get('order_number', order.get('id', '')[:8])
-            store_name = order.get('store_name', 'متجر')
-            await db.notifications.insert_one({
-                "id": str(uuid.uuid4()),
-                "user_id": user["id"],
-                "title": "🛵 طلب جاهز للتوصيل!",
-                "message": f"طلب #{order_num} من {store_name} جاهز للاستلام",
-                "type": "food_order_ready",
-                "is_read": False,
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
-            # تحديث حالة الإشعار
-            await db.food_orders.update_one(
-                {"id": order["id"]},
-                {"$set": {"driver_notified": True}}
-            )
+            orders_to_notify.append(order)
         
         # تجميع حسب batch_id
         batch_id = order.get("batch_id")
@@ -2230,6 +2231,35 @@ async def get_available_food_orders(
         else:
             single_orders.append(order)
     
+    # إرسال الإشعارات وتحديث الطلبات دفعة واحدة
+    if orders_to_notify:
+        notifications = []
+        order_ids_to_update = []
+        for order in orders_to_notify:
+            order_num = order.get('order_number', order.get('id', '')[:8])
+            store_name = order.get('store_name', 'متجر')
+            notifications.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "title": "🛵 طلب جاهز للتوصيل!",
+                "message": f"طلب #{order_num} من {store_name} جاهز للاستلام",
+                "type": "food_order_ready",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            order_ids_to_update.append(order["id"])
+        
+        # إدخال الإشعارات دفعة واحدة
+        if notifications:
+            await db.notifications.insert_many(notifications)
+        
+        # تحديث حالة الإشعار للطلبات دفعة واحدة
+        if order_ids_to_update:
+            await db.food_orders.update_many(
+                {"id": {"$in": order_ids_to_update}},
+                {"$set": {"driver_notified": True}}
+            )
+    
     # تحويل الدفعات إلى قائمة
     batch_list = list(batched_orders.values())
     
@@ -2244,8 +2274,8 @@ async def get_available_food_orders(
         order["status_label"] = ORDER_STATUSES.get(order["status"], order["status"])
         order["is_driver_request"] = True  # علامة لتمييزها في الفرونت إند
         
-        # إضافة إحداثيات المتجر
-        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0, "latitude": 1, "longitude": 1, "address": 1, "city": 1, "name": 1})
+        # إضافة إحداثيات المتجر من الـ cache
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_latitude"] = store.get("latitude")
             order["store_longitude"] = store.get("longitude")

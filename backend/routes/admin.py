@@ -504,19 +504,42 @@ async def get_pending_sellers(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     docs = await db.seller_documents.find({"status": "pending"}, {"_id": 0}).to_list(100)
+    
+    if not docs:
+        return []
+    
+    # جلب معرفات البائعين من الوثائق
+    seller_ids = [doc["seller_id"] for doc in docs]
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "password": 0}
+    ).to_list(None)
+    
+    # تحويل إلى قاموس للوصول السريع
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
     result = []
+    # معرفات البائعين المعتمدين لتصحيح حالتهم
+    approved_seller_ids = []
+    
     for doc in docs:
-        seller = await db.users.find_one({"id": doc["seller_id"]}, {"_id": 0, "password": 0})
+        seller = sellers_map.get(doc["seller_id"])
         if seller:
             # تجاهل البائعين المعتمدين - لأن وثائقهم pending قد تكون خطأ
             if seller.get("is_approved"):
-                # تصحيح حالة الوثائق تلقائياً للبائع المعتمد
-                await db.seller_documents.update_many(
-                    {"seller_id": seller["id"]},
-                    {"$set": {"status": "approved"}}
-                )
+                approved_seller_ids.append(seller["id"])
                 continue
             result.append({**doc, "seller": seller})
+    
+    # تصحيح حالة الوثائق للبائعين المعتمدين دفعة واحدة
+    if approved_seller_ids:
+        await db.seller_documents.update_many(
+            {"seller_id": {"$in": approved_seller_ids}},
+            {"$set": {"status": "approved"}}
+        )
+    
     return result
 
 # ============== سجل الطلبات المرفوضة ==============
@@ -643,16 +666,41 @@ async def get_all_sellers(user: dict = Depends(get_current_user)):
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    # جلب البائعين
     sellers = await db.users.find(
         {"user_type": "seller"},
         {"_id": 0, "password": 0}
     ).to_list(100)
     
+    if not sellers:
+        return []
+    
+    # جلب معرفات البائعين
+    seller_ids = [s["id"] for s in sellers]
+    
+    # جلب جميع الوثائق دفعة واحدة
+    all_docs = await db.seller_documents.find(
+        {"seller_id": {"$in": seller_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    
+    # تحويل الوثائق إلى قاموس للوصول السريع
+    docs_map = {doc["seller_id"]: doc for doc in all_docs}
+    
+    # جلب عدد المنتجات لكل بائع دفعة واحدة باستخدام aggregation
+    products_count_pipeline = [
+        {"$match": {"seller_id": {"$in": seller_ids}}},
+        {"$group": {"_id": "$seller_id", "count": {"$sum": 1}}}
+    ]
+    products_counts = await db.products.aggregate(products_count_pipeline).to_list(None)
+    
+    # تحويل عدد المنتجات إلى قاموس
+    counts_map = {item["_id"]: item["count"] for item in products_counts}
+    
+    # ربط البيانات
     for seller in sellers:
-        docs = await db.seller_documents.find_one({"seller_id": seller["id"]}, {"_id": 0})
-        seller["documents"] = docs
-        products_count = await db.products.count_documents({"seller_id": seller["id"]})
-        seller["products_count"] = products_count
+        seller["documents"] = docs_map.get(seller["id"])
+        seller["products_count"] = counts_map.get(seller["id"], 0)
     
     return sellers
 
@@ -1117,19 +1165,47 @@ async def get_pending_delivery(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
     docs = await db.delivery_documents.find({"status": "pending"}, {"_id": 0}).to_list(100)
+    
+    if not docs:
+        return []
+    
+    # جلب معرفات السائقين من الوثائق
+    driver_ids = [doc.get("driver_id") or doc.get("delivery_id") for doc in docs]
+    driver_ids = [d for d in driver_ids if d]  # إزالة القيم الفارغة
+    
+    # جلب جميع السائقين دفعة واحدة
+    drivers_list = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "password": 0}
+    ).to_list(None)
+    
+    # تحويل إلى قاموس للوصول السريع
+    drivers_map = {d["id"]: d for d in drivers_list}
+    
     result = []
+    # معرفات السائقين المعتمدين لتصحيح حالتهم
+    approved_driver_ids = []
+    
     for doc in docs:
-        driver = await db.users.find_one({"id": doc.get("driver_id") or doc.get("delivery_id")}, {"_id": 0, "password": 0})
+        driver_id = doc.get("driver_id") or doc.get("delivery_id")
+        driver = drivers_map.get(driver_id)
         if driver:
             # تجاهل السائقين المعتمدين - لأن وثائقهم pending قد تكون خطأ
             if driver.get("is_approved"):
-                # تصحيح حالة الوثائق تلقائياً للسائق المعتمد
-                await db.delivery_documents.update_many(
-                    {"$or": [{"driver_id": driver["id"]}, {"delivery_id": driver["id"]}]},
-                    {"$set": {"status": "approved"}}
-                )
+                approved_driver_ids.append(driver["id"])
                 continue
             result.append({**doc, "driver": driver})
+    
+    # تصحيح حالة الوثائق للسائقين المعتمدين دفعة واحدة
+    if approved_driver_ids:
+        await db.delivery_documents.update_many(
+            {"$or": [
+                {"driver_id": {"$in": approved_driver_ids}},
+                {"delivery_id": {"$in": approved_driver_ids}}
+            ]},
+            {"$set": {"status": "approved"}}
+        )
+    
     return result
 
 @router.get("/delivery/all")
@@ -1142,12 +1218,31 @@ async def get_all_delivery(user: dict = Depends(get_current_user)):
         {"_id": 0, "password": 0}
     ).sort("created_at", -1).to_list(100)
     
+    if not drivers:
+        return []
+    
+    # جلب معرفات السائقين
+    driver_ids = [d["id"] for d in drivers]
+    
+    # جلب جميع الوثائق دفعة واحدة
+    all_docs = await db.delivery_documents.find(
+        {"$or": [
+            {"driver_id": {"$in": driver_ids}},
+            {"delivery_id": {"$in": driver_ids}}
+        ]},
+        {"_id": 0}
+    ).to_list(None)
+    
+    # تحويل الوثائق إلى قاموس للوصول السريع (بناءً على driver_id أو delivery_id)
+    docs_map = {}
+    for doc in all_docs:
+        key = doc.get("driver_id") or doc.get("delivery_id")
+        if key:
+            docs_map[key] = doc
+    
+    # ربط البيانات
     for driver in drivers:
-        doc = await db.delivery_documents.find_one(
-            {"$or": [{"driver_id": driver["id"]}, {"delivery_id": driver["id"]}]}, 
-            {"_id": 0}
-        )
-        driver["documents"] = doc
+        driver["documents"] = docs_map.get(driver["id"])
     
     return drivers
 
