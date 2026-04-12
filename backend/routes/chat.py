@@ -238,26 +238,45 @@ async def get_active_conversations(user: dict = Depends(get_current_user)):
         ).to_list(20)
     
     # إضافة عدد الرسائل غير المقروءة لكل محادثة
-    result = []
-    for order in orders:
-        unread = await db.chat_messages.count_documents({
-            "order_id": order["id"],
+    if not orders:
+        return {"conversations": []}
+    
+    order_ids = [o["id"] for o in orders]
+    
+    # جلب عدد الرسائل غير المقروءة لجميع الطلبات دفعة واحدة
+    unread_pipeline = [
+        {"$match": {
+            "order_id": {"$in": order_ids},
             "recipient_id": user_id,
             "is_read": False
-        })
-        
-        # جلب آخر رسالة
-        last_message = await db.chat_messages.find_one(
-            {"order_id": order["id"]},
-            {"_id": 0},
-            sort=[("created_at", -1)]
-        )
+        }},
+        {"$group": {"_id": "$order_id", "count": {"$sum": 1}}}
+    ]
+    unread_counts = await db.chat_messages.aggregate(unread_pipeline).to_list(None)
+    unread_map = {item["_id"]: item["count"] for item in unread_counts}
+    
+    # جلب آخر رسالة لكل طلب دفعة واحدة
+    last_messages_pipeline = [
+        {"$match": {"order_id": {"$in": order_ids}}},
+        {"$sort": {"created_at": -1}},
+        {"$group": {
+            "_id": "$order_id",
+            "message": {"$first": "$message"},
+            "created_at": {"$first": "$created_at"}
+        }}
+    ]
+    last_messages = await db.chat_messages.aggregate(last_messages_pipeline).to_list(None)
+    last_messages_map = {lm["_id"]: lm for lm in last_messages}
+    
+    result = []
+    for order in orders:
+        last_message = last_messages_map.get(order["id"])
         
         result.append({
             "order_id": order["id"],
             "order_number": order.get("order_number"),
             "other_party": order.get("customer_name") if user_type == "delivery" else "السائق",
-            "unread_count": unread,
+            "unread_count": unread_map.get(order["id"], 0),
             "last_message": last_message.get("message", "")[:50] if last_message else None,
             "last_message_at": last_message.get("created_at") if last_message else None,
             "status": order.get("status")

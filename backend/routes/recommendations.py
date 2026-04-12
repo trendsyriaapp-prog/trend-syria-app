@@ -161,16 +161,28 @@ async def get_trending_products(limit: int = 10):
     
     trending_ids = await db.product_views.aggregate(pipeline).to_list(limit)
     
+    if not trending_ids:
+        return []
+    
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = [item["_id"] for item in trending_ids]
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}, "is_approved": True},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # إنشاء قاموس للمشاهدات
+    views_map = {item["_id"]: item["views"] for item in trending_ids}
+    
     products = []
     for item in trending_ids:
-        product = await db.products.find_one(
-            {"id": item["_id"], "is_approved": True},
-            {"_id": 0}
-        )
+        product = products_map.get(item["_id"])
         if product:
-            product["views_count"] = item["views"]
-            product["recommendation_reason"] = "رائج الآن 🔥"
-            products.append(product)
+            product_copy = product.copy()
+            product_copy["views_count"] = views_map.get(item["_id"], 0)
+            product_copy["recommendation_reason"] = "رائج الآن 🔥"
+            products.append(product_copy)
     
     return products
 

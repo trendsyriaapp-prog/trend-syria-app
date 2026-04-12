@@ -126,15 +126,20 @@ async def get_all_reports(
     
     total = await db.price_reports.count_documents(query)
     
-    # إضافة معلومات البائع لكل بلاغ
-    for report in reports:
-        seller = await db.users.find_one(
-            {"id": report.get("seller_id")},
+    # جلب جميع البائعين دفعة واحدة
+    seller_ids = list(set(r.get("seller_id") for r in reports if r.get("seller_id")))
+    if seller_ids:
+        sellers_list = await db.users.find(
+            {"id": {"$in": seller_ids}},
             {"_id": 0, "id": 1, "name": 1, "phone": 1, "violation_points": 1}
-        )
-        if seller:
-            report["seller_name"] = seller.get("name", "غير معروف")
-            report["seller_violation_points"] = seller.get("violation_points", 0)
+        ).to_list(None)
+        sellers_map = {s["id"]: s for s in sellers_list}
+        
+        for report in reports:
+            seller = sellers_map.get(report.get("seller_id"))
+            if seller:
+                report["seller_name"] = seller.get("name", "غير معروف")
+                report["seller_violation_points"] = seller.get("violation_points", 0)
     
     return {
         "reports": reports,

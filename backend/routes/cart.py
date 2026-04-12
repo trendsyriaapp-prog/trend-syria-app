@@ -12,14 +12,22 @@ router = APIRouter(prefix="/cart", tags=["Cart"])
 @router.get("")
 async def get_cart(user: dict = Depends(get_current_user)):
     cart = await db.carts.find_one({"user_id": user["id"]}, {"_id": 0})
-    if not cart:
+    if not cart or not cart.get("items"):
         return {"items": [], "total": 0}
+    
+    # جلب جميع المنتجات دفعة واحدة بدلاً من query لكل منتج
+    product_ids = list(set(item["product_id"] for item in cart.get("items", [])))
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
     
     items_with_products = []
     total = 0
     
     for item in cart.get("items", []):
-        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        product = products_map.get(item["product_id"])
         if product:
             # حساب السعر بناءً على الوزن المحدد (إن وجد)
             item_price = product["price"]

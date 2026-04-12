@@ -469,7 +469,6 @@ async def request_withdrawal(
     
     if user["user_type"] not in ["seller", "delivery"]:
         raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
-        raise HTTPException(status_code=403, detail="للبائعين وموظفي التوصيل فقط")
     
     # Get wallet
     wallet = await db.wallets.find_one({"user_id": user["id"]})

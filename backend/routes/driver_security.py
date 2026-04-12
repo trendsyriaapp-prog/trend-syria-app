@@ -689,12 +689,20 @@ async def get_all_driver_deposits(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).to_list(500)
     
+    if not deposits:
+        return []
+    
+    # جلب جميع السائقين دفعة واحدة
+    driver_ids = list(set(d["driver_id"] for d in deposits if d.get("driver_id")))
+    drivers_list = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "full_name": 1, "name": 1, "phone": 1}
+    ).to_list(None)
+    drivers_map = {d["id"]: d for d in drivers_list}
+    
     # إضافة معلومات السائق
     for deposit in deposits:
-        driver = await db.users.find_one(
-            {"id": deposit["driver_id"]}, 
-            {"_id": 0, "full_name": 1, "name": 1, "phone": 1}
-        )
+        driver = drivers_map.get(deposit.get("driver_id"))
         if driver:
             deposit["driver_name"] = driver.get("full_name", driver.get("name", ""))
             deposit["driver_phone"] = driver.get("phone", "")
@@ -846,27 +854,46 @@ async def get_all_drivers(user: dict = Depends(get_current_user)):
         }
     ).to_list(500)
     
-    # إضافة معلومات التأمين
+    if not drivers:
+        return []
+    
+    driver_ids = [d["id"] for d in drivers]
+    
+    # جلب جميع بيانات التأمين دفعة واحدة
+    deposits_list = await db.driver_security_deposits.find(
+        {"driver_id": {"$in": driver_ids}},
+        {"_id": 0, "driver_id": 1, "current_amount": 1, "required_amount": 1, "status": 1}
+    ).to_list(None)
+    deposits_map = {d["driver_id"]: d for d in deposits_list}
+    
+    # جلب إحصائيات الطلبات دفعة واحدة باستخدام aggregation
+    orders_pipeline = [
+        {"$match": {"delivery_driver_id": {"$in": driver_ids}, "delivery_status": "delivered"}},
+        {"$group": {"_id": "$delivery_driver_id", "count": {"$sum": 1}}}
+    ]
+    orders_stats = await db.orders.aggregate(orders_pipeline).to_list(None)
+    orders_map = {s["_id"]: s["count"] for s in orders_stats}
+    
+    food_orders_pipeline = [
+        {"$match": {"driver_id": {"$in": driver_ids}, "status": "delivered"}},
+        {"$group": {"_id": "$driver_id", "count": {"$sum": 1}}}
+    ]
+    food_stats = await db.food_orders.aggregate(food_orders_pipeline).to_list(None)
+    food_map = {s["_id"]: s["count"] for s in food_stats}
+    
+    # إضافة المعلومات للسائقين
     for driver in drivers:
-        deposit = await db.driver_security_deposits.find_one(
-            {"driver_id": driver["id"]},
-            {"_id": 0, "current_amount": 1, "required_amount": 1, "status": 1}
-        )
+        deposit = deposits_map.get(driver["id"])
         if deposit:
-            driver["security_deposit"] = deposit
+            driver["security_deposit"] = {
+                "current_amount": deposit.get("current_amount", 0),
+                "required_amount": deposit.get("required_amount"),
+                "status": deposit.get("status")
+            }
         else:
             driver["security_deposit"] = {"current_amount": 0, "status": "pending"}
         
-        # إحصائيات الطلبات
-        completed_orders = await db.orders.count_documents({
-            "delivery_driver_id": driver["id"],
-            "delivery_status": "delivered"
-        })
-        completed_food = await db.food_orders.count_documents({
-            "driver_id": driver["id"],
-            "status": "delivered"
-        })
-        driver["total_deliveries"] = completed_orders + completed_food
+        driver["total_deliveries"] = orders_map.get(driver["id"], 0) + food_map.get(driver["id"], 0)
     
     return drivers
 

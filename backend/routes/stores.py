@@ -82,17 +82,42 @@ async def unfollow_store(seller_id: str, user: dict = Depends(get_current_user))
 async def get_following_stores(user: dict = Depends(get_current_user)):
     follows = await db.follows.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
     
+    if not follows:
+        return []
+    
+    # جلب جميع البائعين ووثائقهم دفعة واحدة
+    seller_ids = [f["seller_id"] for f in follows]
+    
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    seller_docs_list = await db.seller_documents.find(
+        {"seller_id": {"$in": seller_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    seller_docs_map = {sd["seller_id"]: sd for sd in seller_docs_list}
+    
+    # جلب عدد المنتجات لكل بائع باستخدام aggregation
+    products_pipeline = [
+        {"$match": {"seller_id": {"$in": seller_ids}, "is_active": True}},
+        {"$group": {"_id": "$seller_id", "count": {"$sum": 1}}}
+    ]
+    products_counts = await db.products.aggregate(products_pipeline).to_list(None)
+    products_count_map = {pc["_id"]: pc["count"] for pc in products_counts}
+    
     stores = []
     for follow in follows:
-        seller_docs = await db.seller_documents.find_one({"seller_id": follow["seller_id"]})
-        seller = await db.users.find_one({"id": follow["seller_id"]})
+        seller = sellers_map.get(follow["seller_id"])
         if seller:
+            seller_docs = seller_docs_map.get(follow["seller_id"])
             business_name = seller_docs.get("business_name", seller.get("name")) if seller_docs else seller.get("name")
-            products_count = await db.products.count_documents({"seller_id": follow["seller_id"], "is_active": True})
             stores.append({
                 "seller_id": follow["seller_id"],
                 "business_name": business_name,
-                "products_count": products_count,
+                "products_count": products_count_map.get(follow["seller_id"], 0),
                 "followed_at": follow.get("created_at")
             })
     
@@ -132,15 +157,27 @@ async def remove_from_favorites(product_id: str, user: dict = Depends(get_curren
 async def get_favorites(user: dict = Depends(get_current_user)):
     favorites = await db.favorites.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
     
+    if not favorites:
+        return []
+    
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = [fav["product_id"] for fav in favorites]
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}, "is_active": True},
+        {"_id": 0, "seller_name": 0, "seller_phone": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # إنشاء قاموس لتواريخ الإضافة
+    added_at_map = {fav["product_id"]: fav.get("created_at") for fav in favorites}
+    
     products = []
     for fav in favorites:
-        product = await db.products.find_one(
-            {"id": fav["product_id"], "is_active": True}, 
-            {"_id": 0, "seller_name": 0, "seller_phone": 0}
-        )
+        product = products_map.get(fav["product_id"])
         if product:
-            product["added_at"] = fav.get("created_at")
-            products.append(product)
+            product_copy = product.copy()
+            product_copy["added_at"] = added_at_map.get(fav["product_id"])
+            products.append(product_copy)
     
     return products
 

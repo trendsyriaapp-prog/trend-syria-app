@@ -55,9 +55,17 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     ]
     conversations = await db.messages.aggregate(pipeline).to_list(100)
     
+    # جلب جميع المستخدمين دفعة واحدة
+    other_user_ids = [conv["_id"] for conv in conversations if conv["_id"]]
+    users_list = await db.users.find(
+        {"id": {"$in": other_user_ids}},
+        {"_id": 0, "password": 0}
+    ).to_list(None)
+    users_map = {u["id"]: u for u in users_list}
+    
     result = []
     for conv in conversations:
-        other_user = await db.users.find_one({"id": conv["_id"]}, {"_id": 0, "password": 0})
+        other_user = users_map.get(conv["_id"])
         if other_user:
             result.append({
                 "user": other_user,
