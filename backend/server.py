@@ -159,6 +159,32 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 logger.info("✅ FastAPI app created with GZip compression")
 
+# ============== Cache-Control Middleware (للـ CDN) ==============
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    """إضافة headers للتخزين المؤقت في CDN"""
+    response = await call_next(request)
+    
+    # لا نضيف cache للـ API المصادق عليه
+    if request.url.path.startswith("/api/"):
+        # Static content paths
+        if any(p in request.url.path for p in ["/images/", "/static/", "/uploads/"]):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"  # سنة
+        # Categories and settings (تتغير نادراً)
+        elif any(p in request.url.path for p in ["/categories", "/settings/public"]):
+            response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=86400"  # ساعة
+        # Products listing
+        elif "/products" in request.url.path and request.method == "GET":
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"  # 5 دقائق
+        else:
+            # API عام - no cache
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    
+    # إضافة Vary header للـ CDN
+    response.headers["Vary"] = "Accept-Encoding, Authorization"
+    
+    return response
+
 # ⚡ تسخين قاعدة البيانات عند بدء التطبيق
 @app.on_event("startup")
 async def startup_event():

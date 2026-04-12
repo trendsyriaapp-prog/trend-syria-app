@@ -9,6 +9,53 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Latest Update: 2026-04-12
 
+### ✅ Performance Optimization - Phase 6 (Infrastructure) - COMPLETED
+**Date:** 2026-04-12
+**Session Focus:** CDN Preparation, Caching, and Image Optimization
+
+**Changes Made:**
+
+**1. Redis Cache System (`core/cache.py`):**
+- Created `CacheManager` class with Redis/Memory fallback
+- Supports `get`, `set`, `delete`, `invalidate_pattern`
+- Configurable TTL for different data types:
+  - Settings: 1 hour
+  - Categories: 30 minutes
+  - Products: 5 minutes
+- `@cached` decorator for easy function caching
+
+**2. CDN Cache Headers (`server.py`):**
+- Added `Cache-Control` middleware for all responses:
+  - Static files: 1 year (immutable)
+  - Categories/Settings: 1 hour
+  - Products: 5 minutes
+  - API calls: no-cache
+- Added `Vary` header for proper CDN handling
+
+**3. WebP Image Conversion (`image_processing.py`):**
+- Added `/api/image/convert-to-webp` endpoint
+- Added `/api/image/optimize-batch` for bulk optimization
+- Expected compression: 25-35% smaller than JPEG/PNG
+- Quality configurable (default: 85%)
+
+**4. Rate Limiting:**
+- Already implemented in `core/security.py`
+- Login: 15/minute
+- Register: 5/minute
+- API general: 100/minute
+
+**Dependencies Added:**
+- `redis==7.4.0`
+- `aioredis==2.0.1`
+
+**CDN Setup Instructions (for Cloudflare):**
+1. Add site to Cloudflare
+2. Point DNS to DigitalOcean
+3. Enable "Cache Everything" page rule for `/api/images/*`
+4. Set Edge TTL to "Respect Existing Headers"
+
+---
+
 ### ✅ Performance Optimization - Phase 5 (Frontend + Pagination) - COMPLETED
 **Date:** 2026-04-12
 **Session Focus:** Code Splitting, Pagination, and Bundle Optimization

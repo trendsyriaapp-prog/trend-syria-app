@@ -49,6 +49,14 @@ REMOVE_BG_API_URL = "https://api.remove.bg/v1.0/removebg"
 
 # ============== إعدادات المعالجة الاحترافية ==============
 
+# إعدادات WebP للضغط المحسّن
+WEBP_CONFIG = {
+    "quality": 85,           # جودة الصورة (0-100)
+    "method": 6,             # طريقة الضغط (0-6, 6 = أفضل ضغط)
+    "lossless": False,       # ضغط بدون فقدان
+    "thumbnail_quality": 75, # جودة أقل للصور المصغرة
+}
+
 # أحجام الصور المتعددة
 IMAGE_SIZES = {
     "thumbnail": (200, 200),      # للقوائم
@@ -1344,3 +1352,166 @@ async def get_image_processing_settings():
             "enable_pro_processing": True,
             "enable_food_enhancement": True
         }
+
+
+
+# ============== WebP Conversion ==============
+
+def convert_to_webp(
+    image: Image.Image, 
+    quality: int = WEBP_CONFIG["quality"],
+    optimize_size: bool = True
+) -> bytes:
+    """
+    تحويل صورة إلى WebP مع الضغط الأمثل
+    
+    Args:
+        image: صورة PIL
+        quality: جودة الصورة (0-100)
+        optimize_size: تحسين الحجم
+    
+    Returns:
+        bytes: بيانات الصورة بصيغة WebP
+    """
+    # تحويل RGBA إلى RGB إذا لزم الأمر
+    if image.mode in ('RGBA', 'LA', 'P'):
+        # إنشاء خلفية بيضاء
+        background = Image.new('RGB', image.size, (255, 255, 255))
+        if image.mode == 'P':
+            image = image.convert('RGBA')
+        background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+        image = background
+    elif image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    output = io.BytesIO()
+    image.save(
+        output, 
+        format='WebP', 
+        quality=quality,
+        method=WEBP_CONFIG["method"] if optimize_size else 4,
+        lossless=WEBP_CONFIG["lossless"]
+    )
+    return output.getvalue()
+
+
+@router.post("/convert-to-webp")
+async def convert_image_to_webp(
+    file: UploadFile = File(...),
+    quality: int = Form(default=85),
+    max_width: int = Form(default=1200),
+    max_height: int = Form(default=1200)
+):
+    """
+    تحويل صورة إلى WebP مع ضغط محسّن
+    يقلل حجم الصورة بنسبة 25-35% مع الحفاظ على الجودة
+    """
+    try:
+        # قراءة الصورة
+        content = await file.read()
+        image = Image.open(io.BytesIO(content))
+        
+        original_size = len(content)
+        original_format = image.format or "UNKNOWN"
+        
+        # تغيير الحجم إذا كانت أكبر من الحد المسموح
+        if image.width > max_width or image.height > max_height:
+            image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        
+        # تحويل إلى WebP
+        webp_data = convert_to_webp(image, quality=quality)
+        webp_size = len(webp_data)
+        
+        # حساب نسبة الضغط
+        compression_ratio = ((original_size - webp_size) / original_size) * 100
+        
+        # تحويل إلى base64
+        webp_base64 = base64.b64encode(webp_data).decode('utf-8')
+        
+        return {
+            "success": True,
+            "original_format": original_format,
+            "original_size_kb": round(original_size / 1024, 2),
+            "webp_size_kb": round(webp_size / 1024, 2),
+            "compression_ratio": round(compression_ratio, 1),
+            "width": image.width,
+            "height": image.height,
+            "webp_base64": webp_base64,
+            "data_url": f"data:image/webp;base64,{webp_base64}"
+        }
+    except Exception as e:
+        logger.error(f"WebP conversion error: {e}")
+        raise HTTPException(status_code=500, detail=f"فشل تحويل الصورة: {str(e)}")
+
+
+@router.post("/optimize-batch")
+async def optimize_images_batch(
+    files: list[UploadFile] = File(...),
+    quality: int = Form(default=85),
+    max_width: int = Form(default=1200),
+    output_format: str = Form(default="webp")
+):
+    """
+    تحسين مجموعة صور دفعة واحدة
+    يدعم WebP و JPEG
+    """
+    results = []
+    total_original = 0
+    total_optimized = 0
+    
+    for file in files[:10]:  # حد أقصى 10 صور
+        try:
+            content = await file.read()
+            image = Image.open(io.BytesIO(content))
+            original_size = len(content)
+            total_original += original_size
+            
+            # تغيير الحجم
+            if image.width > max_width:
+                ratio = max_width / image.width
+                new_height = int(image.height * ratio)
+                image = image.resize((max_width, new_height), Image.Resampling.LANCZOS)
+            
+            # تحويل وضغط
+            output = io.BytesIO()
+            if output_format == "webp":
+                # تحويل إلى RGB للـ WebP
+                if image.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    if image.mode == 'P':
+                        image = image.convert('RGBA')
+                    background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                    image = background
+                elif image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                image.save(output, format='WebP', quality=quality, method=6)
+            else:
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                image.save(output, format='JPEG', quality=quality, optimize=True)
+            
+            optimized_data = output.getvalue()
+            optimized_size = len(optimized_data)
+            total_optimized += optimized_size
+            
+            results.append({
+                "filename": file.filename,
+                "original_size_kb": round(original_size / 1024, 2),
+                "optimized_size_kb": round(optimized_size / 1024, 2),
+                "compression": round(((original_size - optimized_size) / original_size) * 100, 1),
+                "data_url": f"data:image/{output_format};base64,{base64.b64encode(optimized_data).decode('utf-8')}"
+            })
+        except Exception as e:
+            results.append({
+                "filename": file.filename,
+                "error": str(e)
+            })
+    
+    return {
+        "success": True,
+        "total_original_kb": round(total_original / 1024, 2),
+        "total_optimized_kb": round(total_optimized / 1024, 2),
+        "total_compression": round(((total_original - total_optimized) / total_original) * 100, 1) if total_original > 0 else 0,
+        "images": results
+    }
