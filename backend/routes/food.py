@@ -624,9 +624,22 @@ async def get_food_products(
     
     products = await db.food_products.find(query, {"_id": 0}).skip(skip).limit(limit).to_list(None)
     
+    if not products:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([p.get("store_id") for p in products if p.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "name": 1, "store_type": 1, "working_hours": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
     # إضافة معلومات المتجر (بما في ذلك حالة الفتح/الإغلاق)
     for product in products:
-        store = await db.food_stores.find_one({"id": product["store_id"]}, {"_id": 0, "name": 1, "store_type": 1, "working_hours": 1})
+        store = stores_map.get(product.get("store_id"))
         if store:
             product["store_name"] = store.get("name", "")
             product["store_type"] = store.get("store_type", "")
@@ -1320,22 +1333,40 @@ async def get_my_flash_requests(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
-    # إضافة معلومات عرض الفلاش
+    if not requests:
+        return []
+    
+    # جمع المعرفات
+    flash_sale_ids = list(set([r.get("flash_sale_id") for r in requests if r.get("flash_sale_id")]))
+    all_product_ids = []
+    for r in requests:
+        if r.get("product_ids"):
+            all_product_ids.extend(r["product_ids"])
+    all_product_ids = list(set(all_product_ids))
+    
+    # جلب جميع عروض الفلاش دفعة واحدة
+    flash_sales_list = await db.flash_sales.find(
+        {"id": {"$in": flash_sale_ids}},
+        {"_id": 0, "id": 1, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
+    ).to_list(None)
+    flash_sales_map = {f["id"]: f for f in flash_sales_list}
+    
+    # جلب جميع المنتجات دفعة واحدة
+    products_list = await db.food_products.find(
+        {"id": {"$in": all_product_ids}},
+        {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # ربط البيانات
     for req in requests:
-        flash_sale = await db.flash_sales.find_one(
-            {"id": req.get("flash_sale_id")},
-            {"_id": 0, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
-        )
+        flash_sale = flash_sales_map.get(req.get("flash_sale_id"))
         if flash_sale:
             req["flash_sale"] = flash_sale
         
         # معلومات المنتجات
         if req.get("product_ids"):
-            products = await db.food_products.find(
-                {"id": {"$in": req["product_ids"]}},
-                {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
-            ).to_list(None)
-            req["products"] = products
+            req["products"] = [products_map[pid] for pid in req["product_ids"] if pid in products_map]
     
     return requests
 

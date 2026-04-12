@@ -634,12 +634,27 @@ async def get_order_tracking(order_id: str, user: dict = Depends(get_current_use
     
     # معلومات البائع (لموظف التوصيل)
     if is_delivery:
-        seller_ids = set(item["seller_id"] for item in order.get("items", []))
+        seller_ids = list(set(item["seller_id"] for item in order.get("items", [])))
+        
+        # جلب جميع البائعين دفعة واحدة
+        sellers_list = await db.users.find(
+            {"id": {"$in": seller_ids}},
+            {"_id": 0, "password": 0}
+        ).to_list(None)
+        sellers_map = {s["id"]: s for s in sellers_list}
+        
+        # جلب جميع المتاجر دفعة واحدة
+        stores_list = await db.stores.find(
+            {"seller_id": {"$in": seller_ids}},
+            {"_id": 0}
+        ).to_list(None)
+        stores_map = {s.get("seller_id"): s for s in stores_list}
+        
         sellers_info = []
         for seller_id in seller_ids:
-            seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
+            seller = sellers_map.get(seller_id)
             if seller:
-                store = await db.stores.find_one({"seller_id": seller_id}, {"_id": 0})
+                store = stores_map.get(seller_id)
                 sellers_info.append({
                     "id": seller["id"],
                     "name": seller.get("full_name", seller.get("name", "")),
@@ -1608,13 +1623,20 @@ async def delivery_complete(order_id: str, delivery_photo: Optional[str] = None,
         "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
     }).to_list(length=100)
     
-    # حساب عدد الطلبات الساخنة/الطازجة فقط
+    # حساب عدد الطلبات الساخنة/الطازجة باستخدام batch query
     hot_fresh_count = 0
-    for fo in active_food_orders:
-        store = await db.food_stores.find_one({"id": fo.get("store_id")})
-        store_type = store.get("store_type", "restaurants") if store else "restaurants"
-        if store_type in HOT_FRESH_STORE_TYPES:
-            hot_fresh_count += 1
+    if active_food_orders:
+        store_ids = list(set([fo.get("store_id") for fo in active_food_orders if fo.get("store_id")]))
+        stores_list = await db.food_stores.find(
+            {"id": {"$in": store_ids}},
+            {"_id": 0, "id": 1, "store_type": 1}
+        ).to_list(None)
+        stores_map = {s["id"]: s.get("store_type", "restaurants") for s in stores_list}
+        
+        for fo in active_food_orders:
+            store_type = stores_map.get(fo.get("store_id"), "restaurants")
+            if store_type in HOT_FRESH_STORE_TYPES:
+                hot_fresh_count += 1
     
     if hot_fresh_count > 0:
         raise HTTPException(
@@ -2056,22 +2078,40 @@ async def get_seller_flash_requests(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
-    # إضافة معلومات عرض الفلاش
+    if not requests:
+        return []
+    
+    # جمع المعرفات
+    flash_sale_ids = list(set([r.get("flash_sale_id") for r in requests if r.get("flash_sale_id")]))
+    all_product_ids = []
+    for r in requests:
+        if r.get("product_ids"):
+            all_product_ids.extend(r["product_ids"])
+    all_product_ids = list(set(all_product_ids))
+    
+    # جلب جميع عروض الفلاش دفعة واحدة
+    flash_sales_list = await db.flash_sales.find(
+        {"id": {"$in": flash_sale_ids}},
+        {"_id": 0, "id": 1, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
+    ).to_list(None)
+    flash_sales_map = {f["id"]: f for f in flash_sales_list}
+    
+    # جلب جميع المنتجات دفعة واحدة
+    products_list = await db.products.find(
+        {"id": {"$in": all_product_ids}},
+        {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # ربط البيانات
     for req in requests:
-        flash_sale = await db.flash_sales.find_one(
-            {"id": req.get("flash_sale_id")},
-            {"_id": 0, "name": 1, "discount_percentage": 1, "start_time": 1, "end_time": 1}
-        )
+        flash_sale = flash_sales_map.get(req.get("flash_sale_id"))
         if flash_sale:
             req["flash_sale"] = flash_sale
         
         # معلومات المنتجات
         if req.get("product_ids"):
-            products = await db.products.find(
-                {"id": {"$in": req["product_ids"]}},
-                {"_id": 0, "id": 1, "name": 1, "price": 1, "images": 1}
-            ).to_list(None)
-            req["products"] = products
+            req["products"] = [products_map[pid] for pid in req["product_ids"] if pid in products_map]
     
     return requests
 

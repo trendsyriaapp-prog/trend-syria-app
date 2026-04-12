@@ -32,11 +32,23 @@ async def count_hot_fresh_food_orders(driver_id: str) -> int:
         "status": {"$in": ["accepted", "out_for_delivery", "picked_up"]}
     }).to_list(length=100)
     
+    if not active_food_orders:
+        return 0
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in active_food_orders if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "store_type": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s.get("store_type", "restaurants") for s in stores_list}
+    
     hot_fresh_count = 0
     for order in active_food_orders:
-        store = await db.food_stores.find_one({"id": order.get("store_id")})
         # إذا لم نجد المتجر أو لم نعرف نوعه، نفترض أنه ساخن/طازج للأمان
-        store_type = store.get("store_type", "restaurants") if store else "restaurants"
+        store_type = stores_map.get(order.get("store_id"), "restaurants")
         if store_type in HOT_FRESH_STORE_TYPES:
             hot_fresh_count += 1
     
@@ -753,13 +765,23 @@ async def get_my_delivery_orders(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
-    # إضافة معلومات البائع لكل طلب
+    if not orders:
+        return []
+    
+    # جلب معرفات البائعين
+    seller_ids = list(set([o.get("seller_id") for o in orders if o.get("seller_id")]))
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "phone": 1, "name": 1, "full_name": 1, "store_name": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    # ربط البيانات
     for order in orders:
         if order.get("seller_id"):
-            seller = await db.users.find_one(
-                {"id": order["seller_id"]},
-                {"_id": 0, "phone": 1, "name": 1, "full_name": 1, "store_name": 1}
-            )
+            seller = sellers_map.get(order["seller_id"])
             if seller:
                 order["seller_phone"] = seller.get("phone")
                 order["seller_name"] = seller.get("store_name") or seller.get("full_name") or seller.get("name")
@@ -793,6 +815,22 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
     if settings and settings.get("values", {}).get("max_product_orders_per_driver"):
         max_orders = settings["values"]["max_product_orders_per_driver"]
     
+    # جلب معرفات البائعين من جميع الطلبات
+    all_seller_ids = set()
+    for order in orders:
+        for item in order.get("items", []):
+            if item.get("seller_id"):
+                all_seller_ids.add(item["seller_id"])
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_map = {}
+    if all_seller_ids:
+        sellers_list = await db.users.find(
+            {"id": {"$in": list(all_seller_ids)}},
+            {"_id": 0, "id": 1, "phone": 1, "name": 1, "full_name": 1, "store_name": 1, "store_address": 1}
+        ).to_list(None)
+        sellers_map = {s["id"]: s for s in sellers_list}
+    
     # إضافة معلومات البائع لكل طلب
     for order in orders:
         # إضافة حالة القفل لكل طلب
@@ -803,13 +841,10 @@ async def get_my_product_orders(user: dict = Depends(get_current_user)):
             order["buyer_phone"] = "مقفل"
             order["delivery_address_details"] = "مقفل - أكمل طلبات الطعام الساخنة أولاً"
         
-        # معلومات البائع
+        # معلومات البائع من الـ cache
         seller_ids = [item.get("seller_id") for item in order.get("items", []) if item.get("seller_id")]
         if seller_ids:
-            seller = await db.users.find_one(
-                {"id": seller_ids[0]},
-                {"_id": 0, "phone": 1, "name": 1, "full_name": 1, "store_name": 1, "store_address": 1}
-            )
+            seller = sellers_map.get(seller_ids[0])
             if seller:
                 order["seller_phone"] = seller.get("phone") if not is_locked else "مقفل"
                 order["seller_name"] = seller.get("store_name") or seller.get("full_name") or seller.get("name")
@@ -856,11 +891,24 @@ async def get_available_food_orders(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", 1).to_list(50)
     
+    if not food_orders:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in food_orders if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
     # تحويل طلبات الطعام لتنسيق يناسب عرض السائق
     for order in food_orders:
         order["order_source"] = "food"
-        # إضافة معلومات المتجر
-        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+        # إضافة معلومات المتجر من الـ cache
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_name"] = store.get("name", "متجر")
             order["store_type"] = "restaurant"
@@ -896,10 +944,23 @@ async def get_my_food_orders(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
+    if not food_orders:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in food_orders if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
     # إضافة معلومات المتجر
     for order in food_orders:
         order["order_source"] = "food"
-        store = await db.food_stores.find_one({"id": order.get("store_id")}, {"_id": 0})
+        store = stores_map.get(order.get("store_id"))
         if store:
             order["store_name"] = store.get("name", "متجر")
             order["seller_phone"] = store.get("phone", "")
@@ -1721,29 +1782,53 @@ async def get_driver_leaderboard(user: dict = Depends(get_current_user)):
     
     # إزالة التكرارات
     driver_ids = list(set(doc.get("driver_id") or doc.get("delivery_id") for doc in approved_docs))
+    driver_ids = [d for d in driver_ids if d]  # إزالة القيم الفارغة
     
-    # حساب طلبات كل سائق هذا الشهر
+    if not driver_ids:
+        return {
+            "leaderboard": [],
+            "my_position": None,
+            "rewards": rewards,
+            "month_name": "",
+            "days_remaining": 0
+        }
+    
+    # جلب معلومات جميع السائقين دفعة واحدة
+    drivers_list = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "name": 1, "full_name": 1}
+    ).to_list(None)
+    drivers_map = {d["id"]: d for d in drivers_list}
+    
+    # حساب عدد الطلبات لكل سائق هذا الشهر دفعة واحدة باستخدام aggregation
+    orders_pipeline = [
+        {"$match": {
+            "delivery_driver_id": {"$in": driver_ids},
+            "delivery_status": "delivered",
+            "delivered_at": {"$gte": month_start.isoformat()}
+        }},
+        {"$group": {"_id": "$delivery_driver_id", "count": {"$sum": 1}}}
+    ]
+    orders_counts = await db.orders.aggregate(orders_pipeline).to_list(None)
+    orders_map = {item["_id"]: item["count"] for item in orders_counts}
+    
+    # حساب متوسط التقييم لكل سائق دفعة واحدة باستخدام aggregation
+    ratings_pipeline = [
+        {"$match": {"driver_id": {"$in": driver_ids}}},
+        {"$group": {"_id": "$driver_id", "avg_rating": {"$avg": "$rating"}}}
+    ]
+    ratings_results = await db.driver_ratings.aggregate(ratings_pipeline).to_list(None)
+    ratings_map = {item["_id"]: round(item["avg_rating"], 1) for item in ratings_results}
+    
+    # بناء بيانات الـ leaderboard
     leaderboard_data = []
-    
     for driver_id in driver_ids:
-        # جلب معلومات السائق
-        driver = await db.users.find_one({"id": driver_id}, {"_id": 0, "id": 1, "name": 1, "full_name": 1})
+        driver = drivers_map.get(driver_id)
         if not driver:
             continue
         
-        # عدد الطلبات المسلمة هذا الشهر
-        month_orders = await db.orders.count_documents({
-            "delivery_driver_id": driver_id,
-            "delivery_status": "delivered",
-            "delivered_at": {"$gte": month_start.isoformat()}
-        })
-        
-        # معدل التقييم
-        ratings = await db.driver_ratings.find(
-            {"driver_id": driver_id},
-            {"_id": 0, "rating": 1}
-        ).to_list(1000)
-        avg_rating = round(sum(r["rating"] for r in ratings) / len(ratings), 1) if ratings else 0
+        month_orders = orders_map.get(driver_id, 0)
+        avg_rating = ratings_map.get(driver_id, 0)
         
         leaderboard_data.append({
             "driver_id": driver_id,
@@ -2816,9 +2901,25 @@ async def get_all_violations(
     
     violations = await db.driver_violations.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=200)
     
+    if not violations:
+        return {
+            "violations": [],
+            "stats": {"total": 0, "pending": 0, "applied": 0, "cancelled": 0, "total_amount": 0}
+        }
+    
+    # جلب معرفات السائقين
+    driver_ids = list(set([v.get("driver_id") for v in violations if v.get("driver_id")]))
+    
+    # جلب جميع السائقين دفعة واحدة
+    drivers_list = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "name": 1, "phone": 1}
+    ).to_list(None)
+    drivers_map = {d["id"]: d for d in drivers_list}
+    
     # إضافة معلومات السائق لكل مخالفة
     for v in violations:
-        driver = await db.users.find_one({"id": v.get("driver_id")}, {"_id": 0, "name": 1, "phone": 1})
+        driver = drivers_map.get(v.get("driver_id"))
         v["driver_name"] = driver.get("name") if driver else "غير معروف"
         v["driver_phone"] = driver.get("phone") if driver else ""
     

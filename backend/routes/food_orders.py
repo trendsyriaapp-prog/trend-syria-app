@@ -592,10 +592,20 @@ async def calculate_optimal_pickup_order(batch_id: str, driver_lat: float, drive
     if not customer_lat or not customer_lng:
         return batch_orders  # إرجاع بدون ترتيب
     
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in batch_orders if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
     # حساب المسافة من كل متجر للعميل
     stores_with_distance = []
     for order in batch_orders:
-        store = await db.food_stores.find_one({"id": order["store_id"]})
+        store = stores_map.get(order.get("store_id"))
         if store and store.get("latitude") and store.get("longitude"):
             distance_to_customer = haversine(
                 store["latitude"], store["longitude"],

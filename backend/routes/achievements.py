@@ -457,12 +457,22 @@ async def get_recent_achievements(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("unlocked_at", -1).limit(10).to_list(10)
     
+    if not recent:
+        return []
+    
+    # جلب معرفات السائقين
+    driver_ids = list(set([a.get("driver_id") for a in recent if a.get("driver_id")]))
+    
+    # جلب جميع السائقين دفعة واحدة
+    drivers_list = await db.users.find(
+        {"id": {"$in": driver_ids}},
+        {"_id": 0, "id": 1, "name": 1, "full_name": 1}
+    ).to_list(None)
+    drivers_map = {d["id"]: d for d in drivers_list}
+    
     result = []
     for ach in recent:
-        driver = await db.users.find_one(
-            {"id": ach["driver_id"]},
-            {"_id": 0, "name": 1, "full_name": 1}
-        )
+        driver = drivers_map.get(ach.get("driver_id"))
         ach_data = ACHIEVEMENTS.get(ach["achievement_id"], {})
         
         result.append({

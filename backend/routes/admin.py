@@ -939,18 +939,32 @@ async def get_all_sellers_with_status(user: dict = Depends(get_current_user)):
         }
     ).to_list(500)
     
-    # إضافة إحصائيات
+    if not sellers:
+        return []
+    
+    # جلب معرفات البائعين
+    seller_ids = [s["id"] for s in sellers]
+    
+    # جلب عدد المنتجات لكل بائع دفعة واحدة
+    products_pipeline = [
+        {"$match": {"seller_id": {"$in": seller_ids}}},
+        {"$group": {"_id": "$seller_id", "count": {"$sum": 1}}}
+    ]
+    products_counts = await db.products.aggregate(products_pipeline).to_list(None)
+    products_map = {item["_id"]: item["count"] for item in products_counts}
+    
+    # جلب عدد الطلبات المكتملة لكل بائع دفعة واحدة
+    orders_pipeline = [
+        {"$match": {"seller_id": {"$in": seller_ids}, "status": "delivered"}},
+        {"$group": {"_id": "$seller_id", "count": {"$sum": 1}}}
+    ]
+    orders_counts = await db.orders.aggregate(orders_pipeline).to_list(None)
+    orders_map = {item["_id"]: item["count"] for item in orders_counts}
+    
+    # ربط البيانات
     for seller in sellers:
-        # عدد المنتجات
-        products_count = await db.products.count_documents({"seller_id": seller["id"]})
-        seller["products_count"] = products_count
-        
-        # عدد الطلبات المكتملة
-        completed_orders = await db.orders.count_documents({
-            "seller_id": seller["id"],
-            "status": "delivered"
-        })
-        seller["completed_orders"] = completed_orders
+        seller["products_count"] = products_map.get(seller["id"], 0)
+        seller["completed_orders"] = orders_map.get(seller["id"], 0)
     
     return sellers
 
@@ -967,8 +981,22 @@ async def get_pending_products(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
+    if not products:
+        return []
+    
+    # جلب معرفات البائعين
+    seller_ids = list(set([p["seller_id"] for p in products if p.get("seller_id")]))
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "password": 0}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    # ربط البيانات
     for product in products:
-        seller = await db.users.find_one({"id": product["seller_id"]}, {"_id": 0, "password": 0})
+        seller = sellers_map.get(product.get("seller_id"))
         if seller:
             product["seller"] = seller
     
@@ -1069,8 +1097,22 @@ async def get_pending_food_products(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
+    if not products:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([p.get("store_id") for p in products if p.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # ربط البيانات
     for product in products:
-        store = await db.food_stores.find_one({"id": product.get("store_id")}, {"_id": 0})
+        store = stores_map.get(product.get("store_id"))
         if store:
             product["store"] = store
     
@@ -1537,9 +1579,17 @@ async def get_commissions_report(user: dict = Depends(get_current_user)):
             commission_by_seller[seller_id]["commission"] += commission
             commission_by_seller[seller_id]["seller_amount"] += item.get("seller_amount", 0)
     
+    # جلب معلومات جميع البائعين دفعة واحدة
+    seller_ids = list(commission_by_seller.keys())
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "name": 1, "phone": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
     sellers_report = []
     for seller_id, data in commission_by_seller.items():
-        seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "name": 1, "phone": 1})
+        seller = sellers_map.get(seller_id)
         sellers_report.append({
             "seller_id": seller_id,
             "seller_name": seller.get("name", "غير معروف") if seller else "غير معروف",
@@ -1813,12 +1863,26 @@ async def get_low_stock_products(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("stock", 1).to_list(100)
     
-    # Enrich with seller info
+    if not products:
+        return {
+            "threshold": threshold,
+            "count": 0,
+            "products": []
+        }
+    
+    # جلب معرفات البائعين
+    seller_ids = list(set([p.get("seller_id") for p in products if p.get("seller_id")]))
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "full_name": 1, "phone": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    # ربط البيانات
     for product in products:
-        seller = await db.users.find_one(
-            {"id": product.get("seller_id")},
-            {"_id": 0, "full_name": 1, "phone": 1}
-        )
+        seller = sellers_map.get(product.get("seller_id"))
         product["seller_info"] = seller or {}
     
     return {
@@ -2455,21 +2519,42 @@ async def get_food_stores_with_status(user: dict = Depends(get_current_user)):
         }
     ).to_list(500)
     
-    # إضافة إحصائيات
+    if not stores:
+        return []
+    
+    # جلب معرفات المتاجر والمالكين
+    store_ids = [s["id"] for s in stores]
+    owner_ids = list(set([s.get("owner_id") for s in stores if s.get("owner_id")]))
+    
+    # جلب عدد الأطباق لكل متجر دفعة واحدة
+    dishes_pipeline = [
+        {"$match": {"store_id": {"$in": store_ids}}},
+        {"$group": {"_id": "$store_id", "count": {"$sum": 1}}}
+    ]
+    dishes_counts = await db.food_dishes.aggregate(dishes_pipeline).to_list(None)
+    dishes_map = {item["_id"]: item["count"] for item in dishes_counts}
+    
+    # جلب عدد الطلبات المكتملة لكل متجر دفعة واحدة
+    orders_pipeline = [
+        {"$match": {"store_id": {"$in": store_ids}, "status": "delivered"}},
+        {"$group": {"_id": "$store_id", "count": {"$sum": 1}}}
+    ]
+    orders_counts = await db.food_orders.aggregate(orders_pipeline).to_list(None)
+    orders_map = {item["_id"]: item["count"] for item in orders_counts}
+    
+    # جلب معلومات المالكين دفعة واحدة
+    owners_list = await db.users.find(
+        {"id": {"$in": owner_ids}},
+        {"_id": 0, "id": 1, "name": 1, "phone": 1}
+    ).to_list(None)
+    owners_map = {o["id"]: o for o in owners_list}
+    
+    # ربط البيانات
     for store in stores:
-        # عدد الأطباق
-        dishes_count = await db.food_dishes.count_documents({"store_id": store["id"]})
-        store["dishes_count"] = dishes_count
+        store["dishes_count"] = dishes_map.get(store["id"], 0)
+        store["completed_orders"] = orders_map.get(store["id"], 0)
         
-        # عدد الطلبات المكتملة
-        completed_orders = await db.food_orders.count_documents({
-            "store_id": store["id"],
-            "status": "delivered"
-        })
-        store["completed_orders"] = completed_orders
-        
-        # اسم المالك
-        owner = await db.users.find_one({"id": store.get("owner_id")}, {"_id": 0, "name": 1, "phone": 1})
+        owner = owners_map.get(store.get("owner_id"))
         if owner:
             store["owner_name"] = owner.get("name", "")
             store["owner_phone"] = owner.get("phone", store.get("phone", ""))
@@ -2537,9 +2622,22 @@ async def get_all_food_offers(
     
     offers = await db.food_offers.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
     
-    # إضافة معلومات المتجر
+    if not offers:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([o.get("store_id") for o in offers if o.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "name": 1, "owner_name": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # ربط البيانات
     for offer in offers:
-        store = await db.food_stores.find_one({"id": offer.get("store_id")}, {"_id": 0, "name": 1, "owner_name": 1})
+        store = stores_map.get(offer.get("store_id"))
         if store:
             offer["store_name"] = store.get("name", "")
             offer["owner_name"] = store.get("owner_name", "")
@@ -2822,23 +2920,60 @@ async def get_flash_sale_requests(
     
     requests = await db.flash_sale_requests.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
     
-    # إضافة معلومات المتجر والمنتج
+    if not requests:
+        return {
+            "requests": [],
+            "stats": {
+                "pending": 0,
+                "approved": 0,
+                "rejected": 0,
+                "total": 0
+            }
+        }
+    
+    # جمع المعرفات
+    store_ids = list(set([r.get("store_id") for r in requests if r.get("store_id")]))
+    flash_sale_ids = list(set([r.get("flash_sale_id") for r in requests if r.get("flash_sale_id")]))
+    all_product_ids = []
+    for r in requests:
+        if r.get("product_ids"):
+            all_product_ids.extend(r["product_ids"])
+    all_product_ids = list(set(all_product_ids))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "name": 1, "owner_name": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # جلب جميع المنتجات دفعة واحدة
+    products_list = await db.food_products.find(
+        {"id": {"$in": all_product_ids}},
+        {"_id": 0, "id": 1, "name": 1, "price": 1}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # جلب جميع عروض الفلاش دفعة واحدة
+    flash_sales_list = await db.flash_sales.find(
+        {"id": {"$in": flash_sale_ids}},
+        {"_id": 0, "id": 1, "name": 1, "discount_percentage": 1}
+    ).to_list(None)
+    flash_sales_map = {f["id"]: f for f in flash_sales_list}
+    
+    # ربط البيانات
     for req in requests:
-        store = await db.food_stores.find_one({"id": req.get("store_id")}, {"_id": 0, "name": 1, "owner_name": 1})
+        store = stores_map.get(req.get("store_id"))
         if store:
             req["store_name"] = store.get("name", "")
             req["owner_name"] = store.get("owner_name", "")
         
         # معلومات المنتجات المختارة
         if req.get("product_ids"):
-            products = await db.food_products.find(
-                {"id": {"$in": req["product_ids"]}},
-                {"_id": 0, "id": 1, "name": 1, "price": 1}
-            ).to_list(None)
-            req["products"] = products
+            req["products"] = [products_map[pid] for pid in req["product_ids"] if pid in products_map]
         
         # معلومات عرض الفلاش
-        flash_sale = await db.flash_sales.find_one({"id": req.get("flash_sale_id")}, {"_id": 0, "name": 1, "discount_percentage": 1})
+        flash_sale = flash_sales_map.get(req.get("flash_sale_id"))
         if flash_sale:
             req["flash_sale_name"] = flash_sale.get("name", "")
             req["discount_percentage"] = flash_sale.get("discount_percentage", 0)
@@ -3915,12 +4050,22 @@ async def get_all_food_items(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(500)
     
-    # إضافة معلومات المتجر
+    if not items:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([i.get("store_id") for i in items if i.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "name": 1, "owner_name": 1, "store_type": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # ربط البيانات
     for item in items:
-        store = await db.food_stores.find_one(
-            {"id": item.get("store_id")},
-            {"_id": 0, "name": 1, "owner_name": 1, "store_type": 1}
-        )
+        store = stores_map.get(item.get("store_id"))
         if store:
             item["store_name"] = store.get("name", "")
             item["owner_name"] = store.get("owner_name", "")
@@ -3953,12 +4098,22 @@ async def get_pending_food_items(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
-    # إضافة معلومات المتجر والبائع
+    if not items:
+        return []
+    
+    # جلب معرفات المتاجر
+    store_ids = list(set([i.get("store_id") for i in items if i.get("store_id")]))
+    
+    # جلب جميع المتاجر دفعة واحدة
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}},
+        {"_id": 0, "id": 1, "name": 1, "owner_name": 1, "owner_id": 1, "store_type": 1}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # ربط البيانات
     for item in items:
-        store = await db.food_stores.find_one(
-            {"id": item.get("store_id")},
-            {"_id": 0, "name": 1, "owner_name": 1, "owner_id": 1, "store_type": 1}
-        )
+        store = stores_map.get(item.get("store_id"))
         if store:
             item["store_name"] = store.get("name", "")
             item["owner_name"] = store.get("owner_name", "")
