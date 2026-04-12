@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign, UserX } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
 import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useModalBackHandler } from '../hooks/useBackButton';
 
 const MobileNav = () => {
   const location = useLocation();
@@ -16,6 +17,14 @@ const MobileNav = () => {
   const { totalItems: foodCartCount, stores: foodStores } = useFoodCart();
   const { isFeatureEnabled } = useSettings();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+
+  // دالة إغلاق القائمة مع useCallback لتجنب إعادة الإنشاء
+  const closeAccountMenu = useCallback(() => {
+    setShowAccountMenu(false);
+  }, []);
+
+  // ✅ تسجيل القائمة مع زر الرجوع في Android
+  useModalBackHandler(showAccountMenu, closeAccountMenu);
 
   const isActive = (path) => location.pathname === path;
   
