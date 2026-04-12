@@ -77,15 +77,20 @@ const AdminDashboardPage = () => {
   const { user, token, logout, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  // State
+  // State - Lazy Loading System
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  
+  // البيانات تُحمّل عند الحاجة فقط (Lazy Loading)
+  const [tabData, setTabData] = useState({});
+  const [loadingTab, setLoadingTab] = useState(null);
+  
+  // Legacy state (للتوافق مع handlers)
   const [pendingSellers, setPendingSellers] = useState([]);
   const [pendingProducts, setPendingProducts] = useState([]);
   const [subAdmins, setSubAdmins] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  // قراءة التبويب من URL أو استخدام 'overview' كافتراضي
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [allUsers, setAllUsers] = useState([]);
   const [allSellers, setAllSellers] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
@@ -123,86 +128,173 @@ const AdminDashboardPage = () => {
     }
   }, [searchParams]);
 
-  // Fetch all data
+  // ==========================================
+  // 🚀 LAZY LOADING - جلب بيانات التاب عند الحاجة
+  // ==========================================
+  const fetchTabData = async (tab) => {
+    // إذا البيانات محملة مسبقاً، لا داعي لإعادة التحميل
+    if (tabData[tab]) return;
+    
+    setLoadingTab(tab);
+    
+    try {
+      let data = null;
+      
+      switch (tab) {
+        case 'users':
+          const usersRes = await axios.get(`${API}/api/admin/users`);
+          data = usersRes.data;
+          setAllUsers(data);
+          break;
+          
+        case 'sellers':
+          const sellersRes = await axios.get(`${API}/api/admin/sellers/all`);
+          data = sellersRes.data;
+          setAllSellers(data);
+          break;
+          
+        case 'products':
+          const productsRes = await axios.get(`${API}/api/admin/products/all`);
+          data = productsRes.data;
+          setAllProducts(data);
+          break;
+          
+        case 'orders':
+          const ordersRes = await axios.get(`${API}/api/admin/orders`);
+          data = ordersRes.data;
+          setAllOrders(data);
+          break;
+          
+        case 'pending-products':
+          const pendingProductsRes = await axios.get(`${API}/api/admin/products/pending`);
+          data = pendingProductsRes.data;
+          setPendingProducts(data);
+          break;
+          
+        case 'pending-sellers':
+          const pendingSellersRes = await axios.get(`${API}/api/admin/sellers/pending`);
+          data = pendingSellersRes.data;
+          setPendingSellers(data);
+          break;
+          
+        case 'pending-delivery':
+          const pendingDeliveryRes = await axios.get(`${API}/api/admin/delivery/pending`);
+          data = pendingDeliveryRes.data;
+          setPendingDelivery(data);
+          break;
+          
+        case 'delivery':
+          const deliveryRes = await axios.get(`${API}/api/admin/delivery/all`);
+          data = deliveryRes.data;
+          setAllDelivery(data);
+          break;
+          
+        case 'sub-admins':
+          const subAdminsRes = await axios.get(`${API}/api/admin/sub-admins`);
+          data = subAdminsRes.data;
+          setSubAdmins(data);
+          break;
+          
+        case 'notifications':
+          const notificationsRes = await axios.get(`${API}/api/admin/notifications`);
+          data = notificationsRes.data;
+          setNotifications(data);
+          break;
+          
+        case 'commissions':
+          const [commissionsRes, ratesRes] = await Promise.all([
+            axios.get(`${API}/api/admin/commissions`),
+            axios.get(`${API}/api/admin/commissions/rates`)
+          ]);
+          setCommissionsReport(commissionsRes.data);
+          setCommissionRates(ratesRes.data);
+          data = { report: commissionsRes.data, rates: ratesRes.data };
+          break;
+          
+        case 'pending-food-stores':
+          const foodStoresRes = await axios.get(`${API}/api/admin/food/stores?status=pending`);
+          data = foodStoresRes.data;
+          setPendingFoodStores(data);
+          break;
+          
+        case 'pending-food-items':
+          const foodItemsRes = await axios.get(`${API}/api/admin/food-items/pending`);
+          data = foodItemsRes.data;
+          setPendingFoodItems(data);
+          break;
+          
+        case 'food-items-all':
+          const allFoodItemsRes = await axios.get(`${API}/api/admin/food-items/all`);
+          data = allFoodItemsRes.data;
+          setAllFoodItems(data);
+          break;
+          
+        default:
+          // التابات الأخرى تجلب بياناتها داخلياً
+          data = true;
+      }
+      
+      // تخزين البيانات في الـ cache
+      setTabData(prev => ({ ...prev, [tab]: data || true }));
+      
+    } catch (error) {
+      console.error(`Error fetching ${tab} data:`, error);
+    } finally {
+      setLoadingTab(null);
+    }
+  };
+
+  // جلب بيانات التاب عند التبديل
+  useEffect(() => {
+    if (activeTab && activeTab !== 'overview') {
+      fetchTabData(activeTab);
+    }
+  }, [activeTab]);
+
+  // ==========================================
+  // جلب الإحصائيات فقط للـ Overview (التحميل الأولي)
+  // ==========================================
   useEffect(() => {
     if (user?.user_type === 'admin' || user?.user_type === 'sub_admin') {
-      fetchData();
+      fetchOverviewData();
     }
   }, [user]);
 
-  const fetchData = async () => {
+  const fetchOverviewData = async () => {
     try {
+      // جلب الإحصائيات والأعداد فقط (طلبات خفيفة)
       const requests = [
         axios.get(`${API}/api/admin/stats`),
-        axios.get(`${API}/api/admin/sellers/pending`),
-        axios.get(`${API}/api/admin/products/pending`),
-        axios.get(`${API}/api/admin/notifications`),
-        axios.get(`${API}/api/admin/users`),
-        axios.get(`${API}/api/admin/sellers/all`),
-        axios.get(`${API}/api/admin/orders`),
-        axios.get(`${API}/api/admin/products/all`),
-        axios.get(`${API}/api/admin/delivery/pending`),
-        axios.get(`${API}/api/admin/delivery/all`),
-        axios.get(`${API}/api/admin/food/stores?status=pending`),
-        axios.get(`${API}/api/payment/admin/withdrawals?status=pending`),
-        axios.get(`${API}/api/admin/food-items/pending`),
-        axios.get(`${API}/api/admin/food-items/all`)
+        axios.get(`${API}/api/admin/call-requests/count`).catch(() => ({ data: { count: 0 } })),
+        axios.get(`${API}/api/admin/emergency-help/count`).catch(() => ({ data: { count: 0 } })),
+        axios.get(`${API}/api/payment/admin/withdrawals?status=pending`).catch(() => ({ data: [] })),
       ];
       
-      if (user?.user_type === 'admin') {
-        requests.push(axios.get(`${API}/api/admin/sub-admins`));
-      }
-
-      const responses = await Promise.all(requests);
-      setStats(responses[0].data);
-      setPendingSellers(responses[1].data);
-      setPendingProducts(responses[2].data);
-      setNotifications(responses[3].data);
-      setAllUsers(responses[4].data);
-      setAllSellers(responses[5].data);
-      setAllOrders(responses[6].data);
-      setAllProducts(responses[7].data);
-      setPendingDelivery(responses[8].data);
-      setAllDelivery(responses[9].data);
-      setPendingFoodStores(responses[10]?.data || []);
-      setPendingWithdrawals(responses[11]?.data || []);
-      setPendingFoodItems(responses[12]?.data || []);
-      setAllFoodItems(responses[13]?.data || []);
+      const [statsRes, callRes, emergencyRes, withdrawalsRes] = await Promise.all(requests);
       
-      if (user?.user_type === 'admin' && responses[14]) {
-        setSubAdmins(responses[14].data);
-      }
+      setStats(statsRes.data);
+      setCallRequestsCount(callRes.data?.count || 0);
+      setEmergencyCount(emergencyRes.data?.count || 0);
+      setPendingWithdrawals(withdrawalsRes.data || []);
       
-      // Fetch commissions data
-      try {
-        const [commissionsRes, ratesRes] = await Promise.all([
-          axios.get(`${API}/api/admin/commissions`),
-          axios.get(`${API}/api/admin/commissions/rates`)
-        ]);
-        setCommissionsReport(commissionsRes.data);
-        setCommissionRates(ratesRes.data);
-      } catch (err) {
-        console.log('Commission data not available yet');
-      }
-      
-      // Fetch call requests and emergency counts
-      try {
-        const [callRes, emergencyRes] = await Promise.all([
-          axios.get(`${API}/api/admin/call-requests/count`).catch(() => ({ data: { count: 0 } })),
-          axios.get(`${API}/api/admin/emergency-help/count`).catch(() => ({ data: { count: 0 } }))
-        ]);
-        setCallRequestsCount(callRes.data?.count || 0);
-        setEmergencyCount(emergencyRes.data?.count || 0);
-      } catch (err) {
-        console.log('Call requests or emergency data not available');
-        setCallRequestsCount(0);
-        setEmergencyCount(0);
-      }
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      console.error('Error fetching overview data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // تحديث البيانات بعد action (إعادة جلب التاب الحالي فقط)
+  const refreshCurrentTab = () => {
+    // مسح cache التاب الحالي لإعادة الجلب
+    setTabData(prev => {
+      const newData = { ...prev };
+      delete newData[activeTab];
+      return newData;
+    });
+    fetchTabData(activeTab);
+    // تحديث الإحصائيات أيضاً
+    fetchOverviewData();
   };
 
   // Handlers
@@ -212,9 +304,10 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/approve`);
-      // لا نحتاج إشعار نجاح - اختفاء العنصر كافٍ
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل تفعيل البائع", variant: "destructive" });
     }
   };
@@ -225,9 +318,10 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/sellers/${sellerId}/reject`, { reason });
-      // لا نحتاج إشعار نجاح
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل رفض البائع", variant: "destructive" });
     }
   };
@@ -240,7 +334,7 @@ const AdminDashboardPage = () => {
     try {
       await axios.delete(`${API}/api/admin/sellers/${sellerId}`);
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل حذف البائع", variant: "destructive" });
     }
   };
@@ -255,7 +349,7 @@ const AdminDashboardPage = () => {
       } else {
         await axios.post(`${API}/api/admin/sellers/${sellerId}/suspend`);
       }
-      fetchData();
+      refreshCurrentTab();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل تغيير حالة البائع", variant: "destructive" });
     }
@@ -267,9 +361,10 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/products/${productId}/approve`);
-      // لا نحتاج إشعار نجاح
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل الموافقة على المنتج", variant: "destructive" });
     }
   };
@@ -283,9 +378,10 @@ const AdminDashboardPage = () => {
         approved: false, 
         rejection_reason: reason 
       });
-      // لا نحتاج إشعار نجاح
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل رفض المنتج", variant: "destructive" });
     }
   };
@@ -296,9 +392,10 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/approve`);
-      // لا نحتاج إشعار نجاح
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل تفعيل موظف التوصيل", variant: "destructive" });
     }
   };
@@ -309,9 +406,10 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.post(`${API}/api/admin/delivery/${driverId}/reject`, { reason });
-      // لا نحتاج إشعار نجاح
+      // تحديث الإحصائيات
+      fetchOverviewData();
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل رفض موظف التوصيل", variant: "destructive" });
     }
   };
@@ -324,7 +422,7 @@ const AdminDashboardPage = () => {
     try {
       await axios.delete(`${API}/api/admin/users/${driverId}`);
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل حذف السائق", variant: "destructive" });
     }
   };
@@ -333,7 +431,7 @@ const AdminDashboardPage = () => {
   const handleBanDriver = async (driverId) => {
     try {
       await axios.post(`${API}/api/admin/users/${driverId}/ban`);
-      fetchData();
+      refreshCurrentTab();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حظر السائق", variant: "destructive" });
     }
@@ -342,12 +440,12 @@ const AdminDashboardPage = () => {
   // حذف عميل
   const handleDeleteBuyer = async (buyerId) => {
     // تحديث فوري للواجهة
-    setAllBuyers(prev => prev.filter(b => b.id !== buyerId));
+    setAllUsers(prev => prev.filter(b => b.id !== buyerId));
     
     try {
       await axios.delete(`${API}/api/admin/users/${buyerId}`);
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل حذف العميل", variant: "destructive" });
     }
   };
@@ -356,7 +454,7 @@ const AdminDashboardPage = () => {
   const handleBanBuyer = async (buyerId) => {
     try {
       await axios.post(`${API}/api/admin/users/${buyerId}/ban`);
-      fetchData();
+      refreshCurrentTab();
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حظر العميل", variant: "destructive" });
     }
@@ -365,8 +463,13 @@ const AdminDashboardPage = () => {
   const handleAddSubAdmin = async (newSubAdmin) => {
     try {
       await axios.post(`${API}/api/admin/sub-admins`, newSubAdmin);
-      // لا نحتاج إشعار نجاح
-      fetchData(); // نحتاج fetchData هنا للحصول على البيانات الجديدة
+      // مسح cache لإعادة الجلب
+      setTabData(prev => {
+        const newData = { ...prev };
+        delete newData['sub-admins'];
+        return newData;
+      });
+      fetchTabData('sub-admins');
     } catch (error) {
       toast({ 
         title: "خطأ", 
@@ -390,9 +493,8 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.delete(`${API}/api/admin/sub-admins/${idToDelete}`);
-      // لا نحتاج إشعار نجاح
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل حذف المدير التنفيذي", variant: "destructive" });
     }
   };
@@ -400,8 +502,13 @@ const AdminDashboardPage = () => {
   const handleSendNotification = async (newNotification) => {
     try {
       await axios.post(`${API}/api/admin/notifications`, newNotification);
-      // لا نحتاج إشعار نجاح
-      fetchData(); // نحتاج fetchData للحصول على الإشعار الجديد
+      // مسح cache لإعادة الجلب
+      setTabData(prev => {
+        const newData = { ...prev };
+        delete newData['notifications'];
+        return newData;
+      });
+      fetchTabData('notifications');
     } catch (error) {
       toast({ title: "خطأ", description: "فشل إرسال الإشعار", variant: "destructive" });
     }
@@ -417,9 +524,8 @@ const AdminDashboardPage = () => {
     
     try {
       await axios.delete(`${API}/api/admin/notifications/${idToDelete}`);
-      // لا نحتاج إشعار نجاح
     } catch (error) {
-      fetchData();
+      refreshCurrentTab();
       toast({ title: "خطأ", description: "فشل حذف الإشعار", variant: "destructive" });
     }
   };
@@ -544,54 +650,67 @@ const AdminDashboardPage = () => {
               <h1 className="text-base font-bold text-gray-900">
                 {tabTitles[activeTab] || ''}
               </h1>
+              {loadingTab === activeTab && (
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-[#FF6B00]" />
+              )}
             </div>
 
-            {/* Tab content */}
-            {activeTab === 'users' && (
-              <UsersTab 
-                allUsers={allUsers} 
-                onDeleteUser={handleDeleteBuyer}
-                onBanUser={handleBanBuyer}
-              />
-            )}
-            {activeTab === 'sellers' && (
-              <SellersTab 
-                allSellers={allSellers} 
-                onDeleteSeller={handleDeleteSeller}
-                onBanSeller={handleSuspendSeller}
-                onApproveSeller={handleApproveSeller}
-                onRejectSeller={handleRejectSeller}
-              />
-            )}
-            {activeTab === 'products' && <ProductsTab allProducts={allProducts} />}
-            {activeTab === 'orders' && <OrdersTab allOrders={allOrders} />}
-            {activeTab === 'pending-products' && (
-              <PendingProductsTab 
-                pendingProducts={pendingProducts} 
-                onApprove={handleApproveProduct} 
-                onReject={handleRejectProduct} 
-              />
-            )}
-            {activeTab === 'pending-sellers' && (
-              <PendingSellersTab 
-                pendingSellers={pendingSellers} 
-                onApprove={handleApproveSeller} 
-                onReject={handleRejectSeller} 
-              />
-            )}
-            {activeTab === 'pending-delivery' && (
-              <DeliveryTab 
-                pendingDelivery={pendingDelivery}
-                isPending={true}
-                onApprove={handleApproveDelivery} 
-                onReject={handleRejectDelivery} 
-              />
-            )}
-            {activeTab === 'delivery' && (
-              <DeliveryTab 
-                allDelivery={allDelivery} 
-                isPending={false} 
-                onDeleteDriver={handleDeleteDriver}
+            {/* Loading indicator for tab */}
+            {loadingTab === activeTab ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-[#FF6B00] mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">جارٍ التحميل...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Tab content */}
+                {activeTab === 'users' && (
+                  <UsersTab 
+                    allUsers={allUsers} 
+                    onDeleteUser={handleDeleteBuyer}
+                    onBanUser={handleBanBuyer}
+                  />
+                )}
+                {activeTab === 'sellers' && (
+                  <SellersTab 
+                    allSellers={allSellers} 
+                    onDeleteSeller={handleDeleteSeller}
+                    onBanSeller={handleSuspendSeller}
+                    onApproveSeller={handleApproveSeller}
+                    onRejectSeller={handleRejectSeller}
+                  />
+                )}
+                {activeTab === 'products' && <ProductsTab allProducts={allProducts} />}
+                {activeTab === 'orders' && <OrdersTab allOrders={allOrders} />}
+                {activeTab === 'pending-products' && (
+                  <PendingProductsTab 
+                    pendingProducts={pendingProducts} 
+                    onApprove={handleApproveProduct} 
+                    onReject={handleRejectProduct} 
+                  />
+                )}
+                {activeTab === 'pending-sellers' && (
+                  <PendingSellersTab 
+                    pendingSellers={pendingSellers} 
+                    onApprove={handleApproveSeller} 
+                    onReject={handleRejectSeller} 
+                  />
+                )}
+                {activeTab === 'pending-delivery' && (
+                  <DeliveryTab 
+                    pendingDelivery={pendingDelivery}
+                    isPending={true}
+                    onApprove={handleApproveDelivery} 
+                    onReject={handleRejectDelivery} 
+                  />
+                )}
+                {activeTab === 'delivery' && (
+                  <DeliveryTab 
+                    allDelivery={allDelivery} 
+                    isPending={false} 
+                    onDeleteDriver={handleDeleteDriver}
                 onBanDriver={handleBanDriver}
               />
             )}
@@ -668,13 +787,13 @@ const AdminDashboardPage = () => {
               <FoodStoresTab />
             )}
             {activeTab === 'pending-food-stores' && (
-              <FoodStoresTab pendingOnly={true} pendingFoodStores={pendingFoodStores} onRefresh={fetchData} />
+              <FoodStoresTab pendingOnly={true} pendingFoodStores={pendingFoodStores} onRefresh={refreshCurrentTab} />
             )}
             {activeTab === 'pending-food-items' && (
               <PendingFoodItemsTab />
             )}
             {activeTab === 'food-items-all' && (
-              <FoodItemsTab allFoodItems={allFoodItems} onRefresh={fetchData} />
+              <FoodItemsTab allFoodItems={allFoodItems} onRefresh={refreshCurrentTab} />
             )}
             
             {activeTab === 'featured-stores' && user.user_type === 'admin' && (
@@ -754,6 +873,8 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'reset-database' && user.user_type === 'admin' && (
               <ResetDatabaseTab />
+            )}
+              </>
             )}
           </>
         ) : (
