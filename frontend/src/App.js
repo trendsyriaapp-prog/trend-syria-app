@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -24,8 +24,18 @@ import FeedbackButton from "./components/FeedbackButton";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { Loader2 } from 'lucide-react';
 
-// Pages
+// مكون تحميل للـ Lazy Loading
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <Loader2 className="w-8 h-8 animate-spin text-[#FF6B00]" />
+  </div>
+);
+
+// ==========================================
+// الصفحات الأساسية (تُحمّل مباشرة)
+// ==========================================
 import HomeRouter from "./pages/HomeRouter";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
@@ -38,9 +48,6 @@ import OrderTrackingPage from "./pages/OrderTrackingPage";
 import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import { SellerDocumentsPage, SellerDashboardPage, SellerPendingApproval } from "./pages/SellerPages";
-import { DeliveryDocuments, DeliveryDashboard, DeliveryPendingApproval } from "./pages/DeliveryPages";
-import AdminDashboardPage from "./pages/AdminPage";
 import StorePage from "./pages/StorePage";
 import FollowingPage from "./pages/FollowingPage";
 import FavoritesPage from "./pages/FavoritesPage";
@@ -48,34 +55,56 @@ import SettingsPage from "./pages/SettingsPage";
 import WalletPage from "./pages/WalletPage";
 import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
 import AboutPage from "./pages/AboutPage";
-import PackagingGuidePage from "./pages/PackagingGuidePage";
-import JoinAsSellerPage from "./pages/JoinAsSellerPage";
-import JoinAsDeliveryPage from "./pages/JoinAsDeliveryPage";
-import FoodPage from "./pages/FoodPage";
-import FoodFreeDeliveryPage from "./pages/FoodFreeDeliveryPage";
-import JoinAsFoodSellerPage from "./pages/JoinAsFoodSellerPage";
-import FoodStoreDashboard from "./pages/FoodStoreDashboard";
-import FoodStorePage from "./pages/FoodStorePage";
-import FoodCartPage from "./pages/FoodCartPage";
-import FoodMyCartPage from "./pages/FoodMyCartPage";
-import FoodBatchCheckoutPage from "./pages/FoodBatchCheckoutPage";
-import FoodBatchSuccessPage from "./pages/FoodBatchSuccessPage";
-import FoodOrderTracking from "./pages/FoodOrderTracking";
-import AllFoodStoresPage from "./pages/AllFoodStoresPage";
-import ReferralsPage from "./pages/ReferralsPage";
-import GiftsPage from "./pages/GiftsPage";
-import DeliveryMapPage from "./pages/DeliveryMapPage";
-import ChatPage from "./pages/ChatPage";
+
+// ==========================================
+// الصفحات الثقيلة (Lazy Loading)
+// ==========================================
+
+// صفحات البائعين
+const SellerPagesModule = lazy(() => import("./pages/SellerPages"));
+const SellerDocumentsPage = lazy(() => import("./pages/SellerPages").then(m => ({ default: m.SellerDocumentsPage })));
+const SellerDashboardPage = lazy(() => import("./pages/SellerPages").then(m => ({ default: m.SellerDashboardPage })));
+const SellerPendingApproval = lazy(() => import("./pages/SellerPages").then(m => ({ default: m.SellerPendingApproval })));
+
+// صفحات التوصيل
+const DeliveryDocuments = lazy(() => import("./pages/DeliveryPages").then(m => ({ default: m.DeliveryDocuments })));
+const DeliveryDashboard = lazy(() => import("./pages/DeliveryPages").then(m => ({ default: m.DeliveryDashboard })));
+const DeliveryPendingApproval = lazy(() => import("./pages/DeliveryPages").then(m => ({ default: m.DeliveryPendingApproval })));
+
+// صفحة الإدارة (الأكبر)
+const AdminDashboardPage = lazy(() => import("./pages/AdminPage"));
+
+// صفحات الطعام
+const FoodPage = lazy(() => import("./pages/FoodPage"));
+const FoodStoreDashboard = lazy(() => import("./pages/FoodStoreDashboard"));
+const FoodStorePage = lazy(() => import("./pages/FoodStorePage"));
+const FoodCartPage = lazy(() => import("./pages/FoodCartPage"));
+const FoodMyCartPage = lazy(() => import("./pages/FoodMyCartPage"));
+const FoodBatchCheckoutPage = lazy(() => import("./pages/FoodBatchCheckoutPage"));
+const FoodBatchSuccessPage = lazy(() => import("./pages/FoodBatchSuccessPage"));
+const FoodOrderTracking = lazy(() => import("./pages/FoodOrderTracking"));
+const AllFoodStoresPage = lazy(() => import("./pages/AllFoodStoresPage"));
+const FoodFreeDeliveryPage = lazy(() => import("./pages/FoodFreeDeliveryPage"));
+const JoinAsFoodSellerPage = lazy(() => import("./pages/JoinAsFoodSellerPage"));
+
+// صفحات أخرى
+const PackagingGuidePage = lazy(() => import("./pages/PackagingGuidePage"));
+const JoinAsSellerPage = lazy(() => import("./pages/JoinAsSellerPage"));
+const JoinAsDeliveryPage = lazy(() => import("./pages/JoinAsDeliveryPage"));
+const ReferralsPage = lazy(() => import("./pages/ReferralsPage"));
+const GiftsPage = lazy(() => import("./pages/GiftsPage"));
+const DeliveryMapPage = lazy(() => import("./pages/DeliveryMapPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 // Section Pages
-import SponsoredProductsPage from "./pages/SponsoredProductsPage";
-import FlashSaleProductsPage from "./pages/FlashSaleProductsPage";
-import FreeShippingProductsPage from "./pages/FreeShippingProductsPage";
-import BestSellersPage from "./pages/BestSellersPage";
-import NewArrivalsPage from "./pages/NewArrivalsPage";
-import AllProductsPage from "./pages/AllProductsPage";
-import BuyerWalletPage from "./pages/BuyerWalletPage";
-import DeleteAccountPage from "./pages/DeleteAccountPage";
+const SponsoredProductsPage = lazy(() => import("./pages/SponsoredProductsPage"));
+const FlashSaleProductsPage = lazy(() => import("./pages/FlashSaleProductsPage"));
+const FreeShippingProductsPage = lazy(() => import("./pages/FreeShippingProductsPage"));
+const BestSellersPage = lazy(() => import("./pages/BestSellersPage"));
+const NewArrivalsPage = lazy(() => import("./pages/NewArrivalsPage"));
+const AllProductsPage = lazy(() => import("./pages/AllProductsPage"));
+const BuyerWalletPage = lazy(() => import("./pages/BuyerWalletPage"));
+const DeleteAccountPage = lazy(() => import("./pages/DeleteAccountPage"));
 
 // مكون حماية صفحات الطعام
 const FoodRoute = ({ children }) => {
@@ -281,6 +310,7 @@ function App() {
                   {/* معالج المكالمات الواردة */}
                   <IncomingCallHandler />
               <main className="pb-16 md:pb-0">
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<HomeRouter />} />
@@ -360,6 +390,7 @@ function App() {
                 {/* Referrals */}
                 <Route path="/referrals" element={<ReferralsPage />} />
               </Routes>
+              </Suspense>
             </main>
             <MobileNav />
             <Toaster />

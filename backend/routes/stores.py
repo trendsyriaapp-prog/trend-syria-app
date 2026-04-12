@@ -1,7 +1,7 @@
 # /app/backend/routes/stores.py
 # مسارات المتاجر والمفضلة والمتابعة
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Query
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
@@ -79,11 +79,26 @@ async def unfollow_store(seller_id: str, user: dict = Depends(get_current_user))
     return {"message": "تم إلغاء المتابعة"}
 
 @router.get("/user/following")
-async def get_following_stores(user: dict = Depends(get_current_user)):
-    follows = await db.follows.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+async def get_following_stores(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    
+    # جلب العدد الإجمالي
+    total = await db.follows.count_documents({"user_id": user["id"]})
+    
+    if total == 0:
+        return {"data": [], "total": 0, "page": page, "pages": 0}
+    
+    follows = await db.follows.find(
+        {"user_id": user["id"]}, 
+        {"_id": 0}
+    ).skip(skip).limit(limit).to_list(limit)
     
     if not follows:
-        return []
+        return {"data": [], "total": total, "page": page, "pages": (total + limit - 1) // limit}
     
     # جلب جميع البائعين ووثائقهم دفعة واحدة
     seller_ids = [f["seller_id"] for f in follows]
@@ -121,7 +136,12 @@ async def get_following_stores(user: dict = Depends(get_current_user)):
                 "followed_at": follow.get("created_at")
             })
     
-    return stores
+    return {
+        "data": stores,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit
+    }
 
 # ============== Favorites ==============
 
@@ -154,11 +174,26 @@ async def remove_from_favorites(product_id: str, user: dict = Depends(get_curren
     return {"message": "تمت الإزالة من المفضلة"}
 
 @router.get("/favorites")
-async def get_favorites(user: dict = Depends(get_current_user)):
-    favorites = await db.favorites.find({"user_id": user["id"]}, {"_id": 0}).to_list(100)
+async def get_favorites(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    
+    # جلب العدد الإجمالي
+    total = await db.favorites.count_documents({"user_id": user["id"]})
+    
+    if total == 0:
+        return {"data": [], "total": 0, "page": page, "pages": 0}
+    
+    favorites = await db.favorites.find(
+        {"user_id": user["id"]}, 
+        {"_id": 0}
+    ).skip(skip).limit(limit).to_list(limit)
     
     if not favorites:
-        return []
+        return {"data": [], "total": total, "page": page, "pages": (total + limit - 1) // limit}
     
     # جلب جميع المنتجات دفعة واحدة
     product_ids = [fav["product_id"] for fav in favorites]
@@ -179,7 +214,12 @@ async def get_favorites(user: dict = Depends(get_current_user)):
             product_copy["added_at"] = added_at_map.get(fav["product_id"])
             products.append(product_copy)
     
-    return products
+    return {
+        "data": products,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit
+    }
 
 @router.get("/favorites/check/{product_id}")
 async def check_favorite(product_id: str, user: dict = Depends(get_current_user)):
