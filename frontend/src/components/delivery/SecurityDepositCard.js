@@ -222,7 +222,8 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
                   setDepositAmount(val);
                 }
               }}
-              className="w-full p-3 border rounded-lg text-lg text-center text-gray-900 bg-white"
+              className="w-full p-3 border border-gray-300 rounded-lg text-lg text-center font-bold bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              style={{ color: '#111827', caretColor: '#111827' }}
               placeholder="أدخل المبلغ"
               required
             />
