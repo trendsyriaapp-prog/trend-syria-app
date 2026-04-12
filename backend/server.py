@@ -155,7 +155,8 @@ app = FastAPI(
 )
 
 # ⚡ GZip Compression - تقليل حجم البيانات المرسلة بنسبة 70-90%
-app.add_middleware(GZipMiddleware, minimum_size=500)
+# خفض الحد الأدنى إلى 256 bytes لضغط المزيد من الاستجابات
+app.add_middleware(GZipMiddleware, minimum_size=256)
 
 logger.info("✅ FastAPI app created with GZip compression")
 

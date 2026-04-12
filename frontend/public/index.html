@@ -16,8 +16,17 @@
         <meta name="msapplication-TileImage" content="/icons/icon-144.png" />
         <meta name="msapplication-TileColor" content="#FF6B00" />
         
+        <!-- ⚡ Preconnect & DNS Prefetch للأداء -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://firebaseinstallations.googleapis.com" />
+        <link rel="preconnect" href="https://firebaseremoteconfig.googleapis.com" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+        
+        <!-- Preload Critical Assets -->
+        <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" as="style" />
+        
         <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <title>ترند سورية | التسوق الأفضل</title>
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>

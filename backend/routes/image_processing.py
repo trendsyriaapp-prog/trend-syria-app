@@ -1515,3 +1515,181 @@ async def optimize_images_batch(
         "total_compression": round(((total_original - total_optimized) / total_original) * 100, 1) if total_original > 0 else 0,
         "images": results
     }
+
+
+
+# ============== Upload مع تحسين تلقائي ==============
+
+def generate_responsive_srcset(image: Image.Image, base_filename: str) -> dict:
+    """
+    إنشاء صور متعددة الأحجام للتجاوب
+    مثل: srcset="image-400.webp 400w, image-800.webp 800w, image-1200.webp 1200w"
+    """
+    RESPONSIVE_SIZES = [
+        {"name": "xs", "width": 200, "quality": 75},    # للـ thumbnail
+        {"name": "sm", "width": 400, "quality": 80},    # للموبايل
+        {"name": "md", "width": 800, "quality": 85},    # للتابلت
+        {"name": "lg", "width": 1200, "quality": 90},   # للديسكتوب
+    ]
+    
+    results = {}
+    original_width, original_height = image.size
+    
+    for size_config in RESPONSIVE_SIZES:
+        target_width = size_config["width"]
+        
+        # لا ننشئ حجماً أكبر من الأصلي
+        if target_width > original_width:
+            continue
+        
+        # حساب الارتفاع مع الحفاظ على النسبة
+        ratio = target_width / original_width
+        target_height = int(original_height * ratio)
+        
+        # تغيير الحجم
+        resized = image.copy()
+        resized.thumbnail((target_width, target_height), Image.Resampling.LANCZOS)
+        
+        # ضغط إلى WebP
+        webp_data = convert_to_webp(resized, quality=size_config["quality"])
+        
+        results[size_config["name"]] = {
+            "width": resized.width,
+            "height": resized.height,
+            "size_kb": round(len(webp_data) / 1024, 2),
+            "data": base64.b64encode(webp_data).decode('utf-8')
+        }
+    
+    return results
+
+
+@router.post("/upload-optimized")
+async def upload_optimized_image(
+    file: UploadFile = File(...),
+    generate_sizes: bool = Form(default=True),
+    max_width: int = Form(default=1200),
+    max_height: int = Form(default=1200),
+    quality: int = Form(default=85)
+):
+    """
+    رفع صورة مع تحسين تلقائي
+    
+    - ضغط إلى WebP (أصغر 25-35%)
+    - إنشاء أحجام متعددة للتجاوب
+    - إرجاع URLs للتخزين
+    """
+    try:
+        # قراءة الصورة
+        content = await file.read()
+        original_size = len(content)
+        
+        if original_size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10MB")
+        
+        image = Image.open(io.BytesIO(content))
+        original_format = image.format or "UNKNOWN"
+        original_dims = f"{image.width}x{image.height}"
+        
+        # تغيير الحجم إذا كانت كبيرة
+        if image.width > max_width or image.height > max_height:
+            image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        
+        # تحسين جودة الصورة
+        image = enhance_image(image)
+        
+        # الصورة الرئيسية - WebP
+        main_webp = convert_to_webp(image, quality=quality)
+        main_base64 = base64.b64encode(main_webp).decode('utf-8')
+        
+        # حساب نسبة الضغط
+        compression_ratio = round(((original_size - len(main_webp)) / original_size) * 100, 1)
+        
+        response_data = {
+            "success": True,
+            "original": {
+                "format": original_format,
+                "dimensions": original_dims,
+                "size_kb": round(original_size / 1024, 2)
+            },
+            "optimized": {
+                "format": "WebP",
+                "dimensions": f"{image.width}x{image.height}",
+                "size_kb": round(len(main_webp) / 1024, 2),
+                "compression_ratio": compression_ratio,
+                "data_url": f"data:image/webp;base64,{main_base64}"
+            }
+        }
+        
+        # إنشاء أحجام متعددة
+        if generate_sizes:
+            responsive = generate_responsive_srcset(image, file.filename or "image")
+            response_data["responsive_sizes"] = responsive
+        
+        return response_data
+        
+    except Exception as e:
+        logger.error(f"Upload optimization error: {e}")
+        raise HTTPException(status_code=500, detail=f"فشل تحسين الصورة: {str(e)}")
+
+
+@router.post("/bulk-upload-optimized")
+async def bulk_upload_optimized(
+    files: list[UploadFile] = File(...),
+    max_width: int = Form(default=1200),
+    quality: int = Form(default=85)
+):
+    """
+    رفع عدة صور مع تحسين تلقائي (حد أقصى 10)
+    """
+    results = []
+    total_original = 0
+    total_optimized = 0
+    
+    for file in files[:10]:
+        try:
+            content = await file.read()
+            original_size = len(content)
+            total_original += original_size
+            
+            image = Image.open(io.BytesIO(content))
+            
+            # تغيير الحجم
+            if image.width > max_width:
+                ratio = max_width / image.width
+                new_height = int(image.height * ratio)
+                image = image.resize((max_width, new_height), Image.Resampling.LANCZOS)
+            
+            # تحسين وضغط
+            image = enhance_image(image)
+            webp_data = convert_to_webp(image, quality=quality)
+            optimized_size = len(webp_data)
+            total_optimized += optimized_size
+            
+            results.append({
+                "filename": file.filename,
+                "success": True,
+                "original_size_kb": round(original_size / 1024, 2),
+                "optimized_size_kb": round(optimized_size / 1024, 2),
+                "compression": round(((original_size - optimized_size) / original_size) * 100, 1),
+                "dimensions": f"{image.width}x{image.height}",
+                "data_url": f"data:image/webp;base64,{base64.b64encode(webp_data).decode('utf-8')}"
+            })
+            
+        except Exception as e:
+            results.append({
+                "filename": file.filename,
+                "success": False,
+                "error": str(e)
+            })
+    
+    return {
+        "success": True,
+        "summary": {
+            "total_files": len(results),
+            "successful": len([r for r in results if r.get("success")]),
+            "total_original_kb": round(total_original / 1024, 2),
+            "total_optimized_kb": round(total_optimized / 1024, 2),
+            "total_compression": round(((total_original - total_optimized) / total_original) * 100, 1) if total_original > 0 else 0
+        },
+        "images": results
+    }
