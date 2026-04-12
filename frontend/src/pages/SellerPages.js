@@ -935,23 +935,16 @@ const SellerDashboardPage = () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       
-      // جلب صورة المتجر
-      try {
-        const settingsRes = await axios.get(`${API}/api/auth/seller/store-settings`, { headers });
-        if (settingsRes.data?.store_logo) {
-          setStoreLogo(settingsRes.data.store_logo);
-        }
-      } catch (e) {
-        console.log('Could not fetch store logo');
-      }
+      // جلب جميع البيانات الأساسية بالتوازي
+      const [settingsRes, flashRes] = await Promise.all([
+        axios.get(`${API}/api/auth/seller/store-settings`, { headers }).catch(() => ({ data: {} })),
+        axios.get(`${API}/api/seller/promotion-settings`, { headers }).catch(() => ({ data: {} }))
+      ]);
       
-      // جلب إعدادات الفلاش للتحقق من التفعيل
-      try {
-        const flashRes = await axios.get(`${API}/api/seller/promotion-settings`, { headers });
-        setFlashEnabled(flashRes.data?.flash_enabled_for_me !== false);
-      } catch (e) {
-        console.log('Could not fetch flash settings');
+      if (settingsRes.data?.store_logo) {
+        setStoreLogo(settingsRes.data.store_logo);
       }
+      setFlashEnabled(flashRes.data?.flash_enabled_for_me !== false);
       
       if (isFoodSeller) {
         // بائع طعام - جلب الأطباق وطلبات الطعام

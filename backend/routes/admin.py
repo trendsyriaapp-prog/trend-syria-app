@@ -1,7 +1,7 @@
 # /app/backend/routes/admin.py
 # مسارات لوحة الإدارة
 
-from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Depends, Body, Query
 from datetime import datetime, timezone
 import uuid
 import hashlib
@@ -414,16 +414,48 @@ async def get_admin_stats(user: dict = Depends(get_current_user)):
 # ============== Users Management ==============
 
 @router.get("/users")
-async def get_all_users(user: dict = Depends(get_current_user)):
+async def get_all_users(
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
+    search: str = Query(None, description="البحث بالاسم أو الهاتف"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع المستخدمين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    users = await db.users.find(
-        {"user_type": "buyer"},
-        {"_id": 0, "password": 0}
-    ).sort("created_at", -1).to_list(200)
+    # بناء الاستعلام
+    query = {"user_type": "buyer"}
     
-    return users
+    # البحث إذا وُجد
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # حساب الـ skip
+    skip = (page - 1) * limit
+    
+    # جلب البيانات
+    users = await db.users.find(
+        query,
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # عدد الإجمالي (للـ pagination)
+    total = await db.users.count_documents(query)
+    
+    return {
+        "data": users,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": (total + limit - 1) // limit
+        }
+    }
 
 # ============== Users/Drivers Delete & Ban ==============
 
@@ -662,18 +694,49 @@ async def delete_pending_food_item(item_id: str, user: dict = Depends(get_curren
 
 
 @router.get("/sellers/all")
-async def get_all_sellers(user: dict = Depends(get_current_user)):
+async def get_all_sellers(
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
+    search: str = Query(None, description="البحث بالاسم أو الهاتف أو اسم المتجر"),
+    status: str = Query(None, description="حالة البائع: approved, pending, rejected"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع البائعين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    # بناء الاستعلام
+    query = {"user_type": "seller"}
+    
+    # البحث إذا وُجد
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}},
+            {"store_name": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # فلتر الحالة
+    if status == "approved":
+        query["is_approved"] = True
+    elif status == "pending":
+        query["is_approved"] = {"$ne": True}
+    
+    # حساب الـ skip
+    skip = (page - 1) * limit
+    
     # جلب البائعين
     sellers = await db.users.find(
-        {"user_type": "seller"},
+        query,
         {"_id": 0, "password": 0}
-    ).to_list(100)
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     if not sellers:
-        return []
+        return {
+            "data": [],
+            "pagination": {"page": page, "limit": limit, "total": 0, "pages": 0}
+        }
     
     # جلب معرفات البائعين
     seller_ids = [s["id"] for s in sellers]
@@ -702,7 +765,18 @@ async def get_all_sellers(user: dict = Depends(get_current_user)):
         seller["documents"] = docs_map.get(seller["id"])
         seller["products_count"] = counts_map.get(seller["id"], 0)
     
-    return sellers
+    # عدد الإجمالي (للـ pagination)
+    total = await db.users.count_documents(query)
+    
+    return {
+        "data": sellers,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": (total + limit - 1) // limit
+        }
+    }
 
 @router.post("/sellers/{seller_id}/approve")
 async def approve_seller(seller_id: str, user: dict = Depends(get_current_user)):
@@ -1003,12 +1077,54 @@ async def get_pending_products(user: dict = Depends(get_current_user)):
     return products
 
 @router.get("/products/all")
-async def get_all_products(user: dict = Depends(get_current_user)):
+async def get_all_products(
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
+    search: str = Query(None, description="البحث بالاسم"),
+    category: str = Query(None, description="الفئة"),
+    status: str = Query(None, description="حالة المنتج: approved, pending, rejected"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع المنتجات مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    products = await db.products.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return products
+    # بناء الاستعلام
+    query = {}
+    
+    # البحث إذا وُجد
+    if search:
+        query["name"] = {"$regex": search, "$options": "i"}
+    
+    # فلتر الفئة
+    if category:
+        query["category"] = category
+    
+    # فلتر الحالة
+    if status == "approved":
+        query["approval_status"] = "approved"
+    elif status == "pending":
+        query["approval_status"] = "pending"
+    elif status == "rejected":
+        query["approval_status"] = "rejected"
+    
+    # حساب الـ skip
+    skip = (page - 1) * limit
+    
+    products = await db.products.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # عدد الإجمالي
+    total = await db.products.count_documents(query)
+    
+    return {
+        "data": products,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": (total + limit - 1) // limit
+        }
+    }
 
 @router.post("/products/{product_id}/approve")
 async def approve_product(product_id: str, user: dict = Depends(get_current_user)):
@@ -1251,17 +1367,47 @@ async def get_pending_delivery(user: dict = Depends(get_current_user)):
     return result
 
 @router.get("/delivery/all")
-async def get_all_delivery(user: dict = Depends(get_current_user)):
+async def get_all_delivery(
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
+    search: str = Query(None, description="البحث بالاسم أو الهاتف"),
+    status: str = Query(None, description="حالة السائق: approved, pending"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع السائقين مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
+    # بناء الاستعلام
+    query = {"user_type": "delivery"}
+    
+    # البحث إذا وُجد
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # فلتر الحالة
+    if status == "approved":
+        query["is_approved"] = True
+    elif status == "pending":
+        query["is_approved"] = {"$ne": True}
+    
+    # حساب الـ skip
+    skip = (page - 1) * limit
+    
     drivers = await db.users.find(
-        {"user_type": "delivery"},
+        query,
         {"_id": 0, "password": 0}
-    ).sort("created_at", -1).to_list(100)
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     if not drivers:
-        return []
+        return {
+            "data": [],
+            "pagination": {"page": page, "limit": limit, "total": 0, "pages": 0}
+        }
     
     # جلب معرفات السائقين
     driver_ids = [d["id"] for d in drivers]
@@ -1286,7 +1432,18 @@ async def get_all_delivery(user: dict = Depends(get_current_user)):
     for driver in drivers:
         driver["documents"] = docs_map.get(driver["id"])
     
-    return drivers
+    # عدد الإجمالي
+    total = await db.users.count_documents(query)
+    
+    return {
+        "data": drivers,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": (total + limit - 1) // limit
+        }
+    }
 
 @router.post("/delivery/{driver_id}/approve")
 async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_current_user)):
@@ -1454,12 +1611,49 @@ async def delete_sub_admin(sub_admin_id: str, user: dict = Depends(get_current_u
 # ============== Orders Management ==============
 
 @router.get("/orders")
-async def get_all_orders(user: dict = Depends(get_current_user)):
+async def get_all_orders(
+    page: int = Query(1, ge=1, description="رقم الصفحة"),
+    limit: int = Query(50, ge=1, le=100, description="عدد النتائج في الصفحة"),
+    search: str = Query(None, description="البحث برقم الطلب أو الهاتف"),
+    status: str = Query(None, description="حالة الطلب"),
+    user: dict = Depends(get_current_user)
+):
+    """جلب جميع الطلبات مع Pagination"""
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="للمدراء فقط")
     
-    orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return orders
+    # بناء الاستعلام
+    query = {}
+    
+    # البحث إذا وُجد
+    if search:
+        query["$or"] = [
+            {"order_number": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}},
+            {"user_name": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # فلتر الحالة
+    if status:
+        query["status"] = status
+    
+    # حساب الـ skip
+    skip = (page - 1) * limit
+    
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # عدد الإجمالي
+    total = await db.orders.count_documents(query)
+    
+    return {
+        "data": orders,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": (total + limit - 1) // limit
+        }
+    }
 
 # ============== Commission Management ==============
 

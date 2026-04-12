@@ -143,49 +143,50 @@ const AdminDashboardPage = () => {
       switch (tab) {
         case 'users':
           const usersRes = await axios.get(`${API}/api/admin/users`);
-          data = usersRes.data;
+          // دعم الـ pagination - البيانات في data أو مباشرة
+          data = usersRes.data?.data || usersRes.data;
           setAllUsers(data);
           break;
           
         case 'sellers':
           const sellersRes = await axios.get(`${API}/api/admin/sellers/all`);
-          data = sellersRes.data;
+          data = sellersRes.data?.data || sellersRes.data;
           setAllSellers(data);
           break;
           
         case 'products':
           const productsRes = await axios.get(`${API}/api/admin/products/all`);
-          data = productsRes.data;
+          data = productsRes.data?.data || productsRes.data;
           setAllProducts(data);
           break;
           
         case 'orders':
           const ordersRes = await axios.get(`${API}/api/admin/orders`);
-          data = ordersRes.data;
+          data = ordersRes.data?.data || ordersRes.data;
           setAllOrders(data);
           break;
           
         case 'pending-products':
           const pendingProductsRes = await axios.get(`${API}/api/admin/products/pending`);
-          data = pendingProductsRes.data;
+          data = pendingProductsRes.data?.data || pendingProductsRes.data;
           setPendingProducts(data);
           break;
           
         case 'pending-sellers':
           const pendingSellersRes = await axios.get(`${API}/api/admin/sellers/pending`);
-          data = pendingSellersRes.data;
+          data = pendingSellersRes.data?.data || pendingSellersRes.data;
           setPendingSellers(data);
           break;
           
         case 'pending-delivery':
           const pendingDeliveryRes = await axios.get(`${API}/api/admin/delivery/pending`);
-          data = pendingDeliveryRes.data;
+          data = pendingDeliveryRes.data?.data || pendingDeliveryRes.data;
           setPendingDelivery(data);
           break;
           
         case 'delivery':
           const deliveryRes = await axios.get(`${API}/api/admin/delivery/all`);
-          data = deliveryRes.data;
+          data = deliveryRes.data?.data || deliveryRes.data;
           setAllDelivery(data);
           break;
           

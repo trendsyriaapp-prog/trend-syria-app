@@ -388,37 +388,34 @@ const FoodStoreDashboard = () => {
 
   const fetchStoreData = async () => {
     try {
-      const res = await axios.get(`${API}/api/food/my-store`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStore(res.data.store);
-      setProducts(res.data.products || []);
+      // جلب جميع البيانات بالتوازي لتسريع التحميل
+      const [storeRes, offersRes] = await Promise.all([
+        axios.get(`${API}/api/food/my-store`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/api/food/my-offers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: [] }))
+      ]);
       
-      // جلب العروض
-      const offersRes = await axios.get(`${API}/api/food/my-offers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      setStore(storeRes.data.store);
+      setProducts(storeRes.data.products || []);
       setOffers(offersRes.data || []);
       
-      // جلب معلومات العمولة
-      try {
-        const commissionRes = await axios.get(`${API}/api/food/my-store/commission`, {
+      // جلب البيانات الثانوية بالتوازي (لا تمنع التحميل إذا فشلت)
+      const [commissionRes, flashRes] = await Promise.all([
+        axios.get(`${API}/api/food/my-store/commission`, {
           headers: { Authorization: `Bearer ${token}` }
-        });
-        setCommissionInfo(commissionRes.data);
-      } catch (e) {
-        console.log('Commission info not available');
-      }
+        }).catch(() => ({ data: null })),
+        axios.get(`${API}/api/seller/promotion-settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: {} }))
+      ]);
       
-      // جلب إعدادات الفلاش للتحقق من التفعيل
-      try {
-        const flashRes = await axios.get(`${API}/api/seller/promotion-settings`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setFlashEnabledForMe(flashRes.data?.flash_enabled_for_me !== false);
-      } catch (e) {
-        console.log('Flash settings not available');
+      if (commissionRes.data) {
+        setCommissionInfo(commissionRes.data);
       }
+      setFlashEnabledForMe(flashRes.data?.flash_enabled_for_me !== false);
       
       // جلب بيانات المحفظة
       await fetchWalletData();
