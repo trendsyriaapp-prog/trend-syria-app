@@ -46,32 +46,97 @@ const getNotificationLink = (notification) => {
   const { type, order_id, product_id, data } = notification;
   
   switch (type) {
+    // ========== إشعارات الطلبات ==========
     case 'order_status':
     case 'delivery':
     case 'delivery_ready':
     case 'new_order':
       if (order_id) return `/orders/${order_id}/tracking`;
       break;
+    
+    // ========== إشعارات الهدايا ==========
     case 'gift_received':
     case 'gift_accepted':
     case 'gift_completed':
     case 'gift_order_created':
       return '/gifts';
+    
+    // ========== إشعارات المنتجات ==========
     case 'review':
     case 'product':
+    case 'new_product':
+    case 'low_stock':
       if (product_id) return `/products/${product_id}`;
       break;
+    
+    // ========== إشعارات طلبات الطعام ==========
     case 'food_order':
       if (order_id) return `/food/order/${order_id}`;
       if (data?.order_id) return `/food/order/${data.order_id}`;
       break;
+    
+    // ========== إشعارات العروض ==========
     case 'promotion':
     case 'flash_sale':
     case 'daily_deal':
       return '/';
-    case 'low_stock':
-      if (product_id) return `/seller/products`;
-      break;
+    
+    // ========== إشعارات المدير - التأمينات ==========
+    case 'security_deposit':
+    case 'security_deposit_request':
+      return '/admin?tab=driver-security';
+    
+    // ========== إشعارات المدير - طلبات الانضمام ==========
+    case 'new_seller_registration':
+    case 'seller_join_request':
+      return '/admin?tab=pending-sellers';
+    
+    case 'new_driver_registration':
+    case 'driver_join_request':
+      return '/admin?tab=pending-drivers';
+    
+    // ========== إشعارات المدير - المحفظة ==========
+    case 'topup_request':
+    case 'withdrawal_request':
+      return '/admin?tab=wallet-requests';
+    
+    // ========== إشعارات المدير - التقييمات والشكاوى ==========
+    case 'new_feedback':
+      return '/admin?tab=feedback';
+    
+    // ========== إشعارات المدير - طلبات Flash Sale ==========
+    case 'flash_request':
+    case 'flash_request_approved':
+    case 'flash_request_rejected':
+      return '/admin?tab=flash-requests';
+    
+    // ========== إشعارات المدير - اقتراحات الأصناف ==========
+    case 'category_suggestion':
+      return '/admin?tab=category-suggestions';
+    
+    // ========== إشعارات البائع ==========
+    case 'store_approved':
+    case 'store_rejected':
+    case 'store_suspended':
+    case 'store_activated':
+      return '/seller/dashboard';
+    
+    // ========== إشعارات السائق ==========
+    case 'account_suspended':
+    case 'account_reactivated':
+    case 'account_terminated':
+    case 'penalty_applied':
+      return '/delivery/dashboard';
+    
+    // ========== إشعارات المحفظة ==========
+    case 'wallet_topup':
+    case 'topup_approved':
+    case 'topup_rejected':
+    case 'withdrawal_approved':
+    case 'withdrawal_rejected':
+      return '/wallet';
+    
+    // ========== الافتراضي ==========
     default:
       if (order_id) return `/orders/${order_id}/tracking`;
       if (product_id) return `/products/${product_id}`;
