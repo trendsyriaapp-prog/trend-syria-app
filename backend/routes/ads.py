@@ -82,17 +82,26 @@ async def get_active_ads():
             "end_date": {"$gte": now}
         }, {"_id": 0}).to_list(5)
         
-        for ad in product_ads:
-            product = await db.products.find_one({"id": ad.get("product_id")}, {"_id": 0})
-            if product:
-                banners.append({
-                    "id": ad["id"],
-                    "title": product.get("name", ""),
-                    "description": f"خصم {ad.get('discount', 0)}%" if ad.get('discount') else "",
-                    "image": product.get("images", [None])[0],
-                    "link": f"/product/{product['id']}",
-                    "background_color": "#FF6B00"
-                })
+        if product_ads:
+            # جلب جميع المنتجات دفعة واحدة
+            product_ids = [ad.get("product_id") for ad in product_ads if ad.get("product_id")]
+            products_list = await db.products.find(
+                {"id": {"$in": product_ids}},
+                {"_id": 0}
+            ).to_list(None)
+            products_map = {p["id"]: p for p in products_list}
+            
+            for ad in product_ads:
+                product = products_map.get(ad.get("product_id"))
+                if product:
+                    banners.append({
+                        "id": ad["id"],
+                        "title": product.get("name", ""),
+                        "description": f"خصم {ad.get('discount', 0)}%" if ad.get('discount') else "",
+                        "image": product.get("images", [None])[0],
+                        "link": f"/product/{product['id']}",
+                        "background_color": "#FF6B00"
+                    })
     
     return banners
 
@@ -205,15 +214,20 @@ async def get_my_ads(
         {"seller_id": current_user.get("id")}
     ).sort("created_at", -1).to_list(length=100)
     
-    # تحديث حالة الإعلانات المنتهية
+    # تحديث حالة الإعلانات المنتهية دفعة واحدة
     now = datetime.utcnow()
+    expired_ad_ids = []
     for ad in ads:
         if ad.get("status") == "active" and ad.get("end_date") and ad["end_date"] < now:
-            await db.ads.update_one(
-                {"id": ad["id"]},
-                {"$set": {"status": "expired"}}
-            )
+            expired_ad_ids.append(ad["id"])
             ad["status"] = "expired"
+    
+    # تحديث دفعي للإعلانات المنتهية
+    if expired_ad_ids:
+        await db.ads.update_many(
+            {"id": {"$in": expired_ad_ids}},
+            {"$set": {"status": "expired"}}
+        )
     
     return [{
         "id": ad["id"],
@@ -259,14 +273,11 @@ async def get_featured_products(
     products_dict = {p["id"]: p for p in products}
     
     result = []
+    ad_ids_to_update = []
     for ad in ads:
         product = products_dict.get(ad["product_id"])
         if product:
-            # زيادة عدد المشاهدات
-            await db.ads.update_one(
-                {"id": ad["id"]},
-                {"$inc": {"views": 1}}
-            )
+            ad_ids_to_update.append(ad["id"])
             
             result.append({
                 "ad_id": ad["id"],
@@ -280,6 +291,13 @@ async def get_featured_products(
                 },
                 "is_featured": True
             })
+    
+    # زيادة عدد المشاهدات دفعة واحدة
+    if ad_ids_to_update:
+        await db.ads.update_many(
+            {"id": {"$in": ad_ids_to_update}},
+            {"$inc": {"views": 1}}
+        )
     
     return result
 
@@ -309,13 +327,11 @@ async def get_active_banners(
     products_dict = {p["id"]: p for p in products}
     
     result = []
+    ad_ids_to_update = []
     for ad in ads:
         product = products_dict.get(ad["product_id"])
         if product:
-            await db.ads.update_one(
-                {"id": ad["id"]},
-                {"$inc": {"views": 1}}
-            )
+            ad_ids_to_update.append(ad["id"])
             
             result.append({
                 "ad_id": ad["id"],
@@ -325,6 +341,13 @@ async def get_active_banners(
                 "product_image": product.get("images", ["/placeholder.jpg"])[0] if product.get("images") else "/placeholder.jpg",
                 "seller_name": ad.get("seller_name", "")
             })
+    
+    # زيادة عدد المشاهدات دفعة واحدة
+    if ad_ids_to_update:
+        await db.ads.update_many(
+            {"id": {"$in": ad_ids_to_update}},
+            {"$inc": {"views": 1}}
+        )
     
     return result
 
@@ -361,15 +384,19 @@ async def get_all_ads_admin(
     
     ads = await db.ads.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=500)
     
-    # تحديث الإعلانات المنتهية
+    # تحديث الإعلانات المنتهية دفعة واحدة
     now = datetime.utcnow()
+    expired_ad_ids = []
     for ad in ads:
         if ad.get("status") == "active" and ad.get("end_date") and ad["end_date"] < now:
-            await db.ads.update_one(
-                {"id": ad["id"]},
-                {"$set": {"status": "expired"}}
-            )
+            expired_ad_ids.append(ad["id"])
             ad["status"] = "expired"
+    
+    if expired_ad_ids:
+        await db.ads.update_many(
+            {"id": {"$in": expired_ad_ids}},
+            {"$set": {"status": "expired"}}
+        )
     
     return ads
 

@@ -665,41 +665,75 @@ async def confirm_pending_earnings(order_id: str):
         "status": "pending"
     }).to_list(10)
     
+    if not pending_records:
+        return
+    
+    from pymongo import UpdateOne
+    
+    # تحضير العمليات الدفعية
+    wallet_updates = []
+    transactions = []
+    pending_updates = []
+    notifications = []
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
     for record in pending_records:
-        # Move from pending to actual balance
-        await db.wallets.update_one(
-            {"user_id": record["user_id"]},
+        user_id = record["user_id"]
+        amount = record["amount"]
+        
+        # تحديث المحفظة
+        wallet_updates.append(UpdateOne(
+            {"user_id": user_id},
             {
                 "$inc": {
-                    "pending_balance": -record["amount"],
-                    "balance": record["amount"],
-                    "total_earned": record["amount"]
+                    "pending_balance": -amount,
+                    "balance": amount,
+                    "total_earned": amount
                 }
             }
-        )
+        ))
         
-        # Create transaction record
-        await db.wallet_transactions.insert_one({
+        # سجل المعاملة
+        transactions.append({
             "id": str(uuid.uuid4()),
-            "user_id": record["user_id"],
+            "user_id": user_id,
             "type": "earning_confirmed",
-            "amount": record["amount"],
+            "amount": amount,
             "description": f"أرباح من الطلب #{order_id[:8]}",
             "order_id": order_id,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": now
         })
         
-        # Update pending record
-        await db.pending_earnings.update_one(
+        # تحديث سجل الأرباح المعلقة
+        pending_updates.append(UpdateOne(
             {"id": record["id"]},
-            {"$set": {"status": "confirmed", "confirmed_at": datetime.now(timezone.utc).isoformat()}}
-        )
+            {"$set": {"status": "confirmed", "confirmed_at": now}}
+        ))
         
-        # Notify user
+        # تحضير الإشعار
+        notifications.append({
+            "user_id": user_id,
+            "title": "تم إضافة رصيد!",
+            "message": f"تم إضافة {amount:,.0f} ل.س إلى محفظتك"
+        })
+    
+    # تنفيذ العمليات الدفعية
+    if wallet_updates:
+        await db.wallets.bulk_write(wallet_updates)
+    
+    if transactions:
+        await db.wallet_transactions.insert_many(transactions)
+    
+    if pending_updates:
+        await db.pending_earnings.bulk_write(pending_updates)
+    
+    # إرسال الإشعارات
+    for notif in notifications:
         await create_notification_for_user(
-            user_id=record["user_id"],
-            title="تم إضافة رصيد!",
-            message=f"تم إضافة {record['amount']:,.0f} ل.س إلى محفظتك",
+            user_id=notif["user_id"],
+            title=notif["title"],
+            message=notif["message"],
             notification_type="wallet",
             order_id=order_id
         )

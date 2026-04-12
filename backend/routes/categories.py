@@ -278,11 +278,17 @@ async def reorder_categories(orders: List[dict], user: dict = Depends(get_curren
     if user["user_type"] not in ["admin", "sub_admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح")
     
-    for item in orders:
-        await db.categories.update_one(
+    # استخدام bulk_write للتحديث الدفعي
+    from pymongo import UpdateOne
+    operations = [
+        UpdateOne(
             {"id": item["id"]},
             {"$set": {"order": item["order"]}}
-        )
+        ) for item in orders
+    ]
+    
+    if operations:
+        await db.categories.bulk_write(operations)
     
     # حذف الكاش
     
