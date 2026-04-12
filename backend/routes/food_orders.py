@@ -699,8 +699,17 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
     subtotal = 0
     order_items = []
     
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = [item.product_id for item in order.items]
+    products_list = await db.food_products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # التحقق من وجود جميع المنتجات أولاً
     for item in order.items:
-        product = await db.food_products.find_one({"id": item.product_id})
+        product = products_map.get(item.product_id)
         if not product:
             raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير موجود")
         
@@ -710,7 +719,10 @@ async def create_food_order(order: FoodOrderCreate, user: dict = Depends(get_cur
             raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' نفد مؤقتاً اليوم، سيعود غداً")
         elif availability_status == "unavailable" or not product.get("is_available", True):
             raise HTTPException(status_code=400, detail=f"المنتج '{product['name']}' غير متاح حالياً")
-        
+    
+    # بناء قائمة العناصر
+    for item in order.items:
+        product = products_map[item.product_id]
         item_total = product["price"] * item.quantity
         subtotal += item_total
         
@@ -1262,9 +1274,30 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
     total_delivery_fee = 0
     stores_info = []
     
-    # التحقق من جميع المتاجر والمنتجات أولاً
+    # جلب جميع المتاجر دفعة واحدة
+    store_ids = list(set(order_item.store_id for order_item in batch.orders))
+    stores_list = await db.food_stores.find(
+        {"id": {"$in": store_ids}, "is_approved": True, "is_active": True},
+        {"_id": 0}
+    ).to_list(None)
+    stores_map = {s["id"]: s for s in stores_list}
+    
+    # جلب جميع المنتجات دفعة واحدة
+    all_product_ids = []
     for order_item in batch.orders:
-        store = await db.food_stores.find_one({"id": order_item.store_id, "is_approved": True, "is_active": True})
+        for item in order_item.items:
+            all_product_ids.append(item.product_id)
+    all_product_ids = list(set(all_product_ids))
+    
+    products_list = await db.food_products.find(
+        {"id": {"$in": all_product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # التحقق من جميع المتاجر والمنتجات
+    for order_item in batch.orders:
+        store = stores_map.get(order_item.store_id)
         if not store:
             raise HTTPException(status_code=404, detail="المتجر غير متاح")
         
@@ -1278,7 +1311,7 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         # حساب مجموع كل متجر
         store_subtotal = 0
         for item in order_item.items:
-            product = await db.food_products.find_one({"id": item.product_id})
+            product = products_map.get(item.product_id)
             if not product:
                 raise HTTPException(status_code=400, detail=f"المنتج {item.name} غير موجود")
             
@@ -1436,19 +1469,20 @@ async def create_batch_food_orders(batch: BatchOrderCreate, user: dict = Depends
         
         order_total = subtotal + delivery_fee
         
-        # تحضير العناصر
+        # تحضير العناصر - استخدام products_map الموجود مسبقاً
         order_items = []
         for item in items_list:
-            product = await db.food_products.find_one({"id": item.product_id})
-            item_total = product["price"] * item.quantity
-            order_items.append({
-                "product_id": item.product_id,
-                "name": product["name"],
-                "price": product["price"],
-                "quantity": item.quantity,
-                "total": item_total,
-                "notes": item.notes
-            })
+            product = products_map.get(item.product_id)
+            if product:
+                item_total = product["price"] * item.quantity
+                order_items.append({
+                    "product_id": item.product_id,
+                    "name": product["name"],
+                    "price": product["price"],
+                    "quantity": item.quantity,
+                    "total": item_total,
+                    "notes": item.notes
+                })
         
         order_id = str(uuid.uuid4())
         # توليد رقم طلب بسيط (6 أرقام) للعميل
@@ -2457,9 +2491,17 @@ async def get_batch_pickup_plan(
         optimal_order = await calculate_optimal_pickup_order(batch_id, driver_lat, driver_lng)
     else:
         # إذا لا توجد إحداثيات السائق، نستخدم ترتيب افتراضي
+        # جلب جميع المتاجر دفعة واحدة
+        store_ids = list(set(order["store_id"] for order in orders if order.get("store_id")))
+        stores_list = await db.food_stores.find(
+            {"id": {"$in": store_ids}},
+            {"_id": 0}
+        ).to_list(None)
+        stores_map = {s["id"]: s for s in stores_list}
+        
         optimal_order = []
         for order in orders:
-            store = await db.food_stores.find_one({"id": order["store_id"]})
+            store = stores_map.get(order["store_id"])
             optimal_order.append({
                 "order": order,
                 "store": store,
@@ -2682,12 +2724,23 @@ async def accept_food_order(
                 detail=f"🔥 لديك طلب طعام تجميعي ({batch_count} متجر). أكمل توصيله أولاً لضمان وصول الطعام طازجاً."
             )
         
+        # جلب جميع المتاجر للطلبات الحالية دفعة واحدة
+        current_store_ids = list(set(o.get("store_id") for o in current_orders if o.get("store_id")))
+        if current_store_ids:
+            current_stores_list = await db.food_stores.find(
+                {"id": {"$in": current_store_ids}},
+                {"_id": 0, "id": 1, "store_type": 1}
+            ).to_list(None)
+            current_stores_map = {s["id"]: s for s in current_stores_list}
+        else:
+            current_stores_map = {}
+        
         # تصنيف الطلبات الحالية حسب نوع المتجر
         hot_fresh_count = 0
         cold_dry_count = 0
         
         for o in current_orders:
-            o_store = await db.food_stores.find_one({"id": o.get("store_id")})
+            o_store = current_stores_map.get(o.get("store_id"))
             o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
             o_category = get_store_delivery_category(o_store_type)
             
@@ -2727,7 +2780,7 @@ async def accept_food_order(
                 # للطلبات الباردة: التحقق من أن جميع مواقع التسليم قريبة من بعضها
                 if new_store_category == "cold_dry" and cold_dry_count > 0:
                     for existing_order in current_orders:
-                        existing_store = await db.food_stores.find_one({"id": existing_order.get("store_id")})
+                        existing_store = current_stores_map.get(existing_order.get("store_id"))
                         existing_category = get_store_delivery_category(existing_store.get("store_type", "restaurants")) if existing_store else "hot_fresh"
                         
                         # التحقق فقط من الطلبات الباردة الأخرى
@@ -3160,22 +3213,36 @@ async def evaluate_order_for_smart_route(data: SmartRouteEvaluateRequest, user: 
     if not new_order:
         raise HTTPException(status_code=404, detail="الطلب غير متاح")
     
-    # إضافة معلومات المتجر
-    store = await db.food_stores.find_one({"id": new_order.get("store_id")})
-    if store:
-        new_order["store_lat"] = store.get("latitude")
-        new_order["store_lng"] = store.get("longitude")
-        new_order["store_type"] = store.get("store_type", "restaurants")
-    
     # جلب الطلبات الحالية للسائق
     current_orders = await db.food_orders.find({
         "driver_id": user["id"],
         "status": "out_for_delivery"
     }).to_list(length=20)
     
+    # جلب جميع معلومات المتاجر دفعة واحدة (بما فيها متجر الطلب الجديد)
+    all_store_ids = list(set(
+        [order.get("store_id") for order in current_orders if order.get("store_id")] +
+        ([new_order.get("store_id")] if new_order.get("store_id") else [])
+    ))
+    if all_store_ids:
+        stores_list = await db.food_stores.find(
+            {"id": {"$in": all_store_ids}},
+            {"_id": 0, "id": 1, "latitude": 1, "longitude": 1, "store_type": 1}
+        ).to_list(None)
+        stores_map = {s["id"]: s for s in stores_list}
+    else:
+        stores_map = {}
+    
+    # إضافة معلومات متجر الطلب الجديد
+    new_store = stores_map.get(new_order.get("store_id"))
+    if new_store:
+        new_order["store_lat"] = new_store.get("latitude")
+        new_order["store_lng"] = new_store.get("longitude")
+        new_order["store_type"] = new_store.get("store_type", "restaurants")
+    
     # إضافة معلومات المتاجر للطلبات الحالية
     for order in current_orders:
-        o_store = await db.food_stores.find_one({"id": order.get("store_id")})
+        o_store = stores_map.get(order.get("store_id"))
         if o_store:
             order["store_lat"] = o_store.get("latitude")
             order["store_lng"] = o_store.get("longitude")
@@ -3779,18 +3846,22 @@ async def report_food_delivery_failed(
             "created_at": now.isoformat()
         })
     
-    # إشعار الإدارة
+    # إشعار الإدارة باستخدام insert_many
     admins = await db.users.find({"user_type": {"$in": ["admin", "sub_admin"]}}, {"_id": 0, "id": 1}).to_list(100)
-    for admin in admins:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": admin["id"],
-            "title": "⚠️ فشل تسليم طلب طعام",
-            "message": f"الطلب #{order_id[:8]} - {reason_text} - {action_text}",
-            "type": "delivery_failed",
-            "is_read": False,
-            "created_at": now.isoformat()
-        })
+    if admins:
+        admin_notifications = [
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": admin["id"],
+                "title": "⚠️ فشل تسليم طلب طعام",
+                "message": f"الطلب #{order_id[:8]} - {reason_text} - {action_text}",
+                "type": "delivery_failed",
+                "is_read": False,
+                "created_at": now.isoformat()
+            }
+            for admin in admins
+        ]
+        await db.notifications.insert_many(admin_notifications)
     
     # إشعار العميل
     customer_id = order.get("customer_id")
@@ -4071,10 +4142,21 @@ async def complete_delivery_and_pay_driver(order: dict, driver: dict, note: str)
         "id": {"$ne": order["id"]}  # استثناء الطلب الحالي
     }).to_list(length=100)
     
+    # جلب جميع المتاجر للطلبات المتبقية دفعة واحدة
+    remaining_store_ids = list(set(o.get("store_id") for o in remaining_food_orders if o.get("store_id")))
+    if remaining_store_ids:
+        remaining_stores_list = await db.food_stores.find(
+            {"id": {"$in": remaining_store_ids}},
+            {"_id": 0, "id": 1, "store_type": 1}
+        ).to_list(None)
+        remaining_stores_map = {s["id"]: s for s in remaining_stores_list}
+    else:
+        remaining_stores_map = {}
+    
     # حساب عدد الطلبات الساخنة/الطازجة المتبقية
     remaining_hot_fresh = 0
     for o in remaining_food_orders:
-        o_store = await db.food_stores.find_one({"id": o.get("store_id")})
+        o_store = remaining_stores_map.get(o.get("store_id"))
         o_store_type = o_store.get("store_type", "restaurants") if o_store else "restaurants"
         if o_store_type in HOT_FRESH_STORE_TYPES:
             remaining_hot_fresh += 1
@@ -4605,22 +4687,26 @@ async def request_driver_for_order(
         }}
     )
     
-    # إرسال إشعارات للسائقين
-    for driver_info in drivers_with_distance:
-        await db.notifications.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": driver_info["driver_id"],
-            "title": "🚗 طلب توصيل جديد!",
-            "message": f"طلب من {store.get('name')} - على بُعد {driver_info['distance_km']} كم",
-            "type": "new_delivery_request",
-            "order_id": order_id,
-            "order_type": "food",
-            "store_name": store.get("name"),
-            "distance_km": driver_info["distance_km"],
-            "is_read": False,
-            "requires_action": True,
-            "created_at": now.isoformat()
-        })
+    # إرسال إشعارات للسائقين باستخدام insert_many
+    if drivers_with_distance:
+        driver_notifications = [
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": driver_info["driver_id"],
+                "title": "🚗 طلب توصيل جديد!",
+                "message": f"طلب من {store.get('name')} - على بُعد {driver_info['distance_km']} كم",
+                "type": "new_delivery_request",
+                "order_id": order_id,
+                "order_type": "food",
+                "store_name": store.get("name"),
+                "distance_km": driver_info["distance_km"],
+                "is_read": False,
+                "requires_action": True,
+                "created_at": now.isoformat()
+            }
+            for driver_info in drivers_with_distance
+        ]
+        await db.notifications.insert_many(driver_notifications)
     
     return {
         "success": True,
