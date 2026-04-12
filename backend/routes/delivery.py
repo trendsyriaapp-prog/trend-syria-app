@@ -543,7 +543,7 @@ async def get_delivery_orders(user: dict = Depends(get_current_user)):
     # Get orders ready for delivery in driver's city
     query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
     if driver_city:
-        query["shipping_city"] = driver_city
+        query["city"] = driver_city
     
     orders = await db.orders.find(
         query,
@@ -570,7 +570,7 @@ async def get_all_available_orders(user: dict = Depends(get_current_user)):
     
     query = {"delivery_status": {"$in": ["shipped", "out_for_delivery"]}}
     if driver_city:
-        query["shipping_city"] = driver_city
+        query["city"] = driver_city
     
     orders = await db.orders.find(
         query,
@@ -602,17 +602,17 @@ async def get_available_orders_alias(user: dict = Depends(get_current_user)):
     
     # التحقق من وجود طلبات منتجات نشطة
     await db.orders.count_documents({
-        "driver_id": user["id"],
+        "delivery_driver_id": user["id"],
         "delivery_status": {"$in": ["accepted", "picked_up", "out_for_delivery"]}
     })
     
     # جلب جميع طلبات المتجر المتاحة (بغض النظر عن الطلبات النشطة)
     shop_query = {
         "delivery_status": {"$in": ["shipped", "out_for_delivery"]},
-        "driver_id": {"$in": [None, ""]}  # فقط الطلبات غير المقبولة
+        "delivery_driver_id": {"$in": [None, ""]}  # فقط الطلبات غير المقبولة
     }
     if driver_city:
-        shop_query["shipping_city"] = driver_city
+        shop_query["city"] = driver_city
     
     shop_orders = await db.orders.find(
         shop_query,
