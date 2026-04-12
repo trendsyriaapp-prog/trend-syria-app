@@ -362,12 +362,20 @@ async def calculate_cart_shipping(customer_city: str, user: dict = Depends(get_c
             "cart_total": 0
         }
     
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = list(set(item["product_id"] for item in cart.get("items", [])))
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0, "id": 1, "seller_id": 1, "city": 1, "price": 1}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
     seller_ids = set()
     seller_cities = {}
     cart_total = 0
     
     for item in cart.get("items", []):
-        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        product = products_map.get(item["product_id"])
         if product:
             seller_id = product.get("seller_id", "")
             seller_ids.add(seller_id)
@@ -481,17 +489,34 @@ async def calculate_cart_shipping_detailed(customer_city: str, user: dict = Depe
             "message": "السلة فارغة"
         }
     
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = list(set(item["product_id"] for item in cart.get("items", [])))
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # جمع معرفات البائعين الفريدة
+    seller_ids = list(set(p.get("seller_id") for p in products_list if p.get("seller_id")))
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "business_name": 1, "full_name": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
     # تجميع المنتجات حسب البائع
     sellers_data = {}
     
     for item in cart.get("items", []):
-        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        product = products_map.get(item["product_id"])
         if product:
             seller_id = product.get("seller_id", "unknown")
             
             if seller_id not in sellers_data:
-                # جلب معلومات البائع
-                seller = await db.users.find_one({"id": seller_id}, {"_id": 0, "password": 0})
+                seller = sellers_map.get(seller_id, {})
                 seller_city = product.get("city", "")
                 
                 sellers_data[seller_id] = {

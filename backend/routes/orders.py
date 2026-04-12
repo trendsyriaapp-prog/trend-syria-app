@@ -185,19 +185,39 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="السلة فارغة")
     
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = [item["product_id"] for item in cart["items"]]
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # جمع معرفات البائعين
+    seller_ids = list(set(p.get("seller_id") for p in products_list if p.get("seller_id")))
+    
+    # جلب جميع البائعين دفعة واحدة
+    sellers_list = await db.users.find(
+        {"id": {"$in": seller_ids}},
+        {"_id": 0, "id": 1, "name": 1, "phone": 1, "store_name": 1}
+    ).to_list(None)
+    sellers_map = {s["id"]: s for s in sellers_list}
+    
+    # التحقق من وجود المنتجات والكميات
+    for item in cart["items"]:
+        if item["product_id"] not in products_map:
+            raise HTTPException(status_code=400, detail="منتج غير موجود")
+        product = products_map[item["product_id"]]
+        if product["stock"] < item["quantity"]:
+            raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
+    
     items_details = []
     total = 0
     total_commission = 0
     
     for item in cart["items"]:
-        product = await db.products.find_one({"id": item["product_id"]})
-        if not product:
-            raise HTTPException(status_code=400, detail="منتج غير موجود")
-        if product["stock"] < item["quantity"]:
-            raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
-        
-        # جلب معلومات البائع
-        seller = await db.users.find_one({"id": product["seller_id"]}, {"_id": 0, "name": 1, "phone": 1, "store_name": 1})
+        product = products_map[item["product_id"]]
+        seller = sellers_map.get(product["seller_id"], {})
         
         item_total = product["price"] * item["quantity"]
         
@@ -210,8 +230,8 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
             "product_id": item["product_id"],
             "product_name": product["name"],
             "seller_id": product["seller_id"],
-            "seller_name": seller.get("store_name") or seller.get("name", "") if seller else "",
-            "seller_phone": seller.get("phone", "") if seller else "",
+            "seller_name": seller.get("store_name") or seller.get("name", ""),
+            "seller_phone": seller.get("phone", ""),
             "price": product["price"],
             "quantity": item["quantity"],
             "selected_size": item.get("selected_size"),
@@ -322,23 +342,34 @@ async def create_order(order: OrderCreate, user: dict = Depends(get_current_user
     settings = await db.platform_settings.find_one({"id": "main"})
     LOW_STOCK_THRESHOLD = settings.get("low_stock_threshold", 5) if settings else 5
     
-    for item in cart["items"]:
-        await db.products.update_one(
+    # تحديث المخزون باستخدام bulk_write
+    from pymongo import UpdateOne
+    stock_updates = [
+        UpdateOne(
             {"id": item["product_id"]},
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
-        
-        # Check if stock is low after this order
-        updated_product = await db.products.find_one({"id": item["product_id"]})
-        if updated_product and updated_product.get("stock", 0) <= LOW_STOCK_THRESHOLD:
-            # Send low stock alert to seller
-            await create_notification_for_user(
-                user_id=updated_product["seller_id"],
-                title="⚠️ تنبيه: مخزون منخفض!",
-                message=f"المنتج '{updated_product['name']}' وصل إلى {updated_product['stock']} قطع فقط. قم بتحديث المخزون.",
-                notification_type="low_stock",
-                product_id=item["product_id"]
-            )
+        for item in cart["items"]
+    ]
+    if stock_updates:
+        await db.products.bulk_write(stock_updates)
+    
+    # التحقق من المخزون المنخفض بعد التحديث
+    product_ids = [item["product_id"] for item in cart["items"]]
+    updated_products = await db.products.find(
+        {"id": {"$in": product_ids}, "stock": {"$lte": LOW_STOCK_THRESHOLD}},
+        {"_id": 0, "id": 1, "name": 1, "stock": 1, "seller_id": 1}
+    ).to_list(None)
+    
+    # إرسال إشعارات المخزون المنخفض
+    for product in updated_products:
+        await create_notification_for_user(
+            user_id=product["seller_id"],
+            title="⚠️ تنبيه: مخزون منخفض!",
+            message=f"المنتج '{product['name']}' وصل إلى {product['stock']} قطع فقط. قم بتحديث المخزون.",
+            notification_type="low_stock",
+            product_id=product["id"]
+        )
     
     # لا نرسل إشعار للبائع فوراً - سيُرسل بعد انتهاء مهلة الإلغاء (ساعة)
     # البائع سيرى الطلب فقط بعد انتهاء المهلة

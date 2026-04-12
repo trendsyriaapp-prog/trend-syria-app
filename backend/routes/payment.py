@@ -132,6 +132,22 @@ async def checkout_order(
     
     customer_city = address.get("city", "")
     
+    # جلب جميع المنتجات دفعة واحدة
+    product_ids = [item["product_id"] for item in cart["items"]]
+    products_list = await db.products.find(
+        {"id": {"$in": product_ids}},
+        {"_id": 0}
+    ).to_list(None)
+    products_map = {p["id"]: p for p in products_list}
+    
+    # التحقق من وجود جميع المنتجات
+    for item in cart["items"]:
+        if item["product_id"] not in products_map:
+            raise HTTPException(status_code=400, detail="المنتج غير موجود")
+        product = products_map[item["product_id"]]
+        if product["stock"] < item["quantity"]:
+            raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
+    
     # Calculate totals
     items_details = []
     subtotal = 0
@@ -144,11 +160,7 @@ async def checkout_order(
         commission_rates = {"categories": {"default": 0.15}}
     
     for item in cart["items"]:
-        product = await db.products.find_one({"id": item["product_id"]})
-        if not product:
-            raise HTTPException(status_code=400, detail="المنتج غير موجود")
-        if product["stock"] < item["quantity"]:
-            raise HTTPException(status_code=400, detail=f"الكمية غير متوفرة: {product['name']}")
+        product = products_map[item["product_id"]]
         
         item_total = product["price"] * item["quantity"]
         subtotal += item_total
@@ -307,12 +319,17 @@ async def verify_payment_otp(
     # Clear cart
     await db.carts.delete_one({"user_id": user["id"]})
     
-    # Update product stock
-    for item in order["items"]:
-        await db.products.update_one(
+    # Update product stock using bulk_write
+    from pymongo import UpdateOne
+    stock_updates = [
+        UpdateOne(
             {"id": item["product_id"]},
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
+        for item in order["items"]
+    ]
+    if stock_updates:
+        await db.products.bulk_write(stock_updates)
     
     # Add pending earnings to sellers' wallets
     for seller_id, earnings in order.get("sellers_earnings", {}).items():
@@ -401,12 +418,17 @@ async def pay_with_wallet(
         }
     )
     
-    # تحديث المخزون
-    for item in order.get("items", []):
-        await db.products.update_one(
+    # تحديث المخزون باستخدام bulk_write
+    from pymongo import UpdateOne
+    stock_updates = [
+        UpdateOne(
             {"id": item["product_id"]},
             {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
         )
+        for item in order.get("items", [])
+    ]
+    if stock_updates:
+        await db.products.bulk_write(stock_updates)
     
     # إضافة أرباح معلقة للبائعين
     for seller_id, earnings in order.get("sellers_earnings", {}).items():

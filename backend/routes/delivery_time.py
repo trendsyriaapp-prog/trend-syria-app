@@ -407,10 +407,34 @@ async def get_admin_driver_penalties(days: int = 7):
     
     penalties_by_driver = await db.driver_penalties.aggregate(pipeline).to_list(50)
     
-    # جلب أسماء السائقين
+    if not penalties_by_driver:
+        return {
+            "success": True,
+            "period_days": days,
+            "total_penalties": 0,
+            "drivers": []
+        }
+    
+    # جلب جميع السائقين دفعة واحدة
+    driver_ids = [item["_id"] for item in penalties_by_driver if item.get("_id")]
+    # التحقق مما إذا كانت المعرفات ObjectId أم string
+    try:
+        drivers_list = await db.users.find(
+            {"_id": {"$in": [ObjectId(d) for d in driver_ids if d]}},
+            {"_id": 1, "name": 1}
+        ).to_list(None)
+        drivers_map = {str(d["_id"]): d.get("name", "غير معروف") for d in drivers_list}
+    except Exception:
+        drivers_list = await db.users.find(
+            {"id": {"$in": driver_ids}},
+            {"_id": 0, "id": 1, "name": 1}
+        ).to_list(None)
+        drivers_map = {d["id"]: d.get("name", "غير معروف") for d in drivers_list}
+    
+    # إضافة أسماء السائقين
     for item in penalties_by_driver:
-        driver = await db.users.find_one({"_id": ObjectId(item["_id"])})
-        item["driver_name"] = driver.get("name", "غير معروف") if driver else "غير معروف"
+        driver_id = str(item["_id"]) if item.get("_id") else None
+        item["driver_name"] = drivers_map.get(driver_id, "غير معروف")
         item["driver_id"] = item.pop("_id")
     
     # مجموع الخصومات

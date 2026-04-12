@@ -172,12 +172,17 @@ async def _process_successful_payment(order: dict, collection_name: str):
     
     if collection_name == "orders":
         # طلب منتجات
-        # تحديث المخزون
-        for item in order.get("items", []):
-            await db.products.update_one(
+        # تحديث المخزون باستخدام bulk_write
+        from pymongo import UpdateOne
+        stock_updates = [
+            UpdateOne(
                 {"id": item["product_id"]},
                 {"$inc": {"stock": -item["quantity"], "sales_count": item["quantity"]}}
             )
+            for item in order.get("items", [])
+        ]
+        if stock_updates:
+            await db.products.bulk_write(stock_updates)
         
         # إضافة أرباح معلقة للبائعين
         for seller_id, earnings in order.get("sellers_earnings", {}).items():
