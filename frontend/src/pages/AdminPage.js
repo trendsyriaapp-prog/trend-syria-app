@@ -68,6 +68,7 @@ import DriverSecurityTab from '../components/admin/DriverSecurityTab';
 import SellerManagementTab from '../components/admin/SellerManagementTab';
 import FoodStoreManagementTab from '../components/admin/FoodStoreManagementTab';
 import ResetDatabaseTab from '../components/admin/ResetDatabaseTab';
+import BusinessCategoriesTab from '../components/admin/BusinessCategoriesTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -622,6 +623,7 @@ const AdminDashboardPage = () => {
     'image-settings': 'إعدادات الصور',
     'product-badges': 'شارات المنتجات',
     'categories': 'إدارة الفئات',
+    'business-categories': 'أصناف الأنشطة التجارية',
     'call-requests': 'طلبات الاتصال',
     'recorded-calls': 'المكالمات المسجلة',
     'payment-settings': 'إعدادات الدفع',
@@ -844,6 +846,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'categories' && user.user_type === 'admin' && (
               <CategoriesTab />
+            )}
+            {activeTab === 'business-categories' && user.user_type === 'admin' && (
+              <BusinessCategoriesTab />
             )}
             {activeTab === 'call-requests' && (
               <CallRequestsTab />
@@ -1212,6 +1217,7 @@ const AdminDashboardPage = () => {
                       { icon: Camera, label: 'الصور', tab: 'image-settings' },
                       { icon: ShieldCheck, label: 'المدراء', tab: 'sub-admins', badge: subAdmins.length },
                       { icon: Package, label: 'الفئات', tab: 'categories' },
+                      { icon: Store, label: 'أصناف الأنشطة', tab: 'business-categories' },
                       { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
                       { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
                       { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },

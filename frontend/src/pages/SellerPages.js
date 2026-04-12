@@ -413,6 +413,9 @@ const SellerDocumentsPage = () => {
   const { toast } = useToast();
 
   const [businessName, setBusinessName] = useState('');
+  const [businessCategory, setBusinessCategory] = useState(''); // الصنف المختار
+  const [businessCategories, setBusinessCategories] = useState([]); // قائمة الأصناف
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [sellerType, setSellerType] = useState('');
   const [nationalId, setNationalId] = useState(null);
   const [commercialReg, setCommercialReg] = useState(null);
@@ -439,6 +442,28 @@ const SellerDocumentsPage = () => {
       requiredDocs: ['nationalId', 'commercialReg', 'healthCert']
     }
   ];
+
+  // جلب أصناف الأنشطة التجارية
+  useEffect(() => {
+    const fetchBusinessCategories = async () => {
+      try {
+        // تحديد نوع البائع: seller أو food_seller
+        const sellerTypeParam = user?.user_type === 'food_seller' ? 'food_seller' : 'seller';
+        const res = await axios.get(`${API}/api/settings/business-categories/public?seller_type=${sellerTypeParam}`);
+        setBusinessCategories(res.data.categories || []);
+      } catch (error) {
+        console.error('Error fetching business categories:', error);
+        // استخدام الأصناف الافتراضية في حالة الخطأ
+        setBusinessCategories([
+          { id: 'other', name: 'أخرى', icon: '📦' }
+        ]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    
+    fetchBusinessCategories();
+  }, [user?.user_type]);
 
   useEffect(() => {
     if (user) {
@@ -484,6 +509,11 @@ const SellerDocumentsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // التحقق من اختيار صنف النشاط
+    if (!businessCategory && !businessName.trim()) {
+      toast({ title: "خطأ", description: "يرجى اختيار صنف النشاط التجاري", variant: "destructive" });
+      return;
+    }
     if (!sellerType) {
       toast({ title: "خطأ", description: "يرجى اختيار نوع النشاط", variant: "destructive" });
       return;
@@ -509,6 +539,7 @@ const SellerDocumentsPage = () => {
     try {
       await axios.post(`${API}/api/seller/documents`, {
         business_name: businessName,
+        business_category: businessCategory, // إضافة صنف النشاط
         seller_type: sellerType,
         national_id: nationalId,
         commercial_registration: commercialReg,
@@ -639,18 +670,47 @@ const SellerDocumentsPage = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm space-y-4">
-            {/* اسم النشاط */}
+            {/* صنف النشاط التجاري - قائمة منسدلة */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">اسم النشاط التجاري</label>
-              <input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
-                placeholder="اسم نشاطك التجاري"
-                required
-                data-testid="business-name-input"
-              />
+              <label className="block text-sm font-medium mb-2 text-gray-700">صنف النشاط التجاري</label>
+              {loadingCategories ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="animate-spin text-[#FF6B00]" size={24} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {businessCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        setBusinessCategory(category.id);
+                        setBusinessName(category.name);
+                      }}
+                      className={`p-3 rounded-xl border-2 transition-all text-center ${
+                        businessCategory === category.id
+                          ? 'border-[#FF6B00] bg-[#FF6B00]/10'
+                          : 'border-gray-200 hover:border-gray-300 bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-2xl block mb-1">{category.icon}</span>
+                      <span className="text-xs font-medium block text-gray-900">{category.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* حقل إضافي إذا اختار "أخرى" */}
+              {(businessCategory === 'other' || businessCategory === 'other_food') && (
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className="w-full mt-3 bg-gray-50 border border-gray-300 rounded-lg py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20"
+                  placeholder="اكتب اسم نشاطك التجاري"
+                  required
+                  data-testid="business-name-input"
+                />
+              )}
             </div>
 
             {/* اختيار نوع النشاط */}

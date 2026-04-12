@@ -1,14 +1,14 @@
 // /app/frontend/src/pages/JoinAsFoodSellerPage.js
 // صفحة التسجيل كمتجر طعام
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { 
   UtensilsCrossed, ShoppingCart, Apple, Store, MapPin, 
   Phone, Clock, ArrowLeft, CheckCircle, Upload, Image, Cake,
-  Coffee, Croissant, Beef, Milk
+  Coffee, Croissant, Beef, Milk, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -35,8 +35,8 @@ const MAIN_TYPES = [
   },
 ];
 
-// الأصناف الفرعية حسب النوع الرئيسي
-const SUB_CATEGORIES = {
+// الأصناف الفرعية الافتراضية (تُستخدم كـ fallback)
+const DEFAULT_SUB_CATEGORIES = {
   food: [
     { id: 'restaurants', name: 'وجبات سريعة', icon: '🍔', description: 'شاورما، برغر، بيتزا، سندويشات' },
     { id: 'hot_drinks', name: 'مشروبات ساخنة', icon: '☕', description: 'قهوة، شاي، نسكافيه' },
@@ -83,6 +83,10 @@ const JoinAsFoodSellerPage = () => {
   const [mainType, setMainType] = useState(''); // food or market
   const [selectedCategories, setSelectedCategories] = useState([]); // الأصناف المختارة
   
+  // أصناف النشاط من API
+  const [businessCategories, setBusinessCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  
   // ساعات العمل الافتراضية
   const defaultWorkingHours = {
     sunday: { is_open: true, open_hour: 8, open_minute: 0, close_hour: 22, close_minute: 0 },
@@ -112,6 +116,41 @@ const JoinAsFoodSellerPage = () => {
     longitude: null,
     working_hours: defaultWorkingHours,
   });
+  
+  // جلب أصناف النشاط من API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const res = await axios.get(`${API}/api/settings/business-categories/public?seller_type=food_seller`);
+        if (res.data.categories && res.data.categories.length > 0) {
+          setBusinessCategories(res.data.categories);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // لا شيء - سنستخدم الأصناف الافتراضية
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+  
+  // دالة للحصول على الأصناف المتاحة
+  const getSubCategories = () => {
+    // إذا كانت هناك أصناف من API، نستخدمها
+    if (businessCategories.length > 0) {
+      return businessCategories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        description: cat.description || ''
+      }));
+    }
+    // خلاف ذلك نستخدم الافتراضية
+    return DEFAULT_SUB_CATEGORIES[mainType] || [];
+  };
   
   const DAY_NAMES = {
     sunday: 'الأحد',
@@ -445,37 +484,43 @@ const JoinAsFoodSellerPage = () => {
             <h2 className="text-lg font-bold text-gray-900 mb-2">اختر أصناف متجرك</h2>
             <p className="text-sm text-gray-500 mb-4">يمكنك اختيار أكثر من صنف</p>
             
-            <div className="grid grid-cols-2 gap-3">
-              {SUB_CATEGORIES[mainType]?.map((category) => (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleCategoryToggle(category.id)}
-                  className={`bg-white rounded-xl p-4 border-2 transition-all text-center ${
-                    selectedCategories.includes(category.id)
-                      ? 'border-[#FF6B00] bg-orange-50 ring-2 ring-orange-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-4xl mb-2">{category.icon}</div>
-                  <h3 className="font-bold text-gray-900 text-sm">{category.name}</h3>
-                  <p className="text-[10px] text-gray-500 mt-1">{category.description}</p>
-                  {selectedCategories.includes(category.id) && (
-                    <div className="mt-2">
-                      <CheckCircle size={20} className="mx-auto text-[#FF6B00]" />
-                    </div>
-                  )}
-                </motion.button>
-              ))}
-            </div>
+            {loadingCategories ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="animate-spin text-[#FF6B00]" size={32} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {getSubCategories().map((category) => (
+                  <motion.button
+                    key={category.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleCategoryToggle(category.id)}
+                    className={`bg-white rounded-xl p-4 border-2 transition-all text-center ${
+                      selectedCategories.includes(category.id)
+                        ? 'border-[#FF6B00] bg-orange-50 ring-2 ring-orange-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-4xl mb-2">{category.icon}</div>
+                    <h3 className="font-bold text-gray-900 text-sm">{category.name}</h3>
+                    <p className="text-[10px] text-gray-500 mt-1">{category.description}</p>
+                    {selectedCategories.includes(category.id) && (
+                      <div className="mt-2">
+                        <CheckCircle size={20} className="mx-auto text-[#FF6B00]" />
+                      </div>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+            )}
 
             {selectedCategories.length > 0 && (
               <div className="mt-4 p-3 bg-orange-50 rounded-xl border border-orange-200">
                 <p className="text-sm text-orange-800">
                   <span className="font-bold">الأصناف المختارة: </span>
                   {selectedCategories.map(id => {
-                    const cat = SUB_CATEGORIES[mainType]?.find(c => c.id === id);
+                    const cat = getSubCategories().find(c => c.id === id);
                     return cat?.name;
                   }).join('، ')}
                 </p>

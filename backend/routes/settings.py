@@ -2237,3 +2237,207 @@ async def update_customer_protection_settings(
     )
     
     return {"message": "تم حفظ إعدادات حماية العميل بنجاح"}
+
+
+
+# ============== Business Categories (أصناف الأنشطة التجارية) ==============
+
+class BusinessCategoryCreate(BaseModel):
+    name: str
+    type: str  # "seller" أو "food_seller"
+    icon: Optional[str] = "🏪"
+    description: Optional[str] = None
+    is_active: Optional[bool] = True
+    order: Optional[int] = 0
+
+class BusinessCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    icon: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    order: Optional[int] = None
+
+
+@router.get("/business-categories")
+async def get_all_business_categories(user: dict = Depends(get_current_user)):
+    """جلب جميع أصناف الأنشطة التجارية (للمدير)"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    categories = await db.business_categories.find(
+        {}, {"_id": 0}
+    ).sort("order", 1).to_list(None)
+    
+    return {"categories": categories}
+
+
+@router.get("/business-categories/public")
+async def get_public_business_categories(seller_type: str = None):
+    """
+    جلب أصناف الأنشطة التجارية (للجميع)
+    - seller_type: "seller" للبائعين العاديين، "food_seller" لبائعي الطعام
+    """
+    query = {"is_active": True}
+    if seller_type:
+        query["type"] = seller_type
+    
+    categories = await db.business_categories.find(
+        query, {"_id": 0}
+    ).sort("order", 1).to_list(None)
+    
+    # إذا لم توجد أصناف، إرجاع أصناف افتراضية
+    if not categories:
+        if seller_type == "seller":
+            categories = [
+                {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller"},
+                {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller"},
+                {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller"},
+                {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller"},
+                {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller"},
+                {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller"},
+                {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller"},
+                {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller"},
+                {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller"},
+                {"id": "other", "name": "أخرى", "icon": "📦", "type": "seller"},
+            ]
+        elif seller_type == "food_seller":
+            categories = [
+                {"id": "restaurant", "name": "مطعم", "icon": "🍽️", "type": "food_seller"},
+                {"id": "cafe", "name": "مقهى", "icon": "☕", "type": "food_seller"},
+                {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller"},
+                {"id": "bakery", "name": "مخبز", "icon": "🥖", "type": "food_seller"},
+                {"id": "fast_food", "name": "وجبات سريعة", "icon": "🍔", "type": "food_seller"},
+                {"id": "juice", "name": "عصائر ومشروبات", "icon": "🧃", "type": "food_seller"},
+                {"id": "grocery", "name": "بقالة", "icon": "🛒", "type": "food_seller"},
+                {"id": "butcher", "name": "ملحمة", "icon": "🥩", "type": "food_seller"},
+                {"id": "vegetables", "name": "خضار وفواكه", "icon": "🥬", "type": "food_seller"},
+                {"id": "other_food", "name": "أخرى", "icon": "🍴", "type": "food_seller"},
+            ]
+    
+    return {"categories": categories}
+
+
+@router.post("/business-categories")
+async def create_business_category(category: BusinessCategoryCreate, user: dict = Depends(get_current_user)):
+    """إنشاء صنف نشاط تجاري جديد"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # التحقق من عدم وجود صنف بنفس الاسم والنوع
+    existing = await db.business_categories.find_one({
+        "name": category.name,
+        "type": category.type
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="يوجد صنف بنفس الاسم")
+    
+    category_id = str(uuid.uuid4())[:8]
+    category_doc = {
+        "id": category_id,
+        "name": category.name,
+        "type": category.type,
+        "icon": category.icon or "🏪",
+        "description": category.description,
+        "is_active": category.is_active,
+        "order": category.order or 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user["id"]
+    }
+    
+    await db.business_categories.insert_one(category_doc)
+    category_doc.pop("_id", None)
+    
+    return {"message": "تم إنشاء الصنف بنجاح", "category": category_doc}
+
+
+@router.put("/business-categories/{category_id}")
+async def update_business_category(category_id: str, update_data: BusinessCategoryUpdate, user: dict = Depends(get_current_user)):
+    """تحديث صنف نشاط تجاري"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    existing = await db.business_categories.find_one({"id": category_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="الصنف غير موجود")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="لا توجد بيانات للتحديث")
+    
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict["updated_by"] = user["id"]
+    
+    await db.business_categories.update_one(
+        {"id": category_id},
+        {"$set": update_dict}
+    )
+    
+    return {"message": "تم تحديث الصنف بنجاح"}
+
+
+@router.delete("/business-categories/{category_id}")
+async def delete_business_category(category_id: str, user: dict = Depends(get_current_user)):
+    """حذف صنف نشاط تجاري"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    existing = await db.business_categories.find_one({"id": category_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="الصنف غير موجود")
+    
+    await db.business_categories.delete_one({"id": category_id})
+    
+    return {"message": "تم حذف الصنف بنجاح"}
+
+
+@router.post("/business-categories/init-defaults")
+async def init_default_business_categories(user: dict = Depends(get_current_user)):
+    """تهيئة الأصناف الافتراضية"""
+    if user["user_type"] not in ["admin", "sub_admin"]:
+        raise HTTPException(status_code=403, detail="للمدراء فقط")
+    
+    # التحقق من وجود أصناف مسبقاً
+    existing_count = await db.business_categories.count_documents({})
+    if existing_count > 0:
+        return {"message": "توجد أصناف مسبقاً", "count": existing_count}
+    
+    # أصناف البائعين العاديين
+    seller_categories = [
+        {"id": "clothing", "name": "ملابس وأزياء", "icon": "👕", "type": "seller", "order": 1},
+        {"id": "electronics", "name": "إلكترونيات", "icon": "📱", "type": "seller", "order": 2},
+        {"id": "home", "name": "أجهزة منزلية", "icon": "🏠", "type": "seller", "order": 3},
+        {"id": "beauty", "name": "مستحضرات تجميل", "icon": "💄", "type": "seller", "order": 4},
+        {"id": "furniture", "name": "أثاث ومفروشات", "icon": "🛋️", "type": "seller", "order": 5},
+        {"id": "toys", "name": "ألعاب وهدايا", "icon": "🎁", "type": "seller", "order": 6},
+        {"id": "books", "name": "كتب وقرطاسية", "icon": "📚", "type": "seller", "order": 7},
+        {"id": "sports", "name": "رياضة ولياقة", "icon": "⚽", "type": "seller", "order": 8},
+        {"id": "cars", "name": "سيارات وقطع غيار", "icon": "🚗", "type": "seller", "order": 9},
+        {"id": "other", "name": "أخرى", "icon": "📦", "type": "seller", "order": 99},
+    ]
+    
+    # أصناف بائعي الطعام
+    food_categories = [
+        {"id": "restaurant", "name": "مطعم", "icon": "🍽️", "type": "food_seller", "order": 1},
+        {"id": "cafe", "name": "مقهى", "icon": "☕", "type": "food_seller", "order": 2},
+        {"id": "sweets", "name": "حلويات", "icon": "🍰", "type": "food_seller", "order": 3},
+        {"id": "bakery", "name": "مخبز", "icon": "🥖", "type": "food_seller", "order": 4},
+        {"id": "fast_food", "name": "وجبات سريعة", "icon": "🍔", "type": "food_seller", "order": 5},
+        {"id": "juice", "name": "عصائر ومشروبات", "icon": "🧃", "type": "food_seller", "order": 6},
+        {"id": "grocery", "name": "بقالة", "icon": "🛒", "type": "food_seller", "order": 7},
+        {"id": "butcher", "name": "ملحمة", "icon": "🥩", "type": "food_seller", "order": 8},
+        {"id": "vegetables", "name": "خضار وفواكه", "icon": "🥬", "type": "food_seller", "order": 9},
+        {"id": "other_food", "name": "أخرى", "icon": "🍴", "type": "food_seller", "order": 99},
+    ]
+    
+    now = datetime.now(timezone.utc).isoformat()
+    all_categories = []
+    
+    for cat in seller_categories + food_categories:
+        cat["is_active"] = True
+        cat["created_at"] = now
+        cat["created_by"] = user["id"]
+        all_categories.append(cat)
+    
+    await db.business_categories.insert_many(all_categories)
+    
+    return {"message": f"تم إنشاء {len(all_categories)} صنف بنجاح"}
