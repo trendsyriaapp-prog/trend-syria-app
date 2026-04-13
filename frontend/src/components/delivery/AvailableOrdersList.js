@@ -180,6 +180,20 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
             </div>
           )}
 
+          {/* ملاحظات العميل للسائق */}
+          {(order.delivery_note || order.notes || order.customer_note) && (
+            <div className={`p-3 rounded-xl mb-3 border ${
+              isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'
+            }`}>
+              <p className={`text-xs font-bold mb-1 flex items-center gap-1 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                📝 ملاحظة العميل:
+              </p>
+              <p className={`text-sm ${isDark ? 'text-amber-200' : 'text-amber-800'}`}>
+                {order.delivery_note || order.notes || order.customer_note}
+              </p>
+            </div>
+          )}
+
           {/* المسافة والربح */}
           <div className={`flex items-center justify-between p-3 rounded-xl mb-3 ${
             isDark ? 'bg-[#252525]' : 'bg-gray-50'
