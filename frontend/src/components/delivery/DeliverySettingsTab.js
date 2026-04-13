@@ -40,7 +40,6 @@ const DeliverySettingsTab = ({ onSaveSuccess }) => {
     vehicle_type: 'motorcycle',
     vehicle_number: '',
     working_city: 'دمشق',
-    working_hours: '',
     home_address: '',
     home_latitude: null,
     home_longitude: null
@@ -218,18 +217,6 @@ const DeliverySettingsTab = ({ onSaveSuccess }) => {
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>
-          </div>
-
-          {/* ساعات العمل */}
-          <div>
-            <label className="block text-[10px] font-bold text-gray-600 mb-1">ساعات العمل</label>
-            <input
-              type="text"
-              value={deliverySettings.working_hours}
-              onChange={(e) => setDeliverySettings({...deliverySettings, working_hours: e.target.value})}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:border-[#FF6B00] focus:outline-none"
-              placeholder="مثال: 9 صباحاً - 9 مساءً"
-            />
           </div>
 
           {/* عنوان المنزل */}
