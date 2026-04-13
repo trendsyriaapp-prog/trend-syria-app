@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Package, MapPin, UtensilsCrossed, ShoppingBag, Clock, Locate } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
@@ -48,20 +48,21 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
   const safeOrders = Array.isArray(orders) ? orders : [];
   const safeFoodOrders = Array.isArray(foodOrders) ? foodOrders : [];
   
-  // طلبات الطعام: استخدم foodOrders فقط (لا تأخذ من orders)
-  const displayFoodOrders = safeFoodOrders;
+  // طلبات الطعام: استخدم foodOrders فقط (لا تأخذ من orders) - محسّنة مع useMemo
+  const displayFoodOrders = useMemo(() => safeFoodOrders, [safeFoodOrders]);
   
-  // طلبات المتجر: استخدم orders وفلتر طلبات الطعام (order_source === 'food' أو وجود store_id/restaurant_name)
-  const shopOrders = safeOrders.filter(o => {
+  // طلبات المتجر: استخدم orders وفلتر طلبات الطعام - محسّنة مع useMemo
+  const shopOrders = useMemo(() => safeOrders.filter(o => {
     // إذا كان order_source = 'food' فهو طلب طعام
     if (o.order_source === 'food') return false;
     // إذا كان لديه store_id أو restaurant_name فهو طلب طعام
     if (o.store_id || o.restaurant_name) return false;
     // غير ذلك هو طلب متجر
     return true;
-  });
+  }), [safeOrders]);
   
-  const allOrders = [...shopOrders, ...displayFoodOrders];
+  // دمج الطلبات - محسّنة مع useMemo
+  const allOrders = useMemo(() => [...shopOrders, ...displayFoodOrders], [shopOrders, displayFoodOrders]);
   
   if (allOrders.length === 0) {
     return (
@@ -76,22 +77,22 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
     );
   }
 
-  // حساب ربح السائق
-  const getDriverEarnings = (order) => {
+  // حساب ربح السائق - محسّنة مع useCallback
+  const getDriverEarnings = useCallback((order) => {
     return order.driver_earnings || order.driver_delivery_fee || order.delivery_fee || 0;
-  };
+  }, []);
 
-  // الحصول على المسافة الإجمالية
-  const getTotalDistance = (orderId) => {
+  // الحصول على المسافة الإجمالية - محسّنة مع useCallback
+  const getTotalDistance = useCallback((orderId) => {
     const distance = orderDistances[orderId];
     if (distance) {
       return formatDistance(distance.total);
     }
     return null;
-  };
+  }, [orderDistances]);
 
-  // الحصول على تفاصيل المسافات
-  const getDistanceDetails = (orderId) => {
+  // الحصول على تفاصيل المسافات - محسّنة مع useCallback
+  const getDistanceDetails = useCallback((orderId) => {
     const distance = orderDistances[orderId];
     if (distance) {
       return {
@@ -101,7 +102,7 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
       };
     }
     return null;
-  };
+  }, [orderDistances]);
 
   // بطاقة الطلب البسيطة
   const SimpleOrderCard = ({ order, isFood = true }) => {

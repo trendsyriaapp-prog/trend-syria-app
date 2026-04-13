@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -16,6 +16,7 @@ import DriverTrackingMap from '../components/DriverTrackingMap';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// دوال مساعدة محسّنة خارج المكون
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
@@ -96,7 +97,8 @@ const OrderTrackingPage = () => {
     }
   };
 
-  const handleSaveNote = async () => {
+  // حفظ الملاحظة - محسّنة مع useCallback
+  const handleSaveNote = useCallback(async () => {
     setSavingNote(true);
     try {
       await axios.put(`${API}/api/orders/${orderId}/delivery-note`, {
@@ -116,9 +118,10 @@ const OrderTrackingPage = () => {
     } finally {
       setSavingNote(false);
     }
-  };
+  }, [orderId, deliveryNote, toast]);
 
-  const getCurrentStepIndex = () => {
+  // الحصول على الخطوة الحالية - محسّنة مع useCallback
+  const getCurrentStepIndex = useCallback(() => {
     const status = tracking?.delivery_status || order?.delivery_status || 'pending_payment';
     // معالجة الحالات القديمة
     if (status === 'pending') return 0;
@@ -126,7 +129,7 @@ const OrderTrackingPage = () => {
     
     const index = statusSteps.findIndex(s => s.key === status);
     return index >= 0 ? index : 0;
-  };
+  }, [tracking?.delivery_status, order?.delivery_status]);
 
   if (loading) {
     return (

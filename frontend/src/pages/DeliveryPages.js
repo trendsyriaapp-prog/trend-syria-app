@@ -1193,7 +1193,8 @@ const DeliveryDashboard = () => {
     }
   };
 
-  const handleOnTheWay = async (orderId, eta = null) => {
+  // بدء التوصيل - محسّنة مع useCallback
+  const handleOnTheWay = useCallback(async (orderId, eta = null) => {
     try {
       // التحقق إذا كان طلب طعام أم منتجات
       const allOrders = [...myOrders, ...myFoodOrders];
@@ -1221,13 +1222,13 @@ const DeliveryDashboard = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [myOrders, myFoodOrders, estimatedTime, toast, fetchOrders]);
 
-  // فتح نافذة إدخال الوقت المتوقع
-  const openETAModal = (orderId) => {
+  // فتح نافذة إدخال الوقت المتوقع - محسّنة مع useCallback
+  const openETAModal = useCallback((orderId) => {
     setShowETAModal(orderId);
     setEstimatedTime(30);
-  };
+  }, []);
 
   const handleCompleteOrder = async (orderId, note) => {
     // إذا كان الطلب يحتوي على delivery_code، نفتح نافذة إدخال الكود

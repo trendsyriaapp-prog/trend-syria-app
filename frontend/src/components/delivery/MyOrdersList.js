@@ -116,8 +116,8 @@ const MyOrdersList = ({
     }));
   };
 
-  // الحصول على حالة الطلب
-  const getOrderStatus = (order) => {
+  // الحصول على حالة الطلب - محسّنة مع useCallback
+  const getOrderStatus = useCallback((order) => {
     // للطعام: نعتمد على pickup_code_verified و delivery_status
     if (order.store_id || order.restaurant_name) {
       // طلب طعام
@@ -144,12 +144,12 @@ const MyOrdersList = ({
       return 'picked_up'; // تم الاستلام - بانتظار بدء التوصيل
     }
     return 'to_store'; // في الطريق للمتجر
-  };
+  }, []);
 
-  // الحصول على ربح السائق
-  const getDriverEarnings = (order) => {
+  // الحصول على ربح السائق - محسّنة مع useCallback
+  const getDriverEarnings = useCallback((order) => {
     return order.driver_earnings || order.driver_delivery_fee || order.delivery_fee || 0;
-  };
+  }, []);
 
   // وصلت للمتجر - مع فحص المسافة GPS
   // State لكل طلب على حدة - لمنع تحميل جميع الأزرار معاً
