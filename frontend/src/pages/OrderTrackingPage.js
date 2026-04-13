@@ -372,10 +372,10 @@ const OrderTrackingPage = () => {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl p-4 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="font-bold text-gray-900 flex items-center gap-2">
                 <MessageSquare size={18} className="text-[#FF6B00]" />
-                ملاحظة لموظف التوصيل
+                تفاصيل إضافية للتوصيل
               </h2>
               {!showNoteInput && deliveryNote && (
                 <button
@@ -387,12 +387,17 @@ const OrderTrackingPage = () => {
               )}
             </div>
             
+            {/* نص توضيحي */}
+            <p className="text-xs text-gray-500 mb-3">
+              ساعد السائق للوصول إليك بسهولة
+            </p>
+            
             {showNoteInput || !deliveryNote ? (
               <div className="space-y-3">
                 <textarea
                   value={deliveryNote}
                   onChange={(e) => setDeliveryNote(e.target.value)}
-                  placeholder="أضف ملاحظة لموظف التوصيل (مثال: اتصل قبل الوصول، الطابق الثالث...)"
+                  placeholder="مثال: بناء رقم 5، الطابق الثالث، شقة 7، بجانب صيدلية الشفاء، اتصل قبل الوصول..."
                   className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none h-24 focus:border-[#FF6B00] focus:outline-none"
                 />
                 <div className="flex gap-2">
@@ -401,7 +406,7 @@ const OrderTrackingPage = () => {
                     disabled={savingNote}
                     className="flex-1 bg-[#FF6B00] text-white py-2 rounded-xl text-sm font-medium disabled:opacity-50"
                   >
-                    {savingNote ? 'جاري الحفظ...' : 'حفظ الملاحظة'}
+                    {savingNote ? 'جاري الحفظ...' : 'حفظ'}
                   </button>
                   {deliveryNote && (
                     <button
