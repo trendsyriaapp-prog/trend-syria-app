@@ -60,13 +60,16 @@ const DeliveryBoxesTab = () => {
       const headers = getAuthHeaders();
       const [boxesRes, driversRes] = await Promise.all([
         axios.get(`${API}/api/delivery-boxes/admin/all`, { headers }),
-        axios.get(`${API}/api/admin/users?type=delivery`, { headers })
+        axios.get(`${API}/api/admin/delivery/all`, { headers })
       ]);
       
       setBoxes(boxesRes.data.boxes || []);
       setStats(boxesRes.data.stats || {});
       setSettings(boxesRes.data.settings || {});
-      setDrivers(driversRes.data.filter(d => d.is_approved) || []);
+      
+      // driversRes.data.data هو array السائقين
+      const driversData = driversRes.data?.data || [];
+      setDrivers(driversData.filter(d => d.is_approved) || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
