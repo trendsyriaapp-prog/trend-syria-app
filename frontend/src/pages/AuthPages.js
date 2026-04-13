@@ -5,25 +5,29 @@ import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound, Smartphon
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
-import { Device } from '@capacitor/device';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة'];
 
-// دالة للحصول على معرف الجهاز
+// دالة للحصول على معرف الجهاز (بدون @capacitor/device)
 const getDeviceId = async () => {
   try {
-    const info = await Device.getId();
-    return info.identifier || info.uuid || `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  } catch (error) {
-    // Fallback للويب
-    let deviceId = localStorage.getItem('device_id');
-    if (!deviceId) {
-      deviceId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('device_id', deviceId);
+    // محاولة استخدام Capacitor Device إذا كان متاحاً (في التطبيق)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Device) {
+      const info = await window.Capacitor.Plugins.Device.getId();
+      return info.identifier || info.uuid || `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
-    return deviceId;
+  } catch (error) {
+    console.log('Capacitor Device not available, using fallback');
   }
+  
+  // Fallback للويب
+  let deviceId = localStorage.getItem('device_id');
+  if (!deviceId) {
+    deviceId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('device_id', deviceId);
+  }
+  return deviceId;
 };
 
 const LoginPage = () => {
