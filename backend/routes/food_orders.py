@@ -3409,6 +3409,84 @@ async def verify_pickup_code(order_id: str, data: VerifyPickupCode, user: dict =
     }
 
 
+class StartDeliveryData(BaseModel):
+    estimated_minutes: Optional[int] = 30
+
+@router.post("/delivery/{order_id}/on-the-way")
+async def start_delivery_to_customer(
+    order_id: str, 
+    data: StartDeliveryData = None,
+    user: dict = Depends(get_current_user)
+):
+    """بدء التوصيل - السائق في الطريق للعميل"""
+    if user["user_type"] != "delivery":
+        raise HTTPException(status_code=403, detail="لموظفي التوصيل فقط")
+    
+    order = await db.food_orders.find_one({
+        "id": order_id,
+        "driver_id": user["id"]
+    })
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود أو ليس مخصصاً لك")
+    
+    # التحقق من أن الطلب تم استلامه من المتجر
+    if not order.get("pickup_code_verified"):
+        raise HTTPException(status_code=400, detail="يجب استلام الطلب من المتجر أولاً")
+    
+    estimated_minutes = 30
+    if data and data.estimated_minutes:
+        estimated_minutes = data.estimated_minutes
+    
+    # تحديث حالة الطلب
+    await db.food_orders.update_one(
+        {"id": order_id},
+        {
+            "$set": {
+                "status": "out_for_delivery",
+                "delivery_status": "on_the_way",
+                "on_the_way_at": datetime.now(timezone.utc).isoformat(),
+                "estimated_arrival_minutes": estimated_minutes
+            },
+            "$push": {
+                "tracking_history": {
+                    "status": "on_the_way",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "actor": user.get("full_name", user.get("name", "")),
+                    "actor_type": "delivery",
+                    "message": f"السائق في الطريق - الوصول خلال {estimated_minutes} دقيقة"
+                }
+            }
+        }
+    )
+    
+    # إشعار العميل
+    customer_id = order.get("customer_id") or order.get("user_id")
+    if customer_id:
+        try:
+            await create_notification_for_user(
+                user_id=customer_id,
+                title="🚗 طلبك في الطريق!",
+                message=f"السائق {user.get('full_name', user.get('name', ''))} في الطريق إليك\n⏱️ الوصول خلال: {estimated_minutes} دقيقة",
+                notification_type="delivery",
+                order_id=order_id,
+                extra_data={
+                    "driver_id": user["id"],
+                    "driver_name": user.get("full_name", user.get("name", "")),
+                    "driver_phone": user.get("phone", ""),
+                    "estimated_minutes": estimated_minutes
+                }
+            )
+        except Exception as e:
+            print(f"Error sending notification: {e}")
+    
+    return {
+        "success": True,
+        "message": "تم تحديث الحالة - أنت في الطريق للعميل",
+        "estimated_minutes": estimated_minutes
+    }
+
+
 @router.post("/delivery/{order_id}/arrived")
 async def driver_arrived_at_store(
     order_id: str, 

@@ -311,6 +311,30 @@ const OrderTrackingPage = () => {
                 بلاغ أخلاقي
               </button>
             )}
+            
+            {/* أزرار التواصل مع السائق */}
+            {tracking.delivery_driver?.id && ['picked_up', 'on_the_way'].includes(order.delivery_status) && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                {/* زر الاتصال */}
+                <a
+                  href={`tel:${tracking.delivery_driver.phone}`}
+                  className="flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-xl font-medium text-sm hover:bg-green-600 transition-colors"
+                  data-testid="call-driver-btn"
+                >
+                  <Phone size={18} />
+                  اتصال
+                </a>
+                {/* زر المحادثة */}
+                <button
+                  onClick={() => navigate(`/chat/${orderId}`)}
+                  className="flex items-center justify-center gap-2 py-3 bg-blue-500 text-white rounded-xl font-medium text-sm hover:bg-blue-600 transition-colors"
+                  data-testid="chat-driver-btn"
+                >
+                  <MessageSquare size={18} />
+                  محادثة
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 

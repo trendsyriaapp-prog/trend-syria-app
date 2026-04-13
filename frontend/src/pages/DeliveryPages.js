@@ -1195,7 +1195,16 @@ const DeliveryDashboard = () => {
 
   const handleOnTheWay = async (orderId, eta = null) => {
     try {
-      await axios.post(`${API}/api/orders/${orderId}/delivery/on-the-way`, {
+      // التحقق إذا كان طلب طعام أم منتجات
+      const allOrders = [...myOrders, ...myFoodOrders];
+      const order = allOrders.find(o => o.id === orderId);
+      const isFood = order?.store_id || order?.restaurant_name;
+      
+      const endpoint = isFood 
+        ? `${API}/api/food/orders/delivery/${orderId}/on-the-way`
+        : `${API}/api/orders/${orderId}/delivery/on-the-way`;
+        
+      await axios.post(endpoint, {
         estimated_minutes: eta || estimatedTime
       });
       toast({

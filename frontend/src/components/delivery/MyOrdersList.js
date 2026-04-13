@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock, Truck } from 'lucide-react';
 import axios from 'axios';
 import OrdersMap from './OrdersMap';
 import PickupWaitingTimer from './PickupWaitingTimer';
@@ -118,19 +118,30 @@ const MyOrdersList = ({
 
   // الحصول على حالة الطلب
   const getOrderStatus = (order) => {
-    // للطعام: نعتمد على pickup_code_verified
+    // للطعام: نعتمد على pickup_code_verified و delivery_status
     if (order.store_id || order.restaurant_name) {
       // طلب طعام
       if (order.pickup_code_verified === true) {
-        return 'to_customer'; // تم الاستلام - في الطريق للعميل
+        // تم الاستلام - نتحقق هل بدأ التوصيل أم لا
+        if (order.delivery_status === 'on_the_way' || order.on_the_way_at) {
+          return 'to_customer'; // في الطريق للعميل
+        }
+        return 'picked_up'; // تم الاستلام - بانتظار بدء التوصيل
       }
       return 'to_store'; // لم يتم الاستلام - في الطريق للمتجر
     }
     
-    // للمنتجات: نعتمد على status
+    // للمنتجات: نعتمد على delivery_status
     const status = order.delivery_status || order.status;
-    if (status === 'picked_up' || status === 'on_the_way' || status === 'out_for_delivery') {
+    if (status === 'on_the_way') {
       return 'to_customer'; // في الطريق للعميل
+    }
+    if (status === 'picked_up' || status === 'out_for_delivery') {
+      // تم الاستلام - نتحقق هل بدأ التوصيل
+      if (order.on_the_way_at) {
+        return 'to_customer';
+      }
+      return 'picked_up'; // تم الاستلام - بانتظار بدء التوصيل
     }
     return 'to_store'; // في الطريق للمتجر
   };
@@ -710,16 +721,22 @@ const MyOrdersList = ({
                   <div className={`flex-1 h-2 rounded-full ${isDark ? 'bg-[#333]' : 'bg-gray-200'}`}>
                     <div 
                       className={`h-full rounded-full transition-all ${
-                        status === 'to_customer' ? 'bg-amber-500 w-1/2' : 'bg-green-500 w-1/4'
+                        status === 'to_customer' ? 'bg-amber-500 w-3/4' : 
+                        status === 'picked_up' ? 'bg-blue-500 w-1/2' : 
+                        'bg-green-500 w-1/4'
                       }`}
                     />
                   </div>
                   <span className={`text-xs font-medium ${
                     status === 'to_customer' 
                       ? (isDark ? 'text-amber-400' : 'text-amber-600')
-                      : (isDark ? 'text-green-400' : 'text-green-600')
+                      : status === 'picked_up'
+                        ? (isDark ? 'text-blue-400' : 'text-blue-600')
+                        : (isDark ? 'text-green-400' : 'text-green-600')
                   }`}>
-                    {status === 'to_customer' ? '🚚 للعميل' : (isFood ? '🍔 للمتجر' : '📦 للمتجر')}
+                    {status === 'to_customer' ? '🚚 للعميل' : 
+                     status === 'picked_up' ? '📦 تم الاستلام' :
+                     (isFood ? '🍔 للمتجر' : '📦 للمتجر')}
                   </span>
                 </div>
 
@@ -843,7 +860,23 @@ const MyOrdersList = ({
                             </>
                           );
                         })()
+                      ) : status === 'picked_up' ? (
+                        /* تم الاستلام - زر بدء التوصيل */
+                        <button
+                          onClick={() => {
+                            if (onOpenETAModal) {
+                              onOpenETAModal(order.id);
+                            } else if (onStartDelivery) {
+                              onStartDelivery(order.id);
+                            }
+                          }}
+                          className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2"
+                        >
+                          <Truck size={20} />
+                          بدء التوصيل
+                        </button>
                       ) : (
+                        /* في الطريق للعميل - زر وصلت للعميل */
                         <button
                           onClick={() => handleArrivedAtCustomer(order)}
                           className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2"
@@ -855,8 +888,8 @@ const MyOrdersList = ({
 
                       {/* الأزرار الثانوية */}
                       <div className="grid grid-cols-3 gap-2">
-                        {status === 'to_customer' ? (
-                          // ذاهب للعميل - اتصال VoIP داخلي
+                        {status === 'to_customer' || status === 'picked_up' ? (
+                          // تم الاستلام أو في الطريق للعميل - اتصال VoIP داخلي بالعميل
                           <button
                             onClick={() => callCustomerVoIP(order)}
                             className={`py-3 rounded-xl font-medium text-sm flex flex-col items-center gap-1 ${
