@@ -22,7 +22,8 @@
         <link rel="preconnect" href="https://firebaseinstallations.googleapis.com" />
         <link rel="preconnect" href="https://firebaseremoteconfig.googleapis.com" />
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+        <!-- PostHog dns-prefetch معطل -->
+        <!-- <link rel="dns-prefetch" href="https://us.i.posthog.com" /> -->
         
         <!-- Preload Critical Assets -->
         <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" as="style" />
@@ -96,6 +97,8 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
         <!-- Emergent badge removed -->
+        <!-- PostHog Analytics - معطل مؤقتاً بسبب مشاكل في بعض المناطق -->
+        <!--
         <script>
             !(function (t, e) {
                 var o, n, p, r;
@@ -160,12 +163,17 @@
             })(document, window.posthog || []);
             posthog.init("phc_xAvL2Iq4tFmANRE7kzbKwaSqp1HJjN7x48s3vr0CMjs", {
                 api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well,
+                person_profiles: "identified_only",
                 session_recording: {
                     recordCrossOriginIframes: true,
                     capturePerformance: false,
                 },
             });
+        </script>
+        -->
+        <!-- PostHog Stub - لمنع أخطاء JavaScript -->
+        <script>
+            window.posthog = { capture: function(){}, identify: function(){}, init: function(){} };
         </script>
     </body>
 </html>
