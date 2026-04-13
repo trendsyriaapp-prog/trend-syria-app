@@ -224,7 +224,7 @@ const Header = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => user && searchHistory.length > 0 && setShowHistory(true)}
                 onBlur={() => setTimeout(() => setShowHistory(false), 200)}
-                placeholder="ابحث عن منتجات..."
+                placeholder="بحث عن منتجات..."
                 className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-9 pl-16 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-1 focus:ring-[#FF6B00]/20 transition-all"
                 data-testid="search-input"
               />
@@ -321,7 +321,7 @@ const Header = () => {
             >
               <input
                 type="text"
-                placeholder="ابحث عن مطعم أو منتج..."
+                placeholder="بحث عن مطعم أو منتج..."
                 className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 pr-9 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF6B00] focus:outline-none focus:ring-1 focus:ring-[#FF6B00]/20 transition-all"
                 data-testid="food-search-input"
                 defaultValue={new URLSearchParams(window.location.search).get('search') || ''}
