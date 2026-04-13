@@ -76,11 +76,28 @@ const LazyImage = memo(({
   // تحديث الـ src عند التغيير
   useEffect(() => {
     if (src !== currentSrc) {
-      setIsLoaded(false);
       setHasError(false);
       setCurrentSrc(src);
+      // لا نعيد تعيين isLoaded إلى false للصور base64 لأنها تُحمّل فوراً
+      if (!src?.startsWith('data:image')) {
+        setIsLoaded(false);
+      }
     }
   }, [src, currentSrc]);
+
+  // للصور base64 أو المحملة من cache، تحقق إذا كانت محملة بالفعل
+  useEffect(() => {
+    if (isInView && src) {
+      // تأخير صغير للتأكد من أن الـ img element موجود
+      const timer = setTimeout(() => {
+        const imgElement = imgRef.current?.querySelector('img');
+        if (imgElement && imgElement.complete && imgElement.naturalWidth > 0) {
+          setIsLoaded(true);
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isInView, src]);
 
   const handleLoad = useCallback((e) => {
     setIsLoaded(true);
