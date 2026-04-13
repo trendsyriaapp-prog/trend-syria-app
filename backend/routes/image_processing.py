@@ -600,20 +600,12 @@ async def process_image(
     if len(image_data) > 10 * 1024 * 1024:  # 10 MB
         raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
     
-    processing_method = "local"
+    processing_method = "local_rembg"
     
     try:
-        # محاولة استخدام Remove.bg أولاً
-        if use_premium and REMOVE_BG_API_KEY:
-            try:
-                no_bg_image_data = await remove_background_removebg(image_data)
-                processing_method = "removebg"
-            except Exception as api_error:
-                print(f"Remove.bg API failed, falling back to local: {api_error}")
-                no_bg_image_data = remove_background_local(image_data)
-                processing_method = "local_fallback"
-        else:
-            no_bg_image_data = remove_background_local(image_data)
+        # استخدام rembg المحلي المجاني دائماً
+        logger.info("🔄 Using local rembg for background removal...")
+        no_bg_image_data = remove_background_local(image_data)
         
         # فتح الصورة بدون خلفية
         no_bg_image = Image.open(io.BytesIO(no_bg_image_data))
@@ -762,12 +754,12 @@ async def process_image_with_photoroom(
     use_sandbox: bool = Form(default=False)
 ):
     """
-    معالجة صورة المنتج باستخدام PhotoRoom API - جودة احترافية عالية
+    معالجة صورة المنتج - تستخدم rembg المحلي المجاني
     
     - **file**: ملف الصورة
-    - **shadow_type**: نوع الظل (none, soft, hard, floating)
+    - **shadow_type**: نوع الظل (none, soft, hard, floating) - يُضاف محلياً
     - **background**: لون الخلفية
-    - **use_sandbox**: استخدام بيئة الاختبار
+    - **use_sandbox**: غير مستخدم (للتوافق مع الكود القديم)
     """
     
     # التحقق من نوع الملف
@@ -783,99 +775,20 @@ async def process_image_with_photoroom(
         raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
     
     try:
-        # 1. إزالة الخلفية باستخدام PhotoRoom مع الظل
-        photoroom_result = await remove_background_photoroom(
-            image_data=image_data,
-            shadow_type=shadow_type,
-            output_size="full",
-            use_sandbox=use_sandbox
-        )
+        # استخدام rembg المحلي المجاني مباشرة
+        logger.info("🔄 Processing image with local rembg (free & unlimited)...")
+        no_bg_data = remove_background_local(image_data)
+        processing_method = "rembg_local"
         
-        if not photoroom_result.get("success"):
-            raise Exception("فشل في معالجة الصورة")
+        # معالجة الصورة
+        product_image = Image.open(io.BytesIO(no_bg_data))
+        if product_image.mode != 'RGBA':
+            product_image = product_image.convert('RGBA')
         
-        # 2. إذا كان هناك لون خلفية محدد (غير شفاف)، نضيف الخلفية
-        if background != "transparent":
-            # فتح الصورة المعالجة
-            processed_bytes = photoroom_result.get("image_bytes")
-            if processed_bytes:
-                processed_image = Image.open(io.BytesIO(processed_bytes))
-                
-                # التأكد من أن الصورة بصيغة RGBA
-                if processed_image.mode != 'RGBA':
-                    processed_image = processed_image.convert('RGBA')
-                
-                # إنشاء الخلفية بنفس حجم الصورة
-                bg_width, bg_height = processed_image.size
-                bg_image = create_gradient_background(bg_width, bg_height, background)
-                bg_image = bg_image.convert('RGBA')
-                
-                # استخدام composite للدمج الصحيح مع الشفافية
-                final_image = Image.alpha_composite(bg_image, processed_image)
-                
-                # تحويل للـ base64
-                output_buffer = io.BytesIO()
-                final_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
-                output_buffer.seek(0)
-                image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
-                
-                return {
-                    "success": True,
-                    "image": f"data:image/png;base64,{image_base64}",
-                    "shadow_type": shadow_type,
-                    "background_used": background,
-                    "processing_method": "photoroom",
-                    "message": "تمت معالجة الصورة بنجاح - جودة PhotoRoom الاحترافية"
-                }
-        
-        # إرجاع الصورة بدون خلفية (شفافة)
-        return {
-            "success": True,
-            "image": photoroom_result.get("image"),
-            "shadow_type": shadow_type,
-            "background_used": "transparent",
-            "processing_method": "photoroom",
-            "message": "تمت معالجة الصورة بنجاح - جودة PhotoRoom الاحترافية"
-        }
-        
-    except Exception:
-        # استخدام rembg المحلي كـ fallback (مجاني)
-        try:
-            no_bg_data = remove_background_local(image_data)
-            processing_method = "rembg_local"
-            
-            # معالجة الصورة
-            product_image = Image.open(io.BytesIO(no_bg_data))
-            if product_image.mode != 'RGBA':
-                product_image = product_image.convert('RGBA')
-            
-            # إذا كانت الخلفية شفافة، نرجع الصورة كما هي
-            if background == "transparent":
-                output_buffer = io.BytesIO()
-                product_image.save(output_buffer, format='PNG')
-                output_buffer.seek(0)
-                image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
-                
-                return {
-                    "success": True,
-                    "image": f"data:image/png;base64,{image_base64}",
-                    "shadow_type": shadow_type,
-                    "background_used": "transparent",
-                    "processing_method": processing_method,
-                    "message": "تمت معالجة الصورة بنجاح (rembg)"
-                }
-            
-            # إضافة الخلفية
-            bg_width, bg_height = product_image.size
-            bg_image = create_gradient_background(bg_width, bg_height, background)
-            bg_image = bg_image.convert('RGBA')
-            
-            # دمج الصورة مع الخلفية
-            final_image = Image.alpha_composite(bg_image, product_image)
-            
-            # تحويل للـ base64
+        # إذا كانت الخلفية شفافة، نرجع الصورة كما هي
+        if background == "transparent":
             output_buffer = io.BytesIO()
-            final_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+            product_image.save(output_buffer, format='PNG')
             output_buffer.seek(0)
             image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
             
@@ -883,16 +796,41 @@ async def process_image_with_photoroom(
                 "success": True,
                 "image": f"data:image/png;base64,{image_base64}",
                 "shadow_type": shadow_type,
-                "background_used": background,
+                "background_used": "transparent",
                 "processing_method": processing_method,
                 "message": "تمت معالجة الصورة بنجاح (rembg)"
             }
+        
+        # إضافة الخلفية
+        bg_width, bg_height = product_image.size
+        bg_image = create_gradient_background(bg_width, bg_height, background)
+        bg_image = bg_image.convert('RGBA')
+        
+        # دمج الصورة مع الخلفية
+        final_image = Image.alpha_composite(bg_image, product_image)
+        
+        # تحويل للـ base64
+        output_buffer = io.BytesIO()
+        final_image.convert('RGB').save(output_buffer, format='PNG', quality=95)
+        output_buffer.seek(0)
+        image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+        
+        logger.info("✅ Image processed successfully with rembg")
+        return {
+            "success": True,
+            "image": f"data:image/png;base64,{image_base64}",
+            "shadow_type": shadow_type,
+            "background_used": background,
+            "processing_method": processing_method,
+            "message": "تمت معالجة الصورة بنجاح (rembg)"
+        }
             
-        except Exception as fallback_error:
-            raise HTTPException(
-                status_code=500, 
-                detail=f"فشل معالجة الصورة: {str(fallback_error)}"
-            )
+    except Exception as e:
+        logger.error(f"❌ Image processing failed: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"فشل معالجة الصورة: {str(e)}"
+        )
 
 
 @router.get("/status")
@@ -991,27 +929,17 @@ async def process_image_professional(
         # 1. تحليل جودة الصورة
         quality_report = analyze_image_quality(original_image)
         
-        # 2. إزالة الخلفية
-        processing_method = "local"
+        # 2. إزالة الخلفية - نستخدم rembg المحلي المجاني كخيار أساسي
+        processing_method = "local_rembg"
         no_bg_data = None
+        
+        logger.info("🔄 Using local rembg (free & unlimited)...")
         try:
-            if REMOVE_BG_API_KEY:
-                logger.info("🔄 Attempting Remove.bg API...")
-                no_bg_data = await remove_background_removebg(image_data)
-                processing_method = "removebg"
-                logger.info("✅ Remove.bg succeeded")
-            else:
-                logger.info("🔄 Using local rembg (no API key)")
-                no_bg_data = remove_background_local(image_data)
+            no_bg_data = remove_background_local(image_data)
+            logger.info("✅ Local rembg succeeded")
         except Exception as e:
-            logger.warning(f"⚠️ Remove.bg failed: {e}, falling back to local rembg")
-            try:
-                no_bg_data = remove_background_local(image_data)
-                processing_method = "local_fallback"
-                logger.info("✅ Local rembg succeeded")
-            except Exception as e2:
-                logger.error(f"❌ Local rembg also failed: {e2}")
-                raise HTTPException(status_code=500, detail=f"فشل إزالة الخلفية: {e2}")
+            logger.error(f"❌ Local rembg failed: {e}")
+            raise HTTPException(status_code=500, detail=f"فشل إزالة الخلفية: {e}")
         
         # فتح الصورة بدون خلفية
         product_image = Image.open(io.BytesIO(no_bg_data))
