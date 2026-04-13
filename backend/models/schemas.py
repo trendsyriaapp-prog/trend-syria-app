@@ -34,6 +34,14 @@ class ResetPasswordRequest(BaseModel):
 class UserLogin(BaseModel):
     phone: str
     password: str
+    device_id: Optional[str] = None  # معرف الجهاز للتحقق من الأجهزة الجديدة
+
+
+class DeviceOTPVerify(BaseModel):
+    phone: str
+    otp: str
+    device_id: str
+    device_name: Optional[str] = None  # اسم الجهاز (اختياري)
 
 class DeliveryDocuments(BaseModel):
     national_id: str

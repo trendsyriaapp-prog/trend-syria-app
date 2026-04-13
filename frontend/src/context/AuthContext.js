@@ -117,14 +117,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (phone, password) => {
+  const login = async (phone, password, skipApi = false) => {
+    // إذا تم التحقق من OTP مسبقاً، نستخدم البيانات المحفوظة
+    if (skipApi) {
+      const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const savedToken = localStorage.getItem('token');
+      
+      if (savedToken && savedUser.id) {
+        skipFetchUserRef.current = true;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+        setUser(savedUser);
+        setToken(savedToken);
+        setLoading(false);
+        return { user: savedUser, token: savedToken };
+      }
+    }
+    
     const res = await axios.post(`${API}/api/auth/login`, { phone, password });
+    
+    // التحقق إذا كان يحتاج OTP
+    if (res.data.requires_otp) {
+      return res.data;  // إرجاع للتعامل معه في صفحة الدخول
+    }
+    
     const newToken = res.data.token;
     
     // منع fetchUser من الاستدعاء لأننا سنعيّن البيانات مباشرة
     skipFetchUserRef.current = true;
     
     localStorage.setItem('token', newToken);
+    localStorage.setItem('user', JSON.stringify(res.data.user));
     axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     setUser(res.data.user);  // تعيين المستخدم أولاً
     setToken(newToken);       // ثم تعيين التوكن
@@ -137,6 +159,12 @@ export const AuthProvider = ({ children }) => {
     }
     
     return res.data;
+  };
+
+  // دالة لتحديث بيانات المستخدم (للأدوار المتعددة)
+  const updateUser = (newUserData) => {
+    setUser(prev => ({ ...prev, ...newUserData }));
+    localStorage.setItem('user', JSON.stringify({ ...user, ...newUserData }));
   };
 
   const register = async (data) => {
@@ -178,7 +206,8 @@ export const AuthProvider = ({ children }) => {
       fetchUser,
       changePassword,
       forcePasswordChange,
-      setForcePasswordChange
+      setForcePasswordChange,
+      updateUser  // 🆕 لتحديث بيانات المستخدم
     }}>
       {children}
     </AuthContext.Provider>

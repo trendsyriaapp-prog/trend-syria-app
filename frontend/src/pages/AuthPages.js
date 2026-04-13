@@ -1,13 +1,30 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, Phone, User, AlertCircle, CheckCircle, KeyRound, Smartphone, Shield, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
+import { Device } from '@capacitor/device';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 const CITIES = ['دمشق', 'حلب', 'حمص', 'اللاذقية', 'طرطوس', 'حماة', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'إدلب', 'القنيطرة'];
+
+// دالة للحصول على معرف الجهاز
+const getDeviceId = async () => {
+  try {
+    const info = await Device.getId();
+    return info.identifier || info.uuid || `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  } catch (error) {
+    // Fallback للويب
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      deviceId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+  }
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,100 +34,56 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({ phone: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // حالة OTP للجهاز الجديد
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [otpData, setOtpData] = useState({ phone: '', device_id: '', expires_in: 600 });
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpInputsRef = useRef([]);
+
+  // مؤقت إعادة الإرسال
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await login(formData.phone, formData.password);
-      toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
+      // الحصول على معرف الجهاز
+      const deviceId = await getDeviceId();
       
-      // توجيه حسب نوع المستخدم - مع استبدال صفحة الدخول من السجل
-      const userType = response.user?.user_type;
-      if (userType === 'admin' || userType === 'sub_admin') {
-        navigate('/admin', { replace: true });
-      } else if (userType === 'seller') {
-        // البائع: التحقق من حالة الوثائق أولاً
-        try {
-          const token = response.token;
-          const docRes = await axios.get(`${API}/api/seller/documents/status`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const docStatus = docRes.data?.status;
-          
-          if (!docStatus || docStatus === 'not_submitted') {
-            // لم يرفع الوثائق بعد
-            navigate('/seller/documents', { replace: true });
-          } else if (docStatus === 'pending') {
-            // في انتظار الموافقة
-            navigate('/seller/pending', { replace: true });
-          } else if (docStatus === 'rejected') {
-            // مرفوض - يحتاج إعادة رفع
-            navigate('/seller/documents', { replace: true });
-          } else {
-            // معتمد
-            navigate('/seller/dashboard', { replace: true });
-          }
-        } catch (docError) {
-          // إذا فشل التحقق، نوجهه لصفحة الوثائق
-          navigate('/seller/documents', { replace: true });
-        }
-      } else if (userType === 'food_seller') {
-        // بائع الطعام: التحقق من حالة الوثائق أولاً
-        try {
-          const token = response.token;
-          const docRes = await axios.get(`${API}/api/seller/documents/status`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const docStatus = docRes.data?.status;
-          
-          if (!docStatus || docStatus === 'not_submitted') {
-            // لم يرفع الوثائق بعد
-            navigate('/seller/documents', { replace: true });
-          } else if (docStatus === 'pending') {
-            // في انتظار الموافقة
-            navigate('/seller/pending', { replace: true });
-          } else if (docStatus === 'rejected') {
-            // مرفوض - يعرض سبب الرفض
-            navigate('/seller/documents', { replace: true });
-          } else {
-            // معتمد
-            navigate('/food/dashboard', { replace: true });
-          }
-        } catch (docError) {
-          // إذا فشل التحقق، نوجهه لصفحة الوثائق
-          navigate('/seller/documents', { replace: true });
-        }
-      } else if (userType === 'delivery') {
-        // موظف التوصيل: التحقق من حالة الوثائق أولاً
-        try {
-          const token = response.token;
-          const docRes = await axios.get(`${API}/api/delivery/documents/status`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const docStatus = docRes.data?.status;
-          
-          if (!docStatus || docStatus === 'not_submitted') {
-            // لم يرفع الوثائق بعد
-            navigate('/delivery/documents', { replace: true });
-          } else if (docStatus === 'pending') {
-            // في انتظار الموافقة
-            navigate('/delivery/pending', { replace: true });
-          } else if (docStatus === 'rejected') {
-            // مرفوض - يحتاج إعادة رفع
-            navigate('/delivery/documents', { replace: true });
-          } else {
-            // معتمد
-            navigate('/delivery/dashboard', { replace: true });
-          }
-        } catch (docError) {
-          // إذا فشل التحقق، نوجهه لصفحة الوثائق
-          navigate('/delivery/documents', { replace: true });
-        }
-      } else {
-        navigate('/', { replace: true });
+      const response = await axios.post(`${API}/api/auth/login`, {
+        phone: formData.phone,
+        password: formData.password,
+        device_id: deviceId
+      });
+      
+      // التحقق إذا كان يحتاج OTP
+      if (response.data.requires_otp) {
+        setOtpData({
+          phone: response.data.phone,
+          device_id: deviceId,
+          expires_in: response.data.otp_expires_in
+        });
+        setShowOtpScreen(true);
+        setResendTimer(60);
+        toast({
+          title: "جهاز جديد",
+          description: "تم إرسال رمز التحقق إلى WhatsApp"
+        });
+        return;
       }
+      
+      // تسجيل دخول ناجح بدون OTP
+      await completeLogin(response.data);
+      
     } catch (error) {
       toast({
         title: "خطأ",
@@ -121,6 +94,187 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) return;
+    
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    
+    // الانتقال للحقل التالي تلقائياً
+    if (value && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  const verifyOtp = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      toast({ title: "خطأ", description: "يرجى إدخال رمز التحقق كاملاً", variant: "destructive" });
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const response = await axios.post(`${API}/api/auth/verify-device-otp`, {
+        phone: formData.phone,
+        otp: otpCode,
+        device_id: otpData.device_id,
+        device_name: navigator.userAgent.includes('Mobile') ? 'هاتف' : 'كمبيوتر'
+      });
+      
+      toast({ title: "تم التحقق", description: "تم التحقق من الجهاز بنجاح" });
+      await completeLogin(response.data);
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "رمز التحقق غير صحيح",
+        variant: "destructive"
+      });
+      setOtp(['', '', '', '', '', '']);
+      otpInputsRef.current[0]?.focus();
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    if (resendTimer > 0) return;
+    
+    try {
+      await axios.post(`${API}/api/auth/resend-device-otp?phone=${formData.phone}&device_id=${otpData.device_id}`);
+      setResendTimer(60);
+      toast({ title: "تم", description: "تم إرسال رمز التحقق مرة أخرى" });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل إعادة الإرسال",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const completeLogin = async (data) => {
+    // حفظ التوكن
+    localStorage.setItem('token', data.token);
+    if (data.refresh_token) {
+      localStorage.setItem('refresh_token', data.refresh_token);
+    }
+    localStorage.setItem('user', JSON.stringify(data.user));
+    
+    // تحديث Context
+    await login(formData.phone, formData.password, true); // skipApi = true
+    
+    toast({ title: "مرحباً بك!", description: "تم تسجيل الدخول بنجاح" });
+    
+    // توجيه حسب نوع المستخدم
+    const userType = data.user?.user_type;
+    if (userType === 'admin' || userType === 'sub_admin') {
+      navigate('/admin', { replace: true });
+    } else if (userType === 'seller') {
+      navigate('/seller/dashboard', { replace: true });
+    } else if (userType === 'food_seller') {
+      navigate('/food/dashboard', { replace: true });
+    } else if (userType === 'delivery') {
+      navigate('/delivery/dashboard', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  };
+
+  // شاشة OTP
+  if (showOtpScreen) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Shield size={40} className="text-[#FF6B00]" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">التحقق من الجهاز</h1>
+            <p className="text-gray-500 mt-2">
+              تم اكتشاف جهاز جديد. أدخل رمز التحقق المرسل إلى WhatsApp
+            </p>
+            <p className="text-sm text-[#FF6B00] font-medium mt-1">{otpData.phone}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            {/* حقول OTP */}
+            <div className="flex justify-center gap-2 mb-6" dir="ltr">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (otpInputsRef.current[index] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 transition-colors"
+                />
+              ))}
+            </div>
+
+            {/* زر التحقق */}
+            <button
+              onClick={verifyOtp}
+              disabled={otpLoading || otp.join('').length !== 6}
+              className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold hover:bg-[#E65000] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {otpLoading ? (
+                <RefreshCw size={20} className="animate-spin" />
+              ) : (
+                <>
+                  <CheckCircle size={20} />
+                  تأكيد
+                </>
+              )}
+            </button>
+
+            {/* إعادة الإرسال */}
+            <div className="text-center mt-4">
+              {resendTimer > 0 ? (
+                <p className="text-sm text-gray-500">
+                  إعادة الإرسال بعد <span className="font-bold text-[#FF6B00]">{resendTimer}</span> ثانية
+                </p>
+              ) : (
+                <button
+                  onClick={resendOtp}
+                  className="text-sm text-[#FF6B00] font-medium hover:underline"
+                >
+                  إعادة إرسال الرمز
+                </button>
+              )}
+            </div>
+
+            {/* زر الرجوع */}
+            <button
+              onClick={() => {
+                setShowOtpScreen(false);
+                setOtp(['', '', '', '', '', '']);
+              }}
+              className="w-full mt-4 text-gray-500 text-sm hover:text-gray-700"
+            >
+              ← العودة لتسجيل الدخول
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">

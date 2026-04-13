@@ -26,18 +26,79 @@ from core.security import (
 )
 from models.schemas import (
     UserRegister, UserLogin, SellerDocuments, DeliveryDocuments,
-    ForgotPasswordRequest, VerifyIdentityRequest, ResetPasswordRequest
+    ForgotPasswordRequest, VerifyIdentityRequest, ResetPasswordRequest,
+    DeviceOTPVerify
 )
 import random
 import string
 import os
 import logging
 from slowapi.util import get_remote_address
+from datetime import timedelta
 
 # إعداد logger
 auth_logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+# ============== دوال مساعدة للأجهزة ==============
+
+async def check_new_device(user_id: str, device_id: str, user_type: str) -> bool:
+    """
+    التحقق إذا كان الجهاز جديداً
+    - المشترين: لا نتحقق من الأجهزة الجديدة (اختياري)
+    - البائعين والمدراء والتوصيل: نتحقق دائماً
+    """
+    # المشترين لا يحتاجون OTP للأجهزة الجديدة (إلا إذا أردت تغيير هذا)
+    # if user_type == "buyer":
+    #     return False
+    
+    # التحقق من وجود الجهاز في قائمة الأجهزة الموثوقة
+    trusted_device = await db.trusted_devices.find_one({
+        "user_id": user_id,
+        "device_id": device_id,
+        "is_active": True
+    })
+    
+    if trusted_device:
+        # تحديث آخر استخدام
+        await db.trusted_devices.update_one(
+            {"_id": trusted_device["_id"]},
+            {"$set": {"last_used_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return False  # جهاز معروف
+    
+    return True  # جهاز جديد
+
+
+async def add_trusted_device(user_id: str, device_id: str, device_name: str = None, ip_address: str = None):
+    """
+    إضافة جهاز للقائمة الموثوقة بعد التحقق
+    """
+    await db.trusted_devices.update_one(
+        {"user_id": user_id, "device_id": device_id},
+        {"$set": {
+            "user_id": user_id,
+            "device_id": device_id,
+            "device_name": device_name or "جهاز غير معروف",
+            "ip_address": ip_address,
+            "is_active": True,
+            "added_at": datetime.now(timezone.utc).isoformat(),
+            "last_used_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+
+
+def mask_phone(phone: str) -> str:
+    """
+    إخفاء جزء من رقم الهاتف للخصوصية
+    مثال: 0945****65
+    """
+    if len(phone) < 6:
+        return phone
+    return phone[:4] + "****" + phone[-2:]
 
 @router.post("/register")
 @limiter.limit("3/minute")
@@ -219,6 +280,54 @@ async def login(request: Request, credentials: UserLogin):
         
         auth_logger.info(f"✅ Tokens created for {credentials.phone}")
         
+        # 🆕 التحقق من الجهاز الجديد
+        device_id = credentials.device_id
+        if device_id:
+            try:
+                is_new_device = await check_new_device(user["id"], device_id, user["user_type"])
+                
+                if is_new_device:
+                    # جهاز جديد - نطلب OTP
+                    otp_code = ''.join(random.choices(string.digits, k=6))
+                    
+                    # حفظ OTP مؤقت
+                    await db.device_otp_codes.update_one(
+                        {"user_id": user["id"], "device_id": device_id},
+                        {"$set": {
+                            "user_id": user["id"],
+                            "phone": user["phone"],
+                            "device_id": device_id,
+                            "otp": otp_code,
+                            "user_type": user["user_type"],
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                            "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+                            "verified": False,
+                            "attempts": 0
+                        }},
+                        upsert=True
+                    )
+                    
+                    # إرسال OTP عبر WhatsApp
+                    from services.whatsapp_service import send_otp, TEST_MODE, TEST_OTP_CODE
+                    
+                    if TEST_MODE:
+                        auth_logger.info(f"🧪 [TEST MODE] Device OTP for {user['phone']}: {TEST_OTP_CODE}")
+                    else:
+                        await send_otp(user["phone"], otp_code)
+                    
+                    auth_logger.info(f"🔐 New device detected for {credentials.phone}, OTP required")
+                    
+                    return {
+                        "requires_otp": True,
+                        "message": "تم اكتشاف جهاز جديد. تم إرسال رمز التحقق إلى WhatsApp",
+                        "phone": mask_phone(user["phone"]),
+                        "device_id": device_id,
+                        "otp_expires_in": 600  # 10 دقائق
+                    }
+            except Exception as device_error:
+                auth_logger.warning(f"Device check error: {device_error}")
+                # استمر بدون التحقق من الجهاز في حالة الخطأ
+        
         # حفظ refresh token
         try:
             await db.refresh_tokens.update_one(
@@ -289,6 +398,206 @@ async def reset_brute_force_locks(user: dict = Depends(get_current_user)):
     
     result = reset_all_brute_force_locks()
     return result
+
+
+@router.post("/verify-device-otp")
+@limiter.limit("5/minute")
+async def verify_device_otp(request: Request, data: DeviceOTPVerify):
+    """
+    🔐 التحقق من OTP للجهاز الجديد
+    بعد التحقق، يتم إضافة الجهاز للقائمة الموثوقة وإرجاع التوكن
+    """
+    get_remote_address(request)
+    
+    # البحث عن سجل OTP
+    otp_record = await db.device_otp_codes.find_one({
+        "phone": data.phone,
+        "device_id": data.device_id,
+        "verified": False
+    })
+    
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="لا يوجد طلب تحقق لهذا الجهاز")
+    
+    # التحقق من انتهاء الصلاحية
+    expires_at = datetime.fromisoformat(otp_record["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        await db.device_otp_codes.delete_one({"_id": otp_record["_id"]})
+        raise HTTPException(status_code=400, detail="انتهت صلاحية رمز التحقق")
+    
+    # التحقق من عدد المحاولات
+    attempts = otp_record.get("attempts", 0)
+    if attempts >= 5:
+        await db.device_otp_codes.delete_one({"_id": otp_record["_id"]})
+        raise HTTPException(status_code=400, detail="تجاوزت عدد المحاولات المسموحة")
+    
+    # استيراد TEST_MODE و TEST_OTP_CODE
+    from services.whatsapp_service import TEST_MODE, TEST_OTP_CODE
+    
+    # التحقق من OTP
+    expected_otp = TEST_OTP_CODE if TEST_MODE else otp_record["otp"]
+    
+    if data.otp != expected_otp:
+        # تسجيل المحاولة الفاشلة
+        await db.device_otp_codes.update_one(
+            {"_id": otp_record["_id"]},
+            {"$inc": {"attempts": 1}}
+        )
+        remaining = 5 - attempts - 1
+        raise HTTPException(
+            status_code=400, 
+            detail=f"رمز التحقق غير صحيح. المحاولات المتبقية: {remaining}"
+        )
+    
+    # OTP صحيح - إضافة الجهاز للقائمة الموثوقة
+    user_id = otp_record["user_id"]
+    user_type = otp_record["user_type"]
+    
+    # إضافة الجهاز الموثوق
+    client_ip = get_remote_address(request)
+    await add_trusted_device(
+        user_id=user_id,
+        device_id=data.device_id,
+        device_name=data.device_name,
+        ip_address=client_ip
+    )
+    
+    # تحديث سجل OTP
+    await db.device_otp_codes.update_one(
+        {"_id": otp_record["_id"]},
+        {"$set": {
+            "verified": True,
+            "verified_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # جلب بيانات المستخدم الكاملة
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # إنشاء التوكنات
+    access_token = create_access_token(user_id, user_type)
+    refresh_token_str = create_refresh_token(user_id)
+    
+    # حفظ refresh token
+    await db.refresh_tokens.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "token": refresh_token_str,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    # تحديد is_approved
+    is_approved = user.get("is_approved", False)
+    if user_type == "delivery":
+        delivery_doc = await db.delivery_documents.find_one(
+            {"$or": [{"driver_id": user_id}, {"delivery_id": user_id}]},
+            {"_id": 0, "status": 1}
+        )
+        is_approved = delivery_doc and delivery_doc.get("status") == "approved"
+    
+    auth_logger.info(f"✅ Device OTP verified for {data.phone}, device: {data.device_id[:8]}...")
+    
+    # جلب معلومات الأدوار
+    roles = user.get("roles", [user_type])
+    active_role = user.get("active_role", user_type)
+    role_status = user.get("role_status", {})
+    
+    return {
+        "success": True,
+        "message": "تم التحقق بنجاح",
+        "token": access_token,
+        "refresh_token": refresh_token_str,
+        "user": {
+            "id": user["id"],
+            "name": user.get("full_name", user.get("name", "")),
+            "full_name": user.get("full_name", user.get("name", "")),
+            "phone": user["phone"],
+            "user_type": user_type,
+            "roles": roles,
+            "active_role": active_role,
+            "role_status": role_status,
+            "is_approved": is_approved
+        },
+        "device_trusted": True
+    }
+
+
+@router.post("/resend-device-otp")
+@limiter.limit("2/minute")
+async def resend_device_otp(request: Request, phone: str, device_id: str):
+    """
+    إعادة إرسال OTP للجهاز
+    """
+    get_remote_address(request)
+    
+    # البحث عن سجل OTP موجود
+    existing = await db.device_otp_codes.find_one({
+        "phone": phone,
+        "device_id": device_id,
+        "verified": False
+    })
+    
+    if not existing:
+        raise HTTPException(status_code=400, detail="لا يوجد طلب تحقق لهذا الجهاز")
+    
+    # إنشاء OTP جديد
+    otp_code = ''.join(random.choices(string.digits, k=6))
+    
+    # تحديث السجل
+    await db.device_otp_codes.update_one(
+        {"_id": existing["_id"]},
+        {"$set": {
+            "otp": otp_code,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+            "attempts": 0
+        }}
+    )
+    
+    # إرسال OTP
+    from services.whatsapp_service import send_otp, TEST_MODE
+    
+    if not TEST_MODE:
+        await send_otp(phone, otp_code)
+    
+    return {
+        "success": True,
+        "message": "تم إرسال رمز التحقق مرة أخرى",
+        "otp_expires_in": 600
+    }
+
+
+@router.get("/trusted-devices")
+async def get_trusted_devices(user: dict = Depends(get_current_user)):
+    """
+    جلب قائمة الأجهزة الموثوقة للمستخدم
+    """
+    devices = await db.trusted_devices.find(
+        {"user_id": user["id"], "is_active": True},
+        {"_id": 0}
+    ).sort("last_used_at", -1).to_list(None)
+    
+    return {"devices": devices}
+
+
+@router.delete("/trusted-devices/{device_id}")
+async def remove_trusted_device(device_id: str, user: dict = Depends(get_current_user)):
+    """
+    إزالة جهاز من القائمة الموثوقة
+    """
+    result = await db.trusted_devices.delete_one({
+        "user_id": user["id"],
+        "device_id": device_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="الجهاز غير موجود")
+    
+    return {"message": "تم إزالة الجهاز بنجاح"}
 
 @router.post("/refresh")
 async def refresh_token(request: Request):
