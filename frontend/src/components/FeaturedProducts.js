@@ -1,7 +1,7 @@
 // /app/frontend/src/components/FeaturedProducts.js
 // مكون عرض المنتجات المميزة (المعلن عنها)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -16,7 +16,7 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-const FeaturedProducts = () => {
+const FeaturedProducts = memo(() => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState({});
@@ -204,7 +204,9 @@ const FeaturedProducts = () => {
       </div>
     </section>
   );
-};
+});
+
+FeaturedProducts.displayName = 'FeaturedProducts';
 
 export default FeaturedProducts;
 

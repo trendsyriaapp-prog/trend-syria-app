@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Bell, X, Check, CheckCheck, Package, Truck, ShoppingCart, Gift, Star, Tag, Utensils, CreditCard, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -161,7 +161,7 @@ const formatTimeAgo = (dateString) => {
   return date.toLocaleDateString('ar-SY');
 };
 
-const NotificationsDropdown = () => {
+const NotificationsDropdown = memo(() => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -388,6 +388,8 @@ const NotificationsDropdown = () => {
       )}
     </div>
   );
-};
+});
+
+NotificationsDropdown.displayName = 'NotificationsDropdown';
 
 export default NotificationsDropdown;

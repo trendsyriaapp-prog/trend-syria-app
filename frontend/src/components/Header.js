@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -15,7 +15,7 @@ import ImageSearchModal from './ImageSearchModal';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const Header = () => {
+const Header = memo(() => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchHistory, setSearchHistory] = useState([]);
@@ -413,6 +413,8 @@ const Header = () => {
       />
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;

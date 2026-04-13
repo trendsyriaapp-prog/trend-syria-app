@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Heart, Play, Flame, Sparkles, ShoppingCart, Truck, MapPin } from 'lucide-react';
@@ -15,7 +15,7 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
 
-const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => {
+const ProductCard = memo(({ product, variant = 'default', badgeSettings = null }) => {
   const { user, token } = useAuth();
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -429,6 +429,8 @@ const ProductCard = ({ product, variant = 'default', badgeSettings = null }) => 
       </Link>
     </motion.div>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
