@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Package, MapPin, UtensilsCrossed, ShoppingBag, Clock, Locate } from 'lucide-react';
 import { formatPrice } from '../../utils/imageHelpers';
@@ -339,4 +339,5 @@ const AvailableOrdersList = ({ orders, foodOrders = [], isWorkingHours, onAccept
   );
 };
 
-export default AvailableOrdersList;
+// تصدير المكون مع React.memo لمنع إعادة الرسم غير الضرورية
+export default memo(AvailableOrdersList);

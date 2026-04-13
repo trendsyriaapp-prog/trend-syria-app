@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Phone, MessageCircle, HelpCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Lock, Truck } from 'lucide-react';
@@ -1165,4 +1165,5 @@ const MyOrdersList = ({
   );
 };
 
-export default MyOrdersList;
+// تصدير المكون مع React.memo لمنع إعادة الرسم غير الضرورية
+export default memo(MyOrdersList);

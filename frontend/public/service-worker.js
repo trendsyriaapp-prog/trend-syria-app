@@ -2,11 +2,12 @@
 // Service Worker محسّن للأداء والعمل Offline
 // إصدار: 6.0 - ديسمبر 2025
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const STATIC_CACHE = `trend-syria-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `trend-syria-dynamic-${CACHE_VERSION}`;
 const API_CACHE = `trend-syria-api-${CACHE_VERSION}`;
 const IMAGE_CACHE = `trend-syria-images-${CACHE_VERSION}`;
+const FONT_CACHE = `trend-syria-fonts-${CACHE_VERSION}`;
 
 // ========== الملفات الأساسية للتخزين ==========
 const CORE_ASSETS = [
@@ -25,7 +26,8 @@ const CACHEABLE_APIS = [
   '/api/products/newly-added',
   '/api/settings/public',
   '/api/settings/ticker-messages',
-  '/api/settings/homepage-sections'
+  '/api/settings/homepage-sections',
+  '/api/settings/business-categories'
 ];
 
 // ========== APIs للـ Network Only (لا تخزين) ==========
@@ -36,7 +38,9 @@ const NETWORK_ONLY_APIS = [
   '/api/wallet/',
   '/api/notifications/',
   '/api/messages/',
-  '/api/payment/'
+  '/api/payment/',
+  '/api/chat/',
+  '/api/voip/'
 ];
 
 // ========== إعدادات الكاش ==========
@@ -52,6 +56,10 @@ const CACHE_CONFIG = {
   static: {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 يوم
     maxEntries: 100
+  },
+  fonts: {
+    maxAge: 365 * 24 * 60 * 60 * 1000, // سنة كاملة
+    maxEntries: 20
   }
 };
 
