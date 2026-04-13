@@ -249,14 +249,14 @@ export default function SecurityDepositCard({ token, onDepositComplete }) {
                   key={method.id}
                   type="button"
                   onClick={() => setPaymentMethod(method.id)}
-                  className={`p-3 border rounded-lg flex items-center justify-center gap-2 transition-all ${
+                  className={`p-3 border-2 rounded-xl flex items-center justify-center gap-2 transition-all ${
                     paymentMethod === method.id 
-                      ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium' 
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-amber-500 bg-amber-50 font-bold shadow-sm' 
+                      : 'border-gray-300 hover:border-gray-400 bg-white'
                   }`}
                 >
-                  <span>{method.icon}</span>
-                  <span className="text-sm">{method.name}</span>
+                  <span className="text-xl">{method.icon}</span>
+                  <span className="text-sm font-medium text-gray-900">{method.name}</span>
                 </button>
               ))}
             </div>
