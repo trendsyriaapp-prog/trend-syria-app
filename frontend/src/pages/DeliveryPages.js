@@ -597,8 +597,16 @@ const DeliveryDashboard = () => {
   // قراءة التبويب من URL
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
+    if (tabFromUrl) {
+      // إذا كان هناك تبويب في URL، استخدمه
+      if (tabFromUrl !== activeTab) {
+        setActiveTab(tabFromUrl);
+      }
+    } else {
+      // إذا لم يكن هناك تبويب في URL (الصفحة الرئيسية)، اعرض التبويب الافتراضي
+      if (activeTab !== 'available') {
+        setActiveTab('available');
+      }
     }
   }, [searchParams]);
   
