@@ -164,7 +164,7 @@ const LazyImage = memo(({
           onDragStart={onDragStart}
           draggable="false"
           className={`w-full h-full transition-opacity duration-300 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
+            isLoaded || src?.startsWith('data:image') ? 'opacity-100' : 'opacity-0'
           } ${className}`}
           style={{ 
             objectFit,
