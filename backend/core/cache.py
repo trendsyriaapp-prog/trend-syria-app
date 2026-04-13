@@ -20,6 +20,10 @@ DEFAULT_TTL = 300  # 5 دقائق
 SETTINGS_TTL = 3600  # ساعة للإعدادات
 CATEGORIES_TTL = 1800  # 30 دقيقة للفئات
 PRODUCTS_TTL = 300  # 5 دقائق للمنتجات
+USER_TTL = 600  # 10 دقائق للمستخدمين
+HOMEPAGE_TTL = 180  # 3 دقائق للصفحة الرئيسية
+FOOD_STORES_TTL = 300  # 5 دقائق لمتاجر الطعام
+BUSINESS_CATEGORIES_TTL = 3600  # ساعة للأصناف التجارية
 
 
 class MemoryCache:

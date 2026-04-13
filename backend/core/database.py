@@ -288,6 +288,42 @@ async def create_indexes():
             ("created_at", -1)
         ])
         
+        # ============================================
+        # 🆕 فهارس إضافية - المحادثات والمكالمات
+        # ============================================
+        
+        # فهارس المحادثات
+        await db.chat_messages.create_index("order_id")
+        await db.chat_messages.create_index("sender_id")
+        await db.chat_messages.create_index([("order_id", 1), ("created_at", 1)])
+        
+        # فهارس طلبات الاتصال
+        await db.call_requests.create_index("order_id")
+        await db.call_requests.create_index("driver_id")
+        await db.call_requests.create_index("status")
+        await db.call_requests.create_index([("driver_id", 1), ("status", 1)])
+        
+        # فهارس الأصناف التجارية
+        await db.business_categories.create_index("id", unique=True)
+        await db.business_categories.create_index("type")
+        await db.business_categories.create_index("is_active")
+        
+        # فهارس العناوين المحفوظة
+        await db.saved_addresses.create_index("user_id")
+        await db.saved_addresses.create_index([("user_id", 1), ("is_default", 1)])
+        
+        # فهارس طرق الدفع
+        await db.payment_methods.create_index("user_id")
+        
+        # فهارس الأجهزة (للتحقق من OTP)
+        await db.users.create_index("device_ids")
+        
+        # فهرس نصي للبحث في المنتجات
+        await db.products.create_index([("name", "text"), ("description", "text")])
+        
+        # فهرس نصي للبحث في متاجر الطعام
+        await db.food_stores.create_index([("name", "text"), ("description", "text")])
+        
         logger.info("✅ MongoDB indexes created successfully")
         return True
     except Exception as e:

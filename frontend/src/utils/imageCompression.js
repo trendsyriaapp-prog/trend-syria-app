@@ -1,7 +1,21 @@
 /**
  * أداة ضغط الصور - تُستخدم في جميع أنحاء التطبيق
  * تضغط الصور تلقائياً قبل الرفع لتجنب فشل الرفع بسبب الحجم الكبير
+ * تدعم تحويل الصور إلى WebP للحصول على أفضل ضغط
  */
+
+/**
+ * التحقق من دعم المتصفح لـ WebP
+ */
+const supportsWebP = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+};
+
+// تخزين نتيجة الفحص
+const webpSupported = supportsWebP();
 
 /**
  * ضغط صورة وتحويلها إلى Base64
@@ -10,7 +24,8 @@
  * @param {number} options.maxWidth - الحد الأقصى للعرض (افتراضي: 1200)
  * @param {number} options.maxHeight - الحد الأقصى للارتفاع (افتراضي: 1200)
  * @param {number} options.quality - جودة الصورة 0-1 (افتراضي: 0.8)
- * @param {string} options.outputType - نوع الإخراج (افتراضي: 'image/jpeg')
+ * @param {string} options.outputType - نوع الإخراج (افتراضي: 'image/webp' إذا مدعوم)
+ * @param {boolean} options.preferWebP - تفضيل WebP (افتراضي: true)
  * @returns {Promise<string>} - الصورة المضغوطة كـ Base64
  */
 export const compressImage = (file, options = {}) => {
@@ -19,8 +34,12 @@ export const compressImage = (file, options = {}) => {
       maxWidth = 1200,
       maxHeight = 1200,
       quality = 0.8,
-      outputType = 'image/jpeg'
+      outputType = webpSupported ? 'image/webp' : 'image/jpeg',
+      preferWebP = true
     } = options;
+    
+    // تحديد نوع الإخراج النهائي
+    const finalOutputType = preferWebP && webpSupported ? 'image/webp' : outputType;
 
     // التحقق من أن الملف صورة
     if (!file || !file.type.startsWith('image/')) {

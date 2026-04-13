@@ -34,7 +34,7 @@ const PageLoader = () => (
 );
 
 // ==========================================
-// الصفحات الأساسية (تُحمّل مباشرة)
+// الصفحات الأساسية (تُحمّل مباشرة - الأكثر استخداماً)
 // ==========================================
 import HomeRouter from "./pages/HomeRouter";
 import HomePage from "./pages/HomePage";
@@ -42,19 +42,28 @@ import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import OrdersPage from "./pages/OrdersPage";
-import OrderTrackingPage from "./pages/OrderTrackingPage";
-import MessagesPage from "./pages/MessagesPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import StorePage from "./pages/StorePage";
-import FollowingPage from "./pages/FollowingPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import SettingsPage from "./pages/SettingsPage";
-import WalletPage from "./pages/WalletPage";
-import { PrivacyPolicyPage, TermsOfServicePage, ReturnPolicyPage } from "./pages/LegalPages";
-import AboutPage from "./pages/AboutPage";
+
+// ==========================================
+// صفحات ثانوية (Lazy Loading)
+// ==========================================
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const OrderTrackingPage = lazy(() => import("./pages/OrderTrackingPage"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const StorePage = lazy(() => import("./pages/StorePage"));
+const FollowingPage = lazy(() => import("./pages/FollowingPage"));
+const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const WalletPage = lazy(() => import("./pages/WalletPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+
+// صفحات قانونية
+const LegalPages = lazy(() => import("./pages/LegalPages"));
+const PrivacyPolicyPage = lazy(() => import("./pages/LegalPages").then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = lazy(() => import("./pages/LegalPages").then(m => ({ default: m.TermsOfServicePage })));
+const ReturnPolicyPage = lazy(() => import("./pages/LegalPages").then(m => ({ default: m.ReturnPolicyPage })));
 
 // ==========================================
 // الصفحات الثقيلة (Lazy Loading)
