@@ -439,110 +439,107 @@ const OrdersPage = () => {
                       </div>
                     </div>
 
-                    {/* Items preview */}
-                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-                      {/* إذا كان الطلب هدية مفاجئة، نخفي تفاصيل المنتج */}
-                      {order.is_gift && order.is_surprise ? (
-                        <div className="flex items-center gap-3 bg-gradient-to-r from-pink-50 to-purple-50 p-3 rounded-xl w-full">
-                          <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Gift size={28} className="text-white" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-purple-800">🎁 هدية مفاجأة</p>
-                            <p className="text-sm text-purple-600">
-                              من {order.gift_sender_name || 'صديق'}
-                            </p>
-                          </div>
-                        </div>
-                      ) : order.is_gift ? (
-                        // هدية عادية (ليست مفاجأة) - نعرض التفاصيل مع إشارة أنها هدية
-                        <>
-                          <div className="flex items-center gap-2 bg-pink-50 p-2 rounded-lg flex-shrink-0">
-                            <Gift size={16} className="text-pink-500" />
-                            <span className="text-xs text-pink-600 font-medium">هدية من {order.gift_sender_name || 'صديق'}</span>
-                          </div>
-                          {(order.items || []).slice(0, 4).map((item, i) => (
-                            <div key={i} className="flex-shrink-0 relative">
-                              <img
-                                src={item.image || item.product_image || '/placeholder.svg'}
-                                alt={item.product_name}
-                                className="w-14 h-14 rounded-lg object-cover border border-gray-200"
-                              />
-                              {item.quantity > 1 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center">
-                                  {item.quantity}
-                                </span>
-                              )}
+                    {/* Items preview with buttons */}
+                    <div className="flex items-center justify-between gap-3">
+                      {/* الصور */}
+                      <div className="flex gap-1.5 overflow-x-auto hide-scrollbar flex-1">
+                        {/* إذا كان الطلب هدية مفاجئة، نخفي تفاصيل المنتج */}
+                        {order.is_gift && order.is_surprise ? (
+                          <div className="flex items-center gap-2 bg-gradient-to-r from-pink-50 to-purple-50 p-2 rounded-xl">
+                            <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Gift size={20} className="text-white" />
                             </div>
-                          ))}
-                        </>
-                      ) : (
-                        // طلب عادي
-                        <>
-                          {(order.items || []).slice(0, 4).map((item, i) => (
-                            <div key={i} className="flex-shrink-0 relative">
-                              <img
-                                src={item.image || item.product_image || '/placeholder.svg'}
-                                alt={item.product_name}
-                                className="w-14 h-14 rounded-lg object-cover border border-gray-200"
-                              />
-                              {item.quantity > 1 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center">
-                                  {item.quantity}
-                                </span>
-                              )}
+                            <div>
+                              <p className="font-bold text-purple-800 text-xs">🎁 هدية مفاجأة</p>
+                              <p className="text-[10px] text-purple-600">من {order.gift_sender_name || 'صديق'}</p>
                             </div>
-                          ))}
-                          {order.items.length > 4 && (
-                            <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-sm text-gray-500 border border-gray-200">
-                              +{order.items.length - 4}
+                          </div>
+                        ) : order.is_gift ? (
+                          <>
+                            <div className="flex items-center gap-1 bg-pink-50 px-2 py-1 rounded-lg flex-shrink-0">
+                              <Gift size={12} className="text-pink-500" />
+                              <span className="text-[10px] text-pink-600 font-medium">هدية</span>
                             </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                            {(order.items || []).slice(0, 3).map((item, i) => (
+                              <div key={i} className="flex-shrink-0 relative">
+                                <img
+                                  src={item.image || item.product_image || '/placeholder.svg'}
+                                  alt={item.product_name}
+                                  className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                                />
+                                {item.quantity > 1 && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6B00] text-white text-[10px] rounded-full flex items-center justify-center">
+                                    {item.quantity}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <>
+                            {(order.items || []).slice(0, 3).map((item, i) => (
+                              <div key={i} className="flex-shrink-0 relative">
+                                <img
+                                  src={item.image || item.product_image || '/placeholder.svg'}
+                                  alt={item.product_name}
+                                  className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                                />
+                                {item.quantity > 1 && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF6B00] text-white text-[10px] rounded-full flex items-center justify-center">
+                                    {item.quantity}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                            {order.items.length > 3 && (
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-xs text-gray-500 border border-gray-200">
+                                +{order.items.length - 3}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
 
-                    {/* Buttons */}
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                      <button
-                        onClick={() => navigate(`/orders/${order.id}/tracking`)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#FF6B00] text-white rounded-xl text-sm font-medium hover:bg-[#E65000] transition-colors"
-                        data-testid={`track-order-${order.id}`}
-                      >
-                        <Truck size={16} />
-                        <span>تتبع</span>
-                      </button>
-                      
-                      {/* زر إعادة الطلب */}
-                      <button
-                        onClick={() => handleReorder(order)}
-                        disabled={reorderLoading === order.id}
-                        className="flex items-center justify-center gap-1 px-3 py-2 bg-green-500 text-white rounded-xl text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
-                        data-testid={`reorder-${order.id}`}
-                      >
-                        <RefreshCw size={14} className={reorderLoading === order.id ? 'animate-spin' : ''} />
-                        <span>إعادة الطلب</span>
-                      </button>
-                      
-                      {/* زر التقييم - يظهر فقط للطلبات المكتملة */}
-                      {order.delivery_status === 'delivered' && !ratedOrders[order.id] && (
+                      {/* الأزرار */}
+                      <div className="flex gap-1.5 flex-shrink-0">
                         <button
-                          onClick={() => setRateOrder(order)}
-                          className="flex items-center justify-center gap-1 px-3 py-2 bg-yellow-500 text-white rounded-xl text-sm font-medium hover:bg-yellow-600 transition-colors"
-                          data-testid={`rate-order-${order.id}`}
+                          onClick={() => navigate(`/orders/${order.id}/tracking`)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#FF6B00] text-white rounded-lg text-xs font-medium hover:bg-[#E65000] transition-colors"
+                          data-testid={`track-order-${order.id}`}
                         >
-                          <Star size={16} />
-                          <span>قيّم</span>
+                          <Truck size={14} />
+                          <span>تتبع</span>
                         </button>
-                      )}
-                      
-                      {/* عرض التقييم إذا تم */}
-                      {ratedOrders[order.id] && (
-                        <div className="flex items-center gap-1 px-3 py-2 bg-gray-100 rounded-xl text-sm">
-                          <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                          <span className="font-medium text-gray-700">{ratedOrders[order.id].rating}</span>
-                        </div>
-                      )}
+                        
+                        <button
+                          onClick={() => handleReorder(order)}
+                          disabled={reorderLoading === order.id}
+                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                          data-testid={`reorder-${order.id}`}
+                        >
+                          <RefreshCw size={12} className={reorderLoading === order.id ? 'animate-spin' : ''} />
+                          <span>إعادة</span>
+                        </button>
+                        
+                        {/* زر التقييم - يظهر فقط للطلبات المكتملة */}
+                        {order.delivery_status === 'delivered' && !ratedOrders[order.id] && (
+                          <button
+                            onClick={() => setRateOrder(order)}
+                            className="flex items-center gap-1 px-2 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600 transition-colors"
+                            data-testid={`rate-order-${order.id}`}
+                          >
+                            <Star size={12} />
+                          </button>
+                        )}
+                        
+                        {/* عرض التقييم إذا تم */}
+                        {ratedOrders[order.id] && (
+                          <div className="flex items-center gap-0.5 px-2 py-1.5 bg-gray-100 rounded-lg text-xs">
+                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                            <span className="font-medium text-gray-700">{ratedOrders[order.id].rating}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
