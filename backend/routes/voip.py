@@ -49,8 +49,8 @@ async def initiate_call(data: CallRequest, user: dict = Depends(get_current_user
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    # التحقق من صلاحيات المتصل
-    driver_id = order.get("driver_id")
+    # التحقق من صلاحيات المتصل (دعم كلا الحقلين driver_id و delivery_driver_id)
+    driver_id = order.get("driver_id") or order.get("delivery_driver_id") or order.get("delivery_id")
     customer_id = order.get("customer_id") or order.get("user_id")
     
     if data.caller_type == "driver":

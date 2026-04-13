@@ -35,8 +35,9 @@ async def create_call_request(data: CallRequestCreate, user: dict = Depends(get_
     if not order:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
     
-    # التحقق من أن السائق معين لهذا الطلب
-    if order.get("driver_id") != user["id"]:
+    # التحقق من أن السائق معين لهذا الطلب (دعم كلا الحقلين driver_id و delivery_driver_id)
+    order_driver_id = order.get("driver_id") or order.get("delivery_driver_id") or order.get("delivery_id")
+    if order_driver_id != user["id"]:
         raise HTTPException(status_code=403, detail="غير مصرح - لست السائق المعين لهذا الطلب")
     
     # جلب معلومات العميل
