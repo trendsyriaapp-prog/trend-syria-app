@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { Package, Clock, Truck, Check, X, ChevronLeft, Eye, MapPin, Phone, User, Navigation, Star, Gift, UtensilsCrossed, ShoppingBag, RefreshCw } from 'lucide-react';
+import { Package, Clock, Truck, Check, X, ChevronLeft, MapPin, Phone, User, Navigation, Star, Gift, UtensilsCrossed, ShoppingBag, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import RateDriverModal from '../components/delivery/RateDriverModal';
@@ -543,15 +543,6 @@ const OrdersPage = () => {
                           <span className="font-medium text-gray-700">{ratedOrders[order.id].rating}</span>
                         </div>
                       )}
-                      
-                      <button
-                        onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                        className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm hover:bg-gray-200 transition-colors"
-                        data-testid={`view-order-${order.id}`}
-                      >
-                        <Eye size={16} />
-                        <ChevronLeft size={14} className={`transition-transform ${selectedOrder?.id === order.id ? 'rotate-90' : ''}`} />
-                      </button>
                     </div>
                   </div>
 
@@ -632,17 +623,6 @@ const OrdersPage = () => {
           }}
         />
       )}
-
-      {/* زر الدعم واتساب */}
-      <a
-        href="https://wa.me/963945570365"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-20 left-4 z-40 flex items-center gap-2 bg-green-500 text-white px-4 py-3 rounded-full shadow-lg hover:bg-green-600 transition-all"
-      >
-        <Phone size={20} />
-        <span className="text-sm font-bold">مساعدة</span>
-      </a>
     </div>
   );
 };
