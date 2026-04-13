@@ -13,6 +13,12 @@ import { useToast } from '../../hooks/use-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 const formatPrice = (price) => {
   return new Intl.NumberFormat('ar-SY').format(price) + ' ل.س';
 };
@@ -51,9 +57,10 @@ const DeliveryBoxesTab = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const headers = getAuthHeaders();
       const [boxesRes, driversRes] = await Promise.all([
-        axios.get(`${API}/api/delivery-boxes/admin/all`),
-        axios.get(`${API}/api/admin/users?type=delivery`)
+        axios.get(`${API}/api/delivery-boxes/admin/all`, { headers }),
+        axios.get(`${API}/api/admin/users?type=delivery`, { headers })
       ]);
       
       setBoxes(boxesRes.data.boxes || []);
@@ -79,7 +86,8 @@ const DeliveryBoxesTab = () => {
     }
     
     try {
-      await axios.post(`${API}/api/delivery-boxes/admin/add?box_serial=${newBoxSerial}`);
+      const headers = getAuthHeaders();
+      await axios.post(`${API}/api/delivery-boxes/admin/add?box_serial=${newBoxSerial}`, {}, { headers });
       toast({ title: "تم", description: "تم إضافة الصندوق بنجاح" });
       setNewBoxSerial('');
       fetchData();
@@ -99,11 +107,12 @@ const DeliveryBoxesTab = () => {
     }
     
     try {
+      const headers = getAuthHeaders();
       await axios.post(`${API}/api/delivery-boxes/admin/assign`, {
         delivery_user_id: selectedDriver,
         box_serial: selectedBox || null,
         deposit_paid: depositAmount
-      });
+      }, { headers });
       
       toast({ title: "تم", description: "تم تعيين الصندوق بنجاح" });
       setSelectedDriver('');
@@ -126,10 +135,11 @@ const DeliveryBoxesTab = () => {
     }
     
     try {
+      const headers = getAuthHeaders();
       const res = await axios.post(`${API}/api/delivery-boxes/admin/record-payment/${driverId}`, {
         amount: parseFloat(paymentAmount),
         payment_type: paymentType
-      });
+      }, { headers });
       
       toast({ title: "تم", description: res.data.message });
       setShowPaymentModal(null);
@@ -148,7 +158,8 @@ const DeliveryBoxesTab = () => {
     if (!returnModal.driverId) return;
     
     try {
-      const res = await axios.post(`${API}/api/delivery-boxes/admin/return/${returnModal.driverId}?condition=${returnModal.condition}`);
+      const headers = getAuthHeaders();
+      const res = await axios.post(`${API}/api/delivery-boxes/admin/return/${returnModal.driverId}?condition=${returnModal.condition}`, {}, { headers });
       toast({ title: "تم", description: res.data.message });
       setReturnModal({ isOpen: false, driverId: null, driverName: '', condition: null });
       fetchData();
