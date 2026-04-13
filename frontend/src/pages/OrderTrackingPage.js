@@ -206,6 +206,13 @@ const OrderTrackingPage = () => {
                     <p className={`font-medium ${isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
                       {step.label}
                     </p>
+                    {/* نص توضيحي لمرحلة "في الطريق" - يظهر قبل الوصول إليها */}
+                    {step.key === 'on_the_way' && !isCompleted && (
+                      <p className="text-xs text-blue-500 mt-1 flex items-center gap-1">
+                        <Phone size={10} />
+                        يمكنك التواصل مع السائق في هذه المرحلة
+                      </p>
+                    )}
                     {historyItem && (
                       <div className="text-xs text-gray-500 mt-1">
                         <span>{formatDate(historyItem.timestamp)}</span>
