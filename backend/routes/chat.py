@@ -40,8 +40,11 @@ async def get_conversation(order_id: str, user: dict = Depends(get_current_user)
     user_id = user["id"]
     user_type = user.get("user_type")
     
-    is_customer = order.get("customer_id") == user_id
-    is_driver = order.get("driver_id") == user_id
+    # دعم كلا الحقلين driver_id و delivery_driver_id
+    order_driver_id = order.get("driver_id") or order.get("delivery_driver_id") or order.get("delivery_id")
+    
+    is_customer = order.get("customer_id") == user_id or order.get("user_id") == user_id
+    is_driver = order_driver_id == user_id
     is_admin = user_type in ["admin", "sub_admin"]
     
     if not (is_customer or is_driver or is_admin):
@@ -57,9 +60,9 @@ async def get_conversation(order_id: str, user: dict = Depends(get_current_user)
     customer_name = order.get("customer_name", "العميل")
     driver_name = "السائق"
     
-    if order.get("driver_id"):
+    if order_driver_id:
         driver = await db.users.find_one(
-            {"id": order["driver_id"]},
+            {"id": order_driver_id},
             {"_id": 0, "name": 1, "full_name": 1}
         )
         if driver:
@@ -69,15 +72,15 @@ async def get_conversation(order_id: str, user: dict = Depends(get_current_user)
         "order_id": order_id,
         "order_number": order.get("order_number"),
         "customer": {
-            "id": order.get("customer_id"),
+            "id": order.get("customer_id") or order.get("user_id"),
             "name": customer_name
         },
         "driver": {
-            "id": order.get("driver_id"),
+            "id": order_driver_id,
             "name": driver_name
-        } if order.get("driver_id") else None,
+        } if order_driver_id else None,
         "messages": messages,
-        "can_chat": order.get("status") in ["accepted", "preparing", "ready", "out_for_delivery", "ready_for_pickup"],
+        "can_chat": order.get("status") in ["accepted", "preparing", "ready", "out_for_delivery", "ready_for_pickup", "picked_up", "on_the_way", "arriving"],
         "status": order.get("status")
     }
 
@@ -97,8 +100,12 @@ async def send_message(req: SendMessageRequest, user: dict = Depends(get_current
     # التحقق من الصلاحية
     user_id = user["id"]
     
-    is_customer = order.get("customer_id") == user_id
-    is_driver = order.get("driver_id") == user_id
+    # دعم كلا الحقلين driver_id و delivery_driver_id
+    order_driver_id = order.get("driver_id") or order.get("delivery_driver_id") or order.get("delivery_id")
+    order_customer_id = order.get("customer_id") or order.get("user_id")
+    
+    is_customer = order_customer_id == user_id
+    is_driver = order_driver_id == user_id
     
     if not (is_customer or is_driver):
         raise HTTPException(status_code=403, detail="غير مصرح بإرسال رسائل")
@@ -110,10 +117,10 @@ async def send_message(req: SendMessageRequest, user: dict = Depends(get_current
     
     # تحديد المستلم
     if is_customer:
-        recipient_id = order.get("driver_id")
+        recipient_id = order_driver_id
         sender_type = "customer"
     else:
-        recipient_id = order.get("customer_id")
+        recipient_id = order_customer_id
         sender_type = "driver"
     
     if not recipient_id:
