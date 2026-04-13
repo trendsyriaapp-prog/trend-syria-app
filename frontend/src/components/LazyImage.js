@@ -40,7 +40,8 @@ const LazyImage = memo(({
 
   // إعداد Intersection Observer
   useEffect(() => {
-    if (priority) {
+    // للصور base64 أو priority، نعرضها مباشرة
+    if (priority || src?.startsWith('data:image')) {
       setIsInView(true);
       return;
     }
@@ -101,7 +102,9 @@ const LazyImage = memo(({
   };
 
   // تحديد src النهائي
-  const finalSrc = hasError ? '/placeholder.svg' : src;
+  // للصور base64، نستخدمها مباشرة بدون تحقق إضافي
+  const isBase64 = src?.startsWith('data:image');
+  const finalSrc = hasError ? '/placeholder.png' : src;
 
   return (
     <div 
