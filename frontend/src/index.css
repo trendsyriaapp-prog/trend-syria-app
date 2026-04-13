@@ -397,12 +397,8 @@ img {
   content-visibility: auto;
 }
 
-img[loading="lazy"] {
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-img[loading="lazy"].loaded,
+/* ملاحظة: تم إزالة opacity: 0 من img[loading="lazy"] لأنه يتعارض مع LazyImage component */
+img.loaded,
 img:not([loading="lazy"]) {
   opacity: 1;
 }
