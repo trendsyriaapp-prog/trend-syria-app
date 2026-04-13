@@ -785,7 +785,7 @@ async def process_image_with_photoroom(
         if product_image.mode != 'RGBA':
             product_image = product_image.convert('RGBA')
         
-        # إذا كانت الخلفية شفافة، نرجع الصورة كما هي
+        # إذا كانت الخلفية شفافة، نرجع الصورة كما هي (بدون ظل)
         if background == "transparent":
             output_buffer = io.BytesIO()
             product_image.save(output_buffer, format='PNG')
@@ -801,12 +801,31 @@ async def process_image_with_photoroom(
                 "message": "تمت معالجة الصورة بنجاح (rembg)"
             }
         
-        # إضافة الخلفية
+        # إنشاء الخلفية
         bg_width, bg_height = product_image.size
         bg_image = create_gradient_background(bg_width, bg_height, background)
         bg_image = bg_image.convert('RGBA')
         
-        # دمج الصورة مع الخلفية
+        # إضافة الظل إذا كان مطلوباً (وليست خلفية داكنة)
+        if shadow_type != "none" and background != "premium_dark":
+            # تحديد إعدادات الظل حسب النوع
+            shadow_settings = {
+                "soft": {"offset": (8, 8), "blur": 15, "opacity": 0.2},
+                "hard": {"offset": (5, 5), "blur": 5, "opacity": 0.4},
+                "floating": {"offset": (0, 15), "blur": 20, "opacity": 0.25},
+            }
+            settings = shadow_settings.get(shadow_type, shadow_settings["soft"])
+            
+            shadow = add_shadow_to_image(
+                product_image, 
+                offset=settings["offset"], 
+                blur=settings["blur"], 
+                opacity=settings["opacity"]
+            )
+            # لصق الظل أولاً
+            bg_image.paste(shadow, (0, 0), shadow)
+        
+        # دمج الصورة مع الخلفية (المنتج فوق الظل)
         final_image = Image.alpha_composite(bg_image, product_image)
         
         # تحويل للـ base64
@@ -815,7 +834,7 @@ async def process_image_with_photoroom(
         output_buffer.seek(0)
         image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
         
-        logger.info("✅ Image processed successfully with rembg")
+        logger.info(f"✅ Image processed successfully with rembg (shadow: {shadow_type})")
         return {
             "success": True,
             "image": f"data:image/png;base64,{image_base64}",
