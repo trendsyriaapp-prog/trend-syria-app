@@ -789,9 +789,21 @@ async def approve_seller(seller_id: str, user: dict = Depends(get_current_user))
     # تحديث جميع وثائق البائع (في حالة وجود طلبات متعددة)
     await db.seller_documents.update_many({"seller_id": seller_id}, {"$set": {"status": "approved", "approved_at": now}})
     
-    # إرسال إشعار للبائع بالموافقة
+    # 🆕 تحديث role_status للبائع
     seller = await db.users.find_one({"id": seller_id})
     if seller:
+        user_type = seller.get("user_type", "seller")
+        role_status = seller.get("role_status", {})
+        role_status[user_type] = {
+            "status": "approved",
+            "approved_at": now
+        }
+        await db.users.update_one(
+            {"id": seller_id},
+            {"$set": {"role_status": role_status}}
+        )
+        
+        # إرسال إشعار للبائع بالموافقة
         await db.notifications.insert_one({
             "id": str(uuid.uuid4()),
             "user_id": seller_id,
@@ -1472,6 +1484,19 @@ async def approve_delivery_driver(driver_id: str, user: dict = Depends(get_curre
         user_update["photo"] = doc["personal_photo"]
     
     await db.users.update_one({"id": driver_id}, {"$set": user_update})
+    
+    # 🆕 تحديث role_status لموظف التوصيل
+    driver = await db.users.find_one({"id": driver_id})
+    if driver:
+        role_status = driver.get("role_status", {})
+        role_status["delivery"] = {
+            "status": "approved",
+            "approved_at": now
+        }
+        await db.users.update_one(
+            {"id": driver_id},
+            {"$set": {"role_status": role_status}}
+        )
     
     # إرسال إشعار لموظف التوصيل بالموافقة
     await db.notifications.insert_one({

@@ -1,22 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign, UserX } from 'lucide-react';
+import { Home, Grid3X3, ShoppingCart, User, Heart, Package, MessageCircle, Settings, LogOut, Store, X, UtensilsCrossed, Gift, ShoppingBag, Wallet, ClipboardList, BarChart3, Users, Trophy, DollarSign, UserX, Truck, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useFoodCart } from '../context/FoodCartContext';
 import { useSettings } from '../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModalBackHandler } from '../hooks/useBackButton';
+import axios from 'axios';
+import { useToast } from '../hooks/use-toast';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const MobileNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, logout } = useAuth();
+  const { user, logout, token, updateUser } = useAuth();
   const { cartCount } = useCart();
   const { totalItems: foodCartCount, stores: foodStores } = useFoodCart();
   const { isFeatureEnabled } = useSettings();
+  const { toast } = useToast();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
+  const [roleStatus, setRoleStatus] = useState({});
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
   // دالة إغلاق القائمة مع useCallback لتجنب إعادة الإنشاء
   const closeAccountMenu = useCallback(() => {
@@ -25,6 +33,105 @@ const MobileNav = () => {
 
   // ✅ تسجيل القائمة مع زر الرجوع في Android
   useModalBackHandler(showAccountMenu, closeAccountMenu);
+
+  // جلب أدوار المستخدم عند فتح القائمة
+  useEffect(() => {
+    if (showAccountMenu && user && token) {
+      fetchUserRoles();
+    }
+  }, [showAccountMenu, user, token]);
+
+  const fetchUserRoles = async () => {
+    try {
+      setLoadingRoles(true);
+      const res = await axios.get(`${API}/api/auth/roles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserRoles(res.data.roles || [user?.user_type || 'buyer']);
+      setRoleStatus(res.data.role_status || {});
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      setUserRoles(user?.roles || [user?.user_type || 'buyer']);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
+  // إضافة دور جديد
+  const addNewRole = async (role) => {
+    try {
+      const res = await axios.post(`${API}/api/auth/roles/add`, 
+        { role },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: "تم بنجاح",
+        description: res.data.message,
+      });
+      
+      setShowAccountMenu(false);
+      navigate(res.data.redirect_to);
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في إضافة الدور",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // تبديل الدور النشط
+  const switchRole = async (role) => {
+    if (role === user?.user_type) return;
+    
+    const status = roleStatus[role]?.status;
+    if (status !== 'approved' && status !== 'active' && role !== 'buyer') {
+      if (status === 'pending') {
+        toast({ title: "في الانتظار", description: "طلبك قيد المراجعة", variant: "warning" });
+      } else if (status === 'rejected') {
+        toast({ title: "مرفوض", description: "يرجى إعادة رفع الوثائق", variant: "destructive" });
+      } else {
+        setShowAccountMenu(false);
+        navigate(role === 'delivery' ? '/delivery/documents' : '/seller/documents');
+      }
+      return;
+    }
+    
+    try {
+      const res = await axios.post(`${API}/api/auth/roles/switch`, 
+        { role },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (res.data.access_token) {
+        localStorage.setItem('token', res.data.access_token);
+      }
+      
+      toast({ title: "تم التبديل", description: `تم التبديل إلى ${getRoleName(role)}` });
+      window.location.href = res.data.redirect_to || '/';
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error.response?.data?.detail || "فشل في التبديل",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getRoleName = (role) => {
+    const names = { buyer: 'مشتري', seller: 'بائع', food_seller: 'بائع طعام', delivery: 'موظف توصيل' };
+    return names[role] || role;
+  };
+
+  const canAddRole = (role) => {
+    if (userRoles.includes(role)) return false;
+    if (role === 'seller' && userRoles.includes('food_seller')) return false;
+    if (role === 'food_seller' && userRoles.includes('seller')) return false;
+    return true;
+  };
 
   const isActive = (path) => location.pathname === path;
   
@@ -348,6 +455,86 @@ const MobileNav = () => {
                   </div>
                   <span className="font-medium text-gray-900">الإعدادات</span>
                 </Link>
+
+                {/* 🆕 قسم الأدوار المتعددة */}
+                {userRoles.length > 1 && (
+                  <div className="pt-3 mt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 px-3 mb-2">التبديل بين الأدوار</p>
+                    {userRoles.map((role) => {
+                      const isActive = role === user?.user_type;
+                      const status = roleStatus[role]?.status;
+                      const canSwitch = role === 'buyer' || status === 'approved' || status === 'active';
+                      const icons = { buyer: ShoppingCart, seller: Store, food_seller: UtensilsCrossed, delivery: Truck };
+                      const colors = { buyer: 'bg-blue-50 text-blue-500', seller: 'bg-orange-50 text-orange-500', food_seller: 'bg-green-50 text-green-500', delivery: 'bg-purple-50 text-purple-500' };
+                      const Icon = icons[role] || ShoppingCart;
+                      
+                      return (
+                        <button
+                          key={role}
+                          onClick={() => switchRole(role)}
+                          disabled={isActive}
+                          className={`w-full flex items-center gap-4 p-3 rounded-xl transition-colors ${
+                            isActive ? 'bg-[#FF6B00]/10' : canSwitch ? 'hover:bg-gray-50' : 'opacity-50'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colors[role]}`}>
+                            <Icon size={20} />
+                          </div>
+                          <div className="flex-1 text-right">
+                            <span className={`font-medium ${isActive ? 'text-[#FF6B00]' : 'text-gray-900'}`}>
+                              {getRoleName(role)}
+                            </span>
+                            {!canSwitch && status && (
+                              <p className="text-[10px] text-gray-400">
+                                {status === 'pending' ? 'في الانتظار' : status === 'rejected' ? 'مرفوض' : 'غير مكتمل'}
+                              </p>
+                            )}
+                          </div>
+                          {isActive && <div className="w-2 h-2 bg-[#FF6B00] rounded-full" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 🆕 أزرار إضافة دور جديد */}
+                {user?.user_type === 'buyer' && (
+                  <div className="pt-3 mt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 px-3 mb-2">انضم كـ</p>
+                    
+                    {canAddRole('seller') && (
+                      <button
+                        onClick={() => addNewRole('seller')}
+                        className="w-full flex items-center gap-4 p-3 hover:bg-orange-50 rounded-xl transition-colors"
+                      >
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          <Store size={20} className="text-orange-500" />
+                        </div>
+                        <div className="flex-1 text-right">
+                          <span className="font-medium text-gray-900">أصبح بائعاً</span>
+                          <p className="text-[10px] text-gray-500">ابدأ ببيع منتجاتك</p>
+                        </div>
+                        <ChevronRight size={16} className="text-gray-400" />
+                      </button>
+                    )}
+                    
+                    {canAddRole('delivery') && (
+                      <button
+                        onClick={() => addNewRole('delivery')}
+                        className="w-full flex items-center gap-4 p-3 hover:bg-purple-50 rounded-xl transition-colors"
+                      >
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <Truck size={20} className="text-purple-500" />
+                        </div>
+                        <div className="flex-1 text-right">
+                          <span className="font-medium text-gray-900">أصبح موظف توصيل</span>
+                          <p className="text-[10px] text-gray-500">اكسب من التوصيل</p>
+                        </div>
+                        <ChevronRight size={16} className="text-gray-400" />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {user.user_type === 'seller' && (
                   <Link

@@ -62,6 +62,16 @@ async def register(request: Request, user: UserRegister):
         raise HTTPException(status_code=400, detail="رقم الهاتف مسجل مسبقاً")
     
     user_id = str(uuid.uuid4())
+    
+    # إعداد الأدوار الأولية
+    initial_roles = [user.user_type]
+    initial_role_status = {
+        user.user_type: {
+            "status": "active" if user.user_type == "buyer" else "not_submitted",
+            "added_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+    
     user_doc = {
         "id": user_id,
         "name": clean_name,
@@ -70,6 +80,9 @@ async def register(request: Request, user: UserRegister):
         "password": hash_password_secure(user.password),  # 🔒 bcrypt
         "city": clean_city,
         "user_type": user.user_type,
+        "roles": initial_roles,  # 🆕 نظام الأدوار المتعددة
+        "active_role": user.user_type,  # 🆕 الدور النشط
+        "role_status": initial_role_status,  # 🆕 حالة كل دور
         "emergency_phone": user.emergency_phone,  # رقم الطوارئ
         "is_verified": user.user_type == "buyer",
         "is_approved": user.user_type == "buyer",
@@ -240,6 +253,11 @@ async def login(request: Request, credentials: UserLogin):
         
         auth_logger.info(f"✅ Login successful: {credentials.phone}, type={user['user_type']}")
         
+        # 🆕 جلب معلومات الأدوار
+        roles = user.get("roles", [user["user_type"]])
+        active_role = user.get("active_role", user["user_type"])
+        role_status = user.get("role_status", {})
+        
         return {
             "token": access_token,
             "refresh_token": refresh_token,
@@ -249,6 +267,9 @@ async def login(request: Request, credentials: UserLogin):
                 "full_name": user.get("full_name", user.get("name", "")),
                 "phone": user["phone"],
                 "user_type": user["user_type"],
+                "roles": roles,  # 🆕 جميع الأدوار
+                "active_role": active_role,  # 🆕 الدور النشط
+                "role_status": role_status,  # 🆕 حالة كل دور
                 "is_approved": is_approved
             },
             "force_password_change": force_password_change
@@ -1763,3 +1784,267 @@ async def delete_account(user: dict = Depends(get_current_user)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء حذف الحساب: {str(e)}")
+
+
+
+# ============== نظام الأدوار المتعددة (Multi-Role System) ==============
+
+class AddRoleRequest(BaseModel):
+    role: str  # "seller", "food_seller", "delivery"
+
+class SwitchRoleRequest(BaseModel):
+    role: str
+
+
+@router.get("/roles")
+async def get_user_roles(user: dict = Depends(get_current_user)):
+    """
+    جلب أدوار المستخدم الحالي
+    """
+    user_id = user["id"]
+    
+    # جلب بيانات المستخدم الكاملة
+    full_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # إذا لم يكن لديه roles، نُنشئها من user_type الحالي
+    roles = full_user.get("roles", [full_user.get("user_type", "buyer")])
+    active_role = full_user.get("active_role", full_user.get("user_type", "buyer"))
+    role_status = full_user.get("role_status", {})
+    
+    # التأكد من وجود حالة لكل دور
+    for role in roles:
+        if role not in role_status:
+            if role == "buyer":
+                role_status[role] = {"status": "active"}
+            elif role in ["seller", "food_seller"]:
+                # التحقق من حالة وثائق البائع
+                seller_doc = await db.seller_documents.find_one({"seller_id": user_id}, {"_id": 0})
+                if seller_doc:
+                    role_status[role] = {"status": seller_doc.get("status", "pending")}
+                else:
+                    role_status[role] = {"status": "not_submitted"}
+            elif role == "delivery":
+                # التحقق من حالة وثائق التوصيل
+                delivery_doc = await db.delivery_documents.find_one({"driver_id": user_id}, {"_id": 0})
+                if delivery_doc:
+                    role_status[role] = {"status": delivery_doc.get("status", "pending")}
+                else:
+                    role_status[role] = {"status": "not_submitted"}
+    
+    return {
+        "roles": roles,
+        "active_role": active_role,
+        "role_status": role_status,
+        "can_add_roles": get_available_roles(roles)
+    }
+
+
+def get_available_roles(current_roles: list) -> list:
+    """
+    الحصول على الأدوار المتاحة للإضافة
+    """
+    all_roles = ["buyer", "seller", "food_seller", "delivery"]
+    # المشتري لا يمكن أن يكون بائع منتجات وطعام معاً
+    if "seller" in current_roles:
+        all_roles.remove("food_seller")
+    if "food_seller" in current_roles:
+        all_roles.remove("seller")
+    
+    return [r for r in all_roles if r not in current_roles]
+
+
+@router.post("/roles/add")
+async def add_role_to_user(data: AddRoleRequest, user: dict = Depends(get_current_user)):
+    """
+    إضافة دور جديد للمستخدم (مثل: مشتري يصبح بائع)
+    """
+    user_id = user["id"]
+    new_role = data.role
+    
+    # التحقق من صحة الدور
+    valid_roles = ["seller", "food_seller", "delivery"]
+    if new_role not in valid_roles:
+        raise HTTPException(status_code=400, detail="دور غير صالح")
+    
+    # جلب بيانات المستخدم
+    full_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # الحصول على الأدوار الحالية
+    current_roles = full_user.get("roles", [full_user.get("user_type", "buyer")])
+    
+    # التحقق من عدم وجود الدور مسبقاً
+    if new_role in current_roles:
+        raise HTTPException(status_code=400, detail="لديك هذا الدور بالفعل")
+    
+    # التحقق من التعارض (لا يمكن أن يكون seller و food_seller معاً)
+    if new_role == "seller" and "food_seller" in current_roles:
+        raise HTTPException(status_code=400, detail="لا يمكنك أن تكون بائع منتجات وبائع طعام معاً")
+    if new_role == "food_seller" and "seller" in current_roles:
+        raise HTTPException(status_code=400, detail="لا يمكنك أن تكون بائع طعام وبائع منتجات معاً")
+    
+    # إضافة الدور الجديد
+    new_roles = current_roles + [new_role]
+    
+    # تحديث role_status
+    role_status = full_user.get("role_status", {})
+    role_status[new_role] = {"status": "not_submitted", "added_at": datetime.now(timezone.utc).isoformat()}
+    
+    # تحديث قاعدة البيانات
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "roles": new_roles,
+                "role_status": role_status
+            }
+        }
+    )
+    
+    # تحديد الصفحة التالية
+    next_page = "/seller/documents" if new_role in ["seller", "food_seller"] else "/delivery/documents"
+    
+    return {
+        "success": True,
+        "message": f"تم إضافة دور {get_role_name(new_role)} بنجاح",
+        "roles": new_roles,
+        "next_step": "يرجى رفع الوثائق المطلوبة للموافقة",
+        "redirect_to": next_page
+    }
+
+
+@router.post("/roles/switch")
+async def switch_active_role(data: SwitchRoleRequest, user: dict = Depends(get_current_user)):
+    """
+    تبديل الدور النشط للمستخدم
+    """
+    user_id = user["id"]
+    new_role = data.role
+    
+    # جلب بيانات المستخدم
+    full_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # الحصول على الأدوار الحالية
+    current_roles = full_user.get("roles", [full_user.get("user_type", "buyer")])
+    
+    # التحقق من أن المستخدم لديه هذا الدور
+    if new_role not in current_roles:
+        raise HTTPException(status_code=400, detail="ليس لديك هذا الدور")
+    
+    # التحقق من حالة الدور (يجب أن يكون معتمداً أو نشطاً)
+    role_status = full_user.get("role_status", {})
+    role_info = role_status.get(new_role, {})
+    
+    if new_role != "buyer":
+        status = role_info.get("status", "not_submitted")
+        if status not in ["active", "approved"]:
+            if status == "pending":
+                raise HTTPException(status_code=400, detail="هذا الدور في انتظار الموافقة")
+            elif status == "rejected":
+                raise HTTPException(status_code=400, detail="تم رفض هذا الدور، يرجى إعادة رفع الوثائق")
+            else:
+                raise HTTPException(status_code=400, detail="يرجى رفع الوثائق المطلوبة أولاً")
+    
+    # تحديث الدور النشط و user_type (للتوافق مع الكود الحالي)
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "active_role": new_role,
+                "user_type": new_role  # للتوافق مع الكود القديم
+            }
+        }
+    )
+    
+    # إنشاء توكن جديد بالدور الجديد
+    new_access_token = create_access_token(user_id, new_role)
+    new_refresh_token = create_refresh_token(user_id)
+    
+    return {
+        "success": True,
+        "message": f"تم التبديل إلى {get_role_name(new_role)}",
+        "active_role": new_role,
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "redirect_to": get_role_redirect(new_role)
+    }
+
+
+def get_role_name(role: str) -> str:
+    """
+    الحصول على اسم الدور بالعربية
+    """
+    names = {
+        "buyer": "مشتري",
+        "seller": "بائع",
+        "food_seller": "بائع طعام",
+        "delivery": "موظف توصيل",
+        "admin": "مدير",
+        "sub_admin": "مشرف"
+    }
+    return names.get(role, role)
+
+
+def get_role_redirect(role: str) -> str:
+    """
+    الحصول على صفحة التوجيه حسب الدور
+    """
+    redirects = {
+        "buyer": "/",
+        "seller": "/seller/dashboard",
+        "food_seller": "/food/dashboard",
+        "delivery": "/delivery/dashboard",
+        "admin": "/admin",
+        "sub_admin": "/admin"
+    }
+    return redirects.get(role, "/")
+
+
+@router.get("/roles/status/{role}")
+async def get_role_status(role: str, user: dict = Depends(get_current_user)):
+    """
+    جلب حالة دور معين (للتحقق قبل التبديل)
+    """
+    user_id = user["id"]
+    
+    full_user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    current_roles = full_user.get("roles", [full_user.get("user_type", "buyer")])
+    
+    if role not in current_roles:
+        return {
+            "has_role": False,
+            "status": "not_added",
+            "message": "لم تضف هذا الدور بعد"
+        }
+    
+    role_status = full_user.get("role_status", {})
+    role_info = role_status.get(role, {"status": "active" if role == "buyer" else "not_submitted"})
+    
+    return {
+        "has_role": True,
+        "status": role_info.get("status"),
+        "can_switch": role_info.get("status") in ["active", "approved"],
+        "message": get_status_message(role_info.get("status"))
+    }
+
+
+def get_status_message(status: str) -> str:
+    """
+    رسالة حالة الدور
+    """
+    messages = {
+        "active": "نشط",
+        "approved": "معتمد",
+        "pending": "في انتظار الموافقة",
+        "rejected": "مرفوض",
+        "not_submitted": "لم يتم رفع الوثائق"
+    }
+    return messages.get(status, status)
