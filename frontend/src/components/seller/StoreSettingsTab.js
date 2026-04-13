@@ -27,7 +27,7 @@ const PAYMENT_TYPES = [
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 
-const StoreSettingsTab = ({ onLogoUpdate }) => {
+const StoreSettingsTab = ({ onLogoUpdate, onSaveSuccess }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -131,6 +131,10 @@ const StoreSettingsTab = ({ onLogoUpdate }) => {
     try {
       await axios.put(`${API}/api/auth/seller/store-settings`, storeSettings);
       toast({ title: "تم الحفظ", description: "تم تحديث إعدادات المتجر بنجاح" });
+      // إغلاق الإعدادات بعد الحفظ بنجاح
+      if (onSaveSuccess) {
+        setTimeout(() => onSaveSuccess(), 500);
+      }
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
     } finally {

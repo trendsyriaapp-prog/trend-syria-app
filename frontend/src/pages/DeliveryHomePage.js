@@ -138,7 +138,7 @@ const DeliveryHomePage = () => {
       <div className="px-3 py-3">
         {/* تبويب الإعدادات */}
         {activeTab === 'settings' ? (
-          <DeliverySettingsTab />
+          <DeliverySettingsTab onSaveSuccess={() => setActiveTab('home')} />
         ) : (
           <>
             {/* طلباتي الحالية */}

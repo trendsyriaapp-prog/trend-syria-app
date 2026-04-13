@@ -782,7 +782,7 @@ const FoodStoreDashboard = () => {
               <Settings size={18} className="text-[#FF6B00]" />
               الإعدادات
             </h3>
-            <StoreSettings store={store} token={token} onUpdate={fetchStoreData} />
+            <StoreSettings store={store} token={token} onUpdate={fetchStoreData} onSaveSuccess={() => setActiveTab('orders')} />
           </div>
         )}
       </div>
@@ -1048,7 +1048,7 @@ const FoodStoreDashboard = () => {
 };
 
 // Store Settings Component
-const StoreSettings = ({ store, token, onUpdate }) => {
+const StoreSettings = ({ store, token, onUpdate, onSaveSuccess }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -1156,6 +1156,10 @@ const StoreSettings = ({ store, token, onUpdate }) => {
       });
       toast({ title: "تم الحفظ", description: "تم تحديث المعلومات" });
       onUpdate();
+      // إغلاق الإعدادات بعد الحفظ بنجاح
+      if (onSaveSuccess) {
+        setTimeout(() => onSaveSuccess(), 500);
+      }
     } catch (error) {
       toast({ title: "خطأ", description: "فشل حفظ التغييرات", variant: "destructive" });
     } finally {

@@ -510,7 +510,7 @@ const SettingsPage = () => {
 
         {/* Delivery Settings Tab - تبويب إعدادات التوصيل للسائق */}
         {activeTab === 'delivery-settings' && user?.user_type === 'delivery' && (
-          <DeliverySettingsTab />
+          <DeliverySettingsTab onSaveSuccess={() => setActiveTab('driver')} />
         )}
 
         {/* Loyalty Tab */}

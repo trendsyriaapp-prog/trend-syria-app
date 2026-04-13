@@ -30,7 +30,7 @@ const PAYMENT_TYPES = [
   { id: 'bank_account', name: 'حساب بنكي', icon: '🏦' },
 ];
 
-const DeliverySettingsTab = () => {
+const DeliverySettingsTab = ({ onSaveSuccess }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -88,6 +88,10 @@ const DeliverySettingsTab = () => {
     try {
       await axios.put(`${API}/api/auth/delivery/settings`, deliverySettings);
       toast({ title: "تم الحفظ", description: "تم تحديث الإعدادات بنجاح" });
+      // إغلاق الإعدادات بعد الحفظ بنجاح
+      if (onSaveSuccess) {
+        setTimeout(() => onSaveSuccess(), 500);
+      }
     } catch (error) {
       toast({ title: "خطأ", description: "فشل في حفظ الإعدادات", variant: "destructive" });
     } finally {
