@@ -50,14 +50,25 @@ class DeliveryDocuments(BaseModel):
     vehicle_type: str  # car, motorcycle, electric_scooter, bicycle
     motorcycle_license: Optional[str] = None  # إجباري فقط لـ car و motorcycle
     vehicle_photo: Optional[str] = None  # صورة المركبة
+    # حقول العنوان الإلزامية
+    home_address: str  # العنوان النصي
+    home_latitude: float  # خط العرض
+    home_longitude: float  # خط الطول
+    home_city: Optional[str] = None  # المدينة
     
 class SellerDocuments(BaseModel):
     business_name: str
+    business_category: Optional[str] = None  # صنف النشاط التجاري
     seller_type: str  # traditional_shop, restaurant
     national_id: str  # صورة الهوية
     commercial_registration: str  # السجل التجاري
     shop_photo: Optional[str] = None  # صورة المحل (للمتاجر التقليدية)
     health_certificate: Optional[str] = None  # الشهادة الصحية (للمطاعم)
+    # حقول العنوان الإلزامية
+    store_address: str  # العنوان النصي
+    store_latitude: float  # خط العرض
+    store_longitude: float  # خط الطول
+    store_city: Optional[str] = None  # المدينة
 
 # ============== Product Models ==============
 

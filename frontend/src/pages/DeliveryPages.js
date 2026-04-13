@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { useModalBackHandler } from '../hooks/useBackButton';
 import { compressDocumentImage } from '../utils/imageCompression';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import { 
   Truck, Clock, Upload, Camera, CreditCard, AlertTriangle, Navigation, Home, Volume2, VolumeX, LogOut, Wallet, Star, Settings,
   Car, Bike, Check, MapPin, X, Trash2
@@ -50,8 +51,19 @@ const DeliveryDocuments = () => {
     id_photo: '',
     vehicle_type: '',
     motorcycle_license: '',
-    vehicle_photo: ''
+    vehicle_photo: '',
+    // حقول العنوان الجديدة
+    home_address: '',
+    home_latitude: null,
+    home_longitude: null,
+    home_city: ''
   });
+
+  // قائمة المدن
+  const CITIES = [
+    'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
+    'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
+  ];
 
   // أنواع المركبات
   const defaultVehicleTypes = [
@@ -126,6 +138,25 @@ const DeliveryDocuments = () => {
       toast({
         title: "خطأ",
         description: "رخصة القيادة مطلوبة لهذا النوع من المركبات",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // التحقق من العنوان والموقع - إلزامي
+    if (!docs.home_address || !docs.home_address.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى كتابة عنوان السكن",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!docs.home_latitude || !docs.home_longitude) {
+      toast({
+        title: "خطأ",
+        description: "يرجى تحديد موقع السكن على الخريطة (إجباري)",
         variant: "destructive"
       });
       return;
@@ -403,6 +434,83 @@ const DeliveryDocuments = () => {
             </div>
           </div>
 
+          {/* قسم العنوان والموقع - إلزامي */}
+          <div className="bg-white rounded-xl p-4 border-2 border-green-200">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <MapPin size={16} className="text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">عنوان السكن</h3>
+                <p className="text-xs text-gray-500">هذا العنوان سيظهر للإدارة عند مراجعة طلبك</p>
+              </div>
+            </div>
+            
+            {/* تنبيه إلزامي */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-amber-700">
+                <AlertTriangle size={16} />
+                <span className="text-sm font-medium">تحديد الموقع إلزامي لإكمال التسجيل</span>
+              </div>
+            </div>
+            
+            {/* المدينة */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+              <select
+                value={docs.home_city}
+                onChange={(e) => setDocs(prev => ({ ...prev, home_city: e.target.value }))}
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">اختر المدينة</option>
+                {CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* العنوان النصي */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي *</label>
+              <input
+                type="text"
+                value={docs.home_address}
+                onChange={(e) => setDocs(prev => ({ ...prev, home_address: e.target.value }))}
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                placeholder="مثال: شارع بغداد، بناء رقم 5، الطابق الثاني"
+                required
+              />
+            </div>
+            
+            {/* خريطة تحديد الموقع */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                تحديد الموقع على الخريطة *
+              </label>
+              <GoogleMapsLocationPicker
+                latitude={docs.home_latitude}
+                longitude={docs.home_longitude}
+                onLocationChange={(lat, lng) => setDocs(prev => ({ 
+                  ...prev, 
+                  home_latitude: lat, 
+                  home_longitude: lng 
+                }))}
+                height="200px"
+              />
+              {docs.home_latitude && docs.home_longitude ? (
+                <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                  <Check size={12} />
+                  تم تحديد الموقع بنجاح
+                </p>
+              ) : (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <X size={12} />
+                  يرجى تحديد موقعك على الخريطة
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* قائمة حالة الوثائق */}
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <p className="text-sm font-bold text-gray-700 mb-3">📋 حالة الوثائق</p>
@@ -457,11 +565,20 @@ const DeliveryDocuments = () => {
                   <span className="text-gray-500 text-sm">اختياري</span>
                 )}
               </div>
+              {/* حالة العنوان */}
+              <div className={`flex items-center justify-between p-2 rounded-lg ${docs.home_address && docs.home_latitude ? 'bg-green-50' : 'bg-red-50'}`}>
+                <span className="text-sm">عنوان السكن</span>
+                {docs.home_address && docs.home_latitude ? (
+                  <span className="text-green-600 text-sm flex items-center gap-1"><Check size={14} /> محدد</span>
+                ) : (
+                  <span className="text-red-600 text-sm flex items-center gap-1"><X size={14} /> مطلوب</span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* تحذير إذا كانت الوثائق ناقصة */}
-          {(!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license)) && (
+          {(!docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude) && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div className="flex items-start gap-2">
                 <AlertTriangle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
@@ -478,7 +595,7 @@ const DeliveryDocuments = () => {
           {/* زر الإرسال */}
           <button
             type="submit"
-            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license)}
+            disabled={loading || !docs.national_id || !docs.personal_photo || !docs.id_photo || !docs.vehicle_type || (requiresLicense && !docs.motorcycle_license) || !docs.home_address || !docs.home_latitude}
             className="w-full bg-[#FF6B00] text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'جاري الإرسال...' : 'إرسال الوثائق'}

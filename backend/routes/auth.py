@@ -707,6 +707,13 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
     if not docs.commercial_registration or not docs.commercial_registration.strip():
         raise HTTPException(status_code=400, detail="صورة السجل التجاري مطلوبة")
     
+    # التحقق من العنوان والموقع - إلزامي
+    if not docs.store_address or not docs.store_address.strip():
+        raise HTTPException(status_code=400, detail="عنوان المتجر مطلوب")
+    
+    if not docs.store_latitude or not docs.store_longitude:
+        raise HTTPException(status_code=400, detail="يرجى تحديد موقع المتجر على الخريطة")
+    
     # التحقق من نوع البائع
     valid_seller_types = ["traditional_shop", "restaurant"]
     if docs.seller_type not in valid_seller_types:
@@ -734,12 +741,18 @@ async def upload_seller_documents(docs: SellerDocuments, user: dict = Depends(ge
         "id": str(uuid.uuid4()),
         "seller_id": user["id"],
         "business_name": docs.business_name,
+        "business_category": docs.business_category,
         "seller_type": docs.seller_type,
         "seller_type_name": seller_type_names.get(docs.seller_type, docs.seller_type),
         "national_id": docs.national_id,
         "commercial_registration": docs.commercial_registration,
         "shop_photo": docs.shop_photo if docs.seller_type == "traditional_shop" else None,
         "health_certificate": docs.health_certificate if docs.seller_type == "restaurant" else None,
+        # حقول العنوان الجديدة
+        "store_address": docs.store_address,
+        "store_latitude": docs.store_latitude,
+        "store_longitude": docs.store_longitude,
+        "store_city": docs.store_city,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -817,6 +830,13 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
     if not docs.national_id or not docs.national_id.strip():
         raise HTTPException(status_code=400, detail="رقم الهوية مطلوب")
     
+    # التحقق من العنوان والموقع - إلزامي
+    if not docs.home_address or not docs.home_address.strip():
+        raise HTTPException(status_code=400, detail="عنوان السكن مطلوب")
+    
+    if not docs.home_latitude or not docs.home_longitude:
+        raise HTTPException(status_code=400, detail="يرجى تحديد موقع السكن على الخريطة")
+    
     # التحقق من نوع المركبة
     valid_vehicle_types = ["car", "motorcycle", "electric_scooter", "bicycle"]
     if docs.vehicle_type not in valid_vehicle_types:
@@ -855,6 +875,11 @@ async def upload_delivery_documents(docs: DeliveryDocuments, user: dict = Depend
         "motorcycle_license": docs.motorcycle_license if docs.vehicle_type in requires_license else None,
         "vehicle_photo": docs.vehicle_photo,
         "requires_license": docs.vehicle_type in requires_license,
+        # حقول العنوان الجديدة
+        "home_address": docs.home_address,
+        "home_latitude": docs.home_latitude,
+        "home_longitude": docs.home_longitude,
+        "home_city": docs.home_city,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     }

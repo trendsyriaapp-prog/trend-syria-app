@@ -692,10 +692,15 @@ const AllPendingJoinRequests = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3 py-3 text-sm border-t">
-                      <div><span className="text-gray-500">المدينة:</span> {driver.city}</div>
+                      <div><span className="text-gray-500">المدينة:</span> {item.home_city || driver.city || 'غير محدد'}</div>
                       <div><span className="text-gray-500">الهاتف:</span> {driver.phone}</div>
                       <div><span className="text-gray-500">نوع المركبة:</span> {item.vehicle_type_name || item.vehicle_type || 'غير محدد'}</div>
                       <div><span className="text-gray-500">رقم الهوية:</span> {item.national_id || 'غير محدد'}</div>
+                      {(item.home_address || driver.home_address) && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">العنوان:</span> {item.home_address || driver.home_address}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex gap-2 mt-3">

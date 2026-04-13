@@ -7,12 +7,13 @@ import {
   Package, DollarSign, ShoppingBag, Loader2,
   Megaphone, Wallet, TrendingUp, Gift, BookOpen, Star, MessageSquare, Send, Home, ShoppingCart,
   Store, CreditCard, Edit2, Trash2, Save, Bell, Volume2, VolumeX, LogOut, ChevronRight,
-  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings, Rocket
+  Eye, EyeOff, RotateCcw, AlertTriangle, CheckCircle, Shield, Flame, Zap, Settings, Rocket, MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import { formatPrice } from '../utils/imageHelpers';
 import { compressDocumentImage } from '../utils/imageCompression';
+import GoogleMapsLocationPicker from '../components/GoogleMapsLocationPicker';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import useNotificationSound from '../hooks/useNotificationSound';
 import PushNotificationButton from '../components/PushNotificationButton';
@@ -424,6 +425,18 @@ const SellerDocumentsPage = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
+  
+  // حقول العنوان الجديدة
+  const [storeAddress, setStoreAddress] = useState('');
+  const [storeLatitude, setStoreLatitude] = useState(null);
+  const [storeLongitude, setStoreLongitude] = useState(null);
+  const [storeCity, setStoreCity] = useState('');
+
+  // قائمة المدن
+  const CITIES = [
+    'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
+    'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
+  ];
 
   // أنواع البائعين
   const sellerTypes = [
@@ -534,17 +547,32 @@ const SellerDocumentsPage = () => {
       toast({ title: "خطأ", description: "يرجى رفع الشهادة الصحية", variant: "destructive" });
       return;
     }
+    
+    // التحقق من العنوان والموقع - إلزامي
+    if (!storeAddress || !storeAddress.trim()) {
+      toast({ title: "خطأ", description: "يرجى كتابة عنوان المتجر", variant: "destructive" });
+      return;
+    }
+    if (!storeLatitude || !storeLongitude) {
+      toast({ title: "خطأ", description: "يرجى تحديد موقع المتجر على الخريطة (إجباري)", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
     try {
       await axios.post(`${API}/api/seller/documents`, {
         business_name: businessName,
-        business_category: businessCategory, // إضافة صنف النشاط
+        business_category: businessCategory,
         seller_type: sellerType,
         national_id: nationalId,
         commercial_registration: commercialReg,
         shop_photo: shopPhoto,
-        health_certificate: healthCert
+        health_certificate: healthCert,
+        // حقول العنوان الجديدة
+        store_address: storeAddress,
+        store_latitude: storeLatitude,
+        store_longitude: storeLongitude,
+        store_city: storeCity
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -780,12 +808,88 @@ const SellerDocumentsPage = () => {
                     inputId="health-cert-input"
                   />
                 )}
+                
+                {/* قسم العنوان والموقع - إلزامي */}
+                <div className="bg-white rounded-xl p-4 border-2 border-green-200 mt-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <MapPin size={16} className="text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">عنوان المتجر</h3>
+                      <p className="text-xs text-gray-500">هذا العنوان سيظهر للإدارة عند مراجعة طلبك</p>
+                    </div>
+                  </div>
+                  
+                  {/* تنبيه إلزامي */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                    <div className="flex items-center gap-2 text-amber-700">
+                      <AlertTriangle size={16} />
+                      <span className="text-sm font-medium">تحديد الموقع إلزامي لإكمال التسجيل</span>
+                    </div>
+                  </div>
+                  
+                  {/* المدينة */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+                    <select
+                      value={storeCity}
+                      onChange={(e) => setStoreCity(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                    >
+                      <option value="">اختر المدينة</option>
+                      {CITIES.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* العنوان النصي */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">العنوان التفصيلي *</label>
+                    <input
+                      type="text"
+                      value={storeAddress}
+                      onChange={(e) => setStoreAddress(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+                      placeholder="مثال: شارع بغداد، بناء رقم 5، الطابق الأرضي"
+                      required
+                    />
+                  </div>
+                  
+                  {/* خريطة تحديد الموقع */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      تحديد الموقع على الخريطة *
+                    </label>
+                    <GoogleMapsLocationPicker
+                      latitude={storeLatitude}
+                      longitude={storeLongitude}
+                      onLocationChange={(lat, lng) => {
+                        setStoreLatitude(lat);
+                        setStoreLongitude(lng);
+                      }}
+                      height="200px"
+                    />
+                    {storeLatitude && storeLongitude ? (
+                      <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                        <Check size={12} />
+                        تم تحديد الموقع بنجاح
+                      </p>
+                    ) : (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <X size={12} />
+                        يرجى تحديد موقع المتجر على الخريطة
+                      </p>
+                    )}
+                  </div>
+                </div>
               </motion.div>
             )}
 
             <button
               type="submit"
-              disabled={loading || !sellerType}
+              disabled={loading || !sellerType || !storeAddress || !storeLatitude}
               className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               data-testid="submit-docs-btn"
             >
