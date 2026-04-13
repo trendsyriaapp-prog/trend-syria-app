@@ -993,16 +993,25 @@ async def process_image_professional(
         
         # 2. إزالة الخلفية
         processing_method = "local"
+        no_bg_data = None
         try:
             if REMOVE_BG_API_KEY:
+                logger.info("🔄 Attempting Remove.bg API...")
                 no_bg_data = await remove_background_removebg(image_data)
                 processing_method = "removebg"
+                logger.info("✅ Remove.bg succeeded")
             else:
+                logger.info("🔄 Using local rembg (no API key)")
                 no_bg_data = remove_background_local(image_data)
         except Exception as e:
-            print(f"Remove.bg failed, using local: {e}")
-            no_bg_data = remove_background_local(image_data)
-            processing_method = "local_fallback"
+            logger.warning(f"⚠️ Remove.bg failed: {e}, falling back to local rembg")
+            try:
+                no_bg_data = remove_background_local(image_data)
+                processing_method = "local_fallback"
+                logger.info("✅ Local rembg succeeded")
+            except Exception as e2:
+                logger.error(f"❌ Local rembg also failed: {e2}")
+                raise HTTPException(status_code=500, detail=f"فشل إزالة الخلفية: {e2}")
         
         # فتح الصورة بدون خلفية
         product_image = Image.open(io.BytesIO(no_bg_data))
