@@ -9,10 +9,46 @@ import {
   X, Loader2, Wand2, Check, Image as ImageIcon, 
   Palette, Focus, Move, Sun, Sparkles, Copy,
   Download, ChevronDown, ChevronUp, AlertCircle,
-  Smartphone, Monitor, Instagram, Utensils, Package
+  Smartphone, Monitor, Instagram, Utensils, Package,
+  Upload, Zap
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// دالة ضغط الصورة قبل الإرسال
+const compressImage = async (dataUrl, maxWidth = 800, quality = 0.7) => {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      
+      // تصغير الأبعاد إذا كانت كبيرة
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // تحويل إلى JPEG مضغوط
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.src = dataUrl;
+  });
+};
+
+// حساب حجم الصورة بالكيلوبايت
+const getImageSize = (dataUrl) => {
+  const base64 = dataUrl.split(',')[1] || dataUrl;
+  const bytes = atob(base64).length;
+  return (bytes / 1024).toFixed(1);
+};
 
 // ألوان الخلفيات للمعاينة
 const BACKGROUND_COLORS = {
@@ -48,6 +84,12 @@ const ProImageProcessor = ({
   const [processingInfo, setProcessingInfo] = useState(null);
   const [multipleSizes, setMultipleSizes] = useState(null);
   const [imageSettings, setImageSettings] = useState(null);
+  
+  // حالة التحميل المحسّنة
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingStep, setProcessingStep] = useState(''); // 'compressing', 'uploading', 'processing', 'downloading'
+  const [originalSize, setOriginalSize] = useState(0);
+  const [compressedSize, setCompressedSize] = useState(0);
   
   // خيارات المعالجة الاحترافية
   const [options, setOptions] = useState({
@@ -114,15 +156,32 @@ const ProImageProcessor = ({
 
     setProcessing(true);
     setProcessedImage(null);
+    setUploadProgress(0);
+    setProcessingStep('compressing');
     
     try {
-      const response = await fetch(imageDataUrl);
+      // 1. حساب حجم الصورة الأصلي
+      const origSize = getImageSize(imageDataUrl);
+      setOriginalSize(origSize);
+      
+      // 2. ضغط الصورة
+      setProcessingStep('compressing');
+      const compressedDataUrl = await compressImage(imageDataUrl, 800, 0.7);
+      const compSize = getImageSize(compressedDataUrl);
+      setCompressedSize(compSize);
+      setUploadProgress(20);
+      
+      // 3. تحويل إلى blob
+      const response = await fetch(compressedDataUrl);
       const blob = await response.blob();
       
       const formData = new FormData();
       formData.append('file', blob, 'image.jpg');
       
       let res;
+      
+      // 4. رفع ومعالجة
+      setProcessingStep('uploading');
       
       // معالجة مختلفة للطعام vs المنتجات
       if (isFoodSeller) {
@@ -131,7 +190,13 @@ const ProImageProcessor = ({
         formData.append('output_format', options.outputFormat);
         
         res = await axios.post(`${API}/api/image/process-food`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000, // 2 دقيقة timeout
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(20 + (percent * 0.3)); // 20-50%
+            if (percent === 100) setProcessingStep('processing');
+          }
         });
       } else {
         // معالجة المنتجات العادية - مع إزالة خلفية
@@ -145,9 +210,18 @@ const ProImageProcessor = ({
         formData.append('output_format', options.outputFormat);
 
         res = await axios.post(`${API}/api/image/process-pro`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000, // 2 دقيقة timeout
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(20 + (percent * 0.3)); // 20-50%
+            if (percent === 100) setProcessingStep('processing');
+          }
         });
       }
+
+      setProcessingStep('downloading');
+      setUploadProgress(90);
 
       if (res.data.success) {
         setProcessedImage(res.data.image);
@@ -155,12 +229,19 @@ const ProImageProcessor = ({
         if (res.data.sizes) {
           setMultipleSizes(res.data.sizes);
         }
+        setUploadProgress(100);
       }
     } catch (error) {
       console.error('Error processing image:', error);
-      alert('فشل معالجة الصورة');
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        alert('انتهت المهلة - الإنترنت بطيء جداً. حاول مرة أخرى.');
+      } else {
+        alert('فشل معالجة الصورة. حاول مرة أخرى.');
+      }
     } finally {
       setProcessing(false);
+      setProcessingStep('');
+      setUploadProgress(0);
     }
   };
 
@@ -323,10 +404,42 @@ const ProImageProcessor = ({
                 processedImage ? 'border-green-500' : 'border-dashed border-gray-300'
               } ${keepOriginal ? 'bg-gray-100' : BACKGROUND_COLORS[selectedBg]}`}>
                 {processing ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="animate-spin text-[#FF6B00]" size={32} />
-                    <p className="text-xs text-gray-500">جاري المعالجة الاحترافية...</p>
-                    <div className="flex gap-1 flex-wrap justify-center px-4">
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4">
+                    {/* شريط التحميل المحسّن */}
+                    <div className="w-full max-w-[150px]">
+                      <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                        <span>
+                          {processingStep === 'compressing' && '📦 ضغط الصورة...'}
+                          {processingStep === 'uploading' && '📤 رفع الصورة...'}
+                          {processingStep === 'processing' && '✨ إزالة الخلفية...'}
+                          {processingStep === 'downloading' && '📥 تحميل النتيجة...'}
+                          {!processingStep && '⏳ جاري التحضير...'}
+                        </span>
+                        <span>{Math.round(uploadProgress)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-[#FF6B00] to-orange-500 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${uploadProgress}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* معلومات الضغط */}
+                    {compressedSize > 0 && (
+                      <div className="text-[9px] text-gray-400 text-center">
+                        <span className="text-red-400">{originalSize} KB</span>
+                        <span className="mx-1">→</span>
+                        <span className="text-green-500 font-bold">{compressedSize} KB</span>
+                        <span className="text-green-500 mr-1">⚡</span>
+                      </div>
+                    )}
+                    
+                    <Loader2 className="animate-spin text-[#FF6B00]" size={28} />
+                    
+                    <div className="flex gap-1 flex-wrap justify-center">
                       {options.autoColorCorrect && <span className="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">الألوان</span>}
                       {options.sharpen && <span className="text-[8px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">الحدة</span>}
                       {options.smartCenter && <span className="text-[8px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded">التوسيط</span>}
