@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ExternalLink, Check, X, Loader2, Settings, MapPinOff } from 'lucide-react';
+import { MapPin, ExternalLink, Check, X, Loader2, Settings, MapPinOff, Clipboard } from 'lucide-react';
 
 /**
  * مكون لاختيار الموقع من Google Maps
@@ -15,6 +15,8 @@ const GoogleMapsLocationPicker = ({
   const [error, setError] = useState(null);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [showGPSModal, setShowGPSModal] = useState(false);
+  const [showPasteInput, setShowPasteInput] = useState(false);
+  const [pasteValue, setPasteValue] = useState('');
 
   // فتح إعدادات الموقع في الهاتف
   const openLocationSettings = () => {
@@ -122,19 +124,41 @@ const GoogleMapsLocationPicker = ({
   // معالجة لصق رابط Google Maps
   const handlePasteLink = async () => {
     try {
+      // محاولة القراءة من الحافظة
       const text = await navigator.clipboard.readText();
-      const coords = extractCoordsFromGoogleMapsLink(text);
-      if (coords) {
-        onLocationSelect({
-          ...coords,
-          source: 'google_maps_link'
-        });
-        setError(null);
+      if (text) {
+        processPastedText(text);
       } else {
-        setError('الرابط غير صالح. يرجى نسخ رابط من Google Maps');
+        // إذا فشل، أظهر حقل الإدخال اليدوي
+        setShowPasteInput(true);
       }
     } catch (err) {
-      setError('لا يمكن قراءة الحافظة. يرجى لصق الرابط يدوياً');
+      // إذا لم يكن هناك إذن للحافظة، أظهر حقل الإدخال اليدوي
+      console.log('Clipboard access denied, showing manual input');
+      setShowPasteInput(true);
+    }
+  };
+
+  // معالجة النص الملصق
+  const processPastedText = (text) => {
+    const coords = extractCoordsFromGoogleMapsLink(text);
+    if (coords) {
+      onLocationSelect({
+        ...coords,
+        source: 'google_maps_link'
+      });
+      setError(null);
+      setShowPasteInput(false);
+      setPasteValue('');
+    } else {
+      setError('الرابط غير صالح. يرجى نسخ رابط من Google Maps يحتوي على الإحداثيات');
+    }
+  };
+
+  // معالجة الإدخال اليدوي
+  const handleManualPaste = () => {
+    if (pasteValue.trim()) {
+      processPastedText(pasteValue.trim());
     }
   };
 
@@ -264,10 +288,42 @@ const GoogleMapsLocationPicker = ({
               onClick={handlePasteLink}
               className="flex items-center justify-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all"
             >
-            <ExternalLink size={18} />
+            <Clipboard size={18} />
             <span>لصق من Maps</span>
           </button>
         </div>
+
+        {/* حقل اللصق اليدوي */}
+        {showPasteInput && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 space-y-3">
+            <p className="text-xs text-green-700 font-bold">📋 الصق رابط Google Maps هنا:</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={pasteValue}
+                onChange={(e) => setPasteValue(e.target.value)}
+                placeholder="https://www.google.com/maps/..."
+                className="flex-1 p-2 border border-green-300 rounded-lg text-sm text-left dir-ltr"
+                dir="ltr"
+              />
+              <button
+                type="button"
+                onClick={handleManualPaste}
+                disabled={!pasteValue.trim()}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
+              >
+                تأكيد
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setShowPasteInput(false); setPasteValue(''); }}
+              className="text-xs text-green-600 hover:text-green-800"
+            >
+              إلغاء
+            </button>
+          </div>
+        )}
         
         {/* رسالة انتظار GPS */}
         {loading && (
