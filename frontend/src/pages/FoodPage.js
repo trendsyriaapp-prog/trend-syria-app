@@ -343,7 +343,7 @@ const FoodPage = () => {
         }
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         timeout: 10000,
         maximumAge: 300000 // 5 دقائق cache
       }

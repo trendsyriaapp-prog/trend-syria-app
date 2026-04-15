@@ -57,7 +57,7 @@ const useDriverLocationTracker = (isActive = false, currentOrderId = null) => {
         }
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         timeout: 10000,
         maximumAge: 0
       }

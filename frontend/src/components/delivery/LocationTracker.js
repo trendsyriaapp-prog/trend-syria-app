@@ -76,7 +76,7 @@ const LocationTracker = () => {
 
     // خيارات GPS عالية الدقة
     const options = {
-      enableHighAccuracy: true,
+      enableHighAccuracy: false,
       timeout: 10000,
       maximumAge: 0
     };

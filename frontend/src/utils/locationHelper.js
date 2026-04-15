@@ -32,7 +32,7 @@ export const getCurrentLocation = (options = {}) => {
     }
 
     const defaultOptions = {
-      enableHighAccuracy: true,
+      enableHighAccuracy: false,
       timeout: 10000,
       maximumAge: 60000,
       ...options

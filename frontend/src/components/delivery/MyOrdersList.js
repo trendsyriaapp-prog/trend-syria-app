@@ -234,7 +234,7 @@ const MyOrdersList = ({
             variant: "destructive" 
           });
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
       );
       return;
     }
@@ -370,7 +370,7 @@ const MyOrdersList = ({
         };
         setTimeout(() => openPickupModal(updatedOrder), 500);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
     );
   };
 

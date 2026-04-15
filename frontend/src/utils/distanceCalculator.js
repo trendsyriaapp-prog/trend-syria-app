@@ -181,7 +181,7 @@ export const getCurrentLocation = () => {
         resolve(SYRIA_LOCATIONS['دمشق']);
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         timeout: 10000,
         maximumAge: 60000 // استخدام موقع محفوظ لمدة دقيقة
       }

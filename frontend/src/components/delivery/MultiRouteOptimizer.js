@@ -114,7 +114,7 @@ const getDriverLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => resolve([position.coords.latitude, position.coords.longitude]),
       (error) => reject(error),
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 30000 }
     );
   });
 };

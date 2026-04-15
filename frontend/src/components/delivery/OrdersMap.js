@@ -632,9 +632,9 @@ const OrdersMap = ({
             console.error('خطأ GPS:', error);
           },
           {
-            enableHighAccuracy: true,
+            enableHighAccuracy: false,
             timeout: 10000,
-            maximumAge: 0
+            maximumAge: 60000
           }
         );
       }
@@ -1501,7 +1501,7 @@ const OrdersMap = ({
               fetchRouteStoreToCustomer(storeCoords, customerCoords, order);
             }
           },
-          { enableHighAccuracy: true, timeout: 5000 }
+          { enableHighAccuracy: false, timeout: 30000 }
         );
       }
       return;
@@ -1608,7 +1608,7 @@ const OrdersMap = ({
           setCurrentDriverLocation(defaultLocation);
           setMapCenter([defaultLocation.latitude, defaultLocation.longitude]);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
       );
     } else {
       setGpsError('المتصفح لا يدعم خدمة الموقع');
@@ -1642,7 +1642,7 @@ const OrdersMap = ({
           (error) => {
             console.log('Watch position error:', error);
           },
-          { enableHighAccuracy: true, maximumAge: 1000 }
+          { enableHighAccuracy: false, maximumAge: 1000 }
         );
       }
 

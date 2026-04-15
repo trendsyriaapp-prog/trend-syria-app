@@ -61,7 +61,7 @@ const GoogleMapsLocationPicker = ({
       setError('خدمة الموقع (GPS) غير مفعّلة أو بطيئة. يرجى تفعيل GPS والانتظار.');
       setShowLocationPrompt(true);
       setShowGPSModal(true);
-    }, 20000);  // 20 ثانية للحصول على موقع دقيق
+    }, 35000);  // 35 ثانية
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -102,9 +102,9 @@ const GoogleMapsLocationPicker = ({
         }
       },
       {
-        enableHighAccuracy: true,  // استخدام GPS بأعلى دقة ممكنة
-        timeout: 15000,            // 15 ثانية للحصول على موقع دقيق
-        maximumAge: 0              // دائماً موقع جديد ودقيق
+        enableHighAccuracy: false, // موقع تقريبي أولاً - أسرع بكثير!
+        timeout: 30000,            // 30 ثانية - وقت كافي
+        maximumAge: 60000          // يستخدم cache لمدة دقيقة - أسرع!
       }
     );
   };

@@ -88,7 +88,7 @@ const getDriverLocation = () => {
       (error) => {
         reject(error);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 30000 }
     );
   });
 };
