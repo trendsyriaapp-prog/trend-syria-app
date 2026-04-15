@@ -417,11 +417,11 @@ const SellerDocumentsPage = () => {
   const [businessCategory, setBusinessCategory] = useState(''); // الصنف المختار
   const [businessCategories, setBusinessCategories] = useState([]); // قائمة الأصناف
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [sellerType, setSellerType] = useState('');
+  // نوع البائع: بائع المنتجات دائماً traditional_shop
+  const [sellerType, setSellerType] = useState('traditional_shop');
   const [nationalId, setNationalId] = useState(null);
   const [commercialReg, setCommercialReg] = useState(null);
   const [shopPhoto, setShopPhoto] = useState(null);
-  const [healthCert, setHealthCert] = useState(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState(null);
@@ -436,24 +436,6 @@ const SellerDocumentsPage = () => {
   const CITIES = [
     'دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 
     'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة', 'إدلب'
-  ];
-
-  // أنواع البائعين
-  const sellerTypes = [
-    {
-      id: 'traditional_shop',
-      name: 'متجر تقليدي',
-      icon: '🏪',
-      description: 'محل تجاري بموقع ثابت',
-      requiredDocs: ['nationalId', 'commercialReg', 'shopPhoto']
-    },
-    {
-      id: 'restaurant',
-      name: 'مطعم/طعام',
-      icon: '🍳',
-      description: 'مطعم أو محل طعام',
-      requiredDocs: ['nationalId', 'commercialReg', 'healthCert']
-    }
   ];
 
   // جلب أصناف الأنشطة التجارية
@@ -517,8 +499,6 @@ const SellerDocumentsPage = () => {
     }
   };
 
-  const selectedType = sellerTypes.find(t => t.id === sellerType);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -527,10 +507,7 @@ const SellerDocumentsPage = () => {
       toast({ title: "خطأ", description: "يرجى اختيار صنف النشاط التجاري", variant: "destructive" });
       return;
     }
-    if (!sellerType) {
-      toast({ title: "خطأ", description: "يرجى اختيار نوع النشاط", variant: "destructive" });
-      return;
-    }
+    // sellerType محدد تلقائياً كـ traditional_shop
     if (!nationalId) {
       toast({ title: "خطأ", description: "يرجى رفع صورة الهوية / إخراج القيد", variant: "destructive" });
       return;
@@ -539,12 +516,8 @@ const SellerDocumentsPage = () => {
       toast({ title: "خطأ", description: "يرجى رفع السجل التجاري", variant: "destructive" });
       return;
     }
-    if (sellerType === 'traditional_shop' && !shopPhoto) {
+    if (!shopPhoto) {
       toast({ title: "خطأ", description: "يرجى رفع صورة المحل", variant: "destructive" });
-      return;
-    }
-    if (sellerType === 'restaurant' && !healthCert) {
-      toast({ title: "خطأ", description: "يرجى رفع الشهادة الصحية", variant: "destructive" });
       return;
     }
     
@@ -563,12 +536,11 @@ const SellerDocumentsPage = () => {
       await axios.post(`${API}/api/seller/documents`, {
         business_name: businessName,
         business_category: businessCategory,
-        seller_type: sellerType,
+        seller_type: sellerType, // دائماً traditional_shop
         national_id: nationalId,
         commercial_registration: commercialReg,
         shop_photo: shopPhoto,
-        health_certificate: healthCert,
-        // حقول العنوان الجديدة
+        // حقول العنوان
         store_address: storeAddress,
         store_latitude: storeLatitude,
         store_longitude: storeLongitude,
@@ -741,75 +713,39 @@ const SellerDocumentsPage = () => {
               )}
             </div>
 
-            {/* اختيار نوع النشاط */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">نوع النشاط</label>
-              <div className="grid grid-cols-2 gap-3">
-                {sellerTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => setSellerType(type.id)}
-                    className={`p-4 rounded-xl border-2 transition-all text-center ${
-                      sellerType === type.id
-                        ? 'border-[#FF6B00] bg-[#FF6B00]/10'
-                        : 'border-gray-200 hover:border-gray-300 bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-3xl block mb-2">{type.icon}</span>
-                    <span className="text-sm font-medium block text-gray-900">{type.name}</span>
-                    <span className="text-[10px] text-gray-500 block mt-1">{type.description}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* الوثائق المطلوبة - بائع المنتجات */}
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-4 pt-2"
+            >
+              <p className="text-xs text-gray-500 text-center">📋 الوثائق المطلوبة للتسجيل كبائع</p>
+              
+              {/* صورة الهوية */}
+              <ImageUploader
+                label="صورة الهوية / إخراج القيد"
+                value={nationalId}
+                onChange={handleFileChange(setNationalId)}
+                inputId="national-id-input"
+              />
 
-            {/* الوثائق المطلوبة */}
-            {sellerType && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-4 pt-2"
-              >
-                <p className="text-xs text-gray-500 text-center">📋 الوثائق المطلوبة لـ{selectedType?.name}</p>
-                
-                {/* صورة الهوية - مطلوبة للجميع */}
-                <ImageUploader
-                  label="صورة الهوية / إخراج القيد"
-                  value={nationalId}
-                  onChange={handleFileChange(setNationalId)}
-                  inputId="national-id-input"
-                />
+              {/* السجل التجاري */}
+              <ImageUploader
+                label="السجل التجاري"
+                value={commercialReg}
+                onChange={handleFileChange(setCommercialReg)}
+                inputId="commercial-reg-input"
+              />
 
-                {/* السجل التجاري - مطلوب للجميع */}
-                <ImageUploader
-                  label="السجل التجاري"
-                  value={commercialReg}
-                  onChange={handleFileChange(setCommercialReg)}
-                  inputId="commercial-reg-input"
-                />
-
-                {/* صورة المحل - للمتاجر فقط */}
-                {sellerType === 'traditional_shop' && (
-                  <ImageUploader
-                    label="صورة المحل"
-                    value={shopPhoto}
-                    onChange={handleFileChange(setShopPhoto)}
-                    inputId="shop-photo-input"
-                  />
-                )}
-
-                {/* الشهادة الصحية - للمطاعم فقط */}
-                {sellerType === 'restaurant' && (
-                  <ImageUploader
-                    label="الشهادة الصحية"
-                    value={healthCert}
-                    onChange={handleFileChange(setHealthCert)}
-                    inputId="health-cert-input"
-                  />
-                )}
-                
-                {/* قسم العنوان والموقع - إلزامي */}
+              {/* صورة المحل */}
+              <ImageUploader
+                label="صورة المحل"
+                value={shopPhoto}
+                onChange={handleFileChange(setShopPhoto)}
+                inputId="shop-photo-input"
+              />
+              
+              {/* قسم العنوان والموقع - إلزامي */}
                 <div className="bg-white rounded-xl p-4 border-2 border-green-200 mt-4">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -885,11 +821,10 @@ const SellerDocumentsPage = () => {
                   </div>
                 </div>
               </motion.div>
-            )}
 
             <button
               type="submit"
-              disabled={loading || !sellerType || !storeAddress || !storeLatitude}
+              disabled={loading || !businessCategory || !storeAddress || !storeLatitude}
               className="w-full bg-[#FF6B00] text-white font-bold py-3 rounded-full mt-4 hover:bg-[#E65000] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               data-testid="submit-docs-btn"
             >
