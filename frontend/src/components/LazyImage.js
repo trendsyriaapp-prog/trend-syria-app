@@ -1,14 +1,43 @@
 // /app/frontend/src/components/LazyImage.js
 // مكون صورة محسّن مع Lazy Loading و Blur Placeholder
-// إصدار 2.0 - يدعم srcset, WebP, و placeholder ذكي
+// إصدار 2.1 - يدعم CDN Storage و srcset و WebP و placeholder ذكي
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+
+/**
+ * تحويل مسار الصورة إلى URL قابل للاستخدام
+ * يدعم: Base64, CDN paths, و URLs العادية
+ */
+const getImageUrl = (src) => {
+  if (!src) return '/placeholder.png';
+  
+  // Base64 images - use directly
+  if (src.startsWith('data:image')) {
+    return src;
+  }
+  
+  // CDN storage path (e.g., "trend-syria/products/uuid.jpg")
+  if (src.startsWith('trend-syria/') || src.startsWith('trendsyria/')) {
+    return `${API_URL}/api/storage/images/${src}`;
+  }
+  
+  // Already a full URL
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+    return src;
+  }
+  
+  // Unknown format - return as-is
+  return src;
+};
 
 /**
  * مكون LazyImage المحسّن
  * - Lazy Loading باستخدام Intersection Observer
  * - Blur/Shimmer Placeholder
  * - دعم srcset للتجاوب
+ * - دعم CDN Storage paths
  * - تحميل تدريجي
  */
 const LazyImage = memo(({ 
@@ -121,7 +150,7 @@ const LazyImage = memo(({
   // تحديد src النهائي
   // للصور base64، نستخدمها مباشرة بدون تحقق إضافي
   const isBase64 = src?.startsWith('data:image');
-  const finalSrc = hasError ? '/placeholder.png' : src;
+  const finalSrc = hasError ? '/placeholder.png' : getImageUrl(src);
 
   return (
     <div 
@@ -232,8 +261,10 @@ const LazyBackgroundImage = memo(({
 
     const img = new Image();
     img.onload = () => setIsLoaded(true);
-    img.src = src;
+    img.src = getImageUrl(src);
   }, [isInView, src]);
+
+  const finalSrc = getImageUrl(src);
 
   return (
     <div
@@ -242,7 +273,7 @@ const LazyBackgroundImage = memo(({
       style={{
         ...style,
         backgroundColor: isLoaded ? undefined : placeholderColor,
-        backgroundImage: isLoaded ? `url(${src})` : undefined,
+        backgroundImage: isLoaded ? `url(${finalSrc})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
@@ -297,5 +328,5 @@ const ProgressiveImage = memo(({
 
 ProgressiveImage.displayName = 'ProgressiveImage';
 
-export { LazyBackgroundImage, ProgressiveImage };
+export { LazyBackgroundImage, ProgressiveImage, getImageUrl };
 export default LazyImage;

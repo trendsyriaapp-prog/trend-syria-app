@@ -8,7 +8,7 @@ import axios from 'axios';
 import { 
   Users, Package, ShoppingBag, Clock, AlertTriangle, Bell, 
   ChevronRight, Truck, DollarSign, ShieldCheck, Megaphone, Shield,
-  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap, ShoppingCart
+  UtensilsCrossed, Ticket, Flame, Settings, TrendingUp, Home, Flag, Map, BarChart2, Camera, Phone, Store, Trash2, User, Headphones, MessageCircle, MessageSquare, Wrench, LogOut, Wallet, Zap, ShoppingCart, Cloud
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/use-toast';
@@ -69,6 +69,7 @@ import SellerManagementTab from '../components/admin/SellerManagementTab';
 import FoodStoreManagementTab from '../components/admin/FoodStoreManagementTab';
 import ResetDatabaseTab from '../components/admin/ResetDatabaseTab';
 import BusinessCategoriesTab from '../components/admin/BusinessCategoriesTab';
+import ImageMigrationTab from '../components/admin/ImageMigrationTab';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -632,7 +633,8 @@ const AdminDashboardPage = () => {
     'all-join-requests': 'جميع طلبات الانضمام',
     'all-pending-items': 'جميع العناصر المعلقة',
     'all-withdraw-requests': 'جميع طلبات السحب',
-    'reset-database': 'مسح قاعدة البيانات'
+    'reset-database': 'مسح قاعدة البيانات',
+    'image-migration': 'ترحيل الصور إلى CDN'
   };
 
   return (
@@ -879,6 +881,9 @@ const AdminDashboardPage = () => {
             )}
             {activeTab === 'reset-database' && user.user_type === 'admin' && (
               <ResetDatabaseTab />
+            )}
+            {activeTab === 'image-migration' && user.user_type === 'admin' && (
+              <ImageMigrationTab />
             )}
               </>
             )}
@@ -1220,6 +1225,7 @@ const AdminDashboardPage = () => {
                       { icon: Store, label: 'أصناف الأنشطة', tab: 'business-categories' },
                       { icon: DollarSign, label: 'الدفع', tab: 'payment-settings' },
                       { icon: Wallet, label: 'محفظة المنصة', tab: 'platform-wallet' },
+                      { icon: Cloud, label: 'ترحيل الصور', tab: 'image-migration' },
                       { icon: Trash2, label: 'مسح البيانات', tab: 'reset-database', danger: true },
                     ].map((item, i) => (
                       <button key={i} onClick={() => setActiveTab(item.tab)} className={`bg-white p-2 flex flex-col items-center gap-1 hover:bg-gray-50 transition-colors ${item.danger ? 'bg-red-50' : ''}`}>

@@ -82,6 +82,25 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
     # أخذ المدينة من بيانات البائع إذا لم تُحدد
     seller_city = product.city if product.city else user.get("city", "دمشق")
     
+    # ============== رفع الصور إلى CDN ==============
+    from core.storage import upload_image_from_base64, is_base64_image, is_storage_path
+    
+    processed_images = []
+    for img in product.images:
+        if is_base64_image(img):
+            # رفع الصورة إلى CDN
+            path = upload_image_from_base64(img, folder="products")
+            if path:
+                processed_images.append(path)
+            else:
+                logging.warning("فشل رفع صورة إلى CDN")
+        elif is_storage_path(img):
+            # الصورة موجودة بالفعل على CDN
+            processed_images.append(img)
+        else:
+            # URL خارجي - نبقيه كما هو
+            processed_images.append(img)
+    
     product_id = str(uuid.uuid4())
     product_doc = {
         "id": product_id,
@@ -94,7 +113,7 @@ async def create_product(product: ProductCreate, user: dict = Depends(get_curren
         "price": product.price,
         "category": product.category,
         "stock": product.stock,
-        "images": product.images,
+        "images": processed_images,  # استخدام الصور المرفوعة إلى CDN
         "video": product.video,
         "video_url": product.video_url,
         "admin_video": product.admin_video,  # فيديو التحقق للأدمن

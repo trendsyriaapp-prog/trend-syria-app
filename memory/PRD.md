@@ -5,9 +5,47 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Current Status: Production (Google Play Closed Testing)
 - Live Website: https://trendsyria.app
-- Android App: v1.0.18 (versionCode: 19) in Closed Testing (Alpha)
+- Android App: v1.0.20 (versionCode: 21) in Closed Testing (Alpha)
 
-## Latest Update: 2026-04-12
+## Latest Update: 2026-04-15
+
+### ✅ CDN Image Storage Integration - COMPLETED
+**Date:** 2026-04-15
+**Session Focus:** Migrate images from Base64 in MongoDB to Emergent Cloud Storage (CDN)
+
+**Problem Solved:**
+- Homepage API was ~1.8MB due to Base64 images stored directly in MongoDB
+- Severe loading delays on slow Syrian internet connections
+
+**Solution Implemented:**
+- Integrated Emergent Object Storage (S3-compatible CDN)
+- New images are automatically uploaded to CDN, URLs stored in DB
+- Added Admin tool for batch migrating existing Base64 images
+
+**New Files Created:**
+- `/app/backend/core/storage.py` - Storage service (init, upload, download)
+- `/app/backend/routes/storage.py` - REST API endpoints for images
+- `/app/frontend/src/components/admin/ImageMigrationTab.js` - Admin migration UI
+
+**Files Modified:**
+- `/app/backend/server.py` - Added storage router & init at startup
+- `/app/backend/routes/products.py` - Auto-upload images on product creation
+- `/app/frontend/src/components/LazyImage.js` - Support CDN paths with `getImageUrl()`
+- `/app/frontend/src/pages/AdminPage.js` - Added migration tab
+
+**API Endpoints Added:**
+- `GET /api/storage/images/{path}` - Serve images from CDN
+- `POST /api/storage/upload` - Upload Base64 images (authenticated)
+- `POST /api/storage/upload-file` - Upload file (multipart)
+- `POST /api/storage/migrate-batch` - Batch migrate products (admin)
+- `POST /api/storage/migrate-product-images/{id}` - Migrate single product
+
+**Expected Impact:**
+- Homepage payload: ~1.8MB → ~50KB (97% reduction)
+- Faster loading on slow connections
+- Better CDN caching & global delivery
+
+---
 
 ### ✅ Performance Optimization - Phase 7 (Advanced Optimizations) - COMPLETED
 **Date:** 2026-04-12

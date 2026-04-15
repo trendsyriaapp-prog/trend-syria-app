@@ -139,6 +139,7 @@ try:
     from routes.payment_v2 import router as payment_v2_router
     from routes.feedback import router as feedback_router
     from routes.driver_security import router as driver_security_router
+    from routes.storage import router as storage_router
     logger.info("✅ All routers imported successfully")
 except Exception as e:
     logger.error(f"❌ Failed to import routers: {e}")
@@ -195,6 +196,13 @@ async def startup_event():
     await warm_up_connection()
     # إنشاء فهارس MongoDB للسرعة
     await create_indexes()
+    # تهيئة خدمة التخزين السحابي
+    try:
+        from core.storage import init_storage
+        init_storage()
+        logger.info("☁️ Cloud storage initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ Cloud storage init failed (will retry on first use): {e}")
     logger.info("✅ Application startup complete")
 
 # Root level health check (for DigitalOcean)
@@ -433,6 +441,7 @@ api_router.include_router(push_router)
 api_router.include_router(payment_v2_router)
 api_router.include_router(feedback_router)
 api_router.include_router(driver_security_router)
+api_router.include_router(storage_router)
 
 # ============== Categories ==============
 
