@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, ExternalLink, Check, X, Loader2, Settings, MapPinOff, Clipboard } from 'lucide-react';
+import { MapPin, Check, X, Loader2, Settings, MapPinOff, ExternalLink } from 'lucide-react';
 
 /**
  * مكون لاختيار الموقع من Google Maps
@@ -15,8 +15,6 @@ const GoogleMapsLocationPicker = ({
   const [error, setError] = useState(null);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [showGPSModal, setShowGPSModal] = useState(false);
-  const [showPasteInput, setShowPasteInput] = useState(false);
-  const [pasteValue, setPasteValue] = useState('');
 
   // فتح إعدادات الموقع في الهاتف
   const openLocationSettings = () => {
@@ -121,79 +119,6 @@ const GoogleMapsLocationPicker = ({
     window.open(url, '_blank');
   };
 
-  // معالجة لصق رابط Google Maps
-  const handlePasteLink = async () => {
-    try {
-      // محاولة القراءة من الحافظة
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        processPastedText(text);
-      } else {
-        // إذا فشل، أظهر حقل الإدخال اليدوي
-        setShowPasteInput(true);
-      }
-    } catch (err) {
-      // إذا لم يكن هناك إذن للحافظة، أظهر حقل الإدخال اليدوي
-      console.log('Clipboard access denied, showing manual input');
-      setShowPasteInput(true);
-    }
-  };
-
-  // معالجة النص الملصق
-  const processPastedText = (text) => {
-    const coords = extractCoordsFromGoogleMapsLink(text);
-    if (coords) {
-      onLocationSelect({
-        ...coords,
-        source: 'google_maps_link'
-      });
-      setError(null);
-      setShowPasteInput(false);
-      setPasteValue('');
-    } else {
-      setError('الرابط غير صالح. يرجى نسخ رابط من Google Maps يحتوي على الإحداثيات');
-    }
-  };
-
-  // معالجة الإدخال اليدوي
-  const handleManualPaste = () => {
-    if (pasteValue.trim()) {
-      processPastedText(pasteValue.trim());
-    }
-  };
-
-  // استخراج الإحداثيات من رابط Google Maps
-  const extractCoordsFromGoogleMapsLink = (text) => {
-    // أنماط مختلفة لروابط Google Maps
-    const patterns = [
-      // https://www.google.com/maps?q=33.5138,36.2765
-      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      // https://www.google.com/maps/@33.5138,36.2765,15z
-      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      // https://maps.google.com/maps?ll=33.5138,36.2765
-      /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      // https://www.google.com/maps/place/.../@33.5138,36.2765
-      /place\/[^@]*@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-      // إحداثيات مباشرة: 33.5138,36.2765
-      /^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/,
-      // goo.gl short links with coordinates
-      /(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/
-    ];
-
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const latitude = parseFloat(match[1]);
-        const longitude = parseFloat(match[2]);
-        // التحقق من أن الإحداثيات منطقية
-        if (latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
-          return { latitude, longitude };
-        }
-      }
-    }
-    return null;
-  };
-
   // إزالة الموقع
   const clearLocation = () => {
     onLocationSelect(null);
@@ -260,14 +185,25 @@ const GoogleMapsLocationPicker = ({
 
       {/* أزرار تحديد الموقع */}
       {!isLocationSet && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-3">
+          {/* تنبيه مهم للبائع */}
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <p className="text-sm font-bold text-amber-800">تنبيه مهم!</p>
+              <p className="text-xs text-amber-700 mt-1">
+                يجب أن تكون <strong>في موقع المتجر/المحل</strong> عند الضغط على "موقعي الحالي" لتسجيل الموقع الصحيح.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
             {/* زر GPS */}
             <button
               type="button"
               onClick={getCurrentLocation}
               disabled={loading}
-              className="flex items-center justify-center gap-2 p-3 bg-blue-500 text-white rounded-xl font-bold text-sm hover:bg-blue-600 disabled:opacity-70 transition-all relative"
+              className="flex items-center justify-center gap-2 p-4 bg-blue-500 text-white rounded-xl font-bold text-sm hover:bg-blue-600 disabled:opacity-70 transition-all relative"
             >
               {loading ? (
                 <>
@@ -281,49 +217,7 @@ const GoogleMapsLocationPicker = ({
                 </>
               )}
             </button>
-
-            {/* زر Google Maps */}
-            <button
-              type="button"
-              onClick={handlePasteLink}
-              className="flex items-center justify-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all"
-            >
-            <Clipboard size={18} />
-            <span>لصق من Maps</span>
-          </button>
         </div>
-
-        {/* حقل اللصق اليدوي */}
-        {showPasteInput && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3 space-y-3">
-            <p className="text-xs text-green-700 font-bold">📋 الصق رابط Google Maps هنا:</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={pasteValue}
-                onChange={(e) => setPasteValue(e.target.value)}
-                placeholder="https://www.google.com/maps/..."
-                className="flex-1 p-2 border border-green-300 rounded-lg text-sm text-left dir-ltr"
-                dir="ltr"
-              />
-              <button
-                type="button"
-                onClick={handleManualPaste}
-                disabled={!pasteValue.trim()}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 disabled:opacity-50"
-              >
-                تأكيد
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => { setShowPasteInput(false); setPasteValue(''); }}
-              className="text-xs text-green-600 hover:text-green-800"
-            >
-              إلغاء
-            </button>
-          </div>
-        )}
         
         {/* رسالة انتظار GPS */}
         {loading && (
@@ -339,26 +233,11 @@ const GoogleMapsLocationPicker = ({
       )}
 
       {/* رسالة المساعدة */}
-      {!isLocationSet && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-700 font-bold mb-2">💡 كيفية تحديد الموقع:</p>
-          <div className="text-xs text-blue-600 space-y-2">
-            <div className="flex items-start gap-2">
-              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</span>
-              <span>اضغط <strong>"موقعي الحالي"</strong> للتحديد التلقائي</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</span>
-              <div>
-                <span>أو افتح Google Maps:</span>
-                <ul className="mt-1 mr-2 space-y-0.5 text-[10px] text-blue-500">
-                  <li>• حدد موقعك على الخريطة</li>
-                  <li>• انسخ الرابط من شريط العنوان</li>
-                  <li>• اضغط <strong>"لصق من Maps"</strong></li>
-                </ul>
-              </div>
-            </div>
-          </div>
+      {!isLocationSet && !loading && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+          <p className="text-xs text-gray-600">
+            💡 تأكد أنك في موقع المتجر، ثم اضغط <strong>"موقعي الحالي"</strong>
+          </p>
         </div>
       )}
 
@@ -378,10 +257,6 @@ const GoogleMapsLocationPicker = ({
               <span>فتح إعدادات الموقع</span>
             </button>
           )}
-          
-          <p className="text-xs text-gray-600 mt-2">
-            💡 أو جرّب استخدام زر "لصق من Maps" بدلاً من ذلك
-          </p>
         </div>
       )}
 
@@ -423,13 +298,6 @@ const GoogleMapsLocationPicker = ({
               >
                 إلغاء
               </button>
-              
-              {/* نصيحة */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400">
-                  💡 يمكنك أيضاً استخدام زر "لصق من Maps" لتحديد موقعك يدوياً
-                </p>
-              </div>
             </div>
           </div>
         </div>
