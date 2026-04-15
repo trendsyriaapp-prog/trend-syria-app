@@ -624,6 +624,7 @@ const JoinAsFoodSellerPage = () => {
                     setFormData({ ...formData, latitude: null, longitude: null });
                   }
                 }}
+                warningMessage="يجب أن تكون في موقع المطعم/المتجر عند الضغط على 'موقعي الحالي' لتسجيل الموقع الصحيح."
               />
 
               <button

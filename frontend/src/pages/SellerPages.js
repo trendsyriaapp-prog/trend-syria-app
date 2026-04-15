@@ -795,29 +795,21 @@ const SellerDocumentsPage = () => {
                   
                   {/* خريطة تحديد الموقع */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      تحديد الموقع على الخريطة *
-                    </label>
                     <GoogleMapsLocationPicker
-                      latitude={storeLatitude}
-                      longitude={storeLongitude}
-                      onLocationChange={(lat, lng) => {
-                        setStoreLatitude(lat);
-                        setStoreLongitude(lng);
+                      label="تحديد الموقع على الخريطة"
+                      required={true}
+                      currentLocation={storeLatitude ? { latitude: storeLatitude, longitude: storeLongitude } : null}
+                      onLocationSelect={(location) => {
+                        if (location) {
+                          setStoreLatitude(location.latitude);
+                          setStoreLongitude(location.longitude);
+                        } else {
+                          setStoreLatitude(null);
+                          setStoreLongitude(null);
+                        }
                       }}
-                      height="200px"
+                      warningMessage="يجب أن تكون في موقع المتجر/المحل عند الضغط على 'موقعي الحالي' لتسجيل الموقع الصحيح."
                     />
-                    {storeLatitude && storeLongitude ? (
-                      <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                        <Check size={12} />
-                        تم تحديد الموقع بنجاح
-                      </p>
-                    ) : (
-                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                        <X size={12} />
-                        يرجى تحديد موقع المتجر على الخريطة
-                      </p>
-                    )}
                   </div>
                 </div>
               </motion.div>

@@ -4,12 +4,15 @@ import { MapPin, Check, X, Loader2, Settings, MapPinOff, ExternalLink } from 'lu
 /**
  * مكون لاختيار الموقع من Google Maps
  * يسمح للمستخدم بمشاركة موقعه أو فتح Google Maps لتحديد الموقع
+ * 
+ * @param {string} warningMessage - رسالة التنبيه (اختياري - للبائعين فقط)
  */
 const GoogleMapsLocationPicker = ({ 
   onLocationSelect, 
   currentLocation = null,
   required = true,
-  label = "موقع التوصيل"
+  label = "موقع التوصيل",
+  warningMessage = null  // رسالة تنبيه مخصصة (null = لا تنبيه)
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -186,16 +189,16 @@ const GoogleMapsLocationPicker = ({
       {/* أزرار تحديد الموقع */}
       {!isLocationSet && (
         <div className="space-y-3">
-          {/* تنبيه مهم للبائع */}
-          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 flex items-start gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <p className="text-sm font-bold text-amber-800">تنبيه مهم!</p>
-              <p className="text-xs text-amber-700 mt-1">
-                يجب أن تكون <strong>في موقع المتجر/المحل</strong> عند الضغط على "موقعي الحالي" لتسجيل الموقع الصحيح.
-              </p>
+          {/* تنبيه مخصص (يظهر فقط إذا تم تمرير رسالة) */}
+          {warningMessage && (
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="text-sm font-bold text-amber-800">تنبيه مهم!</p>
+                <p className="text-xs text-amber-700 mt-1">{warningMessage}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 gap-2">
             {/* زر GPS */}
