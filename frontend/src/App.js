@@ -9,6 +9,7 @@ import { ScrollProvider } from "./context/ScrollContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
+import { DataProvider } from "./context/DataContext";
 import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
@@ -22,9 +23,14 @@ import ChangePasswordModal from "./components/ChangePasswordModal";
 import IncomingCallHandler from "./components/voip/IncomingCallHandler";
 import FeedbackButton from "./components/FeedbackButton";
 import ErrorBoundary from "./components/ErrorBoundary";
+import NetworkStatus from "./components/NetworkStatus";
+import { initDB } from "./lib/offlineDB";
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Loader2 } from 'lucide-react';
+
+// تهيئة قاعدة البيانات المحلية عند بدء التطبيق
+initDB().then(() => console.log('✅ Offline DB ready')).catch(console.error);
 
 // مكون تحميل للـ Lazy Loading
 const PageLoader = () => (
@@ -320,6 +326,7 @@ function App() {
       <LanguageProvider>
         <SettingsProvider>
           <AuthProvider>
+            <DataProvider>
             <CartProvider>
               <FoodCartProvider>
               <WebSocketProvider>
@@ -327,6 +334,8 @@ function App() {
               {showSplash && (
                 <SplashScreen onComplete={() => setShowSplash(false)} />
               )}
+              {/* مؤشر حالة الاتصال */}
+              <NetworkStatus />
               <BrowserRouter>
                 <ScrollProvider>
                 <BackButtonHandler />
@@ -435,6 +444,7 @@ function App() {
         </WebSocketProvider>
         </FoodCartProvider>
       </CartProvider>
+      </DataProvider>
     </AuthProvider>
   </SettingsProvider>
   </LanguageProvider>

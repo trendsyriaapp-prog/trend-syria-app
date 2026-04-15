@@ -27,7 +27,8 @@ const CACHEABLE_APIS = [
   '/api/settings/public',
   '/api/settings/ticker-messages',
   '/api/settings/homepage-sections',
-  '/api/settings/business-categories'
+  '/api/settings/business-categories',
+  '/api/storage/images/'  // صور CDN
 ];
 
 // ========== APIs للـ Network Only (لا تخزين) ==========
