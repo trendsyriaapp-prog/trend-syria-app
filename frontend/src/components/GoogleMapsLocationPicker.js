@@ -2,7 +2,7 @@
 // مكون اختيار الموقع مع خريطة تفاعلية
 // يستخدم OpenStreetMap + Leaflet (مجاني)
 
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 
 // تحميل الخريطة بشكل كسول لتحسين الأداء
@@ -11,18 +11,50 @@ const InteractiveMapPicker = lazy(() => import('./InteractiveMapPicker'));
 /**
  * مكون لاختيار الموقع مع خريطة تفاعلية
  * يدعم: GPS، الضغط على الخريطة، سحب الدبوس
+ * 
+ * يدعم API القديمة والجديدة:
+ * - الجديدة: currentLocation, onLocationSelect
+ * - القديمة: latitude, longitude, onLocationChange
  */
 const GoogleMapsLocationPicker = ({ 
+  // API الجديدة
   onLocationSelect, 
   currentLocation = null,
+  // API القديمة (للتوافق)
+  latitude,
+  longitude,
+  onLocationChange,
+  // خيارات مشتركة
   required = true,
   label = "موقع التوصيل",
-  warningMessage = null
+  warningMessage = null,
+  height = "300px"
 }) => {
-  const [showMap, setShowMap] = useState(!!currentLocation?.latitude);
+  // تحويل API القديمة للجديدة
+  const effectiveLocation = currentLocation || (latitude && longitude ? { latitude, longitude } : null);
+  
+  const handleLocationSelect = (location) => {
+    // استدعاء API الجديدة
+    if (onLocationSelect) {
+      onLocationSelect(location);
+    }
+    // استدعاء API القديمة
+    if (onLocationChange && location) {
+      onLocationChange(location.latitude, location.longitude);
+    }
+  };
+
+  const [showMap, setShowMap] = useState(!!effectiveLocation?.latitude);
+
+  // تحديث showMap عند تغيير الموقع من الخارج
+  useEffect(() => {
+    if (effectiveLocation?.latitude) {
+      setShowMap(true);
+    }
+  }, [effectiveLocation?.latitude]);
 
   // إذا لم تكن الخريطة مفتوحة، أظهر زر لفتحها
-  if (!showMap && !currentLocation?.latitude) {
+  if (!showMap && !effectiveLocation?.latitude) {
     return (
       <div className="space-y-3">
         <label className="block text-sm font-bold text-gray-700">
@@ -55,17 +87,17 @@ const GoogleMapsLocationPicker = ({
   // عرض الخريطة التفاعلية
   return (
     <Suspense fallback={
-      <div className="bg-gray-100 rounded-xl p-8 flex flex-col items-center justify-center" style={{ height: '300px' }}>
+      <div className="bg-gray-100 rounded-xl p-8 flex flex-col items-center justify-center" style={{ height }}>
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
         <p className="text-sm text-gray-600">جاري تحميل الخريطة...</p>
       </div>
     }>
       <InteractiveMapPicker
-        onLocationSelect={onLocationSelect}
-        currentLocation={currentLocation}
+        onLocationSelect={handleLocationSelect}
+        currentLocation={effectiveLocation}
         label={label}
         warningMessage={warningMessage}
-        height="300px"
+        height={height}
       />
     </Suspense>
   );

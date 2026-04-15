@@ -836,10 +836,11 @@ const CartPage = () => {
                   <GoogleMapsLocationPicker
                     currentLocation={tempLocation.latitude ? tempLocation : null}
                     onLocationSelect={(location) => {
-                      setTempLocation({ latitude: location.latitude, longitude: location.longitude });
-                    }}
-                    onLocationClear={() => {
-                      setTempLocation({ latitude: null, longitude: null });
+                      if (location) {
+                        setTempLocation({ latitude: location.latitude, longitude: location.longitude });
+                      } else {
+                        setTempLocation({ latitude: null, longitude: null });
+                      }
                     }}
                     warningMessage="حدد الموقع الذي تريد استلام طلبك فيه بدقة لضمان وصول التوصيل."
                   />
