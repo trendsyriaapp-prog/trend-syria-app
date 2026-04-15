@@ -1021,6 +1021,7 @@ const FoodCartPage = () => {
                     setNewAddress({ ...newAddress, latitude: null, longitude: null });
                   }
                 }}
+                warningMessage="حدد الموقع الذي تريد استلام طلبك فيه بدقة لضمان وصول التوصيل."
               />
               
               <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -1507,6 +1508,7 @@ const FoodCartPage = () => {
                     onLocationClear={() => {
                       setTempLocation({ latitude: null, longitude: null });
                     }}
+                    warningMessage="حدد الموقع الذي تريد استلام طلبك فيه بدقة لضمان وصول التوصيل."
                   />
                 </div>
                 

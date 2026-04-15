@@ -508,6 +508,7 @@ const CheckoutPage = () => {
                       setNewAddress({ ...newAddress, latitude: null, longitude: null });
                     }
                   }}
+                  warningMessage="حدد الموقع الذي تريد استلام طلبك فيه بدقة لضمان وصول التوصيل."
                 />
               </div>
             )}
