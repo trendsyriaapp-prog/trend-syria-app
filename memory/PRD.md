@@ -9,6 +9,52 @@ Full-stack e-commerce application for Syria market with Android/Capacitor, React
 
 ## Latest Update: 2026-04-15
 
+### ✅ Unused Files Cleanup - COMPLETED
+**Date:** 2026-04-15
+**Session Focus:** تنظيف الملفات غير المستخدمة لتقليل حجم البناء
+
+**Problem Solved:**
+- وجود 20 ملف React غير مستخدم في الكود (~188KB)
+- زيادة غير ضرورية في حجم البناء
+
+**Solution Implemented:**
+- فحص شامل لكل ملف للتأكد من عدم استخدامه
+- إنشاء نسخة احتياطية في `/app/frontend/src/_unused_backup/`
+- حذف الملفات الـ 20 بعد التحقق
+
+**Files Deleted (20 files, ~188KB total):**
+1. `components/ImageUploader.js` (9.8KB)
+2. `components/InfiniteProductList.js` (5.0KB)
+3. `components/WhatsAppButton.js` (6.0KB)
+4. `components/RoleSwitcher.js` (8.9KB)
+5. `components/ui/SafeButton.js` (4.1KB)
+6. `components/BackToTopButton.js` (3.9KB)
+7. `components/delivery/DeliveryTimer.js` (5.4KB)
+8. `components/delivery/DeliveryHeader.js` (1.1KB)
+9. `components/seller/ImageEditorModal.js` (11KB)
+10. `components/seller/CameraGuideModal.js` (8.2KB)
+11. `components/OptimizedImage.js` (6.3KB)
+12. `components/voip/CallCustomerButton.js` (1.6KB)
+13. `components/InfiniteScroll.js` (2.8KB)
+14. `components/delivery/RouteSelector.js` (12KB)
+15. `components/VirtualList.js` (7.6KB)
+16. `components/seller/ProImageProcessor.js` (32KB)
+17. `components/seller/SellerFlashSalesTab.js` (12KB)
+18. `components/chat/OrderChat.js` (7.7KB)
+19. `hooks/useDebounce.js` (2.4KB)
+20. `utils/locationHelper.js` (3.4KB)
+
+**Verification:**
+- ✅ `yarn build` - Compiled successfully
+- ✅ ESLint - No issues found
+- ✅ Backup created at `/app/frontend/src/_unused_backup/`
+
+**Expected Impact:**
+- تقليل حجم البناء بـ ~188KB
+- كود أنظف وأسهل للصيانة
+
+---
+
 ### ✅ Offline-First Architecture - COMPLETED
 **Date:** 2026-04-15
 **Session Focus:** تحسين شامل لجعل التطبيق يعمل مثل تطبيقات وديني ويلا كو
