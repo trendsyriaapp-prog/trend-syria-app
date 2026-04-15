@@ -777,8 +777,22 @@ async def process_image_with_photoroom(
     try:
         # استخدام rembg المحلي المجاني مباشرة
         logger.info("🔄 Processing image with local rembg (free & unlimited)...")
-        no_bg_data = remove_background_local(image_data)
-        processing_method = "rembg_local"
+        
+        try:
+            no_bg_data = remove_background_local(image_data)
+            processing_method = "rembg_local"
+        except Exception as rembg_err:
+            logger.warning(f"⚠️ rembg failed: {rembg_err}, returning original image")
+            # إذا فشل rembg، نُرجع الصورة الأصلية مع علامة فشل
+            return {
+                "success": True,
+                "image": f"data:image/{file.content_type.split('/')[-1] if file.content_type else 'jpeg'};base64,{base64.b64encode(image_data).decode('utf-8')}",
+                "shadow_type": shadow_type,
+                "background_used": "none",
+                "processing_method": "failed",
+                "bg_removal_failed": True,
+                "message": "تعذر إزالة الخلفية - يمكنك استخدام الصورة الأصلية"
+            }
         
         # معالجة الصورة
         product_image = Image.open(io.BytesIO(no_bg_data))
@@ -860,6 +874,15 @@ async def get_image_processing_status():
     has_photoroom = bool(PHOTOROOM_API_KEY)
     has_removebg = bool(REMOVE_BG_API_KEY)
     
+    # التحقق من rembg
+    rembg_available = False
+    rembg_error = None
+    try:
+        rembg_func = get_rembg_remove()
+        rembg_available = rembg_func is not None
+    except Exception as e:
+        rembg_error = str(e)
+    
     # الخدمة الرئيسية هي PhotoRoom
     primary_service = None
     if has_photoroom:
@@ -871,8 +894,10 @@ async def get_image_processing_status():
         "photoroom_available": has_photoroom,
         "removebg_available": has_removebg,
         "primary_service": primary_service,
-        "fallback_available": True,
-        "fallback_service": "rembg (local)",
+        "rembg_available": rembg_available,
+        "rembg_error": rembg_error,
+        "fallback_available": rembg_available,
+        "fallback_service": "rembg (local)" if rembg_available else "none",
         "shadow_types": get_available_shadow_types()
     }
 

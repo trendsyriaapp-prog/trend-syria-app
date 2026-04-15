@@ -53,6 +53,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
   const [showTip, setShowTip] = useState(true);
   const [galleryOpened, setGalleryOpened] = useState(false);
   const [editorBgDark, setEditorBgDark] = useState(false);
+  const [bgRemovalFailed, setBgRemovalFailed] = useState(false);
   
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -290,6 +291,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     setProcessing(true);
     setStep('edit');
     setError(null);
+    setBgRemovalFailed(false);
     
     try {
       const response = await fetch(imageData);
@@ -306,9 +308,21 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
       });
       
       if (result.data.success && result.data.image) {
-        setProcessedImage(result.data.image);
+        // التحقق من أن الصورة فعلاً تمت معالجتها
+        if (result.data.bg_removal_failed || result.data.processing_method === 'failed') {
+          // فشل إزالة الخلفية - استخدام الصورة الأصلية
+          setProcessedImage(imageData);
+          setBgRemovalFailed(true);
+        } else if (result.data.processing_method === 'rembg_local') {
+          setProcessedImage(result.data.image);
+        } else {
+          // Fallback - ربما لم تنجح المعالجة
+          setProcessedImage(imageData);
+          setBgRemovalFailed(true);
+        }
       } else {
         setProcessedImage(imageData);
+        setBgRemovalFailed(true);
       }
       
       // القيم الافتراضية للصورة (100%)
@@ -323,6 +337,7 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
     } catch (err) {
       console.error('Error:', err);
       setProcessedImage(imageData);
+      setBgRemovalFailed(true);
       // القيم الافتراضية للصورة (100%)
       setScale(1.3);
       setPosition({ x: 0, y: 0 });
@@ -633,6 +648,18 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
             <Loader2 size={48} className="animate-spin text-[#FF6B00] mb-4" />
             <p className="text-white">جاري إزالة الخلفية...</p>
+          </div>
+        )}
+        
+        {/* Background Removal Failed Warning */}
+        {step === 'edit' && bgRemovalFailed && !processing && (
+          <div className="absolute top-16 left-4 right-4 bg-yellow-500/90 backdrop-blur-sm rounded-xl p-3 z-20">
+            <p className="text-black text-sm font-bold text-center">
+              ⚠️ تعذر إزالة الخلفية تلقائياً
+            </p>
+            <p className="text-black/70 text-xs text-center mt-1">
+              يمكنك استخدام الصورة كما هي أو إعادة المحاولة بصورة أخرى
+            </p>
           </div>
         )}
         
