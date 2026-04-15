@@ -393,6 +393,16 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [showSellerType, setShowSellerType] = useState(false);
 
+  // تحميل مسبق للصفحات التالية عند فتح صفحة التسجيل
+  useEffect(() => {
+    // تحميل صفحات البائع والتوصيل مسبقاً
+    const timer = setTimeout(() => {
+      import('./SellerPages').catch(() => {});
+      import('./DeliveryPages').catch(() => {});
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // عند الضغط على "بائع"، نظهر خيارات نوع البيع
   const handleSellerClick = () => {
     setShowSellerType(true);

@@ -33,6 +33,25 @@ const PageLoader = () => (
   </div>
 );
 
+// تحميل مسبق للصفحات المهمة (Prefetch)
+const prefetchPage = (importFn) => {
+  // تأخير قليل لعدم التأثير على الصفحة الحالية
+  setTimeout(() => {
+    importFn().catch(() => {});
+  }, 1000);
+};
+
+// Prefetch الصفحات الشائعة بعد تحميل التطبيق
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    // تحميل صفحات التسجيل والبائع مسبقاً
+    setTimeout(() => {
+      import("./pages/SellerPages").catch(() => {});
+      import("./pages/DeliveryPages").catch(() => {});
+    }, 2000);
+  });
+}
+
 // ==========================================
 // الصفحات الأساسية (تُحمّل مباشرة - الأكثر استخداماً)
 // ==========================================
