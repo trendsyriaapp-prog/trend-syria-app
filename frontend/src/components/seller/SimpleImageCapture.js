@@ -313,7 +313,8 @@ const SimpleImageCapture = ({ isOpen, onClose, onImageReady, mode = 'camera' }) 
           // فشل إزالة الخلفية - استخدام الصورة الأصلية
           setProcessedImage(imageData);
           setBgRemovalFailed(true);
-        } else if (result.data.processing_method === 'rembg_local') {
+        } else if (result.data.processing_method === 'rembg_local' || result.data.processing_method === 'photoroom') {
+          // نجاح - استخدام الصورة المعالجة
           setProcessedImage(result.data.image);
         } else {
           // Fallback - ربما لم تنجح المعالجة

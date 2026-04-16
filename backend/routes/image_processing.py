@@ -754,12 +754,12 @@ async def process_image_with_photoroom(
     use_sandbox: bool = Form(default=False)
 ):
     """
-    معالجة صورة المنتج - تستخدم rembg المحلي المجاني
+    معالجة صورة المنتج - تستخدم PhotoRoom أولاً ثم rembg كـ fallback
     
     - **file**: ملف الصورة
-    - **shadow_type**: نوع الظل (none, soft, hard, floating) - يُضاف محلياً
+    - **shadow_type**: نوع الظل (none, soft, hard, floating)
     - **background**: لون الخلفية
-    - **use_sandbox**: غير مستخدم (للتوافق مع الكود القديم)
+    - **use_sandbox**: استخدام بيئة الاختبار لـ PhotoRoom
     """
     
     # التحقق من نوع الملف
@@ -774,27 +774,50 @@ async def process_image_with_photoroom(
     if len(image_data) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="حجم الصورة يجب أن يكون أقل من 10 ميجابايت")
     
-    try:
-        # استخدام rembg المحلي المجاني مباشرة
-        logger.info("🔄 Processing image with local rembg (free & unlimited)...")
-        
+    no_bg_data = None
+    processing_method = None
+    
+    # المحاولة 1: استخدام PhotoRoom API (سريع وموثوق)
+    if PHOTOROOM_API_KEY:
         try:
+            logger.info("🔄 Trying PhotoRoom API...")
+            photoroom_result = await remove_background_photoroom(
+                image_data=image_data,
+                shadow_type="none",  # لا نضيف ظل من PhotoRoom، سنضيفه محلياً
+                output_size="full",
+                use_sandbox=use_sandbox
+            )
+            if photoroom_result.get("success") and photoroom_result.get("image_bytes"):
+                no_bg_data = photoroom_result["image_bytes"]
+                processing_method = "photoroom"
+                logger.info("✅ PhotoRoom succeeded!")
+        except Exception as pr_err:
+            logger.warning(f"⚠️ PhotoRoom failed: {pr_err}")
+    
+    # المحاولة 2: استخدام rembg المحلي كـ fallback
+    if no_bg_data is None:
+        try:
+            logger.info("🔄 Trying local rembg as fallback...")
             no_bg_data = remove_background_local(image_data)
             processing_method = "rembg_local"
+            logger.info("✅ rembg succeeded!")
         except Exception as rembg_err:
-            logger.warning(f"⚠️ rembg failed: {rembg_err}, returning original image")
-            # إذا فشل rembg، نُرجع الصورة الأصلية مع علامة فشل
-            return {
-                "success": True,
-                "image": f"data:image/{file.content_type.split('/')[-1] if file.content_type else 'jpeg'};base64,{base64.b64encode(image_data).decode('utf-8')}",
-                "shadow_type": shadow_type,
-                "background_used": "none",
-                "processing_method": "failed",
-                "bg_removal_failed": True,
-                "message": "تعذر إزالة الخلفية - يمكنك استخدام الصورة الأصلية"
-            }
-        
-        # معالجة الصورة
+            logger.warning(f"⚠️ rembg also failed: {rembg_err}")
+    
+    # إذا فشلت كل المحاولات
+    if no_bg_data is None:
+        logger.error("❌ All background removal methods failed")
+        return {
+            "success": True,
+            "image": f"data:image/{file.content_type.split('/')[-1] if file.content_type else 'jpeg'};base64,{base64.b64encode(image_data).decode('utf-8')}",
+            "shadow_type": shadow_type,
+            "background_used": "none",
+            "processing_method": "failed",
+            "bg_removal_failed": True,
+            "message": "تعذر إزالة الخلفية - يمكنك استخدام الصورة الأصلية"
+        }
+    
+    try:
         product_image = Image.open(io.BytesIO(no_bg_data))
         if product_image.mode != 'RGBA':
             product_image = product_image.convert('RGBA')
@@ -812,7 +835,7 @@ async def process_image_with_photoroom(
                 "shadow_type": shadow_type,
                 "background_used": "transparent",
                 "processing_method": processing_method,
-                "message": "تمت معالجة الصورة بنجاح (rembg)"
+                "message": f"تمت معالجة الصورة بنجاح ({processing_method})"
             }
         
         # إنشاء الخلفية
@@ -848,14 +871,14 @@ async def process_image_with_photoroom(
         output_buffer.seek(0)
         image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
         
-        logger.info(f"✅ Image processed successfully with rembg (shadow: {shadow_type})")
+        logger.info(f"✅ Image processed successfully with {processing_method} (shadow: {shadow_type})")
         return {
             "success": True,
             "image": f"data:image/png;base64,{image_base64}",
             "shadow_type": shadow_type,
             "background_used": background,
             "processing_method": processing_method,
-            "message": "تمت معالجة الصورة بنجاح (rembg)"
+            "message": f"تمت معالجة الصورة بنجاح ({processing_method})"
         }
             
     except Exception as e:
