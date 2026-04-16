@@ -268,9 +268,9 @@ const AddProductModal = ({
     setVideoUploadProgress(0);
     
     try {
-      // التحقق من صحة الفيديو وإنشاء preview URL
+      // 1. التحقق من صحة الفيديو
       const result = await processVideo(file, (progress) => {
-        console.log(progress);
+        console.log('Validation:', progress);
       });
       
       if (!result.success) {
@@ -283,35 +283,55 @@ const AddProductModal = ({
         return;
       }
       
-      // تحرير URL القديم إن وجد
-      if (videoPreviewUrl) {
-        revokeVideoPreviewUrl(videoPreviewUrl);
-      }
-      
-      // حفظ الملف و preview URL
-      setVideoFile(result.file);
+      // 2. عرض preview مؤقت أثناء الرفع
+      if (videoPreviewUrl) revokeVideoPreviewUrl(videoPreviewUrl);
       setVideoPreviewUrl(result.previewUrl);
-      
-      // تحديث state المنتج بـ preview URL مؤقتاً
-      setNewProduct(prev => ({
-        ...prev,
-        video: result.previewUrl,
-        _videoNeedsUpload: true // علامة داخلية
-      }));
+      setNewProduct(prev => ({ ...prev, video: result.previewUrl }));
       
       toast({
-        title: "تم تحميل الفيديو ✅",
-        description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+        title: "جاري رفع الفيديو...",
+        description: `الحجم: ${result.sizeMB}MB - يرجى الانتظار`
       });
+      
+      // 3. رفع الفيديو فوراً إلى CDN
+      const uploadResult = await uploadVideoToCDN(
+        file, 
+        'videos', 
+        (progress) => {
+          setVideoUploadProgress(progress.percent || 0);
+        },
+        token
+      );
+      
+      if (uploadResult.success) {
+        // 4. حفظ CDN path (جاهز للحفظ)
+        setNewProduct(prev => ({ 
+          ...prev, 
+          video: uploadResult.path,
+          _videoNeedsUpload: false 
+        }));
+        setVideoFile(null); // لا حاجة للملف بعد الآن
+        
+        toast({
+          title: "✅ تم رفع الفيديو بنجاح",
+          description: `مدة: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+        });
+      }
     } catch (error) {
-      console.error('Video error:', error);
+      console.error('Video upload error:', error);
+      // إذا فشل الرفع، نحتفظ بـ preview للمحاولة لاحقاً
       toast({
-        title: "خطأ",
-        description: "فشل في معالجة الفيديو",
+        title: "فشل رفع الفيديو",
+        description: error.message || "تحقق من الإنترنت وحاول مرة أخرى",
         variant: "destructive"
       });
+      // إعادة تعيين للسماح بالمحاولة مرة أخرى
+      setNewProduct(prev => ({ ...prev, video: null }));
+      if (videoPreviewUrl) revokeVideoPreviewUrl(videoPreviewUrl);
+      setVideoPreviewUrl(null);
     } finally {
       setUploadingProductVideo(false);
+      setVideoUploadProgress(0);
     }
   };
 
@@ -324,8 +344,9 @@ const AddProductModal = ({
     setAdminVideoUploadProgress(0);
     
     try {
+      // 1. التحقق من صحة الفيديو
       const result = await processVideo(file, (progress) => {
-        console.log(progress);
+        console.log('Validation:', progress);
       });
       
       if (!result.success) {
@@ -338,35 +359,54 @@ const AddProductModal = ({
         return;
       }
       
-      // تحرير URL القديم إن وجد
-      if (adminVideoPreviewUrl) {
-        revokeVideoPreviewUrl(adminVideoPreviewUrl);
-      }
-      
-      // حفظ الملف و preview URL
-      setAdminVideoFile(result.file);
+      // 2. عرض preview مؤقت أثناء الرفع
+      if (adminVideoPreviewUrl) revokeVideoPreviewUrl(adminVideoPreviewUrl);
       setAdminVideoPreviewUrl(result.previewUrl);
-      
-      // تحديث state المنتج
-      setNewProduct(prev => ({
-        ...prev,
-        admin_video: result.previewUrl,
-        _adminVideoNeedsUpload: true // علامة داخلية
-      }));
+      setNewProduct(prev => ({ ...prev, admin_video: result.previewUrl }));
       
       toast({
-        title: "تم تحميل فيديو التحقق ✅",
-        description: `مدة الفيديو: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+        title: "جاري رفع فيديو التحقق...",
+        description: `الحجم: ${result.sizeMB}MB - يرجى الانتظار`
       });
+      
+      // 3. رفع الفيديو فوراً إلى CDN
+      const uploadResult = await uploadVideoToCDN(
+        file, 
+        'admin_videos', 
+        (progress) => {
+          setAdminVideoUploadProgress(progress.percent || 0);
+        },
+        token
+      );
+      
+      if (uploadResult.success) {
+        // 4. حفظ CDN path (جاهز للحفظ)
+        setNewProduct(prev => ({ 
+          ...prev, 
+          admin_video: uploadResult.path,
+          _adminVideoNeedsUpload: false 
+        }));
+        setAdminVideoFile(null); // لا حاجة للملف بعد الآن
+        
+        toast({
+          title: "✅ تم رفع فيديو التحقق بنجاح",
+          description: `مدة: ${result.duration} ثانية | الحجم: ${result.sizeMB}MB`
+        });
+      }
     } catch (error) {
-      console.error('Admin video error:', error);
+      console.error('Admin video upload error:', error);
       toast({
-        title: "خطأ",
-        description: "فشل في معالجة الفيديو",
+        title: "فشل رفع فيديو التحقق",
+        description: error.message || "تحقق من الإنترنت وحاول مرة أخرى",
         variant: "destructive"
       });
+      // إعادة تعيين للسماح بالمحاولة مرة أخرى
+      setNewProduct(prev => ({ ...prev, admin_video: null }));
+      if (adminVideoPreviewUrl) revokeVideoPreviewUrl(adminVideoPreviewUrl);
+      setAdminVideoPreviewUrl(null);
     } finally {
       setUploadingAdminVideo(false);
+      setAdminVideoUploadProgress(0);
     }
   };
 
@@ -409,82 +449,26 @@ const AddProductModal = ({
       return;
     }
 
-    // التحقق من فيديو التحقق للأدمن (إجباري)
-    if (!newProduct.admin_video && !adminVideoFile) {
+    // التحقق من فيديو التحقق للأدمن (إجباري) - يجب أن يكون CDN path وليس blob
+    const adminVideoPath = newProduct.admin_video;
+    if (!adminVideoPath || adminVideoPath.startsWith('blob:')) {
       toast({
         title: "فيديو التحقق مطلوب 📹",
-        description: "يرجى رفع فيديو قصير يُظهر المنتج الحقيقي للمراجعة",
+        description: "يرجى رفع فيديو قصير والانتظار حتى اكتمال الرفع",
         variant: "destructive"
       });
       return;
     }
 
-    // رفع الفيديوهات إلى CDN إذا كانت موجودة
+    // التحقق من أن فيديو المنتج (إن وجد) مرفوع بالكامل
     let videoPath = newProduct.video;
-    let adminVideoPath = newProduct.admin_video;
-
-    try {
-      // رفع فيديو المنتج إذا كان جديداً
-      if (videoFile) {
-        toast({
-          title: "جاري رفع فيديو المنتج...",
-          description: "يرجى الانتظار"
-        });
-        
-        const videoResult = await uploadVideoToCDN(
-          videoFile, 
-          'videos', 
-          (progress) => {
-            setVideoUploadProgress(progress.percent || 0);
-          },
-          token
-        );
-        
-        if (videoResult.success) {
-          videoPath = videoResult.path;
-        } else {
-          throw new Error('فشل رفع فيديو المنتج');
-        }
-      }
-
-      // رفع فيديو التحقق إذا كان جديداً
-      if (adminVideoFile) {
-        toast({
-          title: "جاري رفع فيديو التحقق...",
-          description: "يرجى الانتظار"
-        });
-        
-        const adminVideoResult = await uploadVideoToCDN(
-          adminVideoFile, 
-          'admin_videos', 
-          (progress) => {
-            setAdminVideoUploadProgress(progress.percent || 0);
-          },
-          token
-        );
-        
-        if (adminVideoResult.success) {
-          adminVideoPath = adminVideoResult.path;
-        } else {
-          throw new Error('فشل رفع فيديو التحقق');
-        }
-      }
-    } catch (uploadError) {
-      console.error('Video upload error:', uploadError);
+    if (videoPath && videoPath.startsWith('blob:')) {
       toast({
-        title: "خطأ في رفع الفيديو",
-        description: uploadError.message || "فشل رفع الفيديو. تحقق من اتصال الإنترنت",
+        title: "انتظر اكتمال رفع الفيديو",
+        description: "فيديو المنتج لم يكتمل رفعه بعد",
         variant: "destructive"
       });
       return;
-    }
-
-    // تنظيف المسارات - إزالة blob URLs
-    if (videoPath && videoPath.startsWith('blob:')) {
-      videoPath = null; // لا نحفظ blob URLs
-    }
-    if (adminVideoPath && adminVideoPath.startsWith('blob:')) {
-      adminVideoPath = null;
     }
 
     const submitData = isFoodSeller ? {
@@ -495,13 +479,13 @@ const AddProductModal = ({
       preparation_time: parseInt(newProduct.preparation_time) || 15,
       is_available: newProduct.is_available,
       images: newProduct.images,
-      admin_video: adminVideoPath // فيديو التحقق للأدمن (CDN path)
+      admin_video: adminVideoPath // CDN path (مرفوع مسبقاً)
     } : {
       ...newProduct,
       price: parseFloat(newProduct.price),
       stock: parseInt(newProduct.stock),
-      video: videoPath || null, // CDN path
-      admin_video: adminVideoPath, // CDN path
+      video: videoPath || null, // CDN path (مرفوع مسبقاً)
+      admin_video: adminVideoPath, // CDN path (مرفوع مسبقاً)
       length_cm: newProduct.length_cm ? parseFloat(newProduct.length_cm) : null,
       width_cm: newProduct.width_cm ? parseFloat(newProduct.width_cm) : null,
       height_cm: newProduct.height_cm ? parseFloat(newProduct.height_cm) : null,
@@ -1432,6 +1416,23 @@ const AddProductModal = ({
               <p className="text-[9px] text-blue-600 mb-2">
                 أضف فيديو قصير يُظهر منتجك - <strong>سيشاهده العملاء</strong> في صفحة المنتج
               </p>
+              
+              {/* Progress Bar أثناء الرفع */}
+              {uploadingProductVideo && (
+                <div className="mb-2">
+                  <div className="flex justify-between text-[9px] text-blue-700 mb-1">
+                    <span>جاري الرفع...</span>
+                    <span>{videoUploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${videoUploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
               {newProduct.video ? (
                 <div className="relative bg-blue-100 rounded-lg p-2">
                   <video 
@@ -1453,28 +1454,22 @@ const AddProductModal = ({
                   >
                     <X size={12} />
                   </button>
-                  <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
-                    ✓ للعملاء
+                  {/* علامة حالة الرفع */}
+                  <div className={`absolute bottom-1 left-1 text-white text-[8px] px-2 py-0.5 rounded-full font-bold ${
+                    newProduct.video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}>
+                    {newProduct.video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ للعملاء'}
                   </div>
                 </div>
-              ) : (
+              ) : !uploadingProductVideo && (
                 <button
                   type="button"
                   onClick={() => document.getElementById('product-video').click()}
                   disabled={uploadingProductVideo}
                   className="w-full py-2 bg-blue-500 text-white rounded-lg text-[10px] flex items-center justify-center gap-1 hover:bg-blue-600 font-bold disabled:opacity-50"
                 >
-                  {uploadingProductVideo ? (
-                    <>
-                      <Loader2 size={12} className="animate-spin" />
-                      جاري المعالجة...
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={12} />
-                      اختر فيديو ليشاهده العملاء
-                    </>
-                  )}
+                  <Upload size={12} />
+                  اختر فيديو ليشاهده العملاء
                 </button>
               )}
               <input
@@ -1499,6 +1494,23 @@ const AddProductModal = ({
                 <br/>
                 <strong>🔒 هذا الفيديو للإدارة فقط ولن يظهر للعملاء.</strong>
               </p>
+              
+              {/* Progress Bar أثناء الرفع */}
+              {uploadingAdminVideo && (
+                <div className="mb-2">
+                  <div className="flex justify-between text-[9px] text-orange-700 mb-1">
+                    <span>جاري الرفع...</span>
+                    <span>{adminVideoUploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-orange-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-red-500 h-2.5 rounded-full transition-all duration-300"
+                      style={{ width: `${adminVideoUploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
               {newProduct.admin_video ? (
                 <div className="relative bg-orange-100 rounded-lg p-2">
                   <video 
@@ -1520,28 +1532,22 @@ const AddProductModal = ({
                   >
                     <X size={14} />
                   </button>
-                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
-                    ✓ تم الرفع
+                  {/* علامة حالة الرفع */}
+                  <div className={`absolute bottom-1 left-1 text-white text-[8px] px-2 py-0.5 rounded-full font-bold ${
+                    newProduct.admin_video?.startsWith('blob:') ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}>
+                    {newProduct.admin_video?.startsWith('blob:') ? '⏳ جاري الرفع...' : '✓ تم الرفع'}
                   </div>
                 </div>
-              ) : (
+              ) : !uploadingAdminVideo && (
                 <button
                   type="button"
                   onClick={() => document.getElementById('admin-video').click()}
                   disabled={uploadingAdminVideo}
                   className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-[11px] flex items-center justify-center gap-2 hover:from-orange-600 hover:to-red-600 font-bold disabled:opacity-50 shadow-md"
                 >
-                  {uploadingAdminVideo ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      جاري معالجة الفيديو...
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={14} />
-                      📹 ارفع فيديو التحقق (للإدارة فقط)
-                    </>
-                  )}
+                  <Upload size={14} />
+                  📹 ارفع فيديو التحقق (للإدارة فقط)
                 </button>
               )}
               <input
