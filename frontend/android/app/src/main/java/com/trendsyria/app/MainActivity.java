@@ -4,12 +4,16 @@ import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.view.View;
+import android.view.WindowManager;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // السماح بالتقاط الشاشة (إزالة FLAG_SECURE إن وجد)
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         
         // تأخير تهيئة WebView حتى يكون Bridge جاهزاً
         // نستخدم post() لضمان أن Bridge مُهيأ
