@@ -1,15 +1,45 @@
 // /app/frontend/src/components/NetworkStatus.js
-// مكون عرض حالة الاتصال بالإنترنت
+// مكون عرض حالة الاتصال بالإنترنت مع مؤشر جودة الشبكة
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, RefreshCw, Check } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Check, Signal, SignalLow, SignalMedium, SignalHigh } from 'lucide-react';
 import { useConnectionIndicator, useSyncManager } from '../hooks/useOffline';
+import { estimateConnectionQuality, getConnectionInfo } from '../lib/dataSaver';
 
 const NetworkStatus = () => {
   const { isOnline, showOffline, showReconnected } = useConnectionIndicator();
   const { isSyncing, pendingCount } = useSyncManager();
   const [showSyncComplete, setShowSyncComplete] = useState(false);
+  const [connectionQuality, setConnectionQuality] = useState({ quality: 'unknown', label: '', color: 'gray' });
+  const [showQualityIndicator, setShowQualityIndicator] = useState(false);
+
+  // تحديث جودة الاتصال
+  useEffect(() => {
+    const updateQuality = () => {
+      if (isOnline) {
+        setConnectionQuality(estimateConnectionQuality());
+      }
+    };
+
+    updateQuality();
+    
+    // الاستماع لتغييرات الاتصال
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection) {
+      connection.addEventListener('change', updateQuality);
+      return () => connection.removeEventListener('change', updateQuality);
+    }
+  }, [isOnline]);
+
+  // إظهار مؤشر الجودة لبضع ثواني عند تغير الحالة
+  useEffect(() => {
+    if (showReconnected && connectionQuality.quality !== 'unknown') {
+      setShowQualityIndicator(true);
+      const timer = setTimeout(() => setShowQualityIndicator(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showReconnected, connectionQuality]);
 
   // إظهار رسالة اكتمال المزامنة
   useEffect(() => {
@@ -19,6 +49,20 @@ const NetworkStatus = () => {
       return () => clearTimeout(timer);
     }
   }, [isSyncing, pendingCount, showReconnected]);
+
+  // أيقونة جودة الشبكة
+  const QualityIcon = () => {
+    switch (connectionQuality.quality) {
+      case 'poor':
+        return <SignalLow className="w-4 h-4 text-red-400" />;
+      case 'fair':
+        return <SignalMedium className="w-4 h-4 text-yellow-400" />;
+      case 'good':
+        return <SignalHigh className="w-4 h-4 text-green-400" />;
+      default:
+        return <Signal className="w-4 h-4 text-gray-400" />;
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -63,6 +107,12 @@ const NetworkStatus = () => {
               <>
                 <Wifi className="w-5 h-5" />
                 <p className="font-medium text-sm">عاد الاتصال بالإنترنت</p>
+                {showQualityIndicator && connectionQuality.quality !== 'unknown' && (
+                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <QualityIcon />
+                    {connectionQuality.label}
+                  </span>
+                )}
               </>
             )}
           </div>
@@ -79,6 +129,19 @@ const NetworkStatus = () => {
         >
           <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
           <span className="text-xs font-medium">{pendingCount} في الانتظار</span>
+        </motion.div>
+      )}
+
+      {/* مؤشر جودة الشبكة الضعيفة (يظهر دائماً إذا كانت الشبكة ضعيفة) */}
+      {isOnline && !showOffline && !showReconnected && connectionQuality.quality === 'poor' && (
+        <motion.div
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 100, opacity: 0 }}
+          className="fixed top-20 right-2 z-50 bg-red-500/90 text-white rounded-lg px-2 py-1 shadow-lg flex items-center gap-1"
+        >
+          <SignalLow className="w-3 h-3" />
+          <span className="text-[10px] font-medium">إنترنت ضعيف</span>
         </motion.div>
       )}
     </AnimatePresence>
