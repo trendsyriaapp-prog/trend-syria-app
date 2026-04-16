@@ -115,7 +115,8 @@ const AddProductModal = ({
   }, [isOpen, initialData, product, isFoodSeller]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingProductVideo, setUploadingProductVideo] = useState(false);
+  const [uploadingAdminVideo, setUploadingAdminVideo] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [newWeightVariant, setNewWeightVariant] = useState({ weight: '', unit: 'g', price: '' });
   const [imageWarnings, setImageWarnings] = useState([]);
@@ -263,7 +264,7 @@ const AddProductModal = ({
     const file = e.target.files[0];
     if (!file) return;
     
-    setUploadingVideo(true);
+    setUploadingProductVideo(true);
     setVideoUploadProgress(0);
     
     try {
@@ -278,7 +279,7 @@ const AddProductModal = ({
           description: result.error,
           variant: "destructive"
         });
-        setUploadingVideo(false);
+        setUploadingProductVideo(false);
         return;
       }
       
@@ -310,7 +311,7 @@ const AddProductModal = ({
         variant: "destructive"
       });
     } finally {
-      setUploadingVideo(false);
+      setUploadingProductVideo(false);
     }
   };
 
@@ -319,7 +320,7 @@ const AddProductModal = ({
     const file = e.target.files[0];
     if (!file) return;
     
-    setUploadingVideo(true);
+    setUploadingAdminVideo(true);
     setAdminVideoUploadProgress(0);
     
     try {
@@ -333,7 +334,7 @@ const AddProductModal = ({
           description: result.error,
           variant: "destructive"
         });
-        setUploadingVideo(false);
+        setUploadingAdminVideo(false);
         return;
       }
       
@@ -365,7 +366,7 @@ const AddProductModal = ({
         variant: "destructive"
       });
     } finally {
-      setUploadingVideo(false);
+      setUploadingAdminVideo(false);
     }
   };
 
@@ -1423,11 +1424,16 @@ const AddProductModal = ({
               />
             </div>
 
-            {/* Video Section */}
-            <div>
-              <label className="block text-[10px] font-medium mb-1 text-gray-700">إضافة فيديو (اختياري)</label>
+            {/* Video Section - فيديو للعملاء */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <label className="block text-[11px] font-bold mb-1 text-blue-800">
+                🎬 فيديو المنتج للعملاء (اختياري)
+              </label>
+              <p className="text-[9px] text-blue-600 mb-2">
+                أضف فيديو قصير يُظهر منتجك - <strong>سيشاهده العملاء</strong> في صفحة المنتج
+              </p>
               {newProduct.video ? (
-                <div className="relative bg-gray-100 rounded-lg p-2">
+                <div className="relative bg-blue-100 rounded-lg p-2">
                   <video 
                     src={newProduct.video} 
                     className="w-full h-24 object-cover rounded"
@@ -1436,8 +1442,10 @@ const AddProductModal = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setNewProduct({ ...newProduct, video: null });
-                      // إعادة تعيين الـ input لقبول فيديو جديد
+                      if (videoPreviewUrl) revokeVideoPreviewUrl(videoPreviewUrl);
+                      setVideoFile(null);
+                      setVideoPreviewUrl(null);
+                      setNewProduct({ ...newProduct, video: null, _videoNeedsUpload: false });
                       const videoInput = document.getElementById('product-video');
                       if (videoInput) videoInput.value = '';
                     }}
@@ -1445,20 +1453,26 @@ const AddProductModal = ({
                   >
                     <X size={12} />
                   </button>
+                  <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold">
+                    ✓ للعملاء
+                  </div>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => document.getElementById('product-video').click()}
-                  disabled={uploadingVideo}
-                  className="w-full py-2 bg-[#FF6B00] text-white rounded-lg text-[10px] flex items-center justify-center gap-1 hover:bg-[#E65000] font-bold disabled:opacity-50"
+                  disabled={uploadingProductVideo}
+                  className="w-full py-2 bg-blue-500 text-white rounded-lg text-[10px] flex items-center justify-center gap-1 hover:bg-blue-600 font-bold disabled:opacity-50"
                 >
-                  {uploadingVideo ? (
-                    <Loader2 size={12} className="animate-spin" />
+                  {uploadingProductVideo ? (
+                    <>
+                      <Loader2 size={12} className="animate-spin" />
+                      جاري المعالجة...
+                    </>
                   ) : (
                     <>
                       <Upload size={12} />
-                      اختر فيديو من الجهاز
+                      اختر فيديو ليشاهده العملاء
                     </>
                   )}
                 </button>
@@ -1471,7 +1485,7 @@ const AddProductModal = ({
                 className="hidden"
                 data-testid="product-video-input"
               />
-              <p className="text-[8px] text-gray-400 mt-0.5">الحد الأقصى 50MB</p>
+              <p className="text-[8px] text-blue-400 mt-0.5">الحد الأقصى 15MB (30 ثانية)</p>
             </div>
 
             {/* Admin Verification Video Section - فيديو التحقق للأدمن */}
@@ -1483,7 +1497,7 @@ const AddProductModal = ({
               <p className="text-[9px] text-orange-700 mb-2">
                 صوّر فيديو قصير (من 1 إلى 30 ثانية كحد أقصى) يُظهر المنتج الحقيقي والكمية المتوفرة.
                 <br/>
-                <strong>هذا الفيديو للأدمن فقط ولن يظهر للعملاء.</strong>
+                <strong>🔒 هذا الفيديو للإدارة فقط ولن يظهر للعملاء.</strong>
               </p>
               {newProduct.admin_video ? (
                 <div className="relative bg-orange-100 rounded-lg p-2">
@@ -1495,7 +1509,10 @@ const AddProductModal = ({
                   <button
                     type="button"
                     onClick={() => {
-                      setNewProduct({ ...newProduct, admin_video: null });
+                      if (adminVideoPreviewUrl) revokeVideoPreviewUrl(adminVideoPreviewUrl);
+                      setAdminVideoFile(null);
+                      setAdminVideoPreviewUrl(null);
+                      setNewProduct({ ...newProduct, admin_video: null, _adminVideoNeedsUpload: false });
                       const adminVideoInput = document.getElementById('admin-video');
                       if (adminVideoInput) adminVideoInput.value = '';
                     }}
@@ -1511,10 +1528,10 @@ const AddProductModal = ({
                 <button
                   type="button"
                   onClick={() => document.getElementById('admin-video').click()}
-                  disabled={uploadingVideo}
+                  disabled={uploadingAdminVideo}
                   className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-[11px] flex items-center justify-center gap-2 hover:from-orange-600 hover:to-red-600 font-bold disabled:opacity-50 shadow-md"
                 >
-                  {uploadingVideo ? (
+                  {uploadingAdminVideo ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
                       جاري معالجة الفيديو...
@@ -1522,7 +1539,7 @@ const AddProductModal = ({
                   ) : (
                     <>
                       <Upload size={14} />
-                      📹 ارفع فيديو التحقق
+                      📹 ارفع فيديو التحقق (للإدارة فقط)
                     </>
                   )}
                 </button>
