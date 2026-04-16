@@ -5,7 +5,58 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wifi, WifiOff, RefreshCw, Check, Signal, SignalLow, SignalMedium, SignalHigh } from 'lucide-react';
 import { useConnectionIndicator, useSyncManager } from '../hooks/useOffline';
-import { estimateConnectionQuality, getConnectionInfo } from '../lib/dataSaver';
+
+/**
+ * الحصول على معلومات الاتصال
+ */
+const getConnectionInfo = () => {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  
+  if (!connection) {
+    return {
+      type: 'unknown',
+      effectiveType: 'unknown',
+      downlink: null,
+      rtt: null,
+      saveData: false
+    };
+  }
+  
+  return {
+    type: connection.type || 'unknown',
+    effectiveType: connection.effectiveType || 'unknown',
+    downlink: connection.downlink,
+    rtt: connection.rtt,
+    saveData: connection.saveData || false
+  };
+};
+
+/**
+ * تقدير جودة الإنترنت
+ */
+const estimateConnectionQuality = () => {
+  const info = getConnectionInfo();
+  
+  if (info.effectiveType === 'slow-2g' || info.effectiveType === '2g') {
+    return { quality: 'poor', label: 'ضعيف', color: 'red' };
+  } else if (info.effectiveType === '3g') {
+    return { quality: 'fair', label: 'متوسط', color: 'yellow' };
+  } else if (info.effectiveType === '4g') {
+    return { quality: 'good', label: 'جيد', color: 'green' };
+  }
+  
+  if (info.rtt !== null) {
+    if (info.rtt > 500) {
+      return { quality: 'poor', label: 'ضعيف', color: 'red' };
+    } else if (info.rtt > 200) {
+      return { quality: 'fair', label: 'متوسط', color: 'yellow' };
+    } else {
+      return { quality: 'good', label: 'جيد', color: 'green' };
+    }
+  }
+  
+  return { quality: 'unknown', label: 'غير معروف', color: 'gray' };
+};
 
 const NetworkStatus = () => {
   const { isOnline, showOffline, showReconnected } = useConnectionIndicator();
